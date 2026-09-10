@@ -307,7 +307,7 @@ bound to evidence" without reading release notes.
 
 For Buildchain's own releases, public release claims are not authored in prose
 inside the workflow. The source registry is
-`packages/core/buildchain-kfd-claims.js`, published as
+`packages/core/adoption/buildchain-kfd-claims.js`, published as
 `dist/site/kfd-claims.json` and exported as
 `@kungfu-tech/buildchain/buildchain-kfd-claims`. That registry is the
 version-invariant source of public claims and collaboration surfaces: it does
@@ -340,7 +340,7 @@ participant-facing collaboration/control surface is closed over its declared
 interface.
 
 For Buildchain itself, the declared interface starts in
-`packages/core/buildchain-kfd-claims.js`, not in this Markdown file. The
+`packages/core/adoption/buildchain-kfd-claims.js`, not in this Markdown file. The
 registry enumerates public human/agent surfaces across manuals, schema and
 standard metadata, package exports, site-consumption contracts, workflows, and
 actions. `dist/site/kfd-claims.json` is the packaged machine-readable form used

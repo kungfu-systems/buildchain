@@ -3,13 +3,8 @@ name: Buildchain GitHub Artifact Attestation
 on:
   workflow_call:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
       buildchain-ref:
-        description: "Exact Buildchain v3 commit that owns this signer workflow and evidence verifier."
+        description: "Exact Buildchain commit that owns this signer workflow and evidence verifier."
         type: string
         required: true
       evidence-run-id:
@@ -92,15 +87,7 @@ permissions:
   id-token: write
 
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   attest:
-    if: ${{ inputs.universal-request-json == '' }}
     name: Attest sealed Linux release artifact
     runs-on: ubuntu-24.04
     environment: ${{ inputs.environment }}
@@ -111,140 +98,22 @@ jobs:
       contents: read
       id-token: write
     outputs:
-      attestation-id: ${{ steps.attest.outputs.attestation-id }}
-      attestation-url: ${{ steps.attest.outputs.attestation-url }}
-      bundle-digest: ${{ steps.finalize.outputs.bundle-digest }}
-      evidence-root: ${{ steps.finalize.outputs.evidence-root }}
+      attestation-id: ${{ steps.node.outputs.attestation-id }}
+      attestation-url: ${{ steps.node.outputs.attestation-url }}
+      bundle-digest: ${{ steps.node.outputs.bundle-digest }}
+      evidence-root: ${{ steps.node.outputs.evidence-root }}
     steps:
-      - name: Validate immutable Buildchain v3 signer ref
-        env:
-          BUILDCHAIN_REF: ${{ inputs.buildchain-ref }}
-          EVIDENCE_RUN_ID: ${{ inputs.evidence-run-id }}
-          CURRENT_RUN_ID: ${{ github.run_id }}
-          SOURCE_SHA: ${{ inputs.source-sha }}
-          CURRENT_SOURCE_SHA: ${{ github.sha }}
-          SUBJECT_RELATIVE_PATH: ${{ inputs.subject-relative-path }}
-          PLATFORM_MANIFEST_RELATIVE_PATH: ${{ inputs.platform-manifest-relative-path }}
-          RELEASE_PASSPORT_RELATIVE_PATH: ${{ inputs.release-passport-relative-path }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ ! "$BUILDCHAIN_REF" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "::error::buildchain-ref must be an exact 40-hex v3 commit"
-            exit 1
-          fi
-          if [[ "$EVIDENCE_RUN_ID" != "$CURRENT_RUN_ID" ]]; then
-            echo "::error::attestation inputs must come from the current caller workflow run"
-            exit 1
-          fi
-          if [[ ! "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ || "$SOURCE_SHA" != "$CURRENT_SOURCE_SHA" ]]; then
-            echo "::error::source-sha must equal the exact caller workflow SHA attested by GitHub"
-            exit 1
-          fi
-          for relative_path in \
-            "$SUBJECT_RELATIVE_PATH" \
-            "$PLATFORM_MANIFEST_RELATIVE_PATH" \
-            "$RELEASE_PASSPORT_RELATIVE_PATH"; do
-            if [[ -z "$relative_path" || "$relative_path" == /* || "/$relative_path/" == *"/../"* ]]; then
-              echo "::error::attestation input paths must be safe relative paths"
-              exit 1
-            fi
-          done
-
-      - name: Load exact Buildchain attester runtime
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out workflow implementation
+        uses: actions/checkout@v7.0.0
         with:
-          repository: kungfu-systems/buildchain
-          ref: ${{ inputs.buildchain-ref }}
-          path: .buildchain/attester-runtime
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
           persist-credentials: false
-          sparse-checkout: actions/github-artifact-attestation
-
-      - name: Download exact release subject
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - name: Attest sealed Linux release artifact
+        id: node
+        uses: ./.buildchain/workflow-shell/actions/release/signing/attest
         with:
-          repository: ${{ github.repository }}
-          run-id: ${{ inputs.evidence-run-id }}
-          github-token: ${{ github.token }}
-          name: ${{ inputs.subject-artifact-name }}
-          path: .buildchain/attestation-input/subject
-
-      - name: Download original build-runner platform manifest
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          repository: ${{ github.repository }}
-          run-id: ${{ inputs.evidence-run-id }}
-          github-token: ${{ github.token }}
-          name: ${{ inputs.platform-manifest-artifact-name }}
-          path: .buildchain/attestation-input/platform-manifest
-
-      - name: Download pre-attestation Release Passport
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          repository: ${{ github.repository }}
-          run-id: ${{ inputs.evidence-run-id }}
-          github-token: ${{ github.token }}
-          name: ${{ inputs.release-passport-artifact-name }}
-          path: .buildchain/attestation-input/release-passport
-
-      - name: Verify sealed inputs and write predicate
-        id: prepare
-        uses: ./.buildchain/attester-runtime/actions/github-artifact-attestation
-        with:
-          mode: prepare
-          subject-path: .buildchain/attestation-input/subject/${{ inputs.subject-relative-path }}
-          platform-manifest-path: .buildchain/attestation-input/platform-manifest/${{ inputs.platform-manifest-relative-path }}
-          release-passport-path: .buildchain/attestation-input/release-passport/${{ inputs.release-passport-relative-path }}
-          policy-json: ${{ inputs.policy-json }}
-          expected-buildchain-ref: ${{ inputs.buildchain-ref }}
-          expected-caller-repository: ${{ github.repository }}
-          expected-source-sha: ${{ inputs.source-sha }}
-
-      - name: Create GitHub/Sigstore attestation
-        id: attest
-        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4.2.0
-        with:
-          subject-path: ${{ steps.prepare.outputs.subject-path }}
-          subject-name: ${{ steps.prepare.outputs.subject-name }}
-          predicate-type: ${{ steps.prepare.outputs.predicate-type }}
-          predicate-path: ${{ steps.prepare.outputs.predicate-path }}
-
-      - name: Verify actual GitHub signer identity before retaining evidence
-        env:
-          SUBJECT_PATH: ${{ steps.prepare.outputs.subject-path }}
-          BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
-          PREDICATE_TYPE: ${{ steps.prepare.outputs.predicate-type }}
-          CALLER_REPOSITORY: ${{ github.repository }}
-          CALLER_SOURCE_SHA: ${{ inputs.source-sha }}
-          BUILDCHAIN_REF: ${{ inputs.buildchain-ref }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          gh attestation verify "$SUBJECT_PATH" \
-            --repo "$CALLER_REPOSITORY" \
-            --signer-workflow "kungfu-systems/buildchain/.github/workflows/github-artifact-attestation.yml" \
-            --signer-digest "$BUILDCHAIN_REF" \
-            --source-digest "$CALLER_SOURCE_SHA" \
-            --predicate-type "$PREDICATE_TYPE" \
-            --bundle "$BUNDLE_PATH" \
-            --deny-self-hosted-runners \
-            --format json \
-            > .buildchain/github-artifact-attestation/provider-verification.json
-
-      - name: Seal retained attestation evidence
-        id: finalize
-        uses: ./.buildchain/attester-runtime/actions/github-artifact-attestation
-        with:
-          mode: finalize
-          preparation-json: ${{ steps.prepare.outputs.preparation-json }}
-          attestation-id: ${{ steps.attest.outputs.attestation-id }}
-          attestation-url: ${{ steps.attest.outputs.attestation-url }}
-          bundle-path: ${{ steps.attest.outputs.bundle-path }}
-
-      - name: Publish offline-verifiable evidence
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: ${{ inputs.evidence-artifact-name }}
-          retention-days: ${{ inputs.retention-days }}
-          if-no-files-found: error
-          path: .buildchain/github-artifact-attestation/
+          definition-sha: ${{ job.workflow_sha }}
+          runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
+          request-json: ${{ toJSON(inputs) }}

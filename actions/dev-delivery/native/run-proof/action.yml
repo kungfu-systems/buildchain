@@ -1,0 +1,29 @@
+name: Execute exact credentialless native qualification
+description: Execute exact credentialless native qualification.
+inputs:
+  runtime-sha:
+    description: Admitted runtime-sha.
+    required: true
+  runtime-selection-root:
+    description: Admitted runtime-selection-root.
+    required: true
+  source-proof-root:
+    description: Admitted source-proof-root.
+    required: true
+  runner-environment:
+    description: Admitted runner-environment.
+    required: true
+  request-json:
+    description: Admitted request-json.
+    required: true
+  branch:
+    description: Admitted branch.
+    required: true
+outputs:
+  native-proof-root:
+    description: Verified native-proof-root.
+  decision-root:
+    description: Verified decision-root.
+runs:
+  using: node24
+  main: dist/index.js

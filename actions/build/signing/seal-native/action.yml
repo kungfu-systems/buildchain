@@ -1,0 +1,23 @@
+name: seal-native
+description:
+  Admit sealed signing requests, execute bounded providers and qualify
+  immutable result evidence.
+inputs:
+  request-json:
+    description: Explicit request-json.
+    required: true
+  item-json:
+    description: Explicit item-json.
+    required: true
+  signed-payload:
+    description: Explicit signed-payload.
+    required: true
+  evidence-path:
+    description: Explicit evidence-path.
+    required: true
+  credential-artifact-root:
+    description: Explicit credential-artifact-root.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

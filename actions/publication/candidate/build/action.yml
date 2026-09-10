@@ -1,0 +1,48 @@
+name: Qualify publication candidate
+description: Prepare the declared consumer toolchain and qualify publication bytes.
+inputs:
+  request-json:
+    description: Public publication request.
+    required: true
+  runtime-sha:
+    description: Admitted exact runtime commit.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Select consumer Node.js
+      if: ${{ fromJSON(inputs.request-json).setup-node }}
+      uses: actions/setup-node@v6.0.0
+      with:
+        node-version: ${{ fromJSON(inputs.request-json).node-version }}
+    - name: Qualify reproducible publication and package
+      id: qualify
+      uses: ./.buildchain/runtime/actions/publication/candidate/qualify
+      with:
+        request-json: ${{ inputs.request-json }}
+        runtime-sha: ${{ inputs.runtime-sha }}
+outputs:
+  outcomes-json:
+    description: Qualified outcomes-json.
+    value: ${{ steps.qualify.outputs.outcomes-json }}
+  publication-manifest-path:
+    description: Qualified publication-manifest-path.
+    value: ${{ steps.qualify.outputs.manifest-path }}
+  publication-passport-path:
+    description: Qualified publication-passport-path.
+    value: ${{ steps.qualify.outputs.passport-path }}
+  publication-registry-path:
+    description: Qualified publication-registry-path.
+    value: ${{ steps.qualify.outputs.registry-path }}
+  publication-manifest-json:
+    description: Qualified publication-manifest-json.
+    value: ${{ steps.qualify.outputs.manifest-json }}
+  package-name:
+    description: Qualified package-name.
+    value: ${{ steps.qualify.outputs.package-name }}
+  package-version:
+    description: Qualified package-version.
+    value: ${{ steps.qualify.outputs.package-version }}
+  publish-dist-tag:
+    description: Qualified publish-dist-tag.
+    value: ${{ steps.qualify.outputs.dist-tag }}

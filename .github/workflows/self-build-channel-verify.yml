@@ -1,0 +1,25 @@
+name: Release - Verify
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - alpha/*/*
+      - release/*/*
+      - authority/*/*/artifact-signing
+      - publish-gate/major
+permissions:
+  contents: read
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Load workflow implementation
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
+          persist-credentials: false
+      - name: Verify channel lineage
+        uses: ./.buildchain/workflow-shell/actions/release/line/verify-lineage

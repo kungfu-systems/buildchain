@@ -1,0 +1,14 @@
+name: Collect source-bound governance audit
+description: Collect source-bound governance audit
+inputs:
+  token:
+    description: Bounded governance reader credential.
+    required: true
+outputs:
+  non-qualifying:
+    description: Non-qualifying repository count.
+  audit-root:
+    description: Sanitized immutable audit root.
+runs:
+  using: node24
+  main: dist/index.js

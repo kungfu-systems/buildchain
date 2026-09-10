@@ -77,7 +77,7 @@ function validateEvidence(root, mechanism, capability, issues) {
 }
 
 function validateResidualClosure(mechanism, capability, issues) {
-  const sourceResiduals = mechanism.unresolved || [];
+  const sourceResiduals = mechanism.closedRequirements || [];
   const closed = capability.resolvedResiduals || [];
   if (
     !sameMembers(
@@ -113,7 +113,7 @@ function validateImplementation(root, mechanism, capability, issues) {
   }
   if (!boundToReverseScan)
     issues.push(
-      `${capability.id}: implementation is not bound to a reverse-scanned v3 mechanism route`,
+      `${capability.id}: implementation is not bound to a reverse-scanned current mechanism route`,
     );
 }
 
@@ -160,10 +160,7 @@ function validateAuthority(capability, stateMachine, issues) {
 export function validateRuntimeSemanticClosure({
   root = process.cwd(),
   manifest = loadJson(root, RUNTIME_SEMANTIC_CLOSURE_PATH),
-  v3Inventory: baselineInventory = loadJson(
-    root,
-    "architecture/baseline-core-mechanism-inventory.json",
-  ),
+  mechanismInventory = loadJson(root, "architecture/core-mechanisms.json"),
   v4Manifest: domainManifest = loadJson(
     root,
     "architecture/capability-state-machine-manifest.json",
@@ -181,7 +178,7 @@ export function validateRuntimeSemanticClosure({
     issues.push("runtime semantic closure evidence dimensions drifted");
 
   const mechanisms = new Map(
-    (baselineInventory.mechanisms || []).map((entry) => [entry.id, entry]),
+    (mechanismInventory.mechanisms || []).map((entry) => [entry.id, entry]),
   );
   const domainCapabilities = new Map(
     (domainManifest.capabilities || []).map((entry) => [entry.id, entry]),
@@ -199,7 +196,7 @@ export function validateRuntimeSemanticClosure({
     )
   )
     issues.push(
-      "runtime semantic closure does not cover every v3 mechanism exactly once",
+      "runtime semantic closure does not cover every current mechanism exactly once",
     );
   if (
     !sameMembers(

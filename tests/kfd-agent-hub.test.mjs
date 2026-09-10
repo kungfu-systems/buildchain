@@ -12,12 +12,12 @@ import {
   initKfdAgentHub,
   inspectKfdAgentHub,
   testKfdAgentHub,
-} from "../packages/core/kfd-agent-hub.js";
+} from "../packages/core/adoption/kfd-agent-hub.js";
 import {
   resolveSpawnCommand,
   spawnSyncCommand,
   usesShellForSpawnCommand,
-} from "../packages/core/spawn-command.js";
+} from "../packages/core/runtime/spawn-command.js";
 
 function tempDir(name) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `buildchain-${name}-`));

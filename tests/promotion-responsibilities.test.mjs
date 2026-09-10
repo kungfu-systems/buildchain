@@ -5,20 +5,20 @@ import test from "node:test";
 import {
   createDurableTransactionOperations,
   createRefMutationOperations,
-} from "../actions/promote-buildchain-ref/lib.js";
+} from "../packages/core/release/promote-ref/lib.js";
 import {
   promoteAlphaChannel,
   publishAlphaCandidate,
   selectAlphaCandidate,
-} from "../actions/promote-buildchain-ref/internal/promote-alpha-channel.js";
-import { promoteMajorChannel } from "../actions/promote-buildchain-ref/internal/promote-major-channel.js";
-import { promoteReleaseChannel } from "../actions/promote-buildchain-ref/internal/promote-release-channel.js";
-import { createDurableTransactionOperations as createDurableTransactionOperationsModule } from "../actions/promote-buildchain-ref/internal/durable-transaction-operations.js";
+} from "../packages/core/release/promote-ref/internal/promote-alpha-channel.js";
+import { promoteMajorChannel } from "../packages/core/release/promote-ref/internal/promote-major-channel.js";
+import { promoteReleaseChannel } from "../packages/core/release/promote-ref/internal/promote-release-channel.js";
+import { createDurableTransactionOperations as createDurableTransactionOperationsModule } from "../packages/core/release/promote-ref/internal/durable-transaction-operations.js";
 import {
   createReconciliationOperations as createReconciliationOperationsModule,
   createRefMutationOperations as createRefMutationOperationsModule,
-} from "../actions/promote-buildchain-ref/internal/promotion-operations.js";
-import { createVersionStateOperations } from "../actions/promote-buildchain-ref/internal/version-state-operations.js";
+} from "../packages/core/release/promote-ref/internal/promotion-operations.js";
+import { createVersionStateOperations } from "../packages/core/release/promote-ref/internal/version-state-operations.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 
@@ -32,7 +32,7 @@ test("promotion facade delegates to independently owned channel modules", () => 
   assert.equal(typeof createRefMutationOperationsModule, "function");
   assert.equal(typeof createReconciliationOperationsModule, "function");
   const facade = fs.readFileSync(
-    path.join(root, "actions/promote-buildchain-ref/lib.js"),
+    path.join(root, "packages/core/release/promote-ref/lib.js"),
     "utf8",
   );
   for (const channel of ["major", "alpha", "release"]) {
@@ -50,7 +50,7 @@ test("promotion facade delegates to independently owned channel modules", () => 
       .readFileSync(
         path.join(
           root,
-          `actions/promote-buildchain-ref/internal/promote-${channel}-channel.js`,
+          `packages/core/release/promote-ref/internal/promote-${channel}-channel.js`,
         ),
         "utf8",
       )
@@ -332,9 +332,9 @@ test("durable transaction responsibility emits an auditable dry-run plan and enf
   );
 });
 
-test("published promotion option names forward without overriding explicit responsibility options", async () => {
+test("promotion accepts current responsibility options and rejects retired generation aliases", async () => {
   const { normalizePromotionOptions } =
-    await import("../actions/promote-buildchain-ref/internal/promotion-options.js");
+    await import("../packages/core/release/promote-ref/internal/promotion-options.js");
   const aliases = {
     releasePassportV4ConsumerPolicyCertificationJson:
       "releasePassportConsumerPolicyCertificationJson",
@@ -346,15 +346,20 @@ test("published promotion option names forward without overriding explicit respo
       "releasePassportRuntimeResumeEvidenceCommand",
   };
   for (const [legacy, current] of Object.entries(aliases)) {
-    assert.equal(
-      normalizePromotionOptions({ [legacy]: "retained" })[current],
-      "retained",
+    assert.throws(
+      () => normalizePromotionOptions({ [legacy]: "retired" }),
+      /unsupported promotion option/,
+    );
+    assert.throws(
+      () =>
+        normalizePromotionOptions({
+          [legacy]: "retired",
+          [current]: "explicit",
+        }),
+      /unsupported promotion option/,
     );
     assert.equal(
-      normalizePromotionOptions({
-        [legacy]: "retained",
-        [current]: "explicit",
-      })[current],
+      normalizePromotionOptions({ [current]: "explicit" })[current],
       "explicit",
     );
   }

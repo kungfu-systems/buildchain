@@ -1,0 +1,22 @@
+name: admit candidate self-dogfood
+description: Admit reviewed candidate coordinates and qualify primary/recovery
+  execution equivalence.
+inputs:
+  request-json:
+    description: request-json self-dogfood evidence.
+    required: true
+  token:
+    description: token self-dogfood evidence.
+    required: true
+outputs:
+  candidate-sha:
+    description: candidate-sha self-dogfood result.
+  consumer-sha:
+    description: consumer-sha self-dogfood result.
+  pull-request:
+    description: pull-request self-dogfood result.
+  ready:
+    description: ready self-dogfood result.
+runs:
+  using: node24
+  main: dist/index.js

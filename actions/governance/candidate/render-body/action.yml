@@ -1,0 +1,15 @@
+name: candidate render-body
+description: Execute the declared candidate transaction through its domain API.
+inputs:
+  request-json:
+    description: Consumer renderer declaration.
+    required: true
+  source-sha:
+    description: Exact qualified consumer SHA.
+    required: true
+outputs:
+  pull-request-body-prefix:
+    description: pull-request-body-prefix
+runs:
+  using: node24
+  main: dist/index.js

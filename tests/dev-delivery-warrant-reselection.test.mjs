@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { runDevDeliveryCommand } from "../scripts/dev-delivery-warrant.mjs";
+import { runDevDeliveryCommand } from "../packages/core/dev-delivery/warrant/service.js";
 import {
   createDevDeliveryQueue,
   selectDevDeliveryWarrant,
   submitDevDeliveryCandidate,
-} from "../packages/core/dev-delivery-warrant.js";
+} from "../packages/core/dev-delivery/dev-delivery-warrant.js";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 
@@ -42,8 +42,7 @@ test("selection persists expired non-native lease recovery before reselection", 
     {
       pullRequestNumber: 200,
       sourceHead: "a".repeat(40),
-      assignmentRoot: ROOT("1"),
-      initiativeRoot: ROOT("2"),
+      sourceRoot: ROOT("1"),
       sourceIdentityRoot: ROOT("3"),
       sourcePatchRoot: ROOT("4"),
       sourceProofRoot: ROOT("5"),

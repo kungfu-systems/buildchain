@@ -8,8 +8,8 @@ import {
   fenceDevDeliveryWriterProtocol,
   normalizeDevDeliveryQueue,
   submitDevDeliveryCandidate,
-} from "../packages/core/dev-delivery-warrant.js";
-import { runDevDeliveryCommand } from "../scripts/dev-delivery-warrant.mjs";
+} from "../packages/core/dev-delivery/dev-delivery-warrant.js";
+import { runDevDeliveryCommand } from "../packages/core/dev-delivery/warrant/service.js";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 
@@ -72,8 +72,7 @@ test("minimum writer protocol fencing preserves active queue authority", () => {
     {
       pullRequestNumber: 99,
       sourceHead: "a".repeat(40),
-      assignmentRoot: ROOT("1"),
-      initiativeRoot: ROOT("2"),
+      sourceRoot: ROOT("1"),
       sourceIdentityRoot: ROOT("3"),
       sourcePatchRoot: ROOT("4"),
       sourceProofRoot: ROOT("5"),

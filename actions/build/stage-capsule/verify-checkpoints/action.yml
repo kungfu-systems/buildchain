@@ -1,0 +1,34 @@
+name: verify-stage-capsule-checkpoints
+description: Execute the verify stage-capsule-checkpoints capability within its caller job boundary.
+inputs:
+  matrix-json:
+    description: Declared platform matrix value.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Admit source checkout
+      id: source-boundary
+      if: ${{ always() }}
+      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      with:
+        source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
+    - name: Prepare candidate test dependencies
+      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .
+    - name: Verify declared checkpoints and clean process recovery
+      uses: ./actions/build/stage-capsule/rehearse
+      with:
+        platform: ${{ fromJSON(inputs.matrix-json).platform }}
+    - name: Upload exact Stage Capsule checkpoint evidence
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: v4-stage-checkpoint-${{ fromJSON(inputs.matrix-json).platform }}-${{ github.sha }}
+        path: |
+          .buildchain/stage-checkpoint/evidence.json
+          .buildchain/stage-checkpoint/tail-reseal-macos.json
+        if-no-files-found: error

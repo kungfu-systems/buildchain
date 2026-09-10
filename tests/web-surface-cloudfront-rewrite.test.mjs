@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ensureCloudFrontDirectoryIndexRewrite } from "../scripts/web-surface-cloudfront-rewrite.mjs";
+import { ensureCloudFrontDirectoryIndexRewrite } from "../packages/core/web/commands/web-surface-cloudfront-rewrite.mjs";
 
 const DESIRED_ARN = "arn:aws:cloudfront::123456789012:function/buildchain-directory-index";
 

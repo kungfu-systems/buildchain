@@ -225,7 +225,7 @@ buildchain audit publication-control-plane \
   --repository kungfu-systems/buildchain \
   --branch dev/v3/v3.0 \
   --source-sha <exact-merged-branch-sha> \
-  --workflow .github/workflows/release-candidate-promote.yml \
+  --workflow .github/workflows/public-release-promote.yml \
   --workflow-ref <exact-buildchain-sha> \
   --publisher-workflow .github/workflows/self-release-promote.yml \
   --job promote \
@@ -235,7 +235,7 @@ buildchain audit publication-control-plane \
 buildchain audit publication-control-plane \
   --repository kungfu-systems/buildchain \
   --branch dev/v3/v3.0 \
-  --workflow .github/workflows/release-candidate-promote.yml \
+  --workflow .github/workflows/public-release-promote.yml \
   --publisher-workflow .github/workflows/self-release-promote.yml \
   --job promote \
   --environment none \
@@ -244,7 +244,7 @@ buildchain audit publication-control-plane \
 buildchain audit publication-control-plane \
   --repository kungfu-systems/buildchain \
   --branch release/v3/v3.0 \
-  --workflow .github/workflows/.binary-release-assets.yml \
+  --workflow .github/workflows/.release-binary-assets.yml \
   --job publish \
   --environment buildchain-release-assets \
   --publisher-mode github-token
@@ -253,7 +253,7 @@ buildchain audit publication-control-plane \
   --repository OWNER/CONSUMER \
   --workflow-repository kungfu-systems/buildchain \
   --branch main \
-  --workflow .github/workflows/.web-surface.yml \
+  --workflow .github/workflows/public-release-web.yml \
   --job production-apply \
   --environment production \
   --publisher-mode oidc-role \

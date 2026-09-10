@@ -1,14 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  createGitHubQualificationClient,
-  normalizeStableCandidateQualificationOptions,
-  resolveStableCandidateQualificationCandidate,
-  runStableCandidateQualification,
-  validatePublicBuildRun,
-  qualifyPublicBuild,
-} from "../scripts/stable-candidate-qualification.mjs";
+import { createGitHubQualificationClient } from "../packages/core/providers/github/qualification.js";
+import { normalizeStableCandidateQualificationOptions } from "../packages/core/release/qualification/options.js";
+import { resolveStableCandidateQualificationCandidate, validatePublicBuildRun, qualifyPublicBuild } from "../packages/core/release/qualification/public-build.js";
+import { runStableCandidateQualification } from "../packages/core/release/qualification/campaign.js";
 
 const SHA = "a".repeat(40);
 function publicBuild() {
@@ -54,7 +50,7 @@ test("source run readback admits only the authoritative successful workflow in t
 
 test("public qualification never dispatches a workflow or attests a substituted alpha ancestor", async () => {
   const client = fakeClient();
-  client.resolveExactAlpha = async () => ({ sha: SHA, tag: "v4.0.9-alpha.1" });
+  client.resolveAlphaRelease = async () => ({ sha: SHA, tag: "v4.0.9-alpha.1" });
   const result = await qualifyPublicBuild(publicBuild(), client);
   assert.equal(result.candidate.sha, SHA);
   assert.match(result.summaryRoot, /^sha256:[a-f0-9]{64}$/u);
@@ -63,7 +59,7 @@ test("public qualification never dispatches a workflow or attests a substituted 
   assert.equal(client.calls[0][1].repository, "kungfu-systems/buildchain");
   assert.equal(client.calls[0][1].context, "buildchain-canary/buildchain-zero-input");
   client.calls.length = 0;
-  client.resolveExactAlpha = async () => ({ sha: "c".repeat(40) });
+  client.resolveAlphaRelease = async () => ({ sha: "c".repeat(40) });
   await assert.rejects(qualifyPublicBuild(publicBuild(), client), /never an ancestor/);
   assert.equal(client.calls.length, 0);
 });
@@ -72,7 +68,7 @@ function fakeClient(overrides = {}) {
   const calls = [];
   const client = {
     calls,
-    async resolveExactAlpha() { return { version: "2.12.1-alpha.5", tag: "v2.12.1-alpha.5", sha: SHA, releaseUrl: "https://example.test/release" }; },
+    async resolveAlphaRelease() { return { version: "2.12.1-alpha.5", tag: "v2.12.1-alpha.5", sha: SHA, releaseUrl: "https://example.test/release" }; },
     async findWorkflowRun({ repository }) {
       if (repository === "kungfu-systems/buildchain") return { status: "completed", conclusion: "success", html_url: "https://example.test/build" };
       return { status: "completed", conclusion: "success", html_url: "https://example.test/canary" };
@@ -123,7 +119,7 @@ test("attests only after both exact candidate workflows succeed", async () => {
 test("binds workflow and status evidence to the immutable alpha ancestor", async () => {
   const exactSha = "b".repeat(40);
   const client = fakeClient({
-    async resolveExactAlpha() { return { version: "4.0.1-alpha.8", tag: "v4.0.1-alpha.8", sha: exactSha }; },
+    async resolveAlphaRelease() { return { version: "4.0.1-alpha.8", tag: "v4.0.1-alpha.8", sha: exactSha }; },
     async findWorkflowRun({ headSha }) { assert.equal(headSha, exactSha); return { status: "completed", conclusion: "success" }; },
     async findCommitStatus(_repository, sha) { assert.equal(sha, exactSha); return { state: "success" }; },
   });
@@ -225,7 +221,7 @@ test("fails closed when a required workflow does not succeed", async () => {
 });
 
 test("non-alpha workflow deliveries are auditable no-ops", async () => {
-  const client = fakeClient({ async resolveExactAlpha() { return undefined; } });
+  const client = fakeClient({ async resolveAlphaRelease() { return undefined; } });
   const result = await runStableCandidateQualification({ repository: "kungfu-systems/buildchain", candidateSha: SHA }, client);
   assert.equal(result.status, "skipped");
   assert.equal(result.reason, "exact-alpha-release-not-found");
@@ -282,7 +278,7 @@ test("GitHub resolution selects the newest exact alpha ancestor and stops", asyn
     },
   });
 
-  const result = await client.resolveExactAlpha("kungfu-systems/buildchain", runtimeSha);
+  const result = await client.resolveAlphaRelease("kungfu-systems/buildchain", runtimeSha, { allowAncestor: true });
   assert.deepEqual(result, { version: "4.0.1-alpha.8", tag: "v4.0.1-alpha.8", sha: releaseSha, releaseUrl: "https://example.test/8" });
   assert.equal(paths.some((path) => path.includes("alpha.7")), false);
 });
@@ -330,4 +326,21 @@ test("GitHub polling ignores stale completed runs until the dispatched run is vi
 
   assert.equal(run.id, 42);
   assert.equal(request, 2);
+});
+
+test("qualification publication requires a separate matching commit-status readback", async () => {
+ const calls = [], created = { id: 77, context: "qualification", state: "success", target_url: "https://fixture/run/42" };
+ let observed = [];
+ const client = createGitHubQualificationClient({ token: "fixture-read", attestationToken: "fixture-write", fetchImpl: async (url, options) => {
+  calls.push({ url, method: options.method, authorization: options.headers.authorization });
+  return { ok: true, status: 200, text: async () => JSON.stringify(options.method === "POST" ? created : observed) };
+ } });
+ const request = { repository: "acme/project", sha: SHA, context: "qualification", targetUrl: created.target_url, description: "fixture" };
+ await assert.rejects(client.createCommitStatus(request), /not confirmed by provider readback/);
+ assert.equal(calls.length, 2);
+ assert.equal(calls[0].authorization, "Bearer fixture-write");
+ assert.equal(calls[1].authorization, "Bearer fixture-read");
+ assert.match(calls[1].url, new RegExp(`/commits/${SHA}/statuses`));
+ observed = [created];
+ assert.deepEqual(await client.createCommitStatus(request), created);
 });

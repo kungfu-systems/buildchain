@@ -9,9 +9,9 @@
     "reproducibilityCheck": "pnpm run check:wasm"
   },
   "runtimeAuthority": {
-    "loader": "packages/core/domain-wasm.js",
-    "metadata": "packages/core/domain-wasm-artifact.js",
-    "artifact": "packages/core/buildchain-domain.wasm",
+    "loader": "packages/core/runtime/domain-wasm.js",
+    "metadata": "packages/core/runtime/domain-wasm-artifact.js",
+    "artifact": "packages/core/runtime/buildchain-domain.wasm",
     "abiVersion": 1,
     "fallbackWriterCount": 0,
     "failurePolicy": "fail-closed"
@@ -35,11 +35,11 @@
     "provider-error-classification"
   ],
   "distribution": {
-    "npmPackage": "packages/core/buildchain-domain.wasm",
+    "npmPackage": "packages/core/runtime/buildchain-domain.wasm",
     "actionArtifacts": [
-      "actions/promote-buildchain-ref/dist/buildchain-domain.wasm",
-      "actions/release-tail/dist/buildchain-domain.wasm",
-      "actions/release-candidate-promote/dist/buildchain-domain.wasm"
+      "actions/release/promotion/ref/dist/buildchain-domain.wasm",
+      "actions/release/tail/settle/dist/buildchain-domain.wasm",
+      "actions/release/promotion/candidate/dist/buildchain-domain.wasm"
     ],
     "artifactBinding": "sha256-metadata-before-instantiation",
     "runtimeCompilation": false

@@ -1,0 +1,69 @@
+name: Native delivery execute
+description: Own the execute adapter inside its isolated caller job.
+inputs:
+  request-json:
+    description: Typed public workflow inputs, serialized once by the caller.
+    required: true
+  needs-json:
+    description: Exact dependency job results and admitted output coordinates.
+    required: false
+    default: "{}"
+runs:
+  using: composite
+  steps:
+    - name: Checkout Buildchain runtime without persisted credentials
+      if: ${{ success() }}
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+        ref: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-sha }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .buildchain/runtime
+      if: ${{ success() }}
+    - name: Download immutable admission state
+      if: ${{ success() }}
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name:
+          buildchain-dev-delivery-control-${{ github.run_id }}-${{ github.run_attempt }}-${{
+          fromJSON(inputs.request-json).expected-pr-number }}
+        path: .buildchain/dev-delivery
+    - name: Checkout exact candidate for native qualification
+      if: ${{ success() }}
+      uses: actions/checkout@v7.0.0
+      with:
+        ref: ${{ fromJSON(inputs.request-json).expected-head-sha }}
+        fetch-depth: 0
+        path: .buildchain/candidate
+        persist-credentials: false
+    - name: Execute or reuse exact native proof
+      id: native-run
+      continue-on-error: true
+      uses: ./.buildchain/runtime/actions/dev-delivery/native/run-proof
+      with:
+        runtime-sha: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-sha }}
+        branch: ${{ fromJSON(inputs.needs-json).admission.outputs.target-branch }}
+        request-json: ${{ inputs.request-json }}
+        source-proof-root: ${{ fromJSON(inputs.needs-json).admission.outputs.source-proof-root }}
+        runtime-selection-root: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-selection-root }}
+        runner-environment: ${{ runner.environment }}
+      env:
+        BUILDCHAIN_CREDENTIAL_ANCESTRY_BOUNDARY: github-actions-runner-worker/v1
+    - name: Upload raw native execution output
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name:
+          buildchain-dev-delivery-native-raw-${{ github.run_id }}-${{ github.run_attempt }}-${{
+          fromJSON(inputs.request-json).expected-pr-number }}
+        path: .buildchain/dev-delivery/
+        if-no-files-found: error
+        retention-days: 30
+    - name: Preserve native execution outcome for provider settlement
+      if: ${{ always() && steps.native-run.outcome != 'success' }}
+      uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
+      with:
+        reason: Native execution failed; the fresh provider finalizer must settle the retained fence

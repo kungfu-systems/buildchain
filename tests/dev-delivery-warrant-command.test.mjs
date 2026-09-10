@@ -3,12 +3,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
-import { expandDevDeliveryWorkflow } from "../scripts/dev-delivery-workflow-view.mjs";
-import {
-  GitHubDevDeliveryStore,
-  defaultDevDeliveryStateRef,
-  runDevDeliveryCommand,
-} from "../scripts/dev-delivery-warrant.mjs";
+import { inspectWorkflowJob } from "../scripts/workflow-action-graph.mjs";
+import { GitHubDevDeliveryStore } from "../packages/core/providers/dev-delivery/store.js";
+import { defaultDevDeliveryStateRef } from "../packages/core/dev-delivery/warrant/values.js";
+import { runDevDeliveryCommand } from "../packages/core/dev-delivery/warrant/service.js";
 import {
   createIntegrationDeliveryProof,
   createDevDeliveryQueue,
@@ -17,7 +15,7 @@ import {
   selectDevDeliveryWarrant,
   settleDevDeliveryTerminalEvent,
   submitDevDeliveryCandidate,
-} from "../packages/core/dev-delivery-warrant.js";
+} from "../packages/core/dev-delivery/dev-delivery-warrant.js";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 const REPOSITORY_ROOT = path.resolve(import.meta.dirname, "..");
@@ -39,8 +37,7 @@ function submitOptions(overrides = {}) {
     branch: "dev/v4/v4.0",
     pullRequestNumber: 200,
     sourceHead: "a".repeat(40),
-    assignmentRoot: ROOT("1"),
-    initiativeRoot: ROOT("2"),
+    sourceRoot: ROOT("1"),
     sourceIdentityRoot: ROOT("3"),
     sourcePatchRoot: ROOT("4"),
     sourceProofRoot: ROOT("9"),
@@ -103,7 +100,7 @@ test("state refs and the CLI process entrypoint remain executable", () => {
     defaultDevDeliveryStateRef("dev/v4/v4.0"),
     "buildchain/dev-delivery-warrant/dev-v4-v4.0",
   );
-  const entrypoint = "scripts/dev-delivery-warrant.mjs";
+  const entrypoint = "packages/core/dev-delivery/commands/dev-delivery-warrant.mjs";
   const cli = spawnSync(process.execPath, [entrypoint, "--help"], {
     encoding: "utf8",
   });
@@ -320,36 +317,13 @@ test("terminal failure settlement reconciles a concurrent identical winner as an
   assert.equal(result.concurrencyRecovery.initialCommitSha, "a".repeat(40));
 });
 
-test("terminal workflow resolves active fencing or an explicit settlement no-op", () => {
-  const workflow = expandDevDeliveryWorkflow(
-    ".github/workflows/dev-delivery-warrant-close.yml",
-    REPOSITORY_ROOT,
-  );
-  assert.match(
-    workflow,
-    /name: Resolve terminal settlement mode[\s\S]*mode=inactive/u,
-  );
-  assert.match(
-    workflow,
-    /activeCandidate\.candidateId == \.observation\.activeWarrant\.candidateId/u,
-  );
-  assert.match(workflow, /dev-delivery-warrant\.mjs "\$\{args\[@\]\}"/u);
-  assert.match(
-    workflow,
-    /settle[\s\S]*--pull-request "\$\{EXPECTED_PR\}"[\s\S]*--expected-source-head "\$\{EXPECTED_HEAD\}"/u,
-  );
-  assert.match(
-    workflow,
-    /successor-wake-json=.*\.receipt\.successorWake \/\/ null/u,
-  );
-  assert.match(
-    workflow,
-    /if: steps\.close\.outcome == 'success' && steps\.close\.outputs\.successor-wake-json != 'null'/u,
-  );
-  assert.match(
-    workflow,
-    /name: Wake exact queued successor[\s\S]*buildchain-dev-delivery-wake[\s\S]*repos\/\$\{GITHUB_REPOSITORY\}\/dispatches/u,
-  );
+test("terminal workflow reaches a typed settlement transaction", () => {
+ const graph = inspectWorkflowJob(".github/workflows/public-ops-warrant-close.yml", "close", REPOSITORY_ROOT);
+ assert.equal(graph.job.steps.at(-1).with.phase, undefined);
+ assert.ok(graph.modules.has("packages/core/dev-delivery/warrant/terminal.js"));
+ const close = graph.steps.find(step => step.id === "close");
+ assert.ok(close.uses.endsWith("/warrant/close-event"));
+ assert.equal(close.with["request-json"], "${{ inputs.request-json }}");
 });
 
 test("queued cancellation persists once and repeats as an exact no-op", async () => {
@@ -459,8 +433,7 @@ test("GitHub state store reads its immutable queue blob through GitHub raw media
     {
       pullRequestNumber: 201,
       sourceHead: "c".repeat(40),
-      assignmentRoot: ROOT("1"),
-      initiativeRoot: ROOT("2"),
+      sourceRoot: ROOT("1"),
       sourceIdentityRoot: ROOT("3"),
       sourcePatchRoot: ROOT("4"),
       sourceProofRoot: ROOT("9"),

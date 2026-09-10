@@ -1,0 +1,66 @@
+name: Qualify candidate and root exact publication intent
+description: Qualify candidate and root exact publication intent.
+inputs:
+  request-json:
+    description: Complete admitted promotion invocation.
+    required: true
+  workflow-sha:
+    description: Exact publisher workflow commit.
+    required: true
+  token:
+    description: Explicit GitHub read credential.
+    required: true
+outputs:
+  action:
+    description: action
+  reason:
+    description: reason
+  channel:
+    description: channel
+  target-ref:
+    description: target ref
+  requested-sha:
+    description: requested sha
+  current-sha:
+    description: current sha
+  runtime-sha:
+    description: runtime sha
+  runtime-tree:
+    description: runtime tree
+  publisher-sha:
+    description: publisher sha
+  version:
+    description: version
+  exact-tag:
+    description: exact tag
+  candidate-version:
+    description: candidate version
+  product-publication-intent-path:
+    description: product publication intent path
+  product-publication-intent-root:
+    description: product publication intent root
+  candidate-source-sha:
+    description: candidate source sha
+  candidate-artifact:
+    description: candidate artifact
+  recovery-receipt-path:
+    description: Explicit rooted recovery receipt; empty for fresh candidates.
+  candidate-passport-path:
+    description: candidate passport path
+  candidate-build-summary-path:
+    description: candidate build summary path
+  stage-capsules-path:
+    description: stage capsules path
+  publication-qualification-path:
+    description: publication qualification path
+  sealed-bundle-root:
+    description: sealed bundle root
+  sealed-bundle-manifest:
+    description: sealed bundle manifest
+  required-artifacts-path:
+    description: required artifacts path
+  release-artifact-paths:
+    description: release artifact paths
+runs:
+  using: node24
+  main: dist/index.js

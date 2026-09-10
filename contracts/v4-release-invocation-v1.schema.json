@@ -34,7 +34,7 @@
       "properties": {
         "repository": { "const": "kungfu-systems/buildchain" },
         "workflow": {
-          "const": ".github/workflows/.release-candidate-promote.yml"
+          "const": ".github/workflows/.release-promote.yml"
         },
         "workflowSha": { "$ref": "#/$defs/sha" },
         "job": { "const": "apply" }

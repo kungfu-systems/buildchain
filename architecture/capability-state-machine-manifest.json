@@ -2,15 +2,19 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-v4-capability-state-machine-manifest",
   "releaseLine": {
-    "branch": "dev/v4/v4.0",
+    "branch": "dev/v4/v4.1",
     "bootstrapAuthority": "architecture/bootstrap-authority.json",
     "productionAuthority": "v4-native",
     "productionFallback": null,
-    "rollbackRef": "release/v3/v3.0",
+    "rollbackRef": "1bb6333b97ad94e94a81178e956a703dff2b5f84",
     "qualificationMode": "exact-n-minus-one-git-revision"
   },
   "dependencyLayers": [
-    { "id": "contracts", "mayDependOn": [], "providerSdkImports": "forbidden" },
+    {
+      "id": "contracts",
+      "mayDependOn": [],
+      "providerSdkImports": "forbidden"
+    },
     {
       "id": "rust-domain",
       "mayDependOn": ["contracts"],
@@ -28,11 +32,6 @@
     },
     {
       "id": "workflows",
-      "mayDependOn": ["contracts", "typescript-adapters"],
-      "providerSdkImports": "adapter-only"
-    },
-    {
-      "id": "legacy-compatibility",
       "mayDependOn": ["contracts", "typescript-adapters"],
       "providerSdkImports": "adapter-only"
     }
@@ -102,7 +101,7 @@
       "surfaces": [
         "cli:dev",
         "export:./dev-delivery-warrant",
-        "workflow:dev-pr-auto-merge"
+        "workflow:public-ops-dev-auto-merge"
       ],
       "migrationPhase": "legacy-retired"
     },
@@ -113,7 +112,7 @@
       "surfaces": [
         "cli:candidate",
         "export:./release-candidate",
-        "workflow:release-candidate-promote"
+        "workflow:public-release-promote"
       ],
       "migrationPhase": "legacy-retired"
     },
@@ -123,7 +122,7 @@
       "sourceInventoryId": "release-candidate-recovery",
       "surfaces": [
         "export:./release-candidate-recovery",
-        "workflow:buildchain-candidate-recovery-dogfood-failure"
+        "workflow:self-ops-promotion-recovery"
       ],
       "migrationPhase": "legacy-retired"
     },
@@ -133,7 +132,7 @@
       "sourceInventoryId": "stable-candidate-ledger",
       "surfaces": [
         "export:./stable-candidate-ledger",
-        "workflow:stable-candidate-patrol"
+        "workflow:public-ops-stable-candidate-patrol"
       ],
       "migrationPhase": "legacy-retired"
     },
@@ -141,7 +140,7 @@
       "id": "publish-transaction",
       "owner": "Buildchain package and release publication plane",
       "sourceInventoryId": "publish-transaction",
-      "surfaces": ["action:promote-buildchain-ref", "cli:release-transaction"],
+      "surfaces": ["action:release/promotion/ref", "cli:release-transaction"],
       "migrationPhase": "legacy-retired"
     },
     {
@@ -185,7 +184,7 @@
       "surfaces": [
         "export:./engineering-housekeeper",
         "export:./engineering-housekeeper-github",
-        "workflow:engineering-housekeeper"
+        "workflow:public-ops-housekeeping"
       ],
       "migrationPhase": "legacy-retired"
     },
@@ -203,8 +202,8 @@
       "surfaces": [
         "export:./release-tail-provider-plane",
         "cli:release-tail",
-        "action:release-tail",
-        "workflow:release-tail"
+        "action:release/tail/settle",
+        "workflow:public-release-tail"
       ],
       "migrationPhase": "legacy-retired"
     }

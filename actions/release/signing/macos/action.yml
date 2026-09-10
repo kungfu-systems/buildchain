@@ -1,0 +1,95 @@
+name: signing-authority-macos
+description: Execute the signing-authority macos capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  certificate-base64:
+    description: Explicit scoped provider credential.
+    required: true
+  certificate-password:
+    description: Explicit scoped provider credential.
+    required: true
+  notary-key-base64:
+    description: Explicit scoped provider credential.
+    required: true
+  notary-key-id:
+    description: Explicit scoped provider credential.
+    required: true
+  notary-issuer:
+    description: Explicit scoped provider credential.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+  item-json:
+    description: Declared platform matrix value.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Admit source checkout
+      id: source-boundary
+      if: ${{ always() }}
+      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      with:
+        source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
+    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .
+    - uses: actions/download-artifact@v7.0.0
+      with:
+        name: authority-intake-${{ fromJSON(inputs.request-json).correlation-id }}
+        path: .buildchain/authority-intake
+    - name: Sign and qualify native macos payload
+      uses: ./actions/build/signing/sign-macos
+      with:
+        request-json: ${{ inputs.request-json }}
+        item-json: ${{ inputs.item-json }}
+        certificate-base64: ${{ inputs.certificate-base64 }}
+        certificate-password: ${{ inputs.certificate-password }}
+        certificate-sha1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
+        team-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID }}
+        notary-key-base64: ${{ inputs.notary-key-base64 }}
+        notary-key-id: ${{ inputs.notary-key-id }}
+        notary-issuer: ${{ inputs.notary-issuer }}
+      if: ${{ fromJSON(inputs.item-json).kind != 'app-bundle' }}
+    - name: Developer ID sign, notarize, and staple Apple application
+      if: ${{ fromJSON(inputs.item-json).kind == 'app-bundle' }}
+      id: app-signing
+      uses: ./actions/build/credential/macos-island
+      with:
+        input-root: .buildchain/authority-intake
+        output-root: .buildchain/native-work/${{ fromJSON(inputs.item-json).slug }}/credential-artifact
+        source-repository: ${{ fromJSON(inputs.request-json).source-repository }}
+        source-sha: ${{ fromJSON(inputs.item-json).sourceSha }}
+        source-tree-sha: ${{ fromJSON(inputs.item-json).sourceTreeSha }}
+        source-ref: ${{ fromJSON(inputs.item-json).sourceSha }}
+        buildchain-runtime-sha: ${{ fromJSON(inputs.request-json).expected-runtime-sha }}
+        artifact-name: native-${{ fromJSON(inputs.item-json).slug }}-credential
+        platform-id: ${{ fromJSON(inputs.item-json).platformId }}-credential
+        artifact-id: ${{ fromJSON(inputs.item-json).id }}
+        artifact-relative-output: product/release
+        expected-team-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID }}
+        certificate-sha1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
+        certificate-p12-base64: ${{ inputs.certificate-base64 }}
+        certificate-password: ${{ inputs.certificate-password }}
+        notary-api-key-p8-base64: ${{ inputs.notary-key-base64 }}
+        notary-api-key-id: ${{ inputs.notary-key-id }}
+        notary-api-issuer: ${{ inputs.notary-issuer }}
+    - name: Seal native signed result
+      if: ${{ fromJSON(inputs.item-json).kind == 'app-bundle' }}
+      uses: ./actions/build/signing/seal-native
+      with:
+        request-json: ${{ inputs.request-json }}
+        item-json: ${{ inputs.item-json }}
+        signed-payload: ${{ steps.app-signing.outputs.zip-path }}
+        evidence-path: ${{ steps.app-signing.outputs.evidence-path }}
+        credential-artifact-root: ${{ steps.app-signing.outputs.artifact-root }}
+    - uses: actions/upload-artifact@v7.0.1
+      with:
+        name: authority-result-macos-${{ fromJSON(inputs.item-json).slug }}-${{ fromJSON(inputs.request-json).correlation-id }}
+        path: .buildchain/provider-results/${{ fromJSON(inputs.item-json).slug }}
+        if-no-files-found: error
+        retention-days: 14
+        compression-level: 0

@@ -1,0 +1,27 @@
+name: Materialize qualified demo evidence and open or update the exact source-bound pull request
+description: Materialize qualified demo evidence and open or update the exact source-bound pull request.
+inputs:
+  runtime-sha:
+    description: Admitted runtime-sha.
+    required: true
+  source-sha:
+    description: Admitted source-sha.
+    required: true
+  renderer-image:
+    description: Admitted renderer-image.
+    required: true
+  scenario-path:
+    description: Admitted scenario-path.
+    required: true
+  base-ref:
+    description: Admitted base-ref.
+    required: true
+  token:
+    description: Admitted token.
+    required: true
+outputs:
+  url:
+    description: Verified url.
+runs:
+  using: node24
+  main: dist/index.js

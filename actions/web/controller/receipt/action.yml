@@ -1,0 +1,63 @@
+name: web-controller-receipt
+description: Execute the web controller-receipt capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed Web workflow request.
+    required: true
+  observations-json:
+    description: Workflow job results and outputs.
+    required: true
+outputs:
+  controller-receipt-artifact:
+    description: controller-receipt-artifact node result.
+    value: buildchain-web-surface-controller-receipt-${{
+      fromJSON(inputs.observations-json).release-intent.outputs.production-source-sha }}
+  controller-receipt-json:
+    description: controller-receipt-json node result.
+    value: ${{ steps.controller-receipt.outputs.controller-receipt-json }}
+  controller-receipt-digest:
+    description: controller-receipt-digest node result.
+    value: ${{ steps.controller-receipt.outputs.controller-receipt-digest }}
+  controller-receipt-status:
+    description: controller-receipt-status node result.
+    value: ${{ steps.controller-receipt.outputs.controller-receipt-status }}
+runs:
+  using: composite
+  steps:
+    - name: Checkout Buildchain runtime
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+        ref: ${{ fromJSON(inputs.observations-json).runtime.outputs.runtime-sha }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - name: Prepare exact Buildchain runtime
+      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Download web-surface controller plan
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name: ${{ fromJSON(inputs.observations-json).controller-plan.outputs.controller-plan-artifact }}
+        path: .buildchain/controller
+    - name: Download web-surface deployment plan
+      if: ${{ fromJSON(inputs.observations-json).plan.result == 'success' &&
+        (fromJSON(inputs.observations-json).plan.outputs.web-surface-channel != '' ||
+        fromJSON(inputs.observations-json).plan.outputs.web-surface-cleanup-plan-json != '') }}
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name: buildchain-web-surface-plans
+        path: .buildchain/controller/web-plans
+    - name: Finalize Web controller
+      id: controller-receipt
+      uses: ./.buildchain/runtime/actions/web/controller/finalize
+      with:
+        observations-json: ${{ inputs.observations-json }}
+    - name: Upload Web controller receipt
+      if: ${{ always() && steps.controller-receipt.outputs.controller-receipt-digest != '' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-web-surface-controller-receipt-${{
+          fromJSON(inputs.observations-json).release-intent.outputs.production-source-sha }}
+        path: .buildchain/controller/receipt.json
+        if-no-files-found: error

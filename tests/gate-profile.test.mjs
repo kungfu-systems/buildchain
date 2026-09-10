@@ -9,13 +9,10 @@ import {
   createGateExecutionMatrix,
   normalizeGateEnvironment,
   sha256,
-} from "../scripts/gate-profile-core.mjs";
-import {
-  commandSpawnOptions,
-  gateEnvironment,
-  prepareGateExecutionFiles,
-  windowsBatchInvocation,
-} from "../scripts/shifu-gate-profile.mjs";
+} from "../packages/core/build/gate/contracts.js";
+import { commandSpawnOptions, windowsBatchInvocation } from "../packages/core/build/gate/commands.js";
+import { gateEnvironment } from "../packages/core/build/gate/environment.js";
+import { prepareGateExecutionFiles } from "../packages/core/build/gate/execution.js";
 
 const SOURCE_SHA = "1".repeat(40);
 const DIGESTS = Object.freeze({
@@ -111,7 +108,7 @@ test("Gate execution survives output above the bounded JSON capture limit", () =
     const result = spawnSync(
       process.execPath,
       [
-        path.join(import.meta.dirname, "../scripts/shifu-gate-profile.mjs"),
+        path.join(import.meta.dirname, "../packages/core/build/commands/shifu-gate-profile.mjs"),
         "--mode",
         "run",
       ],
@@ -352,7 +349,7 @@ test("Gate platform environment is scalar, deterministic, and platform scoped", 
     CC: "shared-cc",
   });
   try {
-    const environment = gateEnvironment({ CC: "gcc-14", CXX: "g++-14" });
+    const environment = gateEnvironment({ base: process.env, shared: JSON.parse(process.env.BUILDCHAIN_GATE_ENVIRONMENT_JSON), platform: { CC: "gcc-14", CXX: "g++-14" } });
     assert.equal(environment.SHARED, "yes");
     assert.equal(environment.CC, "gcc-14");
     assert.equal(environment.CXX, "g++-14");

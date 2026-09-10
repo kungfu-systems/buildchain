@@ -1,0 +1,30 @@
+name: Release propagation report
+description: Aggregate observed propagation stages and artifact outcomes into the controller receipt.
+inputs:
+  request-json:
+    description: Typed public propagation request.
+    required: true
+  upload-outcome:
+    description: Actual propagation evidence upload outcome.
+    required: true
+  work-upload-outcome:
+    description: Actual captured Work upload outcome.
+    required: true
+  reconcile-outcome:
+    description: Actual reconciliation action outcome.
+    required: true
+  cancelled:
+    description: Actual caller cancellation status.
+    default: "false"
+outputs:
+  controller-receipt-json:
+    description: controller-receipt-json
+  controller-receipt-digest:
+    description: controller-receipt-digest
+  controller-receipt-status:
+    description: controller-receipt-status
+  accepted:
+    description: accepted
+runs:
+  using: node24
+  main: dist/index.js

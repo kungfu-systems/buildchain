@@ -59,7 +59,7 @@ release candidate consumed the caller-supplied family evidence exactly.
 Promotion workflows that should not rebuild artifacts can enable:
 
 ```yaml
-- uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v3
+- uses: kungfu-systems/buildchain/actions/release/promotion/ref@v3
   with:
     token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
     sha: ${{ needs.build.outputs.publish-source-sha }}
@@ -128,7 +128,7 @@ See GitHub's [reusable workflow rerun behavior](https://docs.github.com/en/actio
 and [workflow rerun identity rules](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs).
 
 The supported recovery boundary is a new `workflow_dispatch` (or another new
-caller event) that invokes `release-candidate-promote.yml` and supplies the old
+caller event) that invokes `public-release-promote.yml` and supplies the old
 candidate run explicitly:
 
 ```yaml
@@ -144,7 +144,7 @@ on:
 
 jobs:
   resume:
-    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@<exact-current-buildchain-sha>
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@<exact-current-buildchain-sha>
     permissions:
       actions: write
       checks: write
@@ -277,7 +277,7 @@ pre-build/artifact evidence into the wrapper:
 ```yaml
 jobs:
   promote:
-    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v3
     with:
       buildchain-channel: auto
       buildchain-alpha-contract-lock-path: .buildchain/alpha-contract-lock.json

@@ -7,7 +7,7 @@ import test from "node:test";
 import {
   ANCHORED_VERSION_MATERIAL_CONTRACT,
   createAnchoredVersionMaterialEvidence,
-} from "../packages/core/anchored-version-material.js";
+} from "../packages/core/build/anchored-version-material.js";
 
 function run(cwd, args) {
   return execFileSync("git", args, { cwd, encoding: "utf8" }).trim();

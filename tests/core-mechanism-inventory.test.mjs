@@ -3,7 +3,7 @@ import fs from "node:fs";
 import test from "node:test";
 import { checkCoreMechanismInventory } from "../scripts/check-core-mechanism-inventory.mjs";
 
-test("v3 core mechanism inventory closes every required evidence dimension", () => {
+test("current core mechanism inventory closes every required evidence dimension", () => {
   const report = checkCoreMechanismInventory();
   assert.equal(report.mechanisms, 13);
   assert.equal(report.dependencyCycles, 0);
@@ -21,10 +21,7 @@ test("v3 core mechanism inventory closes every required evidence dimension", () 
 
 test("reverse-discovered orphaned or ambiguously owned mechanism coordinates fail visibly", () => {
   const inventory = JSON.parse(
-    fs.readFileSync(
-      "architecture/baseline-core-mechanism-inventory.json",
-      "utf8",
-    ),
+    fs.readFileSync("architecture/core-mechanisms.json", "utf8"),
   );
   const devDelivery = inventory.mechanisms.find(
     ({ id }) => id === "dev-delivery-warrant",
@@ -38,7 +35,8 @@ test("reverse-discovered orphaned or ambiguously owned mechanism coordinates fai
     /ambiguous mechanism ownership/u,
   );
   releaseCandidate.sourcePaths.pop();
-  const settlement = "packages/core/dev-delivery-warrant-settlement.js";
+  const settlement =
+    "packages/core/dev-delivery/dev-delivery-warrant-settlement.js";
   devDelivery.sourcePaths = devDelivery.sourcePaths.filter(
     (file) => file !== settlement,
   );

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { verifyComposePublication } from "../packages/core/oci-compose-qualification.js";
-import { domainContentRoot } from "../packages/core/canonical-contracts.js";
-import { releaseTailRoot } from "../packages/core/release-tail-provider-plane.js";
+import { verifyComposePublication } from "../packages/core/publication/oci-compose-qualification.js";
+import { domainContentRoot } from "../packages/core/contracts/canonical-contracts.js";
+import { releaseTailRoot } from "../packages/core/release/release-tail-provider-plane.js";
 
 function fixture(merged) {
   const repository = "example/runtime",

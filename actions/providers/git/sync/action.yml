@@ -1,0 +1,28 @@
+name: Synchronize a Git repository
+description: Fetch and push the exact requested ref with process-scoped provider
+  credentials.
+inputs:
+  remote-host:
+    description: Remote HTTPS Git host.
+    required: true
+  remote-path:
+    description: Remote repository path prefix.
+    required: true
+  remote-repo:
+    description: Remote repository name.
+    required: true
+  source-ref:
+    description: Exact source branch or tag name.
+    required: true
+  force:
+    description: Whether the caller authorizes a force push.
+    default: "false"
+  remote-user:
+    description: Optional provider username.
+    required: false
+  remote-credential:
+    description: HTTPS credential URL bound to the remote host.
+    required: false
+runs:
+  using: node24
+  main: dist/index.js

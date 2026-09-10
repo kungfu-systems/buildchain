@@ -5,9 +5,9 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-import { planPartialMutationRecovery } from "../packages/core/partial-mutation-recovery-qualification.js";
-import { projectReleaseActivation } from "../packages/core/release-activation-shadow.js";
-import { planStageCapsuleResume } from "../packages/core/stage-capsule-resume-planner.js";
+import { planPartialMutationRecovery } from "../packages/core/release/partial-mutation-recovery-qualification.js";
+import { projectReleaseActivation } from "../packages/core/release/release-activation-shadow.js";
+import { planStageCapsuleResume } from "../packages/core/build/stage-capsule-resume-planner.js";
 
 const repositoryRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -305,7 +305,7 @@ test("the closed architecture contract keeps production recovery bounded and eff
 test("recovery implementations contain no provider, network, filesystem, process, credential, or ambient-clock authority", () => {
   const javascript = fs.readFileSync(
     new URL(
-      "../packages/core/partial-mutation-recovery-qualification.js",
+      "../packages/core/release/partial-mutation-recovery-qualification.js",
       import.meta.url,
     ),
     "utf8",

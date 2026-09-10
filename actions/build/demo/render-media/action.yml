@@ -1,0 +1,30 @@
+name: Render and independently inspect media from exact passing Gate evidence
+description: Render and independently inspect media from exact passing Gate evidence.
+inputs:
+  runtime-sha:
+    description: Exact runtime-sha.
+    required: true
+  source-sha:
+    description: Exact source-sha.
+    required: true
+  renderer-image:
+    description: Exact renderer-image.
+    required: true
+  media-profile:
+    description: Exact media-profile.
+    required: true
+  gate-root:
+    description: Exact gate-root.
+    required: true
+outputs:
+  media-root:
+    description: Verified media-root.
+  media-artifact-name:
+    description: Verified media-artifact-name.
+  media-profile:
+    description: Verified media-profile.
+  media-qualification-root:
+    description: Verified media-qualification-root.
+runs:
+  using: node24
+  main: dist/index.js

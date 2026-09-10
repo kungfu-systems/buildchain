@@ -1,0 +1,13 @@
+name: Qualify complete Stage Capsule consumer reports
+description: Qualify complete Stage Capsule consumer reports.
+inputs:
+  workflow-sha:
+    description: Exact called workflow runtime
+    required: true
+  consumer:
+    description: Declared consumer identity
+    required: true
+outputs: {}
+runs:
+  using: node24
+  main: dist/index.js

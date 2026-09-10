@@ -1,0 +1,61 @@
+name: stage-capsule-canary-qualify
+description: Execute the stage-capsule-canary qualify capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  matrix-json:
+    description: Declared platform matrix value.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+  workflow-sha:
+    description: workflow sha contract input.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Admit source checkout
+      id: source-boundary
+      if: ${{ always() }}
+      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      with:
+        source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
+    - name: Resolve exact called-workflow runtime
+      id: runtime
+      uses: ./.buildchain/workflow-shell/actions/runtime/selection/workflow
+      with:
+        workflow-sha: ${{ inputs.workflow-sha }}
+    - name: Checkout the exact Buildchain workflow runtime
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: kungfu-systems/buildchain
+        ref: ${{ steps.runtime.outputs.sha }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - id: buildchain-runtime
+      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .buildchain/runtime
+    - uses: actions/setup-node@v6.4.0
+      with:
+        node-version: ${{ fromJSON(inputs.request-json).node-version }}
+    - uses: actions/setup-go@v6.5.0
+      if: fromJSON(inputs.request-json).go-version != ''
+      with:
+        go-version: ${{ fromJSON(inputs.request-json).go-version }}
+    - name: Qualify real lifecycle and clean process recovery
+      uses: ./.buildchain/runtime/actions/build/stage-capsule/qualify-consumer
+      with:
+        workflow-sha: ${{ steps.runtime.outputs.sha }}
+        platform: ${{ fromJSON(inputs.matrix-json).platform }}
+        request-json: ${{ inputs.request-json }}
+    - name: Upload exact platform evidence
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: v4-stage-capsule-canary-${{ fromJSON(inputs.request-json).consumer }}-${{ fromJSON(inputs.matrix-json).platform }}-${{ github.sha }}
+        path: |
+          .buildchain/artifacts/stage-capsule-canary/*.json
+          .buildchain/stage-capsule-canary/${{ fromJSON(inputs.matrix-json).platform }}/*.json
+        if-no-files-found: error

@@ -3,9 +3,9 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { domainContentRoot } from "../../packages/core/canonical-contracts.js";
-import { verifyOciPublicationBundle } from "../../packages/core/oci-publication-bundle.js";
-import { createOciPublicationAdapter } from "../../actions/release-candidate-promote/oci-provider.js";
+import { domainContentRoot } from "../../packages/core/contracts/canonical-contracts.js";
+import { verifyOciPublicationBundle } from "../../packages/core/publication/oci-publication-bundle.js";
+import { createOciPublicationAdapter } from "../../packages/core/release/promote-candidate/oci-provider.js";
 
 export const hash = (bytes) =>
   `sha256:${crypto.createHash("sha256").update(bytes).digest("hex")}`;

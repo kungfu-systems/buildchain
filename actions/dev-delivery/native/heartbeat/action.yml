@@ -1,0 +1,61 @@
+name: Native delivery heartbeat
+description: Own the heartbeat adapter inside its isolated caller job.
+inputs:
+  request-json:
+    description: Typed public workflow inputs, serialized once by the caller.
+    required: true
+  github-token:
+    description: Provider token; supplied only in a credentialed job.
+    required: false
+    default: ""
+  needs-json:
+    description: Exact dependency job results and admitted output coordinates.
+    required: false
+    default: "{}"
+outputs:
+  heartbeat-receipt-root:
+    description: heartbeat-receipt-root.
+    value: ${{ steps.heartbeat.outputs.receipt-root }}
+runs:
+  using: composite
+  steps:
+    - name: Checkout trusted heartbeat runtime
+      if: ${{ success() }}
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+        ref: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-sha }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .buildchain/runtime
+      if: ${{ success() }}
+    - name: Download immutable admitted Warrant
+      if: ${{ success() }}
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name:
+          buildchain-dev-delivery-control-${{ github.run_id }}-${{ github.run_attempt }}-${{ fromJSON(inputs.request-json).expected-pr-number
+          }}
+        path: .buildchain/dev-delivery
+    - name: Durably heartbeat until native and seal are provider-terminal
+      id: heartbeat
+      if: ${{ success() }}
+      uses: ./.buildchain/runtime/actions/dev-delivery/native/maintain-lease
+      with:
+        runtime-sha: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-sha }}
+        branch: ${{ fromJSON(inputs.needs-json).admission.outputs.target-branch }}
+        token: ${{ inputs.github-token || github.token }}
+        lease-seconds: ${{ fromJSON(inputs.request-json).warrant-lease-seconds }}
+        heartbeat-seconds: ${{ fromJSON(inputs.request-json).native-heartbeat-seconds }}
+    - name: Upload rooted provider heartbeat receipt
+      if: ${{ success() }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name:
+          buildchain-dev-delivery-heartbeat-${{ github.run_id }}-${{ github.run_attempt }}-${{ fromJSON(inputs.request-json).expected-pr-number
+          }}
+        path: .buildchain/provider-heartbeat-receipt.json
+        if-no-files-found: error
+        retention-days: 30

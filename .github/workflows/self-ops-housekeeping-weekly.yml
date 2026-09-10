@@ -27,13 +27,21 @@ jobs:
     runs-on: ubuntu-24.04
     permissions: {}
     steps:
-      - run: |
-          echo "::error::apply mode requires apply-enabled=true"
-          exit 1
+      - name: Load request admission node
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
+          persist-credentials: false
+      - name: Reject invalid apply request
+        uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
+        with:
+          reason: apply mode requires apply-enabled=true
 
   report:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode != 'apply' }}
-    uses: ./.github/workflows/engineering-housekeeper.yml
+    uses: ./.github/workflows/public-ops-housekeeping.yml
     permissions:
       contents: read
       pull-requests: read
@@ -45,7 +53,7 @@ jobs:
 
   apply:
     if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'apply' && inputs.apply-enabled) }}
-    uses: ./.github/workflows/engineering-housekeeper.yml
+    uses: ./.github/workflows/public-ops-housekeeping.yml
     permissions:
       contents: write
       pull-requests: write

@@ -9,7 +9,7 @@ import {
   selectStableCandidate,
   setStableCandidateHold,
   stableCandidatePromotionRefs,
-} from "../packages/core/stable-candidate-ledger.js";
+} from "../packages/core/release/stable-candidate-ledger.js";
 
 const SHA4 = "4".repeat(40);
 const SHA5 = "5".repeat(40);

@@ -1,43 +1,38 @@
 ---
 status: active
 period: ongoing
-theme: buildchain-v4-declarative-release-tail
-doc_type: migration-guide
+theme: buildchain-layered-architecture
+doc_type: implementation-guide
 source_level: local-files
 confidence: high
 sensitivity: public
-evidence_grade: A
-review_state: self-reviewed
-last_reviewed: 2026-08-26
+evidence_grade: B
+review_state: unreviewed
+last_reviewed: 2026-09-10
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-08-26
-  invisible_context: unavailable
+  generated_at: 2026-09-10
+  visible_context: Buildchain 4.1 source, architecture registries and local validation.
+  invisible_context_boundary: No unpublished release or external consumer qualification is claimed.
 ---
 
-# Migrate a release-candidate promotion to the v4 Provider Plane
+# Adopt the current release promotion API
 
-Persist the public workflow call at the floating major ref and keep the matching contract lock in the consumer repository:
+Call `public-release-promote.yml` with the closed `request-json` contract after
+the selected floating channel publishes this API. Keep both channel contract
+locks in the consumer repository. See [Promotion request](release-promotion-request.md)
+for the complete request and examples.
 
-```yaml
-jobs:
-  promote:
-    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4
-    with:
-      buildchain-contract-lock-path: .buildchain/contract-lock.json
-      declarative-release-tail: true
-```
+The declaration-driven provider plane is the sole publisher. There is no mode
+switch, command-hook adapter or retained v3 execution path. Candidate identity,
+sealed artifact manifests, qualification and provider receipt roots determine
+execution and recovery.
 
-The Build/Verify workflow now uploads these candidate-owned inputs together:
+On interruption, resume the same candidate and transaction state. The workflow
+verifies the source, artifact and policy roots, then continues the incomplete
+operations. Completed publication recovery reads the existing evidence and
+preserves immutable product bytes.
 
-- `release-candidate-passport.json`
-- `release-candidate-stage-capsules.json`
-- `release-candidate-publication-qualification.json`
-- the typed payload and manifest artifacts bound by those documents
-
-Remove all v4 values for `publish-command`, `publication-gate-command`, `publication-consumer-qualification-command`, `publication-commit-command`, `release-activation-command`, `release-passport-evidence-command`, KFD/invariant command inputs, and every other `command`, `cmd`, `script`, `shell`, or `run` field. v4 admission rejects them before publication planning. Do not replace them with a wrapper script or a standalone workflow; declare provider evidence and let the reusable workflow execute the fixed Provider Plane.
-
-On interruption, rerun with the same candidate and transaction state. Buildchain verifies the candidate/source/artifact/policy roots and continues from the first missing standardized receipt. Never delete the state file to make a failed capability replay from the beginning.
-
-v3 workflow calls retain their existing command-compatible behavior. Migrating a v3 consumer is an explicit contract change, not an automatic reinterpretation.
+The 4.1 development merge is not an alpha publication. Consumer adoption waits
+for the corresponding published channel contract and refreshed locks.

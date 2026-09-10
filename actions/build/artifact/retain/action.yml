@@ -1,0 +1,18 @@
+name: Retain qualified build artifacts and execution evidence
+description: Retain qualified build artifacts and execution evidence.
+inputs:
+  plan:
+    description: Rooted build plan bound to this run and runtime
+    required: true
+  token:
+    description: Scoped artifact read token
+    required: true
+  platform:
+    description: Platform selected from the rooted build plan
+    required: true
+outputs:
+  artifact:
+    description: Immutable artifact reference
+runs:
+  using: node24
+  main: dist/index.js

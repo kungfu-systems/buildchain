@@ -1,90 +1,111 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import YAML from "yaml";
 import os from "node:os";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import test from "node:test";
-import {
-  generateChannelPromotionWorkflow,
-  parsePromotionShellRouting,
-} from "../scripts/generate-channel-promotion-workflow.mjs";
-import { resolvePromotionChannel } from "../scripts/promotion-channel-router.mjs";
-import { resolvePromotionIdentities } from "../scripts/promotion-identity-resolver.mjs";
+import { generateChannelPromotionWorkflow } from "../scripts/generate-channel-promotion-workflow.mjs";
+import { resolvePromotionChannel } from "../packages/core/release/promotion/channel.js";
+import { resolvePromotionIdentities } from "../packages/core/release/promotion/identities.js";
 
 const root = path.resolve(import.meta.dirname, "..");
-const shellRouting = parsePromotionShellRouting(
-  fs.readFileSync(path.join(root, ".buildchain/promotion-shell-routing.json"), "utf8"),
-  { major: 4 },
-);
-
 const base = {
   requestedChannel: "auto",
   requestedRef: "",
-  routerRef: "v3",
-  packageVersion: "3.0.1-alpha.0",
+  routerRef: "v4",
+  packageVersion: "4.1.0-alpha.0",
 };
 
 test("alpha promotion selects the alpha workflow shell, runtime, and target", () => {
-  assert.deepEqual(resolvePromotionChannel({
-    ...base,
-    targetRef: "alpha/v22/v22.22",
-  }), {
-    targetRef: "alpha/v22/v22.22",
-    publicationChannel: "alpha",
-    routerRef: "v3", routerSha: "",
-    channel: "alpha",
-    major: 3,
-    shellRef: "v3-alpha",
-    runtimeRef: "v3-alpha",
-    overrideUsed: false,
-    selectionSource: "publish-channel",
-    reason: "publish-channel=alpha",
-  });
+  assert.deepEqual(
+    resolvePromotionChannel({
+      ...base,
+      targetRef: "alpha/v22/v22.22",
+    }),
+    {
+      targetRef: "alpha/v22/v22.22",
+      publicationChannel: "alpha",
+      routerRef: "v4",
+      routerSha: "",
+      channel: "alpha",
+      major: 4,
+      shellRef: "v4-alpha",
+      runtimeRef: "v4-alpha",
+      overrideUsed: false,
+      selectionSource: "publish-channel",
+      reason: "publish-channel=alpha",
+    },
+  );
 });
 
 test("release and major promotion select the stable workflow shell and runtime", () => {
   for (const [targetRef, publicationChannel] of [
-    ["release/v3/v3.0", "release"],
+    ["release/v4/v4.0", "release"],
     ["publish-gate/major", "major"],
   ]) {
-    const result = resolvePromotionChannel({ ...base, targetRef, publicationChannel });
+    const result = resolvePromotionChannel({
+      ...base,
+      targetRef,
+      publicationChannel,
+    });
     assert.equal(result.channel, "stable");
-    assert.equal(result.shellRef, "v3");
-    assert.equal(result.runtimeRef, "v3");
+    assert.equal(result.shellRef, "v4");
+    assert.equal(result.runtimeRef, "v4");
     assert.equal(result.publicationChannel, publicationChannel);
   }
 });
 
 test("channel and target mismatches fail closed", () => {
   assert.throws(
-    () => resolvePromotionChannel({ ...base, targetRef: "alpha/v3/v3.0", publicationChannel: "release" }),
+    () =>
+      resolvePromotionChannel({
+        ...base,
+        targetRef: "alpha/v4/v4.0",
+        publicationChannel: "release",
+      }),
     /does not match target ref/,
   );
   assert.throws(
-    () => resolvePromotionChannel({ ...base, targetRef: "alpha/v3/v3.0", requestedChannel: "stable" }),
+    () =>
+      resolvePromotionChannel({
+        ...base,
+        targetRef: "alpha/v4/v4.0",
+        requestedChannel: "stable",
+      }),
     /requires alpha shell\/runtime/,
   );
 });
 
 test("consumer target version does not override the Buildchain major", () => {
-  const result = resolvePromotionChannel({ ...base, targetRef: "release/v22/v22.22" });
-  assert.equal(result.major, 3);
-  assert.equal(result.shellRef, "v3");
-  assert.equal(result.runtimeRef, "v3");
+  const result = resolvePromotionChannel({
+    ...base,
+    targetRef: "release/v22/v22.22",
+  });
+  assert.equal(result.major, 4);
+  assert.equal(result.shellRef, "v4");
+  assert.equal(result.runtimeRef, "v4");
 });
 
 test("train and exact-SHA overrides are always bound to the target shell lane", () => {
-  for (const requestedRef of ["train/v3/v3.0/promotion-router", "a".repeat(40)]) {
-    const result = resolvePromotionChannel({ ...base, targetRef: "alpha/v3/v3.0", requestedRef });
+  for (const requestedRef of [
+    "train/v4/v4.0/promotion-router",
+    "a".repeat(40),
+  ]) {
+    const result = resolvePromotionChannel({
+      ...base,
+      targetRef: "alpha/v4/v4.0",
+      requestedRef,
+    });
     assert.equal(result.channel, "alpha");
-    assert.equal(result.shellRef, "v3-alpha");
+    assert.equal(result.shellRef, "v4-alpha");
     assert.equal(result.runtimeRef, requestedRef);
     assert.equal(result.overrideUsed, true);
   }
   assert.equal(
     resolvePromotionChannel({
       ...base,
-      targetRef: "alpha/v3/v3.0",
+      targetRef: "alpha/v4/v4.0",
       requestedChannel: "alpha",
       requestedRef: "a".repeat(40),
     }).channel,
@@ -94,37 +115,44 @@ test("train and exact-SHA overrides are always bound to the target shell lane", 
 
 test("an exact runtime pin matching the reusable workflow SHA is not an override", () => {
   const sha = "a".repeat(40);
-  assert.deepEqual(resolvePromotionChannel({
-    ...base,
-    targetRef: "alpha/v3/v3.0",
-    requestedRef: sha,
-    routerRef: sha,
-    routerSha: sha.toUpperCase(),
-  }), {
-    targetRef: "alpha/v3/v3.0",
-    publicationChannel: "alpha",
-    routerRef: sha, routerSha: sha,
-    channel: "alpha",
-    major: 3,
-    shellRef: "v3-alpha",
-    runtimeRef: sha,
-    overrideUsed: false,
-    selectionSource: "trusted-router-sha",
-    reason: `explicit Buildchain runtime ref ${sha} matches the reusable workflow SHA`,
-  });
+  assert.deepEqual(
+    resolvePromotionChannel({
+      ...base,
+      targetRef: "alpha/v4/v4.0",
+      requestedRef: sha,
+      routerRef: sha,
+      routerSha: sha.toUpperCase(),
+    }),
+    {
+      targetRef: "alpha/v4/v4.0",
+      publicationChannel: "alpha",
+      routerRef: sha,
+      routerSha: sha,
+      channel: "alpha",
+      major: 4,
+      shellRef: "v4-alpha",
+      runtimeRef: sha,
+      overrideUsed: false,
+      selectionSource: "trusted-router-sha",
+      reason: `explicit Buildchain runtime ref ${sha} matches the reusable workflow SHA`,
+    },
+  );
 });
 
 test("a matching workflow ref cannot authorize a different runtime SHA", () => {
   const requestedRef = "a".repeat(40);
   const result = resolvePromotionChannel({
     ...base,
-    targetRef: "alpha/v3/v3.0",
+    targetRef: "alpha/v4/v4.0",
     requestedRef,
     routerRef: requestedRef,
     routerSha: "b".repeat(40),
   });
   assert.equal(result.overrideUsed, true);
-  assert.equal(result.selectionSource, "explicit-buildchain-ref+channel-evidence");
+  assert.equal(
+    result.selectionSource,
+    "explicit-buildchain-ref+channel-evidence",
+  );
 });
 
 test("floating promotion refs resolve once even when the ref moves during routing", async () => {
@@ -132,22 +160,22 @@ test("floating promotion refs resolve once even when the ref moves during routin
   const movedBaseline = "2".repeat(40);
   let calls = 0;
   const identities = await resolvePromotionIdentities({
-    routerRef: "v3-alpha",
+    routerRef: "v4-alpha",
     routerSha: "a".repeat(40),
-    shellRef: "v3",
-    shellCallRef: "v3",
-    runtimeRef: "v3",
+    shellRef: "v4",
+    shellCallRef: "v4",
+    runtimeRef: "v4",
     resolveRef: async (ref) => {
-      assert.equal(ref, "v3");
+      assert.equal(ref, "v4");
       calls += 1;
       return calls === 1 ? firstBaseline : movedBaseline;
     },
   });
 
   assert.equal(calls, 1);
-  assert.equal(identities.shellRef, "v3");
-  assert.equal(identities.shellCallRef, "v3");
-  assert.equal(identities.runtimeRef, "v3");
+  assert.equal(identities.shellRef, "v4");
+  assert.equal(identities.shellCallRef, "v4");
+  assert.equal(identities.runtimeRef, "v4");
   assert.equal(identities.shellSha, firstBaseline);
   assert.equal(identities.runtimeSha, firstBaseline);
 });
@@ -164,66 +192,47 @@ function workflowFields(source, section) {
   return result;
 }
 
-test("generated promotion router preserves every public input and output exactly once", () => {
-  const advanced = fs.readFileSync(
-    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+test("promotion API has one versioned request and forwards every declared result exactly once", () => {
+  const source = fs.readFileSync(
+    path.join(root, ".github/workflows/.release-promote.yml"),
     "utf8",
   );
-  const generated = generateChannelPromotionWorkflow(advanced, {
-    major: 4,
-    shellRouting,
-  });
-  const current = fs.readFileSync(
-    path.join(root, ".github/workflows/release-candidate-promote.yml"),
-    "utf8",
-  );
-  const internal = new Set(
-    workflowFields(advanced, "inputs").filter(
-      (name) =>
-        name.startsWith("promotion-") ||
-        name === "publication-authority-workflow-path" ||
-        name === "buildchain-expected-channel" ||
-        name === "buildchain-expected-major",
+  const generated = generateChannelPromotionWorkflow(source);
+  assert.equal(
+    generated,
+    fs.readFileSync(
+      path.join(root, ".github/workflows/public-release-promote.yml"),
+      "utf8",
     ),
   );
-  const expectedInputs = workflowFields(advanced, "inputs").filter(
-    (name) => !internal.has(name),
-  );
-  expectedInputs.push("buildchain-channel");
-  const actualInputs = workflowFields(generated, "inputs");
-  const expectedOutputs = workflowFields(advanced, "outputs");
-  const actualOutputs = workflowFields(generated, "outputs");
-
-  assert.equal(current, generated);
-  assert.deepEqual([...actualInputs].sort(), [...expectedInputs].sort());
-  assert.equal(new Set(actualInputs).size, actualInputs.length);
-  assert.equal(
-    generated.match(
-      /buildchain-expected-channel: \$\{\{ needs\.resolve-promotion\.outputs\.channel \}\}/g,
-    )?.length,
-    1,
-  );
-  assert.equal(generated.match(/buildchain-expected-major: "4"/g)?.length, 1);
-  for (const output of expectedOutputs) {
-    assert.ok(actualOutputs.includes(output), `missing output ${output}`);
-  }
-  assert.equal(new Set(actualOutputs).size, actualOutputs.length);
+  const api = YAML.parse(generated),
+    component = YAML.parse(source);
+  assert.deepEqual(Object.keys(api.on.workflow_call.inputs), ["request-json"]);
+  assert.deepEqual(Object.keys(component.on.workflow_call.inputs), [
+    "request-json",
+  ]);
+  for (const output of Object.keys(component.on.workflow_call.outputs))
+    assert.equal(
+      api.on.workflow_call.outputs[output].value,
+      `\${{ jobs.invoke.outputs.${output} }}`,
+    );
+  assert.ok(source.split("\n").length <= 300);
+  assert.ok(generated.split("\n").length <= 300);
 });
 
-test("generated promotion router exposes one alpha canonical publisher", () => {
+test("generated promotion router exposes the current publisher component", () => {
   const advanced = fs.readFileSync(
-    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    path.join(root, ".github/workflows/.release-promote.yml"),
     "utf8",
   );
   const generated = generateChannelPromotionWorkflow(advanced, {
     major: 4,
-    shellRouting,
   });
 
   assert.match(generated, /^  invoke:/m);
   assert.match(
     generated,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/u,
+    /uses: \.\/\.github\/workflows\/\.release-promote\.yml/u,
   );
   assert.doesNotMatch(generated, /^  (?:alpha|stable):/m);
   assert.doesNotMatch(
@@ -232,79 +241,29 @@ test("generated promotion router exposes one alpha canonical publisher", () => {
   );
 });
 
-test("canonical invoke forwards immutable routing identity and typed override state", () => {
-  const advanced = fs.readFileSync(
-    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+test("canonical invoke accepts only the complete consumer-admitted invocation", () => {
+  const source = fs.readFileSync(
+    path.join(root, ".github/workflows/.release-promote.yml"),
     "utf8",
   );
-  const generated = generateChannelPromotionWorkflow(advanced, {
-    major: 4,
-    shellRouting,
+  const api = YAML.parse(generateChannelPromotionWorkflow(source));
+  assert.deepEqual(api.jobs.invoke.with, {
+    "request-json": "${{ needs.consumer-admission.outputs.invocation-json }}",
   });
-  const invokeBlock = generated.slice(generated.indexOf("  invoke:\n"));
-
-  assert.match(
-    invokeBlock,
-    /^      promotion-shell-ref: \$\{\{ needs\.resolve-promotion\.outputs\.shell-call-ref \}\}$/m,
-  );
-  assert.match(
-    invokeBlock,
-    /^      buildchain-ref: \$\{\{ needs\.resolve-promotion\.outputs\.runtime-sha \}\}$/m,
-  );
-  assert.match(
-    invokeBlock,
-    /^      promotion-override-used: \$\{\{ needs\.resolve-promotion\.outputs\.override-used == 'true' \}\}$/m,
-  );
-  assert.doesNotMatch(
-    invokeBlock,
-    /^      promotion-override-used: \$\{\{ needs\.resolve-promotion\.outputs\.override-used \}\}$/m,
-  );
+  assert.deepEqual(api.jobs.invoke.needs, [
+    "resolve-promotion",
+    "consumer-admission",
+  ]);
 });
 
 test("promotion router contains no native build or provider mutation implementation", () => {
   const router = fs.readFileSync(
-    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    path.join(root, ".github/workflows/public-release-promote.yml"),
     "utf8",
   );
   assert.doesNotMatch(router, /matrix:|Build native|pnpm run build/);
-  assert.doesNotMatch(
-    router,
-    /actions\/release-candidate-promote/,
-  );
+  assert.doesNotMatch(router, /actions\/release\/promote-candidate/);
   assert.match(router, /^  resolve-promotion:/m);
   assert.match(router, /^  consumer-admission:/m);
   assert.match(router, /^  invoke:/m);
-});
-
-
-test("generated router bootstraps empty inputs and preserves explicit refs", (t) => {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "promotion-router-"));
-  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
-  const sha = "a".repeat(40);
-  const source = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
-  const step = source.split("      - name: Resolve promotion router source\n")[1]
-    .split("\n      - name:")[0];
-  const script = step.split("        run: |\n")[1]
-    .split("\n").map((line) => line.replace(/^          /, "")).join("\n");
-  assert.ok(script.includes("git ls-remote"));
-  const stub = `git() { printf '%s\\t%s\\n' '${sha}' "$3"; }\n`;
-  for (const requestedRef of [undefined, "", "v4", "refs/tags/v4-alpha", "../bad"]) {
-    const output = path.join(directory, "output");
-    fs.writeFileSync(output, "");
-    const env = { ...process.env,
-      BUILDCHAIN_ROUTER_REPOSITORY: "kungfu-systems/buildchain",
-      BUILDCHAIN_RESUME_RUN_ID: "", BUILDCHAIN_RESUME_RUNTIME_SHA: "", GITHUB_OUTPUT: output };
-    delete env.BUILDCHAIN_ROUTER_REF;
-    if (requestedRef !== undefined) env.BUILDCHAIN_ROUTER_REF = requestedRef;
-    const result = spawnSync("bash", ["-c", stub + script], { env, encoding: "utf8" });
-    if (requestedRef === "../bad") {
-      assert.notEqual(result.status, 0);
-      assert.equal(fs.readFileSync(output, "utf8"), "");
-    } else {
-      assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
-      const expected = requestedRef?.replace(/^refs\/tags\//, "") || "v4-alpha";
-      assert.equal(fs.readFileSync(output, "utf8"),
-        `repository=kungfu-systems/buildchain\nref=${expected}\nsha=${sha}\n`);
-    }
-  }
 });

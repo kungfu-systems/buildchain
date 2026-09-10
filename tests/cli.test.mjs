@@ -31,8 +31,8 @@ import {
   summarizeProcessSamples,
   validateAnchoredPackageRelease,
 } from "@kungfu-tech/buildchain/diagnostics";
-import { resolveSpawnCommand, usesShellForSpawnCommand } from "../scripts/build-standalone-binary.mjs";
-import { createReleaseEvidenceBundle } from "../scripts/create-release-bundle.mjs";
+import { resolveSpawnCommand, usesShellForSpawnCommand } from "../packages/core/runtime/spawn-command.js";
+import { createReleaseEvidenceBundle } from "../packages/core/build/release-evidence-bundle.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
@@ -272,7 +272,7 @@ test("init publication-artifact creates a paper artifact scaffold", () => {
   assert.match(toml, /image = "ghcr\.io\/kungfu-systems\/build-images\/latex-pdf-builder"/);
   assert.match(toml, /digest = "sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8"/);
   const workflow = fs.readFileSync(path.join(cwd, ".github", "workflows", "build.yml"), "utf8");
-  assert.match(workflow, /publication-artifact\.yml@v4/);
+  assert.match(workflow, /public-build-publication\.yml@v4/);
   assert.match(workflow, /toolchain-type: config/);
   assert.match(workflow, /verify-command: make check/);
 });
@@ -2027,9 +2027,9 @@ test("npm dry-run proves Buildchain toolkit subpaths are included in the package
   assert.equal(result.package.name, "@kungfu-tech/buildchain");
   assert.equal(result.wouldPublish, false);
   assert.ok(packageFiles.has("packages/core/index.js"));
-  assert.ok(packageFiles.has("packages/core/diagnostics.js"));
-  assert.ok(packageFiles.has("packages/core/logging.js"));
-  assert.ok(packageFiles.has("packages/core/release-passport.js"));
+  assert.ok(packageFiles.has("packages/core/observability/diagnostics.js"));
+  assert.ok(packageFiles.has("packages/core/observability/logging.js"));
+  assert.ok(packageFiles.has("packages/core/release/release-passport.js"));
   assert.ok(packageFiles.has("bin/buildchain.mjs"));
 });
 
@@ -2130,9 +2130,9 @@ test("release line open plans a protected new minor without mutating files", () 
   assert.equal(plan.refs.release, "release/v2/v2.10");
   assert.equal(plan.protection.requiredStatusCheck, "check");
   assert.deepEqual(plan.protection.strictStatusChecksByChannel, {
-    dev: true,
+    dev: false,
     alpha: false,
-    release: false,
+    release: true,
   });
   assert.equal(plan.protection.requiredApprovingReviewCount, 1);
   assert.deepEqual(plan.governance.mergeQueue, {

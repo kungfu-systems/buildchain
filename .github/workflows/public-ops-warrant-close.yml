@@ -1,95 +1,71 @@
 name: Dev Delivery Warrant Close
-
 on:
   workflow_call:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
       buildchain-repository:
-        {
-          description: "Buildchain runtime repository",
-          default: "kungfu-systems/buildchain",
-          type: string,
-          required: false,
-        }
+        description: Buildchain runtime repository
+        default: kungfu-systems/buildchain
+        type: string
+        required: false
       buildchain-ref:
-        {
-          description: "Buildchain runtime ref",
-          default: "v3",
-          type: string,
-          required: false,
-        }
+        description: Buildchain runtime ref
+        default: ""
+        type: string
+        required: false
       target-branch:
-        { description: "Protected dev branch", type: string, required: true }
+        description: Protected dev branch
+        type: string
+        required: true
       expected-pr-number:
-        {
-          description: "Exact PR holding the active Warrant",
-          type: number,
-          required: true,
-        }
+        description: Exact PR holding the active Warrant
+        type: number
+        required: true
       expected-head-sha:
-        { description: "Exact immutable PR head", type: string, required: true }
+        description: Exact immutable PR head
+        type: string
+        required: true
       outcome:
-        {
-          description: "merged, terminal-failure, dequeued, or cancelled",
-          type: string,
-          required: true,
-        }
+        description: merged, terminal-failure, dequeued, or cancelled
+        type: string
+        required: true
       current-base-sha:
-        {
-          description: "Exact latest dev base used by integration",
-          default: "",
-          type: string,
-          required: false,
-        }
+        description: Exact latest dev base used by integration
+        default: ""
+        type: string
+        required: false
       replay-tree-sha:
-        {
-          description: "Exact replayed Project Cut tree",
-          default: "",
-          type: string,
-          required: false,
-        }
+        description: Exact replayed Project Cut tree
+        default: ""
+        type: string
+        required: false
       merge-group-head-sha:
-        {
-          description: "Exact GitHub merge_group candidate head",
-          default: "",
-          type: string,
-          required: false,
-        }
+        description: Exact GitHub merge_group candidate head
+        default: ""
+        type: string
+        required: false
       merge-group-tree-sha:
-        {
-          description: "Exact GitHub merge_group candidate tree",
-          default: "",
-          type: string,
-          required: false,
-        }
+        description: Exact GitHub merge_group candidate tree
+        default: ""
+        type: string
+        required: false
       required-context-roots-json:
-        {
-          description: "Non-empty JSON array of exact final check roots",
-          default: "[]",
-          type: string,
-          required: false,
-        }
+        description: Non-empty JSON array of exact final check roots
+        default: "[]"
+        type: string
+        required: false
       terminal-evidence-root:
-        {
-          description: "Required evidence root for non-merged terminal outcomes",
-          default: "",
-          type: string,
-          required: false,
-        }
+        description: Required evidence root for non-merged terminal outcomes
+        default: ""
+        type: string
+        required: false
       reason:
-        {
-          description: "Visible terminal reason",
-          default: "",
-          type: string,
-          required: false,
-        }
+        description: Visible terminal reason
+        default: ""
+        type: string
+        required: false
     secrets:
       github-token:
-        description: "Token permitted to advance the Buildchain Warrant state ref"
+        description: Token permitted to advance the Buildchain Warrant state ref
         required: false
     outputs:
       integration-proof-root:
@@ -100,20 +76,10 @@ on:
         value: ${{ jobs.close.outputs.final-state-root }}
       successor-wake-json:
         value: ${{ jobs.close.outputs.successor-wake-json }}
-
 permissions:
   contents: write
-
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   close:
-    if: ${{ inputs.universal-request-json == '' }}
     name: Close exact fenced delivery attempt
     runs-on: ubuntu-24.04
     outputs:
@@ -131,9 +97,8 @@ jobs:
           persist-credentials: false
       - name: Settle terminal delivery
         id: settle
-        uses: ./.buildchain/workflow-shell/.github/actions/dev-delivery/settle
+        uses: ./.buildchain/workflow-shell/actions/dev-delivery/warrant/settle
         with:
           request-json: ${{ toJSON(inputs) }}
-          needs-json: ${{ toJSON(needs) }}
-          phase: terminal
+          runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
           github-token: ${{ secrets.github-token || github.token }}

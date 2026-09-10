@@ -22,29 +22,29 @@ import {
   submitDevDeliveryCandidate,
   verifyIntegrationDeliveryProof,
   verifyNativeQualificationProof,
-} from "../packages/core/dev-delivery-warrant.js";
+} from "../packages/core/dev-delivery/dev-delivery-warrant.js";
 import {
   acquireDevDeliveryLandingWarrant,
   acquireDevDeliveryQualificationLease,
   admitDevDeliveryMergeGroup,
   completeDevDeliveryQualification,
   createDevDeliveryAuthorityState,
+  normalizeDevDeliveryAuthorityState,
   createDevDeliveryQualificationContract,
-  migrateDevDeliveryAuthorityState,
   recoverDevDeliveryAuthority,
   settleDevDeliveryAuthorityCandidate,
   submitDevDeliveryAuthorityCandidate,
-} from "../packages/core/dev-delivery-authority-landing.js";
+} from "../packages/core/dev-delivery/dev-delivery-authority-landing.js";
 import {
   DEV_DELIVERY_TESTING_PROVIDER_READBACK,
   admitDevDeliveryMergeGroupForTesting,
   sealLandingTerminalReadbackForTesting,
-} from "../packages/core/dev-delivery-landing-testing-port.js";
+} from "../packages/core/dev-delivery/dev-delivery-landing-testing-port.js";
 import {
   devDeliveryAuthorityCliOptions,
   runDevDeliveryAuthorityCommand,
-} from "../scripts/dev-delivery-authority.mjs";
-import { parseWorkflowDocument } from "../packages/core/workflow-yaml-contract.js";
+} from "../packages/core/dev-delivery/commands/dev-delivery-authority.mjs";
+import { parseWorkflowDocument } from "../packages/core/contracts/workflow-yaml-contract.js";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "..");
 const matrixPath = path.join(
@@ -65,7 +65,7 @@ test("rooted v4 Delivery Authority matrix accounts for every declared invariant"
     matrix.sourceAuthority.decision,
     "architecture/decisions/0003-two-phase-delivery-warrant.md",
   );
-  assert.equal(matrix.target.branch, "dev/v4/v4.0");
+  assert.equal(matrix.target.branch, "dev/v4/v4.1");
   assert.deepEqual(
     matrix.invariants.map(({ id }) => id),
     Array.from(
@@ -128,8 +128,7 @@ function legacyCandidate(number, overrides = {}) {
   const input = {
     pullRequestNumber: number,
     sourceHead: SOURCE_HEAD,
-    assignmentRoot: root("1"),
-    initiativeRoot: root("2"),
+    sourceRoot: root("1"),
     sourceIdentityRoot: root("3"),
     sourcePatchRoot: root("4"),
     planRoot: root("6"),
@@ -153,9 +152,9 @@ function providerAttemptFor(sourceHead, mergeGroupHead) {
     schema: "kungfu.buildchain.github-landing-provider-attempt/v1",
     repository: "kungfu-systems/buildchain",
     workflowId: 700,
-    workflowPath: ".github/workflows/dev-pr-auto-merge.yml",
+    workflowPath: ".github/workflows/public-ops-dev-auto-merge.yml",
     workflowRef:
-      "kungfu-systems/buildchain/.github/workflows/dev-pr-auto-merge.yml@refs/tags/v4-alpha",
+      "kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@refs/tags/v4-alpha",
     workflowSha: "c".repeat(40),
     event: "merge_group",
     runId: 1500,
@@ -768,30 +767,9 @@ test("every implemented parity disposition has an executable behavioral proof", 
       persisted.receipt.expectedOldStateRoot === persistedInitial.stateRoot,
   );
 
-  const migrated = migrateDevDeliveryAuthorityState(selected.queue, {
-    now: "2026-08-15T02:00:00Z",
-  });
-  const migratedAdmission = rejected(
-    () =>
-      admitDevDeliveryMergeGroupForTesting(
-        migrated.state,
-        migrated.state.qualificationLeases[0],
-        {
-          mergeGroupHead: "f".repeat(40),
-          now: "2026-08-15T02:00:01Z",
-        },
-      ),
-    /Qualification Lease cannot admit merge_group/u,
-  );
-  prove(
-    "DA-13",
-    migrated.receipt.legacyStateRoot === selected.queue.stateRoot &&
-      migrated.state.qualificationLeases[0].token ===
-        selected.warrant.fencingToken &&
-      migrated.state.landingWarrant === null &&
-      migratedAdmission.message ===
-        "Qualification Lease cannot admit merge_group",
-  );
+  const migratedInput = {...persistedInitial, migration:{schema:"kungfu.buildchain.dev-delivery-authority-migration/v1"}};
+  delete migratedInput.stateRoot;
+  prove("DA-13", rejected(() => normalizeDevDeliveryAuthorityState(migratedInput), /unsupported migration metadata/u).message.includes("unsupported migration metadata"));
   const legacyProof = structuredClone(proof);
   legacyProof.schema = "kungfu.buildchain.native-qualification-proof/v1";
   for (const field of [
@@ -809,7 +787,7 @@ test("every implemented parity disposition has an executable behavioral proof", 
   legacyProof.proofRoot = devDeliveryContentRoot(legacyIdentity);
   prove(
     "DA-14",
-    verifyNativeQualificationProof(legacyProof).ok &&
+    verifyNativeQualificationProof(legacyProof).reason === "unsupported-schema" &&
       !createNativeProofReuseDecision({
         proof: legacyProof,
         current: reuseCurrent(),
@@ -864,7 +842,7 @@ test("every implemented parity disposition has an executable behavioral proof", 
     ),
   );
   const autoMergeRuntime = fs.readFileSync(
-    path.join(repositoryRoot, "scripts/dev-pr-auto-merge.mjs"),
+    path.join(repositoryRoot, "packages/core/dev-delivery/admission/policy.js"),
     "utf8",
   );
   const authorityInputs = [
@@ -872,12 +850,9 @@ test("every implemented parity disposition has an executable behavioral proof", 
     "expected-pr-number",
     "expected-head-sha",
     "source-workflow-run-id",
-    "legacy-active-owner-binding-json",
     "delivery-warrant-mode",
     "handoff-workflow-id",
-    "source-workflow-id",
-    "assignment-root",
-    "initiative-root",
+    "source-root",
     "source-identity-root",
     "source-patch-root",
     "plan-root",
@@ -904,8 +879,7 @@ test("every implemented parity disposition has an executable behavioral proof", 
     pullRequestNumber: 418,
     sourceHead: "e".repeat(40),
     sourceWorkflowRunId: 9234,
-    assignmentRoot: root("1"),
-    initiativeRoot: root("2"),
+    sourceRoot: root("1"),
     sourceIdentityRoot: root("3"),
     sourcePatchRoot: root("4"),
     planRoot: root("5"),
@@ -925,8 +899,7 @@ test("every implemented parity disposition has an executable behavioral proof", 
     "expected-pr-number",
     "expected-head-sha",
     "source-workflow-run-id",
-    "assignment-root",
-    "initiative-root",
+    "source-root",
     "source-identity-root",
     "source-patch-root",
     "plan-root",
@@ -949,8 +922,7 @@ test("every implemented parity disposition has an executable behavioral proof", 
     "expected-pr-number": queuedCandidate.pullRequestNumber,
     "expected-head-sha": queuedCandidate.sourceHead,
     "source-workflow-run-id": queuedCandidate.sourceWorkflowRunId,
-    "assignment-root": queuedCandidate.assignmentRoot,
-    "initiative-root": queuedCandidate.initiativeRoot,
+    "source-root": queuedCandidate.sourceRoot,
     "source-identity-root": queuedCandidate.sourceIdentityRoot,
     "source-patch-root": queuedCandidate.sourcePatchRoot,
     "plan-root": queuedCandidate.planRoot,
@@ -999,17 +971,15 @@ test("every implemented parity disposition has an executable behavioral proof", 
       schema.$defs.providerFailureSettlement.properties.schema.const ===
         "kungfu.buildchain.provider-failure-settlement/v1" &&
       packageManifest.exports["./dev-delivery-authority"] ===
-        "./packages/core/dev-delivery-authority-landing.js" &&
-      template.uses.endsWith("/dev-pr-auto-merge.yml@v4-alpha") &&
+        "./packages/core/dev-delivery/dev-delivery-authority-landing.js" &&
+      template.uses.endsWith("/public-ops-dev-auto-merge.yml@v4-alpha") &&
       executeWorkflowMapping(template, dispatchContext, ["buildchain-ref"])[
         "buildchain-ref"
       ] === "v4-alpha" &&
       authorityInputs.every(
         (input) => input in caller.with && input in template.with,
       ) &&
-      autoMergeRuntime.includes(
-        'activeLeaseContext: String(options.activeLeaseContext || (choiceOption(options.warrantMode, VALID_WARRANT_MODES, "off", "delivery Warrant mode") === "required" ? "Queue family lease/exact" : "")).trim(),',
-      ) &&
+      /activeLeaseContext: String\([\s\S]*options.activeLeaseContext[\s\S]*VALID_WARRANT_MODES[\s\S]*"required"[\s\S]*"Queue family lease\/exact"/.test(autoMergeRuntime) &&
       JSON.stringify(
         executeWorkflowMapping(caller, dispatchContext, mappingNames),
       ) === JSON.stringify(expectedMapping) &&

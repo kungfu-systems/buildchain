@@ -1,0 +1,11 @@
+name: aggregate adopter qualification
+description: Admit exact consumer policy or qualify public delivery and platform
+  evidence through named domain APIs.
+inputs:
+  request-json:
+    description: request-json admitted adopter input.
+    required: true
+outputs: {}
+runs:
+  using: node24
+  main: dist/index.js

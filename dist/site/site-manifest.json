@@ -1,22 +1,25 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generatedAt": "2026-09-09T07:50:47.206Z",
+  "publishedAt": "2026-09-09T07:50:47.206Z",
   "reproducible": true,
-  "timestampPolicy": "source-date-epoch",
+  "timestampPolicy": "ci-injected",
   "deterministicInputs": [
     "README.md",
     "docs/*.md",
-    "actions/*/README.md",
+    "actions/*/*/*/README.md",
     "fixtures/*/README.md",
     "packages/core/README.md",
     "package.json#exports",
     "tests/buildchain-inventory.json",
+    "sourceRevision",
     "sourceDateEpoch",
     "package content",
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
+  "sourceRevision": "7e1b00ab0c33b0ec5262cb3b44a1016f707b5079",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -34,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "4.0.10-alpha.1",
+    "version": "4.1.0-alpha.0",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -50,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:b47f6a77d495c01fe2dfa35d3b0f60a36aed428b0e470c9ad41c4ea1384963ff"
+      "digest": "sha256:b2ab8f50515e3259bf8217bb1686c839b8bed6ce1e8612b1b5e7cec870e31166"
     },
     {
       "id": "getting-started",
@@ -66,7 +69,7 @@
       "path": "docs/auditable-demo.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:8039e9f759da1a39b6ef908a421b2e573dadb9bfea0aaaf53494eb8a02598cc8"
+      "digest": "sha256:1f1feaaec30af2f04dc211886d70df9a06933f2d62cc3781443170bc651bb56b"
     },
     {
       "id": "install",
@@ -82,7 +85,7 @@
       "path": "docs/release-passport.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:f87853f9f72b3c365e3f4bc492d78e28441be81f6836a59ac66463adf8e2b4a8"
+      "digest": "sha256:8e671261348c45fb8c88de4edebf47e54b87be92cc00c6297868899b499722a7"
     },
     {
       "id": "github-artifact-attestation",
@@ -90,7 +93,7 @@
       "path": "docs/github-artifact-attestation.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:51f28b0b01fae4e3f80a7433f6c491d0c795bd091bff64ca1264c5cc0819c545"
+      "digest": "sha256:1d3bff2f7e5d49a7c0d5e430ec24d62c84f643d2ea6f97f591f925f6f5acea3a"
     },
     {
       "id": "controller-evidence",
@@ -106,7 +109,7 @@
       "path": "docs/publication-authority.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:227d20e70604b9f003a9d75364f39e01cb37f6936ac9ac0f0f495fb92afc7da9"
+      "digest": "sha256:8c7c9fc8f69895b382a8b525fa568f18a09d123ce37f198047aa095fd5dcf77b"
     },
     {
       "id": "github-governance-authority",
@@ -122,7 +125,7 @@
       "path": "docs/release-candidate.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:bf242de8bb97d73ef4489931940844f48223dfd66bf52b046869ca70d2454143"
+      "digest": "sha256:2a129a426b364e4ea93ed269b7c5aa725268526e2eaa799dae24a48086f11ea1"
     },
     {
       "id": "release-train",
@@ -138,7 +141,7 @@
       "path": "docs/next-development-transition.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:2a3556d2b7dd1e3a27878c2741aa5ae42d628afa5bb94ab62e468d789ddf0806"
+      "digest": "sha256:06aecdf35d4176fca184ee935e53c8e5be1cd73ffa7c9f431ece69cec04a05c5"
     },
     {
       "id": "release-propagation",
@@ -146,7 +149,7 @@
       "path": "docs/release-propagation.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:6e8417ff70db290ee6197f064ed9b7a7da3770738509fac06161dad05b3fca7f"
+      "digest": "sha256:f6f81657badb54c40ea94dba5656f28dde777db3b9fb8ebc7423a18cf54d2494"
     },
     {
       "id": "readme-badges",
@@ -170,7 +173,7 @@
       "path": "docs/binary-distribution.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:b1611dcf0e6825e53921e4c9d31d1afe16fca81e6868360bfad1902587cd52ef"
+      "digest": "sha256:fe01140ac9ff62da7f9c077df538792a588eb1cb609f997eaf1ce56a7965a982"
     },
     {
       "id": "consumer-issue-reporting",
@@ -178,7 +181,7 @@
       "path": "docs/consumer-issue-reporting.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:324342b10e69ca5ce6d04a267fb5fc2a6b52e674f6252eec2121557c5542f729"
+      "digest": "sha256:fb492b70f4a8db14d670cdb1503416439c5a9554048e9eadbccd547769b704f3"
     },
     {
       "id": "infra-contract",
@@ -202,7 +205,7 @@
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:36a4e60e91f500ea1dcdbef97cd0250a2c26562b98d8d3622e8e0f9df2aad23b"
+      "digest": "sha256:8c0b8b9498e2fa956d9ba9652cc65d1f41b18cf4090ddd972ab10452366eb054"
     },
     {
       "id": "migration-inventory",
@@ -210,7 +213,7 @@
       "path": "docs/migration-inventory.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:25d896711f4efebffa9a8960b7eb97438d9fd4892aa08bef0339026e83a53bdf"
+      "digest": "sha256:3796f5b306c3402c24257542474a9767bf81d953526b50484798749ad869d041"
     },
     {
       "id": "ownership",
@@ -218,7 +221,7 @@
       "path": "docs/ownership.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:91a1b59f0f71067c58ffd685a23b29e14a4d6fe33c1a44f8708b7d0512e4baa5"
+      "digest": "sha256:ec711580e467e807f6430a7d37ddbee1b3a6aa979bf93f5f26c85e702753c084"
     },
     {
       "id": "product-mechanism",
@@ -234,7 +237,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:fc2e0cd3f5718e05101d85f6363cefcd2336609c05dd6626b6a062b44c3a1a0d"
+      "digest": "sha256:2b7f6d3c8df25cd37fe8028690fc2d9cdce80de873341ef815f800c4ace880db"
     },
     {
       "id": "cli-reference",
@@ -242,7 +245,7 @@
       "path": "docs/cli-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:f8c1d64d8087819b6496b21878ad1457ecba52c0b5e74793c35ddb9bd838497c"
+      "digest": "sha256:4892274502e77e273a544e72e2c280464f45f4c66bf7d22802311281f858c51b"
     },
     {
       "id": "node-api-reference",
@@ -250,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:db6c29f2af429020990db6b517063ef841c16f97b937e9d7720fdbde561e88e5"
+      "digest": "sha256:adfdaa78016bd1156fc8e08560879daf786af462f20334cb1a837ca50c62e759"
     },
     {
       "id": "build-facts",
@@ -266,7 +269,7 @@
       "path": "docs/kfd-support.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:e13f0e58a1bd4699ce8d443c0d316d37c9db807e03917bb2a5f8ebd11cdd7153"
+      "digest": "sha256:ee42926fe1d00b065f0e17d907773cf0a839e595da79e90097ae29d0f2e266d9"
     },
     {
       "id": "kfd-agent-hub",
@@ -282,7 +285,7 @@
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:edff8787985801d060efe9c924d80ac1689f5f2305d853f645fe877bab34c207"
+      "digest": "sha256:630bc3b568abe02c35e4e3115c856d609ea3178b92fc071112188e1e47efc035"
     },
     {
       "id": "reusable-build-surface",
@@ -290,7 +293,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:204d96d3a3979726557509695d5e326288dd622c3e901d89c76ad6b3cb30ac62"
+      "digest": "sha256:0b3f7bb478712e1748758ec4b3107f2c5905c9ba5cf47b9aae28678099dd7594"
     },
     {
       "id": "v4-adopter-delivery",
@@ -298,7 +301,7 @@
       "path": "docs/v4-adopter-delivery.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:4036bd6c0d744e4a166e463f9b869bcf7db0ce31159fefa15c0d1f8ee36fda4c"
+      "digest": "sha256:f3f34ce4f2b36ac935bc5cd7ef3a7306fc7c8eff85b40b8ebf369ac45bde1635"
     },
     {
       "id": "publish-transaction",
@@ -306,7 +309,7 @@
       "path": "docs/publish-transaction.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:b1ee27a958bfe2327ec4702f6f288d916b8c7362bcc01c2c59388ffbe61037bf"
+      "digest": "sha256:d2acad45ad98f66202c59d9b46732ccc41694d56a273115b6fc66aff519ad3dd"
     },
     {
       "id": "release-tail-contract",
@@ -314,7 +317,7 @@
       "path": "docs/release-tail-contract.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:30eeb54eb9fdadc6ff7e26c84572afa84b9778831ebfe581b7969751cd0ca3db"
+      "digest": "sha256:6a24267b121a455051a9e513a86e12bae81e577b1b4fd9236c3f6fca20bac69e"
     },
     {
       "id": "release-tail-provider-plane",
@@ -322,7 +325,7 @@
       "path": "docs/release-tail-provider-plane.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:72dd8231f51003c8a0d6532991b908b39de02deb11300e8c63113cd3a9e5cd8e"
+      "digest": "sha256:1f6dba3988dec2a406cb93cb2e0259e07c5bc54c361bdfc73d67471a06a67814"
     },
     {
       "id": "release-governance",
@@ -330,7 +333,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:4dca8751549a33393a0eb6f7237e1e70e9c586929b1e2792f7b32e9beadef75f"
+      "digest": "sha256:f42b63f0632dfda36fb209c50458f9d21b4717b321f0ad6741db9c343fab986e"
     },
     {
       "id": "v4-compatibility-facts",
@@ -338,7 +341,7 @@
       "path": "docs/v4-compatibility-facts.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:d29c904a17aca0ca3ad4f48a826f530610d77ffca8bde76ef7e5b4c245c2ca47"
+      "digest": "sha256:008e645820fe527b6a40b4e97936ec770ed0496953bc83d27f970d3a6557b9b8"
     },
     {
       "id": "release-flow",
@@ -370,7 +373,7 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:484e896746d2f4cca4f9f18d29c14784ec20143c12affc3dbb9ccfbf8f221b55"
+      "digest": "sha256:54242bc7bada366137e4e75dfcc80b0ad659aa80cb0ffca2d52e42c768897074"
     }
   ],
   "facts": [

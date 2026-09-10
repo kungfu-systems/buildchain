@@ -1,8 +1,10 @@
+import { propagationControllerStages } from "../packages/core/release/propagation/report.js";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { inspectWorkflowJob } from "../scripts/workflow-action-graph.mjs";
 import {
   BUILDCHAIN_CONTROLLER_EVIDENCE_CONTRACT,
   BUILDCHAIN_CONTROLLER_REGISTRY_CONTRACT,
@@ -15,11 +17,11 @@ import {
   validateControllerPlan,
   validateControllerReceipt,
   validateControllerReceiptReference,
-} from "../packages/core/controller-evidence.js";
+} from "../packages/core/observability/controller-evidence.js";
 import {
   resolveControllerInputBoundary,
   selectWorkflowCallInputs,
-} from "../scripts/controller-evidence.mjs";
+} from "../packages/core/observability/controller-input-boundary.js";
 
 const SOURCE_SHA = "a".repeat(40);
 const RUNTIME_SHA = "b".repeat(40);
@@ -29,7 +31,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 function registry() {
   return createControllerRegistry({
     workflows: [
-      { id: "check", path: ".github/workflows/check.yml", inputs: ["mode", "working-directory"] },
+      { id: "check", path: ".github/workflows/public-build-check.yml", inputs: ["mode", "working-directory"] },
       {
         id: ".build",
         path: ".github/workflows/.build.yml",
@@ -37,13 +39,13 @@ function registry() {
         secrets: ["BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN"],
       },
       { id: "build", path: ".github/workflows/build.yml", inputs: ["buildchain-channel"] },
-      { id: ".gate-profile", path: ".github/workflows/.gate-profile.yml", inputs: ["profile"] },
-      { id: ".web-surface", path: ".github/workflows/.web-surface.yml", inputs: ["build-command"] },
-      { id: "publication-artifact", path: ".github/workflows/publication-artifact.yml", inputs: ["build-command"] },
-      { id: "paper-release", path: ".github/workflows/paper-release.yml", inputs: ["build-command"] },
-      { id: "release-candidate-promote", path: ".github/workflows/release-candidate-promote.yml", inputs: ["channel"] },
-      { id: ".release-candidate-promote", path: ".github/workflows/.release-candidate-promote.yml", inputs: ["channel"] },
-      { id: "release-propagation", path: ".github/workflows/release-propagation.yml", inputs: ["graph-json"] },
+      { id: ".gate-profile", path: ".github/workflows/.build-gate-profile.yml", inputs: ["profile"] },
+      { id: ".web-surface", path: ".github/workflows/public-release-web.yml", inputs: ["build-command"] },
+      { id: "publication-artifact", path: ".github/workflows/public-build-publication.yml", inputs: ["build-command"] },
+      { id: "paper-release", path: ".github/workflows/public-release-paper.yml", inputs: ["build-command"] },
+      { id: "release-candidate-promote", path: ".github/workflows/public-release-promote.yml", inputs: ["channel"] },
+      { id: ".release-candidate-promote", path: ".github/workflows/.release-promote.yml", inputs: ["channel"] },
+      { id: "release-propagation", path: ".github/workflows/public-release-propagation.yml", inputs: ["graph-json"] },
       { id: "binary-distribution", path: ".github/workflows/self-build-binary-distribution.yml", inputs: [] },
     ],
   });
@@ -254,22 +256,17 @@ test("release propagation plans admit optional consumer stages recorded as skipp
 });
 
 test("release propagation workflow emits only stages declared by its controller descriptor", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github", "workflows", "release-propagation.yml"),
-    "utf8",
-  );
-  const stagesBlock = workflow.match(
-    /BUILDCHAIN_CONTROLLER_STAGES_JSON:\s*>-\s*\n([\s\S]*?)\n\s+BUILDCHAIN_CONTROLLER_EVIDENCE_/,
-  );
-  assert.ok(stagesBlock, "release propagation workflow must declare controller receipt stages");
-  const emitted = [...stagesBlock[1].matchAll(/\{"id":"([^"]+)"/g)].map((match) => match[1]);
+  const graph = inspectWorkflowJob(".github/workflows/public-release-propagation.yml", "propagate");
+  const receipt = graph.steps.filter(step => step.uses?.endsWith("/actions/release/propagation/report"));
+  assert.equal(receipt.length, 1, "propagation must emit one controller receipt");
+  const emitted = propagationControllerStages({ stages: {} }, { upload: "skipped", workUpload: "skipped", reconcile: "skipped" }).map(stage => stage.id);
   const declared = descriptor("release-propagation").expected.stages.map((stage) => stage.id);
 
   assert.deepEqual(emitted, declared);
 });
 
 test("build finalizer emits every stage declared by its controller descriptor", async () => {
-  const { buildControllerStages } = await import("../scripts/build/finalize.mjs");
+  const { buildControllerStages } = await import("../packages/core/build/summary/execution.js");
   const plan = { platforms: [{ id: "linux" }], lifecycle: Object.fromEntries(["install", "build", "verify"].map((id) => [id, { configured: true }])) };
   const records = [{ stages: { install: "success", build: "success", verify: "success" } }];
   const stages = buildControllerStages(plan, { sign: { result: "success" }, attest: { result: "skipped" } }, records, true);
@@ -366,13 +363,13 @@ test("release passports can carry compact controller receipt references", () => 
   assert.deepEqual(normalizeControllerReceiptReferences({ receipts: [receipt] }), [reference]);
 });
 
-test("taxonomy migration preserves public entry identities and exposes repository relocation", () => {
+test("controller registry names current executable workflow paths without relocation aliases", () => {
   const workflows = JSON.parse(fs.readFileSync(path.join(root, "dist/site/workflow-registry.json"), "utf8")).workflows;
   const controllers = createControllerRegistry({ workflows }).controllers;
   assert.equal(controllers.find((entry) => entry.id === "build-lifecycle").workflow.path, ".github/workflows/.build.yml");
   const binary = controllers.find((entry) => entry.id === "binary-distribution");
   assert.equal(binary.workflow.path, ".github/workflows/self-build-binary-distribution.yml");
-  assert.equal(binary.workflow.contractPath, ".github/workflows/binary-distribution.yml");
+  assert.equal(binary.workflow.contractPath, undefined);
   assert.ok(fs.existsSync(path.join(root, binary.workflow.path)));
-  assert.equal(fs.existsSync(path.join(root, binary.workflow.contractPath)), false);
+  assert.equal(fs.existsSync(path.join(root, ".github/workflows/binary-distribution.yml")), false);
 });

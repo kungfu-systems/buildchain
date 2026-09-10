@@ -9,12 +9,10 @@ import {
   createNativeCommandContract,
   createNativeExecutionReceipt,
   createNativeQualificationProof,
-} from "../packages/core/dev-delivery-warrant.js";
-import {
-  composeCandidate,
-  GitHubTwoPhaseClient,
-  runTwoPhaseDelivery,
-} from "../scripts/dev-delivery-two-phase.mjs";
+} from "../packages/core/dev-delivery/dev-delivery-warrant.js";
+import { composeCandidate } from "../packages/core/dev-delivery/native/candidate.js";
+import { GitHubTwoPhaseClient } from "../packages/core/providers/dev-delivery/candidate.js";
+import { runTwoPhaseDelivery } from "../packages/core/dev-delivery/native/qualification.js";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 const HEAD = "a".repeat(40);
@@ -183,8 +181,7 @@ test("GitHub wake preserves a production-shape exact candidate under one dispatc
     candidateId: ROOT("a"),
     pullRequestNumber: 502,
     sourceHead: "d".repeat(40),
-    assignmentRoot: ROOT("1"),
-    initiativeRoot: ROOT("2"),
+    sourceRoot: ROOT("1"),
     sourceIdentityRoot: ROOT("3"),
     sourcePatchRoot: ROOT("4"),
     sourceProofRoot: ROOT("5"),
@@ -495,8 +492,7 @@ test("terminal native failure closes the fenced lease and wakes the next candida
             candidateId: ROOT("b"),
             pullRequestNumber: 502,
             sourceHead: "d".repeat(40),
-            assignmentRoot: ROOT("1"),
-            initiativeRoot: ROOT("2"),
+            sourceRoot: ROOT("1"),
             sourceIdentityRoot: ROOT("3"),
             sourcePatchRoot: ROOT("4"),
             sourceProofRoot: ROOT("5"),

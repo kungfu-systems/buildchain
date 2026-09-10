@@ -1,13 +1,10 @@
+import { inspectWorkflowJob, readWorkflow } from "../scripts/workflow-action-graph.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
-import {
-  applyHousekeeperWorkflowScope,
-  createHousekeeperWorkflowPlan,
-  normalizeHousekeeperWorkflowOptions,
-  renderHousekeeperWorkflowReport,
-  selectHousekeeperActions,
-} from "../scripts/engineering-housekeeper-workflow.mjs";
+import { applyHousekeeperWorkflowScope, createHousekeeperWorkflowPlan, selectHousekeeperActions } from "../packages/core/governance/housekeeping/transactions.js";
+import { normalizeHousekeeperWorkflowOptions } from "../packages/core/governance/housekeeping/options.js";
+import { renderHousekeeperWorkflowReport } from "../packages/core/governance/housekeeping/report.js";
 
 const repository = "kungfu-systems/buildchain";
 const targetBranch = "dev/v3/v3.0";
@@ -225,61 +222,22 @@ test("apply scopes preserve global ordering and use disjoint permissions surface
 });
 
 test("reusable workflow exposes typed evidence outputs and separated job permissions", () => {
-  const workflow = fs.readFileSync(
-    new URL(
-      "../.github/workflows/engineering-housekeeper.yml",
-      import.meta.url,
-    ),
-    "utf8",
-  );
-  assert.match(workflow, /workflow_call:/);
-  assert.match(
-    workflow,
-    /mode:\n[\s\S]*?type: string\n[\s\S]*?default: report/,
-  );
-  assert.match(workflow, /temporary-branch-patterns:/);
-  assert.match(
-    workflow,
-    /buildchain-ref:\n[\s\S]*?type: string\n[\s\S]*?default: v4/,
-  );
-  assert.match(
-    workflow,
-    /feature\/\*\*,fix\/\*\*,chore\/\*\*,docs\/\*\*,ci\/\*\*,refactor\/\*\*/,
-  );
-  assert.match(
-    workflow,
-    /apply-enabled:\n[\s\S]*?type: boolean\n[\s\S]*?default: false/,
-  );
-  assert.match(workflow, /permissions: \{\}/);
-  assert.match(
-    workflow,
-    /name: Inventory and plan[\s\S]*?permissions:\n      contents: read\n      pull-requests: read/,
-  );
-  assert.doesNotMatch(
-    workflow,
-    /name: Apply exact branch deletions[\s\S]*?permissions:\n      contents: write/,
-  );
-  assert.doesNotMatch(
-    workflow,
-    /name: Apply stale pull-request labels[\s\S]*?permissions:\n(?:      .*\n)*?      pull-requests: write/,
-  );
-  assert.match(workflow, /Mutation authority is inherited from the caller/);
-  assert.match(workflow, /github\.token/);
-  assert.match(workflow, /housekeeper_token:/);
-  assert.match(workflow, /secrets\.housekeeper_token/);
-  assert.match(workflow, /housekeeper_app_id:/);
-  assert.match(workflow, /housekeeper_app_private_key:/);
-  assert.match(workflow, /secrets\.housekeeper_app_id/);
-  assert.match(workflow, /secrets\.housekeeper_app_private_key/);
-  assert.doesNotMatch(workflow, /^\s+github_[a-z0-9_]+:/m);
-  assert.doesNotMatch(workflow, /secrets\.github_[a-z0-9_]+/);
-  assert.match(workflow, /actions\/create-github-app-token@/);
-  assert.match(workflow, /plan-root:/);
-  assert.match(workflow, /report-receipt-root:/);
-  assert.match(workflow, /Upload exact plan/);
-  assert.match(workflow, /Upload decision report/);
-  assert.match(workflow, /Upload report receipt/);
-  assert.doesNotMatch(workflow, /BUILDCHAIN_PROMOTION_TOKEN/);
+  const file = ".github/workflows/public-ops-housekeeping.yml", workflow = readWorkflow(file);
+  const inputs = workflow.on.workflow_call.inputs;
+  assert.equal(inputs.mode.default, "report");
+  assert.equal(inputs["apply-enabled"].default, false);
+  assert.equal(inputs["buildchain-ref"].default, "");
+  assert.deepEqual(workflow.permissions, {});
+  assert.deepEqual(workflow.jobs.plan.permissions, { contents: "read", "pull-requests": "read" });
+  for (const id of ["delete-branches", "label-pull-requests"]) assert.equal(workflow.jobs[id].permissions, undefined);
+  const plan = inspectWorkflowJob(file, "plan");
+  assert.ok(plan.steps.some(step => step.uses?.startsWith("actions/create-github-app-token@")));
+  for (const name of ["Upload exact plan", "Upload decision report", "Upload report receipt"])
+    assert.ok(plan.steps.some(step => step.name === name));
+  for (const field of ["plan-root", "report-receipt-root"]) assert.ok(workflow.on.workflow_call.outputs[field]);
+  assert.doesNotMatch(JSON.stringify(workflow), /BUILDCHAIN_PROMOTION_TOKEN|secrets.github_/);
+  for (const field of ["housekeeper_token", "housekeeper_app_id", "housekeeper_app_private_key"])
+    assert.ok(workflow.on.workflow_call.secrets[field]);
 });
 
 test("daily, weekly, and monthly callers remain thin reusable workflow policy", () => {
@@ -294,7 +252,7 @@ test("daily, weekly, and monthly callers remain thin reusable workflow policy", 
     assert.match(caller, /schedule:/);
     assert.match(
       caller,
-      /uses: \.\/\.github\/workflows\/engineering-housekeeper\.yml/,
+      /uses: \.\/\.github\/workflows\/public-ops-housekeeping\.yml/,
     );
     assert.match(caller, /mode: report/);
     assert.match(caller, /mode: apply/);

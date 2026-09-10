@@ -3,41 +3,16 @@ name: Declarative Release Tail
 on:
   workflow_call:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
       buildchain-ref:
         description: "Exact Buildchain SHA or qualified train ref"
         type: string
         required: true
-      capsule-contract:
-        description: "Compatibility input: must name the current source-bound v4 rehearsal capsule contract"
-        type: string
-        default: ""
-        required: false
-      capsule-path:
-        description: "Compatibility alias for rehearsal-capsule-path"
-        type: string
-        default: ""
-        required: false
-      capsule-root:
-        description: "Compatibility alias for candidate-root"
-        type: string
-        default: ""
-        required: false
-      evidence-path:
-        description: "Compatibility alias for rehearsal-evidence-path"
-        type: string
-        default: ""
-        required: false
       declaration-path:
         description: "Versioned release-tail declaration in the caller checkout"
         type: string
         required: false
       provider-bindings-path:
-        description: "Legacy release-tail bindings, or an optional exact canonical match for capsule-bound rehearsal bindings"
+        description: "Release-tail provider bindings, or an optional exact canonical match for capsule-bound rehearsal bindings"
         type: string
         required: false
       rehearsal-capsule-path:
@@ -92,25 +67,8 @@ on:
       rehearsal-evidence-root:
         description: "Root of non-authoritative Publication Rehearsal evidence"
         value: ${{ jobs.release-tail.outputs.rehearsal-evidence-root }}
-      binding-root:
-        description: "Compatibility output bound to the exact v4 capsule root"
-        value: ${{ jobs.release-tail.outputs.binding-root }}
-      evidence-root:
-        description: "Compatibility alias for rehearsal-evidence-root"
-        value: ${{ jobs.release-tail.outputs.evidence-root }}
-
-# Permission-neutral: production callers grant provider authority explicitly.
-
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   release-tail:
-    if: ${{ inputs.universal-request-json == '' }}
     name: Execute Buildchain release tail
     runs-on: ubuntu-24.04
     outputs:
@@ -118,8 +76,6 @@ jobs:
       transaction-root: ${{ steps.release-tail.outputs.transaction-root }}
       state-root: ${{ steps.release-tail.outputs.state-root }}
       rehearsal-evidence-root: ${{ steps.release-tail.outputs.rehearsal-evidence-root }}
-      binding-root: ${{ steps.release-tail.outputs.binding-root }}
-      evidence-root: ${{ steps.release-tail.outputs.evidence-root }}
     steps:
       - name: Check out caller source
         uses: actions/checkout@v7.0.0
@@ -134,16 +90,15 @@ jobs:
 
       - name: Execute the declarative provider plane
         id: release-tail
-        uses: ./.buildchain/release-tail-runtime/actions/release-tail
+        uses: ./.buildchain/release-tail-runtime/actions/release/tail/settle
         with:
           declaration: ${{ inputs.declaration-path }}
           provider-bindings: ${{ inputs.provider-bindings-path }}
-          capsule-contract: ${{ inputs.capsule-contract }}
-          rehearsal-capsule: ${{ inputs.rehearsal-capsule-path || inputs.capsule-path }}
-          candidate-root: ${{ github.workspace }}/${{ inputs.candidate-root || inputs.capsule-root }}
+          rehearsal-capsule: ${{ inputs.rehearsal-capsule-path }}
+          candidate-root: ${{ github.workspace }}/${{ inputs.candidate-root }}
           rehearsal-mode: ${{ inputs.rehearsal-mode }}
           rehearsal-authority: ${{ inputs.rehearsal-authority-path }}
-          rehearsal-evidence-path: ${{ inputs.rehearsal-evidence-path || inputs.evidence-path }}
+          rehearsal-evidence-path: ${{ inputs.rehearsal-evidence-path }}
           state-path: ${{ inputs.state-path }}
           github-token: ${{ github.token }}
           http-token: ${{ secrets.http-token }}
@@ -157,4 +112,4 @@ jobs:
           if-no-files-found: error
           path: |
             ${{ inputs.state-path }}
-            ${{ inputs.rehearsal-evidence-path || inputs.evidence-path }}
+            ${{ inputs.rehearsal-evidence-path }}

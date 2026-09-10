@@ -10,14 +10,14 @@ import { semanticRoot } from "@kungfu-tech/kfd/scripts/self-conformance-contract
 import {
   createAdopterDeliveryGate,
   createPackageArtifactProfile,
-} from "../packages/core/adopter-delivery-gate.js";
+} from "../packages/core/adoption/adopter-delivery-gate.js";
 import {
   KFD_ADOPTER_CATEGORY_PROTOCOL_ID,
   KFD_ADOPTER_CATEGORY_PROTOCOL_VERSION,
   createKfdAdopterCategoryProtocolDriver,
   resolvePublishedKfdAdopterCategoryProfiles,
   verifyPublishedKfdAdopterCategoryInstance,
-} from "../packages/core/kfd-adopter-category-driver.js";
+} from "../packages/core/adoption/kfd-adopter-category-driver.js";
 
 const checkedAt = "2026-08-12T00:00:00.000Z";
 const maxAgeSeconds = 86400;

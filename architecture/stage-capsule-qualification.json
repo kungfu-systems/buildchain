@@ -5,10 +5,10 @@
   "storeAuthority": "architecture/stage-capsule-store-contract.json",
   "checkpointAuthority": "architecture/platform-stage-checkpoints.json",
   "resumeAuthority": "architecture/stage-capsule-resume-planner.json",
-  "implementation": "packages/core/stage-capsule-qualification.js",
-  "rehearsal": "scripts/stage-capsule-qualification.mjs",
+  "implementation": "packages/core/build/stage-capsule-qualification.js",
+  "rehearsal": "packages/core/build/commands/stage-capsule-qualification.mjs",
   "mode": "shadow-only",
-  "productionAuthority": "v3",
+  "productionAuthority": "v4-native",
   "campaign": {
     "platforms": ["linux-x64", "macos-arm64", "windows-x64"],
     "processRuns": ["seed", "resume"],
@@ -71,7 +71,7 @@
     "protectedDeliveryMustBeDrained": true
   },
   "rollback": {
-    "switch": "stage-capsule-mode=v3",
+    "switch": "stage-capsule-mode=disabled",
     "migrationRequired": false,
     "retainedStateDestroyed": false
   },

@@ -9,18 +9,10 @@ import {
   CROSS_PLATFORM_ADOPTER_PLATFORMS,
   createCrossPlatformAdopterReport,
   qualifyCrossPlatformAdopters,
-  summarizeBaselineCapabilityInventory,
   validateCrossPlatformAdopterReport,
-} from "../packages/core/cross-platform-adopter-qualification.js";
+} from "../packages/core/adoption/cross-platform-adopter-qualification.js";
 
 const root = path.resolve(import.meta.dirname, "..");
-const inventory = JSON.parse(
-  fs.readFileSync(
-    path.join(root, "architecture/capability-parity-live-capability-inventory.json"),
-    "utf8",
-  ),
-);
-const inventoryEvidence = summarizeBaselineCapabilityInventory(inventory);
 const runtimeSha = "a".repeat(40);
 
 function report(platform, consumer = "buildchain") {
@@ -30,14 +22,7 @@ function report(platform, consumer = "buildchain") {
     sourceBinding: {
       runtimeSha,
       consumerSha: consumer === "buildchain" ? "b".repeat(40) : "c".repeat(40),
-      inventoryRoot: inventoryEvidence.inventoryRoot,
-      sourceCuts: inventoryEvidence.sourceCuts,
-    },
-    capabilityMatrix: {
-      capabilityCount: inventoryEvidence.summary.capabilityCount,
-      categoryCounts: inventoryEvidence.summary.categoryCounts,
-      dispositionCounts: inventoryEvidence.summary.dispositionCounts,
-      categories: inventoryEvidence.categories,
+      inputRoot: `sha256:${"d".repeat(64)}`,
     },
     execution: {
       initialRun: {
@@ -50,7 +35,6 @@ function report(platform, consumer = "buildchain") {
         status: "passed",
         readbackRoot: `sha256:${"1".repeat(64)}`,
       },
-      bootstrap: { status: "passed", resultRoot: `sha256:${"2".repeat(64)}` },
       neutralDriver: {
         id: "ledger-specification-driver",
         status: "passed",
@@ -66,18 +50,6 @@ function report(platform, consumer = "buildchain") {
   });
 }
 
-test("raw v3 inventory produces the complete exact-source matrix", () => {
-  assert.equal(inventoryEvidence.summary.capabilityCount, 4654);
-  assert.equal(inventoryEvidence.categories.length, 18);
-  assert.deepEqual(inventoryEvidence.summary, inventory.summary);
-  const substituted = structuredClone(inventory);
-  delete substituted.capabilities[0].v4Route.evidence;
-  assert.throws(
-    () => summarizeBaselineCapabilityInventory(substituted),
-    /does not bind an exact v3 source to a v4 route/,
-  );
-});
-
 test("two public adopters and the neutral driver reconcile across all platforms", () => {
   const consumers = ["buildchain", "sample-consumer"];
   const reports = consumers.flatMap((consumer) =>
@@ -87,7 +59,6 @@ test("two public adopters and the neutral driver reconcile across all platforms"
   );
   const qualification = qualifyCrossPlatformAdopters({ reports, consumers });
   assert.equal(qualification.reports.length, 6);
-  assert.equal(qualification.capabilityMatrix.capabilityCount, 4654);
   assert.equal(qualification.neutralDriver.status, "passed");
   assert.equal(qualification.authority.stablePublication, false);
 });
@@ -148,7 +119,7 @@ test("runner executes public failure, retry and terminal paths", (t) => {
   const completed = spawnSync(
     process.execPath,
     [
-      "scripts/cross-platform-adopter-qualification.mjs",
+      "packages/core/adoption/commands/cross-platform-adopter-qualification.mjs",
       "run",
       "--runtime-root",
       root,
@@ -164,8 +135,6 @@ test("runner executes public failure, retry and terminal paths", (t) => {
       currentSha,
       "--input",
       "contracts/fixtures/v4-adopter-delivery-v1/gate-positive.json",
-      "--bootstrap",
-      "contracts/fixtures/v4-adopter-delivery-v1/bootstrap-positive.json",
       "--output",
       output,
     ],

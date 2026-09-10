@@ -13,92 +13,68 @@ Invariant: Every over-default surface remains exactly measured, owned, mapped, a
 
 Tests: `tests/maintainability.test.mjs`, `tests/maintainability-governance.test.mjs`
 
-Safe change route: Reduce one owned responsibility behind the stable facade, run focused differential tests, regenerate this map, and lower the exact ceiling.
+Safe change route: Reduce one declared responsibility in its owning module, run focused differential tests, regenerate this map, and lower the exact ceiling.
 
 ### Oversized surfaces
 
-- sources: `actions/macos-credential-island/index.js`
-- sources: `actions/macos-credential-island/lib.js`
-- sources: `actions/promote-buildchain-ref/index.js`
-- sources: `actions/promote-buildchain-ref/internal/durable-transaction-operations.js`
-- sources: `actions/promote-buildchain-ref/internal/durable-transaction-store.js`
-- sources: `actions/promote-buildchain-ref/internal/version-state-operations.js`
-- sources: `actions/promote-buildchain-ref/lib.js`
-- sources: `bin/buildchain.mjs`
-- sources: `packages/core/artifact-passport.js`
-- sources: `packages/core/artifact-verification-envelope.js`
-- sources: `packages/core/buildchain-config.js`
-- sources: `packages/core/buildchain-contract.js`
-- sources: `packages/core/buildchain-kfd-claims.js`
-- sources: `packages/core/dev-delivery-execution-transfer.js`
-- sources: `packages/core/dev-delivery-native-proof.js`
-- sources: `packages/core/dev-delivery-process-boundary.js`
-- sources: `packages/core/diagnostics.js`
-- sources: `packages/core/engineering-housekeeper-github.js`
-- sources: `packages/core/github-artifact-attestation.js`
-- sources: `packages/core/github-governance-authority.js`
+- sources: `packages/core/adoption/buildchain-kfd-claims.js`
+- sources: `packages/core/adoption/kfd-gate.js`
+- sources: `packages/core/adoption/kfd-product-gates.js`
+- sources: `packages/core/adoption/kfd.js`
+- sources: `packages/core/adoption/kfd3-surface-register.js`
+- sources: `packages/core/build/artifact-passport.js`
+- sources: `packages/core/build/artifact-verification-envelope.js`
+- sources: `packages/core/build/github-artifact-attestation.js`
+- sources: `packages/core/build/macos-credential-island/action.js`
+- sources: `packages/core/build/macos-credential-island/lib.js`
+- sources: `packages/core/consumer/buildchain-config.js`
+- sources: `packages/core/consumer/runtime-ref-resume-authority.js`
+- sources: `packages/core/contracts/buildchain-contract.js`
+- sources: `packages/core/dev-delivery/commands/dev-delivery-authority.mjs`
+- sources: `packages/core/dev-delivery/commands/dev-delivery-warrant-options.mjs`
+- sources: `packages/core/dev-delivery/dev-delivery-execution-transfer.js`
+- sources: `packages/core/dev-delivery/dev-delivery-process-boundary.js`
+- sources: `packages/core/governance/commands/reconcile-github-governance.mjs`
+- sources: `packages/core/governance/engineering-housekeeper-github.js`
+- sources: `packages/core/governance/github-governance-authority.js`
+- sources: `packages/core/governance/issue-reporting.js`
 - sources: `packages/core/index.js`
-- sources: `packages/core/issue-reporting.js`
-- sources: `packages/core/kfd-gate.js`
-- sources: `packages/core/kfd-product-gates.js`
-- sources: `packages/core/kfd.js`
-- sources: `packages/core/kfd3-surface-register.js`
-- sources: `packages/core/next-development-controller.js`
-- sources: `packages/core/next-development-transition.js`
-- sources: `packages/core/paper-npm-bootstrap.js`
-- sources: `packages/core/paper.js`
-- sources: `packages/core/publication-artifact.js`
-- sources: `packages/core/publication-authority.js`
-- sources: `packages/core/publication-reproducibility.js`
-- sources: `packages/core/publish-transaction.js`
-- sources: `packages/core/readme-badges.js`
-- sources: `packages/core/release-candidate.js`
-- sources: `packages/core/release-passport.js`
-- sources: `packages/core/release-train.js`
-- sources: `packages/core/stable-release-gate.js`
-- sources: `packages/core/runtime-ref-resume-authority.js`
-- sources: `scripts/audit-github-governance.mjs`
-- sources: `scripts/audit-publication-control-plane.mjs`
-- sources: `scripts/auditable-demo.mjs`
-- sources: `scripts/build-contract-core.mjs`
+- sources: `packages/core/observability/diagnostics.js`
+- sources: `packages/core/paper/commands/paper.mjs`
+- sources: `packages/core/paper/paper-npm-bootstrap.js`
+- sources: `packages/core/providers/commands/infra-contract-core.mjs`
+- sources: `packages/core/providers/commands/infra-contract.mjs`
+- sources: `packages/core/publication/publication-artifact.js`
+- sources: `packages/core/publication/publication-authority.js`
+- sources: `packages/core/publication/publication-reproducibility.js`
+- sources: `packages/core/release/commands/stable-release-gate.mjs`
+- sources: `packages/core/release/next-development-controller.js`
+- sources: `packages/core/release/next-development-transition.js`
+- sources: `packages/core/release/promote-ref/internal/durable-transaction-operations.js`
+- sources: `packages/core/release/promote-ref/internal/durable-transaction-store.js`
+- sources: `packages/core/release/promote-ref/internal/promotion-operations.js`
+- sources: `packages/core/release/promote-ref/internal/version-state-operations.js`
+- sources: `packages/core/release/publish-transaction.js`
+- sources: `packages/core/release/release-candidate.js`
+- sources: `packages/core/release/release-train.js`
+- sources: `packages/core/release/stable-release-gate.js`
+- sources: `packages/core/web/commands/web-surface-core.mjs`
+- sources: `packages/core/web/commands/web-surface.mjs`
+- sources: `packages/core/web/readme-badges.js`
 - sources: `scripts/check-inventory.mjs`
 - sources: `scripts/check-maintainability.mjs`
-- sources: `scripts/dev-alpha-candidate-patrol.mjs`
-- sources: `scripts/dev-delivery-authority.mjs`
-- sources: `scripts/dev-delivery-two-phase.mjs`
-- sources: `scripts/dev-delivery-warrant-options.mjs`
-- sources: `scripts/dev-pr-auto-merge.mjs`
-- sources: `scripts/finalize-native-artifact-signing-result.mjs`
-- sources: `scripts/generate-channel-promotion-workflow.mjs`
 - sources: `scripts/generate-site-bundle.mjs`
-- sources: `scripts/infra-contract-core.mjs`
-- sources: `scripts/infra-contract.mjs`
-- sources: `scripts/locked-source-checkout.mjs`
 - sources: `scripts/maintainability-domain-metrics.mjs`
-- sources: `scripts/paper.mjs`
-- sources: `scripts/reconcile-github-governance.mjs`
-- sources: `scripts/release-candidate-resolver.mjs`
-- sources: `scripts/release-line-policy.mjs`
-- sources: `scripts/resume-from-candidate-run.mjs`
-- sources: `scripts/run-lifecycle-core.mjs`
-- sources: `scripts/stable-candidate-patrol.mjs`
-- sources: `scripts/stable-release-gate.mjs`
-- sources: `scripts/universal-workflow-engine.mjs`
-- sources: `scripts/architecture.mjs`
 - sources: `scripts/warrant-shadow-plan.mjs`
-- sources: `scripts/web-surface-core.mjs`
-- sources: `scripts/web-surface-production-release-pr.mjs`
-- sources: `scripts/web-surface.mjs`
-- sources: `actions/promote-buildchain-ref/internal/promotion-operations.js`
-- rust: `crates/buildchain-host-bridge/src/main.rs`
 - rust: `crates/buildchain-domain-contracts/src/main.rs`
 - rust: `crates/buildchain-domain-contracts/src/product_publication.rs`
-- rust: `crates/buildchain-domain-contracts/src/release_tail.rs`
-- rust: `crates/buildchain-domain-contracts/src/wasm.rs`
 - rust: `crates/buildchain-domain-contracts/src/provider_operation_journal.rs`
 - rust: `crates/buildchain-domain-contracts/src/provider_operation_journal/fold.rs`
+- rust: `crates/buildchain-domain-contracts/src/release_tail.rs`
 - rust: `crates/buildchain-domain-contracts/src/warrant.rs`
 - rust: `crates/buildchain-domain-contracts/src/warrant/decision.rs`
+- rust: `crates/buildchain-domain-contracts/src/wasm.rs`
+- rust: `crates/buildchain-host-bridge/src/main.rs`
 - tests: `tests/auditable-demo-platform.test.mjs`
 - tests: `tests/auditable-demo.test.mjs`
 - tests: `tests/aws-windows-jit-controller.test.mjs`
@@ -106,103 +82,395 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - tests: `tests/build-surface.test.mjs`
 - tests: `tests/buildchain-config.test.mjs`
 - tests: `tests/cli.test.mjs`
+- tests: `tests/delivery-authority-parity.test.mjs`
 - tests: `tests/dev-alpha-candidate-patrol.test.mjs`
 - tests: `tests/dev-delivery-authority.test.mjs`
 - tests: `tests/dev-delivery-process-boundary.test.mjs`
-- tests: `tests/dev-delivery-warrant-command.test.mjs`
 - tests: `tests/dev-delivery-warrant.test.mjs`
 - tests: `tests/dev-pr-auto-merge.test.mjs`
+- tests: `tests/floating-consumer-policy.test.mjs`
 - tests: `tests/github-governance-authority.test.mjs`
 - tests: `tests/infra-contract.test.mjs`
 - tests: `tests/macos-credential-island.test.mjs`
 - tests: `tests/native-artifact-signing-authority.test.mjs`
 - tests: `tests/paper.test.mjs`
+- tests: `tests/promote-buildchain-ref-durable-recovery.test.mjs`
 - tests: `tests/promote-buildchain-ref-governance.test.mjs`
+- tests: `tests/promote-buildchain-ref-major-promotion.test.mjs`
+- tests: `tests/promote-buildchain-ref-recovery-alpha-finalization.test.mjs`
+- tests: `tests/promote-buildchain-ref-recovery-release-reconciliation.test.mjs`
 - tests: `tests/promote-buildchain-ref.test.mjs`
 - tests: `tests/publication-authority.test.mjs`
+- tests: `tests/publication-rehearsal.test.mjs`
 - tests: `tests/publish-transaction.test.mjs`
 - tests: `tests/release-candidate-recovery.test.mjs`
 - tests: `tests/release-candidate.test.mjs`
 - tests: `tests/release-passport.test.mjs`
 - tests: `tests/release-propagation.test.mjs`
-- tests: `tests/delivery-authority-parity.test.mjs`
-- tests: `tests/floating-consumer-policy.test.mjs`
-- tests: `tests/publication-rehearsal.test.mjs`
 - tests: `tests/web-surface.test.mjs`
-- tests: `tests/promote-buildchain-ref-durable-recovery.test.mjs`
-- tests: `tests/promote-buildchain-ref-major-promotion.test.mjs`
-- tests: `tests/promote-buildchain-ref-recovery-alpha-finalization.test.mjs`
-- tests: `tests/promote-buildchain-ref-recovery-release-reconciliation.test.mjs`
-- workflows: `.github/workflows/.gate-profile.yml`
-- workflows: `.github/workflows/.publication-authority.yml`
-- workflows: `.github/workflows/.release-candidate-promote.yml`
-- workflows: `.github/workflows/.release-verify.yml`
-- workflows: `.github/workflows/.web-surface.yml`
-- workflows: `.github/workflows/check.yml`
-- workflows: `.github/workflows/dev-pr-auto-merge.yml`
-- workflows: `.github/workflows/paper-release-sealed.yml`
-- workflows: `.github/workflows/paper-release.yml`
-- workflows: `.github/workflows/publication-artifact.yml`
-- workflows: `.github/workflows/release-candidate-promote.yml`
-- workflows: `.github/workflows/release-propagation.yml`
+- workflows: `.github/workflows/public-release-web.yml`
 
 ### Current top twenty maintenance hotspots
 
-- `tests/product-publication-topology.test.mjs`
-- `.github/workflows/.build.yml`
-- `.github/workflows/.publication-authority.yml`
-- `.github/workflows/bootstrap.yml`
-- `scripts/check-universal-workflow-bootstrap.mjs`
-- `scripts/universal-workflow-engine.mjs`
-- `tests/universal-workflow-bootstrap.test.mjs`
-- `tests/capability-parity-inventory.test.mjs`
-- `tests/floating-consumer-policy-contract.test.mjs`
-- `tests/publication-qualification.test.mjs`
-- `.github/workflows/v4-adopter-delivery.yml`
-- `.github/workflows/buildchain-ref-promotion.yml`
-- `.github/workflows/dev-pr-auto-merge.yml`
-- `tests/release-candidate-recovery.test.mjs`
-- `tests/buildchain-ref-promotion-recovery-entry.test.mjs`
-- `.github/workflows/.release-candidate-promote.yml`
-- `tests/build-surface-promotion.test.mjs`
-- `.github/workflows/buildchain-ref-promotion-recovery.yml`
-- `tests/build-surface.test.mjs`
 - `tests/internal-architecture.test.mjs`
-- `scripts/resume-from-candidate-run.mjs`
-- `scripts/check-capability-parity-inventory.mjs`
-- `.github/workflows/release-candidate-promote.yml`
-- `actions/promote-buildchain-ref/lib.js`
-- `actions/release-candidate-promote/index.js`
-- `actions/release-candidate-promote/product-provider.js`
-- `actions/release-candidate-promote/product-provider-github-adapters.js`
-- `tests/release-candidate-promote.test.mjs`
+- `tests/build-surface-promotion.test.mjs`
+- `tests/build-surface.test.mjs`
+- `tests/buildchain-ref-promotion-recovery-entry.test.mjs`
 - `scripts/check-inventory.mjs`
-- `tests/promote-buildchain-ref.test.mjs`
-- `tests/promotion-channel-router.test.mjs`
-- `tests/release-topology.test.mjs`
-- `scripts/site-capability-metadata.mjs`
-- `tests/floating-consumer-policy.test.mjs`
-- `tests/declarative-promotion-mode.test.mjs`
-- `scripts/buildchain-cli-help.mjs`
-- `scripts/check-floating-consumer-policy-contract.mjs`
-- `tests/dev-delivery-warrant.test.mjs`
-- `packages/core/dev-delivery-warrant-state.js`
-- `actions/promote-buildchain-ref/internal/version-state.js`
-- `packages/core/floating-consumer-release-passport.js`
-- `packages/core/release-passport.js`
-- `tests/promote-buildchain-ref-governance.test.mjs`
-- `scripts/check-maintainability.mjs`
-- `tests/maintainability.test.mjs`
-- `scripts/generate-universal-workflow-facades.mjs`
-- `scripts/check-release-topology.mjs`
-- `actions/release-candidate-promote/product-provider-adapters.js`
-- `scripts/release-candidate-resolver.mjs`
-- `scripts/dev-delivery-warrant.mjs`
-- `scripts/generate-channel-promotion-workflow.mjs`
-- `.github/workflows/v4-stage-capsule-canary.yml`
-- `packages/core/release-tail-provider-plane.js`
-- `packages/core/buildchain-publication-authority.js`
+- `.github/workflows/.build.yml`
+- `tests/dev-delivery-minimal-request.test.mjs`
+- `tests/build-configuration.test.mjs`
 - `.github/workflows/build.yml`
+- `.github/workflows/self-build-fixture.yml`
+- `scripts/generate-channel-promotion-workflow.mjs`
+- `tests/github-governance-authority.test.mjs`
+- `tests/maintainability.test.mjs`
+- `tests/oci-publication.test.mjs`
+- `tests/release-candidate-recovery.test.mjs`
+- `.github/workflows/.release-promote.yml`
+- `.github/workflows/public-build-adopter-qualification.yml`
+- `.github/workflows/public-build-stage-capsule-canary.yml`
+- `.github/workflows/public-release-oci-compose-preview.yml`
+- `.github/workflows/public-release-promote.yml`
+
+## action-process-runtime
+
+Owner: Buildchain runtime maintainers
+
+### Implementation
+
+- `packages/core/runtime/action-process.mjs`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/dev-delivery-node-boundaries.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/dev-delivery-node-boundaries.test.mjs`
+
+## adopter-qualification
+
+Owner: Buildchain adopter maintainers
+
+### Implementation
+
+- `packages/core/adoption/qualification/actions.js`
+- `packages/core/adoption/qualification/admission.js`
+- `packages/core/adoption/qualification/aggregate.js`
+- `packages/core/adoption/qualification/io.js`
+- `packages/core/adoption/qualification/platform.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/adopter-qualification-node.test.mjs`
+- `tests/cross-platform-adopter-qualification.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/adopter-qualification-node.test.mjs tests/cross-platform-adopter-qualification.test.mjs`
+
+## artifact-attestation
+
+Owner: Buildchain release maintainers
+
+### Implementation
+
+- `packages/core/build/github-attestation/action.js`
+- `packages/core/build/github-attestation/admission.js`
+- `packages/core/build/github-attestation/transaction.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/attestation-node.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/attestation-node.test.mjs`
+
+## artifact-provider-relay
+
+Owner: Buildchain artifact provider relay maintainers
+
+### Implementation
+
+- `packages/core/providers/artifact-relay/files.js`
+- `packages/core/providers/artifact-relay/s3-client.js`
+- `packages/core/providers/artifact-relay/transactions.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/artifact-transfer-mode.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/artifact-transfer-mode.test.mjs`
+
+## binary-asset-publication
+
+Owner: Buildchain release maintainers
+
+### Implementation
+
+- `packages/core/publication/binary/action.js`
+- `packages/core/publication/binary/capability.js`
+- `packages/core/publication/binary/evidence.js`
+- `packages/core/publication/binary/transaction.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/binary-assets-node.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/binary-assets-node.test.mjs`
+
+## binary-distribution
+
+Owner: Buildchain maintainers
+
+### Implementation
+
+- `packages/core/build/binary-publication-dispatch.js`
+- `packages/core/build/binary/actions.js`
+- `packages/core/build/binary/checksums.js`
+- `packages/core/build/binary/distribution.js`
+- `packages/core/build/release-evidence-bundle.js`
+- `packages/core/build/standalone/build.js`
+- `packages/core/build/standalone/bundle.js`
+- `packages/core/build/standalone/identity.js`
+- `packages/core/build/standalone/logging.js`
+- `packages/core/build/standalone/process.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/binary-distribution-node.test.mjs`
+- `tests/publication-settlement.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/binary-distribution-node.test.mjs tests/publication-settlement.test.mjs`
+
+## binary-publication-planning
+
+Owner: Buildchain release maintainers
+
+### Implementation
+
+- `packages/core/release/binary/coordinates-action.js`
+- `packages/core/release/binary/coordinates.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/binary-publication-coordinates-node.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/binary-publication-coordinates-node.test.mjs`
+
+## build-gate-profile
+
+Owner: Buildchain maintainers
+
+### Implementation
+
+- `packages/core/build/gate/actions.js`
+- `packages/core/build/gate/aggregate.js`
+- `packages/core/build/gate/commands.js`
+- `packages/core/build/gate/contracts.js`
+- `packages/core/build/gate/controller.js`
+- `packages/core/build/gate/environment.js`
+- `packages/core/build/gate/execution.js`
+- `packages/core/build/gate/files.js`
+- `packages/core/build/gate/outputs.js`
+- `packages/core/build/gate/plan.js`
+- `packages/core/providers/toolchain/codebuild-policy.js`
+- `packages/core/providers/toolchain/codebuild.js`
+- `packages/core/runtime/runtime-selection.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/gate-profile-node.test.mjs`
+- `tests/gate-profile.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/gate-profile-node.test.mjs tests/gate-profile.test.mjs`
+
+## build-signing-transactions
+
+Owner: Buildchain build signing transactions maintainers
+
+### Implementation
+
+- `packages/core/build/credential/seal-input.js`
+- `packages/core/build/signing/actions.js`
+- `packages/core/build/signing/authority-actions.js`
+- `packages/core/build/signing/authority-transaction.js`
+- `packages/core/build/signing/control.js`
+- `packages/core/build/signing/controller-transaction.js`
+- `packages/core/build/signing/credential-transaction.js`
+- `packages/core/build/signing/delegation.js`
+- `packages/core/build/signing/detached.js`
+- `packages/core/build/signing/dispatch.js`
+- `packages/core/build/signing/environment.js`
+- `packages/core/build/signing/files.js`
+- `packages/core/build/signing/import-results.js`
+- `packages/core/build/signing/intake.js`
+- `packages/core/build/signing/materialize.js`
+- `packages/core/build/signing/merge-results.js`
+- `packages/core/build/signing/native-result.js`
+- `packages/core/build/signing/prepare.js`
+- `packages/core/build/signing/request.js`
+- `packages/core/build/signing/seal-requests.js`
+- `packages/core/build/signing/transaction.js`
+- `packages/core/build/signing/verify-results.js`
+- `packages/core/providers/signing/detached-key.js`
+- `packages/core/providers/signing/macos/compound-archive.py`
+- `packages/core/providers/signing/macos/sign-request.sh`
+- `packages/core/providers/signing/native.js`
+- `packages/core/providers/signing/windows/sign-request.ps1`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/signing-authority-transactions.test.mjs`
+- `tests/native-artifact-signing-authority.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/signing-authority-transactions.test.mjs tests/native-artifact-signing-authority.test.mjs`
+
+## cli-capability-adapters
+
+Owner: Buildchain CLI maintainers
+
+### Implementation
+
+- `packages/core/adoption/cli/dispatch.mjs`
+- `packages/core/adoption/cli/kfd-aggregate.mjs`
+- `packages/core/adoption/cli/kfd-hub.mjs`
+- `packages/core/adoption/cli/kfd-migrate-layout.mjs`
+- `packages/core/adoption/cli/kfd-schema.mjs`
+- `packages/core/adoption/cli/kfd-status.mjs`
+- `packages/core/adoption/cli/kfd-upstream.mjs`
+- `packages/core/adoption/cli/kfd.mjs`
+- `packages/core/adoption/cli/output.mjs`
+- `packages/core/adoption/cli/product-gate.mjs`
+- `packages/core/adoption/cli/project.mjs`
+- `packages/core/adoption/cli/standards.mjs`
+- `packages/core/adoption/cli/support.mjs`
+- `packages/core/adoption/cli/surface-register.mjs`
+- `packages/core/build/cli/cache.mjs`
+- `packages/core/build/cli/facts.mjs`
+- `packages/core/build/cli/homebrew.mjs`
+- `packages/core/build/cli/lifecycle.mjs`
+- `packages/core/consumer/cli/infrastructure.mjs`
+- `packages/core/contracts/cli/context.mjs`
+- `packages/core/contracts/cli/introspection.mjs`
+- `packages/core/dev-delivery/cli/dispatch.mjs`
+- `packages/core/governance/cli/dispatch.mjs`
+- `packages/core/governance/cli/doctor.mjs`
+- `packages/core/observability/cli/candidate.mjs`
+- `packages/core/observability/cli/context.mjs`
+- `packages/core/observability/cli/diagnostics.mjs`
+- `packages/core/observability/cli/events.mjs`
+- `packages/core/observability/cli/process-sample.mjs`
+- `packages/core/paper/cli/dispatch.mjs`
+- `packages/core/publication/cli/dispatch.mjs`
+- `packages/core/release/cli/dispatch.mjs`
+- `packages/core/web/cli/badges.mjs`
+- `packages/core/web/cli/surface.mjs`
+- `packages/core/workflow/cli/main.mjs`
+- `packages/core/workflow/cli/process.mjs`
+
+### Contracts
+
+- `architecture/code-layout.json`
+
+### Tests
+
+- `tests/cli.test.mjs`
+- `tests/command-registry.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/cli.test.mjs tests/command-registry.test.mjs`
 
 ## cli-command-registry
 
@@ -211,7 +479,7 @@ Owner: Buildchain CLI maintainers
 ### Implementation
 
 - `bin/buildchain.mjs`
-- `bin/internal/command-registry.mjs`
+- `packages/core/contracts/command-registry.mjs`
 
 ### Contracts
 
@@ -231,18 +499,44 @@ Owner: Buildchain CLI maintainers
 
 - `node --test tests/command-registry.test.mjs tests/cli.test.mjs`
 
+## cli-reference-contract
+
+Owner: Buildchain maintainers
+
+### Implementation
+
+- `packages/core/contracts/cli-reference.js`
+
+### Contracts
+
+- `bin/buildchain.mjs`
+
+### Tests
+
+- `tests/command-registry.test.mjs`
+- `tests/public-reference.test.mjs`
+
+### Generated outputs
+
+- `docs/cli-reference.md`
+- `dist/site/cli-registry.json`
+
+### Minimal validation
+
+- `node --test tests/command-registry.test.mjs tests/public-reference.test.mjs`
+
 ## cli-trust-release-dispatch
 
 Owner: Buildchain maintainers
 
 ### Implementation
 
-- `bin/internal/cli-options.mjs`
-- `bin/internal/trust-release-command-handlers.mjs`
-- `bin/internal/trust-release-cli.mjs`
-- `bin/internal/trust-release-inspection-handlers.mjs`
-- `bin/internal/trust-release-release-handlers.mjs`
-- `bin/internal/trust-release-verification-handlers.mjs`
+- `packages/core/contracts/cli/options.mjs`
+- `packages/core/release/cli/command-handlers.mjs`
+- `packages/core/release/cli/inspection-handlers.mjs`
+- `packages/core/release/cli/release-handlers.mjs`
+- `packages/core/release/cli/trust-release.mjs`
+- `packages/core/release/cli/verification-handlers.mjs`
 
 ### Contracts
 
@@ -262,24 +556,110 @@ Owner: Buildchain maintainers
 
 - `node --test tests/cli.test.mjs tests/public-surface-audit.test.mjs`
 
+## code-layout
+
+Owner: Buildchain maintainers
+
+### Implementation
+
+- `packages/core/contracts/action-inventory.js`
+- `packages/core/contracts/action-taxonomy.js`
+- `packages/core/contracts/runtime-contract-action.js`
+- `packages/core/contracts/runtime-contract-inspection.js`
+- `scripts/check-code-layout.mjs`
+
+### Contracts
+
+- `architecture/code-layout.json`
+
+### Tests
+
+- `tests/code-layout.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/code-layout.test.mjs`
+
+## declarative-demo-transactions
+
+Owner: Buildchain maintainers
+
+### Implementation
+
+- `packages/core/build/demo/action-context.js`
+- `packages/core/build/demo/adapter-actions.js`
+- `packages/core/build/demo/adapter-transactions.js`
+- `packages/core/build/demo/adapter.js`
+- `packages/core/build/demo/binary-action.js`
+- `packages/core/build/demo/bundle-verification.js`
+- `packages/core/build/demo/capture-adaptation.js`
+- `packages/core/build/demo/capture.js`
+- `packages/core/build/demo/collection-actions.js`
+- `packages/core/build/demo/collection-containers.js`
+- `packages/core/build/demo/collection-context.js`
+- `packages/core/build/demo/collection.js`
+- `packages/core/build/demo/composition.js`
+- `packages/core/build/demo/container.js`
+- `packages/core/build/demo/gate.js`
+- `packages/core/build/demo/inspection-worker.js`
+- `packages/core/build/demo/io.js`
+- `packages/core/build/demo/materialization.js`
+- `packages/core/build/demo/media-bundle.js`
+- `packages/core/build/demo/media-inspection.js`
+- `packages/core/build/demo/media-profile.js`
+- `packages/core/build/demo/media-qualification-action.js`
+- `packages/core/build/demo/media-qualification.js`
+- `packages/core/build/demo/presentation.js`
+- `packages/core/build/demo/publication.js`
+- `packages/core/build/demo/renderer-evidence.js`
+- `packages/core/build/demo/renditions.js`
+- `packages/core/build/demo/scenario.js`
+- `packages/core/build/demo/schema.js`
+- `packages/core/build/demo/transport-smoke.js`
+- `packages/core/build/demo/values.js`
+- `packages/core/providers/demo/capture-worker.py`
+- `packages/core/providers/git-ref-readback.mjs`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/auditable-demo-platform.test.mjs`
+- `tests/demo-collection-node.test.mjs`
+- `tests/release-propagation-node.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/auditable-demo-platform.test.mjs tests/demo-collection-node.test.mjs tests/release-propagation-node.test.mjs`
+
 ## declarative-release-provider-plane
 
 Owner: Buildchain release provider maintainers
 
 ### Implementation
 
-- `packages/core/release-tail-provider-plane.js`
-- `packages/core/release-tail-provider-adapters.js`
-- `packages/core/release-tail-compatibility.js`
-- `scripts/release-tail.mjs`
-- `actions/release-tail/index.js`
+- `actions/release/tail/settle/index.js`
+- `packages/core/release/commands/release-tail.mjs`
+- `packages/core/release/release-tail-provider-adapters.js`
+- `packages/core/release/release-tail-provider-plane.js`
+- `packages/core/release/settle/action.js`
 
 ### Contracts
 
 - `contracts/release-tail-capabilities-v1.schema.json`
 - `contracts/release-tail-provider-bindings-v1.schema.json`
-- `.github/workflows/release-tail.yml`
-- `actions/release-tail/action.yml`
+- `.github/workflows/public-release-tail.yml`
+- `actions/release/tail/settle/action.yml`
 - `docs/release-tail-provider-plane.md`
 
 ### Tests
@@ -289,11 +669,128 @@ Owner: Buildchain release provider maintainers
 
 ### Generated outputs
 
-- `actions/release-tail/dist/index.js`
+- `actions/release/tail/settle/dist/index.js`
 
 ### Minimal validation
 
 - `node --test tests/release-tail-provider-plane.test.mjs tests/release-tail-contract.test.mjs`
+
+## demo-adapter-transactions
+
+Owner: Buildchain maintainers
+
+### Implementation
+
+- `packages/core/build/artifact-coordinate-action.js`
+- `packages/core/build/artifact-coordinate.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/auditable-demo.test.mjs`
+- `tests/demo-adapter-node.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/auditable-demo.test.mjs tests/demo-adapter-node.test.mjs`
+
+## dev-delivery-transactions
+
+Owner: Buildchain protected delivery maintainers
+
+### Implementation
+
+- `packages/core/dev-delivery/admission/gh-cli-client.js`
+- `packages/core/dev-delivery/admission/github-client.js`
+- `packages/core/dev-delivery/admission/policy.js`
+- `packages/core/dev-delivery/admission/queue.js`
+- `packages/core/dev-delivery/admission/readiness.js`
+- `packages/core/dev-delivery/admission/report.js`
+- `packages/core/dev-delivery/admission/request.js`
+- `packages/core/dev-delivery/admission/targeted.js`
+- `packages/core/dev-delivery/admission/transaction.js`
+- `packages/core/dev-delivery/candidate/admission-actions.js`
+- `packages/core/dev-delivery/candidate/admission.js`
+- `packages/core/dev-delivery/candidate/coordinates.js`
+- `packages/core/dev-delivery/candidate/evidence.js`
+- `packages/core/dev-delivery/candidate/request.js`
+- `packages/core/dev-delivery/candidate/reservation-action.js`
+- `packages/core/dev-delivery/candidate/reservation.js`
+- `packages/core/dev-delivery/candidate/source-paths.js`
+- `packages/core/dev-delivery/candidate/submission.js`
+- `packages/core/dev-delivery/merge-queue-policy.js`
+- `packages/core/dev-delivery/native/action-context.js`
+- `packages/core/dev-delivery/native/actions.js`
+- `packages/core/dev-delivery/native/attempt.js`
+- `packages/core/dev-delivery/native/candidate.js`
+- `packages/core/dev-delivery/native/context-record.js`
+- `packages/core/dev-delivery/native/execution.js`
+- `packages/core/dev-delivery/native/failure.js`
+- `packages/core/dev-delivery/native/files.js`
+- `packages/core/dev-delivery/native/finalizer-admission.js`
+- `packages/core/dev-delivery/native/heartbeat-action.js`
+- `packages/core/dev-delivery/native/heartbeat.js`
+- `packages/core/dev-delivery/native/provider-boundary.js`
+- `packages/core/dev-delivery/native/qualification.js`
+- `packages/core/dev-delivery/native/readback.js`
+- `packages/core/dev-delivery/native/reuse.js`
+- `packages/core/dev-delivery/native/seal-action.js`
+- `packages/core/dev-delivery/native/transactions.js`
+- `packages/core/dev-delivery/native/transfer.js`
+- `packages/core/dev-delivery/qualification/action.js`
+- `packages/core/dev-delivery/qualification/controller.js`
+- `packages/core/dev-delivery/qualification/github-client.js`
+- `packages/core/dev-delivery/qualification/model.js`
+- `packages/core/dev-delivery/qualification/report.js`
+- `packages/core/dev-delivery/queue/completion.js`
+- `packages/core/dev-delivery/queue/landing-action.js`
+- `packages/core/dev-delivery/queue/reconciliation-action.js`
+- `packages/core/dev-delivery/source-proof/evidence.js`
+- `packages/core/dev-delivery/source-proof/io.js`
+- `packages/core/dev-delivery/source-proof/predicates.js`
+- `packages/core/dev-delivery/source-proof/replay.js`
+- `packages/core/dev-delivery/source-proof/reuse.js`
+- `packages/core/dev-delivery/source-proof/seal.js`
+- `packages/core/dev-delivery/warrant/actions.js`
+- `packages/core/dev-delivery/warrant/cancellation.js`
+- `packages/core/dev-delivery/warrant/failure-settlement.js`
+- `packages/core/dev-delivery/warrant/handoff.js`
+- `packages/core/dev-delivery/warrant/observation.js`
+- `packages/core/dev-delivery/warrant/persistence.js`
+- `packages/core/dev-delivery/warrant/reservation-readback.js`
+- `packages/core/dev-delivery/warrant/service.js`
+- `packages/core/dev-delivery/warrant/terminal-policy.js`
+- `packages/core/dev-delivery/warrant/terminal.js`
+- `packages/core/dev-delivery/warrant/transitions.js`
+- `packages/core/dev-delivery/warrant/values.js`
+- `packages/core/providers/dev-delivery/candidate.js`
+- `packages/core/providers/dev-delivery/protection.js`
+- `packages/core/providers/dev-delivery/store.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/dev-delivery-node-boundaries.test.mjs`
+- `tests/dev-delivery-source-paths.test.mjs`
+- `tests/dev-delivery-transactions.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/dev-delivery-node-boundaries.test.mjs tests/dev-delivery-source-paths.test.mjs tests/dev-delivery-transactions.test.mjs`
 
 ## engineering-housekeeper
 
@@ -301,10 +798,10 @@ Owner: Buildchain engineering hygiene maintainers
 
 ### Implementation
 
-- `packages/core/engineering-housekeeper.js`
-- `packages/core/engineering-housekeeper-github-client.js`
-- `packages/core/engineering-housekeeper-github.js`
-- `scripts/engineering-housekeeper-workflow.mjs`
+- `packages/core/governance/commands/engineering-housekeeper-workflow.mjs`
+- `packages/core/governance/engineering-housekeeper-github-client.js`
+- `packages/core/governance/engineering-housekeeper-github.js`
+- `packages/core/governance/engineering-housekeeper.js`
 
 ### Contracts
 
@@ -326,6 +823,130 @@ Owner: Buildchain engineering hygiene maintainers
 
 - `node --test tests/engineering-housekeeper.test.mjs tests/engineering-housekeeper-github.test.mjs tests/engineering-housekeeper-workflow.test.mjs`
 
+## git-transfer
+
+Owner: Buildchain maintainers
+
+### Implementation
+
+- `packages/core/providers/sync-git/action.mjs`
+- `packages/core/providers/sync-git/transfer.mjs`
+
+### Contracts
+
+- `actions/providers/git/sync/action.yml`
+- `.github/workflows/.ops-git-sync.yml`
+
+### Tests
+
+- `tests/git-transfer.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/git-transfer.test.mjs`
+
+## github-provider-transactions
+
+Owner: Buildchain github provider transactions maintainers
+
+### Implementation
+
+- `packages/core/providers/github-cli-api.js`
+- `packages/core/providers/github-issue-comment.js`
+- `packages/core/providers/github-permission.js`
+- `packages/core/providers/github-token.js`
+- `packages/core/providers/github/artifact-attestation.js`
+- `packages/core/providers/github/commits.js`
+- `packages/core/providers/github/json-client.js`
+- `packages/core/providers/github/product-publication.js`
+- `packages/core/providers/github/publication-control-plane.js`
+- `packages/core/providers/github/pull-requests.js`
+- `packages/core/providers/github/qualification.js`
+- `packages/core/providers/github/release-assets.js`
+- `packages/core/providers/github/signing-request.js`
+- `packages/core/providers/github/source-lock.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/github-issue-comment.test.mjs`
+- `tests/release-line-bootstrap.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/github-issue-comment.test.mjs tests/release-line-bootstrap.test.mjs`
+
+## governance-controllers
+
+Owner: Buildchain governance controllers maintainers
+
+### Implementation
+
+- `packages/core/governance/alpha-candidate/action.js`
+- `packages/core/governance/alpha-candidate/controller.js`
+- `packages/core/governance/alpha-candidate/lifecycle.js`
+- `packages/core/governance/alpha-candidate/options.js`
+- `packages/core/governance/alpha-candidate/outputs.js`
+- `packages/core/governance/alpha-candidate/provider.js`
+- `packages/core/governance/alpha-candidate/report.js`
+- `packages/core/governance/alpha-candidate/state.js`
+- `packages/core/governance/alpha-candidate/values.js`
+- `packages/core/governance/audit/actions.js`
+- `packages/core/governance/audit/collection.js`
+- `packages/core/governance/audit/github-reader.js`
+- `packages/core/governance/audit/identity.js`
+- `packages/core/governance/audit/incident.mjs`
+- `packages/core/governance/audit/transactions.js`
+- `packages/core/governance/candidate/body-action.js`
+- `packages/core/governance/candidate/body-renderer.js`
+- `packages/core/governance/housekeeping/action.js`
+- `packages/core/governance/housekeeping/execution.js`
+- `packages/core/governance/housekeeping/options.js`
+- `packages/core/governance/housekeeping/report.js`
+- `packages/core/governance/housekeeping/transactions.js`
+- `packages/core/governance/patrol/action.js`
+- `packages/core/governance/patrol/controller.js`
+- `packages/core/governance/patrol/options.js`
+- `packages/core/governance/patrol/report.js`
+- `packages/core/governance/patrol/transaction.js`
+- `packages/core/governance/publication/audit.js`
+- `packages/core/governance/publication/collection.js`
+- `packages/core/governance/publication/policy-values.js`
+- `packages/core/governance/publication/source-authorization.js`
+- `packages/core/governance/receipt-admission-action.js`
+- `packages/core/governance/receipt-admission.js`
+- `packages/core/governance/release-check-policy.js`
+- `packages/core/governance/release-reconciliation-action.js`
+- `packages/core/governance/release-reconciliation.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/engineering-housekeeper.test.mjs`
+- `tests/github-governance-audit-workflow.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/engineering-housekeeper.test.mjs tests/github-governance-audit-workflow.test.mjs`
+
 ## maintainability-governance
 
 Owner: Buildchain architecture maintainers
@@ -334,10 +955,10 @@ Owner: Buildchain architecture maintainers
 
 - `scripts/check-internal-architecture.mjs`
 - `scripts/check-maintainability.mjs`
-- `scripts/maintainability-metrics.mjs`
 - `scripts/generate-agent-change-map.mjs`
 - `scripts/maintainability-domain-metrics.mjs`
 - `scripts/maintainability-governance.mjs`
+- `scripts/maintainability-metrics.mjs`
 
 ### Contracts
 
@@ -358,7 +979,103 @@ Owner: Buildchain architecture maintainers
 ### Minimal validation
 
 - `node --test tests/internal-architecture.test.mjs tests/maintainability.test.mjs tests/maintainability-governance.test.mjs`
-- `node scripts/generate-agent-change-map.mjs`
+
+## npm-publication-transaction
+
+Owner: Buildchain npm publication transaction maintainers
+
+### Implementation
+
+- `packages/core/publication/npm/environment.js`
+- `packages/core/publication/npm/evidence.js`
+- `packages/core/publication/npm/pack-preview.js`
+- `packages/core/publication/npm/package.js`
+- `packages/core/publication/npm/preview-action.js`
+- `packages/core/publication/npm/preview.js`
+- `packages/core/publication/npm/registry.js`
+- `packages/core/publication/npm/transaction.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/declarative-npm-provider.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/declarative-npm-provider.test.mjs`
+
+## observed-evidence-publication
+
+Owner: Buildchain maintainers
+
+### Implementation
+
+- `packages/core/observability/controller-actions.js`
+- `packages/core/observability/controller-evidence-io.js`
+- `packages/core/observability/controller-input-boundary.js`
+- `packages/core/observability/controller/identity-action.js`
+- `packages/core/observability/controller/identity.js`
+- `packages/core/observability/diagnostics/aggregate.js`
+- `packages/core/observability/evidence/actions.js`
+- `packages/core/observability/evidence/bundle.js`
+- `packages/core/observability/evidence/publication.js`
+- `packages/core/observability/evidence/transactions.js`
+- `packages/core/observability/publisher-admission.js`
+- `packages/core/observability/transaction-journal.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/observed-evidence-node.test.mjs`
+- `tests/observed-evidence.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/observed-evidence-node.test.mjs tests/observed-evidence.test.mjs`
+
+## oci-publication-transaction
+
+Owner: Buildchain oci publication transaction maintainers
+
+### Implementation
+
+- `packages/core/publication/oci/preview-actions.js`
+- `packages/core/publication/oci/preview-admission.js`
+- `packages/core/publication/oci/preview-promotion.js`
+- `packages/core/publication/oci/preview-registry.js`
+- `packages/core/publication/oci/preview-transaction.js`
+- `packages/core/publication/oci/preview-values.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/oci-compose-preview.test.mjs`
+- `tests/oci-publication.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/oci-compose-preview.test.mjs tests/oci-publication.test.mjs`
 
 ## paper-fleet-golden-path
 
@@ -366,17 +1083,17 @@ Owner: Buildchain Paper maintainers
 
 ### Implementation
 
-- `packages/core/paper-agent-entry.js`
-- `packages/core/paper-fleet.js`
-- `packages/core/paper-npm-bootstrap.js`
-- `packages/core/paper-repository.js`
-- `packages/core/paper-runtime-channels.js`
-- `packages/core/paper-scaffold-content.js`
-- `packages/core/paper-work.js`
-- `packages/core/paper.js`
-- `packages/core/public-surface-cli.js`
-- `scripts/buildchain-cli-help.mjs`
-- `scripts/paper-work-fleet-cli.mjs`
+- `packages/core/contracts/public-surface-cli.js`
+- `packages/core/paper/commands/paper-work-fleet-cli.mjs`
+- `packages/core/paper/paper-agent-entry.js`
+- `packages/core/paper/paper-fleet.js`
+- `packages/core/paper/paper-npm-bootstrap.js`
+- `packages/core/paper/paper-repository.js`
+- `packages/core/paper/paper-runtime-channels.js`
+- `packages/core/paper/paper-scaffold-content.js`
+- `packages/core/paper/paper-work.js`
+- `packages/core/paper/paper.js`
+- `packages/core/workflow/commands/buildchain-cli-help.mjs`
 
 ### Contracts
 
@@ -399,21 +1116,177 @@ Owner: Buildchain Paper maintainers
 
 - `node --test tests/cli.test.mjs tests/paper.test.mjs tests/paper-migration.test.mjs tests/public-surface-audit.test.mjs`
 
+## paper-lifecycle-operations
+
+Owner: Buildchain Paper maintainers
+
+### Implementation
+
+- `packages/core/paper/operations/bootstrap.js`
+- `packages/core/paper/operations/files.js`
+- `packages/core/paper/operations/github-observation.js`
+- `packages/core/paper/operations/identity.js`
+- `packages/core/paper/operations/npm-observation.js`
+- `packages/core/paper/operations/plans.js`
+- `packages/core/paper/operations/preflight-checks.js`
+- `packages/core/paper/operations/provisioning-validation.js`
+- `packages/core/paper/operations/provisioning.js`
+- `packages/core/paper/operations/runtime-observation.js`
+- `packages/core/paper/operations/runtime.js`
+- `packages/core/paper/operations/scaffold-config.js`
+- `packages/core/paper/operations/scaffold-workflows.js`
+- `packages/core/paper/operations/scaffold.js`
+- `packages/core/paper/operations/status-facts.js`
+- `packages/core/paper/operations/status.js`
+- `packages/core/paper/operations/toolchain-observation.js`
+- `packages/core/paper/operations/workspace.js`
+
+### Contracts
+
+- `packages/core/paper/paper.js`
+
+### Tests
+
+- `tests/paper-check-policy.test.mjs`
+- `tests/paper-migration.test.mjs`
+- `tests/paper-publication-controller.test.mjs`
+- `tests/paper-publication-node.test.mjs`
+- `tests/paper.test.mjs`
+
+### Generated outputs
+
+- `dist/site/node-api-registry.json`
+
+### Minimal validation
+
+- `node --test tests/paper-check-policy.test.mjs tests/paper-migration.test.mjs tests/paper-publication-controller.test.mjs tests/paper-publication-node.test.mjs tests/paper.test.mjs`
+
+## paper-publication
+
+Owner: Buildchain maintainers
+
+### Implementation
+
+- `packages/core/paper/publication/actions.js`
+- `packages/core/paper/publication/candidate.js`
+- `packages/core/paper/publication/controller.js`
+- `packages/core/paper/publication/envelope.js`
+- `packages/core/paper/publication/propagation.js`
+- `packages/core/paper/publication/readback.js`
+- `packages/core/paper/publication/target.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/paper-publication-node.test.mjs`
+- `tests/publication-artifact-candidate.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/paper-publication-node.test.mjs tests/publication-artifact-candidate.test.mjs`
+
+## process-sampling
+
+Owner: Buildchain process sampling maintainers
+
+### Implementation
+
+- `packages/core/observability/process/sampling.js`
+- `packages/core/providers/process/sample-worker.mjs`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/cli.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/cli.test.mjs`
+
+## promotion-candidate-recovery
+
+Owner: Buildchain release maintainers
+
+### Implementation
+
+- `packages/core/release/recovery/artifacts.js`
+- `packages/core/release/recovery/candidate.js`
+- `packages/core/release/recovery/capsules.js`
+- `packages/core/release/recovery/download.js`
+- `packages/core/release/recovery/files.js`
+- `packages/core/release/recovery/provenance.js`
+- `packages/core/release/recovery/publication.js`
+- `packages/core/release/recovery/readback.js`
+- `packages/core/release/recovery/runtime.js`
+- `packages/core/release/recovery/transactions.js`
+- `packages/core/runtime/provider-closure.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/promotion-node-boundaries.test.mjs`
+- `tests/publication-qualification.test.mjs`
+- `tests/publication-settlement.test.mjs`
+- `tests/release-candidate-promote.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/promotion-node-boundaries.test.mjs tests/publication-qualification.test.mjs tests/publication-settlement.test.mjs tests/release-candidate-promote.test.mjs`
+
 ## promotion-channel-orchestration
 
 Owner: Buildchain action maintainers
 
 ### Implementation
 
-- `actions/promote-buildchain-ref/internal/contained-published-version-state.js`
-- `actions/promote-buildchain-ref/internal/promote-alpha-channel.js`
-- `actions/promote-buildchain-ref/internal/promote-major-channel.js`
-- `actions/promote-buildchain-ref/internal/promote-release-channel.js`
+- `packages/core/release/promote-ref/internal/branch-protection.js`
+- `packages/core/release/promote-ref/internal/candidate-admission.js`
+- `packages/core/release/promote-ref/internal/channel-governance.js`
+- `packages/core/release/promote-ref/internal/channel-resume.js`
+- `packages/core/release/promote-ref/internal/channel-tags.js`
+- `packages/core/release/promote-ref/internal/contained-published-version-state.js`
+- `packages/core/release/promote-ref/internal/generated-branch.js`
+- `packages/core/release/promote-ref/internal/generated-identity.js`
+- `packages/core/release/promote-ref/internal/generated-ref.js`
+- `packages/core/release/promote-ref/internal/npm-distribution.js`
+- `packages/core/release/promote-ref/internal/npm-existing-evidence.js`
+- `packages/core/release/promote-ref/internal/passport-files.js`
+- `packages/core/release/promote-ref/internal/passport-generation.js`
+- `packages/core/release/promote-ref/internal/promote-alpha-channel.js`
+- `packages/core/release/promote-ref/internal/promote-major-channel.js`
+- `packages/core/release/promote-ref/internal/promote-release-channel.js`
+- `packages/core/release/promote-ref/internal/publish-command.js`
+- `packages/core/release/promote-ref/internal/publish-contract.js`
+- `packages/core/release/promote-ref/internal/publish-transaction.js`
+- `packages/core/release/promote-ref/internal/tag-selection.js`
+- `packages/core/release/promote-ref/internal/transaction-context.js`
+- `packages/core/release/promote-ref/internal/transaction-recovery.js`
 
 ### Contracts
 
-- `actions/promote-buildchain-ref/action.yml`
-- `actions/promote-buildchain-ref/lib.js`
+- `actions/release/promotion/ref/action.yml`
+- `packages/core/release/promote-ref/lib.js`
 
 ### Tests
 
@@ -425,7 +1298,7 @@ Owner: Buildchain action maintainers
 
 ### Generated outputs
 
-- `actions/promote-buildchain-ref/dist/index.js`
+- `actions/release/promotion/ref/dist/index.js`
 
 ### Minimal validation
 
@@ -437,14 +1310,14 @@ Owner: Buildchain maintainers
 
 ### Implementation
 
-- `actions/promote-buildchain-ref/internal/durable-transaction-store.js`
-- `actions/promote-buildchain-ref/internal/durable-transaction-operations.js`
-- `actions/promote-buildchain-ref/internal/github-adapter.js`
-- `actions/promote-buildchain-ref/internal/promotion-operations.js`
+- `packages/core/release/promote-ref/internal/durable-transaction-operations.js`
+- `packages/core/release/promote-ref/internal/durable-transaction-store.js`
+- `packages/core/release/promote-ref/internal/github-adapter.js`
+- `packages/core/release/promote-ref/internal/promotion-operations.js`
 
 ### Contracts
 
-- `actions/promote-buildchain-ref/lib.js`
+- `packages/core/release/promote-ref/lib.js`
 
 ### Tests
 
@@ -454,7 +1327,7 @@ Owner: Buildchain maintainers
 
 ### Generated outputs
 
-- `actions/promote-buildchain-ref/dist/index.js`
+- `actions/release/promotion/ref/dist/index.js`
 
 ### Minimal validation
 
@@ -466,13 +1339,13 @@ Owner: Buildchain maintainers
 
 ### Implementation
 
-- `actions/promote-buildchain-ref/internal/promotion-policy.js`
-- `actions/promote-buildchain-ref/internal/promotion-options.js`
+- `packages/core/release/promote-ref/internal/promotion-options.js`
+- `packages/core/release/promote-ref/internal/promotion-policy.js`
 
 ### Contracts
 
-- `actions/promote-buildchain-ref/action.yml`
-- `actions/promote-buildchain-ref/lib.js`
+- `actions/release/promotion/ref/action.yml`
+- `packages/core/release/promote-ref/lib.js`
 
 ### Tests
 
@@ -482,11 +1355,54 @@ Owner: Buildchain maintainers
 
 ### Generated outputs
 
-- `actions/promote-buildchain-ref/dist/index.js`
+- `actions/release/promotion/ref/dist/index.js`
 
 ### Minimal validation
 
 - `node --test tests/promote-buildchain-ref.test.mjs tests/promote-buildchain-ref-governance.test.mjs tests/promotion-responsibilities.test.mjs`
+
+## promotion-routing-and-qualification
+
+Owner: Buildchain release maintainers
+
+### Implementation
+
+- `packages/core/consumer/channel-selection.js`
+- `packages/core/consumer/invocation-selector.js`
+- `packages/core/consumer/policy-admission.js`
+- `packages/core/consumer/policy-scan.js`
+- `packages/core/consumer/workflow-definition-authority.js`
+- `packages/core/release/promotion-request.js`
+- `packages/core/release/promotion/actions.js`
+- `packages/core/release/promotion/admission.js`
+- `packages/core/release/promotion/candidate.js`
+- `packages/core/release/promotion/channel.js`
+- `packages/core/release/promotion/identities.js`
+- `packages/core/release/promotion/publish-gate.js`
+- `packages/core/release/promotion/qualification-action.js`
+- `packages/core/release/promotion/qualification.js`
+- `packages/core/release/promotion/routing.js`
+- `packages/core/release/promotion/selection.js`
+- `packages/core/release/promotion/source-intent.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/promotion-qualification-transaction.test.mjs`
+- `tests/promotion-request.test.mjs`
+- `tests/promotion-routing-node.test.mjs`
+- `tests/source-owned-promotion-policy.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/promotion-qualification-transaction.test.mjs tests/promotion-request.test.mjs tests/promotion-routing-node.test.mjs tests/source-owned-promotion-policy.test.mjs`
 
 ## promotion-runtime-override-authorization
 
@@ -494,11 +1410,11 @@ Owner: Buildchain release governance maintainers
 
 ### Implementation
 
-- `scripts/authorize-promotion-runtime-override.cjs`
+- `packages/core/release/runtime-override-authorization.js`
 
 ### Contracts
 
-- `.github/workflows/release-candidate-promote.yml`
+- `.github/workflows/public-release-promote.yml`
 
 ### Tests
 
@@ -518,13 +1434,13 @@ Owner: Buildchain maintainers
 
 ### Implementation
 
-- `actions/promote-buildchain-ref/internal/version-state.js`
-- `actions/promote-buildchain-ref/internal/version-state-operations.js`
+- `packages/core/release/promote-ref/internal/version-state-operations.js`
+- `packages/core/release/version-state.js`
 
 ### Contracts
 
 - `.buildchain/release-impact.json`
-- `actions/promote-buildchain-ref/lib.js`
+- `packages/core/release/promote-ref/lib.js`
 
 ### Tests
 
@@ -534,11 +1450,223 @@ Owner: Buildchain maintainers
 
 ### Generated outputs
 
-- `actions/promote-buildchain-ref/dist/index.js`
+- `actions/release/promotion/ref/dist/index.js`
 
 ### Minimal validation
 
 - `node --test tests/promote-buildchain-ref.test.mjs tests/promote-buildchain-ref-recovery.test.mjs tests/release-impact-contract.test.mjs`
+
+## publication-authority-qualification
+
+Owner: Buildchain maintainers
+
+### Implementation
+
+- `packages/core/publication/authority/actions.js`
+- `packages/core/publication/authority/admission.js`
+- `packages/core/publication/authority/assembly.js`
+- `packages/core/publication/authority/binary-evidence.js`
+- `packages/core/publication/authority/candidate-evidence.js`
+- `packages/core/publication/authority/consumer-gate.js`
+- `packages/core/publication/authority/control-plane.js`
+- `packages/core/publication/authority/evidence.js`
+- `packages/core/publication/authority/gate.js`
+- `packages/core/publication/authority/governance.js`
+- `packages/core/publication/authority/paper-evidence.js`
+- `packages/core/publication/authority/request.js`
+- `packages/core/publication/authority/result.js`
+- `packages/core/publication/authority/runner.js`
+- `packages/core/publication/authority/seal.js`
+- `packages/core/publication/authority/verification-evidence.js`
+- `packages/core/publication/authority/verification.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/publication-authority-assembly.test.mjs`
+- `tests/publication-authority-node.test.mjs`
+- `tests/publication-authority.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/publication-authority-assembly.test.mjs tests/publication-authority-node.test.mjs tests/publication-authority.test.mjs`
+
+## publication-candidate-build
+
+Owner: Buildchain maintainers
+
+### Implementation
+
+- `packages/core/publication/candidate/artifact.js`
+- `packages/core/publication/candidate/collection-action.js`
+- `packages/core/publication/candidate/collection.js`
+- `packages/core/publication/candidate/kind.js`
+- `packages/core/publication/candidate/manifest.js`
+- `packages/core/publication/candidate/package-binding.js`
+- `packages/core/publication/candidate/package.js`
+- `packages/core/publication/candidate/paper-package.js`
+- `packages/core/publication/candidate/passport.js`
+- `packages/core/publication/candidate/qualification-action.js`
+- `packages/core/publication/candidate/qualification.js`
+- `packages/core/publication/candidate/registry-hydration.js`
+- `packages/core/publication/candidate/reproducibility.js`
+- `packages/core/publication/candidate/sealing.js`
+- `packages/core/publication/candidate/stage-capsules.js`
+- `packages/core/publication/candidate/toolchain.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/publication-artifact-candidate.test.mjs`
+- `tests/publication-build-node.test.mjs`
+- `tests/publication-candidate-transactions.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/publication-artifact-candidate.test.mjs tests/publication-build-node.test.mjs tests/publication-candidate-transactions.test.mjs`
+
+## publication-head-classification
+
+Owner: Buildchain release maintainers
+
+### Implementation
+
+- `packages/core/release/promotion/product-state.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/publication-head-node.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/publication-head-node.test.mjs`
+
+## publication-installation
+
+Owner: Buildchain publication installation maintainers
+
+### Implementation
+
+- `packages/core/publication/installer/evidence.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/binary-distribution-node.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/binary-distribution-node.test.mjs`
+
+## publication-promotion-transaction
+
+Owner: Buildchain publication promotion transaction maintainers
+
+### Implementation
+
+- `packages/core/publication/settlement/actions.js`
+- `packages/core/publication/settlement/transaction.js`
+- `packages/core/release/promote-candidate/action.js`
+- `packages/core/release/promote-candidate/development-source.js`
+- `packages/core/release/promote-candidate/evidence-binding.js`
+- `packages/core/release/promote-candidate/evidence-inputs.js`
+- `packages/core/release/promote-candidate/files.js`
+- `packages/core/release/promote-candidate/next-development-provider.js`
+- `packages/core/release/promote-candidate/next-development-queue.js`
+- `packages/core/release/promote-candidate/oci-provider.js`
+- `packages/core/release/promote-candidate/oci-registry-client.js`
+- `packages/core/release/promote-candidate/outputs.js`
+- `packages/core/release/promote-candidate/product-finalization-wait.js`
+- `packages/core/release/promote-candidate/product-provider-adapters.js`
+- `packages/core/release/promote-candidate/product-provider-github-adapters.js`
+- `packages/core/release/promote-candidate/product-provider.js`
+- `packages/core/release/promote-candidate/provider-request.js`
+- `packages/core/release/promote-candidate/provider-settlement.js`
+- `packages/core/release/promote-candidate/publication-completion.js`
+- `packages/core/release/promote-candidate/release-documents.js`
+- `packages/core/release/promote-candidate/transaction.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/release-candidate-promote.test.mjs`
+- `tests/product-publication-topology.test.mjs`
+- `tests/publication-settlement.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/release-candidate-promote.test.mjs tests/product-publication-topology.test.mjs tests/publication-settlement.test.mjs`
+
+## release-line-bootstrap
+
+Owner: Buildchain maintainers
+
+### Implementation
+
+- `packages/core/release/line/action.js`
+- `packages/core/release/line/governance.js`
+- `packages/core/release/line/plan.js`
+- `packages/core/release/line/policy.js`
+- `packages/core/release/line/protection.js`
+- `packages/core/release/line/request.js`
+- `packages/core/release/line/source.js`
+- `packages/core/release/line/transaction.js`
+- `packages/core/release/line/verification-action.js`
+- `packages/core/release/line/verification.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/line-bootstrap-action.test.mjs`
+- `tests/line-open-node.test.mjs`
+- `tests/release-line-bootstrap.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/line-bootstrap-action.test.mjs tests/line-open-node.test.mjs tests/release-line-bootstrap.test.mjs`
 
 ## release-passport-verification
 
@@ -546,7 +1674,46 @@ Owner: Buildchain release trust maintainers
 
 ### Implementation
 
-- `packages/core/release-passport.js`
+- `packages/core/release/passport/artifact-index.js`
+- `packages/core/release/passport/assembly-artifacts.js`
+- `packages/core/release/passport/assembly-inputs.js`
+- `packages/core/release/passport/assembly-material.js`
+- `packages/core/release/passport/assembly-render.js`
+- `packages/core/release/passport/assembly.js`
+- `packages/core/release/passport/assets.js`
+- `packages/core/release/passport/attachments.js`
+- `packages/core/release/passport/authoritative-base.js`
+- `packages/core/release/passport/build.js`
+- `packages/core/release/passport/collection-inputs.js`
+- `packages/core/release/passport/collection-material.js`
+- `packages/core/release/passport/collection-options.js`
+- `packages/core/release/passport/collection-output.js`
+- `packages/core/release/passport/collection.js`
+- `packages/core/release/passport/commands.js`
+- `packages/core/release/passport/consumer-input.js`
+- `packages/core/release/passport/consumer-validation.js`
+- `packages/core/release/passport/discovery.js`
+- `packages/core/release/passport/documents.js`
+- `packages/core/release/passport/evidence-validation.js`
+- `packages/core/release/passport/files.js`
+- `packages/core/release/passport/fixture.js`
+- `packages/core/release/passport/identity.js`
+- `packages/core/release/passport/impact-validation.js`
+- `packages/core/release/passport/impact.js`
+- `packages/core/release/passport/inputs.js`
+- `packages/core/release/passport/invariants.js`
+- `packages/core/release/passport/issues.js`
+- `packages/core/release/passport/json.js`
+- `packages/core/release/passport/locations.js`
+- `packages/core/release/passport/packages.js`
+- `packages/core/release/passport/publish-validation.js`
+- `packages/core/release/passport/publish.js`
+- `packages/core/release/passport/report.js`
+- `packages/core/release/passport/state-validation.js`
+- `packages/core/release/passport/transaction.js`
+- `packages/core/release/passport/trust-claims.js`
+- `packages/core/release/passport/trust-validation.js`
+- `packages/core/release/release-passport.js`
 
 ### Contracts
 
@@ -566,19 +1733,103 @@ Owner: Buildchain release trust maintainers
 
 - `node --test tests/release-passport.test.mjs tests/release-passport-contract.test.mjs`
 
+## release-propagation-transactions
+
+Owner: Buildchain maintainers
+
+### Implementation
+
+- `packages/core/release/propagation/actions.js`
+- `packages/core/release/propagation/delivery.js`
+- `packages/core/release/propagation/planning.js`
+- `packages/core/release/propagation/report.js`
+- `packages/core/release/propagation/store.js`
+- `packages/core/release/propagation/transactions.js`
+- `packages/core/release/propagation/work.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/propagation-transactions.test.mjs`
+- `tests/release-propagation-node.test.mjs`
+- `tests/release-propagation.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/propagation-transactions.test.mjs tests/release-propagation-node.test.mjs tests/release-propagation.test.mjs`
+
+## release-source-governance
+
+Owner: Buildchain release source governance maintainers
+
+### Implementation
+
+- `packages/core/release/candidate/download.js`
+- `packages/core/release/candidate/lineage.js`
+- `packages/core/release/candidate/materialize.js`
+- `packages/core/release/candidate/payloads.js`
+- `packages/core/release/candidate/publication-intent.js`
+- `packages/core/release/candidate/resolve.js`
+- `packages/core/release/candidate/run-selection.js`
+- `packages/core/release/candidate/selection.js`
+- `packages/core/release/candidate/transport.js`
+- `packages/core/release/next-development/actions.js`
+- `packages/core/release/next-development/approval.js`
+- `packages/core/release/next-development/enqueue.js`
+- `packages/core/release/next-development/finalization.js`
+- `packages/core/release/next-development/observation.js`
+- `packages/core/release/next-development/review-policy.js`
+- `packages/core/release/next-development/verification.js`
+- `packages/core/release/qualification/actions.js`
+- `packages/core/release/qualification/campaign.js`
+- `packages/core/release/qualification/options.js`
+- `packages/core/release/qualification/public-build.js`
+- `packages/core/release/stable-patrol/action.js`
+- `packages/core/release/stable-patrol/controller.js`
+- `packages/core/release/stable-patrol/coordinates.js`
+- `packages/core/release/stable-patrol/github-client.js`
+- `packages/core/release/stable-patrol/options.js`
+- `packages/core/release/stable-patrol/report.js`
+- `packages/core/release/version-state/verification.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/release-candidate.test.mjs`
+- `tests/next-development-transition.test.mjs`
+- `tests/stable-candidate-ledger.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/release-candidate.test.mjs tests/next-development-transition.test.mjs tests/stable-candidate-ledger.test.mjs`
+
 ## release-workflow-promotion-routing
 
 Owner: Buildchain maintainers
 
 ### Implementation
 
-- `scripts/promotion-routing-evidence.mjs`
-- `scripts/verify-promotion-router-binding.sh`
+- `packages/core/release/commands/promotion-routing-evidence.mjs`
+- `packages/core/release/commands/verify-promotion-router-binding.sh`
 
 ### Contracts
 
-- `.github/workflows/.release-candidate-promote.yml`
-- `.github/workflows/release-candidate-promote.yml`
+- `.github/workflows/.release-promote.yml`
+- `.github/workflows/public-release-promote.yml`
 
 ### Tests
 
@@ -588,7 +1839,7 @@ Owner: Buildchain maintainers
 
 ### Generated outputs
 
-- `.github/workflows/release-candidate-promote.yml`
+- `.github/workflows/public-release-promote.yml`
 
 ### Minimal validation
 
@@ -600,52 +1851,78 @@ Owner: Buildchain workflow maintainers
 
 ### Implementation
 
-- `scripts/resolve-artifact-transfer-mode.mjs`
-- `scripts/run-lifecycle-core.mjs`
-- `packages/core/build-configuration.js`
-- `scripts/resolve-build-configuration.mjs`
-- `scripts/build/artifact-contract.mjs`
-- `scripts/build/artifact-store.mjs`
-- `scripts/build/attest.mjs`
-- `scripts/build/context.mjs`
-- `scripts/build/finalize.mjs`
-- `scripts/build/plan.mjs`
-- `scripts/build/prepare.mjs`
-- `scripts/build/sign.mjs`
-- `scripts/build/stage.mjs`
-- `scripts/build/transfer.mjs`
+- `packages/core/build/build-configuration.js`
+- `packages/core/build/cache/compiler-evidence.js`
+- `packages/core/build/commands/resolve-artifact-transfer-mode.mjs`
+- `packages/core/build/commands/resolve-build-configuration.mjs`
+- `packages/core/build/environment/action.js`
+- `packages/core/build/environment/provision.js`
+- `packages/core/build/lifecycle/action.js`
+- `packages/core/build/lifecycle/artifacts.js`
+- `packages/core/build/lifecycle/context.js`
+- `packages/core/build/lifecycle/diagnostics.js`
+- `packages/core/build/lifecycle/errors.js`
+- `packages/core/build/lifecycle/execution.js`
+- `packages/core/build/lifecycle/files.js`
+- `packages/core/build/lifecycle/manifest.js`
+- `packages/core/build/lifecycle/sampling.js`
+- `packages/core/build/lifecycle/stage-action.js`
+- `packages/core/build/lifecycle/stage.js`
+- `packages/core/build/lifecycle/substage-evidence.js`
+- `packages/core/build/lifecycle/transaction.js`
+- `packages/core/build/plan/action-context.js`
+- `packages/core/build/plan/action.js`
+- `packages/core/build/plan/admission.js`
+- `packages/core/build/plan/configuration.js`
+- `packages/core/build/plan/environment.js`
+- `packages/core/build/plan/identity.js`
+- `packages/core/build/plan/lifecycle.js`
+- `packages/core/build/plan/matrices.js`
+- `packages/core/build/plan/resolve.js`
+- `packages/core/build/plan/runners.js`
+- `packages/core/build/plan/source.js`
+- `packages/core/build/plan/stage-order.js`
+- `packages/core/build/plan/values.js`
+- `packages/core/build/summary/action.js`
+- `packages/core/build/summary/aggregation.js`
+- `packages/core/build/summary/artifacts.js`
+- `packages/core/build/summary/controller-receipt.js`
+- `packages/core/build/summary/execution.js`
+- `packages/core/build/summary/finalization.js`
+- `packages/core/build/summary/payloads.js`
 
 ### Contracts
 
 - `.github/workflows/.build.yml`
 - `.github/workflows/build.yml`
 - `architecture/build-environments.json`
-- `actions/resolve-build-plan/action.yml`
-- `actions/prepare-build-environment/action.yml`
-- `actions/run-build-stage/action.yml`
-- `actions/transfer-build-artifact/action.yml`
-- `actions/sign-build-artifact/action.yml`
-- `actions/attest-build-artifact/action.yml`
-- `actions/finalize-build-result/action.yml`
+- `actions/build/lifecycle/plan/action.yml`
+- `actions/build/lifecycle/prepare/action.yml`
+- `actions/build/lifecycle/stage/action.yml`
+- `actions/build/artifact/transfer/action.yml`
+- `actions/build/artifact/sign/action.yml`
+- `actions/build/artifact/attest/action.yml`
+- `actions/build/artifact/finalize/action.yml`
 - `architecture/build-orchestration.json`
 
 ### Tests
 
 - `tests/artifact-transfer-mode.test.mjs`
+- `tests/build-configuration.test.mjs`
+- `tests/build-surface-promotion.test.mjs`
 - `tests/build-surface-reusable-build-artifacts.test.mjs`
 - `tests/build-surface.test.mjs`
-- `tests/build-surface-promotion.test.mjs`
 - `tests/controller-evidence.test.mjs`
-- `tests/build-configuration.test.mjs`
+- `tests/lifecycle-substage-evidence.test.mjs`
 
 ### Generated outputs
 
 - `.github/workflows/build.yml`
-- `actions/run-lifecycle/dist/index.js`
+- `actions/build/lifecycle/run/dist/index.js`
 
 ### Minimal validation
 
-- `node --test tests/artifact-transfer-mode.test.mjs tests/build-surface-reusable-build-artifacts.test.mjs tests/build-surface.test.mjs tests/build-surface-promotion.test.mjs tests/controller-evidence.test.mjs`
+- `node --test tests/artifact-transfer-mode.test.mjs tests/build-configuration.test.mjs tests/build-surface-promotion.test.mjs tests/build-surface-reusable-build-artifacts.test.mjs tests/build-surface.test.mjs tests/controller-evidence.test.mjs tests/lifecycle-substage-evidence.test.mjs`
 
 ## reusable-workflow-call-contract
 
@@ -653,9 +1930,9 @@ Owner: Buildchain release governance maintainers
 
 ### Implementation
 
-- `packages/core/workflow-call-contract.js`
-- `packages/core/workflow-yaml-contract.js`
-- `scripts/workflow-call-contract.mjs`
+- `packages/core/contracts/commands/workflow-call-contract.mjs`
+- `packages/core/contracts/workflow-call-contract.js`
+- `packages/core/contracts/workflow-yaml-contract.js`
 
 ### Contracts
 
@@ -674,15 +1951,72 @@ Owner: Buildchain release governance maintainers
 
 - `node --test tests/workflow-call-contract.test.mjs tests/public-surface-audit.test.mjs`
 
+## runtime-provider-foundations
+
+Owner: Buildchain runtime provider foundations maintainers
+
+### Implementation
+
+- `packages/core/providers/runner/observation.js`
+- `packages/core/providers/runner/offline-routing.js`
+- `packages/core/runtime/action-host.js`
+- `packages/core/runtime/checkout-identity.js`
+- `packages/core/runtime/consumer-shell.js`
+- `packages/core/runtime/installation-root.js`
+- `packages/core/runtime/locked-dependencies.js`
+- `packages/core/runtime/runtime-selection-action.js`
+- `packages/core/runtime/toolchain/actions.js`
+- `packages/core/runtime/toolchain/user-paths.js`
+- `packages/core/runtime/toolchain/windows-rust.js`
+- `packages/core/runtime/workflow-runtime.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/installation-root.test.mjs`
+- `tests/gate-profile.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/installation-root.test.mjs tests/gate-profile.test.mjs`
+
 ## shared-build-contract
 
 Owner: Buildchain contract maintainers
 
 ### Implementation
 
-- `packages/core/buildchain-contract.js`
-- `scripts/build-contract-core.mjs`
-- `scripts/github-output.mjs`
+- `packages/core/build/artifact/actions.js`
+- `packages/core/build/artifact/attestation.js`
+- `packages/core/build/artifact/contracts.js`
+- `packages/core/build/artifact/coordinates.js`
+- `packages/core/build/artifact/credential-transport.js`
+- `packages/core/build/artifact/expectations.js`
+- `packages/core/build/artifact/files.js`
+- `packages/core/build/artifact/naming.js`
+- `packages/core/build/artifact/services.js`
+- `packages/core/build/artifact/store.js`
+- `packages/core/build/artifact/summary.js`
+- `packages/core/build/artifact/transfer-policy.js`
+- `packages/core/build/artifact/transport.js`
+- `packages/core/build/artifact/upload.js`
+- `packages/core/build/runner/matrix.js`
+- `packages/core/build/runner/presets.js`
+- `packages/core/contracts/buildchain-contract.js`
+- `packages/core/contracts/structured-values.js`
+- `packages/core/providers/commands/github-output.mjs`
+- `packages/core/publication/npm/package-plan.js`
+- `packages/core/release/source/channel.js`
+- `packages/core/release/source/coordinates.js`
+- `packages/core/release/source/lineage.js`
+- `packages/core/release/source/manifest.js`
 
 ### Contracts
 
@@ -691,9 +2025,10 @@ Owner: Buildchain contract maintainers
 
 ### Tests
 
-- `tests/buildchain-contract.test.mjs`
-- `tests/build-surface.test.mjs`
+- `tests/build-artifact-pipeline.test.mjs`
 - `tests/build-surface-promotion.test.mjs`
+- `tests/build-surface.test.mjs`
+- `tests/buildchain-contract.test.mjs`
 - `tests/github-output.test.mjs`
 
 ### Generated outputs
@@ -702,7 +2037,7 @@ Owner: Buildchain contract maintainers
 
 ### Minimal validation
 
-- `node --test tests/buildchain-contract.test.mjs tests/build-surface.test.mjs tests/build-surface-promotion.test.mjs`
+- `node --test tests/build-artifact-pipeline.test.mjs tests/build-surface-promotion.test.mjs tests/build-surface.test.mjs tests/buildchain-contract.test.mjs tests/github-output.test.mjs`
 
 ## site-upstream-agent-propagation
 
@@ -710,11 +2045,11 @@ Owner: Buildchain release propagation maintainers
 
 ### Implementation
 
-- `packages/core/release-propagation-agent-entry.js`
-- `packages/core/release-propagation-push.js`
-- `packages/core/release-propagation-stage-evidence.js`
-- `packages/core/release-propagation-work.js`
-- `scripts/release-propagation.mjs`
+- `packages/core/release/commands/release-propagation.mjs`
+- `packages/core/release/release-propagation-agent-entry.js`
+- `packages/core/release/release-propagation-push.js`
+- `packages/core/release/release-propagation-stage-evidence.js`
+- `packages/core/release/release-propagation-work.js`
 
 ### Contracts
 
@@ -736,35 +2071,138 @@ Owner: Buildchain release propagation maintainers
 
 - `node --test tests/release-propagation.test.mjs tests/release-propagation-pickup.test.mjs`
 
+## source-provider-transactions
+
+Owner: Buildchain source provider transactions maintainers
+
+### Implementation
+
+- `packages/core/providers/git/fetch-process.js`
+- `packages/core/providers/git/fetch-worker.js`
+- `packages/core/providers/git/patch-root.js`
+- `packages/core/providers/source-checkout/action.js`
+- `packages/core/providers/source-checkout/auth.js`
+- `packages/core/providers/source-checkout/fetch.js`
+- `packages/core/providers/source-checkout/git.js`
+- `packages/core/providers/source-checkout/transaction.js`
+- `packages/core/providers/source-checkout/values.js`
+- `packages/core/providers/source-checkout/workspace.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/locked-source-checkout.test.mjs`
+- `tests/git-transfer.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/locked-source-checkout.test.mjs tests/git-transfer.test.mjs`
+
+## source-qualification
+
+Owner: Buildchain maintainers
+
+### Implementation
+
+- `packages/core/build/source-admission.js`
+- `packages/core/build/source/checkout-action.js`
+- `packages/core/build/source/controller-actions.js`
+- `packages/core/build/source/controller.js`
+- `packages/core/build/source/lifecycle-action.js`
+- `packages/core/build/source/lifecycle.js`
+- `packages/core/build/source/proof-actions.js`
+- `packages/core/build/source/proof-lookup.js`
+- `packages/core/build/source/proof.js`
+- `packages/core/build/verification/actions.js`
+- `packages/core/build/verification/discovery.js`
+- `packages/core/build/verification/identity.js`
+- `packages/core/build/verification/proof.js`
+- `packages/core/build/verification/repository.js`
+- `packages/core/build/verification/runner.js`
+- `packages/core/build/verification/source.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/dev-delivery-source-proof-reuse.test.mjs`
+- `tests/source-check-node.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/dev-delivery-source-proof-reuse.test.mjs tests/source-check-node.test.mjs`
+
+## tail-reseal-transactions
+
+Owner: Buildchain release maintainers
+
+### Implementation
+
+- `packages/core/release/reseal/actions.js`
+- `packages/core/release/reseal/admission.js`
+- `packages/core/release/reseal/files.js`
+- `packages/core/release/reseal/finalize-platform.js`
+- `packages/core/release/reseal/outputs.js`
+- `packages/core/release/reseal/plan.js`
+- `packages/core/release/reseal/platform.js`
+- `packages/core/release/reseal/readbacks.js`
+- `packages/core/release/reseal/seal.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/tail-reseal-node.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/tail-reseal-node.test.mjs`
+
 ## v4-adopter-delivery
 
 Owner: Buildchain adopter delivery maintainers
 
 ### Implementation
 
-- `bin/internal/adopter-delivery-cli.mjs`
-- `packages/core/adopter-delivery-gate.js`
-- `packages/core/adopter-delivery-passport.js`
-- `packages/core/adopter-delivery-vectors.js`
-- `packages/core/buildchain-delivery-bootstrap.js`
-- `packages/core/buildchain-delivery-infrastructure.js`
-- `packages/core/buildchain-delivery-self-dogfood.js`
-- `packages/core/kfd-adopter-category-driver.js`
-- `packages/core/legacy-kfd-adopter-driver.js`
-- `packages/core/published-delivery-authority.js`
-- `packages/core/adopter-delivery.js`
-- `packages/core/adopter-delivery-parity.js`
-- `packages/core/cross-platform-adopter-qualification.js`
-- `scripts/cross-platform-adopter-qualification.mjs`
 - `crates/buildchain-domain-contracts/src/adopter_delivery.rs`
+- `packages/core/adoption/adopter-delivery-gate.js`
+- `packages/core/adoption/adopter-delivery-parity.js`
+- `packages/core/adoption/adopter-delivery-passport.js`
+- `packages/core/adoption/adopter-delivery-vectors.js`
+- `packages/core/adoption/adopter-delivery.js`
+- `packages/core/adoption/cli/delivery.mjs`
+- `packages/core/adoption/commands/cross-platform-adopter-qualification.mjs`
+- `packages/core/adoption/cross-platform-adopter-qualification.js`
+- `packages/core/adoption/kfd-adopter-category-driver.js`
+- `packages/core/dev-delivery/buildchain-delivery-bootstrap.js`
+- `packages/core/dev-delivery/buildchain-delivery-infrastructure.js`
+- `packages/core/dev-delivery/buildchain-delivery-self-dogfood.js`
+- `packages/core/dev-delivery/published-delivery-authority.js`
 
 ### Contracts
 
 - `architecture/adopter-delivery-parity.json`
 - `architecture/cross-platform-adopter-qualification.json`
 - `contracts/v4-adopter-delivery-v1.schema.json`
-- `contracts/fixtures/v4-adopter-delivery-v1/archive-template.json`
-- `contracts/fixtures/v4-adopter-delivery-v1/bootstrap-positive.json`
 - `contracts/fixtures/v4-adopter-delivery-v1/gate-positive.json`
 - `contracts/fixtures/v4-adopter-delivery-v1/gate-unknown-selector.json`
 - `contracts/fixtures/v4-adopter-delivery-v1/offline-vectors.json`
@@ -793,42 +2231,57 @@ Owner: Buildchain architecture maintainers
 
 ### Implementation
 
-- `scripts/architecture.mjs`
-- `scripts/bridge-bootstrap.mjs`
-- `scripts/bridge-evidence.mjs`
-- `scripts/host-adapter.mjs`
-- `crates/buildchain-host-bridge/src/main.rs`
-- `packages/core/provider-operation-journal.js`
-- `packages/core/provider-readback-idempotency.js`
-- `packages/core/release-activation-shadow.js`
-- `packages/core/stable-publication-fence.js`
-- `packages/core/partial-mutation-recovery-qualification.js`
-- `packages/core/runtime-ref-resume-authority.js`
-- `packages/core/runtime-selector-persistence.js`
-- `packages/core/tail-reseal-contract.js`
-- `packages/core/tail-reseal.js`
-- `packages/core/tail-reseal-github.js`
-- `packages/core/tail-reseal-receipt.js`
-- `scripts/tail-reseal.mjs`
-- `scripts/tail-reseal-macos-rehearsal.mjs`
-- `packages/core/stage-capsule.js`
-- `packages/core/stage-capsule-store.js`
-- `packages/core/stage-capsule-local-store.js`
-- `packages/core/platform-stage-checkpoints.js`
-- `scripts/platform-stage-checkpoint-rehearsal.mjs`
-- `packages/core/stage-capsule-qualification.js`
-- `packages/core/stage-capsule-qualification-campaign.js`
-- `scripts/stage-capsule-qualification.mjs`
-- `crates/buildchain-domain-contracts/src/stage_capsule.rs`
-- `crates/buildchain-domain-contracts/src/stage_capsule_store.rs`
+- `crates/buildchain-domain-contracts/src/partial_mutation_recovery.rs`
 - `crates/buildchain-domain-contracts/src/provider_operation_journal.rs`
 - `crates/buildchain-domain-contracts/src/provider_operation_journal/fold.rs`
 - `crates/buildchain-domain-contracts/src/provider_readback_idempotency.rs`
 - `crates/buildchain-domain-contracts/src/release_activation_shadow.rs`
-- `crates/buildchain-domain-contracts/src/release_activation_shadow/model.rs`
 - `crates/buildchain-domain-contracts/src/release_activation_shadow/journal.rs`
+- `crates/buildchain-domain-contracts/src/release_activation_shadow/model.rs`
 - `crates/buildchain-domain-contracts/src/stable_publication_fence.rs`
-- `crates/buildchain-domain-contracts/src/partial_mutation_recovery.rs`
+- `crates/buildchain-domain-contracts/src/stage_capsule.rs`
+- `crates/buildchain-domain-contracts/src/stage_capsule_store.rs`
+- `crates/buildchain-host-bridge/src/main.rs`
+- `packages/core/build/commands/stage-capsule-qualification.mjs`
+- `packages/core/build/platform-stage-checkpoints.js`
+- `packages/core/build/stage-capsule-local-store.js`
+- `packages/core/build/stage-capsule-qualification-campaign.js`
+- `packages/core/build/stage-capsule-qualification.js`
+- `packages/core/build/stage-capsule-store.js`
+- `packages/core/build/stage-capsule.js`
+- `packages/core/build/stage-capsule/actions.js`
+- `packages/core/build/stage-capsule/campaign/aggregate.js`
+- `packages/core/build/stage-capsule/campaign/context.js`
+- `packages/core/build/stage-capsule/campaign/resume.js`
+- `packages/core/build/stage-capsule/campaign/run.js`
+- `packages/core/build/stage-capsule/campaign/seed.js`
+- `packages/core/build/stage-capsule/campaign/worker.js`
+- `packages/core/build/stage-capsule/canary.js`
+- `packages/core/build/stage-capsule/rehearsal/checkpoint.js`
+- `packages/core/build/stage-capsule/rehearsal/files.js`
+- `packages/core/build/stage-capsule/rehearsal/macos-tail.js`
+- `packages/core/build/stage-capsule/rehearsal/resume.js`
+- `packages/core/build/stage-capsule/rehearsal/run.js`
+- `packages/core/build/stage-capsule/rehearsal/verify.js`
+- `packages/core/build/stage-capsule/rehearsal/worker.js`
+- `packages/core/consumer/runtime-ref-resume-authority.js`
+- `packages/core/consumer/runtime-selector-persistence.js`
+- `packages/core/governance/commands/architecture.mjs`
+- `packages/core/release/commands/tail-reseal.mjs`
+- `packages/core/release/partial-mutation-recovery-qualification.js`
+- `packages/core/release/provider-operation-journal.js`
+- `packages/core/release/provider-readback-idempotency.js`
+- `packages/core/release/release-activation-shadow.js`
+- `packages/core/release/stable-publication-fence.js`
+- `packages/core/release/tail-reseal-contract.js`
+- `packages/core/release/tail-reseal-github.js`
+- `packages/core/release/tail-reseal-receipt.js`
+- `packages/core/release/tail-reseal.js`
+- `packages/core/runtime/commands/bridge-bootstrap.mjs`
+- `packages/core/runtime/commands/host-adapter.mjs`
+- `scripts/bridge-evidence.mjs`
+- `scripts/platform-stage-checkpoint-rehearsal.mjs`
+- `scripts/tail-reseal-macos-rehearsal.mjs`
 
 ### Contracts
 
@@ -887,6 +2340,7 @@ Owner: Buildchain architecture maintainers
 - `tests/runtime-ref-resume-authority.test.mjs`
 - `tests/tail-reseal.test.mjs`
 - `tests/tail-reseal-parity.test.mjs`
+- `tests/stage-capsule-qualification.test.mjs`
 
 ### Generated outputs
 
@@ -902,16 +2356,16 @@ Owner: Buildchain compatibility authority maintainers
 
 ### Implementation
 
-- `bin/internal/compatibility-facts-cli.mjs`
-- `packages/core/kungfu-temporal-fact.js`
-- `packages/core/buildchain-compatibility-fact.js`
-- `packages/core/buildchain-compatibility-authority.js`
-- `packages/core/buildchain-compatibility-proof.js`
 - `crates/buildchain-domain-contracts/src/compatibility_facts.rs`
 - `crates/buildchain-domain-contracts/src/compatibility_facts/encoding.rs`
 - `crates/buildchain-domain-contracts/src/compatibility_facts/fixture.rs`
 - `crates/buildchain-domain-contracts/src/compatibility_facts/lifecycle.rs`
 - `crates/buildchain-domain-contracts/src/compatibility_facts/verifier.rs`
+- `packages/core/contracts/kungfu-temporal-fact.js`
+- `packages/core/governance/buildchain-compatibility-authority.js`
+- `packages/core/governance/buildchain-compatibility-fact.js`
+- `packages/core/governance/buildchain-compatibility-proof.js`
+- `packages/core/governance/cli/compatibility-facts.mjs`
 
 ### Contracts
 
@@ -939,40 +2393,36 @@ Owner: Buildchain protected delivery maintainers
 
 ### Implementation
 
-- `packages/core/dev-delivery-warrant.js`
-- `packages/core/dev-delivery-warrant-state.js`
-- `packages/core/dev-delivery-warrant-native-compatibility.js`
-- `packages/core/dev-delivery-warrant-qualification.js`
-- `packages/core/dev-delivery-warrant-legacy-recovery.js`
-- `packages/core/dev-delivery-native-proof.js`
-- `packages/core/dev-delivery-native-execution.js`
-- `packages/core/dev-delivery-execution-failure.js`
-- `packages/core/dev-delivery-execution-transfer.js`
-- `packages/core/dev-delivery-process-boundary.js`
-- `packages/core/dev-delivery-contract-surface.js`
-- `packages/core/dev-delivery-authority-candidate.js`
-- `packages/core/dev-delivery-authority-evidence.js`
-- `packages/core/dev-delivery-authority-state.js`
-- `packages/core/dev-delivery-authority-qualification.js`
-- `packages/core/dev-delivery-authority-landing.js`
-- `packages/core/dev-delivery-landing-admission-core.js`
-- `packages/core/dev-delivery-authority-settlement.js`
-- `packages/core/dev-delivery-landing-readback.js`
-- `packages/core/dev-delivery-landing-terminal-evidence.js`
-- `packages/core/dev-delivery-landing-testing-port.js`
-- `packages/core/dev-delivery-provider-attempt.js`
-- `packages/core/dev-delivery-provider-heartbeat.js`
-- `scripts/dev-delivery-warrant.mjs`
-- `scripts/dev-delivery-warrant-options.mjs`
-- `scripts/dev-delivery-warrant-store.mjs`
-- `scripts/dev-delivery-authority.mjs`
-- `scripts/dev-delivery-authority-command-adapters.mjs`
-- `scripts/dev-delivery-authority-provider.mjs`
-- `scripts/dev-delivery-native-run.mjs`
-- `scripts/dev-delivery-process-boundary.mjs`
-- `scripts/dev-delivery-provider-heartbeat.mjs`
-- `scripts/dev-delivery-two-phase-resume.mjs`
-- `scripts/dev-delivery-two-phase.mjs`
+- `packages/core/dev-delivery/commands/dev-delivery-authority-command-adapters.mjs`
+- `packages/core/dev-delivery/commands/dev-delivery-authority-provider.mjs`
+- `packages/core/dev-delivery/commands/dev-delivery-authority.mjs`
+- `packages/core/dev-delivery/commands/dev-delivery-process-boundary.mjs`
+- `packages/core/dev-delivery/commands/dev-delivery-provider-heartbeat.mjs`
+- `packages/core/dev-delivery/commands/dev-delivery-two-phase.mjs`
+- `packages/core/dev-delivery/commands/dev-delivery-warrant-options.mjs`
+- `packages/core/dev-delivery/commands/dev-delivery-warrant.mjs`
+- `packages/core/dev-delivery/dev-delivery-authority-candidate.js`
+- `packages/core/dev-delivery/dev-delivery-authority-evidence.js`
+- `packages/core/dev-delivery/dev-delivery-authority-landing.js`
+- `packages/core/dev-delivery/dev-delivery-authority-qualification.js`
+- `packages/core/dev-delivery/dev-delivery-authority-settlement.js`
+- `packages/core/dev-delivery/dev-delivery-authority-state.js`
+- `packages/core/dev-delivery/dev-delivery-contract-surface.js`
+- `packages/core/dev-delivery/dev-delivery-execution-failure.js`
+- `packages/core/dev-delivery/dev-delivery-execution-transfer.js`
+- `packages/core/dev-delivery/dev-delivery-landing-admission-core.js`
+- `packages/core/dev-delivery/dev-delivery-landing-readback.js`
+- `packages/core/dev-delivery/dev-delivery-landing-terminal-evidence.js`
+- `packages/core/dev-delivery/dev-delivery-landing-testing-port.js`
+- `packages/core/dev-delivery/dev-delivery-native-execution.js`
+- `packages/core/dev-delivery/dev-delivery-native-proof.js`
+- `packages/core/dev-delivery/dev-delivery-process-boundary.js`
+- `packages/core/dev-delivery/dev-delivery-provider-attempt.js`
+- `packages/core/dev-delivery/dev-delivery-provider-heartbeat.js`
+- `packages/core/dev-delivery/dev-delivery-warrant-native-requirements.js`
+- `packages/core/dev-delivery/dev-delivery-warrant-qualification.js`
+- `packages/core/dev-delivery/dev-delivery-warrant-state.js`
+- `packages/core/dev-delivery/dev-delivery-warrant.js`
 
 ### Contracts
 
@@ -980,7 +2430,7 @@ Owner: Buildchain protected delivery maintainers
 - `architecture/decisions/0003-two-phase-delivery-warrant.md`
 - `contracts/dev-delivery-authority-v2.schema.json`
 - `dist/site/schemas/dev-delivery-authority-v2.schema.json`
-- `.github/workflows/dev-pr-auto-merge.yml`
+- `.github/workflows/public-ops-dev-auto-merge.yml`
 - `.github/workflows/self-ops-dev-delivery.yml`
 - `templates/native-dev-delivery.yml`
 - `docs/dev-delivery-warrant.md`
@@ -990,7 +2440,6 @@ Owner: Buildchain protected delivery maintainers
 
 - `tests/dev-delivery-warrant.test.mjs`
 - `tests/dev-delivery-warrant-command.test.mjs`
-- `tests/dev-delivery-warrant-legacy-recovery.test.mjs`
 - `tests/dev-delivery-two-phase.test.mjs`
 - `tests/dev-delivery-two-phase-run.test.mjs`
 - `tests/dev-delivery-native-run.test.mjs`
@@ -1007,7 +2456,7 @@ Owner: Buildchain protected delivery maintainers
 
 ### Minimal validation
 
-- `node --test tests/dev-delivery-warrant.test.mjs tests/dev-delivery-warrant-command.test.mjs tests/dev-delivery-warrant-legacy-recovery.test.mjs tests/dev-delivery-two-phase.test.mjs tests/dev-delivery-two-phase-run.test.mjs tests/dev-delivery-native-run.test.mjs tests/dev-delivery-process-boundary.test.mjs tests/dev-delivery-process-boundary-negative.test.mjs tests/dev-delivery-provider-heartbeat.test.mjs tests/dev-delivery-authority.test.mjs tests/build-surface.test.mjs tests/delivery-authority-parity.test.mjs`
+- `node --test tests/dev-delivery-warrant.test.mjs tests/dev-delivery-warrant-command.test.mjs tests/dev-delivery-two-phase.test.mjs tests/dev-delivery-two-phase-run.test.mjs tests/dev-delivery-native-run.test.mjs tests/dev-delivery-process-boundary.test.mjs tests/dev-delivery-process-boundary-negative.test.mjs tests/dev-delivery-provider-heartbeat.test.mjs tests/dev-delivery-authority.test.mjs tests/build-surface.test.mjs tests/delivery-authority-parity.test.mjs`
 
 ## v4-publication-rehearsal
 
@@ -1015,9 +2464,9 @@ Owner: Buildchain publication rehearsal maintainers
 
 ### Implementation
 
-- `packages/core/publication-rehearsal-capsule.js`
-- `packages/core/publication-rehearsal-provider-bindings.js`
-- `packages/core/publication-rehearsal.js`
+- `packages/core/publication/publication-rehearsal-capsule.js`
+- `packages/core/publication/publication-rehearsal-provider-bindings.js`
+- `packages/core/publication/publication-rehearsal.js`
 
 ### Contracts
 
@@ -1044,19 +2493,17 @@ Owner: Buildchain workflow maintainers
 
 ### Implementation
 
-- `packages/core/universal-workflow-bootstrap.js`
+- `packages/core/workflow/commands/universal-workflow-backflow.mjs`
+- `packages/core/workflow/commands/universal-workflow-engine.mjs`
+- `packages/core/workflow/universal-workflow-bootstrap.js`
 - `scripts/check-universal-workflow-bootstrap.mjs`
-- `scripts/generate-universal-workflow-facades.mjs`
-- `scripts/universal-workflow-backflow.mjs`
-- `scripts/universal-workflow-engine.mjs`
-- `scripts/universal-workflow-self-dogfood.mjs`
 
 ### Contracts
 
 - `architecture/universal-workflow-bootstrap.json`
 - `architecture/universal-workflow-fault-campaign.json`
 - `architecture/universal-workflow-train-admission.json`
-- `.github/workflows/bootstrap.yml`
+- `.github/workflows/public-ops-bootstrap.yml`
 - `.github/workflows/self-ops-bootstrap-dogfood.yml`
 - `templates/universal-buildchain-bootstrap-recovery.yml`
 
@@ -1066,15 +2513,95 @@ Owner: Buildchain workflow maintainers
 - `tests/universal-workflow-bootstrap.test.mjs`
 - `tests/universal-workflow-fault-campaign.test.mjs`
 - `tests/universal-workflow-self-dogfood.test.mjs`
+- `tests/universal-api-boundary.test.mjs`
 
 ### Generated outputs
 
-- `.github/workflows/universal-bootstrap-recovery.yml`
+- None.
 
 ### Minimal validation
 
-- `node scripts/check-universal-workflow-bootstrap.mjs`
-- `node --test tests/universal-workflow-bootstrap.test.mjs tests/universal-workflow-backflow.test.mjs tests/universal-workflow-fault-campaign.test.mjs tests/universal-workflow-self-dogfood.test.mjs`
+- `node --test tests/universal-workflow-backflow.test.mjs tests/universal-workflow-bootstrap.test.mjs tests/universal-workflow-fault-campaign.test.mjs tests/universal-workflow-self-dogfood.test.mjs tests/universal-api-boundary.test.mjs`
+
+## web-deployment-transactions
+
+Owner: Buildchain Web maintainers
+
+### Implementation
+
+- `packages/core/web/deployment/apply-action.js`
+- `packages/core/web/deployment/apply-evidence.js`
+- `packages/core/web/deployment/apply.js`
+- `packages/core/web/deployment/cloudfront-wait.js`
+- `packages/core/web/deployment/plan-files.js`
+- `packages/core/web/deployment/planning-action.js`
+- `packages/core/web/deployment/planning.js`
+- `packages/core/web/deployment/report-action.js`
+- `packages/core/web/deployment/summary.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/web-deployment-node.test.mjs`
+- `tests/web-deployment-transaction.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/web-deployment-node.test.mjs tests/web-deployment-transaction.test.mjs`
+
+## web-publication-admission
+
+Owner: Buildchain Web maintainers
+
+### Implementation
+
+- `packages/core/web/apply-admission-action.js`
+- `packages/core/web/apply-admission.js`
+- `packages/core/web/controller-actions.js`
+- `packages/core/web/controller.js`
+- `packages/core/web/preview-feedback-action.js`
+- `packages/core/web/preview-feedback.js`
+- `packages/core/web/production-decision-action.js`
+- `packages/core/web/production-decision.js`
+- `packages/core/web/production-intent-action.js`
+- `packages/core/web/production-intent.js`
+- `packages/core/web/publication-admission-action.js`
+- `packages/core/web/publication-admission.js`
+- `packages/core/web/publication-capability-action.js`
+- `packages/core/web/publication-capability.js`
+- `packages/core/web/release-feedback.js`
+- `packages/core/web/release-pr-action.js`
+- `packages/core/web/release-pr-handoff.js`
+- `packages/core/web/release-pr-provider.js`
+- `packages/core/web/release-pr-summary.js`
+- `packages/core/web/release-pr-transaction.js`
+- `packages/core/web/release-review-action.js`
+- `packages/core/web/release-review.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/web-admission-node.test.mjs`
+- `tests/web-planning-transaction.test.mjs`
+- `tests/web-surface-publication-authority.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/web-admission-node.test.mjs tests/web-planning-transaction.test.mjs tests/web-surface-publication-authority.test.mjs`
 
 ## web-surface-delivery
 
@@ -1082,13 +2609,13 @@ Owner: Buildchain web-surface maintainers
 
 ### Implementation
 
-- `scripts/web-surface-core.mjs`
-- `scripts/web-surface-routing.mjs`
-- `scripts/web-surface.mjs`
+- `packages/core/web/commands/web-surface-core.mjs`
+- `packages/core/web/commands/web-surface-routing.mjs`
+- `packages/core/web/commands/web-surface.mjs`
 
 ### Contracts
 
-- `.github/workflows/.web-surface.yml`
+- `.github/workflows/public-release-web.yml`
 
 ### Tests
 
@@ -1102,3 +2629,97 @@ Owner: Buildchain web-surface maintainers
 ### Minimal validation
 
 - `node --test tests/web-surface.test.mjs tests/web-surface-publication-authority.test.mjs`
+
+## workflow-admission-and-settlement
+
+Owner: Buildchain workflow maintainers
+
+### Implementation
+
+- `packages/core/workflow/admission/actions.js`
+- `packages/core/workflow/admission/recovery.js`
+- `packages/core/workflow/admission/review.js`
+- `packages/core/workflow/admission/transactions.js`
+- `packages/core/workflow/event-trust.js`
+- `packages/core/workflow/installation.js`
+- `packages/core/workflow/request-rejection.js`
+- `packages/core/workflow/settlement/actions.js`
+- `packages/core/workflow/settlement/backflow.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/bootstrap-node-boundaries.test.mjs`
+- `tests/bootstrap-recovery-distribution.test.mjs`
+
+### Generated outputs
+
+- `templates/bootstrap-recovery`
+- `templates/universal-buildchain-bootstrap-recovery.yml`
+
+### Minimal validation
+
+- `node --test tests/bootstrap-node-boundaries.test.mjs tests/bootstrap-recovery-distribution.test.mjs`
+
+## workflow-engine
+
+Owner: Buildchain workflow engine maintainers
+
+### Implementation
+
+- `packages/core/workflow/engine/action.js`
+- `packages/core/workflow/engine/conformance.js`
+- `packages/core/workflow/engine/execution.js`
+- `packages/core/workflow/engine/identity.js`
+- `packages/core/workflow/engine/provider-context.js`
+- `packages/core/workflow/engine/release-environment.js`
+- `packages/core/workflow/engine/release-evidence.js`
+- `packages/core/workflow/engine/release-observation.js`
+- `packages/core/workflow/engine/release-promotion.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/universal-workflow-bootstrap.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/universal-workflow-bootstrap.test.mjs`
+
+## workflow-self-dogfood
+
+Owner: Buildchain maintainers
+
+### Implementation
+
+- `packages/core/workflow/dogfood/actions.js`
+- `packages/core/workflow/dogfood/readiness.js`
+- `packages/core/workflow/dogfood/transactions.js`
+- `packages/core/workflow/universal-self-dogfood.js`
+
+### Contracts
+
+- None.
+
+### Tests
+
+- `tests/bootstrap-self-dogfood-node.test.mjs`
+- `tests/universal-workflow-self-dogfood.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/bootstrap-self-dogfood-node.test.mjs tests/universal-workflow-self-dogfood.test.mjs`

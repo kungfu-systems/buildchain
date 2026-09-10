@@ -1,0 +1,14 @@
+name: Validate exact delivery source and runtime intent
+description: Validate exact delivery source and runtime intent.
+inputs:
+  request-json:
+    description: Admitted request-json.
+    required: true
+outputs:
+  branch:
+    description: Verified branch.
+  branch-artifact:
+    description: Verified branch-artifact.
+runs:
+  using: node24
+  main: dist/index.js

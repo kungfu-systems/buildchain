@@ -23,12 +23,45 @@
     "buildchain.build-result/v1"
   ],
   "owners": {
-    "actions/resolve-build-plan/action.yml": "Buildchain configuration maintainers",
-    "actions/prepare-build-environment/action.yml": "Buildchain infrastructure maintainers",
-    "actions/run-build-stage/action.yml": "Buildchain lifecycle maintainers",
-    "actions/transfer-build-artifact/action.yml": "Buildchain artifact transport maintainers",
-    "actions/sign-build-artifact/action.yml": "Buildchain signing maintainers",
-    "actions/attest-build-artifact/action.yml": "Buildchain attestation maintainers",
-    "actions/finalize-build-result/action.yml": "Buildchain evidence maintainers"
-  }
+    "actions/build/lifecycle/plan/action.yml": "Buildchain configuration maintainers",
+    "actions/build/lifecycle/prepare/action.yml": "Buildchain infrastructure maintainers",
+    "actions/build/lifecycle/stage/action.yml": "Buildchain lifecycle maintainers",
+    "actions/build/artifact/transfer/action.yml": "Buildchain artifact transport maintainers",
+    "actions/build/artifact/sign/action.yml": "Buildchain signing maintainers",
+    "actions/build/artifact/attest/action.yml": "Buildchain attestation maintainers",
+    "actions/build/artifact/finalize/action.yml": "Buildchain evidence maintainers"
+  },
+  "modules": [
+    "packages/core/build/artifact/attestation.js",
+    "packages/core/build/artifact/contracts.js",
+    "packages/core/build/artifact/credential-transport.js",
+    "packages/core/build/artifact/services.js",
+    "packages/core/build/artifact/store.js",
+    "packages/core/build/artifact/transport.js",
+    "packages/core/build/artifact/upload.js",
+    "packages/core/build/environment/action.js",
+    "packages/core/build/environment/provision.js",
+    "packages/core/build/lifecycle/stage.js",
+    "packages/core/build/plan/action-context.js",
+    "packages/core/build/plan/action.js",
+    "packages/core/build/plan/admission.js",
+    "packages/core/build/plan/configuration.js",
+    "packages/core/build/plan/environment.js",
+    "packages/core/build/plan/identity.js",
+    "packages/core/build/plan/lifecycle.js",
+    "packages/core/build/plan/matrices.js",
+    "packages/core/build/plan/resolve.js",
+    "packages/core/build/plan/runners.js",
+    "packages/core/build/plan/source.js",
+    "packages/core/build/plan/stage-order.js",
+    "packages/core/build/plan/values.js",
+    "packages/core/build/signing/actions.js",
+    "packages/core/build/signing/controller-transaction.js",
+    "packages/core/build/signing/credential-transaction.js",
+    "packages/core/build/signing/transaction.js",
+    "packages/core/build/summary/aggregation.js",
+    "packages/core/build/summary/controller-receipt.js",
+    "packages/core/build/summary/finalization.js",
+    "packages/core/build/summary/payloads.js"
+  ]
 }

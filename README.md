@@ -1,4 +1,27 @@
+---
+status: active
+period: ongoing
+theme: buildchain-layered-architecture
+doc_type: implementation-guide
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: B
+review_state: unreviewed
+last_reviewed: 2026-09-10
+ai_provenance:
+  model_family: GPT-6
+  product: Codex
+  generated_at: 2026-09-10
+  visible_context: Buildchain 4.1 source, architecture registries and local validation.
+  invisible_context_boundary: No unpublished release or external consumer qualification is claimed.
+---
+
 # Buildchain
+
+Development: **4.1.0-alpha.0** on `dev/v4/v4.1`. This development version has
+not been published. See [Code organization](docs/code-organization.md) for the
+workflow → action → JavaScript/Rust implementation layers.
 
 <!-- buildchain-auditable-demo:start -->
 
@@ -37,9 +60,9 @@ This exact standalone-binary scenario proves deterministic local bootstrap behav
 [![Buildchain Release Passport: passed](https://buildchain.libkungfu.dev/badges/v1/buildchain-release-passport/passed.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-0969da.svg)](https://github.com/kungfu-systems/buildchain/blob/HEAD/LICENSE)
 [![Platform: macOS | Linux | Windows](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-6e7781.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
-[![Verify](https://github.com/kungfu-systems/buildchain/actions/workflows/verify.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/verify.yml)
-[![Buildchain Ref Promotion](https://github.com/kungfu-systems/buildchain/actions/workflows/buildchain-ref-promotion.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/buildchain-ref-promotion.yml)
-[![Binary Distribution](https://github.com/kungfu-systems/buildchain/actions/workflows/binary-distribution.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/binary-distribution.yml)
+[![Verify](https://github.com/kungfu-systems/buildchain/actions/workflows/self-build-verify.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/self-build-verify.yml)
+[![Buildchain Ref Promotion](https://github.com/kungfu-systems/buildchain/actions/workflows/self-release-promote.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/self-release-promote.yml)
+[![Binary Distribution](https://github.com/kungfu-systems/buildchain/actions/workflows/self-build-binary-distribution.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/self-build-binary-distribution.yml)
 <!-- buildchain:badges:end -->
 
 Buildchain Release Passport is a mature product release record for artifacts
@@ -216,7 +239,7 @@ Consumers can report Buildchain-owned workflow failures directly to the
 Buildchain repository with a scoped issue-write token:
 
 ```yaml
-- uses: kungfu-systems/buildchain/actions/report-buildchain-issue@v4
+- uses: kungfu-systems/buildchain/actions/governance/incident/report@v4
   if: failure()
   with:
     token: ${{ steps.buildchain-issue-token.outputs.token }}
@@ -283,31 +306,33 @@ plus fail-closed product-evidence gates for KFD-4, KFD-5, and KFD-7. These
 gates preserve product-owned qualification and support decisions; they do not
 turn a schema-valid record into certification or shipped support.
 
-Buildchain's action registry contains fifteen active entries. Six are
-direct consumer integration actions:
+Reusable workflows are the primary consumer API. The generated action registry
+indexes the capability/group/operation hierarchy and marks direct action contracts.
+The direct consumer integration actions are:
 
-- `actions/validate-config`
-- `actions/run-lifecycle`
-- `actions/promote-buildchain-ref`
-- `actions/report-buildchain-issue`
-- `actions/release-tail`
-- `actions/release-candidate-promote`
+- `actions/build/lifecycle/validate`
+- `actions/build/lifecycle/run`
+- `actions/release/promotion/ref`
+- `actions/governance/incident/report`
+- `actions/release/tail/settle`
+- `actions/release/promotion/candidate`
 
-Two additional release-authority components are also registered and versioned:
+Three additional release-authority components are also registered and versioned:
 
-- `actions/github-artifact-attestation`
-- `actions/macos-credential-island`
+- `actions/build/artifact/prepare-attestation`
+- `actions/build/artifact/seal-attestation`
+- `actions/build/credential/macos-island`
 
 Seven shared build components have explicit ownership in
 `architecture/build-orchestration.json`:
 
-- [`actions/resolve-build-plan`](actions/resolve-build-plan/action.yml)
-- [`actions/prepare-build-environment`](actions/prepare-build-environment/action.yml)
-- [`actions/run-build-stage`](actions/run-build-stage/action.yml)
-- [`actions/transfer-build-artifact`](actions/transfer-build-artifact/action.yml)
-- [`actions/sign-build-artifact`](actions/sign-build-artifact/action.yml)
-- [`actions/attest-build-artifact`](actions/attest-build-artifact/action.yml)
-- [`actions/finalize-build-result`](actions/finalize-build-result/action.yml)
+- [`actions/build/lifecycle/plan`](actions/build/lifecycle/plan/action.yml)
+- [`actions/build/lifecycle/prepare`](actions/build/lifecycle/prepare/action.yml)
+- [`actions/build/lifecycle/stage`](actions/build/lifecycle/stage/action.yml)
+- [`actions/build/artifact/transfer`](actions/build/artifact/transfer/action.yml)
+- [`actions/build/artifact/sign`](actions/build/artifact/sign/action.yml)
+- [`actions/build/artifact/attest`](actions/build/artifact/attest/action.yml)
+- [`actions/build/artifact/finalize`](actions/build/artifact/finalize/action.yml)
 
 `dist/site/workflow-registry.json#actions` is the machine-readable inventory;
 this split keeps the older four-action consumer snapshot from being mistaken for
@@ -315,14 +340,14 @@ the complete current registry.
 
 The active reusable workflow surfaces are:
 
-- `.github/workflows/.gate-profile.yml` for project-neutral Shifu Gate profile
+- `.github/workflows/.build-gate-profile.yml` for project-neutral Shifu Gate profile
   planning, capability-aware runner dispatch, receipt validation, and one
   stable aggregate check;
-- `.github/workflows/.auditable-demo.yml` for exact-artifact demo
+- `.github/workflows/.build-demo-adapter.yml` for exact-artifact demo
   qualification, transcript-bound renderer smoke, optional media rendering
   from the exact passing Gate bundle, and opt-in content-addressed web-delivery
   profiles with independently verified rendition roles;
-- `.github/workflows/.declarative-auditable-demo.yml` for standalone binary
+- `.github/workflows/public-build-demo.yml` for standalone binary
   consumers that provide only a versioned multi-demo argv scenario and exact
   same-run binary artifact coordinates; Buildchain owns isolated native
   capture, Gate, Release Passport, materialization, and protected README PRs;
@@ -330,10 +355,10 @@ The active reusable workflow surfaces are:
   artifact contracts;
 - `.github/workflows/build.yml` for the single-config channel router that uses
   `vN-alpha` during development/prerelease work and `vN` for stable releases;
-- `.github/workflows/release-candidate-promote.yml` for post-merge
+- `.github/workflows/public-release-promote.yml` for post-merge
   promote-only publication from a PR-stage release candidate, without a second
   heavy build;
-- `.github/workflows/.web-surface.yml` for preview, staging, production, and
+- `.github/workflows/public-release-web.yml` for preview, staging, production, and
   cleanup plans for site/app repositories;
 - `.github/workflows/self-release-promote.yml` for protected release
   promotion and version-state transactions;
@@ -344,7 +369,7 @@ Stable consumers should reference actions and workflows through floating major
 refs after reviewing the exact release passport:
 
 ```yaml
-uses: kungfu-systems/buildchain/actions/validate-config@v4
+uses: kungfu-systems/buildchain/actions/build/lifecycle/validate@v4
 ```
 
 ```yaml
@@ -352,7 +377,7 @@ uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4
 ```
 
 ```yaml
-uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4
+uses: kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4
 ```
 
 ## Release Model

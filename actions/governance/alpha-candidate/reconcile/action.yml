@@ -1,0 +1,65 @@
+name: alpha-candidate reconcile
+description: Execute the declared candidate transaction through its domain API.
+inputs:
+  request-json:
+    description: Typed candidate policy request.
+    required: true
+  token:
+    description: Scoped provider credential.
+    required: true
+  settlement-authorized:
+    description: Apply the bound observation under caller job authority.
+    required: false
+    default: "false"
+  observation-json:
+    description: Prior source, runtime and state observation.
+    required: false
+    default: ""
+  pull-request-body-prefix:
+    description: Verified source-owned PR body prefix.
+    required: false
+    default: ""
+outputs:
+  result-path:
+    description: result-path
+  eligible:
+    description: eligible
+  selected-sha:
+    description: selected-sha
+  source-lock-ref:
+    description: source-lock-ref
+  promotion-pr:
+    description: promotion-pr
+  controller-state:
+    description: controller-state
+  active-candidate-pr:
+    description: active-candidate-pr
+  next-candidate-sha:
+    description: next-candidate-sha
+  settlement-action:
+    description: settlement-action
+  prior-state-root:
+    description: prior-state-root
+  train-root:
+    description: train-root
+  cut-root:
+    description: cut-root
+  candidate-generation:
+    description: candidate-generation
+  candidate-tree-sha:
+    description: candidate-tree-sha
+  runtime-sha:
+    description: runtime-sha
+  cut-created-at:
+    description: cut-created-at
+  observed-at:
+    description: observed-at
+  drift-root:
+    description: drift-root
+  hold-root:
+    description: hold-root
+  observation-json:
+    description: observation-json
+runs:
+  using: node24
+  main: dist/index.js

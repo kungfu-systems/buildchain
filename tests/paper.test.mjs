@@ -7,35 +7,16 @@ import path from "node:path";
 import test from "node:test";
 import { materializeCommandShim } from "./helpers/command-shim.mjs";
 
-import {
-  PAPER_AGENT_ENTRY_CONTRACT,
-  PAPER_AGENT_ENTRY_SECTION_END,
-  PAPER_AGENT_ENTRY_SECTION_START,
-  PAPER_MIGRATION_CONTRACT,
-  PAPER_NPM_BOOTSTRAP_CONTRACT,
-  PAPER_PROVISIONING_CONTRACT,
-  PAPER_STATE_ORDER,
-  PAPER_VISIBILITY_CONTRACT,
-  collectPaperFleetAudit,
-  collectPaperAgentEntry,
-  collectPaperPreflight,
-  collectPaperStatus,
-  createPaperAlphaPlan,
-  createPaperResumePlan,
-  createPaperWorkStartPlan,
-  createPaperWorkSubmitPlan,
-  executePaperWorkStart,
-  executePaperWorkSubmitPush,
-  executePaperNpmBootstrap,
-  planPaperMigration,
-  planPaperFleetUpdate,
-  paperFleetTransitionWorkspace,
-  planPaperScaffold,
-  resolvePaperRuntimeGitSha,
-  writePaperMigration,
-  writePaperFleetUpdate,
-  writePaperScaffold,
-} from "../packages/core/paper.js";
+import { PAPER_AGENT_ENTRY_CONTRACT, PAPER_AGENT_ENTRY_SECTION_END, PAPER_AGENT_ENTRY_SECTION_START, collectPaperAgentEntry } from "../packages/core/paper/paper-agent-entry.js";
+import { PAPER_MIGRATION_CONTRACT, PAPER_NPM_BOOTSTRAP_CONTRACT, PAPER_PROVISIONING_CONTRACT, PAPER_STATE_ORDER, PAPER_VISIBILITY_CONTRACT } from "../packages/core/paper/operations/identity.js";
+import { collectPaperFleetAudit, planPaperFleetUpdate, paperFleetTransitionWorkspace, writePaperFleetUpdate } from "../packages/core/paper/paper-fleet.js";
+import { collectPaperPreflight } from "../packages/core/paper/paper.js";
+import { collectPaperStatus } from "../packages/core/paper/operations/status.js";
+import { createPaperAlphaPlan, createPaperResumePlan } from "../packages/core/paper/operations/plans.js";
+import { createPaperWorkStartPlan, createPaperWorkSubmitPlan, executePaperWorkStart, executePaperWorkSubmitPush } from "../packages/core/paper/paper-work.js";
+import { executePaperNpmBootstrap } from "../packages/core/paper/operations/bootstrap.js";
+import { planPaperMigration, planPaperScaffold, writePaperMigration, writePaperScaffold } from "../packages/core/paper/operations/scaffold.js";
+import { resolvePaperRuntimeGitSha } from "../packages/core/paper/operations/runtime.js";
 
 test("paper fleet lock refresh temporarily admits the pinned source runtime", () => {
   const workspace =
@@ -51,16 +32,16 @@ test("paper fleet lock refresh temporarily admits the pinned source runtime", ()
 import {
   PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
   publicationArtifactCandidateDigest,
-} from "../packages/core/publication-artifact-candidate.js";
-import { createPublicationSealedBundle } from "../packages/core/publication-sealed-bundle.js";
+} from "../packages/core/publication/publication-artifact-candidate.js";
+import { createPublicationSealedBundle } from "../packages/core/publication/publication-sealed-bundle.js";
 import {
   attachReleaseTransactionSealedBundle,
   createReleaseTransaction,
   recordReleaseTransactionMilestone,
   transitionReleaseTransaction,
   writeReleaseTransaction,
-} from "../packages/core/publish-transaction.js";
-import { evaluatePaperGithubGovernance } from "../scripts/paper-work-fleet-cli.mjs";
+} from "../packages/core/release/publish-transaction.js";
+import { evaluatePaperGithubGovernance } from "../packages/core/paper/commands/paper-work-fleet-cli.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
@@ -76,7 +57,7 @@ function scaffoldOptions(cwd) {
     cwd,
     buildchainRoot: root,
     buildchainVersion: packageVersion,
-    buildchainRef: "v3",
+    buildchainRef: "v4",
     name: "paper-contract-test",
     title: "Paper Contract Test",
     packageName: "@example/paper-contract-test",
@@ -215,15 +196,15 @@ test("paper scaffold is idempotent, validates locally, and never overwrites a co
   );
   assert.equal(provisioning.policy.generatedWrites.githubTokenFallback, false);
   assert.equal(provisioning.policy.release.versionState, "not-required");
-  assert.equal(provisioning.trustedPublisher.workflow, "paper-release.yml");
+  assert.equal(provisioning.trustedPublisher.workflow, "public-release-paper.yml");
   const releaseWorkflow = fs.readFileSync(
-    path.join(cwd, ".github", "workflows", "paper-release.yml"),
+    path.join(cwd, ".github", "workflows", "public-release-paper.yml"),
     "utf8",
   );
   assert.match(
     releaseWorkflow,
     new RegExp(
-      `paper-release-sealed\\.yml@${provisioning.runtime.resolvedSha}`,
+      `public-release-paper\\.yml@${provisioning.runtime.resolvedSha}`,
     ),
   );
   assert.match(
@@ -339,14 +320,14 @@ test("paper migration converges existing repositories without rewriting content 
   );
   fs.writeFileSync(
     path.join(cwd, ".github", "workflows", "verify.yml"),
-    "jobs:\n  check:\n    uses: kungfu-systems/buildchain/.github/workflows/check.yml@v2-alpha\n",
+    "jobs:\n  check:\n    uses: kungfu-systems/buildchain/.github/workflows/public-build-check.yml@v2-alpha\n",
   );
   const runtimeSha = execFileSync("git", ["-C", root, "rev-parse", "HEAD"], {
     encoding: "utf8",
   }).trim();
   for (const workflow of [
     path.join(cwd, ".github", "workflows", "build.yml"),
-    path.join(cwd, ".github", "workflows", "paper-release.yml"),
+    path.join(cwd, ".github", "workflows", "public-release-paper.yml"),
   ]) {
     fs.writeFileSync(
       workflow,
@@ -407,7 +388,7 @@ test("paper migration converges existing repositories without rewriting content 
       "utf8",
     ),
   );
-  assert.equal(migratedLock.buildchain.ref, "v3");
+  assert.equal(migratedLock.buildchain.ref, "v4");
   assert.notEqual(
     migratedLock.buildchain.acceptedAt,
     "1970-01-01T00:00:00.000Z",
@@ -866,7 +847,7 @@ test("paper provisioning authority rejects caller drift and requires exact npm t
     cwd,
     ".github",
     "workflows",
-    "paper-release.yml",
+    "public-release-paper.yml",
   );
   fs.appendFileSync(releasePath, "\n# unadmitted drift\n");
   const drifted = collectPaperPreflight({
@@ -911,7 +892,7 @@ esac
       {
         type: "github",
         repository: "example/another-paper",
-        workflow: "paper-release.yml",
+        workflow: "public-release-paper.yml",
         environment: "",
       },
     ]);
@@ -928,7 +909,7 @@ esac
       {
         type: "github",
         repository: "example/paper-contract-test",
-        workflow: "paper-release.yml",
+        workflow: "public-release-paper.yml",
         environment: "",
       },
     ]);
@@ -1068,7 +1049,7 @@ test("paper fleet audit and update converge data-driven worktrees only", () => {
   );
   fs.writeFileSync(
     verifyPath,
-    "jobs:\n  check:\n    uses: kungfu-systems/buildchain/.github/workflows/check.yml@v2-alpha\n",
+    "jobs:\n  check:\n    uses: kungfu-systems/buildchain/.github/workflows/public-build-check.yml@v2-alpha\n",
   );
   commitAll(repositories[1], "test: add legacy workflow drift");
   const legacyWorkflow = collectPaperFleetAudit({

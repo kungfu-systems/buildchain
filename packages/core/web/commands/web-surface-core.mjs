@@ -1,0 +1,2603 @@
+import crypto from "node:crypto";
+import { spawnSync } from "node:child_process";
+import dns from "node:dns/promises";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
+import { installationRoot } from "../../runtime/installation-root.js";
+import { loadBuildchainConfig, validateBuildchainConfig } from "../../consumer/buildchain-config.js";
+import { createSurfaceTimestampPolicy } from "../../contracts/surface-manifest.js";
+import { validateInstallerPublication, verifyInstallerPublicReadback } from "../../publication/installer/evidence.js";
+import {
+  classifyPreviewAlias,
+  resolveChannelUrl,
+  resolvePathOnlyUrl,
+  resolveSurfaceUrl,
+  manifestPrefixFor,
+  objectPrefixFor,
+  normalizeSurfacePath,
+  surfaceDeployConfig,
+  surfaceObjectPrefixFor,
+  normalizeS3Key,
+  joinS3Key,
+  joinUrlPath,
+  urlWithPath,
+  s3Uri,
+  cdnPath,
+  cdnWildcardPath,
+  viewerWildcardPath,
+  surfaceArtifactPrefix,
+  surfaceArtifactRootFor,
+  syncStaticArtifactArgs,
+  mutableCacheControlArgs,
+} from "./web-surface-routing.mjs";
+
+const commandDirectory = () => path.join(installationRoot(import.meta.url), "packages/core/web/commands");
+
+const DEFAULT_RETENTION = Object.freeze({
+  preview: {
+    pr_days: 14,
+    sha_days: 90,
+  },
+  staging: {
+    days: 90,
+    keep_deploys: 10,
+  },
+  production: {
+    days: 365,
+  },
+});
+
+function assertWebSurfaceConfig(loadedConfig) {
+  if (loadedConfig?.config?.project?.type !== "web-surface") {
+    throw new Error('buildchain.toml project.type must be "web-surface"');
+  }
+  return loadedConfig.config;
+}
+
+function assertSha(value, label) {
+  const sha = String(value || "").trim();
+  if (!/^[0-9a-f]{40}$/i.test(sha)) {
+    throw new Error(`${label} must be a 40-character Git SHA`);
+  }
+  return sha.toLowerCase();
+}
+
+function assertHash(value, label) {
+  const hash = String(value || "").trim();
+  if (!/^[0-9a-f]{64}$/i.test(hash)) {
+    throw new Error(`${label} must be a 64-character SHA-256 hash`);
+  }
+  return hash.toLowerCase();
+}
+
+function toPosix(value) {
+  return String(value || "").split(path.sep).join("/");
+}
+
+function listFiles(root, rel) {
+  const target = path.isAbsolute(rel) ? rel : path.join(root, rel);
+  if (!fs.existsSync(target)) {
+    throw new Error(`artifact path does not exist: ${rel}`);
+  }
+  const stat = fs.statSync(target);
+  if (stat.isFile()) {
+    return [target];
+  }
+  return fs
+    .readdirSync(target, { withFileTypes: true })
+    .flatMap((entry) => listFiles(root, path.join(target, entry.name)));
+}
+
+function sha256File(filePath) {
+  const hash = crypto.createHash("sha256");
+  hash.update(fs.readFileSync(filePath));
+  return hash.digest("hex");
+}
+
+function addDays(iso, days) {
+  if (days === undefined || days === null) {
+    return "";
+  }
+  const date = new Date(iso);
+  date.setUTCDate(date.getUTCDate() + Number(days));
+  return date.toISOString();
+}
+
+function retentionConfig(config, channel) {
+  return {
+    ...(DEFAULT_RETENTION[channel] || {}),
+    ...(config.retention?.[channel] || {}),
+  };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const PUBLICATION_ARCHIVE_POLICY_CONTRACT = "kungfu-buildchain-publication-archive-policy";
+const OBSERVED_EVIDENCE_OWNERSHIP_CONTRACT = "kungfu-buildchain-observed-evidence-ownership";
+const PUBLICATION_FAST_PATH_CONTRACT = "kungfu-buildchain-publication-package-pin-fast-path";
+
+function immutablePrefix(value, label) {
+  const raw = String(value || "").trim().replaceAll("\\", "/");
+  if (!raw || raw.split("/").includes("..")) {
+    throw new Error(`invalid ${label}: ${value}`);
+  }
+  const normalized = normalizeS3Key(raw);
+  if (!normalized || normalized.split("/").length < 2) {
+    throw new Error(`${label} must identify a versioned path below an immutable root: ${value}`);
+  }
+  return normalized;
+}
+
+function publicationFastPathScope({ artifactRoot, bindings }) {
+  const manifestFile = path.join(artifactRoot, "manifest.json");
+  if (!fs.existsSync(manifestFile)) return null;
+  let manifest;
+  try {
+    manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
+  } catch (error) {
+    throw new Error(`invalid web-surface artifact manifest: ${error.message}`);
+  }
+  const raw = manifest?.publicationFastPath;
+  if (raw === undefined || raw === null) return null;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error("publicationFastPath must be an object");
+  }
+  if (raw.contract !== PUBLICATION_FAST_PATH_CONTRACT || raw.mode !== "package-pin-only") {
+    throw new Error("publicationFastPath contract or mode is unsupported");
+  }
+  const targetSurface = String(raw.targetSurface || "").trim();
+  const binding = bindings.find((entry) => entry.surface === targetSurface);
+  if (!binding) {
+    throw new Error(`publicationFastPath target surface is not declared: ${targetSurface}`);
+  }
+  const qualificationRoot = String(raw.qualificationRoot || "").trim();
+  if (!/^sha256:[a-f0-9]{64}$/.test(qualificationRoot)) {
+    throw new Error("publicationFastPath qualificationRoot must be an exact SHA-256 root");
+  }
+  const surfaceRoot = surfaceArtifactRootFor({ artifactRoot, binding });
+  const immutablePrefixes = [...new Set((raw.immutablePrefixes || []).map((entry) =>
+    immutablePrefix(entry, "publicationFastPath immutable prefix"),
+  ))].sort();
+  if (immutablePrefixes.length === 0) {
+    throw new Error("publicationFastPath must declare immutablePrefixes");
+  }
+  const mutableFiles = [...new Set((raw.mutableFiles || []).map((entry) => {
+    const normalized = normalizeS3Key(entry);
+    const candidate = path.join(surfaceRoot, normalized);
+    if (
+      !normalized
+      || String(entry).includes("..")
+      || !fs.statSync(candidate, { throwIfNoEntry: false })?.isFile()
+    ) {
+      throw new Error(`invalid or missing publicationFastPath mutable file: ${entry}`);
+    }
+    return normalized;
+  }))].sort();
+  if (mutableFiles.length === 0) {
+    throw new Error("publicationFastPath must declare mutableFiles");
+  }
+  if (mutableFiles.some((file) =>
+    immutablePrefixes.some((prefix) => file === prefix || file.startsWith(`${prefix}/`)))) {
+    throw new Error("publicationFastPath mutable files cannot overlap immutable prefixes");
+  }
+  for (const prefix of immutablePrefixes) {
+    if (!fs.statSync(path.join(surfaceRoot, prefix), { throwIfNoEntry: false })?.isDirectory()) {
+      throw new Error(`publicationFastPath immutable prefix does not exist: ${prefix}`);
+    }
+  }
+  const invalidationPaths = [...new Set((raw.invalidationPaths || []).map((entry) => {
+    const value = String(entry || "").trim();
+    if (!value.startsWith("/") || value.includes("..")) {
+      throw new Error(`invalid publicationFastPath invalidation path: ${entry}`);
+    }
+    return value;
+  }))].sort();
+  if (invalidationPaths.length === 0) {
+    throw new Error("publicationFastPath must declare invalidationPaths");
+  }
+  return {
+    contract: PUBLICATION_FAST_PATH_CONTRACT,
+    mode: "package-pin-only",
+    targetSurface,
+    qualificationRoot,
+    immutablePrefixes,
+    mutableFiles,
+    invalidationPaths,
+  };
+}
+
+function applyPublicationFastPathScope(bindings, { cwd, artifactPath }) {
+  const artifactRoot = path.resolve(cwd, artifactPath);
+  const scope = publicationFastPathScope({ artifactRoot, bindings });
+  if (!scope) {
+    return { bindings, scope: null };
+  }
+  return {
+    bindings: bindings
+      .filter((binding) => binding.surface === scope.targetSurface)
+      .map((binding) => ({ ...binding, publicationFastPath: scope })),
+    scope,
+  };
+}
+
+function publicationImmutablePolicy({ artifactRoot, binding }) {
+  const surfaceRoot = surfaceArtifactRootFor({ artifactRoot, binding });
+  const manifestFile = path.join(surfaceRoot, "manifest.json");
+  if (!fs.existsSync(manifestFile)) return null;
+  let manifest;
+  try {
+    manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
+  } catch (error) {
+    throw new Error(`invalid publication archive manifest ${toPosix(path.relative(artifactRoot, manifestFile))}: ${error.message}`);
+  }
+  if (manifest?.archivePolicy?.contract !== PUBLICATION_ARCHIVE_POLICY_CONTRACT) return null;
+  const declaredVersions = (manifest.publications || []).flatMap((publication) =>
+    (publication.versions || []).map((version) => ({
+      prefix: immutablePrefix(
+        version.immutablePath,
+        `publication ${publication.id || "unknown"} immutablePath`,
+      ),
+      materialized: Object.hasOwn(version, "immutableIndex"),
+    })),
+  );
+  const declaredPrefixes = [...new Set(declaredVersions.map((entry) => entry.prefix))].sort();
+  if (declaredPrefixes.length === 0) {
+    throw new Error("publication archive policy must declare at least one immutable version prefix");
+  }
+  const hasMaterializationEnvelope = declaredVersions.some((entry) => entry.materialized);
+  const materializedPrefixes = [...new Set(
+    (hasMaterializationEnvelope
+      ? declaredVersions.filter((entry) => entry.materialized)
+      : declaredVersions
+    ).map((entry) => entry.prefix),
+  )].sort();
+  for (const prefix of materializedPrefixes) {
+    if (!fs.existsSync(path.join(surfaceRoot, prefix))) {
+      throw new Error(`materialized immutable publication prefix does not exist in artifact: ${prefix}`);
+    }
+  }
+  const preservedRoots = declaredPrefixes;
+  const uploadRoots = binding.publicationFastPath?.immutablePrefixes || materializedPrefixes;
+  if (binding.publicationFastPath) {
+    for (const prefix of uploadRoots) {
+      if (!declaredPrefixes.includes(prefix)) {
+        throw new Error(`publicationFastPath immutable prefix is not declared by the archive manifest: ${prefix}`);
+      }
+    }
+  }
+  const files = uploadRoots
+    .flatMap((root) => listFiles(surfaceRoot, root))
+    .map((filePath) => ({
+      path: toPosix(path.relative(surfaceRoot, filePath)),
+      size: fs.statSync(filePath).size,
+      sha256: sha256File(filePath),
+    }))
+    .sort((left, right) => left.path.localeCompare(right.path));
+  return {
+    contract: "kungfu-buildchain-web-surface-immutable-publication",
+    sourceContract: manifest.contract || "",
+    archivePolicyContract: PUBLICATION_ARCHIVE_POLICY_CONTRACT,
+    manifestPath: toPosix(path.relative(artifactRoot, manifestFile)),
+    preservedRoots,
+    declaredPrefixes,
+    materializedPrefixes,
+    uploadRoots,
+    files,
+    fastPath: binding.publicationFastPath || undefined,
+  };
+}
+
+function observedEvidenceOwnershipPolicy({ artifactRoot, binding }) {
+  const surfaceRoot = surfaceArtifactRootFor({ artifactRoot, binding });
+  const policyFile = path.join(surfaceRoot, ".buildchain", "observed-evidence-ownership.json");
+  if (!fs.existsSync(policyFile)) return null;
+  let policy;
+  try {
+    policy = JSON.parse(fs.readFileSync(policyFile, "utf8"));
+  } catch (error) {
+    throw new Error(`invalid observed evidence ownership policy: ${error.message}`);
+  }
+  if (policy?.schemaVersion !== 1 || policy?.contract !== OBSERVED_EVIDENCE_OWNERSHIP_CONTRACT) {
+    throw new Error(`observed evidence ownership policy must be ${OBSERVED_EVIDENCE_OWNERSHIP_CONTRACT} schemaVersion 1`);
+  }
+  const paths = [...new Set(policy.paths || [])].map((entry) => String(entry).replaceAll("\\", "/").replace(/^\/+/, ""));
+  if (paths.length === 0 || paths.some((entry) => !entry || entry.split("/").includes("..") || entry === "*")) {
+    throw new Error("observed evidence ownership policy requires bounded relative paths");
+  }
+  return {
+    contract: OBSERVED_EVIDENCE_OWNERSHIP_CONTRACT,
+    policyPath: toPosix(path.relative(artifactRoot, policyFile)),
+    paths: paths.sort(),
+  };
+}
+
+function withImmutablePublicationPolicies(bindings, { cwd, artifactPath }) {
+  const artifactRoot = path.resolve(cwd, artifactPath);
+  const withOwnPolicies = bindings.map((binding) => {
+    const immutablePublication = publicationImmutablePolicy({ artifactRoot, binding });
+    const observedEvidenceOwnership = observedEvidenceOwnershipPolicy({ artifactRoot, binding });
+    if (!immutablePublication && !observedEvidenceOwnership) return binding;
+    return { ...binding, ...(immutablePublication ? { immutablePublication } : {}), ...(observedEvidenceOwnership ? { observedEvidenceOwnership } : {}) };
+  });
+  const protectedRoots = withOwnPolicies.flatMap((binding) =>
+    (binding.immutablePublication?.preservedRoots || []).map((root) => ({
+      owner: binding.surface,
+      path: joinS3Key(binding.artifactPathPrefix, root),
+    })),
+  );
+  const withDeleteExcludes = withOwnPolicies.map((binding) => {
+    const bindingPrefix = normalizeS3Key(binding.artifactPathPrefix);
+    const mutableDeleteExcludes = [...new Set([
+      ...protectedRoots
+      .map((protectedRoot) => {
+        if (!bindingPrefix) return `${protectedRoot.path}/*`;
+        if (protectedRoot.path === bindingPrefix) return "*";
+        if (!protectedRoot.path.startsWith(`${bindingPrefix}/`)) return "";
+        return `${protectedRoot.path.slice(bindingPrefix.length + 1)}/*`;
+      })
+      .filter(Boolean),
+      ...(binding.observedEvidenceOwnership?.paths || []),
+    ])].sort();
+    return mutableDeleteExcludes.length > 0
+      ? { ...binding, mutableDeleteExcludes }
+      : binding;
+  });
+  return withDeleteExcludes.map((binding) => {
+    if (!binding.immutablePublication) return binding;
+    const ownedPaths = protectedRoots
+      .filter((protectedRoot) => protectedRoot.owner === binding.surface)
+      .map((protectedRoot) => protectedRoot.path);
+    const coveringBindings = withDeleteExcludes
+      .map((candidate) => {
+        const candidatePrefix = normalizeS3Key(candidate.artifactPathPrefix);
+        const excludes = ownedPaths
+          .map((ownedPath) => {
+            if (!candidatePrefix) return `${ownedPath}/*`;
+            if (ownedPath === candidatePrefix) return "*";
+            if (!ownedPath.startsWith(`${candidatePrefix}/`)) return "";
+            return `${ownedPath.slice(candidatePrefix.length + 1)}/*`;
+          })
+          .filter(Boolean)
+          .sort();
+        return excludes.length > 0
+          ? { surface: candidate.surface, mutableDeleteExcludes: excludes }
+          : null;
+      })
+      .filter(Boolean)
+      .sort((left, right) => left.surface.localeCompare(right.surface));
+    return {
+      ...binding,
+      immutablePublication: {
+        ...binding.immutablePublication,
+        coveringBindings,
+      },
+    };
+  });
+}
+
+function pathUnderPreservedRoot(relativePath, preservedRoots = []) {
+  const normalized = normalizeS3Key(relativePath);
+  return preservedRoots.some((root) => normalized === root || normalized.startsWith(`${root}/`));
+}
+
+function pathExcludedFromMutableDelete(relativePath, patterns = []) {
+  if (patterns.includes("*")) return true;
+  return pathUnderPreservedRoot(
+    relativePath,
+    patterns.map((pattern) => pattern.replace(/\/\*$/, "")),
+  );
+}
+
+function directoryIndexAliasKeys({ objectPrefix, relativeIndexPath }) {
+  const normalizedPrefix = normalizeS3Key(objectPrefix);
+  if (!normalizedPrefix) {
+    return [];
+  }
+  const normalizedIndexPath = normalizeS3Key(relativeIndexPath);
+  if (!normalizedIndexPath.endsWith("index.html")) {
+    return [];
+  }
+  const directory = normalizeS3Key(normalizedIndexPath.slice(0, -"index.html".length));
+  const aliasBase = joinS3Key(normalizedPrefix, directory);
+  return [...new Set([aliasBase, `${aliasBase}/`].filter(Boolean))];
+}
+
+function directoryIndexAliasOperations({ surfaceArtifactRoot, bucket, binding }) {
+  if (binding.directoryIndexResolution === false || !bucket || !binding.objectPrefix || !fs.existsSync(surfaceArtifactRoot)) {
+    return [];
+  }
+  return listFiles(surfaceArtifactRoot, ".")
+    .filter((filePath) => path.basename(filePath) === (binding.directoryIndex || "index.html"))
+    .filter((filePath) => !pathExcludedFromMutableDelete(
+      toPosix(path.relative(surfaceArtifactRoot, filePath)),
+      binding.mutableDeleteExcludes || [],
+    ))
+    .flatMap((filePath) => {
+      const relativeIndexPath = toPosix(path.relative(surfaceArtifactRoot, filePath));
+      return directoryIndexAliasKeys({ objectPrefix: binding.objectPrefix, relativeIndexPath }).map((key) => ({
+        action: "write-directory-index-alias",
+        surface: binding.surface,
+        command: "aws",
+        args: [
+          "s3api",
+          "put-object",
+          "--bucket",
+          bucket,
+          "--key",
+          key,
+          "--body",
+          filePath,
+          "--content-type",
+          "text/html",
+          ...(binding.cacheControl?.mutable
+            ? ["--cache-control", binding.cacheControl.mutable]
+            : []),
+        ],
+        routing: {
+          ...(binding.routing || {}),
+          directoryIndexAlias: key,
+          directoryIndexSource: relativeIndexPath,
+        },
+      }));
+    });
+}
+
+function cloudFrontDirectoryIndexFunctionName(distributionId = "") {
+  const suffix = String(distributionId || "")
+    .replace(/[^0-9A-Za-z-]/g, "-")
+    .slice(0, 48);
+  return `buildchain-web-surface-index-${suffix || "distribution"}`;
+}
+
+function directoryIndexRewriteMode(binding) {
+  return binding.directoryIndexRewrite === "external" ? "external" : "buildchain";
+}
+
+function directoryIndexRoutingStrategy(binding) {
+  return directoryIndexRewriteMode(binding) === "external"
+    ? "external-viewer-request-function"
+    : "cloudfront-function";
+}
+
+function cloudFrontDirectoryIndexRewriteOperations(bindings) {
+  const seen = new Set();
+  const helper = path.join(commandDirectory(), "web-surface-cloudfront-rewrite.mjs");
+  return bindings
+    .filter((binding) => directoryIndexRewriteMode(binding) === "buildchain")
+    .map((binding) => binding.distributionId || "")
+    .filter(Boolean)
+    .filter((distributionId) => {
+      if (seen.has(distributionId)) {
+        return false;
+      }
+      seen.add(distributionId);
+      return true;
+    })
+    .map((distributionId) => ({
+      action: "ensure-cloudfront-directory-index-rewrite",
+      surface: "__distribution__",
+      command: "node",
+      args: [
+        helper,
+        "--distribution-id",
+        distributionId,
+        "--function-name",
+        cloudFrontDirectoryIndexFunctionName(distributionId),
+      ],
+      routing: {
+        contract: "kungfu-buildchain-web-surface-directory-index-rewrite",
+        strategy: "cloudfront-function",
+        managedBy: "buildchain",
+        distributionId,
+        functionName: cloudFrontDirectoryIndexFunctionName(distributionId),
+        requestRewrite: "viewer request paths ending in / are rewritten to /index.html",
+      },
+    }));
+}
+
+function defaultCommandRunner({ command, args, stdin = "" }) {
+  const result = spawnSync(command, args, {
+    encoding: "utf8",
+    input: stdin,
+  });
+  if (result.error) {
+    throw result.error;
+  }
+  if (result.status !== 0) {
+    const stderr = String(result.stderr || "").trim();
+    throw new Error(`${command} ${args.join(" ")} failed with exit code ${result.status}${stderr ? `: ${stderr}` : ""}`);
+  }
+  return {
+    exitCode: result.status,
+    stdout: String(result.stdout || ""),
+    stderr: String(result.stderr || ""),
+  };
+}
+
+function runAdapterOperation({ operation, dryRun, commandRunner }) {
+  if (dryRun) {
+    return {
+      ...operation,
+      status: "planned",
+      executed: false,
+      exitCode: null,
+      stdout: "",
+      stderr: "",
+    };
+  }
+  try {
+    const commandResult = commandRunner(operation);
+    const exitCode = commandResult?.exitCode ?? 0;
+    return {
+      ...operation,
+      status: exitCode === 0 ? "applied" : "failed",
+      executed: true,
+      exitCode,
+      stdout: commandResult?.stdout || "",
+      stderr: commandResult?.stderr || "",
+    };
+  } catch (error) {
+    return {
+      ...operation,
+      status: "failed",
+      executed: true,
+      exitCode: null,
+      stdout: "",
+      stderr: String(error.message || error),
+    };
+  }
+}
+
+function runAdapterOperations({ operations, dryRun, commandRunner }) {
+  const results = [];
+  for (const operation of operations) {
+    const result = runAdapterOperation({ operation, dryRun, commandRunner });
+    results.push(result);
+    if (result.status === "failed") {
+      break;
+    }
+  }
+  return results;
+}
+
+function appliedStatus({ dryRun, operations, noOp = false }) {
+  if (noOp) {
+    return "no-op";
+  }
+  if (operations.some((operation) => operation.status === "failed")) {
+    return "failed";
+  }
+  return dryRun ? "planned" : "applied";
+}
+
+function isPlaceholderValue(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return (
+    normalized === "" ||
+    normalized === "pending" ||
+    normalized.startsWith("pending-") ||
+    normalized.startsWith("pending_") ||
+    normalized.includes("placeholder") ||
+    normalized.includes("example.")
+  );
+}
+
+function assertConcreteAwsDeployConfig({ deployConfig, channel, operation }) {
+  const bucket = deployConfig.bucket || deployConfig.target || "";
+  const distribution = deployConfig.cloudfront_distribution || deployConfig.distribution || "";
+  if (isPlaceholderValue(bucket)) {
+    throw new Error(`web-surface ${operation} apply requires concrete deploy.${channel}.bucket or deploy.${channel}.target`);
+  }
+  if (isPlaceholderValue(distribution)) {
+    throw new Error(
+      `web-surface ${operation} apply requires concrete deploy.${channel}.cloudfront_distribution or deploy.${channel}.distribution`,
+    );
+  }
+}
+
+function urlHost(value = "") {
+  try {
+    return new URL(value).hostname.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+function wildcardHostMatches(alias = "", host = "") {
+  const normalizedAlias = String(alias || "").toLowerCase();
+  const normalizedHost = String(host || "").toLowerCase();
+  if (!normalizedAlias.startsWith("*.")) return false;
+  const suffix = normalizedAlias.slice(1);
+  return normalizedHost.endsWith(suffix) && normalizedHost.slice(0, -suffix.length).indexOf(".") === -1;
+}
+
+function aliasMatchesHost(aliases = [], host = "") {
+  const normalizedHost = String(host || "").toLowerCase();
+  return aliases.some((alias) => {
+    const normalizedAlias = String(alias || "").toLowerCase();
+    return normalizedAlias === normalizedHost || wildcardHostMatches(normalizedAlias, normalizedHost);
+  });
+}
+
+function parseCloudFrontAliases(stdout = "") {
+  if (!stdout) return [];
+  try {
+    const parsed = JSON.parse(stdout);
+    const aliases = parsed?.Distribution?.DistributionConfig?.Aliases?.Items ||
+      parsed?.DistributionConfig?.Aliases?.Items ||
+      parsed?.Aliases?.Items ||
+      parsed?.Aliases ||
+      [];
+    return Array.isArray(aliases) ? aliases : [];
+  } catch {
+    return [];
+  }
+}
+
+async function defaultDnsResolver(host) {
+  try {
+    const answers = await dns.resolve(host);
+    return answers.map((address) => ({ type: "A", value: address }));
+  } catch (error) {
+    if (error?.code === "ENODATA" || error?.code === "ENOTFOUND") {
+      const answers = await dns.resolve6(host);
+      return answers.map((address) => ({ type: "AAAA", value: address }));
+    }
+    throw error;
+  }
+}
+
+function preflightCheck({ name, status = "pass", details = {}, message = "" }) {
+  return { name, status, message, details };
+}
+
+function preflightStatus(checks) {
+  return checks.some((check) => check.status === "fail") ? "failed" : "passed";
+}
+
+function deployManifestKey(deployConfig, manifest) {
+  return joinS3Key(manifestPrefixFor(deployConfig), `${manifest.alias || manifest.channel}.json`);
+}
+
+function deploySurfaceManifestKey(deployConfig, binding) {
+  const suffix = binding.surface === "default"
+    ? `${binding.alias || binding.channel}.json`
+    : `${binding.alias || binding.channel}/${binding.surface}.json`;
+  return joinS3Key(manifestPrefixFor(deployConfig), suffix);
+}
+
+function assertDeployPlan(plan) {
+  if (plan?.contract !== "kungfu-buildchain-web-surface-deploy-plan") {
+    throw new Error("web-surface deploy apply requires a deploy plan");
+  }
+  if (!plan.manifest) {
+    throw new Error("web-surface deploy plan is missing manifest");
+  }
+  if (!plan.artifact?.hash) {
+    throw new Error("web-surface deploy plan is missing artifact hash");
+  }
+  if (plan.manifest.artifactHash !== plan.artifact.hash) {
+    throw new Error("web-surface deploy plan artifact hash does not match manifest");
+  }
+  return plan;
+}
+
+function verifyDeployPlanArtifact({ cwd, plan }) {
+  const artifactPath = plan.artifact.path || ".";
+  const actual = createWebSurfaceArtifactHash({ cwd, artifactPath });
+  if (actual.artifactHash !== plan.artifact.hash) {
+    throw new Error(
+      `web-surface deploy plan artifact hash mismatch: expected ${plan.artifact.hash}, got ${actual.artifactHash}`,
+    );
+  }
+  return {
+    ...plan,
+    artifact: {
+      ...plan.artifact,
+      path: artifactPath,
+      files: actual.files,
+    },
+  };
+}
+
+function assertCleanupPlan(plan) {
+  if (plan?.contract !== "kungfu-buildchain-web-surface-cleanup-plan") {
+    throw new Error("web-surface cleanup apply requires a cleanup plan");
+  }
+  if (!Array.isArray(plan.entries)) {
+    throw new Error("web-surface cleanup plan is missing entries");
+  }
+  return plan;
+}
+
+function retentionFor({ config, channelName, alias, deployedAt }) {
+  if (channelName === "preview") {
+    const classified = classifyPreviewAlias(alias);
+    const days = retentionConfig(config, "preview")[classified.retentionKey];
+    return {
+      aliasKind: classified.kind,
+      mutableAlias: classified.mutable,
+      retentionClass: classified.retentionClass,
+      expiresAt: addDays(deployedAt, days),
+      retentionDays: days,
+    };
+  }
+  if (channelName === "staging") {
+    const retention = retentionConfig(config, "staging");
+    return {
+      aliasKind: "",
+      mutableAlias: true,
+      retentionClass: "staging-protected",
+      expiresAt: addDays(deployedAt, retention.days),
+      retentionDays: retention.days,
+      keepDeploys: retention.keep_deploys,
+    };
+  }
+  const retention = retentionConfig(config, "production");
+  return {
+    aliasKind: "",
+    mutableAlias: false,
+    retentionClass: "production-canonical",
+    expiresAt: addDays(deployedAt, retention.days),
+    retentionDays: retention.days,
+  };
+}
+
+function configuredSurfaces(config) {
+  if (config.surfaces && Object.keys(config.surfaces).length > 0) {
+    return Object.values(config.surfaces);
+  }
+  return [{
+    name: "default",
+    path: "/",
+    pathOnly: false,
+    canonical: true,
+  }];
+}
+
+function resolveSurfaceBindings({ config, channelName, alias, deployConfig }) {
+  const channel = config.channels?.[channelName];
+  if (!channel) {
+    throw new Error(`unknown web-surface channel: ${channelName}`);
+  }
+  return configuredSurfaces(config).map((surface) => {
+    const effectiveDeploy = surfaceDeployConfig(deployConfig, surface.name);
+    const url = surface.name === "default" && !config.surfaces
+      ? resolveChannelUrl(channel, alias)
+      : resolveSurfaceUrl({ surface, channel, channelName, alias });
+    const objectPrefix = surface.name === "default" && !config.surfaces
+      ? objectPrefixFor(deployConfig, alias || channelName)
+      : surfaceObjectPrefixFor({ deployConfig, surface, alias: alias || channelName });
+    const bucket = effectiveDeploy.bucket || effectiveDeploy.target || "";
+    const distributionId = effectiveDeploy.cloudfront_distribution || effectiveDeploy.distribution || "";
+    return {
+      surface: surface.name,
+      channel: channelName,
+      alias,
+      url,
+      sourcePath: normalizeSurfacePath(surface.path),
+      artifactPathPrefix: surfaceArtifactPrefix({ sourcePath: surface.path }),
+      viewerPathPrefix: "/",
+      directoryIndex: "index.html",
+      directoryIndexResolution: true,
+      directoryIndexRewrite: effectiveDeploy.directoryIndexRewrite || "buildchain",
+      healthStrategy: effectiveDeploy.healthStrategy || "",
+      cacheControl: effectiveDeploy.cacheControl || undefined,
+      canonicalUrl: surface.productionUrl || (channelName === "production" ? url : ""),
+      pathOnly: Boolean(surface.pathOnly),
+      bucket,
+      distributionId,
+      originPath: effectiveDeploy.origin_path || effectiveDeploy.originPath || "",
+      objectPrefix,
+      manifestKey: "",
+      noindex: channel.noindex,
+      accessControl: channel.accessControl,
+    };
+  }).map((binding) => ({
+    ...binding,
+    manifestKey: deploySurfaceManifestKey(deployConfig, binding),
+  }));
+}
+
+function relativeArtifactPath({ artifactPath, filePath }) {
+  const normalizedArtifact = normalizeS3Key(artifactPath);
+  const normalizedFile = normalizeS3Key(filePath);
+  if (!normalizedArtifact) {
+    return normalizedFile;
+  }
+  return normalizedFile === normalizedArtifact
+    ? ""
+    : normalizedFile.startsWith(`${normalizedArtifact}/`)
+      ? normalizedFile.slice(normalizedArtifact.length + 1)
+      : normalizedFile;
+}
+
+function requestPathFromArtifactPath({ binding, artifactPath, filePath }) {
+  const relative = relativeArtifactPath({ artifactPath, filePath });
+  const prefix = normalizeS3Key(binding.artifactPathPrefix || surfaceArtifactPrefix(binding));
+  if (prefix && relative !== prefix && !relative.startsWith(`${prefix}/`)) {
+    return "";
+  }
+  const surfaceRelative = prefix
+    ? relative.slice(prefix.length).replace(/^\/+/, "")
+    : relative;
+  if (!surfaceRelative || surfaceRelative === "index.html") {
+    return "/";
+  }
+  if (surfaceRelative.endsWith("/index.html")) {
+    const directoryPath = normalizeS3Key(surfaceRelative.slice(0, -"index.html".length));
+    return directoryPath ? `/${directoryPath}/` : "/";
+  }
+  return joinUrlPath(surfaceRelative);
+}
+
+function smokeUrlsForBinding({ binding, artifactPath, files }) {
+  const rootUrl = urlWithPath(binding.url, "/");
+  const candidates = (files || [])
+    .map((file) => requestPathFromArtifactPath({ binding, artifactPath, filePath: file.path }))
+    .filter(Boolean)
+    .filter((requestPath) => requestPath !== "/")
+    .filter((requestPath) => requestPath.endsWith("/") || requestPath.endsWith(".html"))
+    .sort();
+  const nestedPath = candidates[0] || "";
+  return [
+    {
+      kind: "root",
+      requestPath: "/",
+      url: rootUrl,
+      required: true,
+    },
+    ...(nestedPath
+      ? [{
+          kind: "nested",
+          requestPath: nestedPath,
+          url: urlWithPath(binding.url, nestedPath),
+          required: true,
+        }]
+      : []),
+  ];
+}
+
+function withSurfaceRoutingEvidence(bindings, { artifactPath, files }) {
+  return bindings.map((binding) => {
+    const directoryIndexRewrite = directoryIndexRewriteMode(binding);
+    return {
+      ...binding,
+      directoryIndexRewrite,
+      artifactPathPrefix: normalizeS3Key(binding.artifactPathPrefix || surfaceArtifactPrefix(binding)),
+      viewerPathPrefix: binding.viewerPathPrefix || "/",
+      directoryIndex: binding.directoryIndex || "index.html",
+      directoryIndexResolution: binding.directoryIndexResolution !== false,
+      routing: {
+        contract: "kungfu-buildchain-web-surface-path-prefix-rewrite",
+        viewerPathPrefix: binding.viewerPathPrefix || "/",
+        artifactPathPrefix: normalizeS3Key(binding.artifactPathPrefix || surfaceArtifactPrefix(binding)),
+        objectPrefix: binding.objectPrefix,
+        directoryIndex: binding.directoryIndex || "index.html",
+        directoryIndexResolution: binding.directoryIndexResolution !== false,
+        directoryIndexRewrite,
+        directoryIndexManagedBy: directoryIndexRewrite === "external" ? "external" : "buildchain",
+        directoryIndexStrategy: directoryIndexRoutingStrategy(binding),
+      },
+      smokeUrls: smokeUrlsForBinding({ binding, artifactPath, files }),
+    };
+  });
+}
+
+export function validateWebSurfaceProject(cwd = process.cwd()) {
+  const summary = validateBuildchainConfig(cwd, {
+    requireConfig: true,
+  });
+  if (summary.project?.type !== "web-surface") {
+    throw new Error('buildchain.toml project.type must be "web-surface"');
+  }
+  return summary;
+}
+
+export function createWebSurfaceArtifactHash({ cwd = process.cwd(), artifactPath = "" } = {}) {
+  const root = path.resolve(cwd);
+  const files = listFiles(root, artifactPath || ".")
+    .sort()
+    .map((filePath) => {
+      const stat = fs.statSync(filePath);
+      const relative = toPosix(path.relative(root, filePath));
+      return {
+        path: relative,
+        size: stat.size,
+        sha256: sha256File(filePath),
+      };
+    });
+  const digest = crypto.createHash("sha256");
+  for (const file of files) {
+    digest.update(`${file.path}\0${file.size}\0${file.sha256}\n`);
+  }
+  return {
+    artifactHash: digest.digest("hex"),
+    files,
+  };
+}
+
+function installerPublicationEvidence(artifactRoot) {
+  const manifestPath = path.join(artifactRoot, "installer-publication.json");
+  if (!fs.existsSync(manifestPath)) return null;
+  let publication;
+  try {
+    publication = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  } catch (error) {
+    throw new Error(`invalid installer publication manifest: ${error.message}`);
+  }
+  return validateInstallerPublication({ publication, artifactRoot });
+}
+
+export function createWebSurfaceDeploymentManifest({
+  cwd = process.cwd(),
+  channel = "preview",
+  alias = "",
+  sourceSha = "",
+  artifactHash = "",
+  deployedAt = new Date().toISOString(),
+  deploymentId = "",
+  runtimeId = "",
+  configFingerprint = "",
+  healthCheck = "",
+  migrationState = "",
+  rollbackPointer = "",
+  rollbackLimitations = "",
+} = {}) {
+  const loadedConfig = loadBuildchainConfig(cwd);
+  const config = assertWebSurfaceConfig(loadedConfig);
+  const channelConfig = config.channels?.[channel];
+  if (!channelConfig) {
+    throw new Error(`unknown web-surface channel: ${channel}`);
+  }
+  const deployConfig = config.deploy?.[channel];
+  if (!deployConfig) {
+    throw new Error(`missing deploy.${channel}`);
+  }
+  const retention = retentionFor({ config, channelName: channel, alias, deployedAt });
+  const surfaceBindings = resolveSurfaceBindings({
+    config,
+    channelName: channel,
+    alias,
+    deployConfig,
+  });
+  const primaryBinding = surfaceBindings[0];
+  const timestampPolicy = createSurfaceTimestampPolicy({
+    generatedAt: deployedAt,
+    publishedAt: deployedAt,
+    sourceRevision: sourceSha,
+    timestampPolicy: "ci-injected",
+    deterministicInputs: [
+      "web-surface artifact content",
+      "buildchain.toml web-surface channels/deploy/surfaces",
+      "sourceSha",
+      "artifactHash",
+      "deployment channel",
+      "deployment alias",
+    ],
+    timestampFields: ["generatedAt", "publishedAt", "deployedAt"],
+    timestampFieldsParticipateInArtifactDigest: false,
+    artifactDigestScope: "web-surface artifactHash excludes deployment manifest timestamps",
+  });
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-web-surface-deployment",
+    ...timestampPolicy,
+    site: config.project.site || config.project.name || "",
+    channel,
+    alias,
+    url: primaryBinding.url,
+    sourceSha: assertSha(sourceSha, "sourceSha"),
+    artifactHash: assertHash(artifactHash, "artifactHash"),
+    deployTarget: deployConfig.target || deployConfig.bucket || deployConfig.environment || deployConfig.service || "",
+    adapter: deployConfig.adapter,
+    deploymentId,
+    deployedAt,
+    retentionClass: retention.retentionClass,
+    expiresAt: retention.expiresAt,
+    mutableAlias: retention.mutableAlias,
+    accessControl: channelConfig.accessControl,
+    edgeAuth: channelConfig.edgeAuth,
+    noindex: channelConfig.noindex,
+    promotable: channelConfig.promotable,
+    canonical: channelConfig.canonical,
+    runtimeId,
+    configFingerprint,
+    secretRefs: [
+      ...new Set([
+        ...(deployConfig.secretRefs || []),
+        ...(config.security?.[channel]?.secretRefs || []),
+      ]),
+    ],
+    healthCheck,
+    migrationState,
+    rollbackPointer,
+    rollbackLimitations,
+    surfaceBindings,
+  };
+}
+
+export function planWebSurfaceDeploy({
+  cwd = process.cwd(),
+  channel = "preview",
+  alias = "",
+  sourceSha = "",
+  artifactHash = "",
+  artifactPath = "",
+  runtimeId = "",
+  configFingerprint = "",
+  rollbackPointer = "",
+  rollbackLimitations = "",
+  dryRun = true,
+  deployedAt = new Date().toISOString(),
+} = {}) {
+  if (!dryRun) {
+    throw new Error("web-surface deploy currently supports dry-run planning only");
+  }
+  const loadedConfig = loadBuildchainConfig(cwd);
+  const config = assertWebSurfaceConfig(loadedConfig);
+  const deployConfig = config.deploy?.[channel];
+  if (!deployConfig) {
+    throw new Error(`missing deploy.${channel}`);
+  }
+  const resolvedArtifact = artifactHash
+    ? { artifactHash: assertHash(artifactHash, "artifactHash"), files: [] }
+    : createWebSurfaceArtifactHash({
+        cwd,
+        artifactPath: artifactPath || deployConfig.artifactPath || ".",
+      });
+  const manifest = createWebSurfaceDeploymentManifest({
+    cwd,
+    channel,
+    alias,
+    sourceSha,
+    artifactHash: resolvedArtifact.artifactHash,
+    runtimeId,
+    configFingerprint,
+    rollbackPointer,
+    rollbackLimitations,
+    deployedAt,
+  });
+  const installerEvidence = installerPublicationEvidence(
+    path.resolve(cwd, artifactPath || deployConfig.artifactPath || "."),
+  );
+  if (installerEvidence) {
+    manifest.installerPublicationEvidence = installerEvidence;
+  }
+  const scoped = applyPublicationFastPathScope(manifest.surfaceBindings, {
+    cwd,
+    artifactPath: artifactPath || deployConfig.artifactPath || ".",
+  });
+  const surfaceBindings = withImmutablePublicationPolicies(withSurfaceRoutingEvidence(scoped.bindings, {
+    artifactPath: artifactPath || deployConfig.artifactPath || ".",
+    files: resolvedArtifact.files,
+  }), {
+    cwd,
+    artifactPath: artifactPath || deployConfig.artifactPath || ".",
+  });
+  if (installerEvidence) {
+    const preserved = surfaceBindings.some((binding) =>
+      binding.immutablePublication?.declaredPrefixes?.includes(installerEvidence.immutablePath));
+    if (!preserved) {
+      throw new Error(
+        `installer immutable path is not covered by append-only publication policy: ${installerEvidence.immutablePath}`,
+      );
+    }
+  }
+  manifest.surfaceBindings = surfaceBindings;
+  if (scoped.scope) {
+    manifest.publicationFastPath = scoped.scope;
+    manifest.url = surfaceBindings[0].url;
+  }
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-web-surface-deploy-plan",
+    dryRun: true,
+    adapter: deployConfig.adapter,
+    channel,
+    alias,
+    url: manifest.url,
+    urls: Object.fromEntries(surfaceBindings.map((binding) => [binding.surface, binding.url])),
+    artifact: {
+      path: artifactPath || deployConfig.artifactPath || ".",
+      hash: resolvedArtifact.artifactHash,
+      files: resolvedArtifact.files,
+    },
+    manifest,
+    surfaceBindings,
+    publicationFastPath: scoped.scope || undefined,
+    steps: planAdapterSteps(deployConfig.adapter, deployConfig, manifest),
+  };
+}
+
+export function verifyWebSurfaceArtifactChannelFacts({ cwd = process.cwd(), plan } = {}) {
+  const resolvedPlan = assertDeployPlan(plan);
+  const artifactRoot = path.resolve(cwd, resolvedPlan.artifact.path);
+  const expectedHosts = new Set((resolvedPlan.manifest?.surfaceBindings || []).map((binding) => {
+    try { return new URL(binding.url).host; } catch { return ""; }
+  }).filter(Boolean));
+  const observed = [];
+  const scopedPrefix = normalizeS3Key(
+    resolvedPlan.publicationFastPath
+      ? resolvedPlan.surfaceBindings?.[0]?.artifactPathPrefix || ""
+      : "",
+  );
+  for (const filePath of listFiles(artifactRoot, artifactRoot)
+    .filter((entry) => entry.endsWith(".json"))
+    .filter((entry) => {
+      if (!scopedPrefix) return true;
+      const relative = normalizeS3Key(path.relative(artifactRoot, entry));
+      return relative === scopedPrefix || relative.startsWith(`${scopedPrefix}/`);
+    })) {
+    let value;
+    try { value = JSON.parse(fs.readFileSync(filePath, "utf8")); } catch { continue; }
+    if (!value || typeof value !== "object" || Array.isArray(value) || !String(value.contract || "").includes("manifest")) continue;
+    const facts = [];
+    if (typeof value.canonicalHost === "string" && value.canonicalHost.trim()) facts.push({ field: "canonicalHost", host: value.canonicalHost.trim() });
+    if (Array.isArray(value.pages)) {
+      for (const [index, page] of value.pages.entries()) {
+        if (typeof page?.host === "string" && page.host.trim()) facts.push({ field: `pages[${index}].host`, host: page.host.trim() });
+      }
+    }
+    for (const fact of facts) observed.push({ path: toPosix(path.relative(cwd, filePath)), ...fact });
+  }
+  const mismatches = observed.filter((fact) => !expectedHosts.has(fact.host));
+  if (mismatches.length > 0) {
+    throw new Error(`web-surface artifact channel facts mismatch for ${resolvedPlan.channel}: ${mismatches.map((fact) => `${fact.path}#${fact.field}=${fact.host}`).join(", ")}`);
+  }
+  return { channel: resolvedPlan.channel, expectedHosts: [...expectedHosts].sort(), observed };
+}
+
+export function applyWebSurfaceDeploy({
+  cwd = process.cwd(),
+  channel = "preview",
+  alias = "",
+  sourceSha = "",
+  artifactHash = "",
+  artifactPath = "",
+  plan = null,
+  dryRun = true,
+  actor = "",
+  runId = "",
+  appliedAt = new Date().toISOString(),
+  commandRunner = defaultCommandRunner,
+} = {}) {
+  const resolvedPlan = plan
+    ? verifyDeployPlanArtifact({ cwd, plan: assertDeployPlan(plan) })
+    : planWebSurfaceDeploy({
+        cwd,
+        channel,
+        alias,
+        sourceSha,
+        artifactHash,
+        artifactPath,
+        dryRun: true,
+        deployedAt: appliedAt,
+      });
+  verifyWebSurfaceArtifactChannelFacts({ cwd, plan: resolvedPlan });
+  const loadedConfig = loadBuildchainConfig(cwd);
+  const config = assertWebSurfaceConfig(loadedConfig);
+  const deployConfig = config.deploy?.[resolvedPlan.channel];
+  if (!deployConfig) {
+    throw new Error(`missing deploy.${resolvedPlan.channel}`);
+  }
+  if (resolvedPlan.adapter !== "aws-s3-cloudfront") {
+    throw new Error(`web-surface deploy apply does not support adapter: ${resolvedPlan.adapter}`);
+  }
+  const bucket = deployConfig.bucket || deployConfig.target || "";
+  const artifactRoot = path.resolve(cwd, resolvedPlan.artifact.path);
+  const bindings = withImmutablePublicationPolicies(withSurfaceRoutingEvidence(resolvedPlan.manifest.surfaceBindings || [], {
+    artifactPath: resolvedPlan.artifact.path,
+    files: resolvedPlan.artifact.files || [],
+  }), {
+    cwd,
+    artifactPath: resolvedPlan.artifact.path,
+  });
+  resolvedPlan.manifest.surfaceBindings = bindings;
+  if (!dryRun) {
+    for (const binding of bindings) {
+      assertConcreteAwsDeployConfig({
+        deployConfig: surfaceDeployConfig(deployConfig, binding.surface),
+        channel: `${resolvedPlan.channel}.surfaces.${binding.surface}`,
+        operation: "deploy",
+      });
+    }
+  }
+  const bindingOperations = bindings.flatMap((binding) => deployBindingOperations({
+      artifactRoot,
+      deployConfig,
+      manifest: resolvedPlan.manifest,
+      binding,
+    }));
+  const operations = [
+    ...bindingOperations.filter((operation) => operation.action === "verify-immutable-artifact-before-upload"),
+    ...bindingOperations.filter((operation) => operation.action === "sync-immutable-artifact"),
+    ...bindingOperations.filter((operation) => operation.action === "verify-immutable-artifact-after-upload"),
+    ...cloudFrontDirectoryIndexRewriteOperations(bindings.filter((binding) => !binding.publicationFastPath)),
+    ...bindingOperations.filter((operation) => ![
+      "verify-immutable-artifact-before-upload",
+      "sync-immutable-artifact",
+      "verify-immutable-artifact-after-upload",
+    ].includes(operation.action)),
+  ];
+  const primaryBinding = bindings[0] || {};
+  const objectPrefix = primaryBinding.objectPrefix || objectPrefixFor(deployConfig, resolvedPlan.manifest.alias || resolvedPlan.manifest.channel);
+  const manifestKey = primaryBinding.manifestKey || deployManifestKey(deployConfig, resolvedPlan.manifest);
+  const invalidationPaths = bindings.flatMap((binding) =>
+    binding.publicationFastPath
+      ? [...binding.publicationFastPath.invalidationPaths, cdnPath(binding.manifestKey)]
+      : [viewerWildcardPath(binding), cdnPath(binding.manifestKey)]);
+  const operationResults = runAdapterOperations({ operations, dryRun, commandRunner });
+  const immutablePreservation = bindings
+    .filter((binding) => binding.immutablePublication)
+    .map((binding) => {
+      const relevant = operationResults.filter((operation) =>
+        operation.surface === binding.surface &&
+        [
+          "verify-immutable-artifact-before-upload",
+          "sync-immutable-artifact",
+          "verify-immutable-artifact-after-upload",
+          "sync-static-artifact",
+          "sync-publication-fast-path",
+        ].includes(operation.action),
+      );
+      const expectedOperationCount = (binding.immutablePublication.files.length * 2) +
+        binding.immutablePublication.uploadRoots.length +
+        (binding.publicationFastPath ? binding.publicationFastPath.mutableFiles.length : 1);
+      const complete = relevant.length === expectedOperationCount;
+      return {
+        surface: binding.surface,
+        manifestPath: binding.immutablePublication.manifestPath,
+        preservedRoots: binding.immutablePublication.preservedRoots,
+        declaredPrefixes: binding.immutablePublication.declaredPrefixes,
+        fileCount: binding.immutablePublication.files.length,
+        mutableDeleteExcludes: binding.mutableDeleteExcludes || [],
+        coveringBindings: binding.immutablePublication.coveringBindings,
+        status: !complete || relevant.some((operation) => operation.status === "failed")
+          ? "failed"
+          : dryRun ? "planned" : "applied",
+      };
+    });
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-web-surface-deploy-apply",
+    dryRun,
+    applyMode: dryRun ? "dry-run" : "apply",
+    status: appliedStatus({ dryRun, operations: operationResults }),
+    actor,
+    runId,
+    appliedAt,
+    channel: resolvedPlan.channel,
+    alias: resolvedPlan.alias,
+    url: resolvedPlan.url,
+    urls: resolvedPlan.urls || Object.fromEntries(bindings.map((binding) => [binding.surface, binding.url])),
+    sourceSha: resolvedPlan.manifest.sourceSha,
+    artifactHash: resolvedPlan.artifact.hash,
+    adapter: resolvedPlan.adapter,
+    target: bucket,
+    objectPrefix,
+    manifestKey,
+    invalidationPaths,
+    publicationFastPath: resolvedPlan.publicationFastPath || resolvedPlan.manifest.publicationFastPath,
+    manifest: resolvedPlan.manifest,
+    surfaceBindings: bindings,
+    immutablePreservation,
+    operations: operationResults,
+  };
+}
+
+export async function preflightWebSurfaceProduction({
+  cwd = process.cwd(),
+  plan = null,
+  execute = false,
+  commandRunner = defaultCommandRunner,
+  dnsResolver = defaultDnsResolver,
+  checkedAt = new Date().toISOString(),
+} = {}) {
+  const resolvedPlan = plan ? assertDeployPlan(plan) : planWebSurfaceDeploy({
+    cwd,
+    channel: "production",
+    sourceSha: "0".repeat(40),
+    artifactHash: "0".repeat(64),
+    dryRun: true,
+    deployedAt: checkedAt,
+  });
+  if (resolvedPlan.channel !== "production") {
+    throw new Error("web-surface production preflight requires a production deploy plan");
+  }
+  const loadedConfig = loadBuildchainConfig(cwd);
+  const config = assertWebSurfaceConfig(loadedConfig);
+  const channel = config.channels?.production || {};
+  const deployConfig = config.deploy?.production;
+  if (!deployConfig) {
+    throw new Error("missing deploy.production");
+  }
+  const checks = [];
+  const configuredProductionBindings = resolveSurfaceBindings({
+    config,
+    channelName: "production",
+    alias: "",
+    deployConfig,
+  });
+  const bindings = resolvedPlan.manifest?.surfaceBindings || resolveSurfaceBindings({
+    config,
+    channelName: "production",
+    alias: "",
+    deployConfig,
+  });
+
+  checks.push(preflightCheck({
+    name: "production-channel",
+    status: channel.canonical === true && channel.noindex === false ? "pass" : "fail",
+    details: {
+      canonical: channel.canonical,
+      noindex: channel.noindex,
+    },
+    message: channel.canonical === true && channel.noindex === false
+      ? "production channel is canonical and indexable"
+      : "channels.production must be canonical=true and noindex=false",
+  }));
+
+  const configuredSurfaceNames = configuredProductionBindings.map((binding) => binding.surface).sort();
+  const plannedSurfaceNames = bindings.map((binding) => binding.surface).sort();
+  const missingSurfaces = configuredSurfaceNames.filter((surface) => !plannedSurfaceNames.includes(surface));
+  const extraSurfaces = plannedSurfaceNames.filter((surface) => !configuredSurfaceNames.includes(surface));
+  checks.push(preflightCheck({
+    name: "production-surface-set",
+    status: missingSurfaces.length === 0 && extraSurfaces.length === 0 ? "pass" : "fail",
+    details: {
+      configured: configuredSurfaceNames,
+      planned: plannedSurfaceNames,
+      missing: missingSurfaces,
+      extra: extraSurfaces,
+    },
+    message: missingSurfaces.length === 0 && extraSurfaces.length === 0
+      ? "production plan covers every configured surface"
+      : `production plan surface mismatch: missing=${missingSurfaces.join(",") || "-"} extra=${extraSurfaces.join(",") || "-"}`,
+  }));
+
+  const concreteFailures = [];
+  for (const binding of bindings) {
+    const effectiveDeploy = surfaceDeployConfig(deployConfig, binding.surface);
+    try {
+      assertConcreteAwsDeployConfig({
+        deployConfig: effectiveDeploy,
+        channel: `production.surfaces.${binding.surface}`,
+        operation: "deploy",
+      });
+    } catch (error) {
+      concreteFailures.push(String(error.message || error));
+    }
+  }
+  checks.push(preflightCheck({
+    name: "production-targets",
+    status: concreteFailures.length === 0 ? "pass" : "fail",
+    details: {
+      bindings: bindings.map((binding) => ({
+        surface: binding.surface,
+        bucket: binding.bucket,
+        distributionId: binding.distributionId,
+        objectPrefix: binding.objectPrefix,
+        manifestKey: binding.manifestKey,
+      })),
+      failures: concreteFailures,
+    },
+    message: concreteFailures.length === 0
+      ? "production bucket and CloudFront distribution values are concrete"
+      : concreteFailures.join("; "),
+  }));
+
+  const hosts = bindings.map((binding) => ({
+    surface: binding.surface,
+    url: binding.url,
+    host: urlHost(binding.url),
+    distributionId: binding.distributionId,
+  }));
+  const invalidHosts = hosts.filter((entry) => !entry.host || !entry.url.startsWith("https://"));
+  checks.push(preflightCheck({
+    name: "production-surface-hosts",
+    status: invalidHosts.length === 0 ? "pass" : "fail",
+    details: { hosts, invalidHosts },
+    message: invalidHosts.length === 0
+      ? "all production surfaces declare HTTPS hosts"
+      : `invalid production surface hosts: ${invalidHosts.map((entry) => entry.surface).join(", ")}`,
+  }));
+
+  const awsResults = [];
+  if (execute) {
+    const checkedBuckets = new Set();
+    for (const binding of bindings) {
+      const effectiveDeploy = surfaceDeployConfig(deployConfig, binding.surface);
+      const bucket = binding.bucket || effectiveDeploy.bucket || effectiveDeploy.target || "";
+      if (bucket && !checkedBuckets.has(bucket)) {
+        checkedBuckets.add(bucket);
+        const operation = {
+          action: "preflight-head-bucket",
+          surface: binding.surface,
+          command: "aws",
+          args: ["s3api", "head-bucket", "--bucket", bucket],
+        };
+        awsResults.push(runAdapterOperation({ operation, dryRun: false, commandRunner }));
+      }
+    }
+
+    const checkedDistributions = new Set();
+    for (const binding of bindings) {
+      const distributionId = binding.distributionId || "";
+      if (distributionId && !checkedDistributions.has(distributionId)) {
+        checkedDistributions.add(distributionId);
+        const operation = {
+          action: "preflight-get-distribution",
+          surface: binding.surface,
+          command: "aws",
+          args: ["cloudfront", "get-distribution", "--id", distributionId, "--output", "json"],
+        };
+        awsResults.push(runAdapterOperation({ operation, dryRun: false, commandRunner }));
+      }
+    }
+  }
+
+  const failedAws = awsResults.filter((result) => result.status === "failed");
+  checks.push(preflightCheck({
+    name: "production-aws-access",
+    status: !execute || failedAws.length === 0 ? "pass" : "fail",
+    details: {
+      execute,
+      operations: awsResults.map((result) => ({
+        action: result.action,
+        surface: result.surface,
+        status: result.status,
+        stderr: result.stderr,
+      })),
+    },
+    message: !execute
+      ? "AWS access check planned but not executed"
+      : failedAws.length === 0
+        ? "production role can inspect buckets and CloudFront distributions"
+        : `production AWS access failed: ${failedAws.map((result) => `${result.action}:${result.surface}`).join(", ")}`,
+  }));
+
+  const aliasChecks = [];
+  if (execute) {
+    const aliasesByDistribution = new Map();
+    for (const result of awsResults.filter((entry) => entry.action === "preflight-get-distribution" && entry.status !== "failed")) {
+      const aliases = parseCloudFrontAliases(result.stdout);
+      aliasesByDistribution.set(result.args[result.args.indexOf("--id") + 1], aliases);
+    }
+    for (const host of hosts) {
+      const aliases = aliasesByDistribution.get(host.distributionId) || [];
+      aliasChecks.push({
+        ...host,
+        aliases,
+        matched: aliasMatchesHost(aliases, host.host),
+      });
+    }
+  }
+  const missingAliases = aliasChecks.filter((entry) => !entry.matched);
+  checks.push(preflightCheck({
+    name: "production-cloudfront-aliases",
+    status: !execute || missingAliases.length === 0 ? "pass" : "fail",
+    details: {
+      execute,
+      aliases: aliasChecks,
+    },
+    message: !execute
+      ? "CloudFront alias check planned but not executed"
+      : missingAliases.length === 0
+        ? "production CloudFront aliases cover every surface host"
+        : `missing CloudFront aliases: ${missingAliases.map((entry) => entry.host).join(", ")}`,
+  }));
+
+  const dnsChecks = [];
+  if (execute) {
+    for (const host of hosts) {
+      try {
+        const answers = await dnsResolver(host.host);
+        dnsChecks.push({ ...host, status: "pass", answers });
+      } catch (error) {
+        dnsChecks.push({ ...host, status: "fail", error: String(error.message || error) });
+      }
+    }
+  }
+  const failedDns = dnsChecks.filter((entry) => entry.status === "fail");
+  checks.push(preflightCheck({
+    name: "production-dns",
+    status: !execute || failedDns.length === 0 ? "pass" : "fail",
+    details: {
+      execute,
+      hosts: dnsChecks,
+    },
+    message: !execute
+      ? "DNS check planned but not executed"
+      : failedDns.length === 0
+        ? "production DNS resolves for every surface host"
+        : `production DNS failed: ${failedDns.map((entry) => entry.host).join(", ")}`,
+  }));
+
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-web-surface-production-preflight",
+    checkedAt,
+    execute,
+    channel: "production",
+    status: preflightStatus(checks),
+    url: resolvedPlan.url,
+    urls: resolvedPlan.urls,
+    sourceSha: resolvedPlan.manifest.sourceSha,
+    artifactHash: resolvedPlan.artifact.hash,
+    surfaceBindings: bindings,
+    checks,
+  };
+}
+
+function healthStatus(checks) {
+  return checks.some((check) => check.status === "fail") ? "failed" : "passed";
+}
+
+function noindexHeader(headers) {
+  const value = headers?.get?.("x-robots-tag") || "";
+  return String(value).toLowerCase().includes("noindex");
+}
+
+function noindexMeta(html = "") {
+  const source = String(html || "").toLowerCase();
+  return /<meta\s+[^>]*name=["']robots["'][^>]*content=["'][^"']*noindex/.test(source) ||
+    /<meta\s+[^>]*content=["'][^"']*noindex[^"']*["'][^>]*name=["']robots["']/.test(source);
+}
+
+function htmlLikeResponse(response, url = "") {
+  const contentType = response.headers?.get?.("content-type") || "";
+  return String(contentType).toLowerCase().includes("text/html") || /\/$|\.html(?:$|[?#])/.test(String(url || ""));
+}
+
+function operationEvidenceStatus(operation, { plannedEvidence = false } = {}) {
+  if (plannedEvidence && operation.status === undefined) {
+    return true;
+  }
+  return operation.status === "applied" || operation.status === "planned";
+}
+
+function managedNetworkHealthEvidence({ target, result, plan }) {
+  const requiredActions = [
+    target.publicationFastPath
+      ? "sync-publication-fast-path"
+      : "sync-static-artifact",
+    "write-deployment-manifest",
+  ];
+  const operationSource = Array.isArray(result?.operations) && result.operations.length > 0
+    ? "apply-result"
+    : "deploy-plan";
+  const operations = operationSource === "apply-result"
+    ? result.operations
+    : (Array.isArray(plan?.steps) ? plan.steps : []);
+  const surfaceOperations = operations.filter((operation) => operation.surface === target.surface);
+  const presentActions = new Set(
+    surfaceOperations
+      .filter((operation) => operationEvidenceStatus(operation, { plannedEvidence: operationSource === "deploy-plan" }))
+      .map((operation) => operation.action),
+  );
+  const missingActions = requiredActions.filter((action) => !presentActions.has(action));
+  const missingFields = [];
+  if (!target.manifestKey) missingFields.push("manifestKey");
+  if (!target.bucket) missingFields.push("bucket");
+  if (target.objectPrefix === undefined || target.objectPrefix === null) missingFields.push("objectPrefix");
+  return {
+    source: operationSource,
+    actions: [...presentActions].sort(),
+    requiredActions,
+    missingActions,
+    missingFields,
+    status: missingActions.length === 0 && missingFields.length === 0 ? "pass" : "fail",
+  };
+}
+
+function managedNetworkTargetObjectKey(target) {
+  const requestPath = String(target.requestPath || "/");
+  let relative = requestPath.replace(/^\/+/, "");
+  if (!relative) {
+    relative = "index.html";
+  } else if (requestPath.endsWith("/")) {
+    relative = `${relative.replace(/\/+$/, "")}/index.html`;
+  }
+  return joinS3Key(target.objectPrefix, relative);
+}
+
+function managedNetworkHeadObject({ target, kind, key, commandRunner }) {
+  return runAdapterOperation({
+    operation: {
+      action: `health-head-${kind}`,
+      surface: target.surface,
+      command: "aws",
+      args: ["s3api", "head-object", "--bucket", target.bucket, "--key", key],
+    },
+    dryRun: false,
+    commandRunner,
+  });
+}
+
+function managedNetworkS3HealthCheck({ target, evidence, commandRunner }) {
+  const objectKey = managedNetworkTargetObjectKey(target);
+  const headResults = [
+    managedNetworkHeadObject({ target, kind: "manifest", key: target.manifestKey, commandRunner }),
+    managedNetworkHeadObject({ target, kind: "object", key: objectKey, commandRunner }),
+  ];
+  const failed = headResults.filter((operation) => operation.status === "failed");
+  return {
+    surface: target.surface,
+    kind: target.kind,
+    requestPath: target.requestPath,
+    url: target.url,
+    accessControl: target.accessControl || "",
+    healthStrategy: "s3-object",
+    status: evidence.status === "pass" && failed.length === 0 ? "pass" : "fail",
+    httpStatus: null,
+    finalUrl: "",
+    noindexHeader: false,
+    manifestKey: target.manifestKey || "",
+    bucket: target.bucket || "",
+    objectPrefix: target.objectPrefix || "",
+    objectKey,
+    evidence,
+    s3Checks: headResults.map((operation) => ({
+      action: operation.action,
+      bucket: target.bucket,
+      key: operation.args?.[operation.args.indexOf("--key") + 1] || "",
+      status: operation.status,
+      exitCode: operation.exitCode,
+      stderr: operation.stderr || "",
+    })),
+    message: evidence.status === "pass" && failed.length === 0
+      ? "surface health verified from S3 manifest and object head checks; direct public fetch skipped"
+      : `S3 object health failed: ${failed.map((operation) => `${operation.action}:${operation.stderr || operation.exitCode}`).join("; ") || "missing deployment evidence"}`,
+  };
+}
+
+function managedNetworkHealthCheck({ target, result, plan, commandRunner, verifyS3Objects = true }) {
+  const evidence = managedNetworkHealthEvidence({ target, result, plan });
+  if (verifyS3Objects && result?.status === "applied" && evidence.status === "pass") {
+    return managedNetworkS3HealthCheck({ target, evidence, commandRunner });
+  }
+  return {
+    surface: target.surface,
+    kind: target.kind,
+    requestPath: target.requestPath,
+    url: target.url,
+    accessControl: target.accessControl || "",
+    healthStrategy: "deployment-evidence",
+    status: evidence.status,
+    httpStatus: null,
+    finalUrl: "",
+    noindexHeader: false,
+    manifestKey: target.manifestKey || "",
+    bucket: target.bucket || "",
+    objectPrefix: target.objectPrefix || "",
+    evidence,
+    message: evidence.status === "pass"
+      ? "managed-network surface health verified from deployment manifest and S3 object sync evidence; direct public fetch skipped"
+      : `managed-network surface health requires manifest and S3 object evidence; missing actions=${evidence.missingActions.join(",") || "none"}, missing fields=${evidence.missingFields.join(",") || "none"}`,
+  };
+}
+
+async function fetchWithRetry(url, {
+  fetchImpl,
+  attempts = 3,
+  intervalMs = 5000,
+  shouldRetry = () => false,
+} = {}) {
+  const maxAttempts = Math.max(1, Number(attempts) || 1);
+  let lastError = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const response = await fetchImpl(url, { redirect: "follow" });
+      if (attempt >= maxAttempts || !shouldRetry(response)) {
+        return { response, attempts: attempt };
+      }
+    } catch (error) {
+      lastError = error;
+      if (attempt >= maxAttempts) {
+        throw Object.assign(error, { attempts: attempt });
+      }
+    }
+    if (intervalMs > 0) {
+      await sleep(intervalMs);
+    }
+  }
+  throw Object.assign(lastError || new Error("web-surface fetch retry exhausted"), { attempts: maxAttempts });
+}
+
+function retryableHealthResponse(response) {
+  return response.status === 403 || response.status === 404 || response.status >= 500;
+}
+
+const DEFAULT_HEALTH_HTTP_RETRY_ATTEMPTS = 12;
+const DEFAULT_HEALTH_HTTP_RETRY_INTERVAL_MS = 10000;
+
+export async function checkWebSurfaceHealth({
+  result = null,
+  plan = null,
+  cwd = process.cwd(),
+  fetchImpl = fetch,
+  checkedAt = new Date().toISOString(),
+  allowedStatuses = [200],
+  allowedManagedNetworkRunner = false,
+  managedNetworkS3ObjectVerification = true,
+  commandRunner = defaultCommandRunner,
+  httpRetryAttempts = Number(process.env.BUILDCHAIN_WEB_SURFACE_HEALTH_HTTP_RETRY_ATTEMPTS || DEFAULT_HEALTH_HTTP_RETRY_ATTEMPTS),
+  httpRetryIntervalMs = Number(process.env.BUILDCHAIN_WEB_SURFACE_HEALTH_HTTP_RETRY_INTERVAL_MS || DEFAULT_HEALTH_HTTP_RETRY_INTERVAL_MS),
+} = {}) {
+  const loadedConfig = loadBuildchainConfig(cwd);
+  const config = assertWebSurfaceConfig(loadedConfig);
+  const manifest = result?.manifest || plan?.manifest;
+  const channel = result?.channel || plan?.channel || manifest?.channel || "production";
+  const urls = result?.urls || plan?.urls || (manifest?.surfaceBindings
+    ? Object.fromEntries(manifest.surfaceBindings.map((binding) => [binding.surface, binding.url]))
+    : {});
+  const bindings = manifest?.surfaceBindings || [];
+  const checks = [];
+  if (Object.keys(urls).length === 0) {
+    checks.push({
+      surface: "__urls__",
+      url: "",
+      status: "fail",
+      httpStatus: 0,
+      finalUrl: "",
+      noindexHeader: false,
+      message: "web-surface health check requires at least one surface URL from an apply result or deploy plan",
+    });
+  }
+
+  const smokeTargets = bindings.length > 0
+    ? bindings.flatMap((binding) => {
+        const smokeUrls = Array.isArray(binding.smokeUrls) && binding.smokeUrls.length > 0
+          ? binding.smokeUrls
+          : [{ kind: "root", requestPath: "/", url: binding.url || urls[binding.surface] || "", required: true }];
+        return smokeUrls.map((smoke) => ({
+          surface: binding.surface,
+          kind: smoke.kind || "root",
+          requestPath: smoke.requestPath || "",
+          url: smoke.url || "",
+          required: smoke.required !== false,
+          missing: Boolean(smoke.missing),
+          message: smoke.message || "",
+          accessControl: binding.accessControl || config.channels?.[channel]?.accessControl || "",
+          healthStrategy: binding.healthStrategy || "",
+          manifestKey: binding.manifestKey || "",
+          bucket: binding.bucket || "",
+          objectPrefix: binding.objectPrefix || "",
+          publicationFastPath: binding.publicationFastPath || null,
+        }));
+      })
+    : Object.entries(urls).map(([surface, url]) => ({
+        surface,
+        kind: "root",
+        requestPath: "/",
+        url,
+        required: true,
+        accessControl: config.channels?.[channel]?.accessControl || "",
+        healthStrategy: "",
+      }));
+
+  for (const target of smokeTargets) {
+    const { surface, url } = target;
+    if (!url || target.missing) {
+      checks.push({
+        surface,
+        kind: target.kind,
+        requestPath: target.requestPath,
+        url: url || "",
+        status: "fail",
+        httpStatus: 0,
+        finalUrl: "",
+        noindexHeader: false,
+        message: target.message || "web-surface smoke URL is missing",
+      });
+      continue;
+    }
+    if (target.healthStrategy === "s3-object") {
+      checks.push(managedNetworkHealthCheck({
+        target,
+        result,
+        plan,
+        commandRunner,
+        verifyS3Objects: managedNetworkS3ObjectVerification,
+      }));
+      continue;
+    }
+    if (target.accessControl === "managed-network" && !allowedManagedNetworkRunner) {
+      checks.push(managedNetworkHealthCheck({
+        target,
+        result,
+        plan,
+        commandRunner,
+        verifyS3Objects: managedNetworkS3ObjectVerification,
+      }));
+      continue;
+    }
+    try {
+      const { response, attempts } = await fetchWithRetry(url, {
+        fetchImpl,
+        attempts: httpRetryAttempts,
+        intervalMs: httpRetryIntervalMs,
+        shouldRetry: retryableHealthResponse,
+      });
+      const expectedNoindex = Boolean(config.channels?.[channel]?.noindex);
+      const headerNoindex = noindexHeader(response.headers);
+      const body = htmlLikeResponse(response, url) && typeof response.text === "function"
+        ? await response.text()
+        : "";
+      const metaNoindex = noindexMeta(body);
+      const noindex = headerNoindex || metaNoindex;
+      const statusOk = allowedStatuses.includes(response.status);
+      const noindexOk = channel !== "production" || expectedNoindex || !noindex;
+      checks.push({
+        surface,
+        kind: target.kind,
+        requestPath: target.requestPath,
+        url,
+        accessControl: target.accessControl || "",
+        healthStrategy: "http",
+        status: statusOk && noindexOk ? "pass" : "fail",
+        httpStatus: response.status,
+        attempts,
+        finalUrl: response.url || url,
+        noindexHeader: noindex,
+        noindexHeaderValue: headerNoindex,
+        noindexMeta: metaNoindex,
+        message: statusOk && noindexOk
+          ? "surface is reachable"
+          : `surface health failed: http=${response.status}, noindex=${noindex}`,
+      });
+    } catch (error) {
+      checks.push({
+        surface,
+        kind: target.kind,
+        requestPath: target.requestPath,
+        url,
+        status: "fail",
+        httpStatus: 0,
+        attempts: error.attempts || 1,
+        finalUrl: "",
+        noindexHeader: false,
+        message: String(error.message || error),
+      });
+    }
+  }
+
+  const immutableBindings = bindings.filter((binding) => binding.immutablePublication);
+  if (immutableBindings.length > 0) {
+    const operationSource = Array.isArray(result?.operations) && result.operations.length > 0
+      ? result.operations
+      : (Array.isArray(plan?.steps) ? plan.steps : []);
+    const preservationBindings = immutableBindings.map((binding) => {
+      const requiredActions = [
+        "verify-immutable-artifact-before-upload",
+        "sync-immutable-artifact",
+        "verify-immutable-artifact-after-upload",
+        binding.publicationFastPath
+          ? "sync-publication-fast-path"
+          : "sync-static-artifact",
+      ];
+      const actions = new Set(operationSource
+        .filter((operation) => operation.surface === binding.surface)
+        .filter((operation) => operationEvidenceStatus(operation, { plannedEvidence: !result }))
+        .map((operation) => operation.action));
+      const missingActions = requiredActions.filter((action) => !actions.has(action));
+      const coveringBindings = binding.publicationFastPath
+        ? []
+        : (binding.immutablePublication.coveringBindings || []).map((covering) => {
+        const sync = operationSource.find((operation) =>
+          operation.surface === covering.surface &&
+          operation.action === "sync-static-artifact" &&
+          operationEvidenceStatus(operation, { plannedEvidence: !result }),
+        );
+        const actualExcludes = sync?.preservation?.mutableDeleteExcludes || sync?.deleteExcludes || [];
+        return {
+          ...covering,
+          status: sync && covering.mutableDeleteExcludes.every((pattern) => actualExcludes.includes(pattern))
+            ? "pass"
+            : "fail",
+        };
+          });
+      return {
+        surface: binding.surface,
+        manifestPath: binding.immutablePublication.manifestPath,
+        preservedRoots: binding.immutablePublication.preservedRoots,
+        declaredPrefixes: binding.immutablePublication.declaredPrefixes,
+        fileCount: binding.immutablePublication.files.length,
+        mutableDeleteExcludes: binding.mutableDeleteExcludes || [],
+        coveringBindings,
+        actions: [...actions].sort(),
+        requiredActions,
+        missingActions,
+        status: missingActions.length === 0 && coveringBindings.every((covering) => covering.status === "pass")
+          ? "pass"
+          : "fail",
+      };
+    });
+    checks.push({
+      surface: "__immutable__",
+      url: "",
+      status: preservationBindings.every((binding) => binding.status === "pass") ? "pass" : "fail",
+      bindings: preservationBindings,
+      message: preservationBindings.every((binding) => binding.status === "pass")
+        ? "immutable publication roots were excluded from mutable deletion and verified around no-overwrite upload"
+        : "immutable publication preservation evidence is incomplete",
+    });
+  }
+
+  const installerPublication = manifest?.installerPublicationEvidence;
+  const managedInstallerSurface =
+    config.channels?.[channel]?.accessControl === "managed-network" &&
+    !allowedManagedNetworkRunner;
+  if (installerPublication && !managedInstallerSurface) {
+    try {
+      const publicBase = new URL(urls.hub || manifest?.url || Object.values(urls)[0]);
+      const projected = {
+        ...installerPublication,
+        assets: installerPublication.assets.map((asset) => ({
+          ...asset,
+          friendlyUrl: new URL(new URL(asset.friendlyUrl).pathname, publicBase).href,
+          immutableUrl: new URL(new URL(asset.immutableUrl).pathname, publicBase).href,
+        })),
+      };
+      const evidence = await verifyInstallerPublicReadback({
+        publication: projected,
+        fetchImpl,
+      });
+      checks.push({
+        surface: "__installer__",
+        url: publicBase.href,
+        status: "pass",
+        evidence,
+        message: "friendly and immutable installer routes match signed publication bytes and cache policy",
+      });
+    } catch (error) {
+      checks.push({
+        surface: "__installer__",
+        url: urls.hub || manifest?.url || "",
+        status: "fail",
+        message: String(error.message || error),
+      });
+    }
+  }
+
+  const manifestChecks = bindings.map((binding) => ({
+    surface: binding.surface,
+    manifestKey: binding.manifestKey,
+    bucket: binding.bucket,
+    distributionId: binding.distributionId,
+    status: binding.manifestKey ? "pass" : "fail",
+  }));
+  checks.push({
+    surface: "__manifest__",
+    url: "",
+    status: manifestChecks.length > 0 && manifestChecks.every((entry) => entry.status === "pass") ? "pass" : "fail",
+    manifests: manifestChecks,
+    message: "deployment manifest pointers are recorded for every surface",
+  });
+
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-web-surface-health-check",
+    checkedAt,
+    channel,
+    status: healthStatus(checks),
+    sourceSha: manifest?.sourceSha || result?.sourceSha || "",
+    artifactHash: manifest?.artifactHash || result?.artifactHash || "",
+    urls,
+    checks,
+  };
+}
+
+function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding }) {
+  const effectiveDeploy = surfaceDeployConfig(deployConfig, binding.surface);
+  const bucket = binding.bucket || effectiveDeploy.bucket || effectiveDeploy.target || "";
+  const distribution = binding.distributionId || effectiveDeploy.cloudfront_distribution || effectiveDeploy.distribution || "";
+  const surfaceArtifactRoot = surfaceArtifactRootFor({ artifactRoot, binding });
+  const immutable = binding.immutablePublication;
+  const installer = manifest.installerPublicationEvidence;
+  const installerRoot = installer?.immutablePath || "";
+  const ownsArtifactRoot = normalizeS3Key(
+    binding.artifactPathPrefix || surfaceArtifactPrefix(binding),
+  ) === "";
+  const ownsInstallerAssets = installer?.assets?.every((asset) =>
+    fs.existsSync(path.join(surfaceArtifactRoot, asset.friendly.path)));
+  const installerBinding =
+    installer &&
+    ownsArtifactRoot &&
+    ownsInstallerAssets &&
+    immutable?.declaredPrefixes?.includes(installer.immutablePath)
+      ? installer
+      : null;
+  const immutableVerifier = path.join(commandDirectory(), "web-surface-immutable-object.mjs");
+  const verifyImmutable = (phase) => (immutable?.files || []).map((file) => ({
+    action: `verify-immutable-artifact-${phase}`,
+    surface: binding.surface,
+    command: "node",
+    args: [
+      immutableVerifier,
+      "--bucket",
+      bucket,
+      "--key",
+      joinS3Key(binding.objectPrefix, file.path),
+      "--sha256",
+      file.sha256,
+    ],
+    immutable: {
+      phase,
+      path: file.path,
+      sha256: file.sha256,
+    },
+  }));
+  const syncImmutable = (immutable?.uploadRoots || immutable?.preservedRoots || []).map((root) => {
+    const isInstallerRoot = Boolean(installerBinding && root === installerRoot);
+    const immutableMetadataArgs = isInstallerRoot
+      ? [
+          "--content-type",
+          "application/octet-stream",
+          "--cache-control",
+          "public,max-age=31536000,immutable",
+        ]
+      : binding.cacheControl?.immutable
+        ? ["--cache-control", binding.cacheControl.immutable]
+        : [];
+    return {
+      action: "sync-immutable-artifact",
+      surface: binding.surface,
+      command: "aws",
+      args: [
+        "s3",
+        "sync",
+        path.join(surfaceArtifactRoot, root),
+        s3Uri(bucket, joinS3Key(binding.objectPrefix, root)),
+        "--no-overwrite",
+        "--checksum-algorithm",
+        "SHA256",
+        ...immutableMetadataArgs,
+      ],
+      immutable: {
+        preservedRoot: root,
+        overwrite: false,
+        cacheControl: isInstallerRoot
+          ? "public,max-age=31536000,immutable"
+          : binding.cacheControl?.immutable,
+      },
+    };
+  });
+  const publishFriendlyInstallers = (installerBinding?.assets || []).map((asset) => ({
+    action: "publish-friendly-installer",
+    surface: binding.surface,
+    command: "aws",
+    args: [
+      "s3",
+      "cp",
+      path.join(surfaceArtifactRoot, asset.friendly.path),
+      s3Uri(bucket, joinS3Key(binding.objectPrefix, asset.friendly.path)),
+      "--content-type",
+      asset.contentType,
+      "--cache-control",
+      "public,max-age=300,must-revalidate",
+    ],
+    installer: {
+      name: asset.name,
+      digest: asset.digest,
+      cacheControl: "public,max-age=300,must-revalidate",
+    },
+  }));
+  const fastPathMutable = (binding.publicationFastPath?.mutableFiles || []).map((file) => ({
+    action: "sync-publication-fast-path",
+    surface: binding.surface,
+    command: "aws",
+    args: [
+      "s3",
+      "cp",
+      path.join(surfaceArtifactRoot, file),
+      s3Uri(bucket, joinS3Key(binding.objectPrefix, file)),
+      "--checksum-algorithm",
+      "SHA256",
+    ],
+    publicationFastPath: {
+      qualificationRoot: binding.publicationFastPath.qualificationRoot,
+      path: file,
+      overwriteBoundary: "declared-mutable-file-only",
+    },
+  }));
+  const mutableSync = binding.publicationFastPath
+    ? fastPathMutable
+    : [
+      {
+        action: "sync-static-artifact",
+        surface: binding.surface,
+        command: "aws",
+        args: syncStaticArtifactArgs({
+          artifactRoot: surfaceArtifactRoot,
+          bucket,
+          objectPrefix: binding.objectPrefix,
+          deleteExcludes: binding.mutableDeleteExcludes || [],
+          cacheControl: binding.cacheControl?.default || "",
+        }),
+        routing: binding.routing,
+        preservation: binding.mutableDeleteExcludes?.length > 0
+          ? {
+              contract: "kungfu-buildchain-web-surface-immutable-delete-exclusion",
+              mutableDeleteExcludes: binding.mutableDeleteExcludes,
+            }
+          : undefined,
+      },
+      ...(binding.cacheControl?.mutable
+        ? [{
+            action: "apply-mutable-cache-control",
+            surface: binding.surface,
+            command: "aws",
+            args: mutableCacheControlArgs({
+              artifactRoot: surfaceArtifactRoot,
+              bucket,
+              objectPrefix: binding.objectPrefix,
+              cacheControl: binding.cacheControl.mutable,
+              excludePatterns: binding.mutableDeleteExcludes || [],
+            }),
+            cacheControl: binding.cacheControl.mutable,
+            patterns: ["*.html", "*.json", "*.xml"],
+            excludes: binding.mutableDeleteExcludes || [],
+          }]
+        : []),
+    ];
+  const operations = [
+    ...verifyImmutable("before-upload"),
+    ...syncImmutable,
+    ...verifyImmutable("after-upload"),
+    ...mutableSync,
+    ...publishFriendlyInstallers,
+    ...(binding.publicationFastPath
+      ? []
+      : directoryIndexAliasOperations({ surfaceArtifactRoot, bucket, binding })),
+    {
+      action: "write-deployment-manifest",
+      surface: binding.surface,
+      command: "aws",
+      args: [
+        "s3",
+        "cp",
+        "-",
+        s3Uri(bucket, binding.manifestKey),
+        "--content-type",
+        "application/json",
+        ...(binding.cacheControl?.mutable
+          ? ["--cache-control", binding.cacheControl.mutable]
+          : []),
+      ],
+      stdin: `${JSON.stringify({
+        ...manifest,
+        surface: binding.surface,
+        url: binding.url,
+        surfaceBinding: binding,
+      }, null, 2)}\n`,
+    },
+  ];
+  if (distribution) {
+    const invalidationPaths = binding.publicationFastPath?.invalidationPaths
+      || [viewerWildcardPath(binding)];
+    operations.push({
+      action: "invalidate-cdn",
+      surface: binding.surface,
+      command: "aws",
+      args: [
+        "cloudfront",
+        "create-invalidation",
+        "--distribution-id",
+        distribution,
+        "--paths",
+        ...invalidationPaths,
+        cdnPath(binding.manifestKey),
+      ],
+    });
+  }
+  return operations;
+}
+
+function planAdapterSteps(adapter, deployConfig, manifest) {
+  if (adapter === "aws-s3-cloudfront") {
+    const bindingSteps = manifest.surfaceBindings.flatMap((binding) => [
+      ...(binding.immutablePublication
+        ? [
+            {
+              action: "verify-immutable-artifact-before-upload",
+              surface: binding.surface,
+              fileCount: binding.immutablePublication.files.length,
+            },
+            {
+              action: "sync-immutable-artifact",
+              surface: binding.surface,
+              roots: binding.immutablePublication.uploadRoots,
+              overwrite: false,
+            },
+            {
+              action: "verify-immutable-artifact-after-upload",
+              surface: binding.surface,
+              fileCount: binding.immutablePublication.files.length,
+            },
+          ]
+        : []),
+      ...(binding.publicationFastPath
+        ? binding.publicationFastPath.mutableFiles.map((file) => ({
+            action: "sync-publication-fast-path",
+            surface: binding.surface,
+            target: binding.bucket,
+            path: file,
+            qualificationRoot: binding.publicationFastPath.qualificationRoot,
+          }))
+        : [{
+            action: "sync-static-artifact",
+            surface: binding.surface,
+            target: binding.bucket,
+            prefix: binding.objectPrefix,
+            deleteExcludes: binding.mutableDeleteExcludes || [],
+            cacheControl: binding.cacheControl || undefined,
+          },
+          ...(binding.cacheControl?.mutable
+            ? [{
+                action: "apply-mutable-cache-control",
+                surface: binding.surface,
+                cacheControl: binding.cacheControl.mutable,
+                patterns: ["*.html", "*.json", "*.xml"],
+                excludes: binding.mutableDeleteExcludes || [],
+              }]
+            : []),
+        ]),
+      {
+        action: "write-deployment-manifest",
+        surface: binding.surface,
+        target: manifestPrefixFor(deployConfig),
+        key: binding.manifestKey,
+      },
+      {
+        action: "invalidate-cdn",
+        surface: binding.surface,
+        distribution: binding.distributionId,
+        paths: binding.publicationFastPath?.invalidationPaths,
+      },
+    ]);
+    return [
+      ...bindingSteps.filter((step) => step.action === "verify-immutable-artifact-before-upload"),
+      ...bindingSteps.filter((step) => step.action === "sync-immutable-artifact"),
+      ...bindingSteps.filter((step) => step.action === "verify-immutable-artifact-after-upload"),
+      ...cloudFrontDirectoryIndexRewriteOperations(
+        (manifest.surfaceBindings || []).filter((binding) => !binding.publicationFastPath),
+      ).map((operation) => ({
+        action: operation.action,
+        distribution: operation.routing.distributionId,
+        functionName: operation.routing.functionName,
+        strategy: operation.routing.strategy,
+      })),
+      ...bindingSteps.filter((step) => ![
+        "verify-immutable-artifact-before-upload",
+        "sync-immutable-artifact",
+        "verify-immutable-artifact-after-upload",
+      ].includes(step.action)),
+    ];
+  }
+  return [
+    {
+      action: "prepare-dynamic-environment",
+      target: manifest.deployTarget,
+    },
+    {
+      action: "write-deployment-manifest",
+      target: manifestPrefixFor(deployConfig),
+    },
+  ];
+}
+
+export function planWebSurfaceCleanup({
+  cwd = process.cwd(),
+  aliases = [],
+  channel = "preview",
+  now = new Date().toISOString(),
+  event = "manual",
+  sourceSha = "",
+  pullNumber = "",
+  actor = "",
+  runId = "",
+  dryRun = true,
+} = {}) {
+  const loadedConfig = loadBuildchainConfig(cwd);
+  const config = assertWebSurfaceConfig(loadedConfig);
+  if (channel !== "preview") {
+    throw new Error("web-surface cleanup currently supports preview aliases only");
+  }
+  const deployConfig = config.deploy?.[channel];
+  if (!deployConfig) {
+    throw new Error(`missing deploy.${channel}`);
+  }
+  const requestedAliases = [...aliases];
+  if (requestedAliases.length === 0 && pullNumber) {
+    requestedAliases.push(`pr-${pullNumber}`);
+  }
+  const manifestPrefix = manifestPrefixFor(deployConfig);
+  const bindingsByAlias = new Map(requestedAliases.map((alias) => [
+    alias,
+    resolveSurfaceBindings({ config, channelName: channel, alias, deployConfig }),
+  ]));
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-web-surface-cleanup-plan",
+    dryRun,
+    applyMode: dryRun ? "dry-run" : "apply",
+    event,
+    channel,
+    now,
+    sourceSha: sourceSha ? assertSha(sourceSha, "sourceSha") : "",
+    pullNumber: pullNumber ? String(pullNumber) : "",
+    actor,
+    runId,
+    status: requestedAliases.length === 0 ? "no-op" : "planned",
+    adapter: deployConfig.adapter,
+    target: deployConfig.bucket || deployConfig.target || "",
+    manifestPrefix,
+    secretRefs: [...new Set([...(deployConfig.secretRefs || [])])],
+    entries: requestedAliases.map((alias) => {
+      const classified = classifyPreviewAlias(alias);
+      const retention = retentionConfig(config, "preview");
+      const surfaceBindings = bindingsByAlias.get(alias) || [];
+      const primaryBinding = surfaceBindings[0] || {};
+      const objectPrefix = primaryBinding.objectPrefix || objectPrefixFor(deployConfig, alias);
+      return {
+        alias,
+        aliasKind: classified.kind,
+        mutableAlias: classified.mutable,
+        retentionClass: classified.retentionClass,
+        retentionDays: retention[classified.retentionKey],
+        action: "delete-preview-alias",
+        objectPrefix,
+        manifestKey: primaryBinding.manifestKey || `${manifestPrefix.replace(/\/$/, "")}/${alias}.json`,
+        surfaceBindings,
+        steps: cleanupAdapterSteps(deployConfig.adapter, deployConfig, {
+          alias,
+          objectPrefix,
+          manifestPrefix,
+          surfaceBindings,
+        }),
+      };
+    }),
+  };
+}
+
+export function applyWebSurfaceCleanup({
+  cwd = process.cwd(),
+  aliases = [],
+  channel = "preview",
+  now = new Date().toISOString(),
+  event = "manual",
+  sourceSha = "",
+  pullNumber = "",
+  actor = "",
+  runId = "",
+  plan = null,
+  dryRun = true,
+  commandRunner = defaultCommandRunner,
+} = {}) {
+  const cleanup = plan
+    ? assertCleanupPlan(plan)
+    : planWebSurfaceCleanup({
+        cwd,
+        aliases,
+        channel,
+        now,
+        event,
+        sourceSha,
+        pullNumber,
+        actor,
+        runId,
+        dryRun,
+      });
+  const loadedConfig = loadBuildchainConfig(cwd);
+  const config = assertWebSurfaceConfig(loadedConfig);
+  const deployConfig = config.deploy?.[cleanup.channel];
+  if (!deployConfig) {
+    throw new Error(`missing deploy.${cleanup.channel}`);
+  }
+  if (cleanup.adapter !== "aws-s3-cloudfront") {
+    throw new Error(`web-surface cleanup apply does not support adapter: ${cleanup.adapter}`);
+  }
+  if (!dryRun) {
+    for (const entry of cleanup.entries) {
+      const bindings = entry.surfaceBindings?.length
+        ? entry.surfaceBindings
+        : [{
+            surface: "default",
+          }];
+      for (const binding of bindings) {
+        assertConcreteAwsDeployConfig({
+          deployConfig: surfaceDeployConfig(deployConfig, binding.surface),
+          channel: `${cleanup.channel}.surfaces.${binding.surface}`,
+          operation: "cleanup",
+        });
+      }
+    }
+  }
+  const bucket = deployConfig.bucket || deployConfig.target || "";
+  const operations = cleanup.entries.flatMap((entry) => cleanupEntryOperations({ deployConfig, entry, bucket }));
+  const operationResults = runAdapterOperations({ operations, dryRun, commandRunner });
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-web-surface-cleanup-apply",
+    dryRun,
+    applyMode: dryRun ? "dry-run" : "apply",
+    status: appliedStatus({ dryRun, operations: operationResults, noOp: cleanup.status === "no-op" }),
+    event,
+    channel,
+    now,
+    sourceSha: cleanup.sourceSha,
+    pullNumber: cleanup.pullNumber,
+    actor,
+    runId,
+    adapter: cleanup.adapter,
+    target: bucket,
+    manifestPrefix: cleanup.manifestPrefix,
+    entries: cleanup.entries,
+    operations: operationResults,
+  };
+}
+
+function cleanupEntryOperations({ deployConfig, entry, bucket }) {
+  const bindings = entry.surfaceBindings?.length
+    ? entry.surfaceBindings
+    : [{
+        surface: "default",
+        objectPrefix: entry.objectPrefix,
+        manifestKey: entry.manifestKey,
+        bucket,
+        distributionId: deployConfig.cloudfront_distribution || deployConfig.distribution || "",
+      }];
+  return bindings.flatMap((binding) => {
+    const effectiveDeploy = surfaceDeployConfig(deployConfig, binding.surface);
+    const bindingBucket = binding.bucket || effectiveDeploy.bucket || effectiveDeploy.target || bucket;
+    const distribution = binding.distributionId || effectiveDeploy.cloudfront_distribution || effectiveDeploy.distribution || "";
+    const entryOperations = [
+      {
+        action: "delete-static-prefix",
+        alias: entry.alias,
+        surface: binding.surface,
+        command: "aws",
+        args: ["s3", "rm", s3Uri(bindingBucket, binding.objectPrefix), "--recursive"],
+      },
+      {
+        action: "delete-deployment-manifest",
+        alias: entry.alias,
+        surface: binding.surface,
+        command: "aws",
+        args: ["s3", "rm", s3Uri(bindingBucket, binding.manifestKey)],
+      },
+    ];
+    if (distribution) {
+      entryOperations.push({
+        action: "invalidate-cdn",
+        alias: entry.alias,
+        surface: binding.surface,
+        command: "aws",
+        args: [
+          "cloudfront",
+          "create-invalidation",
+          "--distribution-id",
+          distribution,
+          "--paths",
+          viewerWildcardPath(binding),
+          cdnPath(binding.manifestKey),
+        ],
+      });
+    }
+    return entryOperations;
+  });
+}
+
+function cleanupAdapterSteps(adapter, deployConfig, entry) {
+  if (adapter === "aws-s3-cloudfront") {
+    const bindings = entry.surfaceBindings?.length
+      ? entry.surfaceBindings
+      : [{
+          surface: "default",
+          objectPrefix: entry.objectPrefix,
+          manifestKey: `${entry.manifestPrefix.replace(/\/$/, "")}/${entry.alias}.json`,
+          bucket: deployConfig.bucket || deployConfig.target || "",
+          distributionId: deployConfig.cloudfront_distribution || deployConfig.distribution || "",
+        }];
+    return bindings.flatMap((binding) => [
+        {
+          action: "delete-static-prefix",
+          surface: binding.surface,
+          target: binding.bucket,
+          prefix: binding.objectPrefix,
+        },
+        {
+          action: "delete-deployment-manifest",
+          surface: binding.surface,
+          target: entry.manifestPrefix,
+          key: binding.manifestKey,
+        },
+        {
+          action: "invalidate-cdn",
+          surface: binding.surface,
+          distribution: binding.distributionId,
+        },
+      ]);
+  }
+  return [
+    {
+      action: "delete-preview-environment",
+      target: deployConfig.environment || deployConfig.service || deployConfig.target || "",
+      alias: entry.alias,
+    },
+    {
+      action: "delete-deployment-manifest",
+      target: entry.manifestPrefix,
+      key: `${entry.manifestPrefix.replace(/\/$/, "")}/${entry.alias}.json`,
+    },
+  ];
+}
+
+export function defaultWebSurfaceAlias({ channel = "preview", sourceSha = "", pullNumber = "" } = {}) {
+  if (channel !== "preview") {
+    return "";
+  }
+  if (pullNumber) {
+    return `pr-${pullNumber}`;
+  }
+  const sha = assertSha(sourceSha, "sourceSha");
+  return `sha-${sha.slice(0, 12)}`;
+}
+
+export function localWebSurfaceContext() {
+  return {
+    sourceSha: process.env.BUILDCHAIN_SOURCE_SHA || process.env.GITHUB_SHA || "",
+    sourceRef: process.env.BUILDCHAIN_SOURCE_REF || process.env.GITHUB_REF || "",
+    repository: process.env.GITHUB_REPOSITORY || "",
+    runId: process.env.GITHUB_RUN_ID || "",
+    runAttempt: process.env.GITHUB_RUN_ATTEMPT || "",
+    runner: {
+      os: process.env.RUNNER_OS || os.platform(),
+      arch: process.env.RUNNER_ARCH || os.arch(),
+    },
+  };
+}

@@ -12,12 +12,10 @@ import {
   runtimeResumeDocumentRoot,
   verifyRuntimeAuthorizationReceipt,
   verifyRuntimeResumeLineage,
-} from "../packages/core/runtime-ref-resume-authority.js";
-import { finalizeRuntimeResumeEvidence } from "../scripts/resume-from-candidate-run.mjs";
-import {
-  collectGitHubReleasePassport,
-  createReleasePassport,
-} from "../packages/core/release-passport.js";
+} from "../packages/core/consumer/runtime-ref-resume-authority.js";
+import { finalizeRuntimeResumeEvidence } from "../packages/core/release/recovery/runtime.js";
+import { collectGitHubReleasePassport } from "../packages/core/release/passport/collection.js";
+import { createReleasePassport } from "../packages/core/release/passport/assembly.js";
 
 const SHA_A = "a".repeat(40);
 const SHA_B = "b".repeat(40);
@@ -58,7 +56,7 @@ function cleanConsumer() {
   );
   write(
     path.join(root, ".github/workflows/release.yml"),
-    `on:\n  workflow_dispatch:\n    inputs:\n      buildchain-ref:\n        default: ""\npermissions:\n  id-token: write\njobs:\n  release:\n    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha\n    with:\n      buildchain-ref: \${{ inputs.buildchain-ref }}\n`,
+    `on:\n  workflow_dispatch:\n    inputs:\n      buildchain-ref:\n        default: ""\npermissions:\n  id-token: write\njobs:\n  release:\n    uses: kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4-alpha\n    with:\n      buildchain-ref: \${{ inputs.buildchain-ref }}\n`,
   );
   write(
     path.join(root, ".buildchain/contract-lock.json"),
@@ -539,4 +537,60 @@ test("machine architecture keeps transient authority bounded to v4", () => {
   assert.equal(architecture.resume.failedJobRerun, false);
   assert.equal(architecture.authority.v3BehaviorChange, false);
   assert.equal(architecture.authority.credentialsInEvidence, false);
+});
+
+test("source scan closes runtime selectors inside multiline workflow and action JSON envelopes", (t) => {
+  const root = cleanConsumer();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const workflow = path.join(root, ".github/workflows/promotion.yml");
+  const envelope = (value) =>
+    `jobs:\n  promote:\n    uses: ./.github/workflows/public-release-promote.yml\n    with:\n      request-json: |\n${value
+      .split("\n")
+      .map((line) => `        ${line}`)
+      .join("\n")}\n`;
+  for (const value of [
+    `{ "buildchain-ref":\n  "${SHA_B}" }`,
+    `{ "buildchainRuntime": { "sha": "${SHA_B}" } }`,
+    '{ "resume-buildchain-runtime-sha": "${{ vars.RUNTIME_SHA }}" }',
+  ]) {
+    write(workflow, envelope(value));
+    const scan = scanRuntimeSelectorPersistence({ root });
+    assert.equal(scan.status, "rejected");
+    assert.ok(
+      scan.failures.some((f) => f.code === "persistent-runtime-json-value"),
+      JSON.stringify(scan.failures),
+    );
+  }
+  write(
+    workflow,
+    envelope(
+      '{ "buildchain-ref": "v4-alpha", "resume-buildchain-runtime-sha": ${{ toJSON(inputs.runtime_sha) }} }',
+    ),
+  );
+  assert.equal(scanRuntimeSelectorPersistence({ root }).status, "passed");
+  write(workflow, envelope('{ "buildchain-ref": '));
+  assert.ok(
+    scanRuntimeSelectorPersistence({ root }).failures.some(
+      (f) => f.code === "runtime-selector-json-envelope-invalid",
+    ),
+  );
+  write(workflow, envelope("${{ vars.PROMOTION_REQUEST }}"));
+  assert.ok(
+    scanRuntimeSelectorPersistence({ root }).failures.some(
+      (f) => f.code === "persistent-runtime-json-indirection",
+    ),
+  );
+  write(workflow, envelope('{ "buildchain-ref": "v4" }'));
+  write(
+    path.join(root, "actions/promotion/submit/action.yml"),
+    `runs:\n  using: composite\n  steps:\n    - uses: ./.buildchain/runtime/actions/release/promotion/ref\n      with:\n        invocation-json: >\n          { "buildchain-ref":\n            "${SHA_B}" }\n`,
+  );
+  const actionScan = scanRuntimeSelectorPersistence({ root });
+  assert.ok(
+    actionScan.failures.some(
+      (f) =>
+        f.path === "actions/promotion/submit/action.yml" &&
+        f.code === "persistent-runtime-json-value",
+    ),
+  );
 });

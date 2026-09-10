@@ -40,9 +40,9 @@ Any consumer migration must record:
 
 New stable references should use:
 
-- `kungfu-systems/buildchain/actions/validate-config@v3`
-- `kungfu-systems/buildchain/actions/run-lifecycle@v3`
-- `kungfu-systems/buildchain/actions/promote-buildchain-ref@v3`
+- `kungfu-systems/buildchain/actions/build/lifecycle/validate@v3`
+- `kungfu-systems/buildchain/actions/build/lifecycle/run@v3`
+- `kungfu-systems/buildchain/actions/release/promotion/ref@v3`
 - `kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v3`
 
 ## Publishing Rule

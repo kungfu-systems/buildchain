@@ -11,29 +11,20 @@ import {
   createReleaseCandidatePassport,
   sha256Json,
   validateReleaseCandidatePassport,
-} from "../packages/core/release-candidate.js";
-import { generateReleaseCandidatePassportCli } from "../scripts/generate-release-candidate-passport.mjs";
-import {
-  generatePublishRequiredArtifacts,
-  githubDownload,
-  readNpmPackageArtifact,
-  resolveReleaseCandidateArtifacts,
-  releaseCandidateDownloadEnabled,
-  releaseCandidateRuntimeSha,
-  selectReleaseAssetPaths,
-  selectMergedChannelPullRequest,
-  selectPayloadArtifacts,
-  selectReleaseCandidateArtifacts,
-  selectReleaseCandidateRun,
-  selectReleaseCandidateRuns,
-  verifyArtifactArchive,
-} from "../scripts/release-candidate-resolver.mjs";
-import { createResolvedPublicationSealedBundle } from "../scripts/publication-candidate-sealer.mjs";
+} from "../packages/core/release/release-candidate.js";
+import { generateReleaseCandidatePassportCli } from "../packages/core/publication/commands/generate-release-candidate-passport.mjs";
+import { generatePublishRequiredArtifacts, readNpmPackageArtifact, selectReleaseAssetPaths, selectPayloadArtifacts } from "../packages/core/release/candidate/payloads.js";
+import { selectReleaseCandidateArtifacts } from "../packages/core/release/candidate/selection.js";
+import { verifyArtifactArchive } from "../packages/core/release/candidate/transport.js";
+import { githubDownload } from "../packages/core/release/candidate/transport.js";
+import { resolveReleaseCandidateArtifacts } from "../packages/core/release/candidate/resolve.js";
+import { releaseCandidateDownloadEnabled, releaseCandidateRuntimeSha, selectMergedChannelPullRequest, selectReleaseCandidateRun, selectReleaseCandidateRuns } from "../packages/core/release/candidate/selection.js";
+import { createResolvedPublicationSealedBundle } from "../packages/core/publication/candidate/sealing.js";
 import {
   buildWorkflowFrictionBody,
   classifyWorkflowFriction,
   selectFrictionClass,
-} from "../scripts/workflow-friction-report.mjs";
+} from "../packages/core/governance/commands/workflow-friction-report.mjs";
 
 const SOURCE_SHA = "1111111111111111111111111111111111111111";
 

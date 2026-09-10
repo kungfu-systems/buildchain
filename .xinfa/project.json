@@ -24,13 +24,13 @@
       "visibility": "public",
       "root": "repository",
       "paths": [
-        ".github/workflows/buildchain-patrol.yml",
-        ".github/workflows/dev-pr-auto-merge.yml",
+        ".github/workflows/public-ops-patrol.yml",
+        ".github/workflows/public-ops-dev-auto-merge.yml",
         "AGENTS.md",
         "CONTRIBUTING.md",
         "docs/release-governance.md",
-        "scripts/buildchain-patrol.mjs",
-        "scripts/dev-pr-auto-merge.mjs",
+        "packages/core/governance/commands/buildchain-patrol.mjs",
+        "packages/core/dev-delivery/commands/dev-pr-auto-merge.mjs",
         "tests/dev-pr-auto-merge.test.mjs"
       ],
       "revision": "sha256:fba3292e278f119228c5a93431744b8854ec75c21a81c00376afc0639a716ce0"
@@ -61,7 +61,7 @@
       "visibility": "public",
       "revision": "sha256:210c2016d7c10b07db5c86230ebe1d3d0d2f4d7207bdae0853ff86493308ec37",
       "provenance": {"kind": "project-source", "authority": "buildchain"},
-      "source": {"provider": "buildchain.files", "path": "scripts/dev-pr-auto-merge.mjs"},
+      "source": {"provider": "buildchain.files", "path": "packages/core/dev-delivery/commands/dev-pr-auto-merge.mjs"},
       "verification": {"mode": "non-claim", "status": "non-claim", "dependencies": [], "waiver": null}
     },
     {
@@ -79,7 +79,7 @@
       "visibility": "public",
       "revision": "sha256:2b5fdd5f68b3639394484b8d1d04dd6ba2e37741c0e12f7c82d2047bda275407",
       "provenance": {"kind": "project-source", "authority": "buildchain"},
-      "source": {"provider": "buildchain.files", "path": "scripts/buildchain-patrol.mjs"},
+      "source": {"provider": "buildchain.files", "path": "packages/core/governance/commands/buildchain-patrol.mjs"},
       "verification": {"mode": "non-claim", "status": "non-claim", "dependencies": [], "waiver": null}
     },
     {
@@ -88,7 +88,7 @@
       "visibility": "public",
       "revision": "sha256:6852f5d8b4663521d80031637e9dd5fe090e596254bebe8e5e56f35c6c83d41c",
       "provenance": {"kind": "project-source", "authority": "buildchain"},
-      "source": {"provider": "buildchain.files", "path": ".github/workflows/dev-pr-auto-merge.yml"},
+      "source": {"provider": "buildchain.files", "path": ".github/workflows/public-ops-dev-auto-merge.yml"},
       "verification": {"mode": "non-claim", "status": "non-claim", "dependencies": [], "waiver": null}
     },
     {
@@ -97,7 +97,7 @@
       "visibility": "public",
       "revision": "sha256:42fbb71bd47bbf3f4b37946ed1b628d5fcffe9f2c6a414e04a4868ff4aa3eecd",
       "provenance": {"kind": "project-source", "authority": "buildchain"},
-      "source": {"provider": "buildchain.files", "path": ".github/workflows/buildchain-patrol.yml"},
+      "source": {"provider": "buildchain.files", "path": ".github/workflows/public-ops-patrol.yml"},
       "verification": {"mode": "non-claim", "status": "non-claim", "dependencies": [], "waiver": null}
     },
     {
@@ -127,7 +127,7 @@
         "buildchain.source.patrol-workflow",
         "buildchain.source.release-governance"
       ],
-      "entrypoints": ["AGENTS.md", "scripts/dev-pr-auto-merge.mjs"],
+      "entrypoints": ["AGENTS.md", "packages/core/dev-delivery/commands/dev-pr-auto-merge.mjs"],
       "resolution": {
         "subjects": ["buildchain", "dev-pr", "delivery-intent", "merge-queue"],
         "capabilities": ["authority", "evidence", "known-limits", "next-action", "use"],

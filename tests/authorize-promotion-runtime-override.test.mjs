@@ -4,7 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import authorization from "../scripts/authorize-promotion-runtime-override.cjs";
+import * as authorization from "../packages/core/release/runtime-override-authorization.js";
 
 const context = {
   eventName: "workflow_dispatch",
@@ -158,9 +158,6 @@ test("promotion runtime override roots provider reachability and source persiste
   );
   const request = {
     consumerRoot,
-    runtimeModulePath: path.resolve(
-      "packages/core/runtime-ref-resume-authority.js",
-    ),
     consumerPolicyReceiptPath: policyPath,
     consumerPolicyReceiptRoot: ROOT_A,
     sourceSha: SHA_A,

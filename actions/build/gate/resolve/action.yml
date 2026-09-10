@@ -1,0 +1,38 @@
+name: Resolve admitted Gate profile and controller plan
+description: Resolve admitted Gate profile and controller plan.
+inputs:
+  request-json:
+    description: Public Gate profile request
+    required: true
+  runtime-ref:
+    description: Admitted runtime selector
+    required: true
+  runtime-sha:
+    description: Admitted immutable runtime commit
+    required: true
+outputs:
+  source-sha:
+    description: source sha
+  controller-plan-json:
+    description: controller plan json
+  controller-plan-digest:
+    description: controller plan digest
+  controller-plan-artifact:
+    description: controller plan artifact
+  gate-matrix-artifact:
+    description: gate matrix artifact
+  gate-matrix-json:
+    description: gate matrix json
+  gate-matrix-count:
+    description: gate matrix count
+  gate-matrix-digest:
+    description: gate matrix digest
+  gate-matrix-path:
+    description: gate matrix path
+  gate-project-id:
+    description: gate project id
+  gate-registry-digest:
+    description: gate registry digest
+runs:
+  using: node24
+  main: dist/index.js

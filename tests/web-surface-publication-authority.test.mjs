@@ -6,11 +6,11 @@ import test from "node:test";
 import {
   createControllerPlan,
   createControllerReceipt,
-} from "../packages/core/controller-evidence.js";
+} from "../packages/core/observability/controller-evidence.js";
 import {
   createWebSurfaceProductionDecision,
   createWebSurfacePublicationCandidate,
-} from "../packages/core/web-surface-publication-candidate.js";
+} from "../packages/core/web/web-surface-publication-candidate.js";
 import {
   createPublicationAdmission,
   createPublicationAuthorityRegistry,
@@ -19,8 +19,8 @@ import {
   createRunnerProvenance,
   publicationGateAggregateBindings,
   verifyPublicationAdmission,
-} from "../packages/core/publication-authority.js";
-import { resolveWebSurfaceProductionDecision } from "../scripts/web-surface-production-decision.mjs";
+} from "../packages/core/publication/publication-authority.js";
+import { resolveWebSurfaceProductionDecision } from "../packages/core/web/production-decision.js";
 
 const SOURCE_SHA = "1".repeat(40);
 const TREE_SHA = "2".repeat(40);
@@ -228,7 +228,7 @@ test("independent authority emits web-production capability from the managed can
   const candidate = createWebSurfacePublicationCandidate(candidateEvidence);
   const registry = createPublicationAuthorityRegistry({
     descriptors: [{
-      workflowPath: ".github/workflows/.web-surface.yml",
+      workflowPath: ".github/workflows/public-release-web.yml",
       authorityClass: "product-publication",
       publicationCapable: true,
       capabilityIds: ["web-production"],
@@ -238,7 +238,7 @@ test("independent authority emits web-production capability from the managed can
       runnerPolicy: "qualified-measured",
     }],
     workflows: [{
-      path: ".github/workflows/.web-surface.yml",
+      path: ".github/workflows/public-release-web.yml",
       text: "permissions:\n  contents: read\njobs:\n  production-apply:\n    environment: production\n    permissions:\n      id-token: write\n",
     }],
   });
@@ -260,8 +260,8 @@ test("independent authority emits web-production capability from the managed can
   ].map((id, index) => ({ id, status: "pass", digest: String(index + 1).repeat(64) }));
   const controlPlaneAudit = createPublicationControlPlaneAudit({
     repository: "kungfu-systems/site",
-    workflowPath: ".github/workflows/.web-surface.yml",
-    publisherWorkflowPath: ".github/workflows/.web-surface.yml",
+    workflowPath: ".github/workflows/public-release-web.yml",
+    publisherWorkflowPath: ".github/workflows/public-release-web.yml",
     environment: "production",
     facts,
     observedAt: "2026-07-16T00:00:00.000Z",
@@ -276,8 +276,8 @@ test("independent authority emits web-production capability from the managed can
   const gate = publicationGateAggregateBindings(gateAggregate);
   const admission = createPublicationAdmission({
     registryDigest: registry.registryDigest,
-    workflowPath: ".github/workflows/.web-surface.yml",
-    publisherWorkflowPath: ".github/workflows/.web-surface.yml",
+    workflowPath: ".github/workflows/public-release-web.yml",
+    publisherWorkflowPath: ".github/workflows/public-release-web.yml",
     repository: "kungfu-systems/site",
     sourceSha: SOURCE_SHA,
     runtimeSha: RUNTIME_SHA,

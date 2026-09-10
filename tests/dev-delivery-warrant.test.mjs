@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { classifyDevDeliveryDelta, cancelQueuedDevDeliveryCandidate, closeDevDeliveryWarrant, createDevDeliveryQueue, createNativeCommandContract, devDeliveryContentRoot, createIntegrationDeliveryProof, createProjectCutReplayPlan, createProjectCutReplayProof, createSourceQualificationProof, heartbeatDevDeliveryWarrant, normalizeDevDeliveryQueue, observeDevDeliveryQueue, rankDevDeliveryCandidates, reconcileDevDeliveryTerminalEvidence, recoverExpiredDevDeliveryWarrant, selectDevDeliveryWarrant, settleDevDeliveryTerminalEvent, submitDevDeliveryCandidate, verifyIntegrationDeliveryProof, verifyProjectCutReplayProof, verifySourceQualificationProof } from "../packages/core/dev-delivery-warrant.js";
+import { classifyDevDeliveryDelta, cancelQueuedDevDeliveryCandidate, closeDevDeliveryWarrant, createDevDeliveryQueue, createNativeCommandContract, devDeliveryContentRoot, createIntegrationDeliveryProof, createProjectCutReplayPlan, createProjectCutReplayProof, createSourceQualificationProof, heartbeatDevDeliveryWarrant, normalizeDevDeliveryQueue, observeDevDeliveryQueue, rankDevDeliveryCandidates, reconcileDevDeliveryTerminalEvidence, recoverExpiredDevDeliveryWarrant, selectDevDeliveryWarrant, settleDevDeliveryTerminalEvent, submitDevDeliveryCandidate, verifyIntegrationDeliveryProof, verifyProjectCutReplayProof, verifySourceQualificationProof } from "../packages/core/dev-delivery/dev-delivery-warrant.js";
 
 const ROOTS = Object.fromEntries(["assignment", "initiative", "source", "patch", "proof", "plan", "closure", "dependency", "toolchain", "shard", "context", "evidence"].map((name, index) => [name, `sha256:${(index + 1).toString(16).repeat(64)}`]));
 
@@ -18,8 +18,7 @@ function candidate(number, overrides = {}) {
   return {
     pullRequestNumber: number,
     sourceHead: digit.toString(16).repeat(40),
-    assignmentRoot: ROOTS.assignment,
-    initiativeRoot: ROOTS.initiative,
+    sourceRoot: ROOTS.assignment,
     sourceIdentityRoot: `sha256:${digit.toString(16).repeat(64)}`,
     sourcePatchRoot: ROOTS.patch,
     sourceProofRoot: ROOTS.proof,
@@ -58,116 +57,28 @@ test("queue readback preserves native qualification metadata", () => {
   const submitted = submit(queue(), 99, "2026-08-04T00:00:00Z", {
     environmentRoot: ROOTS.context,
     sourceWorkflowRunId: 31665171177,
-    affectedPaths: ["tests/dev-delivery-warrant.test.mjs", "packages/core/dev-delivery-warrant.js"],
+    affectedPaths: ["tests/dev-delivery-warrant.test.mjs", "packages/core/dev-delivery/dev-delivery-warrant.js"],
   });
   const candidate = submitted.queue.candidates[0];
 
   assert.equal(candidate.environmentRoot, ROOTS.context);
   assert.equal(candidate.sourceWorkflowRunId, 31665171177);
-  assert.deepEqual(candidate.affectedPaths, ["packages/core/dev-delivery-warrant.js", "tests/dev-delivery-warrant.test.mjs"]);
+  assert.deepEqual(candidate.affectedPaths, ["packages/core/dev-delivery/dev-delivery-warrant.js", "tests/dev-delivery-warrant.test.mjs"]);
   assert.equal(normalizeDevDeliveryQueue(submitted.queue).stateRoot, submitted.queue.stateRoot);
 });
 
-test("queue readback quarantines legacy queued native candidates without weakening live authority", () => {
+test("all native queue states require the current execution contract without a compatibility escape", () => {
   const submitted = submit(queue(), 99, "2026-08-04T00:00:00Z");
-  const selected = selectDevDeliveryWarrant(submitted.queue, { now: "2026-08-04T00:00:01Z" });
-  const terminal = closeDevDeliveryWarrant(selected.queue, selected.warrant, { outcome: "dequeued", evidenceRoot: ROOTS.evidence, now: "2026-08-04T00:01:00Z" });
-  const asLegacyState = (state) => {
-    const legacy = structuredClone(state);
-    delete legacy.candidates[0].nativeCommandContract;
-    delete legacy.stateRoot;
-    legacy.stateRoot = devDeliveryContentRoot(legacy);
-    return legacy;
-  };
-
-  for (const state of [asLegacyState(terminal.queue), asLegacyState(submitted.queue)])
-    assert.equal(normalizeDevDeliveryQueue(state).stateRoot, state.stateRoot);
-
-  const legacySelected = asLegacyState(selected.queue);
-  assert.throws(
-    () => normalizeDevDeliveryQueue(legacySelected),
-    /live native candidate requires exact native proof/u,
-  );
-});
-
-test("queue readback accepts a v3 superseded terminal candidate", () => {
-  const submitted = submit(queue(), 99, "2026-08-04T00:00:00Z");
-  const superseded = structuredClone(submitted.queue);
-  superseded.candidates[0].status = "superseded";
-  delete superseded.candidates[0].nativeCommandContract;
-  delete superseded.stateRoot;
-  superseded.stateRoot = devDeliveryContentRoot(superseded);
-
-  const normalized = normalizeDevDeliveryQueue(superseded);
-  assert.equal(normalized.candidates[0].status, "superseded");
-});
-
-test("read-only v3 compatibility accepts provisional and exact qualified native Warrants", () => {
-  const submitted = submit(queue(), 99, "2026-08-04T00:00:00Z");
-  const selected = selectDevDeliveryWarrant(submitted.queue, {
-    now: "2026-08-04T00:00:01Z",
-  });
-  const withFollower = submit(selected.queue, 100, "2026-08-04T00:00:02Z");
-  const provisional = structuredClone(withFollower.queue);
-  for (const entry of provisional.candidates) delete entry.nativeCommandContract;
-  delete provisional.activeWarrant.nativeCommandContract;
-  delete provisional.stateRoot;
-  provisional.stateRoot = devDeliveryContentRoot(provisional);
-
-  assert.throws(
-    () => normalizeDevDeliveryQueue(provisional),
-    /live native candidate requires exact native proof/u,
-  );
-  assert.equal(
-    normalizeDevDeliveryQueue(provisional, { allowLegacyBaselineReadback: true }).stateRoot,
-    provisional.stateRoot,
-  );
-
-  const legacy = structuredClone(provisional);
-  const candidate = legacy.candidates.find(
-    (entry) => entry.candidateId === legacy.activeWarrant.candidateId,
-  );
-  const warrant = legacy.activeWarrant;
-  candidate.status = "qualified";
-  candidate.updatedAt = "2026-08-04T00:05:00.000Z";
-  warrant.phase = "qualified";
-  warrant.nativeProofRoot = ROOTS.evidence;
-  warrant.nativeProofReuseRoot = ROOTS.shard;
-  warrant.qualifiedAt = "2026-08-04T00:05:00.000Z";
-  delete warrant.nativeExecutionReceiptRoot;
-  delete warrant.qualificationReceiptRoot;
-  delete legacy.stateRoot;
-  legacy.stateRoot = devDeliveryContentRoot(legacy);
-
-  assert.equal(
-    normalizeDevDeliveryQueue(legacy, { allowLegacyV3Readback: true }).stateRoot,
-    legacy.stateRoot,
-  );
-  assert.deepEqual(
-    observeDevDeliveryQueue(legacy, {
-      now: "2026-08-04T00:05:01Z",
-      allowLegacyBaselineReadback: true,
-    }).queued,
-    [],
-  );
-
-  const missingProof = structuredClone(legacy);
-  delete missingProof.activeWarrant.nativeProofRoot;
-  delete missingProof.stateRoot;
-  missingProof.stateRoot = devDeliveryContentRoot(missingProof);
-  assert.throws(
-    () => normalizeDevDeliveryQueue(missingProof, { allowLegacyBaselineReadback: true }),
-    /Warrant nativeProofRoot/u,
-  );
-
-  const partialCurrent = structuredClone(legacy);
-  partialCurrent.activeWarrant.nativeExecutionReceiptRoot = ROOTS.context;
-  delete partialCurrent.stateRoot;
-  partialCurrent.stateRoot = devDeliveryContentRoot(partialCurrent);
-  assert.throws(
-    () => normalizeDevDeliveryQueue(partialCurrent, { allowLegacyBaselineReadback: true }),
-    /live native candidate requires exact native proof/u,
-  );
+  const selected = selectDevDeliveryWarrant(submitted.queue, {now:"2026-08-04T00:00:01Z"});
+  const terminal = closeDevDeliveryWarrant(selected.queue, selected.warrant, {outcome:"dequeued", evidenceRoot:ROOTS.evidence, now:"2026-08-04T00:01:00Z"});
+  for (const state of [submitted.queue, selected.queue, terminal.queue]) {
+    const broken = structuredClone(state);
+    delete broken.candidates[0].nativeCommandContract;
+    delete broken.stateRoot;
+    broken.stateRoot = devDeliveryContentRoot(broken);
+    for (const options of [{}, {allowLegacyBaselineReadback:true}, {allowLegacyV3Readback:true}])
+      assert.throws(() => normalizeDevDeliveryQueue(broken, options), /live native candidate requires exact native proof/);
+  }
 });
 
 test("live native delivery classes cannot downgrade to phase-less authority", () => {
@@ -411,8 +322,7 @@ test("heartbeat and terminal failure closeout bind the current fencing generatio
     candidateId: successor.receipt.candidateId,
     pullRequestNumber: 141,
     sourceHead: candidate(141).sourceHead,
-    assignmentRoot: ROOTS.assignment,
-    initiativeRoot: ROOTS.initiative,
+    sourceRoot: ROOTS.assignment,
     sourceIdentityRoot: candidate(141).sourceIdentityRoot,
     sourcePatchRoot: ROOTS.patch,
     sourceProofRoot: ROOTS.proof,
@@ -694,9 +604,8 @@ test("source proof reuse is exact and unknown or overlapping deltas fail closed"
     proofRoot: devDeliveryContentRoot(legacyBody),
   };
   assert.deepEqual(verifySourceQualificationProof(legacyProof), {
-    ok: true,
-    reason: "exact-source-proof",
-    proofRoot: legacyProof.proofRoot,
+    ok: false,
+    reason: "unsupported-root-semantics",
   });
   const exact = {
     sourceIdentityRoot: ROOTS.source,

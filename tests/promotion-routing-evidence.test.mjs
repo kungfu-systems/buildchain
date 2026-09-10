@@ -3,10 +3,11 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { inspectWorkflowJob } from "../scripts/workflow-action-graph.mjs";
 import {
   bundlePromotionControllerEvidence,
   createPromotionRoutingEvidence,
-} from "../scripts/promotion-routing-evidence.mjs";
+} from "../packages/core/release/commands/promotion-routing-evidence.mjs";
 
 test("promotion routing evidence preserves the workflow routing contract", () => {
   const cwd = fs.mkdtempSync(
@@ -58,23 +59,17 @@ test("promotion routing evidence preserves the workflow routing contract", () =>
 
 test("release promotion workflow routes through the canonical invocation boundary", () => {
   const workflow = fs.readFileSync(
-    path.resolve(".github/workflows/.release-candidate-promote.yml"),
+    path.resolve(".github/workflows/.release-promote.yml"),
     "utf8",
   );
-  const apply = workflow.slice(
-    workflow.indexOf("\n  apply:"),
-    workflow.indexOf("\n  settle:"),
-  );
-
-  assert.match(apply, /uses: \.\/\.buildchain\/runtime\/actions\/release-candidate-promote/);
-  assert.match(
-    apply,
-    /publisher-workflow-sha: \$\{\{ needs\.qualify\.outputs\.publisher-sha \}\}/,
-  );
-  assert.match(
-    apply,
-    /runtime-commit: \$\{\{ needs\.qualify\.outputs\.runtime-sha \}\}/,
-  );
+  const graph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "apply");
+  const node = graph.job.steps.find(step => step.id === "node");
+  for (const [port, output] of [["publisher-workflow-sha", "publisher-sha"], ["runtime-commit", "runtime-sha"]]) {
+    assert.equal(node.with[`needs-qualify-outputs-${output}`], `${'${{'} toJSON(needs.qualify.outputs.${output}) }}`);
+    const publishers = graph.steps.filter(step => step.uses?.endsWith("/actions/release/promotion/candidate"));
+    assert.ok(publishers.length > 0);
+    for (const publisher of publishers) assert.equal(publisher.with[port], `${'${{'} fromJSON(inputs.needs-qualify-outputs-${output}) }}`);
+  }
   assert.doesNotMatch(
     workflow,
     /verify-promotion-router-binding\.sh|promotion-routing-evidence\.mjs/,

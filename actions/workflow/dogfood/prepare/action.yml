@@ -1,0 +1,54 @@
+name: bootstrap-dogfood-prepare
+description: Execute the bootstrap-dogfood prepare capability within its caller
+  job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+outputs:
+  ready:
+    description: ready node result.
+    value: ${{ steps.readiness.outputs.ready }}
+  candidate-sha:
+    description: candidate-sha node result.
+    value: ${{ steps.readiness.outputs.candidate-sha }}
+  conformance-request:
+    description: conformance-request node result.
+    value: ${{ steps.requests.outputs.conformance-request }}
+  alpha-request:
+    description: alpha-request node result.
+    value: ${{ steps.requests.outputs.alpha-request }}
+  stable-request:
+    description: stable-request node result.
+    value: ${{ steps.requests.outputs.stable-request }}
+runs:
+  using: composite
+  steps:
+    - name: Prepare workflow implementation
+      id: core-node
+      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+    - name: Admit exact self-dogfood coordinates and readiness
+      id: readiness
+      uses: ./.buildchain/workflow-shell/actions/workflow/dogfood/admit
+      with:
+        request-json: ${{ inputs.request-json }}
+        token: ${{ github.token }}
+    - name: Checkout exact candidate request generator
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: kungfu-systems/buildchain
+        ref: ${{ steps.readiness.outputs.candidate-sha }}
+        path: .buildchain/candidate
+        persist-credentials: false
+      if: ${{ steps.readiness.outputs.ready == 'true' }}
+    - name: Prepare independently reviewed candidate
+      if: ${{ steps.readiness.outputs.ready == 'true' }}
+      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .buildchain/candidate
+    - name: Generate closed requests after exact review readiness
+      id: requests
+      if: ${{ steps.readiness.outputs.ready == 'true' }}
+      uses: ./.buildchain/candidate/actions/workflow/dogfood/generate
+      with:
+        coordinates-json: ${{ toJSON(steps.readiness.outputs) }}

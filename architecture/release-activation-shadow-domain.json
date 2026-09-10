@@ -17,10 +17,10 @@
     "rustDomain": "crates/buildchain-domain-contracts/src/release_activation_shadow.rs",
     "rustModel": "crates/buildchain-domain-contracts/src/release_activation_shadow/model.rs",
     "rustJournalMaterializer": "crates/buildchain-domain-contracts/src/release_activation_shadow/journal.rs",
-    "typescript": "packages/core/release-activation-shadow.js",
-    "wasmRuntime": "packages/core/domain-wasm.js",
-    "wasmArtifact": "packages/core/buildchain-domain.wasm",
-    "artifactMetadata": "packages/core/domain-wasm-artifact.js"
+    "typescript": "packages/core/release/release-activation-shadow.js",
+    "wasmRuntime": "packages/core/runtime/domain-wasm.js",
+    "wasmArtifact": "packages/core/runtime/buildchain-domain.wasm",
+    "artifactMetadata": "packages/core/runtime/domain-wasm-artifact.js"
   },
   "roots": [
     "release-activation-step",

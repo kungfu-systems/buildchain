@@ -4,182 +4,128 @@ on:
   workflow_dispatch:
     inputs:
       buildchain-ref:
-        {
-          description: "Trusted non-persistent v4 runtime selector; durable caller remains @v4-alpha",
-          type: string,
-          required: false,
-          default: "v4-alpha",
-        }
+        description: Exact runtime used for this source-owned delivery invocation
+        type: string
+        required: false
+        default: ""
       target-branch:
-        {
-          description: "Exact protected development branch",
-          type: string,
-          required: false,
-          default: "dev/v4/v4.0",
-        }
+        description: Exact protected development branch
+        type: string
+        required: false
+        default: dev/v4/v4.1
       expected-pr-number:
-        {
-          description: "Exact Buildchain PR number",
-          type: number,
-          required: true,
-        }
+        description: Exact Buildchain PR number
+        type: number
+        required: true
       expected-head-sha:
-        {
-          description: "Exact 40-character PR head",
-          type: string,
-          required: true,
-        }
+        description: Exact 40-character PR head
+        type: string
+        required: true
       native-roots-json:
-        {
-          description: "Machine-supplied Work sourceRoot or historical root pair",
-          type: string,
-          required: false,
-          default: "",
-        }
+        description: Machine-supplied canonical Work sourceRoot
+        type: string
+        required: false
+        default: ""
       source-workflow-run-id:
-        {
-          description: "Exact successful source workflow run",
-          type: number,
-          required: false,
-          default: 0,
-        }
-      legacy-active-owner-binding-json:
-        {
-          description: "Explicit legacy-safe phase-less owner binding JSON",
-          type: string,
-          required: false,
-          default: "",
-        }
+        description: Exact successful source workflow run
+        type: number
+        required: false
+        default: 0
       source-identity-root:
-        {
-          description: "Immutable semantic source identity root",
-          type: string,
-          required: true,
-        }
+        description: Immutable semantic source identity root
+        type: string
+        required: true
       source-patch-root:
-        {
-          description: "Immutable source patch or tree-intent root",
-          type: string,
-          required: true,
-        }
+        description: Immutable source patch or tree-intent root
+        type: string
+        required: true
       plan-root:
-        {
-          description: "Exact qualification plan root",
-          type: string,
-          required: true,
-        }
+        description: Exact qualification plan root
+        type: string
+        required: true
       closure-root:
-        {
-          description: "Exact affected-closure root",
-          type: string,
-          required: true,
-        }
+        description: Exact affected-closure root
+        type: string
+        required: true
       dependency-root:
-        {
-          description: "Exact dependency-graph root",
-          type: string,
-          required: true,
-        }
+        description: Exact dependency-graph root
+        type: string
+        required: true
       toolchain-root:
-        {
-          description: "Exact qualification toolchain root",
-          type: string,
-          required: true,
-        }
+        description: Exact qualification toolchain root
+        type: string
+        required: true
       environment-root:
-        {
-          description: "Exact pre-spawn native environment root",
-          type: string,
-          required: false,
-          default: "",
-        }
+        description: Exact pre-spawn native environment root
+        type: string
+        required: false
+        default: ""
       affected-paths-json:
-        {
-          description: "JSON paths covered by source qualification",
-          type: string,
-          required: true,
-        }
+        description: Optional covered paths; an empty array reconstructs the exact source run paths
+        type: string
+        required: false
+        default: "[]"
       shard-evidence-roots-json:
-        {
-          description: "Exact rooted native shard evidence JSON",
-          type: string,
-          required: false,
-          default: "[]",
-        }
+        description: Exact rooted native shard evidence JSON
+        type: string
+        required: false
+        default: "[]"
       release-blocker-priority-json:
-        {
-          description: "Optional exact rooted release-blocker priority claim",
-          type: string,
-          required: false,
-          default: "",
-        }
+        description: Optional exact rooted release-blocker priority claim
+        type: string
+        required: false
+        default: ""
       native-proof-json:
-        {
-          description: "Optional reusable semantic native proof",
-          type: string,
-          required: false,
-          default: "",
-        }
+        description: Optional reusable semantic native proof
+        type: string
+        required: false
+        default: ""
       native-command:
-        {
-          description: "Slow native qualification command",
-          type: string,
-          required: false,
-          default: "",
-        }
+        description: Slow native qualification command
+        type: string
+        required: false
+        default: ""
       native-command-root:
-        {
-          description: "Optional exact native command contract root",
-          type: string,
-          required: false,
-          default: "",
-        }
+        description: Optional exact native command contract root
+        type: string
+        required: false
+        default: ""
       native-heartbeat-seconds:
-        {
-          description: "Native qualification heartbeat cadence",
-          type: number,
-          required: false,
-          default: 30,
-        }
+        description: Native qualification heartbeat cadence
+        type: number
+        required: false
+        default: 30
       delivery-class:
-        {
-          description: "Bounded delivery class",
-          type: string,
-          required: false,
-          default: "native-proof-required",
-        }
+        description: Bounded delivery class
+        type: string
+        required: false
+        default: native-proof-required
       delivery-priority:
-        {
-          description: "Reviewed delivery priority",
-          type: string,
-          required: false,
-          default: "ordinary",
-        }
+        description: Reviewed delivery priority
+        type: string
+        required: false
+        default: ordinary
   repository_dispatch:
-    types: [buildchain-dev-delivery-wake]
+    types:
+      - buildchain-dev-delivery-wake
 permissions:
   actions: write
   contents: write
   pull-requests: write
   checks: read
   statuses: write
-
 jobs:
   deliver:
-    uses: kungfu-systems/buildchain/.github/workflows/dev-pr-auto-merge.yml@v4-alpha
+    uses: ./.github/workflows/public-ops-dev-auto-merge.yml
     with:
       buildchain-repository: kungfu-systems/buildchain
-      buildchain-ref: ${{ github.event.inputs.buildchain-ref || 'v4-alpha' }}
-      target-branch: ${{ github.event.client_payload.candidate.targetBranch || github.event.inputs.target-branch || 'dev/v4/v4.0' }}
+      buildchain-ref: ${{ github.event.inputs.buildchain-ref || github.sha }}
+      target-branch: ${{ github.event.client_payload.candidate.targetBranch || github.event.inputs.target-branch || 'dev/v4/v4.1' }}
       expected-pr-number: ${{ github.event.client_payload.candidate.pullRequestNumber || fromJSON(github.event.inputs.expected-pr-number) }}
       expected-head-sha: ${{ github.event.client_payload.candidate.sourceHead || github.event.inputs.expected-head-sha }}
       source-workflow-run-id: ${{ github.event.client_payload.candidate.sourceWorkflowRunId || fromJSON(github.event.inputs.source-workflow-run-id || github.run_id) }}
-      legacy-active-owner-binding-json: ${{ github.event.inputs.legacy-active-owner-binding-json || '' }}
       delivery-warrant-mode: required
       handoff-workflow-id: self-ops-dev-delivery.yml
-      source-workflow-id: self-build-verify.yml
-      assignment-root: ${{ github.event.client_payload.candidate.assignmentRoot || fromJSON(github.event.inputs.native-roots-json || '{}').assignmentRoot || '' }}
-      initiative-root: ${{ github.event.client_payload.candidate.initiativeRoot || fromJSON(github.event.inputs.native-roots-json || '{}').initiativeRoot || '' }}
       source-identity-root: ${{ github.event.client_payload.candidate.sourceIdentityRoot || github.event.inputs.source-identity-root }}
       source-patch-root: ${{ github.event.client_payload.candidate.sourcePatchRoot || github.event.inputs.source-patch-root }}
       plan-root: ${{ github.event.client_payload.candidate.planRoot || github.event.inputs.plan-root }}
@@ -204,5 +150,6 @@ jobs:
       allowed-head-prefixes: feature/,fix/,chore/,docs/,ci/,refactor/,automation/auditable-demo-,buildchain/version-state/
       landing-mode: queue
       dry-run: false
+      source-root: ${{ github.event.client_payload.candidate.sourceRoot || fromJSON(github.event.inputs.native-roots-json || '{}').sourceRoot || '' }}
     secrets:
       github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}

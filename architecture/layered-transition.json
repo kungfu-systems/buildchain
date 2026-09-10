@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-layered-architecture-transition",
+  "version": "4.1.0-alpha.0",
+  "protectedSeed": "1bb6333b97ad94e94a81178e956a703dff2b5f84",
+  "measurement": "Physical tracked source, workflow and action definition lines; generated bundles excluded; both cuts use the current collector.",
+  "before": {
+    "handMaintainedSourceFiles": 523,
+    "handMaintainedSourceLines": 176461,
+    "workflowFiles": 114,
+    "workflowLines": 37011,
+    "actionDefinitions": 21,
+    "actionDefinitionLines": 2917,
+    "automationImplementationLines": 216389
+  },
+  "after": {
+    "handMaintainedSourceFiles": 760,
+    "handMaintainedSourceLines": 187037,
+    "workflowFiles": 68,
+    "workflowLines": 8715,
+    "actionDefinitions": 135,
+    "actionDefinitionLines": 12177,
+    "automationImplementationLines": 207929
+  },
+  "invariants": [
+    "No historical runtime path forwarding",
+    "No inline workflow implementation",
+    "Composite and CLI adapters have independent size budgets",
+    "Rust domain authority and provider effects retain distinct owners",
+    "No alpha publication"
+  ]
+}

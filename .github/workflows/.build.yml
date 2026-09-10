@@ -6,7 +6,7 @@ on:
         description: Locate buildchain.toml when the project cannot be discovered.
         type: string
         required: false
-        default: ''
+        default: ""
     secrets:
       BUILDCHAIN_PROMOTION_TOKEN:
         required: false
@@ -36,30 +36,30 @@ jobs:
     outputs:
       plan: ${{ steps.plan.outputs.plan }}
     steps:
-    - name: Checkout exact workflow implementation
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: kungfu-systems/buildchain
-        ref: ${{ job.workflow_sha }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - name: Checkout exact consumer source
-      uses: actions/checkout@v7.0.0
-      with:
-        ref: ${{ github.sha }}
-        path: source
-        fetch-depth: 0
-        persist-credentials: false
-    - uses: ./.buildchain/runtime/actions/resolve-build-plan
-      with:
-        config-path: ${{ inputs.config-path }}
-        workflow-ref: ${{ job.workflow_ref }}
-        workflow-sha: ${{ job.workflow_sha }}
-        control-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
-      id: plan
+      - name: Checkout exact workflow implementation
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: kungfu-systems/buildchain
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+      - name: Checkout exact consumer source
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          path: source
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/plan
+        with:
+          config-path: ${{ inputs.config-path }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          control-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+        id: plan
   build-native:
     needs:
-    - plan
+      - plan
     if: ${{ fromJSON(needs.plan.outputs.plan).matrix.native[0] != null }}
     strategy:
       fail-fast: ${{ fromJSON(needs.plan.outputs.plan).build.fail_fast }}
@@ -72,42 +72,45 @@ jobs:
       actions: read
       id-token: write
     steps:
-    - name: Checkout exact workflow implementation
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: kungfu-systems/buildchain
-        ref: ${{ job.workflow_sha }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - uses: ./.buildchain/runtime/actions/prepare-build-environment
-      with:
-        plan: ${{ needs.plan.outputs.plan }}
-        platform: ${{ toJSON(matrix.platform) }}
-        checkout-source: 'true'
-        tools: 'true'
-    - uses: ./.buildchain/runtime/actions/run-build-stage
-      with:
-        plan: ${{ needs.plan.outputs.plan }}
-        platform: ${{ toJSON(matrix.platform) }}
-        stage: install
-    - uses: ./.buildchain/runtime/actions/run-build-stage
-      with:
-        plan: ${{ needs.plan.outputs.plan }}
-        platform: ${{ toJSON(matrix.platform) }}
-        stage: build
-    - uses: ./.buildchain/runtime/actions/run-build-stage
-      with:
-        plan: ${{ needs.plan.outputs.plan }}
-        platform: ${{ toJSON(matrix.platform) }}
-        stage: verify
-    - uses: ./.buildchain/runtime/actions/transfer-build-artifact
-      with:
-        plan: ${{ needs.plan.outputs.plan }}
-        platform: ${{ toJSON(matrix.platform) }}
-      if: ${{ always() }}
+      - name: Checkout exact workflow implementation
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: kungfu-systems/buildchain
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/prepare
+        with:
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          checkout-source: "true"
+          tools: "true"
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/stage
+        with:
+          token: ${{ github.token }}
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          stage: install
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/stage
+        with:
+          token: ${{ github.token }}
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          stage: build
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/stage
+        with:
+          token: ${{ github.token }}
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          stage: verify
+      - uses: ./.buildchain/runtime/actions/build/artifact/transfer
+        with:
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+        if: ${{ always() }}
   build-container:
     needs:
-    - plan
+      - plan
     if: ${{ fromJSON(needs.plan.outputs.plan).matrix.container[0] != null }}
     strategy:
       fail-fast: ${{ fromJSON(needs.plan.outputs.plan).build.fail_fast }}
@@ -120,47 +123,50 @@ jobs:
       actions: read
       id-token: write
     steps:
-    - name: Checkout exact workflow implementation
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: kungfu-systems/buildchain
-        ref: ${{ job.workflow_sha }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - uses: ./.buildchain/runtime/actions/prepare-build-environment
-      with:
-        plan: ${{ needs.plan.outputs.plan }}
-        platform: ${{ toJSON(matrix.platform) }}
-        checkout-source: 'true'
-        tools: 'true'
-    - uses: ./.buildchain/runtime/actions/run-build-stage
-      with:
-        plan: ${{ needs.plan.outputs.plan }}
-        platform: ${{ toJSON(matrix.platform) }}
-        stage: install
-    - uses: ./.buildchain/runtime/actions/run-build-stage
-      with:
-        plan: ${{ needs.plan.outputs.plan }}
-        platform: ${{ toJSON(matrix.platform) }}
-        stage: build
-    - uses: ./.buildchain/runtime/actions/run-build-stage
-      with:
-        plan: ${{ needs.plan.outputs.plan }}
-        platform: ${{ toJSON(matrix.platform) }}
-        stage: verify
-    - uses: ./.buildchain/runtime/actions/transfer-build-artifact
-      with:
-        plan: ${{ needs.plan.outputs.plan }}
-        platform: ${{ toJSON(matrix.platform) }}
-      if: ${{ always() }}
+      - name: Checkout exact workflow implementation
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: kungfu-systems/buildchain
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/prepare
+        with:
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          checkout-source: "true"
+          tools: "true"
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/stage
+        with:
+          token: ${{ github.token }}
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          stage: install
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/stage
+        with:
+          token: ${{ github.token }}
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          stage: build
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/stage
+        with:
+          token: ${{ github.token }}
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          stage: verify
+      - uses: ./.buildchain/runtime/actions/build/artifact/transfer
+        with:
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+        if: ${{ always() }}
     container:
       image: ${{ fromJSON(needs.plan.outputs.plan).container.image }}
       options: --user root
   sign:
     needs:
-    - plan
-    - build-native
-    - build-container
+      - plan
+      - build-native
+      - build-container
     if: ${{ always() && needs.plan.result == 'success' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
     strategy:
       fail-fast: false
@@ -175,36 +181,36 @@ jobs:
       actions: read
       id-token: write
     steps:
-    - name: Checkout exact workflow implementation
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: kungfu-systems/buildchain
-        ref: ${{ job.workflow_sha }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - uses: ./.buildchain/runtime/actions/prepare-build-environment
-      with:
-        plan: ${{ needs.plan.outputs.plan }}
-        platform: ${{ toJSON(matrix.platform) }}
-        checkout-source: ${{ matrix.platform.kind == 'artifact' }}
-        tools: 'false'
-    - uses: ./.buildchain/runtime/actions/sign-build-artifact
-      with:
-        plan: ${{ needs.plan.outputs.plan }}
-        platform: ${{ toJSON(matrix.platform) }}
-        kind: ${{ matrix.platform.kind }}
-        control-token: ${{ matrix.platform.kind == 'artifact' && secrets.BUILDCHAIN_PROMOTION_TOKEN || '' }}
-        expected-team-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID }}
-        certificate-sha1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
-        certificate-p12-base64: ${{ matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64 || '' }}
-        certificate-password: ${{ matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD || '' }}
-        notary-api-key-p8-base64: ${{ matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64 || '' }}
-        notary-api-key-id: ${{ matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_ID || '' }}
-        notary-api-issuer: ${{ matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_NOTARY_API_ISSUER || '' }}
+      - name: Checkout exact workflow implementation
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: kungfu-systems/buildchain
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/prepare
+        with:
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          checkout-source: ${{ matrix.platform.kind == 'artifact' }}
+          tools: "false"
+      - uses: ./.buildchain/runtime/actions/build/artifact/sign
+        with:
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          kind: ${{ matrix.platform.kind }}
+          control-token: ${{ matrix.platform.kind == 'artifact' && secrets.BUILDCHAIN_PROMOTION_TOKEN || '' }}
+          expected-team-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID }}
+          certificate-sha1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
+          certificate-p12-base64: ${{ matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64 || '' }}
+          certificate-password: ${{ matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD || '' }}
+          notary-api-key-p8-base64: ${{ matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64 || '' }}
+          notary-api-key-id: ${{ matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_ID || '' }}
+          notary-api-issuer: ${{ matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_NOTARY_API_ISSUER || '' }}
   attest:
     needs:
-    - plan
-    - sign
+      - plan
+      - sign
     if: ${{ always() && needs.sign.result == 'success' && fromJSON(needs.plan.outputs.plan).build.attestation.subject_path != '' }}
     runs-on: ubuntu-24.04
     permissions:
@@ -215,27 +221,27 @@ jobs:
     outputs:
       artifact: ${{ steps.attest.outputs.artifact }}
     steps:
-    - name: Checkout exact workflow implementation
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: kungfu-systems/buildchain
-        ref: ${{ job.workflow_sha }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - uses: ./.buildchain/runtime/actions/prepare-build-environment
-      with:
-        plan: ${{ needs.plan.outputs.plan }}
-    - uses: ./.buildchain/runtime/actions/attest-build-artifact
-      with:
-        plan: ${{ needs.plan.outputs.plan }}
-      id: attest
+      - name: Checkout exact workflow implementation
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: kungfu-systems/buildchain
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/prepare
+        with:
+          plan: ${{ needs.plan.outputs.plan }}
+      - uses: ./.buildchain/runtime/actions/build/artifact/attest
+        with:
+          plan: ${{ needs.plan.outputs.plan }}
+        id: attest
   deliver:
     needs:
-    - plan
-    - build-native
-    - build-container
-    - sign
-    - attest
+      - plan
+      - build-native
+      - build-container
+      - sign
+      - attest
     if: ${{ always() && needs.plan.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
@@ -244,18 +250,19 @@ jobs:
     outputs:
       result: ${{ steps.final.outputs.result }}
     steps:
-    - name: Checkout exact workflow implementation
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: kungfu-systems/buildchain
-        ref: ${{ job.workflow_sha }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - uses: ./.buildchain/runtime/actions/prepare-build-environment
-      with:
-        plan: ${{ needs.plan.outputs.plan }}
-    - uses: ./.buildchain/runtime/actions/finalize-build-result
-      with:
-        plan: ${{ needs.plan.outputs.plan }}
-        jobs: ${{ toJSON(needs) }}
-      id: final
+      - name: Checkout exact workflow implementation
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: kungfu-systems/buildchain
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/prepare
+        with:
+          plan: ${{ needs.plan.outputs.plan }}
+      - uses: ./.buildchain/runtime/actions/build/artifact/finalize
+        with:
+          token: ${{ github.token }}
+          plan: ${{ needs.plan.outputs.plan }}
+          jobs: ${{ toJSON(needs) }}
+        id: final

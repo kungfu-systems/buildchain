@@ -1,0 +1,23 @@
+name: Initialize source qualification
+description: Initialize source qualification
+inputs:
+  request-json:
+    description: Typed public source qualification request.
+    required: true
+  runtime-ref:
+    description: runtime-ref admitted qualification coordinates.
+    required: true
+outputs:
+  source-sha:
+    description: source-sha qualification evidence.
+  runtime-sha:
+    description: runtime-sha qualification evidence.
+  contract-digest:
+    description: contract-digest qualification evidence.
+  controller-plan-json:
+    description: controller-plan-json qualification evidence.
+  controller-plan-digest:
+    description: controller-plan-digest qualification evidence.
+runs:
+  using: node24
+  main: dist/index.js

@@ -18,8 +18,8 @@ import {
   verifyBuildchainCompatibilityFactRegistry,
   verifyBuildchainCompatibilityPath,
   verifyBuildchainCompatibilityVerificationReceipt,
-} from "../packages/core/buildchain-contract.js";
-import { devDeliveryContentRoot } from "../packages/core/dev-delivery-common.js";
+} from "../packages/core/contracts/buildchain-contract.js";
+import { devDeliveryContentRoot } from "../packages/core/dev-delivery/dev-delivery-common.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const fixturePath = path.join(
@@ -96,10 +96,10 @@ test("rooted parity inventory binds the exact v3 and v4 heads", () => {
   );
 });
 
-test("current v4 world derives legacy arrays only from exact-target Facts", () => {
+test("current world has no historical compatibility allowances", () => {
   const world = contractWorld();
-  assert.equal(world.compatibilityFacts.length, 9);
-  assert.equal(world.compatibilityProofs.length, 9);
+  assert.deepEqual(world.compatibilityFacts, []);
+  assert.deepEqual(world.compatibilityProofs, []);
   assert.equal(assertBuildchainCompatibilityProjection(world).ok, true);
   assert.equal(
     verifyBuildchainCompatibilityFactRegistry(
@@ -107,32 +107,35 @@ test("current v4 world derives legacy arrays only from exact-target Facts", () =
     ).ok,
     true,
   );
-  const projected = world.surfaces.filter(
-    (surface) => surface.compatibilityFactRoots?.length,
-  );
-  assert.equal(
-    projected.reduce(
-      (count, surface) => count + surface.compatibilityFactRoots.length,
-      0,
+  assert.ok(
+    world.surfaces.every(
+      (surface) => !surface.compatibleBreakingDigests?.length,
     ),
-    4,
   );
   assert.equal(
-    world.surfaces.find((surface) => surface.id === "release-candidate-promote")
-      .compatibleBreakingDigests,
-    undefined,
+    verifyBuildchainCompatibilityVerificationReceipt({
+      schema: "kungfu.buildchain.compatibility-verification-receipt/v1",
+    }).reason,
+    "unsupported-schema",
   );
-  for (const surface of projected) {
-    assert.equal(
-      surface.compatibleBreakingDigests.length,
-      surface.compatibilityProofRoots.length,
-    );
-    assert.equal(
-      surface.compatibleBreakingDigests.length,
-      surface.compatibilityFactRoots.length,
-    );
-  }
 });
+
+function explicitRegistry(overrides = {}) {
+  return createBuildchainCompatibilityFactRegistry({
+    factInputs: [
+      {
+        ...syntheticFactInput({
+          id: "synthetic-current",
+          source: `sha256:${"a".repeat(64)}`,
+          target: `sha256:${"b".repeat(64)}`,
+          cut: "c".repeat(40),
+          pull: 1,
+        }),
+        ...overrides,
+      },
+    ],
+  });
+}
 
 test("public v4 schema validates registries, queries, and receipts", () => {
   const schema = JSON.parse(
@@ -142,7 +145,7 @@ test("public v4 schema validates registries, queries, and receipts", () => {
     ),
   );
   const validate = new Ajv2020({ strict: false }).compile(schema);
-  const registry = createBuildchainCompatibilityFactRegistry();
+  const registry = explicitRegistry();
   const fact = registry.facts[0];
   const query = createBuildchainCompatibilityPathQuery({
     registry,
@@ -167,10 +170,8 @@ test("Fact-less, tampered, or caller-asserted compatibility fails closed", () =>
   );
 
   const tampered = structuredClone(current);
-  const surface = tampered.surfaces.find(
-    (entry) => entry.compatibleBreakingDigests?.length,
-  );
-  surface.compatibleBreakingDigests.push(`sha256:${"0".repeat(64)}`);
+  const surface = tampered.surfaces[0];
+  surface.compatibleBreakingDigests = [`sha256:${"0".repeat(64)}`];
   assert.throws(
     () => assertBuildchainCompatibilityProjection(tampered),
     /projection mismatch/,
@@ -185,7 +186,20 @@ test("Fact-less, tampered, or caller-asserted compatibility fails closed", () =>
 });
 
 test("contract admission binds the direct Fact and rooted v2 receipt", () => {
-  const current = contractWorld();
+  const base = contractWorld();
+  const surface = base.surfaces.find(
+    (entry) => entry.id === "promote-buildchain-ref-action",
+  );
+  const registry = explicitRegistry({
+    surfaceId: surface.id,
+    surfaceKind: surface.kind,
+    targetBreakingDigest: surface.breakingDigest,
+  });
+  const current = finalizeBuildchainContractWorld({
+    ...base,
+    compatibilityFacts: registry.facts,
+    compatibilityProofs: registry.proofs,
+  });
   const lock = createBuildchainContractLock({
     buildchainRef: "v4-alpha",
     resolvedSha: "a".repeat(40),
@@ -194,8 +208,7 @@ test("contract admission binds the direct Fact and rooted v2 receipt", () => {
   const action = lock.buildchain.surfaces.find(
     (entry) => entry.id === "promote-buildchain-ref-action",
   );
-  action.breakingDigest =
-    "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874";
+  action.breakingDigest = `sha256:${"a".repeat(64)}`;
   lock.buildchain.contractDigest = `sha256:${"1".repeat(64)}`;
   const result = evaluateBuildchainContractLock({
     lock,
@@ -409,7 +422,11 @@ test("compatibility CLI projects, verifies, templates, and rejects bad paths", (
     path.join(os.tmpdir(), "buildchain-compat-facts-"),
   );
   try {
-    const fact = projected.registry.facts[0];
+    assert.deepEqual(projected.registry.facts, []);
+    const registry = explicitRegistry();
+    const fact = registry.facts[0];
+    const registryPath = path.join(temp, "registry.json");
+    fs.writeFileSync(registryPath, JSON.stringify(registry));
     const query = JSON.parse(
       execFileSync(
         process.execPath,
@@ -420,6 +437,8 @@ test("compatibility CLI projects, verifies, templates, and rejects bad paths", (
           "query-template",
           "--fact-root",
           fact.factRoot,
+          "--registry",
+          registryPath,
           "--json",
         ],
         { cwd: root, encoding: "utf8" },
@@ -427,9 +446,7 @@ test("compatibility CLI projects, verifies, templates, and rejects bad paths", (
     );
     query.sourceRoot = query.targetRoot;
     const queryPath = path.join(temp, "query.json");
-    const registryPath = path.join(temp, "registry.json");
     fs.writeFileSync(queryPath, JSON.stringify(query));
-    fs.writeFileSync(registryPath, JSON.stringify(projected.registry));
     const rejected = spawnSync(
       process.execPath,
       [

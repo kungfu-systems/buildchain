@@ -2,15 +2,15 @@ import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
 import test from "node:test";
 
-import { createNativeCommandContract } from "../packages/core/dev-delivery-warrant.js";
+import { createNativeCommandContract } from "../packages/core/dev-delivery/dev-delivery-warrant.js";
 import {
   createNativeChildEnvironment,
   runNativeWithHeartbeat as runNativeWithHeartbeatCore,
-} from "../scripts/dev-delivery-native-run.mjs";
+} from "../packages/core/dev-delivery/native/execution.js";
 import {
   inspectCredentiallessProcessAncestry,
   isCredentialVariableName,
-} from "../packages/core/dev-delivery-process-boundary.js";
+} from "../packages/core/dev-delivery/dev-delivery-process-boundary.js";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 const HOSTED_ENVIRONMENT = {

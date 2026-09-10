@@ -9,7 +9,7 @@ import {
   BUILDCHAIN_CANDIDATE_TIMELINE_CONTRACT,
   createCandidateTimeline,
   formatCandidateTimelineReport,
-} from "../packages/core/candidate-timeline.js";
+} from "../packages/core/observability/candidate-timeline.js";
 
 const candidate = {
   repository: "kungfu-systems/kungfu",

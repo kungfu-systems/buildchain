@@ -3,11 +3,11 @@ import test from "node:test";
 import {
   UNIVERSAL_WORKFLOW_REQUEST,
   universalWorkflowRequestRoot,
-} from "../packages/core/universal-workflow-bootstrap.js";
+} from "../packages/core/workflow/universal-workflow-bootstrap.js";
 import {
   createUniversalBackflowPlan,
   upsertUniversalBackflow,
-} from "../scripts/universal-workflow-backflow.mjs";
+} from "../packages/core/workflow/settlement/backflow.js";
 
 const sha = (value) => value.repeat(40);
 const root = (value) => `sha256:${value.repeat(64)}`;
@@ -36,6 +36,7 @@ function request() {
     payload: {
       schema: "kungfu-buildchain-v4-universal-release-promotion/v1",
       inputs: {
+        schema: "buildchain.promotion-request/v1",
         channel: "alpha",
         "dry-run": false,
         "target-ref": "alpha/v4/v4.0",
@@ -135,7 +136,7 @@ test("the coordinator updates the exact existing backflow receipt", async () => 
     const value = url.includes("/pulls/")
       ? {
           state: "open",
-          base: { ref: "dev/v4/v4.0" },
+          base: { ref: "dev/v4/v4.1" },
           head: {
             sha: sha("1"),
             repo: { full_name: "kungfu-systems/buildchain" },

@@ -3,11 +3,12 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
+import { BUILDCHAIN_COMMAND_HANDLERS } from "../packages/core/workflow/cli/main.mjs";
 import {
   BUILDCHAIN_COMMAND_REGISTRY,
   dispatchRegisteredCommand,
   resolveBuildchainCommand,
-} from "../bin/internal/command-registry.mjs";
+} from "../packages/core/contracts/command-registry.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 
@@ -17,24 +18,16 @@ test("CLI runtime binds bounded command handlers without a monolithic dispatcher
     "utf8",
   );
   assert.doesNotMatch(source, /runRegisteredCommand/u);
-  for (const entry of BUILDCHAIN_COMMAND_REGISTRY) {
-    if (
-      [
-        "audit",
-        "collect",
-        "create",
-        "explain",
-        "inspect",
-        "project",
-        "release",
-        "transaction",
-        "verify",
-      ].includes(entry.id)
-    ) {
-      continue;
-    }
-    assert.match(source, new RegExp(`${JSON.stringify(entry.id)}\\s*:`));
-  }
+  assert.deepEqual(
+    Object.keys(BUILDCHAIN_COMMAND_HANDLERS).sort(),
+    BUILDCHAIN_COMMAND_REGISTRY.map((entry) => entry.id).sort(),
+  );
+  assert.ok(
+    Object.values(BUILDCHAIN_COMMAND_HANDLERS).every(
+      (handler) => typeof handler === "function",
+    ),
+  );
+  assert.ok(source.trim().split("\n").length <= 12);
 });
 
 test("CLI command registry owns canonical names, aliases, help, and runtime dispatch", async () => {

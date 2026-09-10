@@ -1,0 +1,21 @@
+name: Assemble managed publication admission
+description: Admit exact publication authority and bind independently verified evidence.
+runs:
+  using: node24
+  main: dist/index.js
+inputs:
+  request-json:
+    description: Explicit request-json.
+    required: true
+  token:
+    description: Explicit token.
+    required: true
+  governance-token:
+    description: Explicit governance-token.
+    required: true
+  consumer-gate-json:
+    description: Explicit consumer-gate-json.
+    required: false
+outputs:
+  admission-bundle-json:
+    description: Verified admission-bundle-json.

@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-30
+last_reviewed: 2026-09-09
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-07-30
+  generated_at: 2026-09-09
   invisible_context_boundary: No credentials, private logs, or unpublished deployment values are included.
 ---
 
@@ -185,7 +185,7 @@ floating ref, such as:
 ```yaml
 jobs:
   web:
-    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v3
     with:
       buildchain-contract-lock-path: .buildchain/contract-lock.json
       buildchain-contract-compatibility-policy: major-compatible
@@ -205,7 +205,7 @@ caller build command, and applies these rules:
 - breaking drift: fail closed before rendering, deployment planning, deploy
   apply, or release publication.
 
-The caller no longer needs to run `scripts/buildchain-contract-lock.mjs` inside
+The caller no longer needs to run `packages/core/contracts/commands/buildchain-contract-lock.mjs` inside
 its own build command. That check belongs to Buildchain because the actual
 contract world is stored in the Buildchain runtime ref being used.
 
@@ -342,7 +342,7 @@ manifest JSON, but it does not touch AWS, DNS, CloudFront, or deployment
 credentials.
 
 ```bash
-node scripts/web-surface.mjs \
+node packages/core/web/commands/web-surface.mjs \
   --mode deploy-plan \
   --cwd fixtures/web-surface-shaped \
   --source-sha aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
@@ -352,7 +352,7 @@ node scripts/web-surface.mjs \
 For manifest-only output:
 
 ```bash
-node scripts/web-surface.mjs \
+node packages/core/web/commands/web-surface.mjs \
   --mode manifest \
   --cwd fixtures/web-surface-shaped \
   --source-sha aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
@@ -389,7 +389,7 @@ Deploy apply syncs the artifact, writes the deployment manifest, and invalidates
 CloudFront when a distribution id is configured:
 
 ```bash
-node scripts/web-surface.mjs \
+node packages/core/web/commands/web-surface.mjs \
   --mode deploy-apply \
   --cwd fixtures/web-surface-shaped \
   --channel staging \
@@ -581,7 +581,7 @@ surface hosts. A production plan therefore rejects staging/preview host facts
 before AWS apply:
 
 ```bash
-node scripts/web-surface.mjs \
+node packages/core/web/commands/web-surface.mjs \
   --mode deploy-apply \
   --cwd fixtures/web-surface-shaped \
   --plan .buildchain/web-surface-staging-plan.json \
@@ -593,7 +593,7 @@ Cleanup apply deletes preview content, deletes the preview manifest, and
 invalidates CloudFront:
 
 ```bash
-node scripts/web-surface.mjs \
+node packages/core/web/commands/web-surface.mjs \
   --mode cleanup-apply \
   --cwd fixtures/web-surface-shaped \
   --event pull-request-closed \
@@ -606,7 +606,7 @@ node scripts/web-surface.mjs \
 Cleanup apply can also execute a saved cleanup plan:
 
 ```bash
-node scripts/web-surface.mjs \
+node packages/core/web/commands/web-surface.mjs \
   --mode cleanup-apply \
   --cwd fixtures/web-surface-shaped \
   --plan .buildchain/web-surface-cleanup-plan.json \
@@ -630,7 +630,7 @@ Production promotion is not just `deploy-apply --channel production`. Before a
 live production apply, the reusable workflow runs:
 
 ```bash
-node scripts/web-surface.mjs \
+node packages/core/web/commands/web-surface.mjs \
   --mode production-preflight \
   --cwd fixtures/web-surface-shaped \
   --plan .buildchain/web-surface-production-plan.json \
@@ -651,7 +651,7 @@ The production preflight checks that:
 After preview, staging, and production apply, the workflow runs:
 
 ```bash
-node scripts/web-surface.mjs \
+node packages/core/web/commands/web-surface.mjs \
   --mode health-check \
   --cwd fixtures/web-surface-shaped \
   --result .buildchain/web-surface-production-apply.json \
@@ -725,7 +725,7 @@ an apply-mode plan, or the explicit `cleanup-apply` executor with preview-only
 credentials:
 
 ```bash
-node scripts/web-surface.mjs \
+node packages/core/web/commands/web-surface.mjs \
   --mode cleanup-plan \
   --cwd fixtures/web-surface-shaped \
   --event pull-request-closed \
@@ -741,13 +741,13 @@ auditable no-op when no aliases are requested.
 
 ## Reusable Workflow Shape
 
-Buildchain ships `.github/workflows/.web-surface.yml` for repositories that want
+Buildchain ships `.github/workflows/public-release-web.yml` for repositories that want
 the standard PR review and promotion flow without copying bespoke glue:
 
 ```yaml
 jobs:
   web-surface:
-    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v3
     with:
       build-command: npm run build
       verify-command: npm run check
@@ -783,7 +783,7 @@ on:
 
 jobs:
   web-surface:
-    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v3
     with:
       buildchain-ref: ${{ inputs.buildchain-ref || '' }}
       build-command: pnpm run build
@@ -811,7 +811,7 @@ permissions:
 
 jobs:
   web-surface:
-    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v3
     with:
       build-command: pnpm run build
       verify-command: pnpm run check
@@ -905,7 +905,7 @@ For release-PR publishing, callers opt in explicitly:
 ```yaml
 jobs:
   web-surface:
-    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v3
     with:
       build-command: npm run build
       verify-command: npm run check
@@ -956,17 +956,11 @@ that behind the fallback `github.token`. The handoff JSON and job summary report
 the manual PR creation command. If the repository intentionally uses another
 narrow token, pass it through `production-release-pr-token`.
 
-`production-release-app-id` remains accepted as a deprecated alias for the input
-name, but the value should be the GitHub App client id. GitHub App numeric App
-IDs and client IDs are distinct, and Buildchain passes the value to
-`actions/create-github-app-token` through its non-deprecated `client-id` input so
-new runs do not emit the deprecated `app-id` warning.
-
 If a repository already generates its own narrow token or PAT, it can still pass
 that through `production-release-pr-token`:
 
 ```yaml
-with:
+secrets:
   production-release-pr-token: ${{ secrets.BUILDCHAIN_RELEASE_PR_TOKEN }}
 ```
 
@@ -1051,7 +1045,7 @@ excludes the immutable root from mutable deletion.
 Local verification:
 
 ```sh
-node scripts/installer-publication.mjs \
+node packages/core/publication/commands/installer-publication.mjs \
   --manifest dist/installer-publication.json \
   --artifact-root dist
 ```
@@ -1062,7 +1056,7 @@ with `max-age` no greater than 300 seconds; immutable routes require at least
 one year and the `immutable` directive:
 
 ```sh
-node scripts/installer-publication.mjs \
+node packages/core/publication/commands/installer-publication.mjs \
   --manifest dist/installer-publication.json \
   --public-readback
 ```

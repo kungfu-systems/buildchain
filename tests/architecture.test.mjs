@@ -11,7 +11,7 @@ import {
   compareNMinusOne,
   loadArchitecture,
   validateManifest,
-} from "../scripts/architecture.mjs";
+} from "../packages/core/governance/commands/architecture.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 
@@ -21,10 +21,10 @@ test("v4 architecture contract validates with every production writer migrated",
     schemaVersion: 1,
     contract: "kungfu-buildchain-v4-architecture-validation",
     ok: true,
-    releaseLine: "dev/v4/v4.0",
+    releaseLine: "dev/v4/v4.1",
     capabilities: 13,
     stateMachines: 7,
-    dependencyLayers: 6,
+    dependencyLayers: 5,
     dependencyCycles: 0,
     activeExceptions: 0,
     productionWriterMigrations: 7,
@@ -83,10 +83,7 @@ test("validation rejects cycles, a second writer, and missing recovery", () => {
         manifest: cyclic,
         inventory: JSON.parse(
           fs.readFileSync(
-            path.join(
-              root,
-              "architecture/baseline-core-mechanism-inventory.json",
-            ),
+            path.join(root, "architecture/core-mechanisms.json"),
             "utf8",
           ),
         ),
@@ -105,10 +102,7 @@ test("validation rejects cycles, a second writer, and missing recovery", () => {
         manifest: secondWriter,
         inventory: JSON.parse(
           fs.readFileSync(
-            path.join(
-              root,
-              "architecture/baseline-core-mechanism-inventory.json",
-            ),
+            path.join(root, "architecture/core-mechanisms.json"),
             "utf8",
           ),
         ),

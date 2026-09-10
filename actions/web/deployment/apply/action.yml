@@ -1,0 +1,20 @@
+name: Apply verified Web deployment
+description: Apply the exact downloaded channel plan and verify readiness and
+  health with durable failure evidence.
+inputs:
+  request-json:
+    description: Typed public Web request.
+    required: true
+  channel:
+    description: Admitted preview, staging, production or cleanup channel.
+    required: true
+outputs:
+  web-surface-apply-result-json:
+    description: Compact observed apply result.
+  web-surface-cleanup-result-json:
+    description: Observed cleanup result.
+  apply-outcome:
+    description: Actual apply stage outcome, independent of subsequent health.
+runs:
+  using: node24
+  main: dist/index.js

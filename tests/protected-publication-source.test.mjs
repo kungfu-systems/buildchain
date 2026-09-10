@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { bindProtectedPublicationSource } from "../packages/core/protected-publication-source.js";
+import { bindProtectedPublicationSource } from "../packages/core/release/protected-publication-source.js";
 
 const sha = (character) => character.repeat(40);
 

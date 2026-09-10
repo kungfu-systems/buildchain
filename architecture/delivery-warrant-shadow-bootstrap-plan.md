@@ -52,9 +52,9 @@ inventory rather than reconstructing it from workflow prose.
 | Concern                                          | Source of record                                                                   | Result                                                                       |
 | ------------------------------------------------ | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | Current states, events, writers, stores, effects | `baseline-core-mechanism-inventory.json` and `capability-state-machine-manifest.json` | Nine states, seven manifest events, TypeScript v3 sole writer                |
-| Queue roots, generation, selection, leases       | `packages/core/dev-delivery-warrant.js`                                            | Rooted successors, bounded FIFO/aging, one active fence                      |
+| Queue roots, generation, selection, leases       | `packages/core/dev-delivery/dev-delivery-warrant.js`                                            | Rooted successors, bounded FIFO/aging, one active fence                      |
 | Terminal behavior                                | settlement and cancellation modules plus Warrant tests                             | Active fenced close, exact queued cancellation, terminal/no-authority no-ops |
-| Durable compare-and-set                          | `scripts/dev-delivery-warrant.mjs`                                                 | Immutable Git commit plus expected commit/root readback                      |
+| Durable compare-and-set                          | `packages/core/dev-delivery/commands/dev-delivery-warrant.mjs`                                                 | Immutable Git commit plus expected commit/root readback                      |
 | Protected effects                                | Buildchain dev delivery, close, and cancel workflows                               | GitHub admission occurs after exact state readback                           |
 | Bootstrap and N-1                                | `bootstrap-authority.json` and `architecture.mjs`                            | v3 bootstrap authority, protected v4 handoff, no self-qualification          |
 
@@ -215,7 +215,7 @@ Run the focused contract and fixture checks with:
 ```sh
 node scripts/warrant-shadow-plan.mjs validate
 node --test tests/warrant-shadow-plan.test.mjs
-node scripts/architecture.mjs validate
+node packages/core/governance/commands/architecture.mjs validate
 ```
 
 The repository `check` command runs the plan validator and the unit suite. A

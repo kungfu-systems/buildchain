@@ -1,0 +1,23 @@
+name: publish
+description:
+  Admit the binary capability, seal checksums and publish immutable assets
+  with readback.
+inputs:
+  source-sha:
+    required: true
+    description: Explicit source-sha for the admitted operation.
+  runtime-sha:
+    required: true
+    description: Explicit runtime-sha for the admitted operation.
+  tag:
+    required: true
+    description: Explicit tag for the admitted operation.
+  capability-json:
+    required: true
+    description: Explicit capability-json for the admitted operation.
+  token:
+    required: true
+    description: Explicit token for the admitted operation.
+runs:
+  using: node24
+  main: dist/index.js

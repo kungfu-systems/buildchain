@@ -5,7 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { resolveReleaseCandidateArtifacts } from "../scripts/release-candidate-resolver.mjs";
+import { resolveReleaseCandidateArtifacts } from "../packages/core/release/candidate/resolve.js";
 
 function createNpmTarball(root, packageJson) {
   const packageDir = path.join(root, "npm-source", "package");

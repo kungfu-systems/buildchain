@@ -3,7 +3,7 @@ import fs from "node:fs";
 import test from "node:test";
 
 const source = fs.readFileSync(
-  new URL("../scripts/resume-from-candidate-run.mjs", import.meta.url),
+  new URL("../packages/core/release/commands/resume-from-candidate-run.mjs", import.meta.url),
   "utf8",
 );
 
@@ -14,6 +14,7 @@ test("candidate recovery forwards the sealed v4 publication evidence", () => {
   ]) {
     assert.match(source, new RegExp(`"${name}": result\\.paths\\.`));
   }
-  assert.match(source, /stageCapsules: stageCapsuleFile \?/u);
-  assert.match(source, /publicationQualification: publicationQualificationFile \?/u);
+  const recovery = fs.readFileSync(new URL("../packages/core/release/recovery/candidate.js", import.meta.url), "utf8");
+  assert.match(recovery, /stageCapsules: stageCapsuleFile\s*\?/u);
+  assert.match(recovery, /publicationQualification: publicationQualificationFile\s*\?/u);
 });

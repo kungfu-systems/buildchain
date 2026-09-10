@@ -16,7 +16,7 @@ import {
   createSourceQualificationProof,
   selectDevDeliveryWarrant,
   submitDevDeliveryCandidate as submitLegacyDevDeliveryCandidate,
-} from "../packages/core/dev-delivery-warrant.js";
+} from "../packages/core/dev-delivery/dev-delivery-warrant.js";
 import {
   DEV_DELIVERY_AUTHORITY_MODE,
   acquireDevDeliveryLandingWarrant,
@@ -30,25 +30,24 @@ import {
   readGitHubLandingActiveProviderAttempt,
   readGitHubLandingTerminalState,
   heartbeatDevDeliveryQualificationLease,
-  migrateDevDeliveryAuthorityState,
   normalizeDevDeliveryAuthorityState,
   observeDevDeliveryAuthorityState,
   recoverDevDeliveryAuthority,
   settleDevDeliveryAuthorityCandidate,
   settleDevDeliveryAuthorityCandidateWithGitHubProvider,
   submitDevDeliveryAuthorityCandidate,
-} from "../packages/core/dev-delivery-authority-landing.js";
+} from "../packages/core/dev-delivery/dev-delivery-authority-landing.js";
 import {
   DEV_DELIVERY_TESTING_PROVIDER_READBACK,
   admitDevDeliveryMergeGroupForTesting,
   sealLandingTerminalReadbackForTesting,
-} from "../packages/core/dev-delivery-landing-testing-port.js";
-import { deriveDevDeliveryLandingProviderAttempt } from "../packages/core/dev-delivery-landing-readback.js";
+} from "../packages/core/dev-delivery/dev-delivery-landing-testing-port.js";
+import { deriveDevDeliveryLandingProviderAttempt } from "../packages/core/dev-delivery/dev-delivery-landing-readback.js";
 import {
   defaultDevDeliveryAuthorityStateRef,
   devDeliveryAuthorityCliOptions,
   runDevDeliveryAuthorityCommand,
-} from "../scripts/dev-delivery-authority.mjs";
+} from "../packages/core/dev-delivery/commands/dev-delivery-authority.mjs";
 
 const root = (digit) => `sha256:${digit.repeat(64)}`;
 const repositoryRoot = path.resolve(
@@ -85,8 +84,7 @@ function candidate(number, overrides = {}) {
   const input = {
     pullRequestNumber: number,
     sourceHead: digit.repeat(40),
-    assignmentRoot: root("1"),
-    initiativeRoot: root("2"),
+    sourceRoot: root("1"),
     sourceIdentityRoot: root(digit),
     sourcePatchRoot: root("3"),
     planRoot: root("5"),
@@ -110,9 +108,9 @@ function providerAttemptFor(sourceHead, mergeGroupHead, overrides = {}) {
     schema: "kungfu.buildchain.github-landing-provider-attempt/v1",
     repository: "kungfu-systems/kungfu",
     workflowId: 700,
-    workflowPath: ".github/workflows/dev-pr-auto-merge.yml",
+    workflowPath: ".github/workflows/public-ops-dev-auto-merge.yml",
     workflowRef:
-      "kungfu-systems/kungfu/.github/workflows/dev-pr-auto-merge.yml@refs/heads/dev/v4/v4.0",
+      "kungfu-systems/kungfu/.github/workflows/public-ops-dev-auto-merge.yml@refs/heads/dev/v4/v4.0",
     workflowSha: "c".repeat(40),
     event: "merge_group",
     runId: 1200,
@@ -375,160 +373,6 @@ test("machine-readable v2 schema accepts the normalized authority state", () => 
     expiresAt: "2026-08-12T00:10:00.000Z",
   });
   assert.equal(validate(invalid), false);
-});
-
-test("an active provisional v1 Warrant migrates without rewriting evidence or granting landing", () => {
-  const legacy = createDevDeliveryQueue({
-    repository: "kungfu-systems/buildchain",
-    protectedBase: "dev/v3/v3.0",
-    now: "2026-08-12T00:00:00Z",
-  });
-  const submitted = submitLegacyDevDeliveryCandidate(legacy, candidate(90), {
-    now: "2026-08-12T00:00:01Z",
-  });
-  const selected = selectDevDeliveryWarrant(submitted.queue, {
-    now: "2026-08-12T00:00:02Z",
-  });
-  const migrated = migrateDevDeliveryAuthorityState(selected.queue, {
-    now: "2026-08-12T00:00:03Z",
-  });
-
-  assert.equal(migrated.receipt.legacyStateRoot, selected.queue.stateRoot);
-  assert.equal(migrated.receipt.activeAuthority, "qualification-lease");
-  assert.equal(
-    migrated.state.migration.legacyStateRoot,
-    selected.queue.stateRoot,
-  );
-  assert.equal(migrated.state.landingWarrant, null);
-  assert.equal(migrated.state.qualificationLeases.length, 1);
-  assert.equal(
-    migrated.state.qualificationLeases[0].token,
-    selected.warrant.fencingToken,
-  );
-  assert.equal(
-    migrated.state.qualificationLeases[0].generation,
-    selected.warrant.generation,
-  );
-  assert.equal(
-    migrated.state.qualificationLeases[0].mergeGroupAdmission,
-    false,
-  );
-  assert.throws(
-    () =>
-      admitDevDeliveryMergeGroupForTesting(
-        migrated.state,
-        migrated.state.qualificationLeases[0],
-        { mergeGroupHead: "a".repeat(40), now: "2026-08-12T00:00:04Z" },
-      ),
-    /Qualification Lease cannot admit merge_group/,
-  );
-});
-
-test("historical phase-less active Warrant migrates with schema-safe compatibility state", () => {
-  const legacy = createDevDeliveryQueue({
-    repository: "kungfu-systems/buildchain",
-    protectedBase: "dev/v3/v3.0",
-    now: "2026-08-12T00:05:00Z",
-  });
-  const historical = candidate(91, {
-    environmentRoot: undefined,
-    nativeCommandContract: undefined,
-    deliveryClass: "non-native-fast",
-  });
-  const submitted = submitLegacyDevDeliveryCandidate(legacy, historical, {
-    now: "2026-08-12T00:05:01Z",
-  });
-  const selected = selectDevDeliveryWarrant(submitted.queue, {
-    now: "2026-08-12T00:05:02Z",
-  });
-  assert.equal(Object.hasOwn(selected.warrant, "phase"), false);
-  assert.equal(
-    selectDevDeliveryWarrant(selected.queue, {
-      now: "2026-08-12T00:05:03Z",
-    }).receipt.reason,
-    "non-preemptive-active-warrant",
-  );
-
-  const migrated = migrateDevDeliveryAuthorityState(selected.queue, {
-    now: "2026-08-12T00:05:04Z",
-  });
-  assert.equal(migrated.receipt.activeAuthority, "landing-warrant");
-  assert.equal(migrated.state.qualificationLeases.length, 0);
-  assert.equal(
-    migrated.state.landingWarrant.token,
-    selected.warrant.fencingToken,
-  );
-  assert.deepEqual(migrated.state.candidates[0].qualification, {
-    schema: "kungfu.buildchain.dev-delivery-compatibility-qualification/v1",
-    authority: "legacy-compatibility-only",
-    nativeProofAuthority: false,
-    legacyStateRoot: selected.queue.stateRoot,
-    legacyWarrantPhase: "phase-less",
-    legacyFencingToken: selected.warrant.fencingToken,
-    legacyGeneration: selected.warrant.generation,
-    qualificationReceiptRoot: null,
-    sourceProofRoot: historical.sourceProofRoot,
-    nativeProofRoot: null,
-    nativeExecutionBindingRoot: null,
-    nativeExecutionReceiptRoot: null,
-    nativeCommandRoot: null,
-    qualificationContractRoot: null,
-    qualifiedAt: null,
-  });
-  const validate = authoritySchemaValidator();
-  assert.equal(validate(migrated.state), true, JSON.stringify(validate.errors));
-});
-
-test("qualified v1 Warrant migration remains schema-valid without claiming v2 native proof", () => {
-  const legacy = createDevDeliveryQueue({
-    repository: "kungfu-systems/buildchain",
-    protectedBase: "dev/v3/v3.0",
-    now: "2026-08-12T00:06:00Z",
-  });
-  const submitted = submitLegacyDevDeliveryCandidate(legacy, candidate(92), {
-    now: "2026-08-12T00:06:01Z",
-  });
-  const selected = selectDevDeliveryWarrant(submitted.queue, {
-    now: "2026-08-12T00:06:02Z",
-  });
-  const qualifiedLegacy = structuredClone(selected.queue);
-  qualifiedLegacy.activeWarrant.phase = "qualified";
-  qualifiedLegacy.activeWarrant.nativeProofRoot = root("b");
-  qualifiedLegacy.activeWarrant.nativeProofReuseRoot = root("c");
-  qualifiedLegacy.activeWarrant.nativeExecutionReceiptRoot = root("d");
-  qualifiedLegacy.activeWarrant.qualificationReceiptRoot = root("e");
-  qualifiedLegacy.activeWarrant.qualifiedAt = "2026-08-12T00:06:03.000Z";
-  qualifiedLegacy.candidates[0].status = "qualified";
-  qualifiedLegacy.candidates[0].updatedAt = "2026-08-12T00:06:03.000Z";
-
-  const migrated = migrateDevDeliveryAuthorityState(
-    rerootLegacyState(qualifiedLegacy),
-    { now: "2026-08-12T00:06:04Z" },
-  );
-  const qualification = migrated.state.candidates[0].qualification;
-  assert.equal(qualification.authority, "legacy-compatibility-only");
-  assert.equal(qualification.nativeProofAuthority, false);
-  assert.equal(qualification.legacyWarrantPhase, "qualified");
-  assert.equal(qualification.nativeProofRoot, root("b"));
-  assert.equal(qualification.nativeExecutionBindingRoot, null);
-  assert.equal(qualification.qualificationContractRoot, null);
-  const validate = authoritySchemaValidator();
-  assert.equal(validate(migrated.state), true, JSON.stringify(validate.errors));
-
-  const compatibilityOnly = structuredClone(migrated.state);
-  compatibilityOnly.landingWarrant = null;
-  compatibilityOnly.candidates[0].status = "qualified";
-  const honestCompatibilityState = normalizeDevDeliveryAuthorityState(
-    rerootLegacyState(compatibilityOnly),
-  );
-  const refused = acquireDevDeliveryLandingWarrant(honestCompatibilityState, {
-    now: "2026-08-12T00:06:05Z",
-  });
-  assert.equal(refused.warrant, null);
-  assert.equal(
-    refused.receipt.blockedReason.code,
-    "native-qualification-authority-required",
-  );
 });
 
 test("v2 normalization rejects partial or unmarked native qualification objects", () => {
@@ -1207,7 +1051,7 @@ test("Landing heartbeat requires the persisted admitted provider attempt and fre
       conclusion: null,
       referenced_workflows: [
         {
-          path: "kungfu-systems/buildchain/.github/workflows/dev-pr-auto-merge.yml@v4-alpha",
+          path: "kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@v4-alpha",
           sha: providerAttempt.workflowSha,
           ref: "refs/tags/v4-alpha",
         },
@@ -1238,7 +1082,7 @@ test("Landing heartbeat requires the persisted admitted provider attempt and fre
     },
     "/repos/kungfu-systems/kungfu/actions/workflows/700": {
       id: 700,
-      path: ".github/workflows/dev-pr-auto-merge.yml",
+      path: ".github/workflows/public-ops-dev-auto-merge.yml",
     },
   };
   const fetchImpl = async (url) => {
@@ -1384,7 +1228,7 @@ test("expired Landing never cancels a run-level successor and settles only termi
           run_attempt: 1,
           referenced_workflows: [
             {
-              path: "kungfu-systems/buildchain/.github/workflows/dev-pr-auto-merge.yml@refs/tags/v4-alpha",
+              path: "kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@refs/tags/v4-alpha",
               ref: "refs/tags/v4-alpha",
               sha: "c".repeat(40),
             },
@@ -1432,7 +1276,7 @@ test("expired Landing never cancels a run-level successor and settles only termi
       response.end(
         JSON.stringify({
           id: 700,
-          path: ".github/workflows/dev-pr-auto-merge.yml",
+          path: ".github/workflows/public-ops-dev-auto-merge.yml",
         }),
       );
       return;
@@ -1639,7 +1483,7 @@ test("Landing provider attempt is derived from exact live execution context", ()
         },
       ],
     },
-    workflow: { id: 700, path: ".github/workflows/check.yml" },
+    workflow: { id: 700, path: ".github/workflows/public-build-check.yml" },
     pullRequest: {
       number: input.pullRequestNumber,
       head: { sha: input.sourceHead },
@@ -1655,7 +1499,7 @@ test("Landing provider attempt is derived from exact live execution context", ()
   assert.equal(attempt.workflowSha, mergeGroupHead);
   assert.equal(
     attempt.workflowRef,
-    "kungfu-systems/kungfu/.github/workflows/check.yml@refs/heads/gh-readonly-queue/dev/v4/v4.0/pr-182-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "kungfu-systems/kungfu/.github/workflows/public-build-check.yml@refs/heads/gh-readonly-queue/dev/v4/v4.0/pr-182-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   );
   assert.equal(attempt.mergeGroupHead, mergeGroupHead);
   assert.throws(
@@ -1677,7 +1521,7 @@ test("Landing provider attempt is derived from exact live execution context", ()
           repository: { full_name: "kungfu-systems/kungfu" },
         },
         jobs: { jobs: [] },
-        workflow: { id: 700, path: ".github/workflows/check.yml" },
+        workflow: { id: 700, path: ".github/workflows/public-build-check.yml" },
         pullRequest: {},
       }),
     /current execution context mismatch/u,
@@ -2345,114 +2189,5 @@ test("public authority CLI stays opt-in and persists through expected-old state 
       },
     ),
     /explicitly migrate the exact current v1 state/u,
-  );
-});
-
-test("public migration command atomically replaces the live v1 state ref", async () => {
-  const legacy = createDevDeliveryQueue({
-    repository: "kungfu-systems/kungfu",
-    protectedBase: "dev/v4/v4.0",
-    now: "2026-08-12T03:00:00Z",
-  });
-  const selected = selectDevDeliveryWarrant(
-    submitLegacyDevDeliveryCandidate(legacy, candidate(400), {
-      now: "2026-08-12T03:00:01Z",
-    }).queue,
-    { now: "2026-08-12T03:00:02Z" },
-  );
-  const initial = authorityState();
-  const writes = [];
-  const store = {
-    async read() {
-      return {
-        exists: true,
-        commitSha: "d".repeat(40),
-        queue: selected.queue,
-      };
-    },
-    async write(input) {
-      writes.push(input);
-      return { commitSha: "e".repeat(40), stateRoot: input.queue.stateRoot };
-    },
-  };
-  const result = await runDevDeliveryAuthorityCommand(
-    {
-      command: "migrate",
-      repository: "kungfu-systems/kungfu",
-      branch: "dev/v4/v4.0",
-      now: "2026-08-12T03:00:03Z",
-      maxQualificationLeases: 1,
-      qualificationLeaseSeconds: 120,
-      landingLeaseSeconds: 60,
-      maxLandingOvertakes: 0,
-      maxQualificationAttempts: 5,
-      execute: true,
-    },
-    store,
-  );
-
-  assert.equal(writes.length, 1);
-  assert.equal(
-    writes[0].stateRef,
-    "buildchain/dev-delivery-warrant/dev-v4-v4.0",
-  );
-  assert.equal(writes[0].expectedCommitSha, "d".repeat(40));
-  assert.equal(writes[0].expectedStateRoot, selected.queue.stateRoot);
-  assert.deepEqual(writes[0].queue.policy, {
-    maxQualificationLeases: 1,
-    qualificationLeaseSeconds: 120,
-    landingLeaseSeconds: 60,
-    maxLandingOvertakes: 0,
-    maxQualificationAttempts: 5,
-  });
-  assert.equal(result.receipt.legacyStateRoot, selected.queue.stateRoot);
-  assert.deepEqual(result.migrationSource, {
-    stateRef: "buildchain/dev-delivery-warrant/dev-v4-v4.0",
-    commitSha: "d".repeat(40),
-    stateRoot: selected.queue.stateRoot,
-  });
-  assert.equal(result.observation.qualification.active.length, 1);
-  assert.equal(result.mutationApplied, true);
-
-  await assert.rejects(
-    runDevDeliveryAuthorityCommand(
-      {
-        command: "migrate",
-        repository: "kungfu-systems/kungfu",
-        branch: "dev/v4/v4.0",
-        now: "2026-08-12T03:00:04Z",
-        execute: true,
-      },
-      {
-        async read() {
-          return { exists: false, commitSha: "", queue: initial };
-        },
-      },
-    ),
-    /live v1 authority state ref .* is missing/u,
-  );
-
-  let reads = 0;
-  await assert.rejects(
-    runDevDeliveryAuthorityCommand(
-      {
-        command: "migrate",
-        repository: "kungfu-systems/kungfu",
-        branch: "dev/v4/v4.0",
-        now: "2026-08-12T03:00:05Z",
-        execute: true,
-      },
-      {
-        async read() {
-          reads += 1;
-          return {
-            exists: true,
-            commitSha: (reads === 1 ? "d" : "c").repeat(40),
-            queue: selected.queue,
-          };
-        },
-      },
-    ),
-    /live v1 authority changed during migration/u,
   );
 });

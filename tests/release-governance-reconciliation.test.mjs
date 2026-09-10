@@ -3,7 +3,7 @@ import test from "node:test";
 import {
   planReleaseGovernanceReconciliation,
   resolvePublicBuildRouterAggregateCheck,
-} from "../scripts/reconcile-release-governance.mjs";
+} from "../packages/core/governance/release-check-policy.js";
 
 const SHA = "4fa074877b7263c1a32727eac4fb993c47776147";
 const APP_ID = 15368;

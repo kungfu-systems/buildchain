@@ -1,3 +1,4 @@
+import YAML from "yaml";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -9,36 +10,22 @@ function source(relativePath) {
   return fs.readFileSync(path.join(root, relativePath), "utf8");
 }
 
-test("active runtime defaults use the v3 baseline", () => {
-  const expectations = new Map([
-    [".github/workflows/.web-surface.yml", ["BUILDCHAIN_DEFAULT_REF: v3", 'BUILDCHAIN_DEFAULT_REF || "v3"']],
-    ["packages/core/buildchain-contract.js", ['buildchainRef = "v3"']],
-    ["packages/core/paper.js", ['buildchainRef = "v3"']],
-    ["scripts/buildchain-contract-lock.mjs", ['BUILDCHAIN_RUNTIME_REF", "v3"']],
-    ["scripts/paper.mjs", ['buildchainRef = "v3"']],
-  ]);
-
-  for (const [relativePath, requiredTokens] of expectations) {
-    const contents = source(relativePath);
-    for (const token of requiredTokens) {
-      assert.ok(contents.includes(token), `${relativePath} must contain ${token}`);
-    }
-  }
-
-  for (const relativePath of expectations.keys()) {
-    assert.doesNotMatch(
-      source(relativePath),
-      /(?:BUILDCHAIN_DEFAULT_REF:|BUILDCHAIN_DEFAULT_REF \|\||BUILDCHAIN_RUNTIME_REF",|buildchainRef(?:Default)?\s*[=:])[^,\n]*v2/,
-      `${relativePath} must not retain an implicit v2 runtime default`,
-    );
+test("current runtime defaults use v4 with no historical producer fallback", () => {
+  for (const [file, token] of [
+    ["packages/core/contracts/buildchain-contract.js", 'buildchainRef = "v4"'],
+    ["packages/core/paper/paper.js", 'buildchainRef = "v4"'],
+    ["packages/core/contracts/commands/buildchain-contract-lock.mjs", 'env("BUILDCHAIN_RUNTIME_REF", "v4")'],
+  ]) {
+    assert.ok(source(file).includes(token));
+    assert.doesNotMatch(source(file), /(?:buildchainRef\s*[=:]|BUILDCHAIN_RUNTIME_REF",)[^,\n]*"v3"/);
   }
 });
 
-test("manual binary evidence defaults to an existing v3 exact tag", () => {
-  assert.match(
-    source(".github/workflows/self-build-binary-distribution.yml"),
-    /default: "v3\.0\.2-alpha\.4"/,
-  );
+test("binary evidence requires an explicit exact current tag instead of a historical default", () => {
+  const workflow = YAML.parse(source(".github/workflows/self-build-binary-distribution.yml"));
+  assert.equal(workflow.on.workflow_dispatch.inputs.tag.required, true);
+  assert.equal(workflow.on.workflow_dispatch.inputs.tag.default, undefined);
+  assert.deepEqual(workflow.on.push.tags, ["v4.*.*", "v4.*.*-alpha.*"]);
 });
 
 test("current manuals and action references use v3 examples", () => {
@@ -58,9 +45,9 @@ test("current manuals and action references use v3 examples", () => {
     "docs/reusable-build-surface.md",
     "docs/runtime-train-validation.md",
     "docs/stable-candidate-patrol.md",
-    "actions/promote-buildchain-ref/README.md",
-    "actions/report-buildchain-issue/README.md",
-    "actions/validate-config/README.md",
+    "actions/release/promotion/ref/README.md",
+    "actions/governance/incident/report/README.md",
+    "actions/build/lifecycle/validate/README.md",
   ];
   const staleBuildchainBaseline =
     /Buildchain v2|(?:dev|alpha|release|train)\/v2\/|`v2(?:-alpha|\.\d+)?`|workflow-shell-ref-or-v2/;
@@ -82,9 +69,9 @@ test("the v2 inventory is explicitly historical and points to v3", () => {
 });
 
 test("the v2 train-only Initiative-family release handoff is present on v3", () => {
-  const releaseCandidate = source("packages/core/release-candidate.js");
-  const publicationAuthority = source("packages/core/publication-authority.js");
-  const promoteAction = source("actions/promote-buildchain-ref/action.yml");
+  const releaseCandidate = source("packages/core/release/release-candidate.js");
+  const publicationAuthority = source("packages/core/publication/publication-authority.js");
+  const promoteAction = source("actions/release/promotion/ref/action.yml");
   const retrospective = source(".github/retrospectives/2026-07-31-buildchain-v2-v3-parity.md");
 
   assert.match(

@@ -1,0 +1,22 @@
+name: Qualify declared source lifecycle
+description: Admit Paper policy, validate configuration and execute install and
+  check with durable phase evidence.
+inputs:
+  request-json:
+    description: request-json
+    required: true
+  runtime-ref:
+    description: Exact selected runtime coordinate.
+    required: true
+outputs:
+  lifecycle-stage:
+    description: lifecycle-stage result.
+  validate-outcome:
+    description: validate-outcome result.
+  install-outcome:
+    description: install-outcome result.
+  selected-check-outcome:
+    description: selected-check-outcome result.
+runs:
+  using: node24
+  main: dist/index.js

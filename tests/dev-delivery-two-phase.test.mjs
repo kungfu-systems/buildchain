@@ -17,7 +17,7 @@ import {
   submitDevDeliveryCandidate,
   verifyNativeProofReuseDecision,
   verifyNativeQualificationProof,
-} from "../packages/core/dev-delivery-warrant.js";
+} from "../packages/core/dev-delivery/dev-delivery-warrant.js";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 const SOURCE_HEAD = "a".repeat(40);
@@ -29,8 +29,7 @@ function candidate(number = 401, overrides = {}) {
   return {
     pullRequestNumber: number,
     sourceHead: SOURCE_HEAD,
-    assignmentRoot: ROOT("1"),
-    initiativeRoot: ROOT("2"),
+    sourceRoot: ROOT("1"),
     sourceIdentityRoot: ROOT("3"),
     sourcePatchRoot: ROOT("4"),
     sourceProofRoot: ROOT("5"),
@@ -438,49 +437,21 @@ test("native proof timestamp is observational while semantic evidence is rooted"
   assert.equal(verifyNativeQualificationProof(second).ok, true);
 });
 
-test("legacy native proofs remain verifiable but cannot gain receipt-bound reuse", () => {
-  const proof = nativeProof();
-  proof.schema = "kungfu.buildchain.native-qualification-proof/v1";
-  delete proof.environmentRoot;
-  delete proof.sourceHead;
-  delete proof.nativeExecutionBindingRoot;
-  delete proof.nativeExecutionReceiptRoot;
-  const identity = structuredClone(proof);
-  delete identity.proofRoot;
-  delete identity.qualifiedAt;
-  delete identity.observationRoot;
-  proof.proofRoot = devDeliveryContentRoot(identity);
-  assert.equal(verifyNativeQualificationProof(proof).ok, true);
-  const decision = createNativeProofReuseDecision({
-    proof,
-    current: current(),
-  });
-  assert.equal(decision.reusable, false);
-  assert.equal(decision.reason, "native-execution-evidence-unbound");
+test("obsolete native proof schemas are rejected even with recomputed content roots", () => {
+  for (const version of [1, 2, 3]) {
+    const proof = nativeProof();
+    proof.schema = `kungfu.buildchain.native-qualification-proof/v${version}`;
+    const identity = structuredClone(proof);
+    for (const field of ["proofRoot", "qualifiedAt", "observationRoot"]) delete identity[field];
+    proof.proofRoot = devDeliveryContentRoot(identity);
+    assert.deepEqual(verifyNativeQualificationProof(proof), {ok:false, reason:"unsupported-schema"});
+    const decision = createNativeProofReuseDecision({proof, current:current()});
+    assert.equal(decision.reusable, false);
+    assert.equal(decision.reason, "unsupported-schema");
+  }
 });
 
-test("legacy v2 environment proof cannot reuse without a bound execution receipt", () => {
-  const proof = nativeProof();
-  proof.schema = "kungfu.buildchain.native-qualification-proof/v2";
-  delete proof.sourceHead;
-  delete proof.nativeExecutionBindingRoot;
-  delete proof.nativeExecutionReceiptRoot;
-  const identity = structuredClone(proof);
-  delete identity.proofRoot;
-  delete identity.qualifiedAt;
-  delete identity.observationRoot;
-  proof.proofRoot = devDeliveryContentRoot(identity);
-  assert.equal(verifyNativeQualificationProof(proof).ok, true);
-  const decision = createNativeProofReuseDecision({
-    proof,
-    current: current(),
-  });
-  assert.equal(decision.reusable, false);
-  assert.equal(decision.action, "rerun-full-native-qualification");
-  assert.equal(decision.reason, "native-execution-evidence-unbound");
-});
-
-test("v3 native proof rejects execution binding and receipt-root drift", () => {
+test("current native proof rejects execution binding and receipt-root drift", () => {
   const bindingDrift = nativeProof();
   bindingDrift.nativeExecutionBindingRoot = ROOT("e");
   const bindingIdentity = structuredClone(bindingDrift);
@@ -506,7 +477,7 @@ test("v3 native proof rejects execution binding and receipt-root drift", () => {
   );
 });
 
-test("v3 native proof rejects caller-computable roots without exact execution receipt bytes", () => {
+test("current native proof rejects caller-computable roots without exact execution receipt bytes", () => {
   const fabricated = nativeProof();
   delete fabricated.nativeExecutionReceipt;
   const identity = structuredClone(fabricated);

@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-v4-floating-consumer-policy/v1",
-  "policyVersion": "2026-08-14",
+  "policyVersion": "2026-09-09",
   "scope": {
     "repository": "kungfu-systems/buildchain",
     "majorLine": "v4",
     "persistedSelectors": ["v4", "v4-alpha"],
     "publicWorkflowEntrypoints": [
       ".github/workflows/.build.yml",
-      ".github/workflows/publication-artifact.yml",
-      ".github/workflows/release-candidate-promote.yml",
+      ".github/workflows/public-build-publication.yml",
+      ".github/workflows/public-release-promote.yml",
       ".github/workflows/public-build-stage-capsule-canary.yml"
     ]
   },
@@ -32,16 +32,19 @@
     "inputOrEnvironmentIndirection": "deny",
     "nestedCompositeIndirection": "deny",
     "unknownSyntax": "deny",
-    "missingCallerCheckout": "deny"
+    "missingCallerCheckout": "deny",
+    "repositoryLocalInvocation": {
+      "repository": "kungfu-systems/buildchain",
+      "workflow": ".github/workflows/public-release-promote.yml",
+      "exactDefinitionCommitRequired": true,
+      "committedSourceContentRequired": true,
+      "dualContractLocksRequired": true,
+      "executionAuthority": "same-commit-public-definition",
+      "publishedCompatibilityAllowance": false
+    }
   },
   "runtimeEscapeBoundary": {
     "persistedSelectorOverride": false,
-    "protectedAlphaRecoveryBootstrap": {
-      "selector": "alpha/v4/v4.0",
-      "sourcePath": ".github/workflows/self-ops-promotion-recovery.yml",
-      "workflow": ".github/workflows/.release-candidate-promote.yml",
-      "repository": "kungfu-systems/buildchain"
-    },
     "trustedNonPersistentInput": true,
     "requiresSeparateAuthority": true,
     "requiresReadback": true,
@@ -62,7 +65,8 @@
       "policy-version",
       "policy-root",
       "scanner-root",
-      "source-scan-root"
+      "source-scan-root",
+      "source-owned-workflow-definition"
     ]
   },
   "enforcement": {

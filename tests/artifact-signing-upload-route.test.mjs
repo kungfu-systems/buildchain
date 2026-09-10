@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { resolveArtifactSigningUploadRoute } from "../scripts/resolve-artifact-signing-upload-route.mjs";
+import { resolveArtifactSigningUploadRoute } from "../packages/core/build/commands/resolve-artifact-signing-upload-route.mjs";
 
 test("artifact signing upload route preserves the runner proxy bypass by default", () => {
   assert.deepEqual(

@@ -11,7 +11,7 @@ import {
   readArtifactSigningDelegation,
   sealArtifactSigningDelegation,
   validateArtifactSigningDelegation,
-} from "../scripts/artifact-signing-delegation.mjs";
+} from "../packages/core/build/signing/delegation.js";
 
 const sha = "a".repeat(40);
 const treeSha = "b".repeat(40);

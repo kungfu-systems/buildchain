@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {
-  GitHubDevDeliveryStore,
-  defaultDevDeliveryStateRef,
-} from "../scripts/dev-delivery-warrant.mjs";
-import { createDevDeliveryQueue } from "../packages/core/dev-delivery-warrant.js";
+import { GitHubDevDeliveryStore } from "../packages/core/providers/dev-delivery/store.js";
+import { defaultDevDeliveryStateRef } from "../packages/core/dev-delivery/warrant/values.js";
+import { createDevDeliveryQueue } from "../packages/core/dev-delivery/dev-delivery-warrant.js";
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {

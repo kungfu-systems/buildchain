@@ -1,0 +1,73 @@
+name: demo-publish
+description: Execute the demo publish capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  workflow-sha:
+    description: Exact workflow-sha.
+    required: true
+  source-sha:
+    description: Exact source-sha.
+    required: true
+  capture-artifact-name:
+    description: Exact capture-artifact-name.
+    required: true
+  evidence-artifact-name:
+    description: Exact evidence-artifact-name.
+    required: true
+  update-token:
+    description: Exact update-token.
+    required: true
+outputs:
+  pr-url:
+    description: pr-url node result.
+    value: ${{ steps.pr.outputs.url }}
+runs:
+  using: composite
+  steps:
+    - name: Require explicit publication capability
+      if: ${{ inputs.update-token == '' || fromJSON(inputs.request-json).materialize-base-ref == '' }}
+      uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
+      with:
+        reason: DEMO_UPDATE_TOKEN and materialize-base-ref are required for publication
+    - name: Check out exact source with bounded update capability
+      uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      with:
+        ref: ${{ inputs.source-sha }}
+        fetch-depth: 0
+        token: ${{ inputs.update-token }}
+        persist-credentials: true
+        path: source
+    - name: Check out exact Buildchain runtime
+      uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      with:
+        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+        ref: ${{ inputs.workflow-sha }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - name: Prepare exact Buildchain runtime
+      id: core-node
+      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Download exact capture collection
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+      with:
+        name: ${{ inputs.capture-artifact-name }}
+        path: .demo-input/captures
+    - name: Download exact qualified evidence
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+      with:
+        name: ${{ inputs.evidence-artifact-name }}
+        path: .demo-input/qualified
+    - name: Materialize verified evidence and update the exact demo pull request
+      id: pr
+      uses: ./.buildchain/runtime/actions/build/demo/materialize-collection
+      with:
+        runtime-sha: ${{ inputs.workflow-sha }}
+        source-sha: ${{ inputs.source-sha }}
+        renderer-image: ${{ fromJSON(inputs.request-json).renderer-image }}
+        scenario-path: ${{ fromJSON(inputs.request-json).scenario-path }}
+        base-ref: ${{ fromJSON(inputs.request-json).materialize-base-ref }}
+        token: ${{ inputs.update-token }}

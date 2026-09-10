@@ -5,19 +5,15 @@ import test from "node:test";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import {
-  discoverVerification,
-  planVerification,
-  readProofArchive,
-  sealVerification,
-  verificationIdentity,
-} from "../scripts/source-verification-evidence.mjs";
+import { discoverVerification, readProofArchive } from "../packages/core/build/verification/discovery.js";
+import { planVerification, sealVerification } from "../packages/core/build/verification/proof.js";
+import { verificationIdentity } from "../packages/core/build/verification/identity.js";
 
 const r = `sha256:${"1".repeat(64)}`;
 
 test("verification identity hashes the complete tracked WASM above the default subprocess buffer", () => {
-  const wasm = "packages/core/buildchain-domain.wasm";
-  const manifestPath = "packages/core/domain-wasm-artifact.js";
+  const wasm = "packages/core/runtime/buildchain-domain.wasm";
+  const manifestPath = "packages/core/runtime/domain-wasm-artifact.js";
   const git = (args) => execFileSync("git", args, { encoding: "utf8" }).trim();
   const root = process.cwd();
   const fixture = fs.mkdtempSync(
@@ -27,10 +23,13 @@ test("verification identity hashes the complete tracked WASM above the default s
     wasm,
     manifestPath,
     ".github/workflows/self-build-verify.yml",
+    "actions/build/verification/repository/action.yml",
+    "actions/build/stage-capsule/verify-checkpoints/action.yml",
+    "actions/runtime/environment/prepare/action.yml",
     "package.json",
     ".buildchain/buildchain.toml",
-    "scripts/source-verification-evidence.mjs",
-    "scripts/verify-version-state-delta.mjs",
+    "packages/core/build/commands/source-verification-evidence.mjs",
+    "packages/core/release/commands/verify-version-state-delta.mjs",
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
     "crates/buildchain-domain-contracts/Cargo.lock",
@@ -79,6 +78,12 @@ test("verification identity hashes the complete tracked WASM above the default s
         ]),
       ),
     );
+    fs.mkdirSync("actions/build/verification/qualify-source", { recursive: true });
+    fs.writeFileSync("actions/build/verification/qualify-source/index.js", "export const changed = true;\n");
+    git(["add", "actions/build/verification/qualify-source/index.js"]);
+    git(["-c", "user.name=Buildchain Test", "-c", "user.email=buildchain@example.test", "-c", "commit.gpgsign=false", "commit", "-m", "new verification implementation"]);
+    const changed = verificationIdentity({ env: { ...process.env, GITHUB_REPOSITORY: "owner/repo", ImageOS: "fixture", ImageVersion: "1" }, command: (name, args) => name === "git" ? git(args) : `${name}-fixture` });
+    assert.notEqual(changed.checkDefinitionRoot, actual.checkDefinitionRoot);
   } finally {
     process.chdir(root);
     fs.rmSync(fixture, { recursive: true, force: true });
@@ -250,7 +255,7 @@ test("discovery binds the provider run and artifact and falls back on transport 
 
 test("Rust/WASM version projection admits only the immediate alpha successor", async () => {
   const { invokeDomainWasm } =
-    await import("../packages/core/domain-wasm.js");
+    await import("../packages/core/runtime/domain-wasm.js");
   const project = (version, baseVersion = "4.0.2-alpha.34") =>
     invokeDomainWasm("source-version-projection", { baseVersion, version });
   assert.equal(project("4.0.2-alpha.35").valid, true);

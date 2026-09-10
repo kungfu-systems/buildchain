@@ -26,12 +26,12 @@ two distinct evidence products:
    bundle passes.
 
 The public reusable workflow is
-`.github/workflows/.auditable-demo.yml`. It is consumer-neutral: Buildchain
+`.github/workflows/.build-demo-adapter.yml`. It is consumer-neutral: Buildchain
 does not know how a Kungfu, library, service, or application artifact should be
 interpreted. The consumer owns a small checked-in executable adapter.
 
 For standalone binary CLIs, the higher-level first-class surface is
-`.github/workflows/.declarative-auditable-demo.yml`. A consumer checks in only
+`.github/workflows/public-build-demo.yml`. A consumer checks in only
 `.buildchain/auditable-demo.json`, builds and uploads its exact same-run binary
 plus metadata, and passes the producer-owned artifact name and digest to that
 workflow. Buildchain then owns capture, Gate adaptation, independent native
@@ -122,7 +122,7 @@ authority.
 jobs:
   demo:
     needs: exact-binary
-    uses: kungfu-systems/buildchain/.github/workflows/.declarative-auditable-demo.yml@BUILDCHAIN_EXACT_SHA
+    uses: kungfu-systems/buildchain/.github/workflows/public-build-demo.yml@BUILDCHAIN_EXACT_SHA
     with:
       source-ref: ${{ github.sha }}
       binary-artifact-name: ${{ needs.exact-binary.outputs.artifact-name }}
@@ -353,7 +353,7 @@ jobs:
     permissions:
       actions: read
       contents: read
-    uses: kungfu-systems/buildchain/.github/workflows/.auditable-demo.yml@BUILDCHAIN_EXACT_SHA
+    uses: kungfu-systems/buildchain/.github/workflows/.build-demo-adapter.yml@BUILDCHAIN_EXACT_SHA
     with:
       source-ref: ${{ github.sha }}
       source-artifact-name: ${{ needs.build.outputs.artifact-name }}

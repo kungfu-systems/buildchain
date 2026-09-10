@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
+import YAML from "yaml";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -57,36 +58,30 @@ test("primary and recovery shells are non-circular and retain opposite fault rou
   const recovery = read(
     "templates/universal-buildchain-bootstrap-recovery.yml",
   );
-  assert.match(primary, /\.github\/workflows\/bootstrap\.yml@/u);
+  assert.match(primary, /\.github\/workflows\/public-ops-bootstrap\.yml@/u);
   assert.doesNotMatch(
     recovery,
     /uses:\s+kungfu-systems\/buildchain\/\.github\/workflows\//u,
   );
-  assert.match(
-    recovery,
-    /Parse exact recovery coordinates without Buildchain code/u,
-  );
-  assert.match(recovery, /Execute only the exact admitted engine/u);
-  assert.match(recovery, /Seal receipt outside candidate authority/u);
-  assert.doesNotMatch(recovery, /candidate\/scripts\/universal-workflow-engine\.mjs terminal/u);
+  const workflow = YAML.parse(recovery);
+  assert.deepEqual(Object.keys(workflow.jobs), ["recovery-admit", "recovery-execute", "recovery-settle"]);
+  for (const job of Object.values(workflow.jobs)) {
+    assert.ok(job.steps.some((step) => step.uses?.includes(".buildchain/bootstrap-recovery/actions/workflow/")));
+    assert.ok(job.steps.every((step) => !Object.hasOwn(step, "run")));
+  }
+  const settle = read("actions/workflow/recovery/settle/action.yml");
+  assert.match(settle, /Seal receipt outside candidate authority/);
+  assert.doesNotMatch(settle, /candidate.*universal-workflow-engine.*terminal/);
 });
 
 test("candidate-owned faults execute only after exact admission", () => {
-  const recovery = read(
-    "templates/universal-buildchain-bootstrap-recovery.yml",
-  );
-  const review = recovery.indexOf("Prove exact independent review");
-  const admit = recovery.indexOf(
-    "Admit candidate policy and exact-head checks",
-  );
-  const execute = recovery.indexOf("Execute only the exact admitted engine");
-  assert.ok(review >= 0 && review < admit && admit < execute);
-  assert.match(
-    recovery,
-    /ref: \$\{\{ needs\.recovery-admit\.outputs\.runtime-sha \}\}/u,
-  );
-  assert.doesNotMatch(
-    recovery.slice(execute),
-    /train\/v4|v4-alpha|@v4(?:\s|$)/u,
-  );
+  const action = YAML.parse(read("actions/workflow/recovery/admit/action.yml"));
+  const review = action.runs.steps.findIndex((step) => /independent review/.test(step.name || ""));
+  const install = action.runs.steps.findIndex((step) => step.uses?.endsWith("actions/runtime/environment/prepare"));
+  const admit = action.runs.steps.findIndex((step) => step.id === "admit");
+  assert.ok(review >= 0 && review < install && install < admit);
+  const execute = YAML.parse(read("actions/workflow/recovery/execute/action.yml"));
+  const candidate = execute.runs.steps.find((step) => step.name === "Checkout exact admitted candidate");
+  assert.equal(candidate.with.ref, "${{ fromJSON(inputs.needs-recovery-admit-outputs-runtime-sha) }}");
+  assert.ok(execute.runs.steps.every((step) => !/train\/v4|v4-alpha/.test(JSON.stringify(step))));
 });

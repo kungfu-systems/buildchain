@@ -6,7 +6,7 @@
   "capsuleAuthority": "architecture/stage-capsule-contract.json",
   "checkpointAuthority": "architecture/platform-stage-checkpoints.json",
   "mode": "shadow-only",
-  "productionAuthority": "v3",
+  "productionAuthority": "v4-native",
   "planner": {
     "rust": "pure-domain-authority",
     "typescript": "byte-identical-projection",

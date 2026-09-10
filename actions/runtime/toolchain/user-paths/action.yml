@@ -1,0 +1,7 @@
+name: Expose runner user toolchains
+description: Expose runner user toolchains.
+inputs: {}
+outputs: {}
+runs:
+  using: node24
+  main: dist/index.js

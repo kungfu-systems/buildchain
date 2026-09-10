@@ -27,7 +27,7 @@ verified path receipt.
 ## Authority chain
 
 The package source is
-`packages/core/buildchain-compatibility-facts.json`, retained from v3 exact head
+`packages/core/governance/buildchain-compatibility-facts.json`, retained from v3 exact head
 `6b96bdad8d9f8ccf9275f27d9370a226a9c78465`. Each declaration becomes a KFR2
 predicate and relation, then enters an append-only temporal bundle. The
 registry identity binds all Fact, proof, Cut, supersession, revocation, and

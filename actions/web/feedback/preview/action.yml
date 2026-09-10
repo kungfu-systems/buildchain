@@ -1,0 +1,12 @@
+name: Report preview outcome
+description: Update the same preview comment from deployment or cleanup evidence.
+inputs:
+  cleanup:
+    description: Report preview cleanup.
+    default: "false"
+  token:
+    description: Scoped pull request comment credential.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

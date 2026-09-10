@@ -9,22 +9,19 @@ import {
   explainArtifactPassport,
   resolveArtifactSubject,
   verifyArtifactPassport,
-} from "../packages/core/artifact-passport.js";
-import { artifactVerificationEnvelopeDigest } from "../packages/core/artifact-verification-envelope.js";
-import {
-  collectGitHubReleasePassport,
-  createReleasePassport,
-  explainReleasePassport,
-  KFD2_TRUST_PROOF_CONTRACT,
-  readJsonFromLocation,
-  verifyReleasePassport,
-} from "../packages/core/release-passport.js";
+} from "../packages/core/build/artifact-passport.js";
+import { artifactVerificationEnvelopeDigest } from "../packages/core/build/artifact-verification-envelope.js";
+import { collectGitHubReleasePassport } from "../packages/core/release/passport/collection.js";
+import { createReleasePassport } from "../packages/core/release/passport/assembly.js";
+import { explainReleasePassport, verifyReleasePassport } from "../packages/core/release/release-passport.js";
+import { KFD2_TRUST_PROOF_CONTRACT } from "../packages/core/release/passport/identity.js";
+import { readJsonFromLocation } from "../packages/core/release/passport/locations.js";
 import {
   resolveKfd1Metadata,
   resolveKfd3Metadata,
   sha256File as sha256KfdFile,
-} from "../packages/core/kfd-gate.js";
-import { createBuildchainKfdClaimRegistry } from "../packages/core/buildchain-kfd-claims.js";
+} from "../packages/core/adoption/kfd-gate.js";
+import { createBuildchainKfdClaimRegistry } from "../packages/core/adoption/buildchain-kfd-claims.js";
 import { generateBuildchainKfdWitnesses } from "../scripts/generate-buildchain-kfd-witnesses.mjs";
 
 function tempDir(name) {
@@ -426,7 +423,7 @@ test("release passport preserves a tree-equivalent RC controller source during d
 });
 
 test("KFD release gate metadata is statically bundled for action runtimes", () => {
-  const source = fs.readFileSync(path.resolve("packages/core/kfd-gate.js"), "utf8");
+  const source = fs.readFileSync(path.resolve("packages/core/adoption/kfd-gate.js"), "utf8");
   assert.match(source, /from "@kungfu-tech\/kfd\/package\.json" with \{ type: "json" \}/);
   assert.match(source, /from "@kungfu-tech\/kfd\/standards\.json" with \{ type: "json" \}/);
   assert.match(source, /from "@kungfu-tech\/kfd\/schemas\/kfd-2\/trust-taxonomy\.schema\.json" with \{ type: "json" \}/);
@@ -1539,7 +1536,7 @@ test("release passport records Kungfu-shaped KFD-1 gate without invoking Kungfu 
   });
   const passportPath = path.join(collected.outputDir, "buildchain.release.json");
   const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
-  const implementation = fs.readFileSync(path.resolve("packages/core/kfd-gate.js"), "utf8");
+  const implementation = fs.readFileSync(path.resolve("packages/core/adoption/kfd-gate.js"), "utf8");
 
   assert.equal(passport[metadata.key].contractWorlds[0].id, "kungfu-config");
   assert.equal(passport[metadata.key].contractWorlds[0].artifactVerification.status, "passed");
@@ -2269,7 +2266,7 @@ test("Buildchain source KFD claim registry is stable across semver version-state
     repository: { url: "https://github.com/kungfu-systems/buildchain" },
     exports: {
       ".": "./packages/core/index.js",
-      "./buildchain-kfd-claims": "./packages/core/buildchain-kfd-claims.js",
+      "./buildchain-kfd-claims": "./packages/core/adoption/buildchain-kfd-claims.js",
       "./site/kfd-claims.json": "./dist/site/kfd-claims.json",
     },
   });

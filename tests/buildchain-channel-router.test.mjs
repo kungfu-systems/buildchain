@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { resolveBuildchainChannel } from "../scripts/buildchain-channel-router.mjs";
+import { resolveBuildchainChannel } from "../packages/core/consumer/channel-selection.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const base = { routerRef: "v2-alpha", packageVersion: "2.12.0-alpha.0" };

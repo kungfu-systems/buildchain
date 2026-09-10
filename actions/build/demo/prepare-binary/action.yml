@@ -1,0 +1,8 @@
+name: Build and transport-test the exact standalone demo binary
+description: Build and transport-test the exact standalone demo binary.
+outputs:
+  name:
+    description: Verified name.
+runs:
+  using: node24
+  main: dist/index.js

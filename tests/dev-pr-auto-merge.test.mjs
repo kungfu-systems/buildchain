@@ -1,4 +1,4 @@
-import { expandDevDeliveryWorkflow } from "../scripts/dev-delivery-workflow-view.mjs";
+import { inspectWorkflowJob } from "../scripts/workflow-action-graph.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -11,17 +11,15 @@ import {
   createSourceQualificationProof,
   devDeliveryContentRoot,
   submitDevDeliveryCandidate,
-} from "../packages/core/dev-delivery-warrant.js";
-import {
-  cliOptions,
-  evaluatePullRequest,
-  GhCliClient,
-  GitHubClient,
-  renderMarkdownSummary,
-  runDevPrAdmission,
-  runDevPrAutoMerge,
-} from "../scripts/dev-pr-auto-merge.mjs";
-import { readCurrentDeliveryQueueState } from "../scripts/dev-pr-delivery-warrant.mjs";
+} from "../packages/core/dev-delivery/dev-delivery-warrant.js";
+import { evaluatePullRequest } from "../packages/core/dev-delivery/admission/readiness.js";
+import { GhCliClient } from "../packages/core/dev-delivery/admission/gh-cli-client.js";
+import { GitHubClient } from "../packages/core/dev-delivery/admission/github-client.js";
+import { renderMarkdownSummary } from "../packages/core/dev-delivery/admission/report.js";
+import { runDevPrAdmission } from "../packages/core/dev-delivery/admission/targeted.js";
+import { runDevPrAutoMerge } from "../packages/core/dev-delivery/admission/queue.js";
+import { cliOptions } from "../packages/core/dev-delivery/commands/dev-pr-auto-merge.mjs";
+import { readCurrentDeliveryQueueState } from "../packages/core/dev-delivery/commands/dev-pr-delivery-warrant.mjs";
 test("targeted CLI defaults to an explicit readiness label", () => {
   const options = cliOptions([
     "--repository", "kungfu-systems/buildchain",
@@ -375,19 +373,19 @@ test("queue admission accepts blocked state but requires exact Project Cut proof
   );
 });
 
-test("reusable admission retains immutable Warrant and Project Cut readback coordinates", () => {
-  const workflow = expandDevDeliveryWorkflow(".github/workflows/dev-pr-auto-merge.yml");
-  assert.match(workflow, /project-cut-proof-json:/u);
-  assert.match(workflow, /dev-delivery-proof\.mjs verify-replay/u);
-  assert.match(workflow, /\.after\.commitSha \| test\("\^\[0-9a-f\]\{40\}\$"\)/u);
-  assert.match(workflow, /\.warrant == \.observation\.activeWarrant/u);
-  assert.match(workflow, /\.observation\.activeCandidate\.candidateId == \.observation\.activeWarrant\.candidateId/u);
-  const sourceQualification = workflow.slice(
-    workflow.indexOf("- name: Qualify exact source before scheduling"),
-    workflow.indexOf("- name: Seal Source Qualification Proof"),
-  );
-  assert.match(sourceQualification, /BUILDCHAIN_DEV_PR_WARRANT_MODE: \$\{\{ inputs\.delivery-warrant-mode == 'required'/u);
-  assert.match(sourceQualification, /BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT: \$\{\{ inputs\.queue-admission-context \}\}/u);
+test("reusable admission reaches immutable Warrant and Project Cut verification", () => {
+  const graph = inspectWorkflowJob(".github/workflows/public-ops-dev-auto-merge.yml", "admission");
+  assert.ok(graph.workflow.on.workflow_call.inputs["project-cut-proof-json"]);
+  const qualification = graph.steps.find(step => step.uses?.endsWith("/dev-delivery/candidate/qualify-source"));
+  assert.ok(qualification);
+  assert.equal(qualification.with["request-json"], "${{ inputs.request-json }}");
+  assert.equal(graph.actions.get("actions/dev-delivery/candidate/qualify-source").runs.using, "node24");
+  assert.match(graph.modules.get("packages/core/dev-delivery/candidate/admission.js"), /verifyProjectCutReplayProof\(proof\)/u);
+  assert.match(graph.modules.get("packages/core/dev-delivery/candidate/admission.js"), /verification.reason !== "exact-project-cut-replay"/u);
+  assert.ok(graph.modules.has("packages/core/dev-delivery/admission/transaction.js"));
+  const policy = graph.modules.get("packages/core/dev-delivery/admission/request.js");
+  assert.match(policy, /input\["delivery-warrant-mode"\] === "required"/u);
+  assert.match(policy, /input\["queue-admission-context"\]/u);
 });
 
 test("merge mode merges eligible PRs sequentially and honors max-merges", async () => {
@@ -888,7 +886,7 @@ test("gh CLI client preserves authenticated REST fallback for current Warrant re
   assert.equal(requests[0].headers.authorization, "Bearer test-token");
 });
 
-test("current Warrant readback accepts the production v3 queue during the v4 reader transition", async () => {
+test("current Warrant readback rejects an unqualified historical queue", async () => {
   const root = `sha256:${"2".repeat(64)}`;
   const submitted = submitDevDeliveryCandidate(createDevDeliveryQueue({
     repository: "kungfu-systems/buildchain",
@@ -897,8 +895,7 @@ test("current Warrant readback accepts the production v3 queue during the v4 rea
   }), {
     pullRequestNumber: 21,
     sourceHead: exactHead,
-    assignmentRoot: root,
-    initiativeRoot: root,
+    sourceRoot: root,
     sourceIdentityRoot: root,
     sourcePatchRoot: root,
     sourceProofRoot: root,
@@ -932,9 +929,9 @@ test("current Warrant readback accepts the production v3 queue during the v4 rea
     fetchImpl,
   });
 
-  assert.deepEqual(
-    await readCurrentDeliveryQueueState(github, github.repository, "dev/v4/v4.0"),
-    legacyQueue,
+  await assert.rejects(
+    () => readCurrentDeliveryQueueState(github, github.repository, "dev/v4/v4.0"),
+    /requires exact native proof|phase is unsupported/,
   );
 });
 
@@ -954,6 +951,7 @@ async function withWarrantResult(overrides, callback) {
     issuedAt: "2026-08-04T00:00:00.000Z",
     expiresAt: "2099-08-04T01:00:00.000Z",
     nextAction: "Execute the protected delivery attempt.",
+    phase: "ready",
     ...overrides?.warrant,
   };
   const result = {
@@ -969,6 +967,7 @@ async function withWarrantResult(overrides, callback) {
       activeWarrant: warrant,
       activeCandidate: {
         candidateId: warrant.candidateId,
+        deliveryClass: "non-native-fast",
         pullRequestNumber: warrant.pullRequestNumber,
         sourceHead: warrant.sourceHead,
       },
@@ -1138,7 +1137,7 @@ test("exact active Warrant authorizes only its bound PR head", async () => {
   });
 });
 
-test("required Warrant restores the canonical active lease context for a floating v1 caller", async () => {
+test("required Warrant binds the canonical active lease context for a current ready caller", async () => {
   await withWarrantResult({}, async (resultPath, warrantResult) => {
     const target = pr({ number: 21, headSha: exactHead });
     const fake = client({

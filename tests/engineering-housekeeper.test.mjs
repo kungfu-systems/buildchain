@@ -10,7 +10,7 @@ import {
   createEngineeringHousekeeperPlan,
   createEngineeringHousekeeperReceipt,
   revalidateHousekeeperBranchAction,
-} from "../packages/core/engineering-housekeeper.js";
+} from "../packages/core/governance/engineering-housekeeper.js";
 
 const oid = (value) => String(value).repeat(40).slice(0, 40);
 const target = { name: "dev/v3/v3.0", headOid: oid("b") };

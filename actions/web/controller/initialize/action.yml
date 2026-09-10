@@ -1,0 +1,20 @@
+name: Bind Web controller source, runtime and request
+description: Bind Web controller source, runtime and request
+inputs:
+  request-json:
+    description: Typed Web workflow request.
+    required: true
+  runtime-json:
+    description: Admitted runtime coordinates.
+    required: true
+  intent-json:
+    description: Verified production release intent.
+    required: true
+outputs:
+  controller-plan-json:
+    description: controller plan json
+  controller-plan-digest:
+    description: controller plan digest
+runs:
+  using: node24
+  main: dist/index.js

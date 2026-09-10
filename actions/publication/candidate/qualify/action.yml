@@ -1,0 +1,29 @@
+name: qualify
+description: Qualify publication bytes and preserve controller evidence through failure.
+inputs:
+  request-json:
+    description: Explicit request-json.
+    required: true
+  runtime-sha:
+    description: Explicit runtime-sha.
+    required: true
+outputs:
+  outcomes-json:
+    description: Verified outcomes-json.
+  manifest-path:
+    description: Verified manifest-path.
+  passport-path:
+    description: Verified passport-path.
+  registry-path:
+    description: Verified registry-path.
+  manifest-json:
+    description: Verified manifest-json.
+  package-name:
+    description: Verified package-name.
+  package-version:
+    description: Verified package-version.
+  dist-tag:
+    description: Verified dist-tag.
+runs:
+  using: node24
+  main: dist/index.js

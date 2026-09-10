@@ -1,0 +1,7 @@
+name: Qualify build lifecycle and artifact boundaries
+description: Qualify build lifecycle and artifact boundaries
+inputs: {}
+outputs: {}
+runs:
+  using: node24
+  main: dist/index.js

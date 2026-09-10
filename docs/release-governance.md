@@ -80,16 +80,16 @@ Buildchain implements the same governance loop with:
 - `.github/workflows/self-build-release-verify-compat.yml` for PR verification;
 - `.github/workflows/self-release-promote.yml` for post-verify ref
   promotion; this workflow dogfoods the declarative
-  `release-candidate-promote.yml` wrapper and does not hand-wire resolver,
+  `public-release-promote.yml` wrapper and does not hand-wire resolver,
   artifact download, publish-gate, or promote action steps;
 - Buildchain self promotion enables `release-passport-buildchain-self-kfd`, so
   the promote action generates KFD-1 witnesses, KFD-2 public claim JSON, and
   KFD-3 collaboration-interface witnesses from the final version-state workspace
   before release passport finalization. The witness hashes therefore bind to the
   exact published package and site facts from
-  `packages/core/buildchain-kfd-claims.js` instead of relying on prose release
+  `packages/core/adoption/buildchain-kfd-claims.js` instead of relying on prose release
   notes;
-- `actions/promote-buildchain-ref` for branch, tag, version-state, and
+- `actions/release/promotion/ref` for branch, tag, version-state, and
   governance checks;
 - package-manager adapters that can update version state for pnpm, npm, and
   yarn style repositories;
@@ -154,7 +154,7 @@ continue from the same SHA without another native build or an administrator
 merge bypass.
 
 Repositories may also expose a small caller workflow around
-`.github/workflows/release-governance-reconcile.yml@v3`. Pass `branch`,
+`.github/workflows/public-ops-release-governance.yml@v3`. Pass `branch`,
 `candidate-sha`, and `apply`, and provide `governance-token` through the caller's
 secrets. The reusable workflow uploads the JSON reconciliation receipt.
 
@@ -548,7 +548,7 @@ sealed publication authority can finish its machine-verified bookkeeping. The
 dry-run receipt exposes the exact actor IDs before `--apply` changes GitHub.
 
 Buildchain provides the reusable
-`.github/workflows/dev-pr-auto-merge.yml` workflow for repositories that want a
+`.github/workflows/public-ops-dev-auto-merge.yml` workflow for repositories that want a
 scheduled or manual "merge ready dev PRs" pass. The consumer repository owns
 the trigger schedule, but the merge decision is declared through workflow
 inputs: target dev branch, required status/check names, ready and block labels,
@@ -631,13 +631,13 @@ complete interface are bound into `contractRoot`; the receipt additionally
 binds the caller commit/tree and both workflow digests.
 
 ```sh
-node .buildchain/workflow-contract-runtime/scripts/workflow-call-contract.mjs check \
+node .buildchain/workflow-contract-runtime/packages/core/contracts/commands/workflow-call-contract.mjs check \
   --caller-root . \
   --caller-workflow .github/workflows/self-release-new-version-compat.yml \
   --caller-repository kungfu-systems/example \
   --job promote \
   --callee-root .buildchain/workflow-contract-runtime \
-  --callee-workflow .github/workflows/release-candidate-promote.yml \
+  --callee-workflow .github/workflows/public-release-promote.yml \
   --callee-repository kungfu-systems/buildchain \
   --trusted-event workflow_dispatch \
   --trusted-event pull_request:closed \
@@ -662,7 +662,7 @@ command = "cargo test --workspace --locked"
 ```
 
 Consumers that want Buildchain to own the check wrapper can call
-`.github/workflows/check.yml@v3`. The wrapper runs the declared
+`.github/workflows/public-build-check.yml@v3`. The wrapper runs the declared
 `lifecycle.install` and `lifecycle.verify` stages and fails the `check` job when
 either declaration is missing or the command exits non-zero.
 
@@ -689,7 +689,7 @@ on:
 
 jobs:
   merge-dev:
-    uses: kungfu-systems/buildchain/.github/workflows/dev-pr-auto-merge.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@v3
     permissions:
       contents: write
       pull-requests: write
@@ -714,17 +714,17 @@ status to failure, while the merge group must still produce its own final check.
 
 ## Buildchain Patrol
 
-`dev-pr-auto-merge.yml` remains the focused merge primitive. For repositories
+`public-ops-dev-auto-merge.yml` remains the focused merge primitive. For repositories
 that want a stable day-to-day operations contract, Buildchain also exposes a
 patrol workflow family:
 
 | Workflow                                         | Intended cadence                   | Default intent                                                                             |
 | ------------------------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------------------ |
-| `.github/workflows/patrol-daily.yml`             | daily                              | lightweight inspection plus ready dev PR maintenance                                       |
-| `.github/workflows/patrol-weekly.yml`            | weekly                             | release-state, passport, gate, and stale-state health checks as they are added             |
-| `.github/workflows/patrol-monthly.yml`           | monthly                            | governance, permission, branch-protection, and workflow drift checks as they are added     |
-| `.github/workflows/patrol-observed-evidence.yml` | caller-selected schedule           | validated immutable observation plus atomic last-known-good publication; no per-refresh PR |
-| `.github/workflows/stable-candidate-patrol.yml`  | repository-selected release window | qualify immutable alpha candidates and open the exact source-lock stable PR                |
+| `.github/workflows/public-ops-patrol-daily.yml`             | daily                              | lightweight inspection plus ready dev PR maintenance                                       |
+| `.github/workflows/public-ops-patrol-weekly.yml`            | weekly                             | release-state, passport, gate, and stale-state health checks as they are added             |
+| `.github/workflows/public-ops-patrol-monthly.yml`           | monthly                            | governance, permission, branch-protection, and workflow drift checks as they are added     |
+| `.github/workflows/public-ops-observed-evidence.yml` | caller-selected schedule           | validated immutable observation plus atomic last-known-good publication; no per-refresh PR |
+| `.github/workflows/public-ops-stable-candidate-patrol.yml`  | repository-selected release window | qualify immutable alpha candidates and open the exact source-lock stable PR                |
 
 The cadence names describe patrol intensity, not release cadence:
 
@@ -764,7 +764,7 @@ on:
 
 jobs:
   patrol:
-    uses: kungfu-systems/buildchain/.github/workflows/patrol-daily.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-patrol-daily.yml@v3
     with:
       dry-run: false
       max-actions: 1
@@ -775,7 +775,7 @@ Weekly and monthly callers use the matching wrapper:
 ```yaml
 jobs:
   patrol:
-    uses: kungfu-systems/buildchain/.github/workflows/patrol-weekly.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-patrol-weekly.yml@v3
     with:
       dry-run: true
 ```
@@ -846,7 +846,7 @@ with one required approving review, required GitHub Actions checks, administrato
 enforcement, conversation resolution, no force pushes, and no deletions. Each
 target uses the exact check set, GitHub App identity, and strictness declared by
 the governance authority descriptor. The
-reusable `release-candidate-promote.yml` wrapper defaults
+reusable `public-release-promote.yml` wrapper defaults
 `branch-protection-bypass-apps` to `github-actions`, which lets the workflow's
 automation identity apply generated version-state or post-publish channel
 bookkeeping after the reviewed channel PR has merged. Direct
@@ -941,18 +941,18 @@ or release-material SHAs, but new tags are source-bound.
 
 Every Buildchain publish model that can run registry side effects must bind the
 publish entrypoint to an immutable `publish-gate/*` source lock. The reusable
-`release-candidate-promote.yml@v3` wrapper creates or updates that gate ref and
+`public-release-promote.yml@v3` wrapper creates or updates that gate ref and
 passes `require-publish-source-lock`, `publish-source-ref`,
 `publish-source-sha`, and `publish-source-locked` to
 `promote-buildchain-ref`. Direct action callers must pass the same four inputs
 from the reusable build outputs. Workflows that only collect passports or run
 dry-run package checks do not move publish refs and are not publish-gate
-publication models. A dry-run of `release-candidate-promote.yml` computes and
+publication models. A dry-run of `public-release-promote.yml` computes and
 reports the exact `publish-gate/*` source lock that a real promotion would use,
 but does not read, create, or move that ref.
 
 Semver GitHub Release publication is owned by `promote-buildchain-ref`, not by
-consumer shell glue. Consumers normally use the `release-candidate-promote.yml`
+consumer shell glue. Consumers normally use the `public-release-promote.yml`
 generated channel router, where GitHub Release publication is enabled by default and can be
 disabled with `github-release: false`; the wrapper passes that declaration to
 the action. After the publish transaction reaches `complete`, Buildchain creates
@@ -1012,10 +1012,10 @@ When debugging or extending release behavior, read in this order:
 1. `docs/release-flow.md`
 2. `.github/workflows/self-build-release-verify-compat.yml`
 3. `.github/workflows/self-release-promote.yml`
-4. `.github/workflows/release-candidate-promote.yml`
-5. `.github/workflows/.release-candidate-promote.yml`
-6. `actions/promote-buildchain-ref/README.md`
-7. `actions/promote-buildchain-ref/src/`
+4. `.github/workflows/public-release-promote.yml`
+5. `.github/workflows/.release-promote.yml`
+6. `actions/release/promotion/ref/README.md`
+7. `actions/release/promotion/ref/src/`
 8. `docs/migration-inventory.md`
 
 That path gives the policy first, the workflow trigger second, and the action

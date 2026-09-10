@@ -5,7 +5,7 @@ import {
   createPortableDevCachePlan,
   createPortableDevCacheReceipt,
   verifyPortableDevCachePlan,
-} from "../packages/core/portable-dev-cache.js";
+} from "../packages/core/build/portable-dev-cache.js";
 
 const sha = (character) => `sha256:${character.repeat(64)}`;
 const manifest = (overrides = {}) => ({

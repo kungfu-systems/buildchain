@@ -4,15 +4,15 @@ import fs from "node:fs";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { ContractFault } from "../packages/core/canonical-contracts.js";
-import { foldProviderOperationJournal } from "../packages/core/provider-operation-journal.js";
+import { ContractFault } from "../packages/core/contracts/canonical-contracts.js";
+import { foldProviderOperationJournal } from "../packages/core/release/provider-operation-journal.js";
 import {
   adaptGitHubReleaseReadback,
   adaptNpmPublicationReadback,
   adaptOciManifestReadback,
   foldProviderReadbackSamples,
   projectProviderReadbackFixtures,
-} from "../packages/core/provider-readback-idempotency.js";
+} from "../packages/core/release/provider-readback-idempotency.js";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const fixturePath = new URL(
@@ -196,7 +196,7 @@ test("one closed schema and architecture retain bounded v4 production authority"
 test("readback implementations contain no live provider, network, filesystem, or ambient authority", () => {
   const javascript = fs.readFileSync(
     new URL(
-      "../packages/core/provider-readback-idempotency.js",
+      "../packages/core/release/provider-readback-idempotency.js",
       import.meta.url,
     ),
     "utf8",

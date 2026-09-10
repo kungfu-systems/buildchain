@@ -12,7 +12,7 @@ import {
   resolveRulesetBypassActors,
   selectMergeQueueMethod,
   validateMergeGroupWorkflows,
-} from "../scripts/dev-merge-queue.mjs";
+} from "../packages/core/dev-delivery/merge-queue-policy.js";
 
 const REPOSITORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -57,12 +57,12 @@ test("merge queue selects only a repository-enabled merge method", () => {
 
 test("merge queue rejects required workflows without merge_group", () => {
   assert.throws(
-    () => validateMergeGroupWorkflows([{ path: "check.yml", source: "on:\n  pull_request:\n" }]),
+    () => validateMergeGroupWorkflows([{ path: "public-build-check.yml", source: "on:\n  pull_request:\n" }]),
     /requires pull_request and merge_group triggers/,
   );
   assert.throws(
     () => validateMergeGroupWorkflows([{
-      path: "check.yml",
+      path: "public-build-check.yml",
       source: "on:\n  pull_request:\n  merge_group:\nsteps:\n  - run: echo ${{ github.event.pull_request.head.sha }}\n",
     }]),
     /must not depend directly on github\.event\.pull_request/,

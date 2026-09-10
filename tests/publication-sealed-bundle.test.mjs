@@ -8,11 +8,11 @@ import test from "node:test";
 import {
   PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
   publicationArtifactCandidateDigest,
-} from "../packages/core/publication-artifact-candidate.js";
+} from "../packages/core/publication/publication-artifact-candidate.js";
 import {
   createPublicationSealedBundle,
   verifyPublicationSealedBundle,
-} from "../packages/core/publication-sealed-bundle.js";
+} from "../packages/core/publication/publication-sealed-bundle.js";
 
 function sha256(value) {
   return crypto.createHash("sha256").update(value).digest("hex");

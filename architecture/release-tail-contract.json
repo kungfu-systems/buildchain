@@ -1,0 +1,273 @@
+{
+  "schemaVersion": 1,
+  "canonicalTransaction": {
+    "id": "buildchain.release-tail/v1",
+    "owner": "Buildchain release transaction",
+    "singleWriter": true,
+    "states": [
+      "preparing",
+      "prepared",
+      "publishing",
+      "committing",
+      "activating",
+      "reading-back",
+      "settling",
+      "complete",
+      "blocked",
+      "repair-required",
+      "terminal-failure"
+    ],
+    "phases": [
+      {
+        "id": "prepare",
+        "consumes": ["declaration", "source-root", "candidate-root"],
+        "emits": ["effect-plan", "prepared-receipt"]
+      },
+      {
+        "id": "publish",
+        "consumes": ["artifact.publish effect-plan"],
+        "emits": ["provider-observation", "artifact-publication receipt"]
+      },
+      {
+        "id": "commit",
+        "consumes": ["signed-channel.commit effect-plan"],
+        "emits": ["provider-observation", "publication-commit receipt"]
+      },
+      {
+        "id": "activate",
+        "consumes": ["release.activate effect-plan"],
+        "emits": ["provider-observation", "activation receipt set"]
+      },
+      {
+        "id": "readback",
+        "consumes": ["all declared readback predicates"],
+        "emits": ["verified observations", "readback receipt"]
+      },
+      {
+        "id": "settle",
+        "consumes": ["all required receipt roots"],
+        "emits": ["released evidence", "terminal classification"]
+      }
+    ],
+    "operationIdentity": {
+      "schema": "kungfu.buildchain.release-tail.operation/v1",
+      "fields": [
+        "transactionRoot",
+        "capabilityId",
+        "subjectRoot",
+        "targetRoot",
+        "attemptKey"
+      ],
+      "derivation": "sha256(canonical-json(fields))"
+    },
+    "effectSchema": "kungfu.buildchain.release-tail.effect/v1",
+    "observationSchema": "kungfu.buildchain.release-tail.observation/v1",
+    "receiptSchema": "kungfu.buildchain.release-tail.receipt/v1",
+    "retryClasses": [
+      {
+        "id": "never",
+        "localAttempts": 0,
+        "exhausted": "terminal-failure"
+      },
+      {
+        "id": "readback",
+        "localAttempts": 2,
+        "exhausted": "repair-required"
+      },
+      {
+        "id": "provider-transient",
+        "localAttempts": 2,
+        "exhausted": "blocked"
+      }
+    ],
+    "terminalClasses": [
+      "complete",
+      "blocked",
+      "repair-required",
+      "terminal-failure"
+    ],
+    "adapterBoundary": {
+      "may": [
+        "translate a rooted effect into provider API calls",
+        "perform declared provider readback",
+        "return standardized observations"
+      ],
+      "mustNot": [
+        "choose transaction transitions",
+        "change capability or subject identity",
+        "synthesize terminal success",
+        "execute repository-supplied shell"
+      ]
+    }
+  },
+  "declarativeContract": {
+    "contract": "kungfu-buildchain-release-tail-capabilities",
+    "schemaVersion": 1,
+    "schemaPath": "contracts/release-tail-capabilities-v1.schema.json",
+    "fixturePaths": [
+      "contracts/fixtures/release-tail-capabilities-v1/kungfu-alpha.json"
+    ],
+    "requiredCapabilityIds": [
+      "artifact.publish",
+      "signed-channel.commit",
+      "release.activate",
+      "released-evidence.synthesize"
+    ],
+    "forbiddenKeys": ["command", "cmd", "script", "shell", "run"],
+    "requiredDimensions": [
+      "artifactRoles",
+      "destination",
+      "channelPolicy",
+      "activationPolicy",
+      "readbackPredicates",
+      "effect",
+      "observation",
+      "receipt",
+      "operationIdentity",
+      "idempotency",
+      "retry",
+      "evidenceRequirements"
+    ]
+  },
+  "contract": "buildchain.release-tail-contract/v1",
+  "sourceCut": {
+    "protectedDevelopmentSeed": "1bb6333b97ad94e94a81178e956a703dff2b5f84",
+    "implementation": "working-tree"
+  },
+  "reverseScan": {
+    "workflowInputs": [
+      ".github/workflows/public-release-promote.yml",
+      ".github/workflows/.release-promote.yml",
+      ".github/workflows/.release-authority.yml"
+    ],
+    "actionInputs": ["actions/release/promotion/ref/action.yml"],
+    "workflowCommandNames": ["consumer-gate-command"],
+    "actionCommandNames": [
+      "publish-command",
+      "release-passport-attachment-command",
+      "release-passport-invariant-passport-command",
+      "release-passport-kfd-3-artifact-verify-command",
+      "release-passport-v4-runtime-resume-evidence-command",
+      "verification-command"
+    ],
+    "orphanPolicy": "Every current command input has one responsibility owner and a verified execution site. Public promotion accepts only its typed request and cannot forward command hooks.",
+    "configAndCliCoordinates": [
+      "config:buildchain.toml#lifecycle.publish",
+      "cli:packages/core/release/commands/release-line-dry-run.mjs#--publish-command"
+    ]
+  },
+  "executableSurfaces": [
+    {
+      "id": "publication-admission-commands",
+      "classification": "pre-tail-policy",
+      "owner": "Buildchain publication authority",
+      "publicNames": ["consumer-gate-command"],
+      "default": "disabled",
+      "coordinates": [
+        "workflow:.github/workflows/.release-authority.yml#consumer-gate-command"
+      ],
+      "executionSites": [
+        {
+          "path": "packages/core/publication/authority/consumer-gate.js",
+          "marker": "script: request.command"
+        }
+      ],
+      "disposition": "current-owned-contract"
+    },
+    {
+      "id": "artifact-publication-command",
+      "classification": "release-tail",
+      "owner": "Buildchain publish transaction",
+      "publicNames": ["publish-command"],
+      "default": "lifecycle.publish, otherwise disabled",
+      "coordinates": [
+        "action:actions/release/promotion/ref/action.yml#publish-command",
+        "config:buildchain.toml#lifecycle.publish",
+        "cli:packages/core/release/commands/release-line-dry-run.mjs#--publish-command"
+      ],
+      "executionSites": [
+        {
+          "path": "packages/core/release/promote-ref/internal/publish-command.js",
+          "marker": "function runPublishCommand("
+        }
+      ],
+      "disposition": "current-owned-contract"
+    },
+    {
+      "id": "release-passport-producer-commands",
+      "classification": "release-tail-evidence-preparation",
+      "owner": "Buildchain release trust plane",
+      "publicNames": [
+        "release-passport-kfd-3-artifact-verify-command",
+        "release-passport-invariant-passport-command",
+        "release-passport-attachment-command",
+        "release-passport-v4-runtime-resume-evidence-command"
+      ],
+      "default": "disabled",
+      "coordinates": [
+        "action:actions/release/promotion/ref/action.yml#release-passport-kfd-3-artifact-verify-command",
+        "action:actions/release/promotion/ref/action.yml#release-passport-invariant-passport-command",
+        "action:actions/release/promotion/ref/action.yml#release-passport-attachment-command",
+        "action:actions/release/promotion/ref/action.yml#release-passport-v4-runtime-resume-evidence-command"
+      ],
+      "executionSites": [
+        {
+          "path": "packages/core/release/passport/commands.js",
+          "marker": "function parseJsonCommandOutput("
+        },
+        {
+          "path": "packages/core/release/promote-ref/internal/passport-generation.js",
+          "marker": "function generateReleaseEvidenceInputs({"
+        }
+      ],
+      "disposition": "current-owned-contract"
+    },
+    {
+      "id": "version-state-verification-command",
+      "classification": "adjacent-non-tail",
+      "owner": "Buildchain version-state plane",
+      "publicNames": ["verification-command"],
+      "default": "configured lifecycle or disabled",
+      "coordinates": [
+        "action:actions/release/promotion/ref/action.yml#verification-command"
+      ],
+      "executionSites": [
+        {
+          "path": "packages/core/release/promote-ref/internal/version-state-operations.js",
+          "marker": "runVersionVerification({"
+        }
+      ],
+      "disposition": "current-owned-contract"
+    }
+  ],
+  "ownedCallers": [
+    {
+      "id": "paper-release",
+      "workflow": ".github/workflows/public-release-paper.yml",
+      "action": "actions/paper/candidate/publish",
+      "executableSurfaceIds": ["artifact-publication-command"]
+    },
+    {
+      "id": "publication-authority",
+      "workflow": ".github/workflows/.release-authority.yml",
+      "action": "actions/publication/authority/candidate-evidence",
+      "executableSurfaceIds": ["publication-admission-commands"]
+    }
+  ],
+  "currentBoundary": {
+    "compatibilityFallback": false,
+    "commandAliases": false,
+    "canonicalPublisher": ".github/workflows/.release-promote.yml",
+    "retiredRequestFields": [
+      "publication-commit-command",
+      "release-activation-command",
+      "release-passport-evidence-command",
+      "publish-command",
+      "release-passport-kfd-3-artifact-verify-command",
+      "release-passport-invariant-passport-command",
+      "release-passport-attachment-command",
+      "publication-gate-command",
+      "publication-consumer-qualification-command"
+    ]
+  }
+}

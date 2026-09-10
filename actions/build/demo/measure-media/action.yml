@@ -1,0 +1,9 @@
+name: Measure demo media
+description: Render, independently inspect, measure and compare one immutable media fixture.
+inputs:
+  fixture-json:
+    description: Declared media fixture and immutable renderer coordinates.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

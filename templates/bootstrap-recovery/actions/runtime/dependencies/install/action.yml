@@ -1,0 +1,18 @@
+name: Install locked dependencies
+description: Install exact pnpm dependencies within the selected Node 24 checkout.
+inputs:
+  directory:
+    description: Checkout owning the package manifest and lockfile.
+    required: true
+  production:
+    description: Install only production dependencies.
+    default: "true"
+  ignore-scripts:
+    description: Suppress dependency install scripts.
+    default: "true"
+outputs:
+  node-path:
+    description: Exact selected Node 24 executable.
+runs:
+  using: node24
+  main: dist/index.js

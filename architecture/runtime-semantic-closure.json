@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-v4-runtime-semantic-closure",
   "sources": {
-    "v3Mechanisms": "architecture/baseline-core-mechanism-inventory.json",
-    "domainCapabilities": "architecture/capability-state-machine-manifest.json"
+    "mechanismInventory": "architecture/core-mechanisms.json",
+    "stateMachineManifest": "architecture/capability-state-machine-manifest.json"
   },
   "requiredEvidence": [
     "positive",
@@ -20,7 +20,9 @@
       "stateAuthority": "single-writer-state-machine",
       "legacyFallbackAllowed": false,
       "providerDecisionAuthorityAllowed": false,
-      "implementation": ["packages/core/next-development-controller.js"],
+      "implementation": [
+        "packages/core/release/next-development-controller.js"
+      ],
       "invariants": {
         "exactHeadFence": true,
         "immutableRootFence": true,
@@ -74,8 +76,8 @@
       "legacyFallbackAllowed": false,
       "providerDecisionAuthorityAllowed": false,
       "implementation": [
-        "packages/core/dev-delivery-warrant-native-compatibility.js",
-        "packages/core/dev-delivery-warrant.js"
+        "packages/core/dev-delivery/dev-delivery-warrant-native-requirements.js",
+        "packages/core/dev-delivery/dev-delivery-warrant.js"
       ],
       "invariants": {
         "exactHeadFence": true,
@@ -129,7 +131,7 @@
       "stateAuthority": "bounded-protocol",
       "legacyFallbackAllowed": false,
       "providerDecisionAuthorityAllowed": false,
-      "implementation": ["packages/core/release-candidate.js"],
+      "implementation": ["packages/core/release/release-candidate.js"],
       "invariants": {
         "exactHeadFence": true,
         "immutableRootFence": true,
@@ -186,7 +188,7 @@
       "stateAuthority": "bounded-protocol",
       "legacyFallbackAllowed": false,
       "providerDecisionAuthorityAllowed": false,
-      "implementation": ["packages/core/release-candidate-recovery.js"],
+      "implementation": ["packages/core/release/release-candidate-recovery.js"],
       "invariants": {
         "exactHeadFence": true,
         "immutableRootFence": true,
@@ -202,7 +204,7 @@
       "evidence": {
         "positive": [
           {
-            "path": "tests/release-candidate-recovery.test.mjs",
+            "path": "tests/release-candidate-recovery-selection.test.mjs",
             "name": "recovery resolves an exact publication version without scanning historical state refs"
           }
         ],
@@ -239,7 +241,7 @@
       "stateAuthority": "single-writer-state-machine",
       "legacyFallbackAllowed": false,
       "providerDecisionAuthorityAllowed": false,
-      "implementation": ["packages/core/stable-candidate-ledger.js"],
+      "implementation": ["packages/core/release/stable-candidate-ledger.js"],
       "invariants": {
         "exactHeadFence": true,
         "immutableRootFence": true,
@@ -292,7 +294,7 @@
       "stateAuthority": "single-writer-state-machine",
       "legacyFallbackAllowed": false,
       "providerDecisionAuthorityAllowed": false,
-      "implementation": ["packages/core/publish-transaction.js"],
+      "implementation": ["packages/core/release/publish-transaction.js"],
       "invariants": {
         "exactHeadFence": true,
         "immutableRootFence": true,
@@ -345,7 +347,9 @@
       "stateAuthority": "single-writer-state-machine",
       "legacyFallbackAllowed": false,
       "providerDecisionAuthorityAllowed": false,
-      "implementation": ["packages/core/release-activation-transaction.js"],
+      "implementation": [
+        "packages/core/release/release-activation-transaction.js"
+      ],
       "invariants": {
         "exactHeadFence": true,
         "immutableRootFence": true,
@@ -398,7 +402,7 @@
       "stateAuthority": "bounded-protocol",
       "legacyFallbackAllowed": false,
       "providerDecisionAuthorityAllowed": false,
-      "implementation": ["packages/core/publication-authority.js"],
+      "implementation": ["packages/core/publication/publication-authority.js"],
       "invariants": {
         "exactHeadFence": true,
         "immutableRootFence": true,
@@ -451,7 +455,9 @@
       "stateAuthority": "bounded-protocol",
       "legacyFallbackAllowed": false,
       "providerDecisionAuthorityAllowed": false,
-      "implementation": ["packages/core/github-governance-authority.js"],
+      "implementation": [
+        "packages/core/governance/github-governance-authority.js"
+      ],
       "invariants": {
         "exactHeadFence": true,
         "immutableRootFence": true,
@@ -504,7 +510,7 @@
       "stateAuthority": "bounded-protocol",
       "legacyFallbackAllowed": false,
       "providerDecisionAuthorityAllowed": false,
-      "implementation": ["packages/core/engineering-housekeeper.js"],
+      "implementation": ["packages/core/governance/engineering-housekeeper.js"],
       "invariants": {
         "exactHeadFence": true,
         "immutableRootFence": true,
@@ -557,7 +563,7 @@
       "stateAuthority": "bounded-protocol",
       "legacyFallbackAllowed": false,
       "providerDecisionAuthorityAllowed": false,
-      "implementation": ["packages/core/release-passport.js"],
+      "implementation": ["packages/core/release/release-passport.js"],
       "invariants": {
         "exactHeadFence": true,
         "immutableRootFence": true,
@@ -610,7 +616,9 @@
       "stateAuthority": "single-writer-state-machine",
       "legacyFallbackAllowed": false,
       "providerDecisionAuthorityAllowed": false,
-      "implementation": ["packages/core/release-propagation-work-control.js"],
+      "implementation": [
+        "packages/core/release/release-propagation-work-control.js"
+      ],
       "invariants": {
         "exactHeadFence": true,
         "immutableRootFence": true,
@@ -663,7 +671,9 @@
       "stateAuthority": "single-writer-state-machine",
       "legacyFallbackAllowed": false,
       "providerDecisionAuthorityAllowed": false,
-      "implementation": ["packages/core/release-tail-provider-plane.js"],
+      "implementation": [
+        "packages/core/release/release-tail-provider-plane.js"
+      ],
       "invariants": {
         "exactHeadFence": true,
         "immutableRootFence": true,

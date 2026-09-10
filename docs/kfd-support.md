@@ -111,7 +111,7 @@ uses KFD-1 for its runtime contract, release-passport schemas, packaged docs,
 Node exports, workflows, actions, and site-consumption facts.
 
 For Buildchain itself, the source registry lives in
-`packages/core/buildchain-kfd-claims.js` and is projected to
+`packages/core/adoption/buildchain-kfd-claims.js` and is projected to
 `dist/site/kfd-claims.json`. Release promotion binds that registry to exact
 source and artifact hashes in the release passport.
 

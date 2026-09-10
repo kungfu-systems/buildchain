@@ -8,11 +8,11 @@ import { pathToFileURL } from "node:url";
 import {
   runNextDevelopmentController,
   validateNextDevelopmentController,
-} from "../packages/core/next-development-controller.js";
+} from "../packages/core/release/next-development-controller.js";
 import {
   NEXT_DEVELOPMENT_TRANSITION_CONTRACT,
   nextDevelopmentRoot,
-} from "../packages/core/next-development-transition.js";
+} from "../packages/core/release/next-development-transition.js";
 import {
   DurableStore,
   HOSTED_READBACK_PATHS,

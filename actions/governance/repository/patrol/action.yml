@@ -1,0 +1,57 @@
+name: Patrol protected development
+description: Resolve the target, execute bounded maintenance, and retain its result.
+inputs:
+  request-json:
+    description: Typed public patrol request.
+    required: true
+  runtime-repository:
+    description: Resolved Buildchain runtime repository.
+    required: true
+  runtime-ref:
+    description: Resolved runtime ref; defaults to the defining workflow SHA.
+    required: true
+  github-token:
+    description: Bounded repository maintenance credential.
+    required: false
+outputs:
+  result-path:
+    description: result-path
+    value: ${{ steps.execute.outputs.result-path }}
+  evaluated-count:
+    description: evaluated-count
+    value: ${{ steps.execute.outputs.evaluated-count }}
+  action-count:
+    description: action-count
+    value: ${{ steps.execute.outputs.action-count }}
+  skipped-count:
+    description: skipped-count
+    value: ${{ steps.execute.outputs.skipped-count }}
+  planned-count:
+    description: planned-count
+    value: ${{ steps.execute.outputs.planned-count }}
+runs:
+  using: composite
+  steps:
+    - name: Checkout Buildchain runtime
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ inputs.runtime-repository }}
+        ref: ${{ inputs.runtime-ref }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Run Buildchain patrol
+      id: execute
+      uses: ./.buildchain/runtime/actions/governance/repository/reconcile-patrol
+      with:
+        request-json: ${{ inputs.request-json }}
+        token: ${{ inputs.github-token || github.token }}
+    - name: Upload Buildchain patrol result
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-patrol-${{ fromJSON(inputs.request-json).cadence }}-${{
+          steps.execute.outputs.branch-artifact }}
+        path: ${{ steps.execute.outputs.result-path }}
+        if-no-files-found: error

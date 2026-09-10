@@ -1,3 +1,5 @@
+import YAML from "yaml";
+import { shaRoot, workRef, typedReference, propagationWorkContext } from "./helpers/propagation-work.mjs";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import crypto from "node:crypto";
@@ -25,14 +27,14 @@ import {
   verifyReleasePropagationWork,
   writeReleasePropagationLock,
 } from "@kungfu-tech/buildchain/release-propagation";
-import { sha256Json } from "../packages/core/release-propagation-common.js";
-import { contentRoot } from "../packages/core/release-propagation-work-control.js";
-import { withWorkRoot } from "../packages/core/release-propagation-work.js";
+import { sha256Json } from "../packages/core/release/release-propagation-common.js";
+import { contentRoot } from "../packages/core/release/release-propagation-work-control.js";
+import { withWorkRoot } from "../packages/core/release/release-propagation-work.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
 const fixture = path.join(root, "fixtures", "release-propagation-shaped");
-const workflowPath = path.join(root, ".github", "workflows", "release-propagation.yml");
+const workflowPath = path.join(root, ".github", "workflows", "public-release-propagation.yml");
 
 function packageCaptureConfig() {
   return {
@@ -50,67 +52,6 @@ function readJson(rel) {
 
 function tempDir(name) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `buildchain-${name}-`));
-}
-
-function shaRoot(value) {
-  return `sha256:${crypto.createHash("sha256").update(value).digest("hex")}`;
-}
-
-function workRef(kind, subject) {
-  return {
-    schema: "kungfu.assignment-graph.work-ref/v1",
-    workspace_identity_root: shaRoot(`${subject}:workspace`),
-    object_kind: kind,
-    subject,
-    version_root: shaRoot(`${subject}:version`),
-    cut_root: shaRoot(`${subject}:cut`),
-  };
-}
-
-function typedReference(kind, identity, status, familyState) {
-  return {
-    kind,
-    identity,
-    root: shaRoot(`${kind}:${identity}`),
-    factWorld: familyState.factWorld,
-    cutRoot: familyState.cutRoot,
-    schema: `kungfu.test.${kind}/v1`,
-    status,
-  };
-}
-
-function propagationWorkContext(mode = "execute") {
-  const familyState = {
-    schema: "kungfu.work-control.initiative-family-state/v2",
-    stateRoot: shaRoot("family-state"),
-    v1ProjectionRoot: shaRoot("family-v1"),
-    typedBindingRoot: shaRoot("family-bindings"),
-    factWorld: "kungfu-test-world",
-    cutRoot: shaRoot("family-cut"),
-  };
-  return {
-    parentWorkRef: workRef("initiative", "paper-publication"),
-    childWorkRef: workRef("assignment", "site-propagation"),
-    familyState,
-    authority: mode === "execute"
-      ? {
-          mode: "execute",
-          publishToProduction: true,
-          allowedActions: [...RELEASE_PROPAGATION_WORK_STAGES].sort(),
-          executionPrincipal: "codex/pro-1802",
-          sourceControlPrincipal: "dongkeren",
-          executionWarrant: typedReference("execution-warrant", "warrant-1", "active", familyState),
-        }
-      : {
-          mode: "capture-only",
-          publishToProduction: false,
-          allowedActions: [],
-          executionPrincipal: null,
-          sourceControlPrincipal: null,
-          executionWarrant: null,
-        },
-    supersedesWorkRoot: "",
-  };
 }
 
 function stageReceipt(
@@ -1058,145 +999,22 @@ test("release propagation staged change detection includes a new lock and preser
   assert.equal(spawnSync("git", ["diff", "--cached", "--quiet", "--", lockPath], { cwd }).status, 0);
 });
 
-test("release propagation reusable workflow invokes the checked out Buildchain runtime", () => {
-  const workflow = fs.readFileSync(workflowPath, "utf8");
-
-  assert.match(workflow, /buildchain-repository:/);
-  assert.match(workflow, /buildchain-ref:/);
-  assert.match(workflow, /repository: \$\{\{ inputs\.buildchain-repository \}\}/);
-  assert.match(workflow, /ref: \$\{\{ inputs\.buildchain-ref \|\| 'v3' \}\}/);
-  assert.match(workflow, /path: \.buildchain\/runtime/);
-  assert.match(workflow, /Install Buildchain runtime dependencies/);
-  assert.match(workflow, /pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/);
-  assert.equal(workflow.includes("node bin/buildchain.mjs release-propagation"), false);
-  assert.ok(
-    (workflow.match(/node \.buildchain\/runtime\/bin\/buildchain\.mjs release-propagation/g) || []).length >= 8,
-  );
-  assert.match(workflow, /node \.buildchain\/runtime\/bin\/buildchain\.mjs "\$\{args\[@\]\}"/);
-  assert.match(workflow, /LOCK_PATH: \$\{\{ steps\.plan\.outputs\.lock_path \}\}/);
-  assert.match(workflow, /downstream-prepare-command:/);
-  assert.match(workflow, /BUILDCHAIN_UPSTREAM_PACKAGE_VERSION:/);
-  assert.match(workflow, /Refresh managed README badges/);
-  assert.match(workflow, /badges readme --cwd \. --write/);
-  assert.match(workflow, /downstream-verify-command:/);
-  assert.ok(
-    workflow.indexOf("Prepare downstream release update") <
-      workflow.indexOf("Refresh managed README badges"),
-  );
-  assert.ok(
-    workflow.indexOf("Refresh managed README badges") <
-      workflow.indexOf("Verify downstream release update"),
-  );
-  assert.match(
-    workflow,
-    /git add --all[\s\S]*?if git diff --cached --quiet/,
-  );
-  assert.doesNotMatch(workflow, /if git diff --quiet/);
-  assert.doesNotMatch(workflow, /git add \./);
-  assert.match(workflow, /git ls-remote --heads origin "refs\/heads\/\$BRANCH"/);
-  assert.match(workflow, /--force-with-lease="refs\/heads\/\$BRANCH:\$remote_sha"/);
-  assert.doesNotMatch(workflow, /git push --force(?:\s|$)/);
-  assert.match(workflow, /kungfu-buildchain-release-propagation-branch-reconciliation/);
-  assert.match(workflow, /"kind":"propagation-branch-reconciliation"/);
-  assert.match(workflow, /gh pr list[\s\S]*--state open[\s\S]*--head "\$BRANCH"/);
-  assert.match(workflow, /git commit --signoff -m "\$TITLE"/);
-  assert.ok(
-    workflow.indexOf("Verify downstream release update") < workflow.indexOf("Create or update downstream PR"),
-  );
-  assert.match(workflow, /concurrency:/);
-  assert.match(workflow, /fromJSON\(inputs\.upstream-release-json\)\.repository/);
-  assert.match(workflow, /cancel-in-progress: false/);
-  assert.match(workflow, /downstream-update-command:/);
-  assert.match(workflow, /Apply consumer-owned downstream update/);
-  assert.match(workflow, /BUILDCHAIN_PROPAGATION_LOCK_PATH:/);
-  assert.match(workflow, /bash --noprofile --norc -e -u -o pipefail -c "\$DOWNSTREAM_UPDATE_COMMAND"/);
-  assert.match(workflow, /release-propagation receipt/);
-  assert.match(workflow, /agent-work-context-json:/);
-  assert.match(workflow, /agent-work-mode:/);
-  assert.match(workflow, /agent-work-mode == 'capture-only'/);
-  assert.match(workflow, /release-propagation work create/);
-  assert.match(workflow, /release-propagation work receipt/);
-  assert.match(workflow, /release-propagation work record/);
-  assert.match(workflow, /release-propagation work status/);
-  assert.match(workflow, /propagation-work-next-action:/);
-  assert.match(workflow, /steps\.propagation-work\.outputs\.execute == 'true'/);
-  assert.match(workflow, /release propagation found duplicate matching PRs/);
-  assert.equal(workflow.includes("gh pr create \\\n"), true);
-});
-
-test("release propagation replaces a surviving managed branch with an exact lease and rejects stale writers", () => {
-  const cwd = tempDir("release-propagation-lease");
-  const remote = path.join(cwd, "remote.git");
-  const seed = path.join(cwd, "seed");
-  const writer = path.join(cwd, "writer");
-  const stale = path.join(cwd, "stale");
-  const concurrent = path.join(cwd, "concurrent");
-  const branch = "buildchain/release-propagation/kfd";
-  const ref = `refs/heads/${branch}`;
-  const run = (args, options = {}) => execFileSync("git", args, {
-    cwd: options.cwd || cwd,
-    encoding: "utf8",
-    stdio: options.stdio || "pipe",
-  }).trim();
-  const configure = (repo) => {
-    run(["config", "user.name", "Buildchain Test"], { cwd: repo });
-    run(["config", "user.email", "buildchain@example.test"], { cwd: repo });
-  };
-  const commitFile = (repo, file, content, message) => {
-    fs.writeFileSync(path.join(repo, file), content);
-    run(["add", "--", file], { cwd: repo });
-    run(["commit", "-m", message], { cwd: repo });
-  };
-
-  run(["init", "--bare", remote]);
-  run(["clone", remote, seed]);
-  configure(seed);
-  run(["checkout", "-b", "main"], { cwd: seed });
-  commitFile(seed, "base.txt", "base\n", "test: base");
-  run(["push", "-u", "origin", "main"], { cwd: seed });
-  run(["checkout", "-b", branch], { cwd: seed });
-  commitFile(seed, "kfd.release.json", "{\"version\":1}\n", "test: first lock");
-  run(["push", "-u", "origin", branch], { cwd: seed });
-  run(["checkout", "main"], { cwd: seed });
-  run(["merge", "--no-ff", branch, "-m", "test: merge first propagation"], { cwd: seed });
-  run(["push", "origin", "main"], { cwd: seed });
-
-  run(["clone", "--branch", "main", remote, writer]);
-  configure(writer);
-  run(["checkout", "-b", branch], { cwd: writer });
-  commitFile(writer, "kfd.release.json", "{\"version\":2}\n", "test: next lock");
-  const observed = run(["ls-remote", "--heads", "origin", ref], { cwd: writer }).split("\t")[0];
-  run([
-    "push",
-    `--force-with-lease=${ref}:${observed}`,
-    "origin",
-    `HEAD:${ref}`,
-  ], { cwd: writer });
-  assert.equal(
-    run(["ls-remote", "--heads", "origin", ref], { cwd: writer }).split("\t")[0],
-    run(["rev-parse", "HEAD"], { cwd: writer }),
-  );
-
-  run(["clone", remote, stale]);
-  configure(stale);
-  run(["checkout", "-b", branch, `origin/${branch}`], { cwd: stale });
-  const staleLease = run(["rev-parse", "HEAD"], { cwd: stale });
-  commitFile(stale, "kfd.release.json", "{\"version\":3}\n", "test: stale lock");
-
-  run(["clone", remote, concurrent]);
-  configure(concurrent);
-  run(["checkout", "-b", branch, `origin/${branch}`], { cwd: concurrent });
-  commitFile(concurrent, "concurrent.txt", "advanced\n", "test: concurrent advance");
-  run(["push", "origin", `HEAD:${ref}`], { cwd: concurrent });
-
-  const rejected = spawnSync("git", [
-    "push",
-    `--force-with-lease=${ref}:${staleLease}`,
-    "origin",
-    `HEAD:${ref}`,
-  ], { cwd: stale, encoding: "utf8" });
-  assert.notEqual(rejected.status, 0);
-  assert.match(`${rejected.stdout}\n${rejected.stderr}`, /stale info|rejected/);
+test("release propagation reusable workflow exposes authorized Work phases", () => {
+  const workflow = YAML.parse(fs.readFileSync(workflowPath, "utf8"));
+  assert.equal(workflow.on.workflow_call.inputs["agent-work-mode"].default, "capture-only");
+  assert.deepEqual(workflow.jobs.propagate.steps.slice(1).map(step => step.id), ["propagation-plan", "propagation-materialize", "propagation-deliver"]);
+  assert.ok(workflow.jobs.propagate.steps.every(step => step.uses && !step.run));
+  assert.equal(workflow.jobs.propagate.concurrency["cancel-in-progress"], false);
+  const readNode = name => YAML.parse(fs.readFileSync(path.join(root, "actions", "release", "propagation", name, "action.yml"), "utf8"));
+  const plan = readNode("plan"), materialize = readNode("materialize"), deliver = readNode("deliver");
+  assert.ok(plan.runs.steps.some(step => step.uses === "./.buildchain/workflow-shell/actions/runtime/environment/prepare"));
+  assert.equal(plan.runs.steps.find(step => step.id === "capture").if, undefined);
+  assert.equal(materialize.runs.using, "node24");
+  assert.equal(workflow.jobs.propagate.steps[2].uses, "./.buildchain/runtime/actions/release/propagation/materialize");
+  assert.equal(workflow.jobs.propagate.steps.at(-1).if, "${{ always() }}");
+  assert.ok(deliver.runs.steps[0].uses.endsWith("/workflow/admission/reject"));
+  assert.match(deliver.runs.steps.find(step => step.id === "report").if, /always/);
+  assert.ok([...plan.runs.steps, ...deliver.runs.steps].every(step => step.uses && !step.run));
 });
 
 test("package release propagation config is strict and source-package bound", () => {

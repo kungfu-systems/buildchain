@@ -29,7 +29,7 @@ their heads are already ancestors of a mainline.
 The reusable entrypoint is:
 
 ```yaml
-uses: kungfu-systems/buildchain/.github/workflows/engineering-housekeeper.yml@v4
+uses: kungfu-systems/buildchain/.github/workflows/public-ops-housekeeping.yml@v4
 ```
 
 The v4 surface is a traceable forward-port of protected v3 merge
@@ -48,7 +48,7 @@ separate plan, Markdown report, and dry-run receipt artifacts:
 ```yaml
 jobs:
   housekeeper:
-    uses: kungfu-systems/buildchain/.github/workflows/engineering-housekeeper.yml@v4
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-housekeeping.yml@v4
     permissions:
       contents: read
       pull-requests: read
@@ -89,7 +89,7 @@ An unattended scheduled caller can set both values in committed policy.
 ```yaml
 jobs:
   housekeeper:
-    uses: kungfu-systems/buildchain/.github/workflows/engineering-housekeeper.yml@v4
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-housekeeping.yml@v4
     permissions:
       contents: write
       pull-requests: write

@@ -341,7 +341,7 @@ write-normalize-observe-remutate cycle: `transferRoot`,
 `providerTerminalReadbackRoot`.
 
 Buildchain's tracked self-delivery caller invokes
-`kungfu-systems/buildchain/.github/workflows/dev-pr-auto-merge.yml@v4-alpha`.
+`kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@v4-alpha`.
 The durable selector remains the floating alpha channel, the repository keeps
 matching `.buildchain/contract-lock.json` (`v4`) and
 `.buildchain/alpha-contract-lock.json` (`v4-alpha`), and a train runtime may be
@@ -402,7 +402,7 @@ native proof or reuse authority. Phase-less native candidates remain invalid.
 
 ## Workflow rollout and rollback
 
-The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
+The reusable `public-ops-dev-auto-merge.yml` supports three explicit rollout modes:
 
 - `off` preserves the previous exact-head admission controller;
 - `shadow` qualifies the source and emits a read-only queue submission plan;

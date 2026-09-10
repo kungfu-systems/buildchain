@@ -1,0 +1,35 @@
+name: seal-attestation
+description:
+  Bind the exact GitHub attestation subject, signer and retained provider
+  evidence.
+inputs:
+  runtime-sha:
+    description: Exact runtime-sha.
+    required: true
+  preparation-json:
+    description: Exact preparation-json.
+    required: true
+  bundle-path:
+    description: Exact bundle-path.
+    required: true
+  attestation-id:
+    description: Exact attestation-id.
+    required: true
+  attestation-url:
+    description: Exact attestation-url.
+    required: true
+  token:
+    description: Exact token.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js
+outputs:
+  evidence-path:
+    description: Verified evidence-path.
+  evidence-root:
+    description: Verified evidence-root.
+  bundle-digest:
+    description: Verified bundle-digest.
+  bundle-path:
+    description: Verified bundle-path.

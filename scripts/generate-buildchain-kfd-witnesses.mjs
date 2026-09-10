@@ -8,14 +8,14 @@ import {
   createBuildchainKfd2Claims,
   createBuildchainKfd3ArtifactWitness,
   createBuildchainKfd3PrebuildWitness,
-} from "../packages/core/buildchain-kfd-claims.js";
+} from "../packages/core/adoption/buildchain-kfd-claims.js";
 import {
   BUILDCHAIN_KFD1_CONTRACT_WORLD_WITNESS_PATH,
   BUILDCHAIN_KFD2_CLAIMS_DIR,
   BUILDCHAIN_KFD3_ARTIFACT_WITNESS_PATH,
   BUILDCHAIN_KFD3_PREBUILD_WITNESS_PATH,
-} from "../packages/core/buildchain-layout.js";
-import { writeGitHubOutputs } from "./build-contract-core.mjs";
+} from "../packages/core/contracts/buildchain-layout.js";
+import { writeGitHubOutputs } from "../packages/core/providers/commands/github-output.mjs";
 
 function parseArgs(argv = process.argv.slice(2)) {
   const args = {

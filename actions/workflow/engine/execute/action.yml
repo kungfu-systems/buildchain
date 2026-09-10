@@ -1,0 +1,23 @@
+name: Execute admitted capability
+description: Execute the exact admitted candidate and retain a rooted terminal result for trusted settlement.
+inputs:
+  request-json:
+    description: Admitted workflow request.
+    required: true
+  admission-json:
+    description: Trusted admission document.
+    required: true
+  token:
+    description: Provider read and execution credential.
+    required: true
+  mutation-token:
+    description: Scoped publication mutation credential.
+    required: false
+outputs:
+  result-json:
+    description: Candidate result including failure evidence.
+  result-root:
+    description: Canonical candidate result root.
+runs:
+  using: node24
+  main: dist/index.js

@@ -1,6 +1,5 @@
 name: Buildchain Artifact Signing Authority
 run-name: Sign ${{ inputs.source-repository }} run ${{ inputs.source-run-id }} (${{ inputs.correlation-id }})
-
 on:
   workflow_dispatch:
     inputs:
@@ -36,53 +35,43 @@ on:
         description: Exact Buildchain runtime SHA embedded in every request
         required: true
         type: string
-
 permissions:
   contents: read
-
 concurrency:
   group: artifact-signing-${{ inputs.source-repository }}-${{ inputs.source-run-id }}-${{ inputs.source-run-attempt }}-${{ inputs.correlation-id }}
   cancel-in-progress: false
-
 jobs:
   intake:
     name: Admit immutable signing requests
     runs-on: ubuntu-24.04
     outputs:
-      detached-matrix: ${{ steps.inspect.outputs.detached-matrix }}
-      macos-matrix: ${{ steps.inspect.outputs.macos-matrix }}
-      windows-matrix: ${{ steps.inspect.outputs.windows-matrix }}
+      detached-matrix: ${{ steps.node.outputs.detached-matrix }}
+      macos-matrix: ${{ steps.node.outputs.macos-matrix }}
+      windows-matrix: ${{ steps.node.outputs.windows-matrix }}
     steps:
       - name: Checkout exact Buildchain authority runtime
         uses: actions/checkout@v7.0.0
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - name: Download consumer-sealed requests only
-        uses: actions/download-artifact@v7.0.0
+        id: source-checkout
+      - name: Check out workflow implementation
+        uses: actions/checkout@v7.0.0
         with:
-          github-token: ${{ secrets.BUILDCHAIN_AUTHORITY_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN }}
-          repository: ${{ inputs.source-repository }}
-          run-id: ${{ inputs.source-run-id }}
-          pattern: ${{ inputs.request-artifact-pattern }}
-          path: .buildchain/authority-intake
-      - name: Validate source, runtime, profiles, and duplicate admission
-        id: inspect
-        run: node scripts/inspect-artifact-signing-requests.mjs
-        env:
-          BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/authority-intake
-          BUILDCHAIN_SIGNING_SOURCE_REPOSITORY: ${{ inputs.source-repository }}
-          BUILDCHAIN_RUNTIME_SHA: ${{ inputs.expected-runtime-sha }}
-          BUILDCHAIN_SIGNING_EXPECTED_REQUEST_ROOT: ${{ inputs.expected-request-root }}
-      - name: Retain admitted request set for isolated provider jobs
-        uses: actions/upload-artifact@v7.0.1
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
+          persist-credentials: false
+        if: ${{ always() }}
+      - name: Admit immutable signing requests
+        id: node
+        uses: ./.buildchain/workflow-shell/actions/release/signing/intake
         with:
-          name: authority-intake-${{ inputs.correlation-id }}
-          path: .buildchain/authority-intake
-          include-hidden-files: true
-          if-no-files-found: error
-          retention-days: 14
-
+          authority-token: ${{ secrets.BUILDCHAIN_AUTHORITY_TOKEN }}
+          promotion-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          request-json: ${{ toJSON(inputs) }}
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+        if: ${{ always() }}
   detached:
     name: Detached signature ${{ matrix.request.id }}
     needs: intake
@@ -98,25 +87,24 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - uses: actions/download-artifact@v7.0.0
+        id: source-checkout
+      - name: Check out workflow implementation
+        uses: actions/checkout@v7.0.0
         with:
-          name: authority-intake-${{ inputs.correlation-id }}
-          path: .buildchain/authority-intake
-      - name: Sign exact sealed payloads
-        run: node scripts/sign-detached-artifact-requests.mjs
-        env:
-          BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/authority-intake/${{ matrix.request.indexRoot }}
-          BUILDCHAIN_SIGNING_RESULT_ROOT: .buildchain/provider-results/${{ matrix.request.slug }}
-          BUILDCHAIN_SIGNING_ARTIFACT_ID: ${{ matrix.request.id }}
-          BUILDCHAIN_DETACHED_PRIVATE_KEY_PKCS8_BASE64: ${{ secrets.BUILDCHAIN_DETACHED_PRIVATE_KEY_PKCS8_BASE64 }}
-          BUILDCHAIN_DETACHED_KEY_ID: ${{ vars.BUILDCHAIN_DETACHED_KEY_ID }}
-      - uses: actions/upload-artifact@v7.0.1
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
+          persist-credentials: false
+        if: ${{ always() }}
+      - name: Detached signature ${{ matrix.request.id }}
+        id: node
+        uses: ./.buildchain/workflow-shell/actions/release/signing/detached
         with:
-          name: authority-result-detached-${{ matrix.request.slug }}-${{ inputs.correlation-id }}
-          path: .buildchain/provider-results/${{ matrix.request.slug }}
-          if-no-files-found: error
-          retention-days: 14
-
+          request-json: ${{ toJSON(inputs) }}
+          item-json: ${{ toJSON(matrix.request) }}
+          private-key-base64: ${{ secrets.BUILDCHAIN_DETACHED_PRIVATE_KEY_PKCS8_BASE64 }}
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+        if: ${{ always() }}
   macos:
     name: Developer ID ${{ matrix.request.id }}
     needs: intake
@@ -132,74 +120,28 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - uses: actions/download-artifact@v7.0.0
+        id: source-checkout
+      - name: Check out workflow implementation
+        uses: actions/checkout@v7.0.0
         with:
-          name: authority-intake-${{ inputs.correlation-id }}
-          path: .buildchain/authority-intake
-      - name: Materialize sealed unsigned Apple artifact
-        if: ${{ matrix.request.kind != 'app-bundle' }}
-        run: node scripts/materialize-artifact-signing-request.mjs
-        env:
-          BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/authority-intake
-          BUILDCHAIN_SIGNING_REQUEST_PATH: ${{ matrix.request.request }}
-          BUILDCHAIN_SIGNING_EXPECTED_PROFILE: apple-developer-id
-          BUILDCHAIN_UNSIGNED_OUTPUT: .buildchain/native-work/${{ matrix.request.slug }}/signed-payload
-      - name: Developer ID sign and notarize Apple artifact
-        if: ${{ matrix.request.kind != 'app-bundle' }}
-        run: bash scripts/sign-macos-mach-o-request.sh
-        env:
-          BUILDCHAIN_SIGNED_PAYLOAD: .buildchain/native-work/${{ matrix.request.slug }}/signed-payload
-          BUILDCHAIN_SIGNING_EVIDENCE: .buildchain/native-work/${{ matrix.request.slug }}/provider-evidence.json
-          BUILDCHAIN_ARTIFACT_KIND: ${{ matrix.request.kind }}
-          BUILDCHAIN_ENTITLEMENTS_PROFILE: ${{ matrix.request.entitlementsProfile }}
-          BUILDCHAIN_ENTITLEMENTS_PATHS: ${{ matrix.request.entitlementsPaths }}
-          BUILDCHAIN_APPLE_CERTIFICATE_P12_BASE64: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64 }}
-          BUILDCHAIN_APPLE_CERTIFICATE_PASSWORD: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD }}
-          BUILDCHAIN_APPLE_CERTIFICATE_SHA1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
-          BUILDCHAIN_APPLE_TEAM_ID: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID }}
-          BUILDCHAIN_APPLE_NOTARY_KEY_P8_BASE64: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64 }}
-          BUILDCHAIN_APPLE_NOTARY_KEY_ID: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_ID }}
-          BUILDCHAIN_APPLE_NOTARY_ISSUER: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_ISSUER }}
-      - name: Developer ID sign, notarize, and staple Apple application
-        if: ${{ matrix.request.kind == 'app-bundle' }}
-        id: app-signing
-        uses: ./actions/macos-credential-island
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
+          persist-credentials: false
+        if: ${{ always() }}
+      - name: Developer ID ${{ matrix.request.id }}
+        id: node
+        uses: ./.buildchain/workflow-shell/actions/release/signing/macos
         with:
-          input-root: .buildchain/authority-intake
-          output-root: .buildchain/native-work/${{ matrix.request.slug }}/credential-artifact
-          source-repository: ${{ inputs.source-repository }}
-          source-sha: ${{ matrix.request.sourceSha }}
-          source-tree-sha: ${{ matrix.request.sourceTreeSha }}
-          source-ref: ${{ matrix.request.sourceSha }}
-          buildchain-runtime-sha: ${{ inputs.expected-runtime-sha }}
-          artifact-name: native-${{ matrix.request.slug }}-credential
-          platform-id: ${{ matrix.request.platformId }}-credential
-          artifact-id: ${{ matrix.request.id }}
-          artifact-relative-output: product/release
-          expected-team-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID }}
-          certificate-sha1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
-          certificate-p12-base64: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64 }}
+          request-json: ${{ toJSON(inputs) }}
+          item-json: ${{ toJSON(matrix.request) }}
+          certificate-base64: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64 }}
           certificate-password: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD }}
-          notary-api-key-p8-base64: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64 }}
-          notary-api-key-id: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_ID }}
-          notary-api-issuer: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_ISSUER }}
-      - name: Seal native signed result
-        run: node scripts/finalize-native-artifact-signing-result.mjs
-        env:
-          BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/authority-intake
-          BUILDCHAIN_SIGNING_REQUEST_PATH: ${{ matrix.request.request }}
-          BUILDCHAIN_SIGNED_PAYLOAD: ${{ matrix.request.kind == 'app-bundle' && steps.app-signing.outputs.zip-path || format('.buildchain/native-work/{0}/signed-payload', matrix.request.slug) }}
-          BUILDCHAIN_SIGNING_EVIDENCE: ${{ matrix.request.kind == 'app-bundle' && steps.app-signing.outputs.evidence-path || format('.buildchain/native-work/{0}/provider-evidence.json', matrix.request.slug) }}
-          BUILDCHAIN_SIGNING_CREDENTIAL_ARTIFACT_ROOT: ${{ matrix.request.kind == 'app-bundle' && steps.app-signing.outputs.artifact-root || '' }}
-          BUILDCHAIN_SIGNING_RESULT_ROOT: .buildchain/provider-results/${{ matrix.request.slug }}
-      - uses: actions/upload-artifact@v7.0.1
-        with:
-          name: authority-result-macos-${{ matrix.request.slug }}-${{ inputs.correlation-id }}
-          path: .buildchain/provider-results/${{ matrix.request.slug }}
-          if-no-files-found: error
-          retention-days: 14
-          compression-level: 0
-
+          notary-key-base64: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64 }}
+          notary-key-id: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_ID }}
+          notary-issuer: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_ISSUER }}
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+        if: ${{ always() }}
   windows:
     name: Authenticode ${{ matrix.request.id }}
     needs: intake
@@ -215,49 +157,32 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - uses: actions/download-artifact@v7.0.0
+        id: source-checkout
+      - name: Check out workflow implementation
+        uses: actions/checkout@v7.0.0
         with:
-          name: authority-intake-${{ inputs.correlation-id }}
-          path: .buildchain/authority-intake
-      - name: Materialize exact unsigned PE
-        shell: pwsh
-        run: node scripts/materialize-artifact-signing-request.mjs
-        env:
-          BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/authority-intake
-          BUILDCHAIN_SIGNING_REQUEST_PATH: ${{ matrix.request.request }}
-          BUILDCHAIN_SIGNING_EXPECTED_PROFILE: windows-authenticode
-          BUILDCHAIN_UNSIGNED_OUTPUT: .buildchain/native-work/${{ matrix.request.slug }}/signed-payload.exe
-      - name: Authenticode sign, timestamp, and policy verify
-        shell: pwsh
-        run: ./scripts/sign-windows-authenticode-request.ps1
-        env:
-          BUILDCHAIN_SIGNED_PAYLOAD: .buildchain/native-work/${{ matrix.request.slug }}/signed-payload.exe
-          BUILDCHAIN_SIGNING_EVIDENCE: .buildchain/native-work/${{ matrix.request.slug }}/provider-evidence.json
-          BUILDCHAIN_WINDOWS_CERTIFICATE_PFX_BASE64: ${{ secrets.BUILDCHAIN_WINDOWS_CERTIFICATE_PFX_BASE64 }}
-          BUILDCHAIN_WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.BUILDCHAIN_WINDOWS_CERTIFICATE_PASSWORD }}
-          BUILDCHAIN_WINDOWS_CERTIFICATE_SHA1: ${{ vars.BUILDCHAIN_WINDOWS_CERTIFICATE_SHA1 }}
-          BUILDCHAIN_WINDOWS_TIMESTAMP_URL: ${{ vars.BUILDCHAIN_WINDOWS_TIMESTAMP_URL }}
-      - name: Seal native signed result
-        shell: pwsh
-        run: node scripts/finalize-native-artifact-signing-result.mjs
-        env:
-          BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/authority-intake
-          BUILDCHAIN_SIGNING_REQUEST_PATH: ${{ matrix.request.request }}
-          BUILDCHAIN_SIGNED_PAYLOAD: .buildchain/native-work/${{ matrix.request.slug }}/signed-payload.exe
-          BUILDCHAIN_SIGNING_EVIDENCE: .buildchain/native-work/${{ matrix.request.slug }}/provider-evidence.json
-          BUILDCHAIN_SIGNING_RESULT_ROOT: .buildchain/provider-results/${{ matrix.request.slug }}
-          BUILDCHAIN_SIGNING_VERIFICATION_CHECKS: signtool-policy,sha256-file-digest,rfc3161-timestamp,publisher-fingerprint,powershell-valid
-      - uses: actions/upload-artifact@v7.0.1
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
+          persist-credentials: false
+        if: ${{ always() }}
+      - name: Authenticode ${{ matrix.request.id }}
+        id: node
+        uses: ./.buildchain/workflow-shell/actions/release/signing/windows
         with:
-          name: authority-result-windows-${{ matrix.request.slug }}-${{ inputs.correlation-id }}
-          path: .buildchain/provider-results/${{ matrix.request.slug }}
-          if-no-files-found: error
-          retention-days: 14
-          compression-level: 0
-
+          request-json: ${{ toJSON(inputs) }}
+          item-json: ${{ toJSON(matrix.request) }}
+          certificate-base64: ${{ secrets.BUILDCHAIN_WINDOWS_CERTIFICATE_PFX_BASE64 }}
+          certificate-password: ${{ secrets.BUILDCHAIN_WINDOWS_CERTIFICATE_PASSWORD }}
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+        if: ${{ always() }}
   deliver:
     name: Publish immutable signed result set
-    needs: [intake, detached, macos, windows]
+    needs:
+      - intake
+      - detached
+      - macos
+      - windows
     if: ${{ always() && needs.intake.result == 'success' && (needs.detached.result == 'success' || needs.detached.result == 'skipped') && (needs.macos.result == 'success' || needs.macos.result == 'skipped') && (needs.windows.result == 'success' || needs.windows.result == 'skipped') }}
     runs-on: ubuntu-24.04
     steps:
@@ -265,30 +190,19 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - uses: actions/download-artifact@v7.0.0
+        id: source-checkout
+      - name: Check out workflow implementation
+        uses: actions/checkout@v7.0.0
         with:
-          pattern: authority-result-*-${{ inputs.correlation-id }}
-          path: .buildchain/provider-results
-      - uses: actions/download-artifact@v7.0.0
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
+          persist-credentials: false
+        if: ${{ always() }}
+      - name: Publish immutable signed result set
+        id: node
+        uses: ./.buildchain/workflow-shell/actions/release/signing/deliver
         with:
-          name: authority-intake-${{ inputs.correlation-id }}
-          path: .buildchain/authority-intake
-      - name: Merge provider result indexes without changing signed bytes
-        run: node scripts/merge-artifact-signing-results.mjs
-        env:
-          BUILDCHAIN_SIGNING_RESULT_INPUT_ROOT: .buildchain/provider-results
-          BUILDCHAIN_SIGNING_RESULT_ROOT: .buildchain/authority-result
-      - name: Verify complete signed result set on GitHub-hosted infrastructure
-        run: node scripts/verify-artifact-signing-results.mjs
-        env:
-          BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/authority-intake
-          BUILDCHAIN_SIGNING_RESULT_ROOT: .buildchain/authority-result
-      - name: Publish immutable signed result delivery
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ inputs.result-artifact-name }}
-          path: .buildchain/authority-result
-          include-hidden-files: true
-          if-no-files-found: error
-          retention-days: 30
-          compression-level: 0
+          request-json: ${{ toJSON(inputs) }}
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+        if: ${{ always() }}

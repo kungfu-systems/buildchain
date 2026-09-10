@@ -1,0 +1,80 @@
+name: propagation-plan
+description:
+  Prepare the selected runtime, plan the release graph, then capture Work against the
+  checked out downstream branch.
+inputs:
+  runtime-ref:
+    description: Selected runtime ref with the caller precedence preserved.
+    required: true
+  runtime-repository:
+    description: Runtime repository.
+    required: true
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  secrets-propagation-token:
+    description: Explicit scoped provider credential.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Checkout Buildchain runtime
+      id: runtime
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ inputs.runtime-repository }}
+        ref: ${{ inputs.runtime-ref }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - name: Prepare exact Buildchain runtime
+      id: core-node
+      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Resolve release graph and controller
+      id: resolve
+      uses: ./.buildchain/runtime/actions/release/propagation/resolve
+      with:
+        request-json: ${{ inputs.request-json }}
+        runtime-ref: ${{ inputs.runtime-ref }}
+    - name: Upload controller plan
+      if: ${{ always() && steps.resolve.outputs.controller-plan-digest != '' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ format('buildchain-release-propagation-controller-plan-{0}', github.sha) }}
+        path: .buildchain/controller/plan.json
+        if-no-files-found: error
+    - name: Checkout downstream repository
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ fromJSON(inputs.request-json).downstream-repository }}
+        token: ${{ inputs.secrets-propagation-token || github.token }}
+        path: downstream
+        ref: ${{ fromJSON(inputs.request-json).downstream-base-ref }}
+    - name: Capture downstream Work
+      id: capture
+      uses: ./.buildchain/runtime/actions/release/propagation/capture
+      with:
+        request-json: ${{ inputs.request-json }}
+outputs:
+  runtime-ready:
+    description: Runtime closure preparation succeeded.
+    value: ${{ steps.core-node.outcome == 'success' }}
+  node-path:
+    description: Prepared consumer Node executable.
+    value: ${{ steps.core-node.outputs.node-path }}
+  execute:
+    description: Captured Work authorizes execution.
+    value: ${{ steps.capture.outputs.execute }}
+  controller-plan-json:
+    description: Controller plan.
+    value: ${{ steps.resolve.outputs.controller-plan-json }}
+  controller-plan-digest:
+    description: Controller plan digest.
+    value: ${{ steps.resolve.outputs.controller-plan-digest }}
+  propagation-key:
+    description: Exact propagation key.
+    value: ${{ steps.resolve.outputs.propagation-key }}
+  propagation-work-artifact:
+    description: Captured Work artifact.
+    value: ${{ format('buildchain-release-propagation-work-{0}', steps.resolve.outputs.propagation-key) }}
