@@ -112,12 +112,12 @@ export function inspectPromotionInvocationAction(core, env) {
   verifyPromotionInvocation(get(core, "request-json"), workflowSha);
 }
 export async function classifyPublicationHeadAction(core, env) {
-  requireRuntime(path.resolve(env.GITHUB_WORKSPACE), ".", env.GITHUB_SHA);
   const event = context(env).payload.workflow_run;
   if (!event || !/^[0-9a-f]{40}$/u.test(event.head_sha || ""))
     throw new Error(
       "Publication classification requires a workflow run with an exact source SHA",
     );
+  requireRuntime(path.resolve(env.GITHUB_WORKSPACE), ".", event.head_sha);
   const result = await classifyProductPublication(
     { requestedSha: event.head_sha, targetRef: event.head_branch },
     productPublicationReader(

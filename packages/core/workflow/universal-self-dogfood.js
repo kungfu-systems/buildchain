@@ -60,14 +60,9 @@ export function createUniversalSelfDogfoodRequest({
           id: "bootstrap-conformance",
           payload: {
             schema: "kungfu-buildchain-v4-universal-bootstrap-conformance/v1",
-            expectedGovernedWorkflowCount: JSON.parse(
-              fs.readFileSync(
-                new URL(
-                  "../../../architecture/universal-workflow-bootstrap.json",
-                  import.meta.url,
-                ),
-              ),
-            ).bootstrapGovernedWorkflows.length,
+            expectedGovernedWorkflowCount: JSON.parse(fs.readFileSync(path.join(
+              installationRoot(import.meta.url), "architecture/universal-workflow-bootstrap.json",
+            ), "utf8")).bootstrapGovernedWorkflows.length,
           },
         }
       : {

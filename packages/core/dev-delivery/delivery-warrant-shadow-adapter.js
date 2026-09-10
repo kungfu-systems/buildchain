@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import crypto from "node:crypto";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { installationRoot } from "../runtime/installation-root.js";
 
 import { runDeliveryWarrantTraceFixture } from "./delivery-warrant-fixture-runner.js";
 
@@ -26,10 +26,7 @@ const MAX_TIMEOUT_MS = 30_000;
 const RETENTION_DAYS = 90;
 const ROOT_PATTERN = /^sha256:[0-9a-f]{64}$/u;
 const REVISION_PATTERN = /^[0-9a-f]{40,64}$/u;
-const root = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "../../..",
-);
+const root = installationRoot(import.meta.url);
 
 class ShadowHostFault extends Error {
   constructor(code, message) {
