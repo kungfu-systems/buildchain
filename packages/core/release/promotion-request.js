@@ -1,13 +1,16 @@
 import fs from "node:fs";
+import path from "node:path";
+import { installationRoot } from "../runtime/installation-root.js";
 
 const schemas = Object.fromEntries(
   ["request", "invocation"].map((kind) => [
     kind,
     JSON.parse(
       fs.readFileSync(
-        new URL(
-          `../../../contracts/promotion-${kind}-v1.schema.json`,
-          import.meta.url,
+        path.join(
+          installationRoot(import.meta.url),
+          "contracts",
+          `promotion-${kind}-v1.schema.json`,
         ),
         "utf8",
       ),
