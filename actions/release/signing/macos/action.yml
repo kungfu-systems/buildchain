@@ -1,6 +1,10 @@
 name: signing-authority-macos
 description: Execute the signing-authority macos capability within its caller job boundary.
 inputs:
+  team-id:
+    description: Expected macOS signing team.
+  certificate-sha1:
+    description: Expected macOS certificate fingerprint.
   request-json:
     description: Typed public workflow request.
     required: true
@@ -48,8 +52,8 @@ runs:
         item-json: ${{ inputs.item-json }}
         certificate-base64: ${{ inputs.certificate-base64 }}
         certificate-password: ${{ inputs.certificate-password }}
-        certificate-sha1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
-        team-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID }}
+        certificate-sha1: ${{ inputs.certificate-sha1 }}
+        team-id: ${{ inputs.team-id }}
         notary-key-base64: ${{ inputs.notary-key-base64 }}
         notary-key-id: ${{ inputs.notary-key-id }}
         notary-issuer: ${{ inputs.notary-issuer }}
@@ -70,8 +74,8 @@ runs:
         platform-id: ${{ fromJSON(inputs.item-json).platformId }}-credential
         artifact-id: ${{ fromJSON(inputs.item-json).id }}
         artifact-relative-output: product/release
-        expected-team-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID }}
-        certificate-sha1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
+        expected-team-id: ${{ inputs.team-id }}
+        certificate-sha1: ${{ inputs.certificate-sha1 }}
         certificate-p12-base64: ${{ inputs.certificate-base64 }}
         certificate-password: ${{ inputs.certificate-password }}
         notary-api-key-p8-base64: ${{ inputs.notary-key-base64 }}

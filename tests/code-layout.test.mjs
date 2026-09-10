@@ -252,8 +252,10 @@ test("JSON request fields remain closed through nested composite delegation", (t
     ]),
     "actions/build/fixture/inner/action.yml": action([
       {
-        run: "true",
-        env: { RUNTIME: "${{ fromJSON(inputs.request-json).runtime }}" },
+        uses: "actions/setup-node@v6",
+        with: {
+          "node-version": "${{ fromJSON(inputs.request-json).runtime }}",
+        },
       },
     ]),
   });
@@ -264,9 +266,10 @@ test("JSON request fields remain closed through nested composite delegation", (t
     path.join(root, "actions/build/fixture/inner/action.yml"),
     action([
       {
-        run: "true",
-        env: {
-          RUNTIME: "${{ fromJSON(inputs.request-json).retired-runtime }}",
+        uses: "actions/setup-node@v6",
+        with: {
+          "node-version":
+            "${{ fromJSON(inputs.request-json).retired-runtime }}",
         },
       },
     ]),

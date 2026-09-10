@@ -1,6 +1,10 @@
 name: signing-authority-windows
 description: Execute the signing-authority windows capability within its caller job boundary.
 inputs:
+  timestamp-url:
+    description: Windows signing timestamp service.
+  certificate-sha1:
+    description: Expected Windows certificate fingerprint.
   request-json:
     description: Typed public workflow request.
     required: true
@@ -39,8 +43,8 @@ runs:
         item-json: ${{ inputs.item-json }}
         certificate-base64: ${{ inputs.certificate-base64 }}
         certificate-password: ${{ inputs.certificate-password }}
-        certificate-sha1: ${{ vars.BUILDCHAIN_WINDOWS_CERTIFICATE_SHA1 }}
-        timestamp-url: ${{ vars.BUILDCHAIN_WINDOWS_TIMESTAMP_URL }}
+        certificate-sha1: ${{ inputs.certificate-sha1 }}
+        timestamp-url: ${{ inputs.timestamp-url }}
     - uses: actions/upload-artifact@v7.0.1
       with:
         name: authority-result-windows-${{ fromJSON(inputs.item-json).slug }}-${{ fromJSON(inputs.request-json).correlation-id }}

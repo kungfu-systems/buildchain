@@ -7,9 +7,14 @@ import { spawnSync } from "node:child_process";
 import YAML from "yaml";
 const root = process.cwd();
 const contract = JSON.parse(fs.readFileSync(path.join(root, "architecture/dev-delivery-orchestration.json"), "utf8"));
-const temp = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-delivery-actionlint-"));
+const temp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-delivery-actionlint-")));
 try {
-  const files = [];
+  const workflows = path.join(temp, ".github/workflows");
+  fs.cpSync(path.join(root, ".github"), path.join(temp, ".github"), { recursive: true });
+  fs.mkdirSync(path.join(temp, ".git")); // actionlint's isolated project boundary, never a runtime checkout.
+  fs.mkdirSync(path.join(temp, ".buildchain"));
+  fs.symlinkSync(path.join(root, "actions"), path.join(temp, "actions"), "junction");
+  const files = fs.readdirSync(workflows).filter(file => /\.ya?ml$/u.test(file)).map(file => path.join(workflows, file));
   for (const node of contract.nodes) for (const implementation of node.implementations) {
     const action = YAML.parse(fs.readFileSync(path.join(root, implementation.action), "utf8"));
     assert.deepEqual(Object.keys(action.inputs || {}), implementation.inputs, `${implementation.action}: input contract drift`);
@@ -21,15 +26,17 @@ try {
     }
     const inputs = Object.fromEntries(Object.entries(action.inputs || {}).map(([name, input]) => [name, { ...input, type: "string" }]));
     const outputs = Object.fromEntries(Object.entries(action.outputs || {}).map(([name, output]) => [name, output.value]));
-    const file = path.join(temp, `${node.id}-${files.length}.yml`);
+    const file = path.join(workflows, `lint-composite-${node.id}-${files.length}.yml`);
     fs.writeFileSync(file, YAML.stringify({ name: `Validate ${node.id} composite`, on: { workflow_call: { inputs } }, jobs: { node: { "runs-on": "ubuntu-24.04", ...(Object.keys(outputs).length ? { outputs } : {}), steps: action.runs.steps } } }));
     files.push(file);
   }
-  const probe = spawnSync("actionlint", ["-version"], { stdio: "ignore" });
-  const command = probe.error?.code === "ENOENT" ? "go" : "actionlint";
-  const prefix = command === "go" ? ["run", "github.com/rhysd/actionlint/cmd/actionlint@v1.7.12"] : [];
-  const result = spawnSync(command, [...prefix, "-color=false", ...files], { stdio: "inherit" });
+  const aliases = new Set(files.flatMap(file => [...fs.readFileSync(file, "utf8").matchAll(/\.\/\.buildchain\/([a-z0-9][a-z0-9-]*)\/actions\//gu)].map(match => match[1])));
+  for (const alias of aliases) fs.symlinkSync(root, path.join(temp, ".buildchain", alias), "junction");
+  const version = "1.7.12", probe = spawnSync("actionlint", ["-version"], { encoding: "utf8" });
+  const command = probe.status === 0 && probe.stdout.trim().split(/\s/u)[0].replace(/^v/u, "") === version ? "actionlint" : "go";
+  const prefix = command === "go" ? ["run", `github.com/rhysd/actionlint/cmd/actionlint@v${version}`] : [];
+  const result = spawnSync(command, [...prefix, "-color=false", ...files], { cwd: temp, stdio: "inherit" });
   if (result.error) throw result.error;
   if (result.signal || result.status !== 0) process.exitCode = result.status || 1;
-  else console.log(`Validated ${files.length} delivery composite bodies and interfaces.`);
+  else console.log(`Validated ${files.length} source workflows and delivery composite interfaces.`);
 } finally { fs.rmSync(temp, { recursive: true, force: true }); }

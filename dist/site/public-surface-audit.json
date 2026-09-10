@@ -2726,6 +2726,8 @@
         "id": "build/gate/execute",
         "path": "actions/build/gate/execute/action.yml",
         "inputs": [
+          "cache-mirror-url-template",
+          "cache-reference-repository-template",
           "matrix-json",
           "plan-artifact",
           "request-json",
@@ -2733,7 +2735,7 @@
           "runtime-sha",
           "source-sha"
         ],
-        "inputCount": 6
+        "inputCount": 8
       },
       {
         "id": "build/gate/plan",
@@ -3965,13 +3967,14 @@
         "id": "publication/authority/admit",
         "path": "actions/publication/authority/admit/action.yml",
         "inputs": [
+          "auditor-app-id",
           "auditor-private-key",
           "governance-read-token",
           "request-json",
           "runtime-ref",
           "runtime-repository"
         ],
-        "inputCount": 5
+        "inputCount": 6
       },
       {
         "id": "publication/authority/artifact-evidence",
@@ -4736,11 +4739,12 @@
         "path": "actions/release/signing/detached/action.yml",
         "inputs": [
           "item-json",
+          "key-id",
           "private-key-base64",
           "request-json",
           "source-checkout-outcome"
         ],
-        "inputCount": 4
+        "inputCount": 5
       },
       {
         "id": "release/signing/intake",
@@ -4759,14 +4763,16 @@
         "inputs": [
           "certificate-base64",
           "certificate-password",
+          "certificate-sha1",
           "item-json",
           "notary-issuer",
           "notary-key-base64",
           "notary-key-id",
           "request-json",
-          "source-checkout-outcome"
+          "source-checkout-outcome",
+          "team-id"
         ],
-        "inputCount": 8
+        "inputCount": 10
       },
       {
         "id": "release/signing/windows",
@@ -4774,11 +4780,13 @@
         "inputs": [
           "certificate-base64",
           "certificate-password",
+          "certificate-sha1",
           "item-json",
           "request-json",
-          "source-checkout-outcome"
+          "source-checkout-outcome",
+          "timestamp-url"
         ],
-        "inputCount": 5
+        "inputCount": 7
       },
       {
         "id": "release/tail/settle",
@@ -10882,7 +10890,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "064977352dff4ecf6696c7b91e7bb6cc647a2e87aa89c5dddd8127340f6d949c",
-    "workflowRegistryDigest": "4196cba1e0a2393d82ed93cdc57cfa851b87d8124dc3b57602b86c7ac2d7b19d",
+    "workflowRegistryDigest": "706ca0a9d81adb3ad9291bc56644c4783c51a6ab1281400dc33de48132b399bc",
     "pageRegistryDigest": "6fa113c8d70cd24d9580a27a11f00526135a2258f8830328d3896355fbdac584"
   },
   "comparison": {

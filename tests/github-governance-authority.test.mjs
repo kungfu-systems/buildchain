@@ -1114,7 +1114,10 @@ test("publication authority recollects live App-authenticated governance instead
   const graph = inspectWorkflowJob(".github/workflows/.release-authority.yml", "verify");
   const mint = graph.steps.find(step => step.id === "governance-auditor");
   assert.match(mint.uses, /actions\/create-github-app-token@/);
-  assert.match(mint.if, /KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY != ''/);
+  assert.match(mint.if, /inputs.auditor-private-key != ''/);
+  const admission = graph.job.steps.find(step => step.id === "authority-admit");
+  assert.equal(admission.with["auditor-private-key"], "${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}");
+  assert.equal(mint.with["private-key"], "${{ inputs.auditor-private-key }}");
   assert.equal(mint["continue-on-error"], true);
   const audit = graph.steps.find(step => step.name === "Collect and verify exact live GitHub governance authority");
   assert.match(audit.with.token, /steps.governance-auditor.outputs.token.*inputs.governance-read-token.*github.token/);

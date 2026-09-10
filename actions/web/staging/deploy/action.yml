@@ -34,7 +34,6 @@ runs:
         path: .buildchain/runtime
         persist-credentials: false
     - name: Prepare exact Buildchain Node runtime
-      id: core-runtime
       uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
       with:
         directory: .buildchain/runtime
@@ -79,17 +78,14 @@ runs:
         include-hidden-files: true
         if-no-files-found: error
     - name: Report observed deployment
-      id: report
       if: ${{ always() }}
       uses: ./.buildchain/runtime/actions/web/deployment/report
       with:
         request-json: ${{ inputs.request-json }}
         channel: staging
-        job-status: ${{ cancelled() && 'cancelled' || failure() && 'failure' || 'success' }}
+        job-status: ${{ job.status == 'cancelled' && 'cancelled' || github.action_status == 'failure' && 'failure' || 'success' }}
         runtime-sha: ${{ fromJSON(inputs.needs-runtime-outputs-runtime-sha) }}
         rollback-pointer: ${{ fromJSON(inputs.needs-runtime-outputs-rollback-ref) }}
-        release-pr: ""
-        release-source: ""
         token: ${{ github.token }}
     - name: Upload staging release passport
       if: ${{ always() }}

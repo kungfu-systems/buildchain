@@ -64,7 +64,7 @@ runs:
         publication-json: ${{ inputs.publication-json || '{}' }}
         observations-json: ${{ toJSON(steps) }}
         publish-outcome: ${{ inputs.publish-outcome }}
-        aggregate-outcome: ${{ cancelled() && 'cancelled' || success() && 'success' || 'failure' }}
+        aggregate-outcome: ${{ job.status == 'cancelled' && 'cancelled' || (github.action_status || 'success') == 'success' && 'success' || 'failure' }}
     - name: Retain terminal publication receipt
       if: ${{ always() && steps.receipt.outputs.controller-receipt-digest != '' }}
       uses: actions/upload-artifact@v7.0.1

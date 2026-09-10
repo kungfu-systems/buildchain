@@ -3864,6 +3864,8 @@
       "id": "build/gate/execute",
       "path": "actions/build/gate/execute/action.yml",
       "inputs": [
+        "cache-mirror-url-template",
+        "cache-reference-repository-template",
         "matrix-json",
         "plan-artifact",
         "request-json",
@@ -3871,7 +3873,7 @@
         "runtime-sha",
         "source-sha"
       ],
-      "inputCount": 6,
+      "inputCount": 8,
       "capabilityGroup": "reusable-build",
       "status": "active",
       "owner": "buildchain-actions",
@@ -6183,13 +6185,14 @@
       "id": "publication/authority/admit",
       "path": "actions/publication/authority/admit/action.yml",
       "inputs": [
+        "auditor-app-id",
         "auditor-private-key",
         "governance-read-token",
         "request-json",
         "runtime-ref",
         "runtime-repository"
       ],
-      "inputCount": 5,
+      "inputCount": 6,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",
@@ -7604,11 +7607,12 @@
       "path": "actions/release/signing/detached/action.yml",
       "inputs": [
         "item-json",
+        "key-id",
         "private-key-base64",
         "request-json",
         "source-checkout-outcome"
       ],
-      "inputCount": 4,
+      "inputCount": 5,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",
@@ -7647,14 +7651,16 @@
       "inputs": [
         "certificate-base64",
         "certificate-password",
+        "certificate-sha1",
         "item-json",
         "notary-issuer",
         "notary-key-base64",
         "notary-key-id",
         "request-json",
-        "source-checkout-outcome"
+        "source-checkout-outcome",
+        "team-id"
       ],
-      "inputCount": 8,
+      "inputCount": 10,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",
@@ -7672,11 +7678,13 @@
       "inputs": [
         "certificate-base64",
         "certificate-password",
+        "certificate-sha1",
         "item-json",
         "request-json",
-        "source-checkout-outcome"
+        "source-checkout-outcome",
+        "timestamp-url"
       ],
-      "inputCount": 5,
+      "inputCount": 7,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",

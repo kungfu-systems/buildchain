@@ -1,6 +1,10 @@
 name: gate-profile-run-gates
 description: Execute the gate-profile run-gates capability within its caller job boundary.
 inputs:
+  cache-reference-repository-template:
+    description: Workflow checkout reference fallback.
+  cache-mirror-url-template:
+    description: Workflow checkout mirror fallback.
   request-json:
     description: Typed public workflow request.
     required: true
@@ -23,28 +27,23 @@ runs:
   using: composite
   steps:
     - name: Prepare defining workflow bootstrap
-      id: bootstrap-runtime
       uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/workflow-shell
     - name: Checkout locked consumer source
       uses: ./.buildchain/workflow-shell/actions/providers/source/checkout
       with:
         sha: ${{ inputs.source-sha }}
         ref: ${{ fromJSON(inputs.request-json).source-ref || github.ref }}
-        directory: source
         cache-mode: ${{ fromJSON(inputs.request-json).checkout-cache-mode }}
         mirror-url-template:
           ${{ fromJSON(inputs.request-json).checkout-cache-mirror-url-template ||
-          vars.BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE }}
+          inputs.cache-mirror-url-template }}
         reference-repository-template:
           ${{ fromJSON(inputs.request-json).checkout-cache-reference-repository-template ||
-          vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
+          inputs.cache-reference-repository-template }}
         fallback: ${{ fromJSON(inputs.request-json).checkout-cache-fallback }}
         cache-timeout-seconds: ${{ fromJSON(inputs.request-json).checkout-cache-timeout-seconds }}
         github-timeout-seconds: ${{ fromJSON(inputs.request-json).checkout-cache-github-timeout-seconds }}
         fetch-attempts: ${{ fromJSON(inputs.request-json).checkout-cache-fetch-attempts }}
-        diagnostics-path: .buildchain/diagnostics/source-checkout.json
         token: ${{ github.token }}
         repository: ${{ github.repository }}
         reset-working-tree: ${{ runner.os == 'Windows' }}
@@ -58,10 +57,10 @@ runs:
         cache-mode: ${{ fromJSON(inputs.request-json).checkout-cache-mode }}
         mirror-url-template:
           ${{ fromJSON(inputs.request-json).checkout-cache-mirror-url-template ||
-          vars.BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE }}
+          inputs.cache-mirror-url-template }}
         reference-repository-template:
           ${{ fromJSON(inputs.request-json).checkout-cache-reference-repository-template ||
-          vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
+          inputs.cache-reference-repository-template }}
         fallback: ${{ fromJSON(inputs.request-json).checkout-cache-fallback }}
         cache-timeout-seconds: ${{ fromJSON(inputs.request-json).checkout-cache-timeout-seconds }}
         github-timeout-seconds: ${{ fromJSON(inputs.request-json).checkout-cache-github-timeout-seconds }}
@@ -69,7 +68,6 @@ runs:
         diagnostics-path: .buildchain/diagnostics/runtime-checkout.json
         token: ${{ github.token }}
     - name: Prepare exact Buildchain Node runtime
-      id: core-runtime
       uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
       with:
         directory: .buildchain/runtime

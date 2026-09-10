@@ -237,6 +237,7 @@ jobs:
           runtime-repository: ${{ inputs.buildchain-repository || job.workflow_repository }}
           request-json: ${{ toJSON(inputs) }}
           auditor-private-key: ${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
+          auditor-app-id: ${{ vars.KUNGFU_GOVERNANCE_AUDITOR_APP_ID }}
           governance-read-token: ${{ secrets.BUILDCHAIN_GOVERNANCE_READ_TOKEN }}
       - name: "Publication authority: candidate evidence."
         id: authority-candidate-evidence
@@ -244,7 +245,6 @@ jobs:
         with:
           request-json: ${{ toJSON(inputs) }}
       - name: "Publication authority: artifact evidence."
-        id: authority-artifact-evidence
         uses: ./.buildchain/workflow-shell/actions/publication/authority/artifact-evidence
         with:
           request-json: ${{ toJSON(inputs) }}

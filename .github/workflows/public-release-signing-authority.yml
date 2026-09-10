@@ -103,6 +103,7 @@ jobs:
           request-json: ${{ toJSON(inputs) }}
           item-json: ${{ toJSON(matrix.request) }}
           private-key-base64: ${{ secrets.BUILDCHAIN_DETACHED_PRIVATE_KEY_PKCS8_BASE64 }}
+          key-id: ${{ vars.BUILDCHAIN_DETACHED_KEY_ID }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
         if: ${{ always() }}
   macos:
@@ -137,6 +138,8 @@ jobs:
           item-json: ${{ toJSON(matrix.request) }}
           certificate-base64: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64 }}
           certificate-password: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD }}
+          certificate-sha1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
+          team-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID }}
           notary-key-base64: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64 }}
           notary-key-id: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_ID }}
           notary-issuer: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_ISSUER }}
@@ -174,6 +177,8 @@ jobs:
           item-json: ${{ toJSON(matrix.request) }}
           certificate-base64: ${{ secrets.BUILDCHAIN_WINDOWS_CERTIFICATE_PFX_BASE64 }}
           certificate-password: ${{ secrets.BUILDCHAIN_WINDOWS_CERTIFICATE_PASSWORD }}
+          certificate-sha1: ${{ vars.BUILDCHAIN_WINDOWS_CERTIFICATE_SHA1 }}
+          timestamp-url: ${{ vars.BUILDCHAIN_WINDOWS_TIMESTAMP_URL }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
         if: ${{ always() }}
   deliver:
