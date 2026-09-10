@@ -21,7 +21,6 @@ runs:
   using: composite
   steps:
     - name: Prepare exact core runtime
-      id: core
       uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
       with:
         directory: .buildchain/workflow-shell
@@ -66,6 +65,7 @@ runs:
         stable-lock-path: ${{ fromJSON(inputs.request-json).buildchain-stable-contract-lock-path }}
         alpha-lock-path: ${{ fromJSON(inputs.request-json).buildchain-alpha-contract-lock-path }}
     - name: Preserve rooted admission
+      if: ${{ always() && steps.policy.outputs.v4-consumer-policy-receipt-path != '' }}
       uses: actions/upload-artifact@v7.0.1
       with:
         name: v4-consumer-policy-release-candidate-promote-${{ github.sha }}
