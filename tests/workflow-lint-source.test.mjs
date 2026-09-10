@@ -35,10 +35,32 @@ test("workflow lint binds source action inputs despite a foreign executing runti
     import.meta.dirname,
     "../scripts/check-dev-delivery-actions.mjs",
   );
+  const env = { ...process.env };
+  if (process.platform !== "win32") {
+    write(
+      "tools/actionlint",
+      '#!/usr/bin/env node\nrequire("node:fs").appendFileSync(process.env.BUILDCHAIN_TEST_OLD_ACTIONLINT_RECORD, process.argv[2] + "\\n");\nconsole.log("1.0.0");\nprocess.exit(process.argv[2] === "-version" ? 0 : 91);\n',
+    );
+    fs.chmodSync(path.join(root, "tools/actionlint"), 0o755);
+    env.PATH = path.join(root, "tools") + path.delimiter + env.PATH;
+    env.BUILDCHAIN_TEST_OLD_ACTIONLINT_RECORD = path.join(
+      root,
+      "old-tool-calls.txt",
+    );
+  }
   const lint = () =>
-    spawnSync(process.execPath, [command], { cwd: root, encoding: "utf8" });
+    spawnSync(process.execPath, [command], {
+      cwd: root,
+      encoding: "utf8",
+      env,
+    });
   const accepted = lint();
   assert.equal(accepted.status, 0, accepted.stdout + accepted.stderr);
+  if (process.platform !== "win32")
+    assert.equal(
+      fs.readFileSync(env.BUILDCHAIN_TEST_OLD_ACTIONLINT_RECORD, "utf8"),
+      "-version\n",
+    );
   assert.equal(
     fs.readFileSync(path.join(root, foreign), "utf8"),
     metadata("old-input"),

@@ -32,9 +32,9 @@ try {
   }
   const aliases = new Set(files.flatMap(file => [...fs.readFileSync(file, "utf8").matchAll(/\.\/\.buildchain\/([a-z0-9][a-z0-9-]*)\/actions\//gu)].map(match => match[1])));
   for (const alias of aliases) fs.symlinkSync(root, path.join(temp, ".buildchain", alias), "junction");
-  const probe = spawnSync("actionlint", ["-version"], { stdio: "ignore" });
-  const command = probe.error?.code === "ENOENT" ? "go" : "actionlint";
-  const prefix = command === "go" ? ["run", "github.com/rhysd/actionlint/cmd/actionlint@v1.7.12"] : [];
+  const version = "1.7.12", probe = spawnSync("actionlint", ["-version"], { encoding: "utf8" });
+  const command = probe.status === 0 && probe.stdout.trim().split(/\s/u)[0].replace(/^v/u, "") === version ? "actionlint" : "go";
+  const prefix = command === "go" ? ["run", `github.com/rhysd/actionlint/cmd/actionlint@v${version}`] : [];
   const result = spawnSync(command, [...prefix, "-color=false", ...files], { cwd: temp, stdio: "inherit" });
   if (result.error) throw result.error;
   if (result.signal || result.status !== 0) process.exitCode = result.status || 1;
