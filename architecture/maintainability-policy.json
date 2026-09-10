@@ -27,7 +27,7 @@
   "repositoryBudgets": {
     "baselineRevision": "9569f69c2cb609372b8a3d65ce5dec8fb7b34a84",
     "maxHandMaintainedSourceFiles": 1295,
-    "maxHandMaintainedSourceLines": 203384,
+    "maxHandMaintainedSourceLines": 203392,
     "maxWorkflowFiles": 68,
     "maxWorkflowLines": 8715,
     "latestTransition": "Buildchain 4.1 responsibility layers and capability modules.",
@@ -36,7 +36,7 @@
     "governance": "legacy-debt-sunset-2026q4",
     "maxActionDefinitions": 283,
     "maxActionDefinitionLines": 12399,
-    "maxAutomationImplementationLines": 224412
+    "maxAutomationImplementationLines": 224420
   },
   "sourceBudgets": {
     "newFileLines": 600,

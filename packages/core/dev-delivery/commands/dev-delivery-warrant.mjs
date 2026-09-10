@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { runDevDeliveryCommand } from "../warrant/service.js";
 import { devDeliveryCliOptions } from "./dev-delivery-warrant-options.mjs";
 function usage() {
@@ -13,7 +14,11 @@ async function main() {
     process.stdout.write(usage());
     return;
   }
-  const options = devDeliveryCliOptions(args);
+  const options = {
+    ...devDeliveryCliOptions(args),
+    token: process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "",
+    apiUrl: process.env.GITHUB_API_URL || "https://api.github.com",
+  };
   if (
     ![
       "fence-writer-protocol",
@@ -49,7 +54,10 @@ async function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   main().catch((error) => {
     console.error(`buildchain dev warrant: ${error.message}`);
     process.exit(1);
