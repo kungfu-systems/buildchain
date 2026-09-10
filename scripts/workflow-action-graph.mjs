@@ -117,23 +117,10 @@ export function inspectWorkflowJob(relative, jobId, root = repositoryRoot) {
     if (action.runs.using === "composite") {
       for (const child of action.runs.steps) {
         if (excludedPhase(child, childInputs)) continue;
-        const executableText = [child.run, child.with?.script]
-          .filter(Boolean)
-          .join("\n");
-        for (const match of executableText.matchAll(
-          /(?:\$GITHUB_ACTION_PATH\/|["'](?:\.\.\/)+)([^"'\s]+\.[cm]?js)/gu,
-        )) {
-          const prefix = match[0].startsWith("$GITHUB_ACTION_PATH/")
-            ? ""
-            : match[0].slice(1, -match[1].length);
-          sourceModule(path.posix.join(directory, prefix, match[1]));
-        }
-        for (const match of executableText.matchAll(
-          /(?:^|[\s"'/])((?:packages\/core|scripts)\/[^\s"']+\.[cm]?js)/gu,
-        )) {
-          const file = match[1];
-          if (fs.existsSync(path.join(root, file))) sourceModule(file);
-        }
+        assert.ok(
+          child.uses && !child.run && !child.shell && !child.with?.script,
+          `${directory}: composite must invoke actions, not executable scripts`,
+        );
         walk(child, [...ancestry, directory], childInputs);
       }
     } else if (/^node\d+$/u.test(action.runs.using)) {
