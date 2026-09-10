@@ -29,13 +29,18 @@ test("workflow lint binds source action inputs despite a foreign executing runti
     "// Foreign runtime fixture.\n",
   );
   const workflow = (input) =>
-    `name: lint fixture\non: push\njobs:\n  check:\n    runs-on: ubuntu-24.04\n    steps:\n      - uses: ./.buildchain/workflow-shell/${action}\n        with:\n          ${input}: value\n`;
+    `name: lint fixture\non: push\njobs:\n  check:\n    runs-on: ubuntu-24.04\n    steps:\n      - uses: ./.buildchain/workflow-shell/${action}\n        with:\n          ${input}: \${{ job.workflow_sha }}\n`;
   write(".github/workflows/fixture.yml", workflow("fresh-input"));
+  write(".github/actionlint.yaml", 'paths:\n  .github/workflows/fixture.yml:\n    ignore:\n      - property "workflow_sha" is not defined in object type\n');
   const command = path.resolve(
     import.meta.dirname,
     "../scripts/check-dev-delivery-actions.mjs",
   );
   const env = { ...process.env };
+  fs.mkdirSync(path.join(root, "temporary"));
+  const temporaryAlias = path.join(root, "temporary-alias");
+  fs.symlinkSync(path.join(root, "temporary"), temporaryAlias, "junction");
+  Object.assign(env, { TMPDIR: temporaryAlias, TMP: temporaryAlias, TEMP: temporaryAlias });
   if (process.platform !== "win32") {
     write(
       "tools/actionlint",

@@ -7,7 +7,7 @@ import { spawnSync } from "node:child_process";
 import YAML from "yaml";
 const root = process.cwd();
 const contract = JSON.parse(fs.readFileSync(path.join(root, "architecture/dev-delivery-orchestration.json"), "utf8"));
-const temp = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-delivery-actionlint-"));
+const temp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-delivery-actionlint-")));
 try {
   const workflows = path.join(temp, ".github/workflows");
   fs.cpSync(path.join(root, ".github"), path.join(temp, ".github"), { recursive: true });
