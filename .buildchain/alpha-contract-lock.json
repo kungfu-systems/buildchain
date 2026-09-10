@@ -3,16 +3,16 @@
   "contract": "kungfu-buildchain-contract-lock",
   "buildchain": {
     "ref": "v4-alpha",
-    "resolvedSha": "316cea90576de816ede38d96cf08b924ee41a15a",
+    "resolvedSha": "e4d4a9529989a4d97e780267fc0a5271a3a68ac6",
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "contractDigest": "sha256:9020e79400bb4540e27298d4a035a61328a5e54306ce8a0ee3199bab76a02bd3",
-    "compatibilityDigest": "sha256:e398528e54509c05569630ffcc98a04d41e831479ab921df65943b49bf077719",
-    "compatibilityFactRegistryRoot": "sha256:232fd556a2372b29db586bbc2acbdfce6464a68c93902797ff527f75f7816c42",
-    "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
-    "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
+    "contractDigest": "sha256:c39174b294496d49bfdef4d18286b859574a110c81bd72d2c755653f095b183c",
+    "compatibilityDigest": "sha256:5cfe9b904da70a3a7194868aaef1f1b11957d8e0158ebb77a524f2ea7005083b",
+    "compatibilityFactRegistryRoot": "sha256:ea8f656c9fd74aa2d2fb9b7807e7daa39a708f6a7cd37ab7d154eac7be5605a6",
+    "compatibilityFactCutRoot": "sha256:58f33e498596505a26b6fc3c7ae5acef847ff699eee6c7e17a7b318a40bdf0d6",
+    "compatibilityProofRegistryRoot": "sha256:2f6477405c7891b754b33ad6515d55618bd320e7cdc59330d7cc645e17201e72",
     "majorLine": "v4",
     "compatibilityPolicy": "major-compatible",
-    "acceptedAt": "2026-09-08T16:48:40.291Z",
+    "acceptedAt": "2026-09-10T16:30:58.010Z",
     "surfaces": [
       {
         "id": "reusable-build",
@@ -46,23 +46,15 @@
         "id": "advanced-release-candidate-promote",
         "kind": "workflow",
         "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-        "compatibilityProofRoots": [
-          "sha256:36c85ba487be1528e85776d2bc5f766a971d42ac238aec30071945f7d60d9fc5"
-        ],
-        "compatibilityFactRoots": [
-          "sha256:5664da2363bed0b45497215b60763c3be627e568eb3182af5891c23ae3875fbe"
-        ]
+        "compatibilityProofRoots": [],
+        "compatibilityFactRoots": []
       },
       {
         "id": "web-surface",
         "kind": "workflow",
-        "breakingDigest": "sha256:27f0cb9c7d97288850d215be8696b323471c41fd1cdf3a2ff3ebf21f62541960",
-        "compatibilityProofRoots": [
-          "sha256:3ba66a1e8f8d00ddd45f3f448bcccb15469cbd31f5765d36f61e4cfe7fd0dd41"
-        ],
-        "compatibilityFactRoots": [
-          "sha256:bba5690e6c535b54623d31b3260e59381bdb50161d7bff33b8e42b8b6dd3135a"
-        ]
+        "breakingDigest": "sha256:3bb62548a4e1476d3b5df9deb7bacf6c2e5bb333132a456108ab1572d571b9a8",
+        "compatibilityProofRoots": [],
+        "compatibilityFactRoots": []
       },
       {
         "id": "auditable-demo",
@@ -89,12 +81,8 @@
         "id": "promote-buildchain-ref-action",
         "kind": "action",
         "breakingDigest": "sha256:6147c0a8d5c36bfaa6021871574e1fc28192a3f1b8cfdae4d24ef3059ac1ebda",
-        "compatibilityProofRoots": [
-          "sha256:e6f93f44a6613a9d6de776ebe8f29b1779b0cd18a24bdf126ec6c1a07770fa75"
-        ],
-        "compatibilityFactRoots": [
-          "sha256:50e5b6e644493ac00d5b1d83a0ec6009f9faaae1bee15e88ee8386c9ec8a775d"
-        ]
+        "compatibilityProofRoots": [],
+        "compatibilityFactRoots": []
       },
       {
         "id": "macos-credential-island-action",
@@ -176,67 +164,63 @@
       {
         "id": "controller:source-check",
         "kind": "controller",
-        "breakingDigest": "sha256:d4bd0f2a1921bfed71a4d9104d45934555bde74a5c189f93ad79f37074c02b87",
+        "breakingDigest": "sha256:c90592a71d859c9814e70cb1c8603d8240271e8049fe4e754fe4776b8f1b1a4c",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       },
       {
         "id": "controller:build-lifecycle",
         "kind": "controller",
-        "breakingDigest": "sha256:51ef685c6a85a669785d5de240cdda95ed6fe947485d6b2552e2b17d96acdfe1",
+        "breakingDigest": "sha256:6adb4adc805a741ec7e54a769c4bb89ef66805bb63ac99dfab06ba11f36d9381",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       },
       {
         "id": "controller:shifu-gate-profile-envelope",
         "kind": "controller",
-        "breakingDigest": "sha256:5f1868478b7ccd9fb79aea76bc771289d2ca6bd2dccd1abf57575426f1eae5fb",
+        "breakingDigest": "sha256:93d630270c6db2c6993f0965d44280e0f178159d8d74519c7752a38d5771d02e",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       },
       {
         "id": "controller:web-surface",
         "kind": "controller",
-        "breakingDigest": "sha256:f14825324a16b51c2e9ed708ebe64e1932e05b6d5e0866f83aea8439decb4a27",
+        "breakingDigest": "sha256:ad5e695f42245fdbe53afbef5311ae52f113c9016bec46eaff4476aeb158ec17",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       },
       {
         "id": "controller:publication-artifact",
         "kind": "controller",
-        "breakingDigest": "sha256:3f76502666069c2727d23efcfdb08fb80f89ced1955a69e29f11525ae88aca1d",
+        "breakingDigest": "sha256:64043b583051b8fc5320b5d6f2304120037fb6a14b8448edbf6e91908f719739",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       },
       {
         "id": "controller:paper-release",
         "kind": "controller",
-        "breakingDigest": "sha256:0eb318df455ef9cb737a7c2515a2411b685d34ed0bde7b5f5b173a7a42513114",
+        "breakingDigest": "sha256:1175b298251f200a6290c7f46d79f70e5c703279d3a5c5e9776bb18d4e4f7b52",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       },
       {
         "id": "controller:release-candidate-promotion",
         "kind": "controller",
-        "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
+        "breakingDigest": "sha256:884bc7c4dccbc561b1d22a20cc5f7f50172c9691775aa2b84179e036a138cb20",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       },
       {
         "id": "controller:release-propagation",
         "kind": "controller",
-        "breakingDigest": "sha256:b873ceb65618972bea615afcb9c616c138ce834b3246ec7237ef87c1618d68bd",
-        "compatibilityProofRoots": [
-          "sha256:8b98ff903d3abd8d9a9b6a0b250efd8fdf6fd5d4127aa4d0d0c4a5b3db87f353"
-        ],
-        "compatibilityFactRoots": [
-          "sha256:f6e89a46bb73e93583477eeb3bc3a8bd1f36bdafd040777fb3a999460191b360"
-        ]
+        "breakingDigest": "sha256:63cbc80ea892431ee4780c358a60f4357ba95553c632dd86e1d62c18e375ecca",
+        "compatibilityProofRoots": [],
+        "compatibilityFactRoots": []
       },
       {
         "id": "controller:binary-distribution",
         "kind": "controller",
-        "breakingDigest": "sha256:7c18fdd3df180db9e1f043a2286ef3f02fae60b84e42b76cd50da9cfeb77883d",
+        "breakingDigest": "sha256:c8dc1280b05fa2fc1e976292d7a3d31d6dfb99ce1a814834462e634b38671859",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       }

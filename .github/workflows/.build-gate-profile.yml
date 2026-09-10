@@ -252,6 +252,8 @@ jobs:
           source-sha: ${{ needs.plan.outputs.source-sha }}
           runtime-ref: ${{ needs.plan.outputs.buildchain-runtime-ref }}
           plan-artifact: ${{ needs.plan.outputs.gate-matrix-artifact }}
+          cache-mirror-url-template: ${{ vars.BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE }}
+          cache-reference-repository-template: ${{ vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
   aggregate:
     name: Gate profile / aggregate
     needs:

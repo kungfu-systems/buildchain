@@ -1,6 +1,8 @@
 name: signing-authority-detached
 description: Execute the signing-authority detached capability within its caller job boundary.
 inputs:
+  key-id:
+    description: Detached signing key identifier.
   request-json:
     description: Typed public workflow request.
     required: true
@@ -35,7 +37,7 @@ runs:
         request-json: ${{ inputs.request-json }}
         item-json: ${{ inputs.item-json }}
         private-key-base64: ${{ inputs.private-key-base64 }}
-        key-id: ${{ vars.BUILDCHAIN_DETACHED_KEY_ID }}
+        key-id: ${{ inputs.key-id }}
     - uses: actions/upload-artifact@v7.0.1
       with:
         name: authority-result-detached-${{ fromJSON(inputs.item-json).slug }}-${{ fromJSON(inputs.request-json).correlation-id }}

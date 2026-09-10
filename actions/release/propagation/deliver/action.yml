@@ -63,7 +63,7 @@ runs:
         upload-outcome: ${{ steps.upload.outcome }}
         work-upload-outcome: ${{ steps.work-upload.outcome }}
         reconcile-outcome: ${{ steps.reconcile.outcome }}
-        cancelled: ${{ cancelled() }}
+        cancelled: ${{ job.status == 'cancelled' }}
     - name: Upload controller receipt
       if: ${{ always() && steps.report.outputs.controller-receipt-digest != '' }}
       uses: actions/upload-artifact@v7.0.1

@@ -1,6 +1,8 @@
 name: authority-admit
 description: "Publication authority: admit."
 inputs:
+  auditor-app-id:
+    description: Governance auditor application identifier.
   runtime-ref:
     description: Selected runtime ref with the caller precedence preserved.
     required: true
@@ -20,7 +22,6 @@ runs:
   using: composite
   steps:
     - name: Prepare workflow implementation
-      id: core-node
       uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
     - name: Admit immutable authority request and evidence requirements
       uses: ./.buildchain/workflow-shell/actions/publication/authority/inspect-request
@@ -39,16 +40,14 @@ runs:
         directory: .buildchain/authority-runtime
     - name: Mint bounded governance auditor token
       if:
-        ${{ !fromJSON(inputs.request-json).dry-run && vars.KUNGFU_GOVERNANCE_AUDITOR_APP_ID != '' && env.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY
+        ${{ !fromJSON(inputs.request-json).dry-run && inputs.auditor-app-id != '' && inputs.auditor-private-key
         != '' }}
       id: governance-auditor
       continue-on-error: true
       uses: actions/create-github-app-token@v3
-      env:
-        KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY: ${{ inputs.auditor-private-key }}
       with:
-        app-id: ${{ vars.KUNGFU_GOVERNANCE_AUDITOR_APP_ID }}
-        private-key: ${{ env.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
+        app-id: ${{ inputs.auditor-app-id }}
+        private-key: ${{ inputs.auditor-private-key }}
         owner: ${{ github.repository_owner }}
     - name: Collect and verify exact live GitHub governance authority
       if: ${{ !fromJSON(inputs.request-json).dry-run }}

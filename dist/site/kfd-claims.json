@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "a3a2a355779bb4a6d1abc1b0d488cf3c01ba215a64f580e265fd8955f6be598e",
+    "sha256": "d9eea80c1bedd3234ababfe8f35efb90c7a7e88ff6550bfb9dc3c546594e1428",
     "summary": {
       "cliCommandCount": 117,
       "workflowCount": 68,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "a3a2a355779bb4a6d1abc1b0d488cf3c01ba215a64f580e265fd8955f6be598e",
+      "sha256": "d9eea80c1bedd3234ababfe8f35efb90c7a7e88ff6550bfb9dc3c546594e1428",
       "summary": {
         "cliCommandCount": 117,
         "workflowCount": 68,
@@ -5999,8 +5999,10 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 6,
+          "inputCount": 8,
           "inputs": [
+            "cache-mirror-url-template",
+            "cache-reference-repository-template",
             "matrix-json",
             "plan-artifact",
             "request-json",
@@ -8102,8 +8104,9 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 5,
+          "inputCount": 6,
           "inputs": [
+            "auditor-app-id",
             "auditor-private-key",
             "governance-read-token",
             "request-json",
@@ -9392,9 +9395,10 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 4,
+          "inputCount": 5,
           "inputs": [
             "item-json",
+            "key-id",
             "private-key-base64",
             "request-json",
             "source-checkout-outcome"
@@ -9430,16 +9434,18 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 8,
+          "inputCount": 10,
           "inputs": [
             "certificate-base64",
             "certificate-password",
+            "certificate-sha1",
             "item-json",
             "notary-issuer",
             "notary-key-base64",
             "notary-key-id",
             "request-json",
-            "source-checkout-outcome"
+            "source-checkout-outcome",
+            "team-id"
           ],
           "reverseAuditSource": "actions/*/action.yml"
         },
@@ -9453,13 +9459,15 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 5,
+          "inputCount": 7,
           "inputs": [
             "certificate-base64",
             "certificate-password",
+            "certificate-sha1",
             "item-json",
             "request-json",
-            "source-checkout-outcome"
+            "source-checkout-outcome",
+            "timestamp-url"
           ],
           "reverseAuditSource": "actions/*/action.yml"
         },

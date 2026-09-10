@@ -200,7 +200,11 @@ test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () 
   assert.match(nodes, /request-json: \$\{\{ inputs.request-json \}\}/);
   assert.match(nodes, /dtolnay\/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30/);
   assert.match(nodes, /actions\/runtime\/toolchain\/windows-rust/);
-  assert.equal((nodes.match(/diagnostics-path: .buildchain\/diagnostics\/(?:source|runtime)-checkout.json/g) || []).length, 2);
+  const checkout = readWorkflow("actions/providers/source/checkout/action.yml");
+  const execution = readWorkflow("actions/build/gate/execute/action.yml");
+  const diagnosticPaths = execution.runs.steps.filter(step => step.uses.endsWith("/actions/providers/source/checkout"))
+    .map(step => step.with["diagnostics-path"] ?? checkout.inputs["diagnostics-path"].default);
+  assert.deepEqual(diagnosticPaths, [".buildchain/diagnostics/source-checkout.json", ".buildchain/diagnostics/runtime-checkout.json"]);
   assert.doesNotMatch(nodes, /runtime-bootstrap\/locked-source-checkout|Download Buildchain runtime checkout bootstrap/);
   assert.doesNotMatch(workflow + nodes, /product\.verify|gate\.catalog|dev-patrol|alpha-pr|release-pr/);
 });
