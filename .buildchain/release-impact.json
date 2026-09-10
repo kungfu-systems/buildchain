@@ -12,6 +12,13 @@
   },
   "surfaceImpacts": [
     {
+      "id": "semantic-action-capability-hierarchy",
+      "impact": "major",
+      "class": "workflow-contract",
+      "rationale": "Organize 274 actions into 13 capabilities and 73 responsibility groups. Composites contain only action composition; minimal Node 24 adapters enter named modular transactions and shared providers. Enforced ownership, dependency and distribution checks reject inline scripts, generic script executors and retired action paths while retaining Rust/WASM authority and credential, failure and evidence boundaries.",
+      "source": "architecture/action-taxonomy.json"
+    },
+    {
       "id": "layered-architecture-41",
       "impact": "major",
       "class": "workflow-contract",
@@ -506,5 +513,5 @@
   "breaking": true,
   "security": false,
   "migrationRequired": true,
-  "summary": "Buildchain v4.1 makes reusable workflows the primary API, composes semantic actions, organizes JavaScript modules by capability and retains authoritative Rust/WASM domains. It removes historical forwarding paths, closes owned consumers and distribution, and advances development without publishing alpha."
+  "summary": "Buildchain v4.1 alpha introduces a strict workflow API, capability/group/operation action hierarchy, uses-only composite actions and modular Node 24 business transactions with authoritative Rust/WASM domains. Owned callers, bootstrap artifacts and generated contracts use the new structure; retired action paths and forwarding entries are removed. Consumers must adopt the published 4.1 contracts when moving to this alpha."
 }
