@@ -96,7 +96,9 @@ function scriptLines(step) {
 export function inspectCompositeSteps(metadata, label) {
   const issues = [];
   if (/\boutputs\.[\w-]*(?:fromJSON|toJSON)\(/u.test(JSON.stringify(metadata)))
-    issues.push(`${label}: output property contains an invalid expression call`);
+    issues.push(
+      `${label}: output property contains an invalid expression call`,
+    );
   for (const step of metadata.runs?.steps || []) {
     const location = `${label}/${step.id || step.name || "step"}`;
     if (typeof step.uses !== "string" || !step.uses.trim())
@@ -117,6 +119,17 @@ export function inspectCompositeSteps(metadata, label) {
 export function inspectWorkflowNodes(source, label, budgets) {
   const issues = [];
   const workflow = parseYaml(source);
+  for (const event of ["workflow_call", "workflow_dispatch"]) {
+    const declaration = workflow.on?.[event];
+    for (const field of ["inputs", "outputs", "secrets"]) {
+      if (!declaration || !Object.hasOwn(declaration, field)) continue;
+      const value = declaration[field];
+      if (!value || typeof value !== "object" || Array.isArray(value))
+        issues.push(
+          `${label}: ${event}.${field} must be a mapping when declared`,
+        );
+    }
+  }
   for (const [id, job] of Object.entries(workflow.jobs || {})) {
     if (!job.steps) continue;
     if (job.steps.length > budgets.workflowStepsPerJob)

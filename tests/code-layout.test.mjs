@@ -320,3 +320,21 @@ test("composite boundary gate rejects stale job status and lost failed-checkout 
     /can execute node business/,
   );
 });
+
+test("workflow API declarations reject null and sequence ports before provider parsing", () => {
+  const budgets = { workflowStepsPerJob: 2, workflowInlineScriptLines: 0 };
+  for (const field of ["inputs", "outputs", "secrets"]) {
+    for (const value of ["", " []", " invalid"]) {
+      const source = `on:\n  workflow_call:\n    ${field}:${value}\njobs: {}\n`;
+      assert.match(
+        inspectWorkflowNodes(source, "fixture", budgets).join("\n"),
+        /must be a mapping/,
+      );
+    }
+  }
+  for (const source of [
+    "on: workflow_call\njobs: {}\n",
+    "on:\n  workflow_call:\n    inputs: {}\njobs: {}\n",
+  ])
+    assert.deepEqual(inspectWorkflowNodes(source, "fixture", budgets), []);
+});

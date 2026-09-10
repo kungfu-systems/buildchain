@@ -120,18 +120,18 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - `.github/workflows/.build.yml`
 - `tests/dev-delivery-minimal-request.test.mjs`
 - `tests/build-configuration.test.mjs`
-- `tests/release-candidate-recovery.test.mjs`
 - `.github/workflows/build.yml`
 - `.github/workflows/self-build-fixture.yml`
 - `scripts/generate-channel-promotion-workflow.mjs`
 - `tests/github-governance-authority.test.mjs`
 - `tests/maintainability.test.mjs`
 - `tests/oci-publication.test.mjs`
+- `tests/release-candidate-recovery.test.mjs`
 - `.github/workflows/.release-promote.yml`
 - `.github/workflows/public-build-adopter-qualification.yml`
 - `.github/workflows/public-build-stage-capsule-canary.yml`
+- `.github/workflows/public-release-oci-compose-preview.yml`
 - `.github/workflows/public-release-promote.yml`
-- `.github/workflows/self-build-verify.yml`
 
 ## action-process-runtime
 
@@ -2079,6 +2079,7 @@ Owner: Buildchain source provider transactions maintainers
 
 - `packages/core/providers/git/fetch-process.js`
 - `packages/core/providers/git/fetch-worker.js`
+- `packages/core/providers/git/patch-root.js`
 - `packages/core/providers/source-checkout/action.js`
 - `packages/core/providers/source-checkout/auth.js`
 - `packages/core/providers/source-checkout/fetch.js`

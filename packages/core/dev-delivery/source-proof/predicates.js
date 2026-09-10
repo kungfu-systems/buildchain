@@ -1,13 +1,7 @@
+import { gitPatchRoot } from "../../providers/git/patch-root.js";
 import path from "node:path";
 import { devDeliveryContentRoot } from "../dev-delivery-warrant.js";
-import {
-  required,
-  exactSha,
-  jsonList,
-  git,
-  sha256,
-  gitPathRoot,
-} from "./io.js";
+import { required, exactSha, jsonList, git, gitPathRoot } from "./io.js";
 export function sourceQualificationPredicates(input = {}) {
   const cwd = path.resolve(input.cwd || process.cwd());
   const repository = required(input.repository, "repository");
@@ -33,19 +27,6 @@ export function sourceQualificationPredicates(input = {}) {
     .map((entry) => entry.trim())
     .filter(Boolean)
     .sort();
-  const patch = git(
-    [
-      "diff",
-      "--binary",
-      "--full-index",
-      "--no-ext-diff",
-      `${qualifiedBase}...${sourceHead}`,
-    ],
-    {
-      cwd,
-      encoding: null,
-    },
-  );
   const runtimeRef = required(input.runtimeRef, "runtimeRef");
   const runtimeSha = exactSha(input.runtimeSha, "runtimeSha");
   const contractDigest = required(input.contractDigest, "contractDigest");
@@ -64,7 +45,12 @@ export function sourceQualificationPredicates(input = {}) {
       sourceHead,
       sourceTree,
     }),
-    sourcePatchRoot: sha256(patch),
+    sourcePatchRoot: gitPatchRoot({
+      cwd,
+      base: qualifiedBase,
+      head: sourceHead,
+      mergeBase: true,
+    }),
     planRoot: devDeliveryContentRoot({
       schema: "kungfu.buildchain.source-qualification-plan/v1",
       mode: "source",

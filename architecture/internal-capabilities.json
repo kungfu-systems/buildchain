@@ -456,6 +456,7 @@
     "packages/core/providers/git-ref-readback.mjs",
     "packages/core/providers/git/fetch-process.js",
     "packages/core/providers/git/fetch-worker.js",
+    "packages/core/providers/git/patch-root.js",
     "packages/core/providers/github-cli-api.js",
     "packages/core/providers/github-issue-comment.js",
     "packages/core/providers/github-permission.js",
@@ -2711,6 +2712,7 @@
       "implementation": [
         "packages/core/providers/git/fetch-process.js",
         "packages/core/providers/git/fetch-worker.js",
+        "packages/core/providers/git/patch-root.js",
         "packages/core/providers/source-checkout/action.js",
         "packages/core/providers/source-checkout/auth.js",
         "packages/core/providers/source-checkout/fetch.js",

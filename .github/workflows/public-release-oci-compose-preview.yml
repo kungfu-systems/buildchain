@@ -2,7 +2,6 @@ name: Buildchain OCI Compose Preview
 
 on:
   workflow_call:
-    inputs:
     secrets:
       BUILDCHAIN_PROMOTION_TOKEN:
         required: true

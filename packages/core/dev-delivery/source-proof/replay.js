@@ -1,4 +1,4 @@
-import crypto from "node:crypto";
+import { gitPatchRoot } from "../../providers/git/patch-root.js";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
@@ -27,11 +27,7 @@ function git(args, { cwd, encoding = "utf8" }) {
 }
 
 function patchRoot(base, head, cwd) {
-  const patch = git(
-    ["diff", "--binary", "--full-index", "--no-ext-diff", `${base}..${head}`],
-    { cwd, encoding: null },
-  );
-  return `sha256:${crypto.createHash("sha256").update(patch).digest("hex")}`;
+  return gitPatchRoot({ cwd, base, head });
 }
 
 function linearRange(base, head, cwd) {
