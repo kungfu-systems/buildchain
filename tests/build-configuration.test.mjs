@@ -4,10 +4,10 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { discoverBuildConfiguration, normalizeBuildConfiguration } from "../packages/core/build/build-configuration.js";
-import { resolveBuildConfiguration } from "../packages/core/build/commands/resolve-build-configuration.mjs";
-import { selectReleaseCandidateArtifacts } from "../packages/core/release/commands/release-candidate-resolver.mjs";
+import { resolveBuildConfiguration } from "../packages/core/build/plan/configuration.js";
+import { selectReleaseCandidateArtifacts } from "../packages/core/release/candidate/selection.js";
 import { loadBuildchainConfig } from "../packages/core/consumer/buildchain-config.js";
-import { resolveRunnerMatrix } from "../packages/core/build/commands/build-contract-core.mjs";
+import { resolveRunnerMatrix } from "../packages/core/build/runner/matrix.js";
 import { resolveArtifactTransferMode } from "../packages/core/build/commands/resolve-artifact-transfer-mode.mjs";
 
 function fixture(t, relative = "buildchain.toml", extra = "") {
@@ -57,7 +57,7 @@ test("optional Go setup derives from TOML and changes the toolchain root", (t) =
   fs.appendFileSync(path.join(root, "go.sum"), "example.com/library v1.1.0 h1:second\n");
   assert.notEqual(resolve(root).plan.cache.dependency_root, dependencyRoot);
   assert.throws(() => normalizeBuildConfiguration({ tools: { go: true } }));
-  const action = fs.readFileSync("actions/build/prepare-environment/action.yml", "utf8");
+  const action = fs.readFileSync("actions/build/lifecycle/prepare/action.yml", "utf8");
   assert.match(action, /inputs.tools == 'true' && fromJSON\(inputs.plan\).tools.setup_go/u);
   assert.match(action, /uses: actions\/setup-go@/u);
   assert.match(action, /go-version: \$\{\{ fromJSON\(inputs.plan\).tools.go \}\}/u);

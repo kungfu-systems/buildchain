@@ -3,12 +3,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
 import YAML from "yaml";
-import {
-  evidenceArguments,
-  publishEvidence,
-} from "../packages/core/observability/nodes/publish-evidence.mjs";
+import { qualifyObservedEvidence, publishQualifiedEvidence } from "../packages/core/observability/evidence/transactions.js";
+import { evidencePublisherAdmissionAction } from "../packages/core/observability/publisher-admission.js";
 const root = process.cwd();
 const request = {
   "manifest-path": "evidence/manifest.json",
@@ -16,41 +13,15 @@ const request = {
   "production-bucket": "example-bucket",
   "cloudfront-distribution": "",
 };
-const env = { BUILDCHAIN_EVIDENCE_REQUEST_JSON: JSON.stringify(request) };
-test("observed evidence verification has no write flag and publication passes literal paths", () => {
-  const verify = evidenceArguments(env, "verify");
-  assert.equal(verify.includes("--execute"), false);
-  assert.equal(
-    verify[verify.indexOf("--artifact-root") + 1],
-    request["artifact-path"],
-  );
-  const publish = evidenceArguments(env, "publish");
-  assert.equal(publish[publish.indexOf("--execute") + 1], "true");
-});
-test("observed evidence publishes an output only after provider success and a real receipt", (t) => {
-  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "observed-node-"));
-  process.chdir(cwd);
-  t.after(() => {
-    process.chdir(root);
-    fs.rmSync(cwd, { recursive: true, force: true });
-  });
-  const input = { ...env, GITHUB_OUTPUT: path.join(cwd, "output") };
-  assert.throws(
-    () =>
-      publishEvidence(input, () => {
-        throw Object.assign(new Error("provider failed"), { status: 17 });
-      }),
-    (e) => e.status === 17,
-  );
-  assert.equal(fs.existsSync(input.GITHUB_OUTPUT), false);
-  assert.throws(() => publishEvidence(input, () => {}), /did not produce/);
-  publishEvidence(input, () =>
-    fs.writeFileSync(".buildchain/observed-evidence/receipt.json", "{}"),
-  );
-  assert.equal(
-    fs.readFileSync(input.GITHUB_OUTPUT, "utf8"),
-    "receipt-path=.buildchain/observed-evidence/receipt.json\n",
-  );
+test("Evidence qualification preserves shell failure semantics and publishes only after receipt success", async t => {
+  const workspace=fs.mkdtempSync(path.join(os.tmpdir(),"observed-transaction-"));t.after(()=>fs.rmSync(workspace,{recursive:true,force:true}));
+  const calls=[];const input={request:{...request,"build-command":"build","verify-command":"verify"},workspace,environment:{},token:"build-token"};
+  const result=await qualifyObservedEvidence(input,{execute:(program,args,options)=>{assert.equal(program,"bash");assert.ok(args.includes("pipefail"));assert.ok(!args.includes("-u"));calls.push(args.at(-1));if(args.at(-1)==="build")fs.writeFileSync(options.env.GITHUB_ENV,"FROM_BUILD=present\n");else assert.equal(options.env.FROM_BUILD,"present");},publish:options=>{calls.push("admit");assert.equal(options.dryRun,true);assert.equal(options.artifactRoot,path.resolve(workspace,request["artifact-path"]));return {status:"planned"};}});
+  assert.deepEqual(calls,["build","verify","admit"]);assert.equal(result.status,"planned");
+  assert.throws(()=>publishQualifiedEvidence(input,{publish:()=>{throw Object.assign(new Error("provider failed"),{status:17});}}),error=>error.status===17);
+  assert.equal(fs.existsSync(path.join(workspace,".buildchain/observed-evidence/receipt.json")),false);
+  const published=publishQualifiedEvidence(input,{publish:options=>{assert.equal(options.dryRun,false);return {status:"published"};}});
+  assert.equal(JSON.parse(fs.readFileSync(published.receiptPath,"utf8")).status,"published");
 });
 test("observed evidence admits the default branch before source checkout and rejects pull requests", (t) => {
   const workflow = YAML.parse(
@@ -62,53 +33,30 @@ test("observed evidence admits the default branch before source checkout and rej
   const steps = workflow.jobs.publish.steps;
   assert.equal(
     steps[1].uses,
-    "./.buildchain/workflow-shell/actions/observability/admit-evidence-publisher",
+    "./.buildchain/workflow-shell/actions/observability/evidence/admit-publisher",
   );
   assert.equal(steps[2].with.ref, "${{ github.sha }}");
   assert.equal(
     steps[4].with["source-checkout-outcome"],
     "${{ steps.source-checkout.outcome }}",
   );
-  const action = YAML.parse(
-    fs.readFileSync(
-      path.join(
-        root,
-        "actions/observability/admit-evidence-publisher/action.yml",
-      ),
-      "utf8",
-    ),
-  );
-  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "observed-admit-"));
-  t.after(() => fs.rmSync(cwd, { recursive: true, force: true }));
-  for (const [event, ref, ok] of [
-    ["schedule", "refs/heads/main", true],
-    ["workflow_dispatch", "refs/heads/main", true],
-    ["pull_request", "refs/heads/main", false],
-    ["workflow_dispatch", "refs/heads/feature/test", false],
-  ]) {
-    const result = spawnSync("bash", ["-e", "-c", action.runs.steps[0].run], {
-      cwd,
-      env: {
-        ...process.env,
-        DEFAULT_BRANCH: "main",
-        GITHUB_EVENT_NAME: event,
-        GITHUB_REF: ref,
-      },
-      encoding: "utf8",
-    });
-    assert.equal(result.status === 0, ok);
+  const cwd=fs.mkdtempSync(path.join(os.tmpdir(),"observed-admit-"));t.after(()=>fs.rmSync(cwd,{recursive:true,force:true}));
+  const eventPath=path.join(cwd,"event.json");fs.writeFileSync(eventPath,JSON.stringify({repository:{default_branch:"main"}}));
+  for(const [event,ref,ok] of [["schedule","refs/heads/main",true],["workflow_dispatch","refs/heads/main",true],["pull_request","refs/heads/main",false],["workflow_dispatch","refs/heads/feature/test",false]]){
+    const run=()=>evidencePublisherAdmissionAction({},{GITHUB_EVENT_NAME:event,GITHUB_REF:ref,GITHUB_EVENT_PATH:eventPath});
+    if(ok)assert.doesNotThrow(run);else assert.throws(run);
   }
   const publication = YAML.parse(
     fs.readFileSync(
-      path.join(root, "actions/observability/publish-evidence/action.yml"),
+      path.join(root, "actions/observability/evidence/publish/action.yml"),
       "utf8",
     ),
   );
   const before = publication.runs.steps.findIndex(
-    (s) => s.name === "Verify caller evidence semantics",
+    (s) => s.uses?.endsWith("/actions/observability/evidence/qualify"),
   );
   const credentials = publication.runs.steps.findIndex((s) =>
     s.uses?.startsWith("aws-actions/configure-aws-credentials@"),
   );
-  assert.ok(before < credentials);
+  assert.ok(before >= 0 && before < credentials);
 });

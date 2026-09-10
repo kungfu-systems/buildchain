@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import os from "node:os";
 import { pathToFileURL } from "node:url";
-import { runLifecycle } from "./run-lifecycle-core.mjs";
+import { runLifecycle } from "../lifecycle/transaction.js";
 
 function readArg(name, fallback = "") {
   const index = process.argv.indexOf(`--${name}`);

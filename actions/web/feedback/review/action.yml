@@ -1,0 +1,13 @@
+name: Report release review target
+description: Bind a release PR review comment to its admitted labels, branch and
+  configured staging target.
+inputs:
+  request-json:
+    description: Typed public Web request.
+    required: true
+  token:
+    description: Scoped pull request review credential.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

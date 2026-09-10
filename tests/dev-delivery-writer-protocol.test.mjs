@@ -9,7 +9,7 @@ import {
   normalizeDevDeliveryQueue,
   submitDevDeliveryCandidate,
 } from "../packages/core/dev-delivery/dev-delivery-warrant.js";
-import { runDevDeliveryCommand } from "../packages/core/dev-delivery/commands/dev-delivery-warrant.mjs";
+import { runDevDeliveryCommand } from "../packages/core/dev-delivery/warrant/service.js";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 

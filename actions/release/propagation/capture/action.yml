@@ -1,0 +1,14 @@
+name: Release propagation capture
+description: Resolve the downstream branch and capture its exact authorized propagation Work.
+inputs:
+  request-json:
+    description: Typed public propagation request.
+    required: true
+outputs:
+  execute:
+    description: execute
+  lifecycle:
+    description: lifecycle
+runs:
+  using: node24
+  main: dist/index.js

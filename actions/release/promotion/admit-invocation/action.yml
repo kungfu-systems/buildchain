@@ -1,0 +1,25 @@
+name: Authorize and bind admitted promotion invocation
+description: Authorize and bind admitted promotion invocation.
+inputs:
+  request-json:
+    description: Complete typed promotion request.
+    required: true
+  selection-json:
+    description: Exact selected identities and contract lock.
+    required: true
+  token:
+    description: Explicit scoped GitHub credential.
+    required: true
+  consumer-policy-root:
+    description: Rooted successful consumer policy receipt.
+    required: true
+outputs:
+  runtime-authorization-json:
+    description: runtime authorization json
+  runtime-authorization-root:
+    description: runtime authorization root
+  invocation-json:
+    description: invocation json
+runs:
+  using: node24
+  main: dist/index.js

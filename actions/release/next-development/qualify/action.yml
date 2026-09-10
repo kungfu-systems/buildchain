@@ -1,0 +1,14 @@
+name: Qualify protected next-development transition
+description: Require exact protected source, publication and independent review evidence before advancing development.
+inputs:
+  token:
+    description: token
+    required: true
+outputs:
+  review-path:
+    description: review-path
+  head-sha:
+    description: head-sha
+runs:
+  using: node24
+  main: dist/index.js

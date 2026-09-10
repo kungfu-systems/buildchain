@@ -8,25 +8,24 @@ import {
   publishedPackageMatches,
   resolvePublishedTag,
   readPublishedPaper,
-} from "../packages/core/paper/nodes/release-readback.mjs";
+} from "../packages/core/paper/publication/readback.js";
 import {
-  requireWriteAuthority,
   resolvePaperTarget,
-} from "../packages/core/paper/nodes/publication-target.mjs";
-import publicationGate from "../packages/core/paper/nodes/publication-gate.mjs";
+} from "../packages/core/paper/publication/target.js";
+import { lockPaperPublicationTarget } from "../packages/core/paper/publication/target.js";
 import {
   validatePaperPropagationConfig,
   capturePaperPropagation,
-} from "../packages/core/paper/nodes/capture-propagation.mjs";
+} from "../packages/core/paper/publication/propagation.js";
 const sha = "a".repeat(40),
   version = "4.1.0-alpha.0",
   tag = `v${version}`;
 const env = {
-  PACKAGE_NAME: "@acme/paper",
-  PACKAGE_VERSION: version,
-  SOURCE_SHA: sha,
-  RELEASE_TAG: tag,
-  RELEASE_PASSPORT_PATH: "passport.json",
+  packageName: "@acme/paper",
+  packageVersion: version,
+  sourceSha: sha,
+  releaseTag: tag,
+  passportPath: "passport.json",
 };
 const fact = { version, gitHead: sha, dist: { integrity: "sha512-example" } };
 async function workspace(fn) {
@@ -77,31 +76,34 @@ test("paper release has one public API with read-only candidate, independent aut
   );
   assert.ok(workflow.jobs.publish.steps.every((s) => s.uses && !s.run));
   const publish = YAML.parse(
-    fs.readFileSync("actions/paper/publish-candidate/action.yml", "utf8"),
+    fs.readFileSync("actions/paper/candidate/publish/action.yml", "utf8"),
   );
   const promote = publish.runs.steps.find((s) => s.id === "promote");
   assert.equal(promote.with["publish-auth"], "trusted-publishing");
   assert.match(
     promote.with["publish-sealed-bundle-manifest"],
-    /candidate-outputs-sealed-bundle-manifest/,
+    /sealed-bundle-manifest/,
   );
   assert.doesNotMatch(promote.with.token, /github.token/);
 });
 test("paper write authority and publication target reject absent credentials and unexpected source", () => {
-  assert.throws(() => requireWriteAuthority({}), /narrow generated-write/);
-  requireWriteAuthority({ NARROW_TOKEN: "test-only" });
+  const admission = YAML.parse(fs.readFileSync("actions/paper/candidate/admit/action.yml", "utf8"));
+  const credential = admission.runs.steps.find(step => step.id === "credential");
+  assert.equal(credential.with["require-token"], "true");
+  assert.equal(credential.with["workflow-token"], undefined);
+  assert.equal(credential.with["permission-contents"], "write");
   assert.throws(
     () =>
       resolvePaperTarget({
-        INPUT_TARGET_REF: "dev/v4/v4.1",
-        INPUT_TARGET_SHA: sha,
+        ref: "dev/v4/v4.1",
+        sha: sha,
       }),
     /alpha or release/,
   );
   assert.throws(
     () =>
       resolvePaperTarget(
-        { INPUT_TARGET_REF: "alpha/v4/v4.1", INPUT_TARGET_SHA: sha },
+        { ref: "alpha/v4/v4.1", sha: sha },
         () => "b".repeat(40),
       ),
     /differs/,
@@ -112,10 +114,10 @@ test("publication gate refuses to replace a differently bound source and propaga
     outputs = [],
     writes = [];
   const settings = {
-    CHANNEL: "alpha",
-    TARGET_REF: "alpha/v4/v4.1",
-    TARGET_SHA: sha,
-    VERSION: version,
+    channel: "alpha",
+    ref: "alpha/v4/v4.1",
+    sha: sha,
+    version: version,
   };
   const github = {
     rest: {
@@ -128,7 +130,7 @@ test("publication gate refuses to replace a differently bound source and propaga
   };
   const core = { setOutput: (...x) => outputs.push(x) };
   await assert.rejects(
-    publicationGate({ github, context, core }, settings),
+    lockPaperPublicationTarget({ github, repository: "acme/paper", target: settings, version }),
     /different source/,
   );
   assert.equal(writes.length, 0);
@@ -139,7 +141,7 @@ test("publication gate refuses to replace a differently bound source and propaga
     throw error;
   };
   await assert.rejects(
-    publicationGate({ github, context, core }, settings),
+    lockPaperPublicationTarget({ github, repository: "acme/paper", target: settings, version }),
     /denied/,
   );
   assert.equal(writes.length, 0);
@@ -148,16 +150,18 @@ test("publication gate refuses to replace a differently bound source and propaga
     error.status = 404;
     throw error;
   };
-  await publicationGate({ github, context, core }, settings);
+  github.rest.git.getRef = async () => {
+    if (writes.length) return { data: { object: { sha } } };
+    throw Object.assign(new Error("missing"), { status: 404 });
+  };
+  const locked = await lockPaperPublicationTarget({ github, repository: "acme/paper", target: settings, version });
   assert.equal(writes.length, 1);
   assert.equal(writes[0].sha, sha);
   assert.equal(
     writes[0].ref,
     `refs/heads/publish-gate/alpha/v4/v4.1/${version}`,
   );
-  assert.ok(
-    outputs.some(([key, value]) => key === "locked" && value === "true"),
-  );
+  assert.equal(locked.locked, true);
 });
 test("npm readback requires coherent version, gitHead and integrity; tag selection handles annotated refs exactly", () => {
   assert.ok(publishedPackageMatches(fact, env));
@@ -191,7 +195,7 @@ test("paper readback retries boundedly and emits facts only after the published 
   workspace(async () => {
     let attempts = 0,
       waits = 0;
-    const result = await readPublishedPaper(env, {
+    const result = await readPublishedPaper({ ...env, workspace: process.cwd() }, {
       request: async (url) => {
         assert.equal(
           url,
@@ -219,7 +223,7 @@ test("incoherent registry and substituted tag cannot emit publication evidence",
   workspace(async () => {
     let attempts = 0;
     await assert.rejects(
-      readPublishedPaper(env, {
+      readPublishedPaper({ ...env, workspace: process.cwd() }, {
         request: async () => {
           attempts++;
           return { ok: false };
@@ -234,7 +238,7 @@ test("incoherent registry and substituted tag cannot emit publication evidence",
     assert.equal(attempts, 6);
     assert.ok(!fs.existsSync(".buildchain/published-package.json"));
     await assert.rejects(
-      readPublishedPaper(env, {
+      readPublishedPaper({ ...env, workspace: process.cwd() }, {
         request: async () => ({ ok: true, json: async () => fact }),
         execute: () => `${"b".repeat(40)}\trefs/tags/${tag}`,
       }),
@@ -262,7 +266,7 @@ test("paper propagation rejects unknown fields, duplicate targets and missing so
 test("optional propagation config treats only exact provider 404 as unconfigured", async () => {
   const outputs = [],
     calls = [];
-  const settings = { GITHUB_REPOSITORY: "acme/paper", SOURCE_SHA: sha };
+  const settings = { repository: "acme/paper", sourceSha: sha };
   const github = {
     rest: {
       repos: {
@@ -275,11 +279,8 @@ test("optional propagation config treats only exact provider 404 as unconfigured
       },
     },
   };
-  await capturePaperPropagation(settings, {
-    github,
-    outputs: (value) => outputs.push(value),
-  });
-  assert.deepEqual(outputs, [{ configured: false }]);
+  const result = await capturePaperPropagation({ ...settings, github });
+  assert.deepEqual(result, { configured: false });
   assert.equal(calls[0].ref, sha);
   github.rest.repos.getContent = async () => {
     const error = new Error("denied");
@@ -287,11 +288,8 @@ test("optional propagation config treats only exact provider 404 as unconfigured
     throw error;
   };
   await assert.rejects(
-    capturePaperPropagation(settings, {
-      github,
-      outputs: (value) => outputs.push(value),
-    }),
+    capturePaperPropagation({ ...settings, github }),
     /denied/,
   );
-  assert.equal(outputs.length, 1);
+  assert.equal(outputs.length, 0);
 });

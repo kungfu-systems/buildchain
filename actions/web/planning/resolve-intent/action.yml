@@ -1,0 +1,23 @@
+name: web-release-intent
+description: Execute the web release-intent capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  token:
+    description: Bounded GitHub pull-request read token.
+    required: true
+outputs:
+  production-release-approved:
+    description: production-release-approved node result.
+  production-release-pr:
+    description: production-release-pr node result.
+  production-release-source:
+    description: production-release-source node result.
+  production-release-reason:
+    description: production-release-reason node result.
+  production-source-sha:
+    description: production-source-sha node result.
+runs:
+  using: node24
+  main: dist/index.js

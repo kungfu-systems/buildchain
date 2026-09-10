@@ -140,7 +140,7 @@
       ".github/workflows/.release-promote.yml",
       ".github/workflows/.release-authority.yml"
     ],
-    "actionInputs": ["actions/release/promote-ref/action.yml"],
+    "actionInputs": ["actions/release/promotion/ref/action.yml"],
     "workflowCommandNames": ["consumer-gate-command"],
     "actionCommandNames": [
       "publish-command",
@@ -168,8 +168,8 @@
       ],
       "executionSites": [
         {
-          "path": "packages/core/publication/nodes/authority-consumer-gate.mjs",
-          "marker": "env.BUILDCHAIN_CONSUMER_GATE_COMMAND"
+          "path": "packages/core/publication/authority/consumer-gate.js",
+          "marker": "script: request.command"
         }
       ],
       "disposition": "current-owned-contract"
@@ -181,7 +181,7 @@
       "publicNames": ["publish-command"],
       "default": "lifecycle.publish, otherwise disabled",
       "coordinates": [
-        "action:actions/release/promote-ref/action.yml#publish-command",
+        "action:actions/release/promotion/ref/action.yml#publish-command",
         "config:buildchain.toml#lifecycle.publish",
         "cli:packages/core/release/commands/release-line-dry-run.mjs#--publish-command"
       ],
@@ -205,10 +205,10 @@
       ],
       "default": "disabled",
       "coordinates": [
-        "action:actions/release/promote-ref/action.yml#release-passport-kfd-3-artifact-verify-command",
-        "action:actions/release/promote-ref/action.yml#release-passport-invariant-passport-command",
-        "action:actions/release/promote-ref/action.yml#release-passport-attachment-command",
-        "action:actions/release/promote-ref/action.yml#release-passport-v4-runtime-resume-evidence-command"
+        "action:actions/release/promotion/ref/action.yml#release-passport-kfd-3-artifact-verify-command",
+        "action:actions/release/promotion/ref/action.yml#release-passport-invariant-passport-command",
+        "action:actions/release/promotion/ref/action.yml#release-passport-attachment-command",
+        "action:actions/release/promotion/ref/action.yml#release-passport-v4-runtime-resume-evidence-command"
       ],
       "executionSites": [
         {
@@ -229,7 +229,7 @@
       "publicNames": ["verification-command"],
       "default": "configured lifecycle or disabled",
       "coordinates": [
-        "action:actions/release/promote-ref/action.yml#verification-command"
+        "action:actions/release/promotion/ref/action.yml#verification-command"
       ],
       "executionSites": [
         {
@@ -244,13 +244,13 @@
     {
       "id": "paper-release",
       "workflow": ".github/workflows/public-release-paper.yml",
-      "action": "actions/paper/publish-candidate",
+      "action": "actions/paper/candidate/publish",
       "executableSurfaceIds": ["artifact-publication-command"]
     },
     {
       "id": "publication-authority",
       "workflow": ".github/workflows/.release-authority.yml",
-      "action": "actions/publication/authority-candidate-evidence",
+      "action": "actions/publication/authority/candidate-evidence",
       "executableSurfaceIds": ["publication-admission-commands"]
     }
   ],

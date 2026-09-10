@@ -1,0 +1,16 @@
+name: review universal workflow admission
+description: Coordinate exact request, review and terminal evidence through a
+  named workflow authority API.
+inputs:
+  request-json:
+    description: request-json exact workflow authority input.
+    required: true
+  token:
+    description: token exact workflow authority input.
+    required: true
+outputs:
+  review-json:
+    description: review-json rooted workflow evidence.
+runs:
+  using: node24
+  main: dist/index.js

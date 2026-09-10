@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { resolveWebRuntime } from "../packages/core/web/nodes/runtime.mjs";
-import { resolveReleaseIntent } from "../packages/core/web/nodes/release-intent.mjs";
+import { resolveWebRuntime } from "./helpers/runtime-selection.mjs";
+import { resolveReleaseIntent } from "../packages/core/web/production-intent.js";
 const sha = "a".repeat(40);
 const env = {
   BUILDCHAIN_REPOSITORY: "kungfu-systems/buildchain",
@@ -137,23 +137,23 @@ test("Web current channel resolves a commit and preserves provider authorization
 });
 test("Web production intent requires explicit dispatch approval for an exact requested source", async () => {
   const request = {
-    PRODUCTION_SOURCE_SHA: sha,
-    EVENT_NAME: "workflow_dispatch",
-    PRODUCTION_APPROVED: "false",
+    "production-source-sha": sha,
+    "production-approved": false,
   };
+  const invocation = { ...context, eventName: "workflow_dispatch" };
   const { values, core } = recorder();
   await assert.rejects(
-    resolveReleaseIntent({ env: request, context, core }),
+    resolveReleaseIntent({ request, context: invocation, core }),
     /explicitly approved/,
   );
   assert.equal(values["production-release-approved"], "false");
   await resolveReleaseIntent({
-    env: {
+    request: {
       ...request,
-      PRODUCTION_APPROVED: "true",
-      PRODUCTION_ENVIRONMENT: "production",
+      "production-approved": true,
+      "production-environment": "production",
     },
-    context,
+    context: invocation,
     core,
   });
   assert.equal(values["production-source-sha"], sha);
@@ -162,12 +162,11 @@ test("Web production intent requires explicit dispatch approval for an exact req
 test("Web release intent rejects ambiguous merged PRs and filters foreign heads", async () => {
   const { values, core } = recorder();
   const input = {
-    PRODUCTION_RELEASE_ON_MAIN: "true",
-    EVENT_NAME: "push",
-    REF_NAME: "main",
-    PRODUCTION_RELEASE_LABEL: "release",
-    PRODUCTION_RELEASE_HEAD_PREFIX: "web-release/",
+    "production-release-on-main": true,
+    "production-release-label": "release",
+    "production-release-head-prefix": "web-release/",
   };
+  const invocation = { ...context, eventName: "push", ref: "refs/heads/main" };
   const pull = {
     number: 1,
     labels: [{ name: "release" }],
@@ -181,70 +180,30 @@ test("Web release intent rejects ambiguous merged PRs and filters foreign heads"
     rest: { repos: { listPullRequestsAssociatedWithCommit() {} } },
   };
   await assert.rejects(
-    resolveReleaseIntent({ env: input, context, core, github }),
+    resolveReleaseIntent({ request: input, context: invocation, core, github }),
     /multiple associated/,
   );
   github.paginate = async () => [
     { ...pull, head: { ...pull.head, repo: { full_name: "other/repo" } } },
   ];
-  await resolveReleaseIntent({ env: input, context, core, github });
+  await resolveReleaseIntent({ request: input, context: invocation, core, github });
   assert.equal(values["production-release-approved"], "false");
 });
 
 test("Web apply gate uses the trusted decision and validates roles before a build", async () => {
-  const { webApplyInputGate } =
-    await import("../packages/core/web/nodes/apply-input-gate.mjs");
+  const { admitWebApplyInputs } = await import("../packages/core/web/apply-admission.js");
   for (const input of [
-    {
-      EVENT_NAME: "pull_request",
-      EVENT_ACTION: "opened",
-      PREVIEW_APPLY: "true",
-    },
-    {
-      EVENT_NAME: "pull_request",
-      EVENT_ACTION: "closed",
-      PREVIEW_CLEANUP_APPLY: "true",
-    },
-    { EVENT_NAME: "push", REF_NAME: "main", STAGING_APPLY: "true" },
-    {
-      EVENT_NAME: "workflow_dispatch",
-      PRODUCTION_APPLY: "true",
-      PRODUCTION_DECISION_APPROVED: "true",
-    },
-  ])
-    assert.throws(() => webApplyInputGate(input), /role-arn is required/);
-  assert.deepEqual(
-    webApplyInputGate({
-      EVENT_NAME: "workflow_dispatch",
-      PRODUCTION_APPROVED: "true",
-    }),
-    { "web-surface-channel": "staging", "web-surface-alias": "" },
-  );
-  assert.deepEqual(
-    webApplyInputGate({ EVENT_NAME: "pull_request", EVENT_ACTION: "closed" }),
-    { "web-surface-channel": "", "web-surface-alias": "" },
-  );
-  assert.deepEqual(
-    webApplyInputGate({
-      EVENT_NAME: "pull_request",
-      PULL_REQUEST_NUMBER: "12",
-    }),
-    { "web-surface-channel": "preview", "web-surface-alias": "pr-12" },
-  );
-  assert.equal(
-    webApplyInputGate({
-      EVENT_NAME: "pull_request",
-      EVENT_ACTION: "closed",
-      PRODUCTION_DECISION_APPROVED: "true",
-    })["web-surface-channel"],
-    "production",
-  );
-  assert.throws(
-    () =>
-      webApplyInputGate({
-        EVENT_NAME: "pull_request",
-        PULL_REQUEST_NUMBER: "12\nchannel=production",
-      }),
-    /exact pull request/,
-  );
+    {event:{name:"pull_request",action:"opened"}, request:{"preview-apply":true}},
+    {event:{name:"pull_request",action:"closed"}, request:{"preview-cleanup-apply":true}},
+    {event:{name:"push",refName:"main"}, request:{"staging-apply":true}},
+    {event:{name:"workflow_dispatch"}, request:{"production-apply":true}, decisionApproved:true},
+  ]) assert.throws(() => admitWebApplyInputs(input), /role-arn is required/);
+  assert.deepEqual(admitWebApplyInputs({event:{name:"workflow_dispatch"},request:{"production-approved":true}}),
+    {"web-surface-channel":"staging","web-surface-alias":""});
+  assert.deepEqual(admitWebApplyInputs({event:{name:"pull_request",action:"closed"}}),
+    {"web-surface-channel":"","web-surface-alias":""});
+  assert.deepEqual(admitWebApplyInputs({event:{name:"pull_request",pullNumber:12}}),
+    {"web-surface-channel":"preview","web-surface-alias":"pr-12"});
+  assert.equal(admitWebApplyInputs({event:{name:"pull_request",action:"closed"},decisionApproved:true})["web-surface-channel"],"production");
+  assert.throws(()=>admitWebApplyInputs({event:{name:"pull_request",pullNumber:"12\nchannel=production"}}),/exact pull request/);
 });

@@ -45,7 +45,7 @@ The recommended pattern is:
     owner: kungfu-systems
     repositories: buildchain
 
-- uses: kungfu-systems/buildchain/actions/governance/report-issue@v3
+- uses: kungfu-systems/buildchain/actions/governance/incident/report@v3
   if: failure()
   with:
     token: ${{ steps.buildchain-issue-token.outputs.token }}

@@ -48,7 +48,9 @@ on:
         required: false
         type: string
       downstream-update-command:
-        description: Optional consumer-owned command that applies the exact lock to downstream package/config pins
+        description:
+          Optional consumer-owned command that applies the exact lock to downstream
+          package/config pins
         default: ""
         required: false
         type: string
@@ -63,7 +65,9 @@ on:
         required: false
         type: string
       downstream-prepare-command:
-        description: Optional consumer-owned command that pins the propagated release and updates deterministic generated files
+        description:
+          Optional consumer-owned command that pins the propagated release and updates
+          deterministic generated files
         default: ""
         required: false
         type: string
@@ -78,7 +82,9 @@ on:
         required: false
         type: string
       agent-work-context-json:
-        description: Optional exact typed Family State, WorkRef, and authority context; when present emits a resumable propagation work unit
+        description:
+          Optional exact typed Family State, WorkRef, and authority context; when present emits a
+          resumable propagation work unit
         default: ""
         required: false
         type: string
@@ -178,56 +184,29 @@ jobs:
           ref: ${{ job.workflow_sha }}
           path: .buildchain/workflow-shell
           persist-credentials: false
-      - name: propagation plan.
+      - name: Plan downstream propagation
         id: propagation-plan
-        uses: ./.buildchain/workflow-shell/actions/release/propagation-plan
+        uses: ./.buildchain/workflow-shell/actions/release/propagation/plan
         with:
           runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
           runtime-repository: ${{ inputs.buildchain-repository || job.workflow_repository }}
           request-json: ${{ toJSON(inputs) }}
-          job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
           secrets-propagation-token: ${{ secrets.propagation-token }}
-      - name: propagation materialize.
+      - name: Materialize verified downstream update
         id: propagation-materialize
-        uses: ./.buildchain/workflow-shell/actions/release/propagation-materialize
+        uses: ./.buildchain/runtime/actions/release/propagation/materialize
         with:
           request-json: ${{ toJSON(inputs) }}
-          propagation-work-outputs-execute: ${{ steps.propagation-plan.outputs.propagation-work-outputs-execute }}
-          plan-outputs: ${{ steps.propagation-plan.outputs.plan-outputs }}
-          branch-outputs: ${{ steps.propagation-plan.outputs.branch-outputs }}
-          core-node-outputs-node-path: ${{ steps.propagation-plan.outputs.core-node-outputs-node-path }}
-          plan-outputs-update_command: ${{ steps.propagation-plan.outputs.plan-outputs-update_command }}
-          plan-outputs-lock_path: ${{ steps.propagation-plan.outputs.plan-outputs-lock_path }}
-          plan-outputs-propagation_key: ${{ steps.propagation-plan.outputs.plan-outputs-propagation_key }}
-          plan-outputs-branch: ${{ steps.propagation-plan.outputs.plan-outputs-branch }}
-          plan-outputs-prepare_command: ${{ steps.propagation-plan.outputs.plan-outputs-prepare_command }}
-          plan-outputs-package_name: ${{ steps.propagation-plan.outputs.plan-outputs-package_name }}
-          plan-outputs-package_version: ${{ steps.propagation-plan.outputs.plan-outputs-package_version }}
-          plan-outputs-verify_command: ${{ steps.propagation-plan.outputs.plan-outputs-verify_command }}
-      - name: propagation deliver.
+          node-path: ${{ steps.propagation-plan.outputs.node-path }}
+      - name: Deliver propagation and report evidence
         id: propagation-deliver
-        uses: ./.buildchain/workflow-shell/actions/release/propagation-deliver
+        if: ${{ always() }}
+        uses: ./.buildchain/workflow-shell/actions/release/propagation/deliver
         with:
           request-json: ${{ toJSON(inputs) }}
-          secrets-propagation-token: ${{ secrets.propagation-token }}
-          propagation-work-outputs-execute: ${{ steps.propagation-plan.outputs.propagation-work-outputs-execute }}
-          plan-outputs-branch: ${{ steps.propagation-plan.outputs.plan-outputs-branch }}
-          plan-outputs: ${{ steps.propagation-plan.outputs.plan-outputs }}
-          branch-outputs: ${{ steps.propagation-plan.outputs.branch-outputs }}
-          lock-outputs: ${{ steps.propagation-materialize.outputs.lock-outputs }}
-          core-node-outputs-node-path: ${{ steps.propagation-plan.outputs.core-node-outputs-node-path }}
-          plan-outputs-lock_path: ${{ steps.propagation-plan.outputs.plan-outputs-lock_path }}
-          plan-outcome: ${{ steps.propagation-plan.outputs.plan-outcome }}
-          lock-outcome: ${{ steps.propagation-materialize.outputs.lock-outcome }}
-          propagation-work-outcome: ${{ steps.propagation-plan.outputs.propagation-work-outcome }}
-          plan-outputs-propagation_key: ${{ steps.propagation-plan.outputs.plan-outputs-propagation_key }}
-          controller-plan-outcome: ${{ steps.propagation-plan.outputs.controller-plan-outcome }}
-          runtime-outcome: ${{ steps.propagation-plan.outputs.runtime-outcome }}
-          controller-identities-outcome: ${{ steps.propagation-plan.outputs.controller-identities-outcome }}
-          downstream-update-outcome: ${{ steps.propagation-materialize.outputs.downstream-update-outcome }}
-          prepare-outcome: ${{ steps.propagation-materialize.outputs.prepare-outcome }}
-          badges-outcome: ${{ steps.propagation-materialize.outputs.badges-outcome }}
-          verify-outcome: ${{ steps.propagation-materialize.outputs.verify-outcome }}
-          summarize-outcome: ${{ steps.propagation-materialize.outputs.summarize-outcome }}
-          predecessors-ok: ${{ steps.propagation-plan.outcome == 'success' && steps.propagation-materialize.outcome == 'success' }}
-        if: ${{ always() }}
+          token: ${{ secrets.propagation-token }}
+          runtime-ready: ${{ steps.propagation-plan.outputs.runtime-ready }}
+          controller-plan-digest: ${{ steps.propagation-plan.outputs.controller-plan-digest }}
+          propagation-key: ${{ steps.propagation-plan.outputs.propagation-key }}
+          predecessors-ok: ${{ steps.propagation-plan.outcome == 'success' &&
+            steps.propagation-materialize.outcome == 'success' }}

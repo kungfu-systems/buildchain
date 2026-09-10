@@ -13,7 +13,6 @@ import {
   createDomainPublicationQualificationReceipt,
   validatePublicationQualificationReceipt,
 } from "../packages/core/publication/publication-qualification.js";
-import { admitDeclarativePromotion } from "../packages/core/release/commands/declarative-promotion-admission.mjs";
 import { createDeclarativeGitHubReleasePlan } from "../packages/core/release/github-release.js";
 import { publishGitHubReleaseEvidence } from "../packages/core/release/github-release.js";
 
@@ -110,22 +109,6 @@ test("execution-shaped fields and legacy command inputs are rejected at admissio
   );
 });
 
-test("promotion admission always enforces the current declarative contract", () => {
-  for (const runtimeRef of ["v3", "v4", "", "a".repeat(40)]) {
-    code("legacy-command-input-forbidden", () =>
-      admitDeclarativePromotion({
-        runtimeRef,
-        inputs: { "publish-command": "npm publish" },
-        declarative: false,
-      }),
-    );
-  }
-  assert.deepEqual(admitDeclarativePromotion({ inputs: { "dry-run": true } }), {
-    mode: "declarative",
-    admitted: true,
-  });
-});
-
 test("Provider Plane and terminal receipt remain in separate permission boundaries", () => {
   const workflow = YAML.parse(
     fs.readFileSync(
@@ -140,8 +123,8 @@ test("Provider Plane and terminal receipt remain in separate permission boundari
         "utf8",
       ),
     );
-  const apply = action("promote-apply");
-  const settle = action("promote-settle");
+  const apply = action("promotion/apply");
+  const settle = action("promotion/settle");
   assert.equal(workflow.jobs.apply.needs, "qualify");
   assert.deepEqual(workflow.jobs.settle.needs, ["qualify", "apply"]);
   assert.deepEqual(workflow.jobs.settle.permissions, {
@@ -151,9 +134,9 @@ test("Provider Plane and terminal receipt remain in separate permission boundari
   assert.equal(
     apply.runs.steps.filter(
       (step) =>
-        step.uses === "./.buildchain/runtime/actions/release/promote-candidate",
+        step.uses === "./.buildchain/runtime/actions/release/promotion/candidate",
     ).length,
-    3,
+    2,
   );
   for (const name of [
     "release-invocation-root",

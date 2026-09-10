@@ -58,7 +58,9 @@ on:
         type: string
         required: false
       project-cut-proof-json:
-        description: Optional exact rooted Project Cut replay proof required when GitHub reports the PR behind the current protected base
+        description:
+          Optional exact rooted Project Cut replay proof required when GitHub reports the PR behind the current
+          protected base
         default: ""
         type: string
         required: false
@@ -276,7 +278,9 @@ permissions:
   checks: read
   statuses: write
 concurrency:
-  group: buildchain-dev-pr-admission-${{ github.repository }}-${{ inputs.target-branch || github.ref_name }}-${{ inputs.expected-pr-number || github.run_id }}
+  group:
+    buildchain-dev-pr-admission-${{ github.repository }}-${{ inputs.target-branch || github.ref_name }}-${{
+    inputs.expected-pr-number || github.run_id }}
   cancel-in-progress: false
 jobs:
   admission:
@@ -298,7 +302,10 @@ jobs:
       handoff-required: ${{ steps.reserve.outputs.warrant-handoff-required }}
       handoff-dispatched: ${{ steps.reserve.outputs.warrant-handoff-dispatched }}
       already-qualified: ${{ steps.reserve.outputs.warrant-already-qualified }}
-      run-native: ${{ inputs.delivery-warrant-mode == 'required' && steps.reserve.outputs.warrant-outcome == 'success' && steps.reserve.outputs.warrant-handoff-required != 'true' && steps.reserve.outputs.warrant-already-qualified != 'true' }}
+      run-native:
+        ${{ inputs.delivery-warrant-mode == 'required' && steps.reserve.outputs.warrant-outcome == 'success' &&
+        steps.reserve.outputs.warrant-handoff-required != 'true' && steps.reserve.outputs.warrant-already-qualified !=
+        'true' }}
     steps:
       - name: Checkout exact workflow implementation
         uses: actions/checkout@v7.0.0
@@ -309,14 +316,14 @@ jobs:
           persist-credentials: false
       - name: Admit exact source
         id: source
-        uses: ./.buildchain/workflow-shell/actions/dev-delivery/source
+        uses: ./.buildchain/workflow-shell/actions/dev-delivery/candidate/admit
         with:
           request-json: ${{ toJSON(inputs) }}
           github-token: ${{ secrets.github-token || github.token }}
       - name: Reserve delivery turn
         id: reserve
         if: always()
-        uses: ./.buildchain/workflow-shell/actions/dev-delivery/reserve
+        uses: ./.buildchain/workflow-shell/actions/dev-delivery/candidate/reserve
         with:
           request-json: ${{ toJSON(inputs) }}
           github-token: ${{ secrets.github-token || github.token }}
@@ -325,6 +332,7 @@ jobs:
           target-branch: ${{ steps.source.outputs.target-branch }}
           proof-source-proof-root: ${{ steps.source.outputs.proof-source-proof-root }}
           qualify-outcome: ${{ steps.source.outputs.qualify-outcome }}
+          runtime-sha: ${{ steps.source.outputs.runtime-sha }}
   native-execution:
     name: Credentialless native execution
     needs: admission
@@ -342,11 +350,10 @@ jobs:
           persist-credentials: false
       - name: Verify native execution
         id: native
-        uses: ./.buildchain/workflow-shell/actions/dev-delivery/native
+        uses: ./.buildchain/workflow-shell/actions/dev-delivery/native/execute
         with:
           request-json: ${{ toJSON(inputs) }}
           needs-json: ${{ toJSON(needs) }}
-          phase: execute
   seal-native-execution:
     name: Credentialless native evidence seal
     needs:
@@ -370,11 +377,10 @@ jobs:
           persist-credentials: false
       - name: Verify native execution
         id: native
-        uses: ./.buildchain/workflow-shell/actions/dev-delivery/native
+        uses: ./.buildchain/workflow-shell/actions/dev-delivery/native/seal
         with:
           request-json: ${{ toJSON(inputs) }}
           needs-json: ${{ toJSON(needs) }}
-          phase: seal
   delivery-heartbeat:
     name: Credentialed independent Warrant heartbeat
     needs: admission
@@ -395,11 +401,10 @@ jobs:
           persist-credentials: false
       - name: Verify native execution
         id: native
-        uses: ./.buildchain/workflow-shell/actions/dev-delivery/native
+        uses: ./.buildchain/workflow-shell/actions/dev-delivery/native/heartbeat
         with:
           request-json: ${{ toJSON(inputs) }}
           needs-json: ${{ toJSON(needs) }}
-          phase: heartbeat
           github-token: ${{ secrets.github-token || github.token }}
   merge-dev-prs:
     name: Credentialed provider finalizer
@@ -432,7 +437,9 @@ jobs:
       project-cut-proof-root: ${{ needs.admission.outputs.project-cut-proof-root }}
       native-proof-root: ${{ steps.qualify.outputs.native-final-native-proof-root || needs.admission.outputs.native-proof-root }}
       native-reuse-decision-root: ${{ steps.qualify.outputs.native-final-decision-root || needs.admission.outputs.native-reuse-decision-root }}
-      qualified-warrant-receipt-root: ${{ steps.qualify.outputs.native-final-qualification-receipt-root || needs.admission.outputs.qualified-warrant-receipt-root }}
+      qualified-warrant-receipt-root:
+        ${{ steps.qualify.outputs.native-final-qualification-receipt-root ||
+        needs.admission.outputs.qualified-warrant-receipt-root }}
       native-execution-transfer-root: ${{ steps.qualify.outputs.boundary-transfer-root }}
       provider-finalizer-boundary-root: ${{ steps.qualify.outputs.boundary-root }}
       provider-heartbeat-receipt-root: ${{ needs.delivery-heartbeat.outputs.receipt-root }}
@@ -446,25 +453,25 @@ jobs:
           persist-credentials: false
       - name: Qualify delivery evidence
         id: qualify
-        uses: ./.buildchain/workflow-shell/actions/dev-delivery/qualify
+        uses: ./.buildchain/workflow-shell/actions/dev-delivery/candidate/qualify
         with:
           request-json: ${{ toJSON(inputs) }}
           needs-json: ${{ toJSON(needs) }}
           github-token: ${{ secrets.github-token || github.token }}
       - name: Settle terminal delivery
         id: settle
-        uses: ./.buildchain/workflow-shell/actions/dev-delivery/settle
+        uses: ./.buildchain/runtime/actions/dev-delivery/warrant/settle-native-failure
         with:
-          request-json: ${{ toJSON(inputs) }}
-          needs-json: ${{ toJSON(needs) }}
-          phase: native-failure
-          github-token: ${{ secrets.github-token || github.token }}
-          boundary-outcome: ${{ steps.qualify.outputs.boundary-outcome }}
-          boundary-native-outcome: ${{ steps.qualify.outputs.boundary-native-outcome }}
+          runtime-sha: ${{ needs.admission.outputs.runtime-sha }}
+          branch: ${{ needs.admission.outputs.target-branch }}
+          token: ${{ secrets.github-token || github.token }}
+        if:
+          ${{ success() && needs.admission.outputs.run-native == 'true' && steps.qualify.outputs.boundary-outcome == 'success'
+          && steps.qualify.outputs.boundary-native-outcome == 'failure' }}
       - name: Land protected dev PR
         id: land
         if: always()
-        uses: ./.buildchain/workflow-shell/actions/dev-delivery/land
+        uses: ./.buildchain/workflow-shell/actions/dev-delivery/queue/land
         with:
           request-json: ${{ toJSON(inputs) }}
           needs-json: ${{ toJSON(needs) }}
@@ -472,5 +479,5 @@ jobs:
           native-final-outcome: ${{ steps.qualify.outputs.native-final-outcome }}
           boundary-outcome: ${{ steps.qualify.outputs.boundary-outcome }}
           boundary-native-outcome: ${{ steps.qualify.outputs.boundary-native-outcome }}
-          failure-final-outcome: ${{ steps.settle.outputs.failure-final-outcome }}
+          failure-final-outcome: ${{ steps.settle.outcome }}
           predecessors-ok: ${{ job.status == 'success' }}

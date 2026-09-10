@@ -1,0 +1,45 @@
+name: stage-capsule-canary-reconcile
+description: Execute the stage-capsule-canary reconcile capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  workflow-sha:
+    description: workflow sha contract input.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Resolve exact called-workflow runtime
+      id: runtime
+      uses: ./.buildchain/workflow-shell/actions/runtime/selection/workflow
+      with:
+        workflow-sha: ${{ inputs.workflow-sha }}
+    - name: Checkout the exact Buildchain workflow runtime
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: kungfu-systems/buildchain
+        ref: ${{ steps.runtime.outputs.sha }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Download exact platform evidence
+      uses: actions/download-artifact@v7.0.0
+      with:
+        pattern: v4-stage-capsule-canary-${{ fromJSON(inputs.request-json).consumer }}-*-${{ github.sha }}
+        path: .buildchain/stage-capsule-canary-inputs
+    - name: Reconcile the consumer campaign
+      uses: ./.buildchain/runtime/actions/build/stage-capsule/aggregate-consumer
+      with:
+        workflow-sha: ${{ steps.runtime.outputs.sha }}
+        consumer: ${{ fromJSON(inputs.request-json).consumer }}
+    - name: Upload qualification and immutable authority contract
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: v4-stage-capsule-canary-${{ fromJSON(inputs.request-json).consumer }}-${{ github.sha }}
+        path: |
+          .buildchain/stage-capsule-canary-qualification.json
+          .buildchain/runtime/architecture/stage-capsule-qualification.json
+        if-no-files-found: error

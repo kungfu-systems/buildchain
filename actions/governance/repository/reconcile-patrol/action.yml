@@ -1,0 +1,26 @@
+name: Reconcile protected repository patrol
+description: Inspect cadence policy and reconcile bounded ready PR admission
+  with exact provider readback.
+inputs:
+  request-json:
+    description: Typed repository patrol request.
+    required: true
+  token:
+    description: Bounded repository maintenance credential.
+    required: true
+outputs:
+  result-path:
+    description: result-path patrol evidence.
+  evaluated-count:
+    description: evaluated-count patrol evidence.
+  action-count:
+    description: action-count patrol evidence.
+  skipped-count:
+    description: skipped-count patrol evidence.
+  planned-count:
+    description: planned-count patrol evidence.
+  branch-artifact:
+    description: branch-artifact patrol evidence.
+runs:
+  using: node24
+  main: dist/index.js

@@ -1,0 +1,25 @@
+name: Verify sealed Web publication capability
+description: Bind live production authority to the candidate, downloaded plan,
+  source, runtime and deployment role before artifact access.
+inputs:
+  capability-json:
+    description: capability-json
+    required: true
+  candidate-json:
+    description: candidate-json
+    required: true
+  source-sha:
+    description: source-sha
+    required: true
+  runtime-sha:
+    description: runtime-sha
+    required: true
+  environment:
+    description: environment
+    required: true
+  role-arn:
+    description: role-arn
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

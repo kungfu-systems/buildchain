@@ -952,7 +952,7 @@ export function verifyPublicationAdmission({
   return { ...capability, capabilityDigest: publicationAuthorityDigest(capability) };
 }
 
-function validatePublicationCapability(capability, now = new Date()) {
+export function validatePublicationCapability(capability, now = new Date()) {
   if (capability?.contract !== PUBLICATION_CAPABILITY_CONTRACT) {
     throw new Error("publication capability contract mismatch");
   }

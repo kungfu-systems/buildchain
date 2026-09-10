@@ -31,7 +31,7 @@ test("public adopter delivery uploads the exact receipt returned by its admissio
   const file = ".github/workflows/public-build-adopter-qualification.yml";
   const workflow = readWorkflow(file);
   const graphs = Object.keys(workflow.jobs).map(id => inspectWorkflowJob(file, id));
-  const graph = graphs.find(item => item.actions.has("actions/adoption/admit-adopter"));
+  const graph = graphs.find(item => item.actions.has("actions/adoption/adopter/admit"));
   assert.ok(graph);
   const upload = graph.steps.find(step => step.name === "Preserve rooted policy");
   assert.equal(upload.with.path, "${{ steps.policy.outputs.v4-consumer-policy-receipt-path }}");
@@ -175,12 +175,13 @@ test("fresh promotion binds exact publisher and runtime identities through QUALI
   const graph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "qualify");
   const node = graph.job.steps.find(step => step.id === "node");
   assert.equal(node.with["job-workflow-sha"], "${{ toJSON(job.workflow_sha) }}");
-  const identities = graph.steps.find(step => step.name === "Root publisher and runtime identities");
-  assert.match(identities.run, /git -C \.buildchain\/runtime rev-parse/);
-  assert.match(identities.run, /publisher-sha=\$\{\{ fromJSON\(inputs.job-workflow-sha\)/);
-  const candidate = graph.steps.find(step => step.name === "Resolve and qualify the sealed release candidate");
-  assert.equal(candidate.env.BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON, "${{ fromJSON(inputs.request-json).promotion-runtime-authorization-json }}");
-  assert.equal(candidate.env.BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT, "${{ fromJSON(inputs.request-json).promotion-runtime-authorization-root }}");
+  const qualification = graph.modules.get("packages/core/release/promotion/qualification-action.js");
+  assert.match(qualification, /verifyCheckoutIdentity\([\s\S]*sha: runtimeSha/);
+  assert.match(qualification, /"publisher-sha": workflowSha/);
+  assert.match(qualification, /"runtime-tree": tree/);
+  const candidate = graph.modules.get("packages/core/release/promotion/candidate.js");
+  assert.match(candidate, /authorizationJson: request\["promotion-runtime-authorization-json"\]/);
+  assert.match(candidate, /authorizationRoot: request\["promotion-runtime-authorization-root"\]/);
 });
 
 test("v4 floating policy contract rejects an unbound publisher identity", () => {

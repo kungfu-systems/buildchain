@@ -4,12 +4,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import YAML from "yaml";
-import { resolveGateRuntime } from "../packages/core/build/nodes/gate-runtime.mjs";
-import {
-  resetGateWorkspace,
-  windowsRustPlan,
-  setupWindowsRust,
-} from "../packages/core/providers/nodes/gate-toolchain.mjs";
+import { resolveGateRuntime } from "./helpers/runtime-selection.mjs";
+import { resetSourceWorktree } from "../packages/core/providers/source-checkout/workspace.js";
+import { prepareWindowsRust } from "../packages/core/runtime/toolchain/windows-rust.js";
 const sha = "a".repeat(40);
 const env = {
   BUILDCHAIN_REPOSITORY: "kungfu-systems/buildchain",
@@ -105,7 +102,7 @@ test("Gate source reset preserves only Git metadata and refuses junction escapes
   fs.mkdirSync(path.join(source, ".git"), { recursive: true });
   fs.writeFileSync(path.join(source, ".git", "HEAD"), "fixture");
   fs.writeFileSync(path.join(source, "residue"), "remove");
-  resetGateWorkspace({ GITHUB_WORKSPACE: cwd });
+  resetSourceWorktree({ workspace: cwd, checkoutPath: "source" });
   assert.deepEqual(fs.readdirSync(source), [".git"]);
   assert.equal(
     fs.readFileSync(path.join(source, ".git", "HEAD"), "utf8"),
@@ -114,7 +111,7 @@ test("Gate source reset preserves only Git metadata and refuses junction escapes
   fs.renameSync(source, path.join(cwd, "other"));
   fs.symlinkSync(path.join(cwd, "other"), source, "junction");
   assert.throws(
-    () => resetGateWorkspace({ GITHUB_WORKSPACE: cwd }),
+    () => resetSourceWorktree({ workspace: cwd, checkoutPath: "source" }),
     /symbolic links/,
   );
   assert.equal(
@@ -125,49 +122,32 @@ test("Gate source reset preserves only Git metadata and refuses junction escapes
 test("Windows Rust setup preserves literal argv and publishes environment only after success", (t) => {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "gate-rust-"));
   t.after(() => fs.rmSync(cwd, { recursive: true, force: true }));
-  const input = {
-    RUNNER_TEMP: cwd,
-    GITHUB_RUN_ID: "12",
-    GITHUB_RUN_ATTEMPT: "3",
-    BUILDCHAIN_RUST_TOOLCHAIN: "stable",
-    GITHUB_PATH: path.join(cwd, "path"),
-    GITHUB_ENV: path.join(cwd, "env"),
-  };
-  const plan = windowsRustPlan(input);
-  assert.ok(plan.install.includes("--no-modify-path"));
-  assert.ok(plan.download.includes("--fail"));
-  assert.ok(plan.download.includes("https://win.rustup.rs/x86_64"));
-  assert.throws(
-    () =>
-      setupWindowsRust(input, () => {
-        throw Object.assign(new Error("download failed"), { status: 28 });
-      }),
-    (e) => e.status === 28,
-  );
-  assert.equal(fs.existsSync(input.GITHUB_ENV), false);
+  const input = { runnerTemp: cwd, toolchain: "stable", environment: {}, platform: "win32" };
+  assert.throws(() => prepareWindowsRust(input, () => { throw Object.assign(new Error("download failed"), { status: 28 }); }), e => e.status === 28);
   const calls = [];
-  setupWindowsRust(input, (...args) => calls.push(args));
-  assert.equal(calls[1][2].env.CARGO_HOME, plan.cargo);
-  assert.match(
-    fs.readFileSync(input.GITHUB_ENV, "utf8"),
-    /CARGO_HOME=.*buildchain-gate-cargo-12-3/,
-  );
+  const prepared = prepareWindowsRust(input, (...args) => calls.push(args));
+  assert.ok(calls[0][1].includes("--fail"));
+  assert.ok(calls[0][1].includes("https://win.rustup.rs/x86_64"));
+  assert.ok(calls[1][1].includes("--no-modify-path"));
+  assert.equal(calls[1][2].env.CARGO_HOME, prepared.variables.CARGO_HOME);
+  assert.ok(prepared.variables.CARGO_HOME.startsWith(cwd + path.sep));
+  assert.deepEqual(prepared.paths, [path.join(prepared.variables.CARGO_HOME, "bin")]);
+
 });
 test("Gate nodes bind core Node before consumer toolchain selection and retain diagnostics on failure", () => {
   for (const stage of ["plan", "run-gates", "aggregate"]) {
     const action = YAML.parse(
-      fs.readFileSync(`actions/build/gate-profile-${stage}/action.yml`, "utf8"),
+      fs.readFileSync(`actions/build/gate/${stage === "run-gates" ? "execute" : stage}/action.yml`, "utf8"),
     );
     const steps = action.runs.steps;
     assert.ok(
       steps.findIndex((s) => s.id === "core-runtime") <
         steps.findIndex((s) => s.name === "Setup Node.js"),
     );
-    for (const step of steps.filter(
-      (s) => s.run?.includes("packages/core/") || s.run?.includes("node -e"),
-    )) {
-      assert.ok(step.run.startsWith('"$BUILDCHAIN_NODE"'));
-      assert.match(step.env.BUILDCHAIN_NODE, /outputs.node-path/);
+    for (const step of steps) {
+      assert.ok(step.uses, "Composite steps must invoke actions");
+      assert.equal(step.run, undefined);
+      assert.equal(step.shell, undefined);
     }
     if (stage === "run-gates")
       assert.match(

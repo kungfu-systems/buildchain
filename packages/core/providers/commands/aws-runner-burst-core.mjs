@@ -124,6 +124,7 @@ export function createRunnerEvidence({
   codeBuildBuildId,
   codeBuildBuildArn,
   codeBuildInitiator,
+  region = "",
   observedAt = new Date().toISOString(),
 } = {}) {
   if (provider !== "aws-codebuild") {
@@ -153,7 +154,7 @@ export function createRunnerEvidence({
       job: String(job || "").trim(),
     },
     aws: {
-      region: process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || "",
+      region,
       buildId: String(codeBuildBuildId || "").trim(),
       buildArn: String(codeBuildBuildArn || "").trim(),
       initiator: String(codeBuildInitiator || "").trim(),

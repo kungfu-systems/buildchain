@@ -15,7 +15,34 @@ import {
   readRepeatedJsonInputs,
   writeJsonFile,
 } from "../../contracts/cli/options.mjs";
-import { readDiagnosticsArtifactInputs } from "./process-sample.mjs";
+function readDiagnosticsArtifactInputs(args) {
+  const values = [];
+  for (let index = 0; index < args.length; index += 1) {
+    const entry = args[index];
+    if (entry === "--artifact") {
+      const value = args[index + 1];
+      if (!value || value.startsWith("--")) {
+        throw new Error(
+          "buildchain diagnostics summary --artifact requires a file path",
+        );
+      }
+      values.push(value);
+      index += 1;
+      continue;
+    }
+    if (entry === "--output") {
+      index += 1;
+      continue;
+    }
+    if (entry === "--json") {
+      continue;
+    }
+    values.push(entry);
+  }
+  return values;
+}
+
+
 
 export async function handleDiagnosticsCommand(args) {
   const [subcommand = "", ...diagnosticsArgs] = args;

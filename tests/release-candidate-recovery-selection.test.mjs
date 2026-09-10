@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { resolveRecoveryTransaction } from "../packages/core/release/commands/resume-from-candidate-run.mjs";
+import { resolveRecoveryTransaction } from "../packages/core/release/recovery/transactions.js";
 
 test("recovery resolves an exact publication version without scanning historical state refs", async () => {
   const transaction = {

@@ -1,98 +1,17 @@
 #!/usr/bin/env node
-import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { findJsonFiles, writeGitHubOutputs } from "./build-contract-core.mjs";
-
-function readEnv(name, fallback = "") {
-  return process.env[name] || fallback;
-}
-
-function parsePlatformIds(name) {
-  const raw = readEnv(name, "").trim();
-  if (!raw) return [];
-  const parsed = JSON.parse(raw);
-  if (!Array.isArray(parsed)) {
-    throw new Error(`${name} must be a JSON array`);
-  }
-  const ids = parsed.map((entry) => String(
-    typeof entry === "string" ? entry : entry?.id || "",
-  ).trim());
-  if (ids.some((id) => !id)) {
-    throw new Error(`${name} entries must declare non-empty platform ids`);
-  }
-  if (new Set(ids).size !== ids.length) {
-    throw new Error(`${name} must not contain duplicate platform ids`);
-  }
-  return ids;
-}
-
-function readManifest(file) {
-  try {
-    return JSON.parse(fs.readFileSync(file, "utf8"));
-  } catch {
-    return null;
-  }
-}
-
-function selectPlatformManifests({ inputRoot, expectedPlatformIds }) {
-  const candidates = findJsonFiles(inputRoot)
-    .filter((file) => path.basename(file) === "manifest.json")
-    .sort()
-    .map((file) => ({ file, manifest: readManifest(file) }))
-    .filter(({ manifest }) => manifest?.contract === "kungfu-buildchain-artifact");
-  if (expectedPlatformIds.length === 0) return candidates;
-  return expectedPlatformIds.map((platformId) => {
-    const matches = candidates.filter(({ manifest }) => manifest.platform?.id === platformId);
-    if (matches.length !== 1) {
-      throw new Error(
-        `expected exactly one platform manifest for ${platformId}, found ${matches.length} under ${inputRoot}`,
-      );
-    }
-    return matches[0];
-  });
-}
-
+import { aggregateBuildSummary } from "../summary/artifacts.js";
+import { writeGitHubOutputs } from "../../providers/commands/github-output.mjs";
+const readEnv = (name, fallback = "") => process.env[name] || fallback;
 export function aggregateBuildSummaryCli() {
   const inputRoot = path.resolve(readEnv("BUILDCHAIN_SUMMARY_INPUT", ".buildchain/downloaded-manifests"));
   const outputPath = path.resolve(readEnv("BUILDCHAIN_SUMMARY_OUTPUT", ".buildchain/artifacts/build-summary.json"));
   const artifactName = readEnv("BUILDCHAIN_ARTIFACT_NAME", "buildchain-artifact");
   const expectedPlatformCount = Number(readEnv("BUILDCHAIN_PLATFORM_COUNT", "0"));
   const additionalPlatformCount = Number(readEnv("BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT", "0"));
-  if (!Number.isInteger(additionalPlatformCount) || additionalPlatformCount < 0) {
-    throw new Error("BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT must be a non-negative integer");
-  }
-  const expectedManifestCount = expectedPlatformCount + additionalPlatformCount;
-  const platformIds = parsePlatformIds("BUILDCHAIN_EXPECTED_PLATFORMS_JSON");
-  const additionalPlatformIds = parsePlatformIds("BUILDCHAIN_ADDITIONAL_PLATFORM_IDS_JSON");
-  if (platformIds.length > 0 && platformIds.length !== expectedPlatformCount) {
-    throw new Error(
-      `BUILDCHAIN_EXPECTED_PLATFORMS_JSON declares ${platformIds.length} platforms, expected ${expectedPlatformCount}`,
-    );
-  }
-  if (additionalPlatformIds.length !== additionalPlatformCount) {
-    throw new Error(
-      `BUILDCHAIN_ADDITIONAL_PLATFORM_IDS_JSON declares ${additionalPlatformIds.length} platforms, expected ${additionalPlatformCount}`,
-    );
-  }
-  const expectedPlatformIds = [...platformIds, ...additionalPlatformIds];
-  if (new Set(expectedPlatformIds).size !== expectedPlatformIds.length) {
-    throw new Error("declared platform ids must be unique across primary and additional platforms");
-  }
-  const selected = selectPlatformManifests({
-    inputRoot,
-    expectedPlatformIds,
-  });
-  const manifestFiles = selected.map(({ file }) => file);
-  const manifests = selected.map(({ manifest }) => manifest);
-  if (expectedManifestCount > 0 && manifests.length !== expectedManifestCount) {
-    throw new Error(
-      `expected ${expectedManifestCount} platform manifests, found ${manifests.length} under ${inputRoot}`,
-    );
-  }
-  const summary = {
-    contract: "kungfu-buildchain-build-summary",
-    artifactName,
+  const summary = aggregateBuildSummary({ inputRoot, outputPath, artifactName, expectedPlatformCount, additionalPlatformCount,
+    platforms: JSON.parse(readEnv("BUILDCHAIN_EXPECTED_PLATFORMS_JSON", "[]")), additionalPlatforms: JSON.parse(readEnv("BUILDCHAIN_ADDITIONAL_PLATFORM_IDS_JSON", "[]")),
     git: {
       repository: process.env.GITHUB_REPOSITORY || "",
       sha: process.env.BUILDCHAIN_SOURCE_SHA || process.env.GITHUB_SHA || "",
@@ -126,38 +45,7 @@ export function aggregateBuildSummaryCli() {
       trustDecision: readEnv("BUILDCHAIN_RUNTIME_TRUST_DECISION", ""),
       rollbackRef: readEnv("BUILDCHAIN_ROLLBACK_REF", ""),
     },
-    platformCount: manifests.length,
-    fileCount: manifests.reduce((sum, manifest) => sum + Number(manifest.summary?.fileCount || 0), 0),
-    totalBytes: manifests.reduce((sum, manifest) => sum + Number(manifest.summary?.totalBytes || 0), 0),
-    observability: {
-      lifecycle: {
-        stages: manifests.reduce((acc, manifest) => {
-          for (const [stage, value] of Object.entries(manifest.observability?.lifecycle?.stages || {})) {
-            acc[stage] = acc[stage] || { durationMs: 0, eventCount: 0 };
-            acc[stage].durationMs += Number(value.durationMs || 0);
-            acc[stage].eventCount += Number(value.eventCount || 0);
-          }
-          return acc;
-        }, {}),
-        topSlowSpans: manifests
-          .flatMap((manifest) => manifest.observability?.lifecycle?.topSlowSpans || [])
-          .sort((left, right) => Number(right.durationMs || 0) - Number(left.durationMs || 0))
-          .slice(0, 10),
-        warningCount: manifests.reduce((sum, manifest) => sum + Number(manifest.observability?.lifecycle?.warningCount || 0), 0),
-        errorCount: manifests.reduce((sum, manifest) => sum + Number(manifest.observability?.lifecycle?.errorCount || 0), 0),
-      },
-    },
-    platforms: manifests.map((manifest, index) => ({
-      artifactName: manifest.artifactName,
-      platform: manifest.platform,
-      summary: manifest.summary,
-      observability: manifest.observability,
-      expectedArtifacts: manifest.expectedArtifacts,
-      manifestPath: manifestFiles[index],
-    })),
-  };
-  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-  fs.writeFileSync(outputPath, `${JSON.stringify(summary, null, 2)}\n`);
+  });
   writeGitHubOutputs({
     "summary-path": path.relative(process.cwd(), outputPath).split(path.sep).join("/"),
     "platform-count": String(summary.platformCount),

@@ -1,0 +1,21 @@
+name: Capture every declared demo in an isolated renderer
+description: Capture every declared demo in an isolated renderer.
+inputs:
+  runtime-sha:
+    description: Admitted runtime-sha.
+    required: true
+  source-sha:
+    description: Admitted source-sha.
+    required: true
+  renderer-image:
+    description: Admitted renderer-image.
+    required: true
+  scenario-path:
+    description: Admitted scenario-path.
+    required: true
+outputs:
+  name:
+    description: Verified name.
+runs:
+  using: node24
+  main: dist/index.js

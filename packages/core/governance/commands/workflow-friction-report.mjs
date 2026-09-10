@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { recordBuildchainControlPlaneOutcome } from "../../observability/logging.js";
 import { pathToFileURL } from "node:url";
-import { writeGitHubOutputs } from "../../build/commands/build-contract-core.mjs";
+import { writeGitHubOutputs } from "../../providers/commands/github-output.mjs";
 
 const DEFAULT_BUILD_WORKFLOW_FILE = "build.yml";
 const DEFAULT_BUILD_WORKFLOW_NAME = "Build";

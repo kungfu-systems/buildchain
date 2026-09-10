@@ -1,0 +1,26 @@
+name: Release propagation reconcile
+description: Reconcile the downstream branch and PR, emit its receipt, and expose captured Work on failure.
+inputs:
+  request-json:
+    description: Typed public propagation request.
+    required: true
+  predecessors-ok:
+    description: Planning and materialization outcomes both succeeded.
+    required: true
+  token:
+    description: Scoped downstream GitHub credential.
+    required: true
+outputs:
+  receipt-json:
+    description: receipt-json
+  receipt-digest:
+    description: receipt-digest
+  work-json:
+    description: work-json
+  work-root:
+    description: work-root
+  next-action:
+    description: next-action
+runs:
+  using: node24
+  main: dist/index.js

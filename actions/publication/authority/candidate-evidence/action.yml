@@ -1,0 +1,91 @@
+name: authority-candidate-evidence
+description: "Publication authority: candidate evidence."
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Download exact release-candidate passport evidence
+      if: ${{ !fromJSON(inputs.request-json).dry-run && fromJSON(inputs.request-json).auto-admission-kind == 'release-candidate' }}
+      uses: actions/download-artifact@v7.0.0
+      with:
+        repository: ${{ fromJSON(inputs.request-json).evidence-repository }}
+        run-id: ${{ fromJSON(inputs.request-json).evidence-run-id }}
+        github-token: ${{ github.token }}
+        name: ${{ fromJSON(inputs.request-json).evidence-passport-artifact }}
+        path: .buildchain/publication-evidence/passport
+    - name: Download exact build-summary evidence
+      if: ${{ !fromJSON(inputs.request-json).dry-run && fromJSON(inputs.request-json).auto-admission-kind == 'release-candidate' }}
+      uses: actions/download-artifact@v7.0.0
+      with:
+        repository: ${{ fromJSON(inputs.request-json).evidence-repository }}
+        run-id: ${{ fromJSON(inputs.request-json).evidence-run-id }}
+        github-token: ${{ github.token }}
+        name: ${{ fromJSON(inputs.request-json).evidence-summary-artifact }}
+        path: .buildchain/publication-evidence/summary
+    - name: Resolve referenced controller evidence
+      if: ${{ !fromJSON(inputs.request-json).dry-run && fromJSON(inputs.request-json).auto-admission-kind == 'release-candidate' }}
+      id: controller-evidence
+      uses: ./.buildchain/authority-runtime/actions/publication/authority/locate-controller
+    - name: Download referenced controller receipt evidence
+      if: ${{ !fromJSON(inputs.request-json).dry-run && fromJSON(inputs.request-json).auto-admission-kind == 'release-candidate' }}
+      uses: actions/download-artifact@v7.0.0
+      with:
+        repository: ${{ fromJSON(inputs.request-json).evidence-repository }}
+        run-id: ${{ fromJSON(inputs.request-json).evidence-run-id }}
+        github-token: ${{ github.token }}
+        name: ${{ steps.controller-evidence.outputs.controller-artifact }}
+        path: .buildchain/publication-evidence/controller
+    - name: Download exact artifact manifest evidence
+      if: ${{ !fromJSON(inputs.request-json).dry-run && fromJSON(inputs.request-json).auto-admission-kind == 'release-candidate' }}
+      uses: actions/download-artifact@v7.0.0
+      with:
+        repository: ${{ fromJSON(inputs.request-json).evidence-repository }}
+        run-id: ${{ fromJSON(inputs.request-json).evidence-run-id }}
+        github-token: ${{ github.token }}
+        pattern: ${{ fromJSON(inputs.request-json).evidence-manifest-pattern }}
+        path: .buildchain/publication-evidence/manifests
+    - name: Download exact candidate payload evidence
+      if: ${{ !fromJSON(inputs.request-json).dry-run && fromJSON(inputs.request-json).auto-admission-kind == 'release-candidate' }}
+      uses: actions/download-artifact@v7.0.0
+      with:
+        repository: ${{ fromJSON(inputs.request-json).evidence-repository }}
+        run-id: ${{ fromJSON(inputs.request-json).evidence-run-id }}
+        github-token: ${{ github.token }}
+        pattern: ${{ fromJSON(inputs.request-json).evidence-payload-pattern }}
+        path: .buildchain/publication-evidence/payloads
+    - name: Checkout exact consumer Gate subject
+      if:
+        ${{ !fromJSON(inputs.request-json).dry-run && fromJSON(inputs.request-json).auto-admission && fromJSON(inputs.request-json).auto-admission-kind
+        == 'release-candidate' && fromJSON(inputs.request-json).consumer-gate-command != '' }}
+      uses: actions/checkout@v7.0.0
+      with:
+        ref: ${{ fromJSON(inputs.request-json).source-sha }}
+        path: .buildchain/publication-consumer-source
+        clean: true
+        persist-credentials: false
+    - name: Checkout exact consumer Gate controller
+      if:
+        ${{ !fromJSON(inputs.request-json).dry-run && fromJSON(inputs.request-json).auto-admission && fromJSON(inputs.request-json).auto-admission-kind
+        == 'release-candidate' && fromJSON(inputs.request-json).consumer-gate-command != '' && fromJSON(inputs.request-json).consumer-gate-controller-sha
+        != '' }}
+      uses: actions/checkout@v7.0.0
+      with:
+        ref: ${{ fromJSON(inputs.request-json).consumer-gate-controller-sha }}
+        path: .buildchain/publication-consumer-controller
+        clean: true
+        persist-credentials: false
+    - name: Assemble consumer Gate from exact downloaded evidence
+      if:
+        ${{ !fromJSON(inputs.request-json).dry-run && fromJSON(inputs.request-json).auto-admission && fromJSON(inputs.request-json).auto-admission-kind
+        == 'release-candidate' && fromJSON(inputs.request-json).consumer-gate-command != '' }}
+      id: consumer-gate
+      uses: ./.buildchain/authority-runtime/actions/publication/authority/qualify-consumer-gate
+      with:
+        request-json: ${{ inputs.request-json }}
+outputs:
+  consumer-gate-json:
+    description: Exact authority step result.
+    value: ${{ steps.consumer-gate.outputs.gate-aggregate-json }}

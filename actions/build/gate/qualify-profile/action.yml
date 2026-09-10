@@ -1,0 +1,20 @@
+name: Qualify complete Gate profile evidence
+description: Qualify complete Gate profile evidence.
+inputs:
+  source-sha:
+    description: Admitted source commit
+    required: true
+outputs:
+  gate-aggregate-path:
+    description: gate aggregate path
+  gate-aggregate-json:
+    description: gate aggregate json
+  gate-aggregate-digest:
+    description: gate aggregate digest
+  gate-aggregate-status:
+    description: gate aggregate status
+  gate-aggregate-qualifying:
+    description: gate aggregate qualifying
+runs:
+  using: node24
+  main: dist/index.js

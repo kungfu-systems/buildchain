@@ -2431,7 +2431,7 @@
     {
       "laneId": ".github/workflows/self-release-binary-assets.yml#publish",
       "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
+      "triggerClass": "manual",
       "concurrencyPolicy": {
         "mode": "none",
         "cancelInProgress": false
@@ -2448,7 +2448,7 @@
     {
       "laneId": ".github/workflows/self-release-binary-assets.yml#resolve",
       "authorityClass": "release",
-      "triggerClass": "mixed",
+      "triggerClass": "manual",
       "concurrencyPolicy": {
         "mode": "none",
         "cancelInProgress": false

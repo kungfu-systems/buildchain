@@ -1,5 +1,4 @@
 name: Buildchain Dev Qualification Patrol
-
 on:
   workflow_call:
     inputs:
@@ -71,15 +70,12 @@ on:
         value: ${{ jobs.mutate.outputs.active-run-id || jobs.observe.outputs.active-run-id }}
       decision-root:
         value: ${{ jobs.mutate.outputs.decision-root || jobs.observe.outputs.decision-root }}
-
 permissions:
   actions: read
   contents: read
-
 concurrency:
   group: buildchain-dev-qualification-${{ github.repository }}-${{ inputs.source-branch }}
   cancel-in-progress: false
-
 jobs:
   observe:
     runs-on: ubuntu-24.04
@@ -105,15 +101,14 @@ jobs:
           persist-credentials: false
       - name: Execute dev-qualification-patrol-observe
         id: node
-        uses: ./.buildchain/workflow-shell/actions/governance/dev-qualification-patrol-observe
+        uses: ./.buildchain/workflow-shell/actions/governance/dev-qualification/observe
         with:
           runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
           runtime-repository: ${{ inputs.buildchain-repository || job.workflow_repository }}
           request-json: ${{ toJSON(inputs) }}
-
   mutate:
     needs: observe
-    if: >-
+    if: |-
       ${{
         (
           inputs.mutation-authorized &&
@@ -144,11 +139,10 @@ jobs:
           persist-credentials: false
       - name: Execute dev-qualification-patrol-mutate
         id: node
-        uses: ./.buildchain/workflow-shell/actions/governance/dev-qualification-patrol-mutate
+        uses: ./.buildchain/workflow-shell/actions/governance/dev-qualification/apply
         with:
           runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
           runtime-repository: ${{ inputs.buildchain-repository || job.workflow_repository }}
           request-json: ${{ toJSON(inputs) }}
           secrets-qualification-token: ${{ secrets.qualification-token }}
-          needs-observe-outputs-action: ${{ toJSON(needs.observe.outputs.action) }}
-          needs-observe-outputs-source-sha: ${{ toJSON(needs.observe.outputs.source-sha) }}
+          observation-json: ${{ toJSON(needs.observe.outputs) }}

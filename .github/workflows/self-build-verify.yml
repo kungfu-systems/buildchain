@@ -47,7 +47,7 @@ jobs:
         if: ${{ always() }}
       - name: Build backbone (${{ matrix.platform }})
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/verify-build-backbone
+        uses: ./.buildchain/workflow-shell/actions/build/verification/backbone
         if: ${{ always() }}
         with:
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
@@ -79,7 +79,7 @@ jobs:
         if: ${{ always() }}
       - name: Stage Capsule checkpoint (${{ matrix.platform }})
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/verify-stage-capsule-checkpoints
+        uses: ./.buildchain/workflow-shell/actions/build/stage-capsule/verify-checkpoints
         with:
           matrix-json: ${{ toJSON(matrix) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
@@ -105,7 +105,7 @@ jobs:
         if: ${{ always() }}
       - name: Execute verify-check
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/verify-check
+        uses: ./.buildchain/workflow-shell/actions/build/verification/repository
         if: ${{ always() }}
         with:
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}

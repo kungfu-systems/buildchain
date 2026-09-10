@@ -17,9 +17,9 @@
     "receipt": "packages/core/release/tail-reseal-receipt.js",
     "cli": "buildchain tail-reseal",
     "nodes": {
-      "plan": "actions/release/tail-reseal-plan",
-      "platforms": "actions/release/tail-reseal-platforms",
-      "seal": "actions/release/tail-reseal-seal"
+      "plan": "actions/release/reseal/plan",
+      "platforms": "actions/release/reseal/platforms",
+      "seal": "actions/release/reseal/seal"
     }
   },
   "authority": {
@@ -153,5 +153,5 @@
       "verificationEvidence": []
     }
   ],
-  "matrixRoot": "sha256:d6f3ef555df90f39be3fa8119677cc8c20f8571ab1308ff601150dac9fd713ac"
+  "matrixRoot": "sha256:1de7fc8c4cab428b34705a939741a24f3e12114d387db9da4ba3fb50cedd3084"
 }

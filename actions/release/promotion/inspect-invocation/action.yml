@@ -1,0 +1,12 @@
+name: Verify promotion invocation before runtime selection
+description: Verify promotion invocation before runtime selection.
+inputs:
+  request-json:
+    description: Complete typed promotion request.
+    required: true
+  workflow-sha:
+    description: Exact defining publisher commit.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

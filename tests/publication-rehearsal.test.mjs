@@ -694,7 +694,7 @@ test("repo-local prepublication dogfood resolves the current reusable and exact 
   const workflowUses = parseYamlUses(workflow).map((entry) => entry.value);
   assert.ok(
     workflowUses.includes(
-      "./.buildchain/release-tail-runtime/actions/release/settle",
+      "./.buildchain/release-tail-runtime/actions/release/tail/settle",
     ),
   );
   const durableExternalCaller = fs.readFileSync(
@@ -740,7 +740,7 @@ test("checked-in release-tail Action executes the dogfood capsule without author
   fs.writeFileSync(outputPath, "");
   const result = spawnSync(
     process.execPath,
-    [path.join(repositoryRoot, "actions/release/settle/dist/index.js")],
+    [path.join(repositoryRoot, "actions/release/tail/settle/dist/index.js")],
     {
       cwd: repositoryRoot,
       encoding: "utf8",

@@ -75,8 +75,8 @@
       },
       {
         "mechanismId": "publication-authority",
-        "root": "packages/core/publication/commands",
-        "pattern": "^publication-candidate-sealer\\.mjs$"
+        "root": "packages/core/publication/candidate",
+        "pattern": "^sealing\\.js$"
       },
       {
         "mechanismId": "github-governance-authority",
@@ -122,7 +122,7 @@
     "gitRefStores": [
       {
         "mechanismId": "dev-delivery-warrant",
-        "sourcePath": "packages/core/dev-delivery/commands/dev-delivery-warrant.mjs",
+        "sourcePath": "packages/core/dev-delivery/warrant/values.js",
         "marker": "buildchain/dev-delivery-warrant/"
       },
       {
@@ -302,7 +302,19 @@
         "packages/core/dev-delivery/commands/dev-delivery-warrant.mjs",
         "packages/core/dev-delivery/commands/dev-pr-auto-merge.mjs",
         "packages/core/dev-delivery/commands/dev-pr-delivery-warrant.mjs",
-        "packages/core/dev-delivery/dev-delivery-warrant-native-requirements.js"
+        "packages/core/dev-delivery/dev-delivery-warrant-native-requirements.js",
+        "packages/core/dev-delivery/warrant/observation.js",
+        "packages/core/dev-delivery/warrant/terminal-policy.js",
+        "packages/core/dev-delivery/warrant/reservation-readback.js",
+        "packages/core/dev-delivery/warrant/handoff.js",
+        "packages/core/dev-delivery/warrant/actions.js",
+        "packages/core/dev-delivery/warrant/persistence.js",
+        "packages/core/dev-delivery/warrant/terminal.js",
+        "packages/core/dev-delivery/warrant/service.js",
+        "packages/core/dev-delivery/warrant/values.js",
+        "packages/core/dev-delivery/warrant/cancellation.js",
+        "packages/core/dev-delivery/warrant/failure-settlement.js",
+        "packages/core/dev-delivery/warrant/transitions.js"
       ],
       "testPaths": [
         "tests/dev-delivery-warrant.test.mjs",
@@ -618,7 +630,7 @@
         "durable state ref"
       ],
       "publicSurfaces": [
-        "action:release/promote-ref",
+        "action:release/promotion/ref",
         "cli:release-transaction",
         "workflow:public-release-promote",
         "workflow:public-release-paper"
@@ -746,7 +758,7 @@
         "packages/core/governance/buildchain-publication-authority.js",
         "packages/core/publication/publication-control-plane-audit.js",
         "packages/core/governance/commands/audit-publication-control-plane.mjs",
-        "packages/core/publication/commands/publication-candidate-sealer.mjs"
+        "packages/core/publication/candidate/sealing.js"
       ],
       "testPaths": [
         "tests/publication-authority.test.mjs",
@@ -944,7 +956,7 @@
         "local package/sidecar"
       ],
       "publicSurfaces": [
-        "action:build/github-attestation",
+        "action:build/artifact/prepare-attestation",
         "export:./release-passport",
         "export:./artifact-passport",
         "cli:verify-release-passport",
@@ -1119,13 +1131,13 @@
         "export:./release-tail-provider-adapters",
         "cli:release-tail",
         "workflow:public-release-tail",
-        "action:release/settle"
+        "action:release/tail/settle"
       ],
       "sourcePaths": [
         "packages/core/release/release-tail-provider-plane.js",
         "packages/core/release/release-tail-provider-adapters.js",
         "packages/core/release/commands/release-tail.mjs",
-        "actions/release/settle/index.js"
+        "actions/release/tail/settle/index.js"
       ],
       "testPaths": [
         "tests/release-tail-provider-plane.test.mjs",

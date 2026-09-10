@@ -1,0 +1,42 @@
+name: Controller receipt
+description: Seal observed stages and evidence into a controller receipt,
+  preserving non-qualifying outcomes.
+inputs:
+  plan-path:
+    description: Previously sealed controller plan.
+    default: .buildchain/controller/plan.json
+  stages-json:
+    description: Observed controller stage outcomes.
+    default: "[]"
+  evidence-json:
+    description: Already rooted evidence descriptors.
+    default: "[]"
+  evidence-files-json:
+    description: Files whose exact bytes become evidence.
+    default: "[]"
+  reason-code:
+    description: Reason for a non-passing receipt.
+    default: ""
+  reason-summary:
+    description: Diagnostic reason.
+    default: controller did not pass
+  artifact:
+    description: Receipt artifact name.
+    default: ""
+  receipt-path:
+    description: Output receipt evidence path.
+    default: .buildchain/controller/receipt.json
+outputs:
+  controller-receipt-path:
+    description: Controller receipt path.
+  controller-receipt-json:
+    description: Controller receipt json.
+  controller-receipt-digest:
+    description: Controller receipt digest.
+  controller-receipt-status:
+    description: Controller receipt status.
+  controller-receipt-qualifying:
+    description: Controller receipt qualifying.
+runs:
+  using: node24
+  main: dist/index.js

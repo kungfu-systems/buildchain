@@ -1,0 +1,47 @@
+name: demo-dogfood-exact-binary
+description: Execute the demo-dogfood exact-binary capability within its caller job boundary.
+outputs:
+  artifact-name:
+    description: artifact-name node result.
+    value: ${{ steps.identity.outputs.name }}
+  artifact-digest:
+    description: artifact-digest node result.
+    value: ${{ steps.upload.outputs.artifact-digest }}
+runs:
+  using: composite
+  steps:
+    - name: Admit source checkout
+      id: source-boundary
+      if: ${{ always() }}
+      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      with:
+        source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
+    - name: Set up Node.js
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+      with:
+        node-version: "24"
+    - name: Install exact dependencies
+      uses: ./.buildchain/workflow-shell/actions/runtime/dependencies/install
+      with:
+        directory: .
+        production: "false"
+        ignore-scripts: "false"
+    - name: Build and qualify the exact transported demo binary
+      id: identity
+      uses: ./actions/build/demo/prepare-binary
+    - name: Upload exact binary and metadata
+      id: upload
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      with:
+        name: ${{ steps.identity.outputs.name }}
+        path: |
+          dist/auditable-demo-binary/buildchain
+          dist/auditable-demo-binary/buildchain-x86_64-unknown-linux-gnu.json
+        if-no-files-found: error
+        retention-days: 14
+        compression-level: 0
+        overwrite: false
+inputs:
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true

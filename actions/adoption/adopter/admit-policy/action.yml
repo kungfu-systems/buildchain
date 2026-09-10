@@ -1,0 +1,28 @@
+name: admit-policy adopter qualification
+description: Admit exact consumer policy or qualify public delivery and platform
+  evidence through named domain APIs.
+inputs:
+  request-json:
+    description: request-json admitted adopter input.
+    required: true
+  workflow-sha:
+    description: workflow-sha admitted adopter input.
+    required: true
+outputs:
+  v4-consumer-policy-status:
+    description: v4-consumer-policy-status adopter evidence.
+  v4-consumer-policy-receipt-path:
+    description: v4-consumer-policy-receipt-path adopter evidence.
+  v4-consumer-policy-receipt-root:
+    description: v4-consumer-policy-receipt-root adopter evidence.
+  v4-consumer-policy-receipt-json:
+    description: v4-consumer-policy-receipt-json adopter evidence.
+  v4-consumer-policy-channel:
+    description: v4-consumer-policy-channel adopter evidence.
+  v4-consumer-policy-selector:
+    description: v4-consumer-policy-selector adopter evidence.
+  v4-consumer-policy-scanner-root:
+    description: v4-consumer-policy-scanner-root adopter evidence.
+runs:
+  using: node24
+  main: dist/index.js

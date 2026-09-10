@@ -1,0 +1,17 @@
+name: apply-preview
+description:
+  Verify public OCI qualification and retain exact digest-bound preview
+  evidence.
+inputs:
+  workflow-sha:
+    description: Exact called workflow commit.
+    required: true
+  token:
+    description: Scoped release provider credential.
+    required: true
+  registry-token:
+    description: Scoped package registry credential.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

@@ -1,123 +1,52 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
 import YAML from "yaml";
-import {
-  validatePolicyBindings,
-  verifyReadbacks,
-  publicationLine,
-} from "../packages/core/release/nodes/tail-reseal.mjs";
-const sha = "d".repeat(40),
-  runtime = "e".repeat(40),
-  root = `sha256:${"f".repeat(64)}`;
+import { verifyTailPolicyBindings } from "../packages/core/release/reseal/admission.js";
+import { verifyResealProviderReadbacks } from "../packages/core/release/reseal/readbacks.js";
+import { publicationLine } from "../packages/core/release/reseal/seal.js";
+import { tailResealFixturePolicyReceipt } from "../scripts/generate-tail-reseal-fixture.mjs";
+const repositoryRoot = path.resolve(import.meta.dirname, "..");
 function bindings() {
-  return {
-    request: {
-      repository: "example/consumer",
-      source: { sha },
-      runtime: { sha: runtime },
-    },
-    receipt: { id: "policy" },
-    env: {
-      BUILDCHAIN_SOURCE_SHA: sha,
-      BUILDCHAIN_RUNTIME_SHA: runtime,
-      BUILDCHAIN_POLICY_ROOT: root,
-    },
-  };
+  const read = file => JSON.parse(fs.readFileSync(path.join(repositoryRoot, file), "utf8"));
+  const request = read("contracts/fixtures/v4-tail-reseal-v1/valid.json");
+  const { receipt, receiptRoot } = tailResealFixturePolicyReceipt(request, read("architecture/floating-consumer-policy.json"));
+  request.runtime.consumerPolicyReceiptRoot = receiptRoot;
+  return { request, receipt, sourceSha: request.source.sha, runtimeSha: request.runtime.sha };
 }
 test("tail policy admission binds source, runtime and the existing rooted consumer receipt", () => {
-  let observed;
-  validatePolicyBindings({
-    ...bindings(),
-    verify: (value) => {
-      observed = value;
-      return { ok: true };
-    },
-  });
-  assert.equal(observed.receiptRoot, root);
-  assert.equal(observed.repository, "example/consumer");
-  assert.equal(observed.sourceSha, sha);
-  assert.equal(observed.resolvedRuntimeSha, runtime);
-  for (const key of ["BUILDCHAIN_SOURCE_SHA", "BUILDCHAIN_RUNTIME_SHA"]) {
-    const input = bindings();
-    input.env[key] = "a".repeat(40);
-    assert.throws(
-      () =>
-        validatePolicyBindings({
-          ...input,
-          verify: () => {
-            throw Error("must not verify drifted coordinates");
-          },
-        }),
-      /differs/,
-    );
+  assert.doesNotThrow(() => verifyTailPolicyBindings(bindings()));
+  for (const key of ["sourceSha", "runtimeSha"]) {
+    const input = bindings(); input[key] = input[key] === "a".repeat(40) ? "b".repeat(40) : "a".repeat(40);
+    assert.throws(() => verifyTailPolicyBindings(input), /differs/);
   }
-  assert.throws(
-    () =>
-      validatePolicyBindings({
-        ...bindings(),
-        verify: () => ({ ok: false, failures: [{ code: "root-mismatch" }] }),
-      }),
-    /root-mismatch/,
-  );
+  const input = bindings(); input.request.runtime.consumerPolicyReceiptRoot = `sha256:${"f".repeat(64)}`;
+  assert.throws(() => verifyTailPolicyBindings(input), /Consumer policy receipt invalid/);
 });
-test("both independent provider readbacks must match their exact byte roots", () => {
-  const digest = (value) =>
-    `sha256:${crypto.createHash("sha256").update(value).digest("hex")}`;
-  const env = {
-    EXPECTED_SIGNING_ROOT: digest("signing"),
-    EXPECTED_RELEASE_TAIL_ROOT: digest("tail"),
-  };
-  const read = (name) =>
-    name.endsWith("signing-provider-readback.json") ? "signing" : "tail";
-  assert.doesNotThrow(() => verifyReadbacks(env, read));
-  for (const key of Object.keys(env))
-    assert.throws(
-      () => verifyReadbacks({ ...env, [key]: digest("tampered") }, read),
-      /root mismatch/,
-    );
+test("both independent provider readbacks must match their exact byte roots", t => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "tail-readbacks-"));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const digest = value => `sha256:${crypto.createHash("sha256").update(value).digest("hex")}`;
+  fs.writeFileSync(path.join(directory, "signing-provider-readback.json"), "signing");
+  fs.writeFileSync(path.join(directory, "release-tail-provider-readback.json"), "tail");
+  const request = { directory, signingRoot: digest("signing"), releaseTailRoot: digest("tail") };
+  assert.doesNotThrow(() => verifyResealProviderReadbacks(request));
+  for (const key of ["signingRoot", "releaseTailRoot"]) assert.throws(() => verifyResealProviderReadbacks({ ...request, [key]: digest("tampered") }), /root mismatch/);
 });
 test("tail publication line derives from the exact version and rejects unsealed selectors", () => {
   assert.equal(publicationLine("4.1.0-alpha.0"), "alpha/v4/v4.1");
   assert.equal(publicationLine("5.2.3-alpha.4"), "alpha/v5/v5.2");
-  for (const value of ["4.1.0", "v4-alpha", "4.1.0-beta.1", ""])
-    assert.throws(() => publicationLine(value), /exact alpha/);
+  for (const value of ["4.1.0", "v4-alpha", "4.1.0-beta.1", ""]) assert.throws(() => publicationLine(value), /exact alpha/);
 });
-test("tail signing token remains exclusive to the macOS effect and follows retained-byte validation", () => {
-  const read = (name) =>
-    YAML.parse(
-      fs.readFileSync(
-        new URL(
-          `../actions/release/tail-reseal-${name}/action.yml`,
-          import.meta.url,
-        ),
-        "utf8",
-      ),
-    );
+test("tail composites use business actions and keep signing credentials in platform finalization", () => {
+  const read = phase => YAML.parse(fs.readFileSync(path.join(repositoryRoot, `actions/release/reseal/${phase}/action.yml`), "utf8"));
+  for (const phase of ["plan", "platforms", "seal"]) for (const step of read(phase).runs.steps) {
+    assert.ok(step.uses); assert.equal(step.run, undefined); assert.equal(step.shell, undefined);
+  }
   const steps = read("platforms").runs.steps;
-  const effect = steps.find(
-    (s) => s.name === "Execute fenced macOS signing-finalization tail",
-  );
-  assert.equal(
-    effect.if,
-    "fromJSON(inputs.matrix-json).platform.id == 'macos-arm64'",
-  );
-  assert.equal(steps.filter((s) => s.env?.BUILDCHAIN_SIGNING_TOKEN).length, 1);
-  assert.ok(
-    steps.findIndex(
-      (s) => s.name === "Verify exact retained bytes before any effect",
-    ) < steps.indexOf(effect),
-  );
-  assert.match(
-    steps.find(
-      (s) => s.name === "Verify independent signing and release-tail readbacks",
-    ).run,
-    /tail-reseal.mjs" readbacks/,
-  );
-  for (const phase of ["plan", "seal"])
-    assert.doesNotMatch(
-      JSON.stringify(read(phase)),
-      /BUILDCHAIN_SIGNING_TOKEN/,
-    );
+  assert.deepEqual(steps.filter(step => step.with?.["signing-token"]).map(step => step.uses), ["./.buildchain/runtime/actions/release/reseal/finalize-platform"]);
+  for (const phase of ["plan", "seal"]) assert.doesNotMatch(JSON.stringify(read(phase)), /signing-token/);
 });

@@ -1,0 +1,104 @@
+name: resolve-promotion
+description: Resolve channel intent and bind exact workflow, runtime and consumer lock identities.
+inputs:
+  request-json:
+    description: request-json identity.
+    required: true
+  workflow-sha:
+    description: workflow-sha identity.
+    required: true
+  workflow-ref:
+    description: workflow-ref identity.
+    required: true
+  workflow-repository:
+    description: workflow-repository identity.
+    required: true
+outputs:
+  repository:
+    description: repository result.
+    value: ${{ steps.route.outputs.repository }}
+  channel:
+    description: channel result.
+    value: ${{ steps.route.outputs.channel }}
+  publication-channel:
+    description: publication-channel result.
+    value: ${{ steps.route.outputs.publication-channel }}
+  target-ref:
+    description: target-ref result.
+    value: ${{ steps.route.outputs.target-ref }}
+  router-ref:
+    description: router-ref result.
+    value: ${{ steps.route.outputs.router-ref }}
+  router-sha:
+    description: router-sha result.
+    value: ${{ steps.route.outputs.router-sha }}
+  shell-ref:
+    description: shell-ref result.
+    value: ${{ steps.route.outputs.shell-ref }}
+  shell-call-ref:
+    description: shell-call-ref result.
+    value: ${{ steps.route.outputs.shell-call-ref }}
+  shell-sha:
+    description: shell-sha result.
+    value: ${{ steps.route.outputs.shell-sha }}
+  runtime-ref:
+    description: runtime-ref result.
+    value: ${{ steps.route.outputs.runtime-ref }}
+  runtime-sha:
+    description: runtime-sha result.
+    value: ${{ steps.route.outputs.runtime-sha }}
+  override-used:
+    description: override-used result.
+    value: ${{ steps.route.outputs.override-used }}
+  selection-source:
+    description: selection-source result.
+    value: ${{ steps.route.outputs.selection-source }}
+  reason:
+    description: reason result.
+    value: ${{ steps.route.outputs.reason }}
+  contract-lock-path:
+    description: contract-lock-path result.
+    value: ${{ steps.bind.outputs.contract-lock-path }}
+  contract-lock-digest:
+    description: contract-lock-digest result.
+    value: ${{ steps.bind.outputs.contract-lock-digest }}
+  request-json:
+    description: Validated request with declared defaults.
+    value: ${{ steps.route.outputs.request-json }}
+runs:
+  using: composite
+  steps:
+    - name: Prepare exact core runtime
+      id: core
+      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .buildchain/workflow-shell
+    - name: Resolve current promotion identities
+      id: route
+      uses: ./.buildchain/workflow-shell/actions/release/promotion/route
+      with:
+        request-json: ${{ inputs.request-json }}
+        workflow-sha: ${{ inputs.workflow-sha }}
+        workflow-ref: ${{ inputs.workflow-ref }}
+        workflow-repository: ${{ inputs.workflow-repository }}
+        token: ${{ github.token }}
+    - name: Check out selected runtime
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ steps.route.outputs.repository }}
+        ref: ${{ steps.route.outputs.runtime-sha }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - name: Check out exact consumer source
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ github.repository }}
+        ref: ${{ fromJSON(steps.route.outputs.request-json).target-sha || github.sha }}
+        path: .buildchain/source
+        persist-credentials: false
+    - name: Bind source lock and immutable checkouts
+      id: bind
+      uses: ./.buildchain/workflow-shell/actions/release/promotion/bind-selection
+      with:
+        request-json: ${{ steps.route.outputs.request-json }}
+        selection-json: ${{ toJSON(steps.route.outputs) }}

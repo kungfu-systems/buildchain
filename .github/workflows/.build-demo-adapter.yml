@@ -1,47 +1,48 @@
 name: Buildchain Auditable Demo
-
 on:
   workflow_call:
     inputs:
       buildchain-repository:
-        description: "Repository that owns this reusable workflow"
-        default: "kungfu-systems/buildchain"
+        description: Repository that owns this reusable workflow
+        default: kungfu-systems/buildchain
         type: string
         required: false
       source-ref:
-        description: "Optional immutable consumer source ref; defaults to the caller event SHA"
+        description: Optional immutable consumer source ref; defaults to the caller event SHA
         default: ""
         type: string
         required: false
       source-artifact-name:
-        description: "Exact GitHub Artifact produced earlier in this caller run"
+        description: Exact GitHub Artifact produced earlier in this caller run
         type: string
         required: true
       source-artifact-digest:
-        description: "Exact sha256 digest returned by upload-artifact for source-artifact-name"
+        description: Exact sha256 digest returned by upload-artifact for source-artifact-name
         type: string
         required: true
       adapter-path:
-        description: "Executable project-relative adapter; receives --artifact-root, --output, and --source-coordinate"
+        description: Executable project-relative adapter; receives --artifact-root, --output, and --source-coordinate
         type: string
         required: true
       adapter-arguments-json:
-        description: "Optional bounded JSON argv suffix passed literally to the checked-in adapter; coordinate flags are reserved"
+        description: Optional bounded JSON argv suffix passed literally to the checked-in adapter; coordinate flags are reserved
         default: "[]"
         type: string
         required: false
       renderer-image:
-        description: "Immutable demo renderer image@sha256:digest coordinate"
+        description: Immutable demo renderer image@sha256:digest coordinate
         type: string
         required: true
       render-media:
-        description: "Render the complete qualified scene after the required Gate passes"
+        description: Render the complete qualified scene after the required Gate passes
         default: false
         type: boolean
         required: false
       media-profile:
-        description: "Buildchain-owned qualification profile: archive-v1, web-delivery-v1, responsive-web-delivery-v1, or site-hero-v1"
-        default: "archive-v1"
+        description:
+          "Buildchain-owned qualification profile: archive-v1, web-delivery-v1, responsive-web-delivery-v1, or
+          site-hero-v1"
+        default: archive-v1
         type: string
         required: false
       artifact-retention-days:
@@ -54,53 +55,50 @@ on:
         required: false
     outputs:
       source-sha:
-        description: "Exact consumer source SHA evaluated by the Gate"
+        description: Exact consumer source SHA evaluated by the Gate
         value: ${{ jobs.gate.outputs.source-sha }}
       gate-artifact-name:
-        description: "Content-addressed qualified Gate bundle name"
+        description: Content-addressed qualified Gate bundle name
         value: ${{ jobs.gate.outputs.gate-artifact-name }}
       gate-artifact-id:
-        description: "GitHub Artifact id for the qualified Gate bundle"
+        description: GitHub Artifact id for the qualified Gate bundle
         value: ${{ jobs.gate.outputs.gate-artifact-id }}
       gate-artifact-digest:
-        description: "GitHub Artifact archive digest for the qualified Gate bundle"
+        description: GitHub Artifact archive digest for the qualified Gate bundle
         value: ${{ jobs.gate.outputs.gate-artifact-digest }}
       gate-artifact-url:
-        description: "GitHub Artifact URL for the qualified Gate bundle"
+        description: GitHub Artifact URL for the qualified Gate bundle
         value: ${{ jobs.gate.outputs.gate-artifact-url }}
       gate-root:
-        description: "Deterministic member root of the qualified Gate bundle"
+        description: Deterministic member root of the qualified Gate bundle
         value: ${{ jobs.gate.outputs.gate-root }}
       media-artifact-name:
-        description: "Content-addressed rendered media bundle name; empty when render-media is false"
+        description: Content-addressed rendered media bundle name; empty when render-media is false
         value: ${{ jobs.render.outputs.media-artifact-name }}
       media-artifact-id:
-        description: "GitHub Artifact id for the rendered media bundle"
+        description: GitHub Artifact id for the rendered media bundle
         value: ${{ jobs.render.outputs.media-artifact-id }}
       media-artifact-digest:
-        description: "GitHub Artifact archive digest for the rendered media bundle"
+        description: GitHub Artifact archive digest for the rendered media bundle
         value: ${{ jobs.render.outputs.media-artifact-digest }}
       media-artifact-url:
-        description: "GitHub Artifact URL for the rendered media bundle"
+        description: GitHub Artifact URL for the rendered media bundle
         value: ${{ jobs.render.outputs.media-artifact-url }}
       media-root:
-        description: "Deterministic member root of the rendered media bundle"
+        description: Deterministic member root of the rendered media bundle
         value: ${{ jobs.render.outputs.media-root }}
       media-profile:
-        description: "Exact Buildchain media qualification profile applied to the rendered bundle"
+        description: Exact Buildchain media qualification profile applied to the rendered bundle
         value: ${{ jobs.render.outputs.media-profile }}
       media-qualification-root:
-        description: "Content root of independently verified rendition facts and role mappings"
+        description: Content root of independently verified rendition facts and role mappings
         value: ${{ jobs.render.outputs.media-qualification-root }}
-
 permissions:
   actions: read
   contents: read
-
 concurrency:
   group: auditable-demo-${{ github.repository }}-${{ github.workflow }}-${{ github.ref }}-${{ inputs.source-artifact-digest }}
   cancel-in-progress: false
-
 jobs:
   gate:
     name: Auditable demo / required Gate
@@ -123,11 +121,10 @@ jobs:
           persist-credentials: false
       - name: Auditable demo / required Gate
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/demo-adapter-gate
+        uses: ./.buildchain/workflow-shell/actions/build/demo/adapter-gate
         with:
           request-json: ${{ toJSON(inputs) }}
-          job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
-
+          workflow-sha: ${{ job.workflow_sha }}
   render:
     name: Auditable demo / selective render
     if: ${{ (inputs.render-media) }}
@@ -152,10 +149,10 @@ jobs:
           persist-credentials: false
       - name: Auditable demo / selective render
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/demo-adapter-render
+        uses: ./.buildchain/workflow-shell/actions/build/demo/adapter-render
         with:
           request-json: ${{ toJSON(inputs) }}
-          job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
-          needs-gate-outputs-gate-artifact-name: ${{ toJSON(needs.gate.outputs.gate-artifact-name) }}
-          needs-gate-outputs-gate-root: ${{ toJSON(needs.gate.outputs.gate-root) }}
-          needs-gate-outputs-source-sha: ${{ toJSON(needs.gate.outputs.source-sha) }}
+          workflow-sha: ${{ job.workflow_sha }}
+          gate-artifact-name: ${{ needs.gate.outputs.gate-artifact-name }}
+          gate-root: ${{ needs.gate.outputs.gate-root }}
+          source-sha: ${{ needs.gate.outputs.source-sha }}

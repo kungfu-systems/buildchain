@@ -1,0 +1,127 @@
+name: promote-qualify
+description: Execute the promote qualify capability within its caller job boundary.
+inputs:
+  runtime-ref:
+    description: Selected runtime ref with the caller precedence preserved.
+    required: true
+  runtime-repository:
+    description: Runtime repository.
+    required: true
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  job-workflow-sha:
+    description: Caller job.workflow_sha value.
+    required: true
+outputs:
+  action:
+    description: action node result.
+    value: ${{ steps.qualification.outputs.action }}
+  reason:
+    description: reason node result.
+    value: ${{ steps.qualification.outputs.reason }}
+  channel:
+    description: channel node result.
+    value: ${{ steps.qualification.outputs.channel }}
+  target-ref:
+    description: target-ref node result.
+    value: ${{ steps.qualification.outputs.target-ref }}
+  requested-sha:
+    description: requested-sha node result.
+    value: ${{ steps.qualification.outputs.requested-sha }}
+  current-sha:
+    description: current-sha node result.
+    value: ${{ steps.qualification.outputs.current-sha }}
+  runtime-sha:
+    description: runtime-sha node result.
+    value: ${{ steps.qualification.outputs.runtime-sha }}
+  runtime-tree:
+    description: runtime-tree node result.
+    value: ${{ steps.qualification.outputs.runtime-tree }}
+  publisher-sha:
+    description: publisher-sha node result.
+    value: ${{ steps.qualification.outputs.publisher-sha }}
+  version:
+    description: version node result.
+    value: ${{ steps.qualification.outputs.version }}
+  exact-tag:
+    description: exact-tag node result.
+    value: ${{ steps.qualification.outputs.exact-tag }}
+  candidate-version:
+    description: candidate-version node result.
+    value: ${{ steps.qualification.outputs.candidate-version }}
+  product-publication-intent-path:
+    description: product-publication-intent-path node result.
+    value: ${{ steps.qualification.outputs.product-publication-intent-path }}
+  product-publication-intent-root:
+    description: product-publication-intent-root node result.
+    value: ${{ steps.qualification.outputs.product-publication-intent-root }}
+  candidate-source-sha:
+    description: candidate-source-sha node result.
+    value: ${{ steps.qualification.outputs.candidate-source-sha }}
+  candidate-artifact:
+    description: candidate-artifact node result.
+    value: ${{ steps.qualification.outputs.candidate-artifact }}
+  recovery-receipt-path:
+    description: Explicit rooted recovery receipt; empty for fresh candidates.
+    value: ${{ steps.qualification.outputs.recovery-receipt-path }}
+  candidate-passport-path:
+    description: candidate-passport-path node result.
+    value: ${{ steps.qualification.outputs.candidate-passport-path }}
+  candidate-build-summary-path:
+    description: candidate-build-summary-path node result.
+    value: ${{ steps.qualification.outputs.candidate-build-summary-path }}
+  stage-capsules-path:
+    description: stage-capsules-path node result.
+    value: ${{ steps.qualification.outputs.stage-capsules-path }}
+  publication-qualification-path:
+    description: publication-qualification-path node result.
+    value: ${{ steps.qualification.outputs.publication-qualification-path }}
+  sealed-bundle-root:
+    description: sealed-bundle-root node result.
+    value: ${{ steps.qualification.outputs.sealed-bundle-root }}
+  sealed-bundle-manifest:
+    description: sealed-bundle-manifest node result.
+    value: ${{ steps.qualification.outputs.sealed-bundle-manifest }}
+  required-artifacts-path:
+    description: required-artifacts-path node result.
+    value: ${{ steps.qualification.outputs.required-artifacts-path }}
+  release-artifact-paths:
+    description: release-artifact-paths node result.
+    value: ${{ steps.qualification.outputs.release-artifact-paths }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v6.4.0
+      with:
+        node-version: "24"
+    - name: Validate the complete invocation before runtime checkout
+      uses: ./.buildchain/workflow-shell/actions/release/promotion/inspect-invocation
+      with:
+        request-json: ${{ inputs.request-json }}
+        workflow-sha: ${{ fromJSON(inputs.job-workflow-sha) }}
+    - name: Checkout the selected runtime for read-only qualification
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ inputs.runtime-repository }}
+        ref: ${{ inputs.runtime-ref }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Qualify the sealed candidate and exact publication intent
+      id: qualification
+      uses: ./.buildchain/runtime/actions/release/promotion/qualify-candidate
+      with:
+        request-json: ${{ inputs.request-json }}
+        workflow-sha: ${{ fromJSON(inputs.job-workflow-sha) }}
+        token: ${{ github.token }}
+    - name: Retain the exact QUALIFY cut
+      if: ${{ steps.qualification.outputs.action == 'promote' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-v4-release-qualify-${{ steps.qualification.outputs.requested-sha }}
+        path: .buildchain/release-candidate/
+        include-hidden-files: true
+        if-no-files-found: error

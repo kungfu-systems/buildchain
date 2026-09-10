@@ -1,0 +1,14 @@
+name: Bootstrap release line
+description: Plan and apply one release-line transaction, including protected refs and queue governance.
+inputs:
+  request-json:
+    description: Typed release-line workflow request.
+    required: true
+  token:
+    description: Scoped release line governance credential; required only when applying.
+  workflow-sha:
+    description: Exact defining workflow commit.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

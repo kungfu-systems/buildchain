@@ -1,0 +1,12 @@
+name: identify
+description: Resolve controller identity.
+outputs:
+  source-sha:
+    description: Verified source-sha.
+  runtime-sha:
+    description: Verified runtime-sha.
+  contract-digest:
+    description: Verified contract-digest.
+runs:
+  using: node24
+  main: dist/index.js

@@ -29,6 +29,7 @@ function readPublicationInputs() {
     core.getInput("allow-repository") || "kungfu-systems/buildchain";
   const publishTransaction = core.getBooleanInput("publish-transaction");
   const publishCommand = core.getInput("publish-command");
+  const publishProvider = core.getInput("publish-provider-json") ? JSON.parse(core.getInput("publish-provider-json")) : undefined;
   const publishEvidencePath = core.getInput("publish-evidence-path");
   const transactionStatePath = core.getInput("transaction-state-path");
   const publishSealedBundleRoot = core.getInput("publish-sealed-bundle-root");
@@ -97,6 +98,7 @@ function readPublicationInputs() {
     allowRepository,
     publishTransaction,
     publishCommand,
+    publishProvider,
     publishEvidencePath,
     transactionStatePath,
     publishSealedBundleRoot,

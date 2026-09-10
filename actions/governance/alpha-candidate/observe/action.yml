@@ -1,0 +1,114 @@
+name: alpha-candidate-patrol-observe
+description: Execute the alpha-candidate-patrol observe capability within its caller job boundary.
+inputs:
+  runtime-ref:
+    description: Exact runtime ref; defaults to this workflow SHA.
+    required: true
+  runtime-repository:
+    description: Runtime repository.
+    required: true
+  request-json:
+    description: Typed public workflow request.
+    required: true
+outputs:
+  result-path:
+    description: result-path node result.
+    value: ${{ steps.observe.outputs.result-path }}
+  eligible:
+    description: eligible node result.
+    value: ${{ steps.observe.outputs.eligible }}
+  selected-sha:
+    description: selected-sha node result.
+    value: ${{ steps.observe.outputs.selected-sha }}
+  source-lock-ref:
+    description: source-lock-ref node result.
+    value: ${{ steps.observe.outputs.source-lock-ref }}
+  controller-state:
+    description: controller-state node result.
+    value: ${{ steps.observe.outputs.controller-state }}
+  active-candidate-pr:
+    description: active-candidate-pr node result.
+    value: ${{ steps.observe.outputs.active-candidate-pr }}
+  next-candidate-sha:
+    description: next-candidate-sha node result.
+    value: ${{ steps.observe.outputs.next-candidate-sha }}
+  pull-request-body-prefix:
+    description: pull-request-body-prefix node result.
+    value: ${{ steps.render-body-prefix.outputs.pull-request-body-prefix || fromJSON(inputs.request-json).pull-request-body-prefix }}
+  prior-state-root:
+    description: prior-state-root node result.
+    value: ${{ steps.observe.outputs.prior-state-root }}
+  train-root:
+    description: train-root node result.
+    value: ${{ steps.observe.outputs.train-root }}
+  cut-root:
+    description: cut-root node result.
+    value: ${{ steps.observe.outputs.cut-root }}
+  candidate-generation:
+    description: candidate-generation node result.
+    value: ${{ steps.observe.outputs.candidate-generation }}
+  candidate-tree-sha:
+    description: candidate-tree-sha node result.
+    value: ${{ steps.observe.outputs.candidate-tree-sha }}
+  runtime-sha:
+    description: runtime-sha node result.
+    value: ${{ steps.observe.outputs.runtime-sha }}
+  cut-created-at:
+    description: cut-created-at node result.
+    value: ${{ steps.observe.outputs.cut-created-at }}
+  observed-at:
+    description: observed-at node result.
+    value: ${{ steps.observe.outputs.observed-at }}
+  drift-root:
+    description: drift-root node result.
+    value: ${{ steps.observe.outputs.drift-root }}
+  hold-root:
+    description: hold-root node result.
+    value: ${{ steps.observe.outputs.hold-root }}
+  observation-json:
+    description: Exact observation for protected settlement.
+    value: ${{ steps.observe.outputs.observation-json }}
+runs:
+  using: composite
+  steps:
+    - name: Checkout Buildchain runtime
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ inputs.runtime-repository }}
+        ref: ${{ inputs.runtime-ref }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Observe exact-source candidate
+      id: observe
+      uses: ./.buildchain/runtime/actions/governance/alpha-candidate/reconcile
+      with:
+        request-json: ${{ inputs.request-json }}
+        token: ${{ github.token }}
+        settlement-authorized: "false"
+    - name: Checkout exact consumer source for PR body prefix
+      if: ${{ fromJSON(inputs.request-json).pull-request-body-prefix-renderer != '' && steps.observe.outputs.eligible == 'true' }}
+      uses: actions/checkout@v7.0.0
+      with:
+        ref: ${{ steps.observe.outputs.selected-sha }}
+        path: .buildchain/consumer
+        fetch-depth: 0
+        persist-credentials: false
+    - name: Render exact-source PR body prefix
+      id: render-body-prefix
+      if: ${{ fromJSON(inputs.request-json).pull-request-body-prefix-renderer != '' && steps.observe.outputs.eligible == 'true' }}
+      uses: ./.buildchain/runtime/actions/governance/candidate/render-body
+      with:
+        request-json: ${{ inputs.request-json }}
+        source-sha: ${{ steps.observe.outputs.selected-sha }}
+    - name: Upload read-only exact-source observation
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-dev-alpha-candidate-observation-${{ steps.observe.outputs.selected-sha }}
+        path: |
+          ${{ steps.observe.outputs.result-path }}
+          .buildchain/patrol/pull-request-body-prefix.txt
+        if-no-files-found: error
+        retention-days: 30

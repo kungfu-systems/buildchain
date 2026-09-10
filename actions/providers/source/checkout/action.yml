@@ -1,0 +1,59 @@
+name: Checkout and verify exact source
+description: Checkout and verify exact source.
+inputs:
+  directory:
+    description: Source checkout directory
+    default: source
+  ref:
+    description: Provider fetch ref
+    default: ""
+  tree-sha:
+    description: Optional admitted Git tree
+    default: ""
+  cache-mode:
+    description: Governed checkout cache policy
+    default: "off"
+  mirror-url-template:
+    description: Trusted mirror URL template
+    default: ""
+  reference-repository-template:
+    description: Trusted reference repository template
+    default: ""
+  fallback:
+    description: Cache miss fallback policy
+    default: github
+  cache-timeout-seconds:
+    description: Bounded cache fetch duration
+    default: "60"
+  github-timeout-seconds:
+    description: Bounded provider fetch duration
+    default: "600"
+  fetch-attempts:
+    description: Maximum provider fetch attempts
+    default: "3"
+  diagnostics-path:
+    description: Checkout evidence path
+    default: .buildchain/diagnostics/source-checkout.json
+  history:
+    description: Required Git history depth
+    default: shallow
+  reset-working-tree:
+    description: Clear stale worktree files while preserving the Git object cache
+    default: "false"
+  repository:
+    description: Exact source repository
+    required: true
+  sha:
+    description: Exact source commit
+    required: true
+  token:
+    description: Scoped repository read credential
+    required: true
+outputs:
+  sha:
+    description: Verified source commit
+  tree:
+    description: Verified source tree
+runs:
+  using: node24
+  main: dist/index.js

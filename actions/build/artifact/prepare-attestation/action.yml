@@ -1,0 +1,38 @@
+name: prepare-attestation
+description:
+  Bind the exact GitHub attestation subject, signer and retained provider
+  evidence.
+inputs:
+  runtime-sha:
+    description: Exact runtime-sha.
+    required: true
+  subject-path:
+    description: Exact subject-path.
+    required: true
+  platform-manifest-path:
+    description: Exact platform-manifest-path.
+    required: true
+  release-passport-path:
+    description: Exact release-passport-path.
+    required: true
+  policy-json:
+    description: Exact policy-json.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js
+outputs:
+  subject-name:
+    description: Verified subject-name.
+  subject-path:
+    description: Verified subject-path.
+  subject-digest:
+    description: Verified subject-digest.
+  predicate-type:
+    description: Verified predicate-type.
+  predicate-path:
+    description: Verified predicate-path.
+  preparation-path:
+    description: Verified preparation-path.
+  preparation-json:
+    description: Verified preparation-json.

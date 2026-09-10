@@ -1,0 +1,35 @@
+name: attest-build-artifact
+description: Attest exact final bytes on a hosted runner without executing consumer code.
+inputs:
+  plan:
+    description: Rooted build plan
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Validate final subject and prepare predicate
+      id: prepare
+      uses: ./.buildchain/runtime/actions/build/attestation/prepare-build
+      with:
+        plan: ${{ inputs.plan }}
+        token: ${{ github.token }}
+    - name: Create GitHub attestation
+      id: attest
+      uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6
+      with:
+        subject-path: ${{ steps.prepare.outputs.subject }}
+        predicate-path: ${{ steps.prepare.outputs.predicate }}
+        predicate-type: https://buildchain.libkungfu.dev/attestations/build/v1
+    - name: Verify provider identity and retain bundle
+      id: final
+      uses: ./.buildchain/runtime/actions/build/attestation/verify-build
+      with:
+        plan: ${{ inputs.plan }}
+        token: ${{ github.token }}
+        bundle-path: ${{ steps.attest.outputs.bundle-path }}
+        attestation-id: ${{ steps.attest.outputs.attestation-id }}
+        attestation-url: ${{ steps.attest.outputs.attestation-url }}
+outputs:
+  artifact:
+    description: Verified attestation artifact reference
+    value: ${{ steps.final.outputs.artifact }}

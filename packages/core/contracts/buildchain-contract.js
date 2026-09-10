@@ -164,8 +164,8 @@ function releaseCandidatePromoteSurface(root, majorLine) {
   return surface(root, {
     id: "release-candidate-promote-action",
     kind: "action",
-    path: "actions/release/promote-candidate/action.yml",
-    publicRef: `kungfu-systems/buildchain/actions/release/promote-candidate@${majorLine}`,
+    path: "actions/release/promotion/candidate/action.yml",
+    publicRef: `kungfu-systems/buildchain/actions/release/promotion/candidate@${majorLine}`,
     requiredInputs: [
       "token", "repository", "source-sha", "version", "tag", "channel",
       "candidate-passport-path", "stage-capsules-path",
@@ -488,8 +488,8 @@ export function createBuildchainContractWorld({
     surface(root, {
       id: "promote-buildchain-ref-action",
       kind: "action",
-      path: "actions/release/promote-ref/action.yml",
-      publicRef: `kungfu-systems/buildchain/actions/release/promote-ref@${majorLine}`,
+      path: "actions/release/promotion/ref/action.yml",
+      publicRef: `kungfu-systems/buildchain/actions/release/promotion/ref@${majorLine}`,
       requiredInputs: ["token", "sha", "target-ref"],
       requiredOutputs: ["sha"],
       breakingDefaults: {
@@ -543,8 +543,8 @@ export function createBuildchainContractWorld({
     surface(root, {
       id: "macos-credential-island-action",
       kind: "action",
-      path: "actions/build/macos-credential-island/action.yml",
-      publicRef: `kungfu-systems/buildchain/actions/build/macos-credential-island@${majorLine}`,
+      path: "actions/build/credential/macos-island/action.yml",
+      publicRef: `kungfu-systems/buildchain/actions/build/credential/macos-island@${majorLine}`,
       requiredInputs: [
         "input-root",
         "output-root",
@@ -594,8 +594,8 @@ export function createBuildchainContractWorld({
     surface(root, {
       id: "report-buildchain-issue-action",
       kind: "action",
-      path: "actions/governance/report-issue/action.yml",
-      publicRef: `kungfu-systems/buildchain/actions/governance/report-issue@${majorLine}`,
+      path: "actions/governance/incident/report/action.yml",
+      publicRef: `kungfu-systems/buildchain/actions/governance/incident/report@${majorLine}`,
       requiredInputs: ["token"],
       requiredOutputs: ["ok", "action", "issue-url", "fingerprint"],
       breakingDefaults: {

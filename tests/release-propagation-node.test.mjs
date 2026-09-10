@@ -9,17 +9,17 @@ import {
   selectPropagationTarget,
   resolvePropagationBranch,
   writePropagationLock,
-} from "../packages/core/release/nodes/propagation-plan.mjs";
+} from "../packages/core/release/propagation/planning.js";
 import {
 
   writePropagation,
   readPropagation,
-} from "../packages/core/release/nodes/propagation-io.mjs";
+} from "../packages/core/release/propagation/store.js";
 import {
   uniquePropagationPr,
   openPropagationPr,
-} from "../packages/core/release/nodes/propagation-pull-request.mjs";
-import { recordMaterialization } from "../packages/core/release/nodes/propagation-work.mjs";
+} from "../packages/core/release/propagation/delivery.js";
+import { recordMaterialization } from "../packages/core/release/propagation/work.js";
 import {
   planReleasePropagation,
   createReleasePropagationWork,
@@ -77,6 +77,8 @@ function readyWork(env, plan, input) {
     { lockSha256: target.lock.lockSha256 },
     env,
   );
+  writePropagation("target.json", { lock_path: target.lockPath }, env);
+  writePropagation("branch.json", { base_sha: sha }, env);
   recordMaterialization(env);
   return readPropagation("work.json", env);
 }
@@ -131,8 +133,8 @@ test("remote lookup preserves authentication failure and never creates a branch 
       target = plan.targets[0],
       input = inputFor(target),
       env = {
-        GITHUB_WORKSPACE: root,
-        BUILDCHAIN_PROPAGATION_REQUEST_JSON: JSON.stringify(input),
+        workspace: root,
+        request: input,
       };
     writePropagation("plan.json", plan, env);
     const calls = [];
@@ -164,8 +166,8 @@ test("capture-only Work cannot materialize a downstream release lock", () =>
       target = plan.targets[0],
       input = inputFor(target),
       env = {
-        GITHUB_WORKSPACE: root,
-        BUILDCHAIN_PROPAGATION_REQUEST_JSON: JSON.stringify(input),
+        workspace: root,
+        request: input,
       };
     writePropagation(
       "work.json",
@@ -185,12 +187,8 @@ test("duplicate PRs and provider failures are rejected before any Git mutation",
       target = plan.targets[0],
       input = inputFor(target),
       env = {
-        GITHUB_WORKSPACE: root,
-        BUILDCHAIN_PROPAGATION_REQUEST_JSON: JSON.stringify(input),
-        BUILDCHAIN_PROPAGATION_PLAN_JSON: JSON.stringify({
-          lock_path: target.lockPath,
-        }),
-        BUILDCHAIN_PROPAGATION_BRANCH_JSON: JSON.stringify({ base_sha: sha }),
+        workspace: root,
+        request: input,
       };
     readyWork(env, plan, input);
     writePropagation("plan.json", plan, env);
@@ -224,12 +222,8 @@ test("native propagation records real push evidence only after successful non-fo
       target = plan.targets[0],
       input = inputFor(target),
       env = {
-        GITHUB_WORKSPACE: root,
-        BUILDCHAIN_PROPAGATION_REQUEST_JSON: JSON.stringify(input),
-        BUILDCHAIN_PROPAGATION_PLAN_JSON: JSON.stringify({
-          lock_path: target.lockPath,
-        }),
-        BUILDCHAIN_PROPAGATION_BRANCH_JSON: JSON.stringify({ base_sha: sha }),
+        workspace: root,
+        request: input,
       };
     readyWork(env, plan, input);
     writePropagation("plan.json", plan, env);

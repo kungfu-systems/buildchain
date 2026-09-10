@@ -52,7 +52,7 @@ function assertOrdered(relative, markers) {
 export function assertPromotionCertificationWiring(source) {
   const workflow = YAML.parse(source);
   const node = workflow?.jobs?.qualify?.steps?.find((step) => step.id === "node");
-  if (node?.uses !== "./.buildchain/workflow-shell/actions/release/promote-qualify" ||
+  if (node?.uses !== "./.buildchain/workflow-shell/actions/release/promotion/qualify" ||
       node.with?.["request-json"] !== "${{ inputs.request-json }}" ||
       node.with?.["job-workflow-sha"] !== "${{ toJSON(job.workflow_sha) }}")
     fail("promotion certification is missing its exact owned node and typed request binding");
@@ -106,18 +106,18 @@ export function checkFloatingConsumerPolicyContract() {
     fail("contract lock must bind the visible workflow shell");
   }
   assertPersistedSelectors();
-  assertOrdered("packages/core/build/commands/plan.mjs", ["consumer-policy.mjs", "validate-package-manager-contract.mjs", "buildchain-contract-lock.mjs"]);
+  assertOrdered("packages/core/build/plan/admission.js", ["const policy = scanConsumerPolicy(", "validatePackageManagerContract({", "const lock = inspectRuntimeContract({", "assertRuntimeContractAccepted(lock)"]);
   const buildWorkflow = read(".github/workflows/.build.yml");
-  const planner = read("packages/core/build/commands/plan.mjs");
-  if (!planner.includes("BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: plan.identity.channel") ||
+  const planner = read("packages/core/build/plan/admission.js");
+  if (!planner.includes("expectedInvocationChannel: plan.identity.channel") ||
       !buildWorkflow.includes("workflow-sha: ${{ job.workflow_sha }}") ||
-      !buildWorkflow.includes("actions/build/resolve-plan")) fail("build planning must bind called workflow and channel admission");
+      !buildWorkflow.includes("actions/build/lifecycle/plan")) fail("build planning must bind called workflow and channel admission");
   assertTrustGatedJobs(buildWorkflow, ["build-native", "build-container", "sign", "attest", "deliver"]);
-  assertOrdered("actions/publication/plan-candidate/action.yml", [
+  assertOrdered("actions/publication/candidate/plan/action.yml", [
     "ref: ${{ inputs.runtime-sha }}", "Prepare exact publication runtime", "Enforce v4 floating consumer policy", "Resolve controller identities",
   ]);
   const publication = YAML.parse(read(".github/workflows/public-build-publication.yml"));
-  if (!Object.values(publication.jobs).some((job) => job.steps?.some((step) => step.uses?.endsWith("/actions/publication/plan-candidate"))))
+  if (!Object.values(publication.jobs).some((job) => job.steps?.some((step) => step.uses?.endsWith("/actions/publication/candidate/plan"))))
     fail("publication does not invoke its consumer policy node");
   const stageCanary = read(".github/workflows/public-build-stage-capsule-canary.yml");
   if (
@@ -144,11 +144,11 @@ export function checkFloatingConsumerPolicyContract() {
     ["packages/core/release/release-candidate.js", "consumerPolicy"],
     ["packages/core/release/passport/assembly-render.js", "v4ConsumerPolicy"],
     [
-      "packages/core/release/promote-candidate/action.js",
+      "packages/core/release/promote-candidate/release-documents.js",
       "candidate.consumerPolicy?.receiptRoot",
     ],
     [
-      "packages/core/release/promote-candidate/action.js",
+      "packages/core/release/promote-candidate/release-documents.js",
       "createReleaseInvocation",
     ],
   ]) {

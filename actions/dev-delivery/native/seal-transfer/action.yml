@@ -1,0 +1,20 @@
+name: Seal native execution transfer
+description: Validate raw native evidence in an independent runner and seal its closed byte set.
+inputs:
+  runtime-sha:
+    description: Exact admitted Buildchain runtime commit.
+    required: true
+  runtime-selection-root:
+    description: Exact runtime selection byte root.
+    required: true
+  runner-environment:
+    description: Provider reported runner environment.
+    required: true
+outputs:
+  root:
+    description: Verified transfer content root.
+  native-outcome:
+    description: Sealed native execution outcome.
+runs:
+  using: node24
+  main: dist/index.js

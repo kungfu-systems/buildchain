@@ -54,7 +54,7 @@ jobs:
         if: ${{ always() }}
       - name: Build exact standalone Buildchain binary
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/demo-dogfood-exact-binary
+        uses: ./.buildchain/workflow-shell/actions/build/demo/qualify-binary
         if: ${{ always() }}
         with:
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}

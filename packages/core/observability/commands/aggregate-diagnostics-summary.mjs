@@ -1,8 +1,9 @@
-#!/usr/bin/env node
+import { aggregateDiagnosticsSummary } from "../diagnostics/aggregate.js";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { findJsonFiles, writeGitHubOutputs } from "../../build/commands/build-contract-core.mjs";
+import { findJsonFiles } from "../../build/artifact/files.js";
+import { writeGitHubOutputs } from "../../providers/commands/github-output.mjs";
 import {
   formatDiagnosticsSummaryTable,
   summarizeDiagnosticsArtifacts,
@@ -16,17 +17,7 @@ export function aggregateDiagnosticsSummaryCli() {
   const inputRoot = path.resolve(readEnv("BUILDCHAIN_DIAGNOSTICS_INPUT", ".buildchain/downloaded-diagnostics"));
   const outputPath = path.resolve(readEnv("BUILDCHAIN_DIAGNOSTICS_OUTPUT", ".buildchain/artifacts/diagnostics-summary.json"));
   const expectedPlatformCount = Number(readEnv("BUILDCHAIN_PLATFORM_COUNT", "0"));
-  const diagnosticsFiles = findJsonFiles(inputRoot)
-    .filter((file) => path.basename(file) === "diagnostics.json")
-    .sort();
-  if (expectedPlatformCount > 0 && diagnosticsFiles.length !== expectedPlatformCount) {
-    throw new Error(
-      `expected ${expectedPlatformCount} platform diagnostics artifacts, found ${diagnosticsFiles.length} under ${inputRoot}`,
-    );
-  }
-  const summary = summarizeDiagnosticsArtifacts(diagnosticsFiles);
-  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-  fs.writeFileSync(outputPath, `${JSON.stringify(summary, null, 2)}\n`);
+  const summary = aggregateDiagnosticsSummary({ inputRoot, outputPath, expectedPlatformCount });
   process.stdout.write(`${formatDiagnosticsSummaryTable(summary)}\n`);
   writeGitHubOutputs({
     "diagnostics-summary-path": path.relative(process.cwd(), outputPath).split(path.sep).join("/"),

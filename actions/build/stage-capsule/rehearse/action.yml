@@ -1,0 +1,11 @@
+name: Verify Stage Capsule checkpoints
+description:
+  Verify committed WASM authority, clean process checkpoint restoration
+  and deterministic resume planning.
+inputs:
+  platform:
+    description: Declared verification platform
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

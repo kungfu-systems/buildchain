@@ -12,7 +12,7 @@ import {
 } from "../packages/core/release/product-publication.js";
 import { domainContentRoot } from "../packages/core/contracts/canonical-contracts.js";
 import { compileReleaseTailDeclaration } from "../packages/core/release/release-tail-provider-plane.js";
-import { resolveReleaseCandidateAdapter } from "../packages/core/release/commands/release-candidate-adapter.mjs";
+import { qualifyPromotionCandidate } from "../packages/core/release/promotion/candidate.js";
 import { createProductPublicationAdapters } from "../packages/core/release/promote-candidate/product-provider-adapters.js";
 import { selectProductPublicationPlan } from "../packages/core/release/promote-candidate/product-provider.js";
 
@@ -182,43 +182,30 @@ test("custom product publication preserves the sealed candidate version and omit
   assert.equal("npm-trusted-publishing" in runtime.adapters, false);
 });
 
-test("fresh and recovery candidate discovery are data-only adapters into the same APPLY engine", () => {
-  assert.deepEqual(resolveReleaseCandidateAdapter(), {
-    mode: "fresh",
-    script: "packages/core/release/commands/release-candidate-resolver.mjs",
-  });
-  assert.deepEqual(
-    resolveReleaseCandidateAdapter({ resumeCandidateRunId: "123" }),
-    {
-      mode: "recovery",
-      script: "packages/core/release/commands/resume-from-candidate-run.mjs",
-    },
-  );
-  const workflow = fs.readFileSync(
-    path.join(root, "actions/release/promote-qualify/action.yml"),
-    "utf8",
-  );
-  assert.match(
-    workflow,
-    /run: node \.buildchain\/runtime\/packages\/core\/release\/commands\/release-candidate-adapter\.mjs/u,
-  );
-  assert.doesNotMatch(
-    workflow,
-    /if \[ -n "\$BUILDCHAIN_RESUME_CANDIDATE_RUN_ID" \]/u,
-  );
+test("fresh and recovery candidate discovery use named APIs and preserve recovery coordinates", async () => {
+ const calls = [], deps = { fresh: async value => { calls.push(["fresh", value]); return "fresh"; }, recover: async value => { calls.push(["recovery", value]); return "recovered"; } };
+ const input = { request: {}, intent: { "target-ref": "alpha/v4/v4.1", "requested-sha": "a".repeat(40) }, repository: "owner/repo", runtimeSha: "b".repeat(40) };
+ assert.equal(await qualifyPromotionCandidate(input, deps), "fresh");
+ assert.equal(calls[0][1].runtimeSha, input.runtimeSha);
+ assert.equal(await qualifyPromotionCandidate({ ...input, request: { "resume-candidate-run-id": "123", "resume-candidate-repository": "owner/repo", "resume-buildchain-runtime-sha": input.runtimeSha } }, deps), "recovered");
+ assert.equal(calls[1][1].candidateRunId, "123");
+ assert.equal(calls[1][1].runtimeSha, input.runtimeSha);
+ assert.equal(calls[1][1].targetSha, input.intent["requested-sha"]);
+ const workflow = fs.readFileSync(path.join(root, "actions/release/promotion/qualify/action.yml"), "utf8");
+ assert.match(workflow, /uses: \.\/\.buildchain\/runtime\/actions\/release\/promotion\/qualify-candidate/u);
 });
 
 test("fresh and recovery APPLY use the same rooted product provider transaction", () => {
   const workflow = fs.readFileSync(
-    path.join(root, "actions/release/promote-qualify/action.yml"),
+    path.join(root, "actions/release/promotion/qualify/action.yml"),
     "utf8",
   );
   const action = fs.readFileSync(
-    path.join(root, "actions/release/promote-candidate/action.yml"),
+    path.join(root, "actions/release/promotion/candidate/action.yml"),
     "utf8",
   );
   const entrypoint = fs.readFileSync(
-    path.join(root, "packages/core/release/promote-candidate/action.js"),
+    path.join(root, "packages/core/release/promote-candidate/provider-request.js"),
     "utf8",
   );
   const provider = fs.readFileSync(
@@ -226,21 +213,17 @@ test("fresh and recovery APPLY use the same rooted product provider transaction"
     "utf8",
   );
   assert.match(workflow, /product-publication-intent-path:/u);
-  assert.match(
-    workflow,
-    /BUILDCHAIN_CANDIDATE_VERSION: \$\{\{ steps\.candidate\.outputs\.release-candidate-publication-version \|\| steps\.candidate\.outputs\.release-candidate-version \}\}/u,
-  );
   const graph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "qualify");
-  assert.ok(graph.steps.some(step => step.name === "Resolve one exact product publication recovery"));
-  assert.match([...graph.modules.values()].join("\n"), /selectRecoveredProductPublicationVersion/);
-  assert.match(workflow, /BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: \$\{\{ steps\.recovery\.outputs\.version \|\| '' \}\}/u);
+  assert.ok(graph.actions.has("actions/release/promotion/qualify-candidate"));
+  assert.ok(graph.modules.has("packages/core/release/promotion/qualification.js"));
+  assert.match(graph.modules.get("packages/core/release/promotion/product-state.js"), /selectRecoveredProductPublicationVersion/);
   assert.match(
     action,
     /product-publication-intent-path:[\s\S]*required: true/u,
   );
   assert.match(
     entrypoint,
-    /publicationIntent: read\(input\("product-publication-intent-path", true\)\)/u,
+    /publicationIntent: read\(request\["product-publication-intent-path"\]\)/u,
   );
   assert.match(
     provider,

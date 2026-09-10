@@ -1,0 +1,15 @@
+{
+  "name": "@kungfu-systems/buildchain-dev-delivery-native-admit-finalizer",
+  "version": "4.1.0-alpha.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsup index.js --format esm --config ../../../../scripts/tsup-action.config.mjs && node ../../../../scripts/strip-trailing-whitespace.mjs dist/index.js"
+  },
+  "dependencies": {
+    "@actions/core": "1.11.1",
+    "@actions/github": "6.0.1"
+  }
+}

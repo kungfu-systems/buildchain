@@ -24,7 +24,7 @@ jobs:
         if: ${{ always() }}
       - name: Execute runner-smoke
         id: node
-        uses: ./.buildchain/workflow-shell/actions/governance/runner-smoke
+        uses: ./.buildchain/workflow-shell/actions/governance/runner/verify
         if: ${{ always() }}
         with:
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}

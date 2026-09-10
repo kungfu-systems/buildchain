@@ -1,59 +1,17 @@
 #!/usr/bin/env node
-
-import crypto from "node:crypto";
-import fs from "node:fs";
 import path from "node:path";
+import fs from "node:fs";
 import { pathToFileURL } from "node:url";
-
-import {
-  TAIL_RESEAL_PLATFORMS,
-  normalizeTailResealRequest,
-  planTailReseal,
-} from "../tail-reseal.js";
+import { getOctokit } from "@actions/github";
+import { normalizeTailResealRequest, planTailReseal } from "../tail-reseal.js";
 import { createTailResealReceipt } from "../tail-reseal-receipt.js";
-import { validateTailResealGitHubEvidence } from "../tail-reseal-github.js";
-import { domainContentRoot } from "../../contracts/canonical-contracts.js";
-
+import { verifyTailResealPlatform } from "../reseal/platform.js";
+import { admitTailResealFromGitHub } from "../reseal/admission.js";
+import { collectReadbacks } from "../reseal/readbacks.js";
+import { required, readJson, writeJson } from "../reseal/files.js";
 function flag(args, name, fallback = "") {
   const index = args.indexOf(`--${name}`);
   return index < 0 ? fallback : String(args[index + 1] || "");
-}
-
-function required(value, label) {
-  const normalized = String(value || "").trim();
-  if (!normalized) throw new Error(`${label} is required`);
-  return normalized;
-}
-
-function readJson(file, label = file) {
-  try {
-    return JSON.parse(fs.readFileSync(path.resolve(file), "utf8"));
-  } catch (error) {
-    throw new Error(`could not read ${label}: ${error.message}`);
-  }
-}
-
-function writeJson(file, value) {
-  const output = path.resolve(file);
-  fs.mkdirSync(path.dirname(output), { recursive: true });
-  fs.writeFileSync(output, `${JSON.stringify(value, null, 2)}\n`);
-  return output;
-}
-
-function sha256File(file) {
-  const hash = crypto.createHash("sha256");
-  const descriptor = fs.openSync(file, "r");
-  const buffer = Buffer.allocUnsafe(1024 * 1024);
-  try {
-    for (;;) {
-      const count = fs.readSync(descriptor, buffer, 0, buffer.length, null);
-      if (count === 0) break;
-      hash.update(buffer.subarray(0, count));
-    }
-  } finally {
-    fs.closeSync(descriptor);
-  }
-  return `sha256:${hash.digest("hex")}`;
 }
 
 function appendOutputs(values) {
@@ -64,237 +22,6 @@ function appendOutputs(values) {
       .map(([key, value]) => `${key}=${String(value)}`)
       .join("\n")}\n`,
   );
-}
-
-async function githubJson(repository, apiPath, token) {
-  const response = await fetch(
-    `https://api.github.com/repos/${repository}${apiPath}`,
-    {
-      headers: {
-        accept: "application/vnd.github+json",
-        authorization: `Bearer ${required(token, "GITHUB_TOKEN")}`,
-        "x-github-api-version": "2022-11-28",
-      },
-    },
-  );
-  if (!response.ok)
-    throw new Error(`GitHub API ${apiPath} failed: HTTP ${response.status}`);
-  return response.json();
-}
-
-async function pagedGithubItems(repository, apiPath, key, token) {
-  const values = [];
-  for (let page = 1; ; page += 1) {
-    const separator = apiPath.includes("?") ? "&" : "?";
-    const response = await githubJson(
-      repository,
-      `${apiPath}${separator}per_page=100&page=${page}`,
-      token,
-    );
-    const items = Array.isArray(response?.[key]) ? response[key] : [];
-    values.push(...items);
-    if (items.length < 100) return values;
-  }
-}
-
-async function admitFromGitHub(request) {
-  const token = required(process.env.GITHUB_TOKEN, "GITHUB_TOKEN");
-  const [
-    sourceCommit,
-    sourceRun,
-    sourceJobs,
-    sourceArtifacts,
-    signingRun,
-    signingArtifacts,
-  ] = await Promise.all([
-    githubJson(request.repository, `/git/commits/${request.source.sha}`, token),
-    githubJson(
-      request.repository,
-      `/actions/runs/${request.source.runId}`,
-      token,
-    ),
-    pagedGithubItems(
-      request.repository,
-      `/actions/runs/${request.source.runId}/jobs?filter=latest`,
-      "jobs",
-      token,
-    ),
-    pagedGithubItems(
-      request.repository,
-      `/actions/runs/${request.source.runId}/artifacts`,
-      "artifacts",
-      token,
-    ),
-    githubJson(
-      request.signing.authorityRepository,
-      `/actions/runs/${request.signing.authorityRunId}`,
-      token,
-    ),
-    pagedGithubItems(
-      request.signing.authorityRepository,
-      `/actions/runs/${request.signing.authorityRunId}/artifacts`,
-      "artifacts",
-      token,
-    ),
-  ]);
-  return validateTailResealGitHubEvidence({
-    request,
-    sourceCommit,
-    sourceRun,
-    sourceJobs,
-    sourceArtifacts,
-    signingRun,
-    signingArtifacts,
-  });
-}
-
-function locateManifest(root, platformId) {
-  const matches = [];
-  const visit = (directory) => {
-    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-      const absolute = path.join(directory, entry.name);
-      if (entry.isDirectory()) visit(absolute);
-      else if (entry.name === "manifest.json") {
-        const value = readJson(absolute);
-        if (
-          value?.contract === "kungfu-buildchain-artifact" &&
-          value?.platform?.id === platformId
-        )
-          matches.push({ absolute, value });
-      }
-    }
-  };
-  visit(root);
-  if (matches.length !== 1)
-    throw new Error(
-      `expected exactly one ${platformId} manifest under ${root}, found ${matches.length}`,
-    );
-  return matches[0];
-}
-
-function resolvePayload(root, relative, platformId) {
-  const absolute = path.resolve(root, relative);
-  if (
-    !absolute.startsWith(`${root}${path.sep}`) ||
-    !fs.existsSync(absolute) ||
-    !fs.statSync(absolute).isFile()
-  )
-    throw new Error(`${platformId} manifest file is missing: ${relative}`);
-  return absolute;
-}
-
-export function verifyTailResealPlatform({
-  request,
-  platformId,
-  artifactRoot,
-  mode = "retained",
-  providerReadbackRoot = null,
-} = {}) {
-  const normalized = normalizeTailResealRequest(request);
-  const platform = normalized.platforms.find(({ id }) => id === platformId);
-  if (!platform)
-    throw new Error(`tail reseal request does not bind platform ${platformId}`);
-  if (!new Set(["retained", "resealed"]).has(mode))
-    throw new Error(
-      "tail reseal verification mode must be retained or resealed",
-    );
-  if (mode === "resealed" && platformId !== "macos-arm64")
-    throw new Error("only macos-arm64 may produce a resealed byte set");
-  const root = path.resolve(artifactRoot || ".");
-  const { absolute: manifestPath, value: manifest } = locateManifest(
-    root,
-    platformId,
-  );
-  if (manifest.artifactName !== platform.artifactName)
-    throw new Error(`${platformId} manifest artifact name mismatch`);
-  if (
-    manifest.git?.repository !== normalized.repository ||
-    manifest.git?.sha !== normalized.source.sha ||
-    manifest.git?.treeSha !== normalized.source.treeSha
-  )
-    throw new Error(`${platformId} manifest source mismatch`);
-  if (
-    Number(manifest.git?.runId) !== normalized.source.runId ||
-    Number(manifest.git?.runAttempt) !== normalized.source.runAttempt
-  )
-    throw new Error(`${platformId} manifest original run mismatch`);
-  const files = (Array.isArray(manifest.files) ? manifest.files : [])
-    .map((file, index) => {
-      const relative = required(
-        file.path || file.name,
-        `${platformId} manifest files[${index}] path`,
-      );
-      const absolute = resolvePayload(root, relative, platformId);
-      const size = fs.statSync(absolute).size;
-      if (Number(file.size ?? file.bytes) !== size)
-        throw new Error(
-          `${platformId} manifest file size mismatch: ${relative}`,
-        );
-      const digest = sha256File(absolute);
-      const expected = `sha256:${String(file.sha256 || "").replace(/^sha256:/u, "")}`;
-      if (digest !== expected)
-        throw new Error(
-          `${platformId} manifest file digest mismatch: ${relative}`,
-        );
-      return { path: relative, size, digest };
-    })
-    .sort((left, right) =>
-      Buffer.from(left.path).compare(Buffer.from(right.path)),
-    );
-  if (files.length === 0)
-    throw new Error(`${platformId} manifest has no retained files`);
-  const observedArtifactRoot = domainContentRoot(
-    "tail-reseal-artifact-files",
-    files,
-  );
-  const observedManifestRoot = sha256File(manifestPath);
-  const retained = mode === "retained";
-  if (
-    retained &&
-    (observedArtifactRoot !== platform.artifactRoot ||
-      observedManifestRoot !== platform.manifestRoot)
-  )
-    throw new Error(
-      `${platformId} retained artifact or manifest root mismatch`,
-    );
-  if (!retained) {
-    if (
-      observedArtifactRoot === platform.artifactRoot ||
-      observedManifestRoot === platform.manifestRoot
-    )
-      throw new Error(
-        "macos-arm64 reseal did not produce a distinct signed manifest",
-      );
-    if (providerReadbackRoot !== normalized.signing.providerReadbackRoot)
-      throw new Error("macos-arm64 provider readback root mismatch");
-  }
-  return {
-    platformId,
-    artifactRoot: observedArtifactRoot,
-    manifestRoot: observedManifestRoot,
-    capsuleRoot: platform.capsuleRoot,
-    byteIdentical: retained,
-    providerReadbackRoot: retained ? null : providerReadbackRoot,
-  };
-}
-
-function collectReadbacks(directory) {
-  const byPlatform = new Map();
-  for (const entry of fs.readdirSync(path.resolve(directory), {
-    recursive: true,
-    withFileTypes: true,
-  })) {
-    if (!entry.isFile() || !entry.name.endsWith("readback.json")) continue;
-    const value = readJson(path.join(entry.parentPath, entry.name));
-    if (byPlatform.has(value.platformId))
-      throw new Error(`duplicate tail reseal readback for ${value.platformId}`);
-    byPlatform.set(value.platformId, value);
-  }
-  return TAIL_RESEAL_PLATFORMS.map((platformId) => {
-    if (!byPlatform.has(platformId))
-      throw new Error(`missing tail reseal readback for ${platformId}`);
-    return byPlatform.get(platformId);
-  });
 }
 
 export function runTailResealCli(args = process.argv.slice(2)) {
@@ -334,7 +61,10 @@ export function runTailResealCli(args = process.argv.slice(2)) {
     const request = normalizeTailResealRequest(
       readJson(required(requestPath, "--request"), "tail reseal request"),
     );
-    return admitFromGitHub(request).then((admission) => {
+    return admitTailResealFromGitHub(
+      request,
+      getOctokit(required(process.env.GITHUB_TOKEN, "GITHUB_TOKEN")),
+    ).then((admission) => {
       const output = writeJson(
         flag(options, "output", ".buildchain/tail-reseal/admission.json"),
         admission,
@@ -409,8 +139,10 @@ if (
   process.argv[1] &&
   import.meta.url === pathToFileURL(process.argv[1]).href
 ) {
-  runTailResealCli().catch((error) => {
-    console.error(`tail-reseal: ${error.message}`);
-    process.exitCode = 1;
-  });
+  Promise.resolve()
+    .then(() => runTailResealCli())
+    .catch((error) => {
+      console.error(`tail-reseal: ${error.message}`);
+      process.exitCode = 1;
+    });
 }

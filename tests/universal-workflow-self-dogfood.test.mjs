@@ -56,7 +56,7 @@ test("primary and recovery results must be byte-equivalent candidate execution",
     requestRoot: root("1"),
     runtime: { repository: "kungfu-systems/buildchain", sha: sha("1") },
     capabilityRoot: root("2"),
-    enginePath: "packages/core/workflow/commands/universal-workflow-engine.mjs",
+    enginePath: "packages/core/workflow/engine/execution.js",
     output: {
       dryRun: true,
       route: { decision: "Fresh", channel: "alpha" },

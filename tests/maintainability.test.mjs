@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { parse as parseYaml } from "yaml";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -275,19 +276,27 @@ test("baseline revision source metrics remain available from Git", () => {
 
 test("Linux standalone binary dependency remains reproducible from the lockfile", () => {
   const lockfile = fs.readFileSync(path.join(root, "pnpm-lock.yaml"), "utf8");
-  const entries = [...lockfile.matchAll(/^  '@esbuild\/linux-x64@[^']+':$/gmu)];
+  const lock = parseYaml(lockfile),
+    keys = Object.keys(lock.packages).filter((key) =>
+      key.startsWith("@esbuild/linux-x64@"),
+    );
+  assert.equal(keys.length, 1);
+  const key = keys[0],
+    pkg = lock.packages[key];
+  assert.ok(
+    Object.hasOwn(lock.snapshots, key),
+    "matching package and snapshot are required",
+  );
+  assert.match(pkg.resolution.integrity, /^sha512-/);
+  assert.deepEqual(pkg.cpu, ["x64"]);
+  assert.deepEqual(pkg.os, ["linux"]);
+  assert.ok(pkg.engines.node);
+  const esbuild = Object.values(lock.snapshots).find(
+    (entry) => entry.optionalDependencies?.["@esbuild/linux-x64"],
+  );
   assert.equal(
-    entries.length,
-    2,
-    "pnpm-lock.yaml must retain both package and snapshot entries for @esbuild/linux-x64",
-  );
-  assert.match(
-    lockfile,
-    /'@esbuild\/linux-x64@[^']+':\n    resolution: \{integrity: [^}]+\}\n    engines: \{node: '[^']+'\}\n    cpu: \[x64\]\n    os: \[linux\]/u,
-  );
-  assert.match(
-    lockfile,
-    /esbuild@[^:]+:\n    optionalDependencies:[\s\S]*?      '@esbuild\/linux-x64': [^\n]+/u,
+    esbuild.optionalDependencies["@esbuild/linux-x64"],
+    key.split("@").at(-1),
   );
 });
 

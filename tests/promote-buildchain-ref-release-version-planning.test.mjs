@@ -378,9 +378,9 @@ test("version verification ignores generated buildchain evidence", () => {
     path.join(cwd, ".buildchain/release-tail/release-transaction.json"),
     "{}\n",
   );
-  fs.mkdirSync(path.join(cwd, ".buildchain/runtime/actions/release/promote-ref"), { recursive: true });
+  fs.mkdirSync(path.join(cwd, ".buildchain/runtime/actions/release/promotion/ref"), { recursive: true });
   fs.writeFileSync(
-    path.join(cwd, ".buildchain/runtime/actions/release/promote-ref/action.yml"),
+    path.join(cwd, ".buildchain/runtime/actions/release/promotion/ref/action.yml"),
     "name: runtime\n",
   );
   fs.mkdirSync(path.join(cwd, ".buildchain/contract-drift"), { recursive: true });

@@ -88,7 +88,7 @@ because the action is part of that retired path.
 | --- | --- |
 | `action-approve` | retired GitHub issue/PR helper; use repository-native GitHub automation |
 | `action-batch-pull-request` | retired PR orchestration helper; not part of the Buildchain reusable contract |
-| `action-bump-version` | replaced by Buildchain release-line scripts and `actions/release/promote-ref` |
+| `action-bump-version` | replaced by Buildchain release-line scripts and `actions/release/promotion/ref` |
 | `action-check-format` | replaced by project-owned `lifecycle.verify` commands |
 | `action-find-dependencies` | retired in workflows v2 or backed by retired Airtable/dependency/collaborator/purge mechanism |
 | `action-generate-download-page` | retired product page generator; model as project-owned lifecycle/deploy work if needed |
@@ -126,9 +126,9 @@ older standalone action repository.
 
 | Buildchain path | Purpose |
 | --- | --- |
-| `actions/release/promote-ref` | governance-closed Buildchain release ref promotion |
-| `actions/build/run-lifecycle` | lifecycle command execution and deterministic artifact manifest generation |
-| `actions/build/validate-config` | `buildchain.toml` version-state and lifecycle preflight without executing lifecycle commands |
+| `actions/release/promotion/ref` | governance-closed Buildchain release ref promotion |
+| `actions/build/lifecycle/run` | lifecycle command execution and deterministic artifact manifest generation |
+| `actions/build/lifecycle/validate` | `buildchain.toml` version-state and lifecycle preflight without executing lifecycle commands |
 
 ## Current v3 Refs
 

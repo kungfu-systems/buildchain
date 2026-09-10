@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createComposePreviewRegistry } from "../packages/core/publication/oci/preview-registry.js";
 import {
-  createComposePreviewRegistry,
   promoteComposePreview,
-} from "../packages/core/publication/commands/oci-compose-preview.mjs";
+} from "../packages/core/publication/oci/preview-promotion.js";
 
 test("preview registry uses explicit package identity and never falls back to governance identity", async () => {
   const environment = {
@@ -13,7 +13,7 @@ test("preview registry uses explicit package identity and never falls back to go
   };
   const requests = [];
   const { registry } = createComposePreviewRegistry(
-    environment,
+    { token: environment.BUILDCHAIN_REGISTRY_TOKEN, actor: environment.GITHUB_ACTOR },
     async (url, options) => {
       requests.push({ url: String(url), options });
       return url.pathname === "/token"
@@ -44,7 +44,7 @@ test("preview registry uses explicit package identity and never falls back to go
     const incomplete = { ...environment };
     delete incomplete[missing];
     assert.throws(
-      () => createComposePreviewRegistry(incomplete),
+      () => createComposePreviewRegistry({ token: incomplete.BUILDCHAIN_REGISTRY_TOKEN, actor: incomplete.GITHUB_ACTOR }),
       /explicit scoped registry identity required/u,
     );
   }

@@ -1,0 +1,18 @@
+name: Record and qualify observed Web controller execution
+description: Record and qualify observed Web controller execution
+inputs:
+  observations-json:
+    description: Workflow job results and outputs.
+    required: true
+outputs:
+  controller-receipt-json:
+    description: controller receipt json
+  controller-receipt-digest:
+    description: controller receipt digest
+  controller-receipt-status:
+    description: controller receipt status
+  controller-receipt-path:
+    description: controller receipt path
+runs:
+  using: node24
+  main: dist/index.js

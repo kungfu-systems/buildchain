@@ -1,5 +1,4 @@
 name: Buildchain Dev to Alpha Candidate Patrol
-
 on:
   workflow_call:
     inputs:
@@ -110,16 +109,13 @@ on:
         value: ${{ jobs.settle.outputs.drift-root || jobs.observe.outputs.drift-root }}
       hold-root:
         value: ${{ jobs.settle.outputs.hold-root || jobs.observe.outputs.hold-root }}
-
 permissions:
   actions: read
   contents: read
   pull-requests: read
-
 concurrency:
   group: buildchain-dev-alpha-candidate-${{ github.repository }}-${{ inputs.target-branch }}
   cancel-in-progress: false
-
 jobs:
   observe:
     runs-on: ubuntu-24.04
@@ -146,6 +142,7 @@ jobs:
       observed-at: ${{ steps.node.outputs.observed-at }}
       drift-root: ${{ steps.node.outputs.drift-root }}
       hold-root: ${{ steps.node.outputs.hold-root }}
+      observation-json: ${{ steps.node.outputs.observation-json }}
     steps:
       - name: Check out workflow implementation
         uses: actions/checkout@v7.0.0
@@ -156,15 +153,14 @@ jobs:
           persist-credentials: false
       - name: Execute alpha-candidate-patrol-observe
         id: node
-        uses: ./.buildchain/workflow-shell/actions/governance/alpha-candidate-patrol-observe
+        uses: ./.buildchain/workflow-shell/actions/governance/alpha-candidate/observe
         with:
           runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
           runtime-repository: ${{ inputs.buildchain-repository || job.workflow_repository }}
           request-json: ${{ toJSON(inputs) }}
-
   settle:
     needs: observe
-    if: >-
+    if: |-
       ${{
         (
           inputs.settlement-authorized &&
@@ -206,14 +202,9 @@ jobs:
           persist-credentials: false
       - name: Execute alpha-candidate-patrol-settle
         id: node
-        uses: ./.buildchain/workflow-shell/actions/governance/alpha-candidate-patrol-settle
+        uses: ./.buildchain/workflow-shell/actions/governance/alpha-candidate/settle
         with:
           request-json: ${{ toJSON(inputs) }}
-          needs-observe-outputs-runtime-sha: ${{ toJSON(needs.observe.outputs.runtime-sha) }}
-          secrets-promotion-token: ${{ secrets.promotion-token }}
-          needs-observe-outputs-pull-request-body-prefix: ${{ toJSON(needs.observe.outputs.pull-request-body-prefix) }}
-          needs-observe-outputs-selected-sha: ${{ toJSON(needs.observe.outputs.selected-sha) }}
-          needs-observe-outputs-prior-state-root: ${{ toJSON(needs.observe.outputs.prior-state-root) }}
-          needs-observe-outputs-cut-root: ${{ toJSON(needs.observe.outputs.cut-root) }}
-          needs-observe-outputs-cut-created-at: ${{ toJSON(needs.observe.outputs.cut-created-at) }}
-          needs-observe-outputs-observed-at: ${{ toJSON(needs.observe.outputs.observed-at) }}
+          observation-json: ${{ needs.observe.outputs.observation-json }}
+          pull-request-body-prefix: ${{ needs.observe.outputs.pull-request-body-prefix }}
+          token: ${{ secrets.promotion-token || github.token }}

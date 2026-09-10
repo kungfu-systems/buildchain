@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { readWorkflow } from "../scripts/workflow-action-graph.mjs";
-import { resolveFreshPublicationVersion } from "../packages/core/release/commands/release-candidate-resolver.mjs";
+import { resolveFreshPublicationVersion } from "../packages/core/release/candidate/selection.js";
 
 const promotion = fs.readFileSync(
   path.resolve(".github/workflows/self-release-promote.yml"),
@@ -18,7 +18,7 @@ const publicPromotion = fs.readFileSync(
   "utf8",
 );
 const resolver = fs.readFileSync(
-  path.resolve("packages/core/release/commands/release-candidate-resolver.mjs"),
+  path.resolve("packages/core/release/candidate/materialize.js"),
   "utf8",
 );
 const universalEngine = fs.readFileSync(
@@ -120,7 +120,7 @@ test("protected alpha recovery bootstraps from the current workflow runtime", ()
 test("candidate sealing precedes required-artifact version projection", () => {
   assert.ok(
     resolver.indexOf("const sealedBundle =") <
-      resolver.lastIndexOf("resolveFreshPublicationVersion({ sealedBundle"),
+      resolver.lastIndexOf("resolveFreshPublicationVersion({"),
   );
 });
 

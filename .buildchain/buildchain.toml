@@ -154,7 +154,7 @@ go = "1.25.x"
 
 [build.artifacts]
 name = "buildchain"
-paths = ["dist/site", "actions/build/run-lifecycle/dist"]
+paths = ["dist/site", "actions/build/lifecycle/run/dist"]
 min_files = 1
 retention_days = 7
 

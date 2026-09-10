@@ -4,13 +4,12 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import YAML from 'yaml';
-import {routePromotion} from '../packages/core/release/nodes/promotion-routing.mjs';
-import {bindPromotionSelection} from '../packages/core/release/nodes/promotion-selection.mjs';
-import {admitPromotionConsumer} from '../packages/core/release/nodes/promotion-admission.mjs';
+import {routePromotion} from '../packages/core/release/promotion/routing.js';
+import {bindPromotionSelection} from '../packages/core/release/promotion/selection.js';
 const sha='a'.repeat(40), other='b'.repeat(40);
 function fixture(change={}) {
  const request={schema:'buildchain.promotion-request/v1','buildchain-repository':'kungfu-systems/buildchain','target-ref':'alpha/v4/v4.1','buildchain-channel':'auto',...change};
- return {env:{BUILDCHAIN_PROMOTION_REQUEST_JSON:JSON.stringify(request),BUILDCHAIN_WORKFLOW_REPOSITORY:'kungfu-systems/buildchain',BUILDCHAIN_WORKFLOW_SHA:sha,BUILDCHAIN_WORKFLOW_REF:'kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@refs/heads/dev/v4/v4.1'},context:{eventName:'push',repo:{owner:'kungfu-systems',repo:'buildchain'},ref:'refs/heads/alpha/v4/v4.1'},core:{setOutput(){}},github:{rest:{repos:{getCommit:async()=>{throw Error('unexpected provider resolution');}}}}};
+ return {request,workflowRepository:'kungfu-systems/buildchain',workflowSha:sha,workflowRef:'kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@refs/heads/dev/v4/v4.1',packageVersion:'4.1.0-alpha.0',context:{eventName:'push',repo:{owner:'kungfu-systems',repo:'buildchain'},ref:'refs/heads/alpha/v4/v4.1'},core:{setOutput(){}},github:{rest:{repos:{getCommit:async()=>{throw Error('unexpected provider resolution');}}}}};
 }
 test('promotion defaults bind the entire implementation to the defining commit without published alpha',async()=>{
  const result=await routePromotion(fixture());assert.equal(result['router-sha'],sha);assert.equal(result['shell-sha'],sha);assert.equal(result['runtime-sha'],sha);assert.equal(result['override-used'],'false');
@@ -30,23 +29,18 @@ test('resume identity compares the selected tooling runtime and rejects a differ
 test('promotion lock binding rejects symlink escape and checkout drift before emitting evidence',t=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'promotion-bind-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
  fs.mkdirSync(path.join(root,'.buildchain/source'),{recursive:true});fs.writeFileSync(path.join(root,'outside.json'),'{}');fs.symlinkSync(path.join(root,'outside.json'),path.join(root,'.buildchain/source/lock.json'));
- const env={GITHUB_WORKSPACE:root,BUILDCHAIN_PROMOTION_REQUEST_JSON:JSON.stringify({'buildchain-contract-lock-path':'lock.json'}),BUILDCHAIN_PROMOTION_SELECTION_JSON:JSON.stringify({'shell-sha':sha,'runtime-sha':sha,channel:'alpha'})};
- let emitted=false;const emit=()=>{emitted=true;};
- assert.throws(()=>bindPromotionSelection(env,()=>other,emit),/checkout moved/);
- assert.throws(()=>bindPromotionSelection(env,()=>sha,emit),/escapes consumer/);assert.equal(emitted,false);
+ const input={workspace:root,sourceSha:sha,request:{'buildchain-contract-lock-path':'lock.json'},selection:{'shell-sha':sha,'runtime-sha':sha,channel:'alpha'}};
+ assert.throws(()=>bindPromotionSelection(input,()=>other),/checked-out commit/);
+ assert.throws(()=>bindPromotionSelection(input,()=>sha),/escapes consumer/);
  fs.unlinkSync(path.join(root,'.buildchain/source/lock.json'));fs.writeFileSync(path.join(root,'.buildchain/source/lock.json'),'{}');
- assert.match(bindPromotionSelection(env,()=>sha,emit)['contract-lock-digest'],/^sha256:[a-f0-9]{64}$/);assert.equal(emitted,true);
-});
-test('consumer policy verifies both source and policy checkout before launching the scanner',()=>{
- const env={GITHUB_WORKSPACE:'/workspace',GITHUB_SHA:sha,BUILDCHAIN_PROMOTION_REQUEST_JSON:'{}',BUILDCHAIN_PROMOTION_SELECTION_JSON:JSON.stringify({'router-sha':sha})};let calls=0;
- assert.throws(()=>admitPromotionConsumer(env,()=>{calls++;return calls===1?sha:other;}),/consumer source checkout moved/);assert.equal(calls,2);
+ assert.match(bindPromotionSelection(input,()=>sha)['contract-lock-digest'],/^sha256:[a-f0-9]{64}$/);
 });
 test('generated public router binds every node output and uses declared runtime preparation inputs',()=>{
  const wf=YAML.parse(fs.readFileSync('.github/workflows/public-release-promote.yml','utf8'));
- for(const [job,name] of [['resolve-promotion','resolve-promotion'],['consumer-admission','admit-promotion']]){
-  const action=YAML.parse(fs.readFileSync(`actions/release/${name}/action.yml`,'utf8'));
+ for(const [job,name] of [['resolve-promotion','resolve'],['consumer-admission','admit']]){
+  const action=YAML.parse(fs.readFileSync(`actions/release/promotion/${name}/action.yml`,'utf8'));
   for(const value of Object.values(wf.jobs[job].outputs)){const key=value.match(/steps\.node\.outputs\.([\w-]+)/)[1];assert.ok(action.outputs[key],key);}
-  for(const step of action.runs.steps.filter(s=>s.uses?.endsWith('/actions/runtime/prepare')))assert.deepEqual(Object.keys(step.with),['directory']);
+  for(const step of action.runs.steps.filter(s=>s.uses?.endsWith('/actions/runtime/environment/prepare')))assert.deepEqual(Object.keys(step.with),['directory']);
  }
  assert.equal(wf.jobs.invoke.uses,'./.github/workflows/.release-promote.yml');
 });

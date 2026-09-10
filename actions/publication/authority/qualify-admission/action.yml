@@ -1,0 +1,27 @@
+name: qualify-admission
+description: Admit exact publication authority and bind independently verified evidence.
+runs:
+  using: node24
+  main: dist/index.js
+inputs:
+  request-json:
+    description: Explicit request-json.
+    required: true
+  token:
+    description: Explicit token.
+    required: true
+  admission-bundle-json:
+    description: Explicit admission-bundle-json.
+    required: false
+  consumer-gate-json:
+    description: Explicit consumer-gate-json.
+    required: false
+outputs:
+  capability-json:
+    description: Verified capability-json.
+  capability-digest:
+    description: Verified capability-digest.
+  gate-aggregate-json:
+    description: Verified gate-aggregate-json.
+  gate-aggregate-digest:
+    description: Verified gate-aggregate-digest.

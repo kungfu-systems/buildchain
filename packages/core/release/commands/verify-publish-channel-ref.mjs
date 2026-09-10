@@ -1,10 +1,7 @@
-#!/usr/bin/env node
+import { verifyPublishChannelSource } from "../source/channel.js";
 import { pathToFileURL } from "node:url";
-import {
-  resolvePublishChannelTargetRef,
-  verifyPublishChannelPrLineage,
-  verifyPublishChannelRef,
-} from "../../build/commands/build-contract-core.mjs";
+import { resolvePublishChannelTargetRef } from "../source/coordinates.js";
+import { verifyPublishChannelPrLineage, verifyPublishChannelRef } from "../source/lineage.js";
 import {
   normalizeSourceRef,
   resolvePublishSourceRefSha,
@@ -68,50 +65,11 @@ export async function verifyPublishChannelRefCli({
 } = {}) {
   const sourceRef = normalizeSourceRef(readEnv(env, "BUILDCHAIN_PUBLISH_SOURCE_REF"));
   const sourceSha = readEnv(env, "BUILDCHAIN_PUBLISH_SOURCE_SHA");
-  const targetRef = resolvePublishChannelTargetRef({
-    sourceRef,
-    targetRef: readEnv(env, "BUILDCHAIN_PUBLISH_TARGET_REF"),
-  });
-  if (!targetRef) {
-    return verifyPublishChannelRef({ sourceRef, sourceSha, targetRef });
-  }
-  const repository = readEnv(env, "BUILDCHAIN_SOURCE_REPOSITORY", readEnv(env, "GITHUB_REPOSITORY"));
-  const targetSha = readEnv(env, "BUILDCHAIN_CURRENT_TARGET_SHA")
-    || await resolvePublishSourceRefSha({
-      repository,
-      sourceRef: targetRef,
-      env,
-      fetchImpl,
-    });
-  const refResult = verifyPublishChannelRef({
-    sourceRef,
-    sourceSha,
-    targetRef,
-    targetSha,
-  });
-  if (refResult.skipped) {
-    return refResult;
-  }
-  const pullRequestsJson = readEnv(env, "BUILDCHAIN_CURRENT_TARGET_PULLS_JSON");
-  const pullRequests = pullRequestsJson
-    ? JSON.parse(pullRequestsJson)
-    : await resolveAssociatedPullRequests({
-        repository,
-        sha: sourceSha,
-        env,
-        fetchImpl,
-      });
-  const lineageResult = verifyPublishChannelPrLineage({
-    sourceRef,
-    sourceSha,
-    targetRef,
-    repository,
-    pullRequests,
-  });
-  return {
-    ...refResult,
-    prLineage: lineageResult,
-  };
+  return verifyPublishChannelSource({ sourceRef, sourceSha,
+    targetRef: readEnv(env, "BUILDCHAIN_PUBLISH_TARGET_REF"), repository: readEnv(env, "BUILDCHAIN_SOURCE_REPOSITORY", readEnv(env, "GITHUB_REPOSITORY")),
+    targetSha: readEnv(env, "BUILDCHAIN_CURRENT_TARGET_SHA"), pullRequests: readEnv(env, "BUILDCHAIN_CURRENT_TARGET_PULLS_JSON") ? JSON.parse(env.BUILDCHAIN_CURRENT_TARGET_PULLS_JSON) : undefined,
+  }, { resolveRefSha: request => resolvePublishSourceRefSha({ ...request, env, fetchImpl }), listPullRequests: request => resolveAssociatedPullRequests({ ...request, env, fetchImpl }) });
+
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

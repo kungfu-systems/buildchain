@@ -151,6 +151,7 @@ function createVersionStateOperations(context) {
     reconciliationWorkspace,
     publishTransaction,
     publishCommand,
+    publishProvider,
     publishEvidencePath,
     transactionStatePath,
     publishRequiredArtifactsJson,

@@ -1,0 +1,28 @@
+name: Admit sealed Paper candidate
+description: Admit sealed Paper candidate.
+inputs:
+  request-json:
+    description: request-json
+    required: true
+  candidate-plan-json:
+    description: candidate-plan-json
+    required: true
+  capability-json:
+    description: capability-json
+    required: true
+outputs:
+  candidate-json:
+    description: candidate-json
+  package-name:
+    description: package-name
+  package-version:
+    description: package-version
+  controller-plan-json:
+    description: controller-plan-json
+  controller-plan-digest:
+    description: controller-plan-digest
+  controller-plan-artifact:
+    description: controller-plan-artifact
+runs:
+  using: node24
+  main: dist/index.js

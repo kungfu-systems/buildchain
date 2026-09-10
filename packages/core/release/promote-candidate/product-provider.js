@@ -2,7 +2,6 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { validateReleaseCandidateRecoveryReceipt } from "../release-candidate-recovery.js";
 import {
   compileReleaseTailDeclaration,
   createReleaseTailTransaction,
@@ -18,145 +17,11 @@ import {
 import {
   createProductPublicationAdapters,
   localVersionFiles,
-  resolvePublicationTarget as resolvePublicationTargetAdapter,
 } from "./product-provider-adapters.js";
 
 export { advanceAlphaNextDevelopment, advanceStableNextDevelopment } from "./next-development-provider.js";
 
 const read = (file) => JSON.parse(fs.readFileSync(path.resolve(file), "utf8"));
-
-function standardCandidatePath(candidatePassportPath, declaredPath, relativePath, label) {
-  if (String(declaredPath || "").trim()) return declaredPath;
-  const fallback = path.join(path.dirname(candidatePassportPath), "..", relativePath);
-  if (!fs.existsSync(path.resolve(fallback)))
-    throw new Error(
-      `${label} is required when the sealed candidate has no standard ${relativePath}`,
-    );
-  return fallback;
-}
-
-export function resolveCandidateProviderInputs({
-  candidatePassportPath,
-  artifactKind = "npm",
-  sealedBundleRoot = "",
-  sealedBundleManifest = "",
-  requiredArtifactsPath = "",
-  publishPackageMain = "",
-}) {
-  const kind = String(artifactKind || "npm").trim();
-  const bundlePath = (declared, relativePath, label) =>
-    (kind === "npm" || kind === "oci")
-      ? standardCandidatePath(candidatePassportPath, declared, relativePath, label)
-      : "";
-  const resolved = {
-    sealedBundleRoot: bundlePath(sealedBundleRoot, "payloads", "sealed-bundle-root"),
-    sealedBundleManifest: bundlePath(
-      sealedBundleManifest,
-      "sealed-bundle.json",
-      "sealed-bundle-manifest",
-    ),
-    requiredArtifactsPath: standardCandidatePath(
-      candidatePassportPath,
-      requiredArtifactsPath,
-      "publish-required-artifacts.json",
-      "required-artifacts-path",
-    ),
-    publishPackageMain: String(publishPackageMain || "").trim(),
-  };
-  if (resolved.sealedBundleManifest) {
-    const receipt = path.join(path.dirname(resolved.sealedBundleManifest), "recovery-receipt.json");
-    if (fs.existsSync(path.resolve(receipt)))
-      resolved.releaseCandidateRecoveryReceiptPath = receipt;
-  }
-  if (kind === "npm" && !resolved.publishPackageMain) {
-    const artifacts = read(resolved.requiredArtifactsPath);
-    const main = artifacts.filter(({ role }) => role === "main");
-    const required = artifacts.filter(
-      ({ kind: type, required }) => type === "npm" && required !== false,
-    );
-    const inferred =
-      main.length === 1 && String(main[0]?.name || "").trim()
-        ? main[0]
-        : required.length === 1 && String(required[0]?.name || "").trim()
-          ? required[0]
-          : null;
-    if (!inferred)
-      throw new Error(
-        "publish-package-main is required when the sealed artifact set has no unique main package",
-      );
-    resolved.publishPackageMain = String(inferred.name).trim();
-  }
-  return resolved;
-}
-
-export function resolveCandidateBuildSummaryPath({ candidatePassportPath, declaredPath = "" }) {
-  const selected = String(declaredPath || "").trim();
-  if (selected) return selected;
-  const artifactsRoot = path.resolve(path.dirname(candidatePassportPath), "..");
-  const matches = fs
-    .readdirSync(artifactsRoot, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => path.join(artifactsRoot, entry.name, "build-summary.json"))
-    .filter((entry) => fs.existsSync(entry))
-    .sort();
-  if (matches.length !== 1) {
-    throw new Error(
-      `candidate-build-summary-path is required when the sealed candidate has ${matches.length === 0 ? "no" : "ambiguous"} standard summary artifacts`,
-    );
-  }
-  return matches[0];
-}
-
-export function resolvePromotionTarget({
-  candidatePassportPath,
-  candidate,
-  repository,
-  channel,
-  sourceSha,
-  declaredTargetRef = "",
-  declaredTargetSha = "",
-  expectedTransactionId = "",
-}) {
-  const sealedBundleRoot = path.resolve(path.dirname(candidatePassportPath), "../..");
-  const recoveryReceiptPath = path.join(path.dirname(sealedBundleRoot), "recovery-receipt.json");
-  const hasRecoveryReceipt = fs.existsSync(recoveryReceiptPath);
-  const recoveryReceipt = hasRecoveryReceipt ? read(recoveryReceiptPath) : null;
-  const targetRef = String(declaredTargetRef || recoveryReceipt?.target?.ref || "").trim();
-  const targetSha = String(declaredTargetSha || recoveryReceipt?.target?.sha || "").trim();
-  if (!targetRef || !targetSha)
-    throw new Error(
-      "target-ref and target-sha are required when no standard recovery receipt supplies them",
-    );
-  if (!hasRecoveryReceipt) {
-    if (expectedTransactionId)
-      throw new Error("resume-transaction-id requires a standard recovery receipt");
-    if (sourceSha !== targetSha)
-      throw new Error("protected source SHA must equal target-sha without recovery evidence");
-    return { targetRef, targetSha };
-  }
-  const validation = validateReleaseCandidateRecoveryReceipt({
-    receipt: recoveryReceipt,
-    passport: candidate,
-    repository,
-    targetChannel: channel,
-    targetRef,
-    targetSha,
-    targetTree: candidate.source?.treeHash,
-  });
-  if (!validation.ok)
-    throw new Error(`standard recovery receipt is invalid: ${validation.errors.join("; ")}`);
-  if (expectedTransactionId && recoveryReceipt.transaction?.identity !== expectedTransactionId)
-    throw new Error("standard recovery receipt transaction identity mismatch");
-  if (![targetSha, candidate.source?.headSha].includes(sourceSha))
-    throw new Error(
-      "legacy source-sha is not bound to the recovered candidate or protected target",
-    );
-  return { targetRef, targetSha };
-}
-
-export async function resolvePublicationTarget(args) {
-  return resolvePublicationTargetAdapter(args, resolvePromotionTarget);
-}
 
 export function activateExactPnpm({ temporaryRoot = os.tmpdir() } = {}) {
   const shimDirectory = fs.mkdtempSync(path.join(temporaryRoot, "buildchain-pnpm-"));

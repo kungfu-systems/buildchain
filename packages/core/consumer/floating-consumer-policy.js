@@ -1,3 +1,4 @@
+import { installationRoot } from "../runtime/installation-root.js";
 import {
   SOURCE_OWNED_PROMOTION,
   verifyWorkflowDefinition,
@@ -44,12 +45,12 @@ const SCANNER_PATHS = Object.freeze([
   "packages/core/consumer/floating-consumer-evidence.js",
   "packages/core/contracts/workflow-yaml-contract.js",
   "packages/core/consumer/commands/consumer-policy.mjs",
+  "packages/core/consumer/policy-scan.js",
+  "packages/core/runtime/installation-root.js",
 ]);
 
 function defaultRuntimeRoot() {
-  return typeof import.meta.dirname === "string"
-    ? path.resolve(import.meta.dirname, "../../..")
-    : process.cwd();
+  return installationRoot(import.meta.url);
 }
 
 function stableJson(value) {

@@ -43,7 +43,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:eee8d601f94fae3b9d440e467792ca5cb9e7fd0a42cd3ad13a72f3f7087de5e9",
-      "auditDigest": "sha256:95bd2ca9934a6705318d523e260561c778c0dcf6b27fde595b393c580200f16e"
+      "auditDigest": "sha256:e54a930d1734e80e233d4c0256cff545f565895740dead47b8918a204d2738f4"
     },
     {
       "contractVersion": 1,
@@ -156,7 +156,7 @@
         "durable consumers call the public floating workflow and may route a train or exact runtime only through trusted non-persistent dispatch input"
       ],
       "breakingDigest": "sha256:21b65d0746d2e8b3e8a7df4c6fab295a85c8fd42cc405ec3bc5df5cdab0421f0",
-      "auditDigest": "sha256:c650fc4e5dd43a4712a8eb817f921c5bfa1547cadc0d05866a325127e099762b"
+      "auditDigest": "sha256:54139745756565b11025020269b6c414ad171646008bfb7505e8d19accf50fba"
     },
     {
       "contractVersion": 1,
@@ -253,7 +253,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:5f10c81d3f80cb417960be682921884639c40b6d875f1a3b1ffae7e652c3f468",
-      "auditDigest": "sha256:6ef80c877895f281a339d1d6bfc574a120480ee9bb4cbfa000327b7adf96daac"
+      "auditDigest": "sha256:faff8be6c5515d45be6f6f309001d5c6a8c990af46d5687558eb08c42438ba1a"
     },
     {
       "contractVersion": 1,
@@ -308,7 +308,7 @@
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph"
       ],
       "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-      "auditDigest": "sha256:bfa43dfb574b6611a69178461e67c004a28fc1da9d55bab3c0c39875144c5517"
+      "auditDigest": "sha256:242b4b358e7da42d3f59abcb4e53460b3047027ec085795ed841792f31425dbf"
     },
     {
       "contractVersion": 1,
@@ -352,7 +352,7 @@
         "channel-aware artifact host facts are checked against the deploy plan before adapter side effects"
       ],
       "breakingDigest": "sha256:3bb62548a4e1476d3b5df9deb7bacf6c2e5bb333132a456108ab1572d571b9a8",
-      "auditDigest": "sha256:ac35340c9159b8b0ebf8a1d5a7e9a23601c0d37a9fa944dc3701b403b6ab99b3"
+      "auditDigest": "sha256:4ef45e54a24e7876e3bec684c13e395d9e1494c5ea152b5fbcec1378fa934d37"
     },
     {
       "contractVersion": 1,
@@ -410,7 +410,7 @@
         "media qualification does not claim browser playback, responsive layout, reduced-motion behavior, accessibility, or production deployment"
       ],
       "breakingDigest": "sha256:425f8d3d1ba205dd6fe35a20f1dc6dad7d7c563872283e3af79fea4d5c475692",
-      "auditDigest": "sha256:afd819b40e4ac9b2d4098ce317e2614e0882d71fe1093dfb9b0e6a1da8ebc9af"
+      "auditDigest": "sha256:d8f95d689041cf816d82581378668da4e8a405558cfc48daff66340889561d6a"
     },
     {
       "contractVersion": 1,
@@ -461,7 +461,7 @@
         "identity, compliance, Product System metadata, package metadata, registry history, scans, and generation grant no authority"
       ],
       "breakingDigest": "sha256:0bcba689ab5060e12230db4118895242ecb48677ff581ea0360b1833bdac558c",
-      "auditDigest": "sha256:51aadb2014770e275581eb0268e676fc592cb7b785a742acb10bfdb5aba7230f"
+      "auditDigest": "sha256:9d2114a14538fc745dde3882110cf36318d0deb3a5816d565e8f0b771d344220"
     },
     {
       "contractVersion": 1,
@@ -469,8 +469,8 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "release-candidate-promote-action",
       "kind": "action",
-      "path": "actions/release/promote-candidate/action.yml",
-      "publicRef": "kungfu-systems/buildchain/actions/release/promote-candidate@v4",
+      "path": "actions/release/promotion/candidate/action.yml",
+      "publicRef": "kungfu-systems/buildchain/actions/release/promotion/candidate@v4",
       "requiredInputs": [
         "token",
         "repository",
@@ -507,7 +507,7 @@
         "no consumer command, script, shell, checkout, or executable tail hook is accepted"
       ],
       "breakingDigest": "sha256:930a8c3bb97347aea40ab19c4ee1dc29c1f4b75897e19bc0d56da1018fa382c8",
-      "auditDigest": "sha256:4d51bce0908155875a70f8168fc545fe164bd1b6a4146a3de56b4dd7a5c1758c"
+      "auditDigest": "sha256:17c4a1b24c1afb1c5e6b2226489878de5158287c931ef5e5c690221f594fd98f"
     },
     {
       "contractVersion": 1,
@@ -515,8 +515,8 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "promote-buildchain-ref-action",
       "kind": "action",
-      "path": "actions/release/promote-ref/action.yml",
-      "publicRef": "kungfu-systems/buildchain/actions/release/promote-ref@v4",
+      "path": "actions/release/promotion/ref/action.yml",
+      "publicRef": "kungfu-systems/buildchain/actions/release/promotion/ref@v4",
       "requiredInputs": [
         "token",
         "sha",
@@ -576,7 +576,7 @@
         "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata bound to the authoritative publication channel and tag syntax retained as the fallback for ordinary callers"
       ],
       "breakingDigest": "sha256:6147c0a8d5c36bfaa6021871574e1fc28192a3f1b8cfdae4d24ef3059ac1ebda",
-      "auditDigest": "sha256:20f5fa03efd0c85cd952170628b85117d06d8c85b874d947299f2bdf5e44b3f8"
+      "auditDigest": "sha256:1b8f8615a114a6f352aeb79a0d25c8ed08b9305f07cabac7a2d4be76cd0ec705"
     },
     {
       "contractVersion": 1,
@@ -584,8 +584,8 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "macos-credential-island-action",
       "kind": "action",
-      "path": "actions/build/macos-credential-island/action.yml",
-      "publicRef": "kungfu-systems/buildchain/actions/build/macos-credential-island@v4",
+      "path": "actions/build/credential/macos-island/action.yml",
+      "publicRef": "kungfu-systems/buildchain/actions/build/credential/macos-island@v4",
       "requiredInputs": [
         "input-root",
         "output-root",
@@ -640,8 +640,8 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "report-buildchain-issue-action",
       "kind": "action",
-      "path": "actions/governance/report-issue/action.yml",
-      "publicRef": "kungfu-systems/buildchain/actions/governance/report-issue@v4",
+      "path": "actions/governance/incident/report/action.yml",
+      "publicRef": "kungfu-systems/buildchain/actions/governance/incident/report@v4",
       "requiredInputs": [
         "token"
       ],
@@ -890,7 +890,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:6538e0567cdccb2d7a8a2aaebf96c87aebfce880b9bfa16f175221cb06ce82a1"
+      "auditDigest": "sha256:fce20a24d00c7d1d839f22d6358853a973d00a8f12105ac1f20caaf2d505055f"
     },
     {
       "contractVersion": 1,
@@ -912,7 +912,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:1f68c6e2e0673b38ab6e43aba086143b1c8b91b982141b44322c54436b4b27e2"
+      "auditDigest": "sha256:c3afcd02862975859e7a6fd31332fbd396765ccf80b19edbea58196b46a134dd"
     },
     {
       "contractVersion": 1,
@@ -1027,7 +1027,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:c90592a71d859c9814e70cb1c8603d8240271e8049fe4e754fe4776b8f1b1a4c",
-      "auditDigest": "sha256:ea46116324144cfbd75751b7db08eb519004297e3d8b1ab5fc2387ef11862a70"
+      "auditDigest": "sha256:8bbfeed147965b6fe1ac622c703a23d58213ec274c3761eefb8c9dff6482fb27"
     },
     {
       "contractVersion": 1,
@@ -1125,7 +1125,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:6adb4adc805a741ec7e54a769c4bb89ef66805bb63ac99dfab06ba11f36d9381",
-      "auditDigest": "sha256:95bd2ca9934a6705318d523e260561c778c0dcf6b27fde595b393c580200f16e"
+      "auditDigest": "sha256:e54a930d1734e80e233d4c0256cff545f565895740dead47b8918a204d2738f4"
     },
     {
       "contractVersion": 1,
@@ -1326,7 +1326,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:93d630270c6db2c6993f0965d44280e0f178159d8d74519c7752a38d5771d02e",
-      "auditDigest": "sha256:e8ef932fd5aa6b6bfa9d447c5b21ef4099062c4dfadb7e70019fd81052c4b8e0"
+      "auditDigest": "sha256:41041cd7a99d12a21aab95ba51e8fb1de26f36755b519d166a3748542e22162f"
     },
     {
       "contractVersion": 1,
@@ -1596,7 +1596,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:ad5e695f42245fdbe53afbef5311ae52f113c9016bec46eaff4476aeb158ec17",
-      "auditDigest": "sha256:ac35340c9159b8b0ebf8a1d5a7e9a23601c0d37a9fa944dc3701b403b6ab99b3"
+      "auditDigest": "sha256:4ef45e54a24e7876e3bec684c13e395d9e1494c5ea152b5fbcec1378fa934d37"
     },
     {
       "contractVersion": 1,
@@ -1766,7 +1766,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:64043b583051b8fc5320b5d6f2304120037fb6a14b8448edbf6e91908f719739",
-      "auditDigest": "sha256:0b9e2815fb9f45d055babb7356a43a006fc3c342d2e620c987a5f880f3f15c5a"
+      "auditDigest": "sha256:8d29eb3c9508d468905885c70249d99106496a96256b72249d3ec39f90b4682d"
     },
     {
       "contractVersion": 1,
@@ -1961,7 +1961,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:1175b298251f200a6290c7f46d79f70e5c703279d3a5c5e9776bb18d4e4f7b52",
-      "auditDigest": "sha256:98b4e21cac79834ed18de6cac58c154d651d0129e4898819901d3d18cc12a73c"
+      "auditDigest": "sha256:ff415870df14b4d9689945aaa091760fa7c5b67adb18a9961694032d86ba6173"
     },
     {
       "contractVersion": 1,
@@ -2076,7 +2076,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:884bc7c4dccbc561b1d22a20cc5f7f50172c9691775aa2b84179e036a138cb20",
-      "auditDigest": "sha256:bfa43dfb574b6611a69178461e67c004a28fc1da9d55bab3c0c39875144c5517"
+      "auditDigest": "sha256:242b4b358e7da42d3f59abcb4e53460b3047027ec085795ed841792f31425dbf"
     },
     {
       "contractVersion": 1,
@@ -2232,7 +2232,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:63cbc80ea892431ee4780c358a60f4357ba95553c632dd86e1d62c18e375ecca",
-      "auditDigest": "sha256:2729299ba20d332f93078538550e62a9c4e9eca145a204268fd6fdad77ca65d0"
+      "auditDigest": "sha256:ad2088db2b783c7a3b5b3fea358ddd64971bda209f19d7f12f2d7cc4f18c6a60"
     },
     {
       "contractVersion": 1,
@@ -2286,12 +2286,12 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:c8dc1280b05fa2fc1e976292d7a3d31d6dfb99ce1a814834462e634b38671859",
-      "auditDigest": "sha256:0e609e54a22840e9e6824fd5fb21526a8cd6a63e604c9bbdd181bb72faad84f6"
+      "auditDigest": "sha256:5a8aec2be3f7a6b67b3a70bbd3e7d7816e7c60ddf67576c26abfedb641795f69"
     }
   ],
   "compatibilityFactRegistryRoot": "sha256:ea8f656c9fd74aa2d2fb9b7807e7daa39a708f6a7cd37ab7d154eac7be5605a6",
   "compatibilityFactCutRoot": "sha256:58f33e498596505a26b6fc3c7ae5acef847ff699eee6c7e17a7b318a40bdf0d6",
   "compatibilityProofRegistryRoot": "sha256:2f6477405c7891b754b33ad6515d55618bd320e7cdc59330d7cc645e17201e72",
   "compatibilityDigest": "sha256:5cfe9b904da70a3a7194868aaef1f1b11957d8e0158ebb77a524f2ea7005083b",
-  "contractDigest": "sha256:bbbb2a5df895f1ae3066567c6dac69653edc64e22a20b4e1a34c6d1e9c6ed27e"
+  "contractDigest": "sha256:8fcab38dfb3d823b2f2c40c3c6b69414b0919755c535eeaacd256ba025df6619"
 }

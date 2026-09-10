@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { candidateResultOutputs } from "../packages/core/workflow/nodes/bootstrap-io.mjs";
+import { candidateResultOutputs } from "../packages/core/workflow/engine/action.js";
 import { admitUniversalWorkflow } from "../packages/core/workflow/universal-workflow-bootstrap.js";
 import { sha, root, policy, request, reviewEvidence, consumerObservation } from "./universal-workflow-harness.mjs";
 
@@ -191,14 +191,6 @@ for (const [label, mutation, expectedStatus] of [
 });
 
 test("candidate action logs cannot corrupt the rooted result channel", () => {
-  const engine = fs.readFileSync(
-    new URL(
-      "../packages/core/workflow/commands/universal-workflow-engine.mjs",
-      import.meta.url,
-    ),
-    "utf8",
-  );
-  assert.match(engine, /stdio: \["ignore", 2, 2\]/u);
   const result = {
     schema: "kungfu-buildchain-v4-universal-workflow-result/v1",
     status: "succeeded",

@@ -49,7 +49,7 @@ repository itself is a Node/pnpm workspace.
 
 The [code organization contract](docs/code-organization.md) defines the layers.
 Consumer APIs and hosted job boundaries live in `.github/workflows`; semantic
-node adapters live in `actions/<capability>/<node>`; JavaScript business logic
+node adapters live in `actions/<capability>/<group>/<operation>`; JavaScript business logic
 lives in `packages/core/<capability>`; authoritative Rust domains and the native
 host live in `crates`. `bin` contains the CLI entry, and `scripts` contains only
 repository tooling. Schemas, ownership declarations and tests live in

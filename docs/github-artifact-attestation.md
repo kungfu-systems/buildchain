@@ -37,7 +37,7 @@ Passport have been sealed and uploaded. It downloads those files as data and
 never checks out or executes consumer source.
 
 The attester checks out only
-`actions/build/github-attestation` from an exact Buildchain commit. It
+`actions/build/artifact/github-attest` from an exact Buildchain commit. It
 rejects a floating Buildchain ref, a different caller repository, a different
 source SHA, a different workflow run, a non-Linux platform manifest, or a
 subject digest absent from the Release Passport.

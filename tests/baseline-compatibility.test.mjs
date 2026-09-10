@@ -45,9 +45,9 @@ test("current manuals and action references use v3 examples", () => {
     "docs/reusable-build-surface.md",
     "docs/runtime-train-validation.md",
     "docs/stable-candidate-patrol.md",
-    "actions/release/promote-ref/README.md",
-    "actions/governance/report-issue/README.md",
-    "actions/build/validate-config/README.md",
+    "actions/release/promotion/ref/README.md",
+    "actions/governance/incident/report/README.md",
+    "actions/build/lifecycle/validate/README.md",
   ];
   const staleBuildchainBaseline =
     /Buildchain v2|(?:dev|alpha|release|train)\/v2\/|`v2(?:-alpha|\.\d+)?`|workflow-shell-ref-or-v2/;
@@ -71,7 +71,7 @@ test("the v2 inventory is explicitly historical and points to v3", () => {
 test("the v2 train-only Initiative-family release handoff is present on v3", () => {
   const releaseCandidate = source("packages/core/release/release-candidate.js");
   const publicationAuthority = source("packages/core/publication/publication-authority.js");
-  const promoteAction = source("actions/release/promote-ref/action.yml");
+  const promoteAction = source("actions/release/promotion/ref/action.yml");
   const retrospective = source(".github/retrospectives/2026-07-31-buildchain-v2-v3-parity.md");
 
   assert.match(

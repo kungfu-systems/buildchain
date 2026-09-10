@@ -1,0 +1,101 @@
+name: web-staging-apply
+description: Execute the web staging-apply capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  needs-runtime-outputs-runtime-sha:
+    description: Caller needs.runtime.outputs.runtime-sha value.
+    required: true
+  needs-runtime-outputs-rollback-ref:
+    description: Caller needs.runtime.outputs.rollback-ref value.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+outputs:
+  staging-apply-result-json:
+    description: staging-apply-result-json node result.
+    value: ${{ steps.apply.outputs.web-surface-apply-result-json }}
+runs:
+  using: composite
+  steps:
+    - name: Admit source checkout
+      id: source-boundary
+      if: ${{ always() }}
+      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      with:
+        source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
+    - name: Checkout Buildchain runtime
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+        ref: ${{ fromJSON(inputs.needs-runtime-outputs-runtime-sha) }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - name: Prepare exact Buildchain Node runtime
+      id: core-runtime
+      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Download web-surface plan
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name: buildchain-web-surface-plans
+        path: .buildchain/downloaded-plans
+    - name: Download web-surface artifact
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name: buildchain-web-surface-artifact
+        path: ${{ fromJSON(inputs.request-json).working-directory }}/${{
+          fromJSON(inputs.request-json).artifact-path }}
+    - name: Configure staging AWS credentials
+      uses: ./.buildchain/workflow-shell/actions/providers/aws/configure
+      with:
+        role: ${{ fromJSON(inputs.request-json).staging-aws-role-arn }}
+        region: ${{ fromJSON(inputs.request-json).aws-region }}
+        session-name: buildchain-staging-${{ github.run_id }}
+    - name: Apply and verify channel transaction
+      id: apply
+      uses: ./.buildchain/runtime/actions/web/deployment/apply
+      with:
+        request-json: ${{ inputs.request-json }}
+        channel: staging
+    - name: Upload staging apply diagnostics
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-web-surface-staging-diagnostics
+        path: |
+          .buildchain/web-surface-staging-apply.json
+          .buildchain/web-surface-staging-health.json
+        include-hidden-files: true
+        if-no-files-found: warn
+    - name: Upload staging release PR summary
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-web-surface-staging-release-pr-summary
+        path: .buildchain/web-surface-staging-release-pr-summary.json
+        include-hidden-files: true
+        if-no-files-found: error
+    - name: Report observed deployment
+      id: report
+      if: ${{ always() }}
+      uses: ./.buildchain/runtime/actions/web/deployment/report
+      with:
+        request-json: ${{ inputs.request-json }}
+        channel: staging
+        job-status: ${{ cancelled() && 'cancelled' || failure() && 'failure' || 'success' }}
+        runtime-sha: ${{ fromJSON(inputs.needs-runtime-outputs-runtime-sha) }}
+        rollback-pointer: ${{ fromJSON(inputs.needs-runtime-outputs-rollback-ref) }}
+        release-pr: ""
+        release-source: ""
+        token: ${{ github.token }}
+    - name: Upload staging release passport
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-web-surface-staging-release-passport
+        path: .buildchain/web-surface-staging-release-passport.json
+        include-hidden-files: true
+        if-no-files-found: error

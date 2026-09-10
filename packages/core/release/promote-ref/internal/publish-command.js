@@ -1,3 +1,5 @@
+import { npmPublishTransaction } from "../../../publication/npm/transaction.js";
+import { npmPublicationEnvironment } from "../../../publication/npm/environment.js";
 import {
   getLifecycleStage,
   runLifecycleStage,
@@ -13,7 +15,12 @@ import {
   updateVersionStateContents,
 } from "../../version-state.js";
 import { publishTransactionEnvironment } from "./transaction-context.js";
-export function runPublishCommand({ cwd, command, loadedConfig, env }) {
+export function runPublishCommand({ cwd, command, provider, loadedConfig, env }) {
+  if (provider) {
+    if (provider.kind !== "npm" || !provider.directory || command) throw new Error("Invalid or ambiguous declarative publication provider");
+    npmPublishTransaction({ cwd: path.resolve(cwd, provider.directory), publication: npmPublicationEnvironment(env), env: { ...process.env, ...env } });
+    return "provider:npm";
+  }
   const lifecyclePublish = getLifecycleStage(loadedConfig, "publish");
   if (command) {
     execSync(command, {
@@ -176,6 +183,7 @@ export function runResumeRematerializedPublish({
   existingNpmPromotion,
   cwd,
   publishCommand,
+  publishProvider,
   loadedConfig,
   context,
   version,

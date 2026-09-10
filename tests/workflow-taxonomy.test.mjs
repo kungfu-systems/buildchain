@@ -30,7 +30,10 @@ function fixture(t) {
     "package.json",
     ".buildchain/buildchain.toml",
     ".github/CODEOWNERS",
-    "actions/build/verify-check/action.yml",
+    "actions/build/verification/repository/action.yml",
+    "actions/build/verification/qualify-source/action.yml",
+    "packages/core/build/verification/source.js",
+    "packages/core/build/source/lifecycle.js",
     ...policy.entries.map(workflowPath),
   ];
   for (const file of files) {

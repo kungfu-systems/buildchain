@@ -60,13 +60,13 @@ const WORKFLOW_AND_ACTION_FILES = Object.freeze([
   ".github/workflows/public-release-promote.yml",
   ".github/workflows/self-release-promote.yml",
   ".github/workflows/public-release-artifact-attestation.yml",
-  "actions/build/github-attestation/action.yml",
-  "actions/build/github-attestation/index.js",
+  "actions/build/artifact/prepare-attestation/action.yml",
+  "actions/build/artifact/prepare-attestation/index.js",
   ".github/workflows/public-release-propagation.yml",
-  "actions/build/macos-credential-island/action.yml",
-  "actions/build/macos-credential-island/index.js",
-  "actions/release/promote-ref/action.yml",
-  "actions/release/promote-ref/index.js",
+  "actions/build/credential/macos-island/action.yml",
+  "actions/build/credential/macos-island/index.js",
+  "actions/release/promotion/ref/action.yml",
+  "actions/release/promotion/ref/index.js",
 ]);
 
 const EXTRA_KFD1_FILES = Object.freeze([
@@ -364,8 +364,8 @@ export function createBuildchainPublicClaimDefinitions() {
       id: "claim:buildchain-semver-github-release",
       claim: "Semver promotion can create or update the public GitHub Release only after the publish transaction completes, and uploads Buildchain release passport/evidence assets while preserving the internal transaction exact tag.",
       sourcePaths: [
-        "actions/release/promote-ref/index.js",
-        "actions/release/promote-ref/action.yml",
+        "actions/release/promotion/ref/index.js",
+        "actions/release/promotion/ref/action.yml",
         "packages/core/release/commands/ensure-github-release.mjs",
         ".github/workflows/.release-promote.yml",
         ".github/workflows/public-release-promote.yml",
@@ -395,7 +395,7 @@ export function createBuildchainPublicClaimDefinitions() {
       claim: "Buildchain npm publish transactions bind trusted publishing, package-set required artifacts, publish evidence, durable release state, and final release passports.",
       sourcePaths: [
         "packages/core/publication/commands/npm-publish-transaction.mjs",
-        "actions/release/promote-ref/index.js",
+        "actions/release/promotion/ref/index.js",
         ".github/workflows/.release-promote.yml",
         ".github/workflows/public-release-promote.yml",
         "docs/publish-transaction.md",

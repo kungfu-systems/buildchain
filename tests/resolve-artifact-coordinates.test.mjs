@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { resolveArtifactCoordinates } from "../packages/core/build/commands/resolve-artifact-coordinates.mjs";
+import { resolveArtifactCoordinates } from "../packages/core/build/artifact/coordinates.js";
 
 const SOURCE_SHA = "a".repeat(40);
 

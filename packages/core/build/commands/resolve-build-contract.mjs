@@ -1,10 +1,8 @@
 #!/usr/bin/env node
 import { pathToFileURL } from "node:url";
-import {
-  resolveArtifactContract,
-  resolveRunnerMatrix,
-  writeGitHubOutputs,
-} from "./build-contract-core.mjs";
+import { resolveArtifactContract } from "../artifact/naming.js";
+import { resolveRunnerMatrix } from "../runner/matrix.js";
+import { writeGitHubOutputs } from "../../providers/commands/github-output.mjs";
 
 function readArg(name, fallback = "") {
   const index = process.argv.indexOf(`--${name}`);

@@ -1,57 +1,21 @@
 #!/usr/bin/env node
-
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
+import { pathToFileURL } from "node:url";
+import { installationRoot } from "../packages/core/runtime/installation-root.js";
 import { domainCanonicalBytes } from "../packages/core/contracts/canonical-contracts.js";
-import { planStageCapsuleResume } from "../packages/core/build/stage-capsule-resume-planner.js";
-
-const repoRoot = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-);
-
-function option(name) {
-  const index = process.argv.indexOf(`--${name}`);
-  return index >= 0 ? process.argv[index + 1] : "";
-}
-
-const platform = option("platform");
-if (!platform) throw new Error("--platform is required");
-
-const declaration = JSON.parse(
-  fs.readFileSync(
-    path.join(repoRoot, "architecture/platform-stage-checkpoints.json"),
-    "utf8",
-  ),
-);
-if (!declaration.platforms.some(({ id }) => id === platform))
-  throw new Error(`undeclared platform: ${platform}`);
-
-const fixture = JSON.parse(
-  fs.readFileSync(
-    path.join(
-      repoRoot,
-      "contracts/fixtures/v4-stage-capsule-resume-v1/late-platform-failure.json",
+import { rehearseStageResume } from "../packages/core/build/stage-capsule/rehearsal/resume.js";
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  const index = process.argv.indexOf("--platform");
+  if (index < 0 || !process.argv[index + 1])
+    throw new Error("--platform is required");
+  process.stdout.write(
+    domainCanonicalBytes(
+      rehearseStageResume({
+        runtimeRoot: installationRoot(import.meta.url),
+        platform: process.argv[index + 1],
+      }),
     ),
-    "utf8",
-  ),
-);
-const first = planStageCapsuleResume(fixture);
-const second = planStageCapsuleResume(structuredClone(fixture));
-if (first.planRoot !== second.planRoot)
-  throw new Error("resume planner is not deterministic");
-
-process.stdout.write(
-  domainCanonicalBytes({
-    schema: "buildchain-v4-stage-capsule-resume-rehearsal/v1",
-    mode: "shadow-only",
-    platform,
-    productionAuthority: first.productionAuthority,
-    planRoot: first.planRoot,
-    requiredRestores: first.requiredRestores,
-    requiredStages: first.requiredStages,
-    requiredEffects: first.requiredEffects,
-  }),
-);
+  );
+}

@@ -40,7 +40,7 @@ jobs:
           path: .buildchain/workflow-shell
           persist-credentials: false
       - name: Synchronize requested ref
-        uses: ./.buildchain/workflow-shell/actions/providers/sync-git
+        uses: ./.buildchain/workflow-shell/actions/providers/git/sync
         with:
           remote-host: ${{ inputs.remote-host }}
           remote-path: ${{ inputs.remote-path }}

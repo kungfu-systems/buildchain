@@ -231,52 +231,35 @@ jobs:
           persist-credentials: false
       - name: "Publication authority: admit."
         id: authority-admit
-        uses: ./.buildchain/workflow-shell/actions/publication/authority-admit
+        uses: ./.buildchain/workflow-shell/actions/publication/authority/admit
         with:
           runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
           runtime-repository: ${{ inputs.buildchain-repository || job.workflow_repository }}
           request-json: ${{ toJSON(inputs) }}
-          secrets-kungfu-governance-auditor-app-private-key: ${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
-          secrets-buildchain-governance-read-token: ${{ secrets.BUILDCHAIN_GOVERNANCE_READ_TOKEN }}
+          auditor-private-key: ${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
+          governance-read-token: ${{ secrets.BUILDCHAIN_GOVERNANCE_READ_TOKEN }}
       - name: "Publication authority: candidate evidence."
         id: authority-candidate-evidence
-        uses: ./.buildchain/workflow-shell/actions/publication/authority-candidate-evidence
+        uses: ./.buildchain/workflow-shell/actions/publication/authority/candidate-evidence
         with:
           request-json: ${{ toJSON(inputs) }}
-          node-path: ${{ steps.authority-admit.outputs.node-path }}
       - name: "Publication authority: artifact evidence."
         id: authority-artifact-evidence
-        uses: ./.buildchain/workflow-shell/actions/publication/authority-artifact-evidence
+        uses: ./.buildchain/workflow-shell/actions/publication/authority/artifact-evidence
         with:
           request-json: ${{ toJSON(inputs) }}
       - name: "Publication authority: assemble."
         id: authority-assemble
-        uses: ./.buildchain/workflow-shell/actions/publication/authority-assemble
+        uses: ./.buildchain/workflow-shell/actions/publication/authority/assemble
         with:
           request-json: ${{ toJSON(inputs) }}
-          secrets-buildchain-governance-read-token: ${{ secrets.BUILDCHAIN_GOVERNANCE_READ_TOKEN }}
-          governance-auditor-token: ${{ steps.authority-admit.outputs.governance-auditor-token }}
-          consumer-gate-gate-aggregate-json: ${{ steps.authority-candidate-evidence.outputs.consumer-gate-gate-aggregate-json }}
-          node-path: ${{ steps.authority-admit.outputs.node-path }}
+          governance-token: ${{ steps.authority-admit.outputs.governance-auditor-token || secrets.BUILDCHAIN_GOVERNANCE_READ_TOKEN || github.token }}
+          token: ${{ github.token }}
+          consumer-gate-json: ${{ steps.authority-candidate-evidence.outputs.consumer-gate-json }}
       - name: "Publication authority: verify."
         id: authority-verify
-        uses: ./.buildchain/workflow-shell/actions/publication/authority-verify
+        uses: ./.buildchain/workflow-shell/actions/publication/authority/verify
         with:
           request-json: ${{ toJSON(inputs) }}
-          auto-evidence-admission-json: ${{ steps.authority-assemble.outputs.auto-evidence-admission-json }}
-          paper-auto-evidence-admission-json: ${{ steps.authority-assemble.outputs.paper-auto-evidence-admission-json }}
-          binary-auto-evidence-admission-json: ${{ steps.authority-assemble.outputs.binary-auto-evidence-admission-json }}
-          auto-evidence-runner-provenance-json: ${{ steps.authority-assemble.outputs.auto-evidence-runner-provenance-json }}
-          paper-auto-evidence-runner-provenance-json: ${{ steps.authority-assemble.outputs.paper-auto-evidence-runner-provenance-json }}
-          binary-auto-evidence-runner-provenance-json: ${{ steps.authority-assemble.outputs.binary-auto-evidence-runner-provenance-json }}
-          auto-evidence-control-plane-audit-json: ${{ steps.authority-assemble.outputs.auto-evidence-control-plane-audit-json }}
-          paper-auto-evidence-control-plane-audit-json: ${{ steps.authority-assemble.outputs.paper-auto-evidence-control-plane-audit-json }}
-          binary-auto-evidence-control-plane-audit-json: ${{ steps.authority-assemble.outputs.binary-auto-evidence-control-plane-audit-json }}
-          consumer-gate-gate-aggregate-json: ${{ steps.authority-candidate-evidence.outputs.consumer-gate-gate-aggregate-json }}
-          auto-evidence-gate-aggregate-json: ${{ steps.authority-assemble.outputs.auto-evidence-gate-aggregate-json }}
-          paper-auto-evidence-gate-aggregate-json: ${{ steps.authority-assemble.outputs.paper-auto-evidence-gate-aggregate-json }}
-          binary-auto-evidence-gate-aggregate-json: ${{ steps.authority-assemble.outputs.binary-auto-evidence-gate-aggregate-json }}
-          auto-evidence-expected-json: ${{ steps.authority-assemble.outputs.auto-evidence-expected-json }}
-          paper-auto-evidence-expected-json: ${{ steps.authority-assemble.outputs.paper-auto-evidence-expected-json }}
-          binary-auto-evidence-expected-json: ${{ steps.authority-assemble.outputs.binary-auto-evidence-expected-json }}
-          node-path: ${{ steps.authority-admit.outputs.node-path }}
+          admission-bundle-json: ${{ steps.authority-assemble.outputs.admission-bundle-json }}
+          consumer-gate-json: ${{ steps.authority-candidate-evidence.outputs.consumer-gate-json }}

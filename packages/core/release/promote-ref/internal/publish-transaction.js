@@ -84,6 +84,7 @@ async function executePublishTransaction(context, initial, persistTransaction) {
     version,
     channel,
     publishCommand,
+    publishProvider,
     publishRematerializeOnResume,
     actor,
     runId,
@@ -152,6 +153,7 @@ async function executePublishTransaction(context, initial, persistTransaction) {
         existingNpmPromotion,
         cwd,
         publishCommand,
+        publishProvider,
         loadedConfig,
         context,
         version,
@@ -430,6 +432,7 @@ function publishRequiredArtifacts(context, publishEnvironment) {
     expected,
     publishRematerializeOnResume,
     publishCommand,
+    publishProvider,
     loadedConfig,
   } = context;
   let publishSource;
@@ -456,6 +459,7 @@ function publishRequiredArtifacts(context, publishEnvironment) {
           existingNpmPromotion,
           cwd,
           publishCommand,
+          publishProvider,
           loadedConfig,
           context,
           version,
@@ -463,6 +467,7 @@ function publishRequiredArtifacts(context, publishEnvironment) {
       : runPublishCommand({
           cwd,
           command: publishCommand,
+          provider: publishProvider,
           loadedConfig,
           env: publishEnvironment,
         });

@@ -27,7 +27,6 @@ jobs:
     name: Reconcile declared dev merge queue
     runs-on: ubuntu-24.04
     env:
-      GH_TOKEN: ${{ secrets.BUILDCHAIN_GOVERNANCE_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
       BUILDCHAIN_TARGET_BRANCH: ${{ inputs.branch || github.ref_name }}
       BUILDCHAIN_APPLY: ${{ github.event_name == 'push' || inputs.apply }}
     steps:
@@ -47,7 +46,10 @@ jobs:
         if: ${{ always() }}
       - name: Reconcile declared dev merge queue
         id: node
-        uses: ./.buildchain/workflow-shell/actions/dev-delivery/merge-queue-reconcile
+        uses: ./.buildchain/workflow-shell/actions/dev-delivery/queue/reconcile
         if: ${{ always() }}
         with:
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+          branch: ${{ env.BUILDCHAIN_TARGET_BRANCH }}
+          apply: ${{ env.BUILDCHAIN_APPLY }}
+          token: ${{ secrets.BUILDCHAIN_GOVERNANCE_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}

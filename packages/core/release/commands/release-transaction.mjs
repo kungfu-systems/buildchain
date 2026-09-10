@@ -140,7 +140,7 @@ async function main() {
       command,
       statePath: filePath,
       durableStateRef: record.state_ref || "",
-      durableBoundary: "remote durable refs and public Git ref finalization are owned by actions/release/promote-ref",
+      durableBoundary: "remote durable refs and public Git ref finalization are owned by actions/release/promotion/ref",
       created,
       transaction: record,
       evidence,
@@ -160,7 +160,7 @@ async function main() {
       command,
       statePath: filePath,
       durableStateRef: record.state_ref || "",
-      durableBoundary: "remote durable refs and public Git ref finalization are owned by actions/release/promote-ref",
+      durableBoundary: "remote durable refs and public Git ref finalization are owned by actions/release/promotion/ref",
       recovery,
       transaction: record,
       validation,
@@ -184,7 +184,7 @@ async function main() {
       command,
       statePath: filePath,
       durableStateRef: next.state_ref || "",
-      durableBoundary: "local transaction state finalized; public Git refs are finalized by actions/release/promote-ref",
+      durableBoundary: "local transaction state finalized; public Git refs are finalized by actions/release/promotion/ref",
       transaction: next,
       validation,
     });
@@ -201,7 +201,7 @@ async function main() {
     command,
     statePath: filePath,
     durableStateRef: next.state_ref || "",
-    durableBoundary: "local transaction state abandoned; remote durable state is written by actions/release/promote-ref",
+    durableBoundary: "local transaction state abandoned; remote durable state is written by actions/release/promotion/ref",
     transaction: next,
   });
 }

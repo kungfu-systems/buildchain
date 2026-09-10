@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { sealPackageCandidate } from "../packages/core/build/nodes/package-candidate.mjs";
+import { sealPackageCandidate } from "../packages/core/publication/candidate/package-binding.js";
 import { sha256Json } from "../packages/core/release/release-candidate.js";
 const tree = "a".repeat(40);
 const passport = {

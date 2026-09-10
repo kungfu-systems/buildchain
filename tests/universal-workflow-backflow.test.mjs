@@ -7,7 +7,7 @@ import {
 import {
   createUniversalBackflowPlan,
   upsertUniversalBackflow,
-} from "../packages/core/workflow/commands/universal-workflow-backflow.mjs";
+} from "../packages/core/workflow/settlement/backflow.js";
 
 const sha = (value) => value.repeat(40);
 const root = (value) => `sha256:${value.repeat(64)}`;

@@ -8,7 +8,7 @@ on:
       mode:
         description: "Report by default; apply also requires apply-enabled."
         type: choice
-        options: [ report, apply ]
+        options: [report, apply]
         default: report
       apply-enabled:
         description: "Explicit positive mutation gate."
@@ -35,7 +35,7 @@ jobs:
           path: .buildchain/workflow-shell
           persist-credentials: false
       - name: Reject invalid apply request
-        uses: ./.buildchain/workflow-shell/actions/workflow/reject-request
+        uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
         with:
           reason: apply mode requires apply-enabled=true
 

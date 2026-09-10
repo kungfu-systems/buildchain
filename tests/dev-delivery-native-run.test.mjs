@@ -6,7 +6,7 @@ import { createNativeCommandContract } from "../packages/core/dev-delivery/dev-d
 import {
   createNativeChildEnvironment,
   runNativeWithHeartbeat as runNativeWithHeartbeatCore,
-} from "../packages/core/dev-delivery/commands/dev-delivery-native-run.mjs";
+} from "../packages/core/dev-delivery/native/execution.js";
 import {
   inspectCredentiallessProcessAncestry,
   isCredentialVariableName,

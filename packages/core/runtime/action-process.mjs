@@ -21,22 +21,3 @@ export function command(program, args, options = {}) {
   }
   return result.stdout;
 }
-
-export function environmentArguments(mapping, env = process.env) {
-  return Object.entries(mapping).flatMap(([name, key]) => [
-    `--${name}`,
-    env[key] || "",
-  ]);
-}
-
-export async function runOperation(operations) {
-  try {
-    const operation = operations[process.argv[2]];
-    requireValue(typeof operation === "function", "Unknown action operation");
-    await operation(process.env);
-  } catch (error) {
-    console.error(`buildchain: ${error.message}`);
-    process.exitCode =
-      Number.isInteger(error.status) && error.status > 0 ? error.status : 1;
-  }
-}

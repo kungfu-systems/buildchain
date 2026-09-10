@@ -37,9 +37,9 @@
   "distribution": {
     "npmPackage": "packages/core/runtime/buildchain-domain.wasm",
     "actionArtifacts": [
-      "actions/release/promote-ref/dist/buildchain-domain.wasm",
-      "actions/release/settle/dist/buildchain-domain.wasm",
-      "actions/release/promote-candidate/dist/buildchain-domain.wasm"
+      "actions/release/promotion/ref/dist/buildchain-domain.wasm",
+      "actions/release/tail/settle/dist/buildchain-domain.wasm",
+      "actions/release/promotion/candidate/dist/buildchain-domain.wasm"
     ],
     "artifactBinding": "sha256-metadata-before-instantiation",
     "runtimeCompilation": false

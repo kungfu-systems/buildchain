@@ -160,11 +160,11 @@ test("historical CLI, Action, and workflow inputs have bounded v4 routes", () =>
       "packages/core/workflow/commands/buildchain-cli-help.mjs",
       "packages/core/release/commands/release-tail.mjs",
       "packages/core/release/cli/release-handlers.mjs",
-      "actions/release/settle/action.yml",
+      "actions/release/tail/settle/action.yml",
       "packages/core/release/settle/action.js",
-      "actions/release/promote-ref/action.yml",
+      "actions/release/promotion/ref/action.yml",
       "packages/core/release/promote-ref/action.js",
-      "packages/core/build/commands/plan.mjs",
+      "packages/core/build/plan/admission.js",
       ".github/workflows/public-release-web.yml",
       ".github/workflows/.release-promote.yml",
       ".github/workflows/public-release-promote.yml",
@@ -179,13 +179,13 @@ test("historical CLI, Action, and workflow inputs have bounded v4 routes", () =>
     /--adopter-delivery-json is non-authoritative in v4/u,
   );
   for (const retired of ["plan-before-target-advance", "release-passport-adopter-delivery-json", "release-passport-kfd-adopter-manifest-gate-json"])
-    assert.equal(readWorkflow("actions/release/promote-ref/action.yml").inputs[retired], undefined);
+    assert.equal(readWorkflow("actions/release/promotion/ref/action.yml").inputs[retired], undefined);
   assert.match(
-    sources.get("packages/core/build/commands/plan.mjs"),
-    /BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: plan.identity.channel/u,
+    sources.get("packages/core/build/plan/admission.js"),
+    /expectedInvocationChannel: plan.identity.channel/u,
   );
   assert.match(
-    inspectWorkflowJob(".github/workflows/public-ops-dev-auto-merge.yml", "merge-dev-prs").modules.get("packages/core/dev-delivery/nodes/outcome.mjs"),
+    inspectWorkflowJob(".github/workflows/public-ops-dev-auto-merge.yml", "merge-dev-prs").modules.get("packages/core/dev-delivery/queue/completion.js"),
     /Exact required Warrant qualified; landing is explicitly deferred/u,
   );
   assert.match(

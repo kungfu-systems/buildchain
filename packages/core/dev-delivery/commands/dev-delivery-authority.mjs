@@ -5,8 +5,8 @@ import {
   createDevDeliveryAuthorityState,
   observeDevDeliveryAuthorityState,
 } from "../dev-delivery-authority-landing.js";
-import { defaultDevDeliveryStateRef } from "./dev-delivery-warrant.mjs";
-import { GitHubDevDeliveryStore } from "./dev-delivery-warrant.mjs";
+import { defaultDevDeliveryStateRef } from "../warrant/values.js";
+import { GitHubDevDeliveryStore } from "../../providers/dev-delivery/store.js";
 import { flag, hasFlag } from "./dev-delivery-warrant-options.mjs";
 import { runDevDeliveryAuthorityCommandAdapter } from "./dev-delivery-authority-command-adapters.mjs";
 function text(value = "") {

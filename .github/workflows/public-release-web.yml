@@ -25,11 +25,14 @@ jobs:
           persist-credentials: false
       - name: Resolve Buildchain runtime
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/web-runtime
+        uses: ./.buildchain/workflow-shell/actions/runtime/selection/admit
         with:
-          request-json: ${{ toJSON(inputs) }}
-          job-workflow-ref: ${{ toJSON(job.workflow_ref) }}
-          job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
+          purpose: web
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          workflow-ref: ${{ job.workflow_ref }}
+          token: ${{ github.token }}
   controller-plan:
     name: Plan web-surface controller
     needs:
@@ -50,12 +53,11 @@ jobs:
           persist-credentials: false
       - name: Plan web-surface controller
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/web-controller-plan
+        uses: ./.buildchain/workflow-shell/actions/web/controller/plan
         with:
           request-json: ${{ toJSON(inputs) }}
-          needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.runtime.outputs.runtime-sha) }}
-          needs-release-intent-outputs-production-source-sha: ${{ toJSON(needs.release-intent.outputs.production-source-sha) }}
-          needs-runtime-outputs-runtime-ref: ${{ toJSON(needs.runtime.outputs.runtime-ref) }}
+          runtime-json: ${{ toJSON(needs.runtime.outputs) }}
+          intent-json: ${{ toJSON(needs.release-intent.outputs) }}
   release-intent:
     name: Resolve production release PR intent
     runs-on: ubuntu-24.04
@@ -77,9 +79,10 @@ jobs:
           persist-credentials: false
       - name: Resolve production release PR intent
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/web-release-intent
+        uses: ./.buildchain/workflow-shell/actions/web/planning/resolve-intent
         with:
           request-json: ${{ toJSON(inputs) }}
+          token: ${{ github.token }}
   publication-decision:
     name: Resolve trusted production decision
     runs-on: ubuntu-24.04
@@ -101,14 +104,11 @@ jobs:
           persist-credentials: false
       - name: Resolve trusted production decision
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/web-publication-decision
+        uses: ./.buildchain/workflow-shell/actions/web/publication/decide
         with:
           request-json: ${{ toJSON(inputs) }}
-          needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.runtime.outputs.runtime-sha) }}
-          needs-release-intent-outputs-production-release-approved: ${{ toJSON(needs.release-intent.outputs.production-release-approved) }}
-          needs-release-intent-outputs-production-release-pr: ${{ toJSON(needs.release-intent.outputs.production-release-pr) }}
-          needs-release-intent-outputs-production-release-source: ${{ toJSON(needs.release-intent.outputs.production-release-source) }}
-          needs-release-intent-outputs-production-source-sha: ${{ toJSON(needs.release-intent.outputs.production-source-sha) }}
+          runtime-json: ${{ toJSON(needs.runtime.outputs) }}
+          intent-json: ${{ toJSON(needs.release-intent.outputs) }}
   apply-input-gate:
     name: Validate web-surface apply inputs
     runs-on: ubuntu-24.04
@@ -129,11 +129,10 @@ jobs:
           persist-credentials: false
       - name: Validate web-surface apply inputs
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/web-apply-input-gate
+        uses: ./.buildchain/workflow-shell/actions/web/planning/admit-inputs
         with:
           request-json: ${{ toJSON(inputs) }}
-          needs-release-intent-outputs-production-release-approved: ${{ toJSON(needs.release-intent.outputs.production-release-approved) }}
-          needs-publication-decision-outputs-approved: ${{ toJSON(needs.publication-decision.outputs.approved) }}
+          decision-approved: ${{ needs.publication-decision.outputs.approved }}
   plan:
     name: Plan web-surface channel
     runs-on: ubuntu-24.04
@@ -173,24 +172,20 @@ jobs:
         if: ${{ always() }}
       - name: Plan web-surface channel
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/web-plan
+        uses: ./.buildchain/workflow-shell/actions/web/planning/plan
         with:
           request-json: ${{ toJSON(inputs) }}
-          needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.runtime.outputs.runtime-sha) }}
-          needs-runtime-outputs-runtime-ref: ${{ toJSON(needs.runtime.outputs.runtime-ref) }}
-          needs-runtime-outputs-runtime-class: ${{ toJSON(needs.runtime.outputs.runtime-class) }}
-          job-workflow-ref: ${{ toJSON(job.workflow_ref) }}
-          needs-runtime-outputs-runtime-override: ${{ toJSON(needs.runtime.outputs.runtime-override) }}
-          needs-release-intent-outputs-production-source-sha: ${{ toJSON(needs.release-intent.outputs.production-source-sha) }}
-          needs-apply-input-gate-outputs-web-surface-channel: ${{ toJSON(needs.apply-input-gate.outputs.web-surface-channel) }}
-          needs-apply-input-gate-outputs-web-surface-alias: ${{ toJSON(needs.apply-input-gate.outputs.web-surface-alias) }}
-          needs-runtime-outputs-rollback-ref: ${{ toJSON(needs.runtime.outputs.rollback-ref) }}
-          needs-release-intent-outputs-production-release-approved: ${{ toJSON(needs.release-intent.outputs.production-release-approved) }}
+          runtime-json: ${{ toJSON(needs.runtime.outputs) }}
+          intent-json: ${{ toJSON(needs.release-intent.outputs) }}
+          selection-json: ${{ toJSON(needs.apply-input-gate.outputs) }}
+          workflow-ref: ${{ job.workflow_ref }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
         if: ${{ always() }}
   preview-apply:
     name: Apply pull request preview
-    if: ${{ (github.event_name == 'pull_request' && github.event.action != 'closed' && inputs.preview-apply) }}
+    if:
+      ${{ (github.event_name == 'pull_request' && github.event.action != 'closed' &&
+      inputs.preview-apply) }}
     runs-on: ubuntu-24.04
     needs:
       - plan
@@ -218,7 +213,7 @@ jobs:
         if: ${{ always() }}
       - name: Apply pull request preview
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/web-preview-apply
+        uses: ./.buildchain/workflow-shell/actions/web/preview/deploy
         with:
           request-json: ${{ toJSON(inputs) }}
           needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.runtime.outputs.runtime-sha) }}
@@ -226,7 +221,10 @@ jobs:
         if: ${{ always() }}
   preview-cleanup:
     name: Apply pull request preview cleanup
-    if: ${{ (github.event_name == 'pull_request' && github.event.action == 'closed' && inputs.preview-cleanup-apply && needs.release-intent.outputs.production-release-approved != 'true') }}
+    if:
+      ${{ (github.event_name == 'pull_request' && github.event.action == 'closed' &&
+      inputs.preview-cleanup-apply && needs.release-intent.outputs.production-release-approved !=
+      'true') }}
     runs-on: ubuntu-24.04
     needs:
       - plan
@@ -255,7 +253,7 @@ jobs:
         if: ${{ always() }}
       - name: Apply pull request preview cleanup
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/web-preview-cleanup
+        uses: ./.buildchain/workflow-shell/actions/web/preview/cleanup
         with:
           request-json: ${{ toJSON(inputs) }}
           needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.runtime.outputs.runtime-sha) }}
@@ -263,7 +261,9 @@ jobs:
         if: ${{ always() }}
   staging-apply:
     name: Apply staging deploy
-    if: ${{ (github.event_name == 'push' && github.ref_name == 'main' && inputs.staging-apply && needs.plan.outputs.web-surface-channel == 'staging') }}
+    if:
+      ${{ (github.event_name == 'push' && github.ref_name == 'main' && inputs.staging-apply &&
+      needs.plan.outputs.web-surface-channel == 'staging') }}
     runs-on: ubuntu-24.04
     needs:
       - plan
@@ -291,7 +291,7 @@ jobs:
         if: ${{ always() }}
       - name: Apply staging deploy
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/web-staging-apply
+        uses: ./.buildchain/workflow-shell/actions/web/staging/deploy
         with:
           request-json: ${{ toJSON(inputs) }}
           needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.runtime.outputs.runtime-sha) }}
@@ -336,7 +336,7 @@ jobs:
           persist-credentials: false
       - name: Open production release PR
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/web-open-production-release-pr
+        uses: ./.buildchain/workflow-shell/actions/web/production/open-release-pr
         with:
           request-json: ${{ toJSON(inputs) }}
           needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.runtime.outputs.runtime-sha) }}
@@ -348,7 +348,7 @@ jobs:
       - plan
       - runtime
       - publication-decision
-    if: |-
+    if: >-
       ${{
         (
           inputs.production-apply &&
@@ -383,7 +383,7 @@ jobs:
       - controller-plan
       - publication-decision
       - release-intent
-    if: |-
+    if: >-
       ${{
         (
           inputs.production-apply &&
@@ -408,20 +408,13 @@ jobs:
           persist-credentials: false
       - name: Seal managed web production publication capability
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/web-publication-authority
+        uses: ./.buildchain/workflow-shell/actions/web/publication/admit
         with:
           request-json: ${{ toJSON(inputs) }}
-          needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.runtime.outputs.runtime-sha) }}
-          needs-controller-plan-outputs-controller-plan-artifact: ${{ toJSON(needs.controller-plan.outputs.controller-plan-artifact) }}
-          needs-runtime-result: ${{ toJSON(needs.runtime.result) }}
-          needs-plan-result: ${{ toJSON(needs.plan.result) }}
-          needs-plan-outputs-build-outcome: ${{ toJSON(needs.plan.outputs.build-outcome) }}
-          needs-plan-outputs-verify-outcome: ${{ toJSON(needs.plan.outputs.verify-outcome) }}
-          needs-release-intent-outputs-production-source-sha: ${{ toJSON(needs.release-intent.outputs.production-source-sha) }}
-          needs-publication-decision-outputs-decision-json: ${{ toJSON(needs.publication-decision.outputs.decision-json) }}
+          observations-json: ${{ toJSON(needs) }}
   production-apply:
     name: Apply production deploy
-    if: |-
+    if: >-
       ${{
         (
           always() &&
@@ -462,7 +455,7 @@ jobs:
         if: ${{ always() }}
       - name: Apply production deploy
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/web-production-apply
+        uses: ./.buildchain/workflow-shell/actions/web/production/deploy
         with:
           request-json: ${{ toJSON(inputs) }}
           needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.runtime.outputs.runtime-sha) }}
@@ -505,24 +498,10 @@ jobs:
           persist-credentials: false
       - name: Record web-surface controller receipt
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/web-controller-receipt
+        uses: ./.buildchain/workflow-shell/actions/web/controller/receipt
         with:
           request-json: ${{ toJSON(inputs) }}
-          needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.runtime.outputs.runtime-sha) }}
-          needs-controller-plan-outputs-controller-plan-artifact: ${{ toJSON(needs.controller-plan.outputs.controller-plan-artifact) }}
-          needs-plan-result: ${{ toJSON(needs.plan.result) }}
-          needs-plan-outputs-web-surface-channel: ${{ toJSON(needs.plan.outputs.web-surface-channel) }}
-          needs-plan-outputs-web-surface-cleanup-plan-json: ${{ toJSON(needs.plan.outputs.web-surface-cleanup-plan-json) }}
-          needs-runtime-result: ${{ toJSON(needs.runtime.result) }}
-          needs-plan-outputs-build-outcome: ${{ toJSON(needs.plan.outputs.build-outcome) }}
-          needs-plan-outputs-verify-outcome: ${{ toJSON(needs.plan.outputs.verify-outcome) }}
-          needs-publication-authority-result: ${{ toJSON(needs.publication-authority.result) }}
-          needs-external-publication-authority-result: ${{ toJSON(needs.external-publication-authority.result) }}
-          needs-preview-apply-result: ${{ toJSON(needs.preview-apply.result) }}
-          needs-preview-cleanup-result: ${{ toJSON(needs.preview-cleanup.result) }}
-          needs-staging-apply-result: ${{ toJSON(needs.staging-apply.result) }}
-          needs-production-apply-result: ${{ toJSON(needs.production-apply.result) }}
-          needs-release-intent-outputs-production-source-sha: ${{ toJSON(needs.release-intent.outputs.production-source-sha) }}
+          observations-json: ${{ toJSON(needs) }}
 on:
   workflow_call:
     inputs:
@@ -556,7 +535,9 @@ on:
         type: string
         required: false
       buildchain-contract-drift-issue-mode:
-        description: "Consumer issue behavior for Buildchain floating-ref contract drift: off, breaking-only, or compatible-and-breaking."
+        description:
+          "Consumer issue behavior for Buildchain floating-ref contract drift: off,
+          breaking-only, or compatible-and-breaking."
         default: compatible-and-breaking
         type: string
         required: false
@@ -617,7 +598,9 @@ on:
         type: string
         required: false
       production-apply:
-        description: Enable production deployment capability; each production apply still requires a trusted event decision.
+        description:
+          Enable production deployment capability; each production apply still requires a trusted
+          event decision.
         default: false
         type: boolean
         required: false
@@ -626,7 +609,9 @@ on:
         type: boolean
         required: false
       production-source-sha:
-        description: Optional exact reviewed consumer source SHA for a trusted workflow_dispatch production activation.
+        description:
+          Optional exact reviewed consumer source SHA for a trusted workflow_dispatch production
+          activation.
         default: ""
         type: string
         required: false
@@ -656,7 +641,9 @@ on:
         type: string
         required: false
       production-release-app-client-id:
-        description: Optional GitHub App client id used to create production release PRs. Requires production-release-app-private-key.
+        description:
+          Optional GitHub App client id used to create production release PRs. Requires
+          production-release-app-private-key.
         default: ""
         type: string
         required: false
@@ -699,7 +686,9 @@ on:
         type: string
         required: false
       publication-expected-json:
-        description: Consumer-owned exact production source, runtime, Gate, artifact, target, and channel bindings.
+        description:
+          Consumer-owned exact production source, runtime, Gate, artifact, target, and channel
+          bindings.
         default: ""
         type: string
         required: false
@@ -709,13 +698,17 @@ on:
         type: string
         required: false
       release-feedback-actor-privacy:
-        description: "Actor identity mode for web-surface release feedback passports: public, redacted, or private-ref."
+        description:
+          "Actor identity mode for web-surface release feedback passports: public, redacted, or
+          private-ref."
         default: public
         type: string
         required: false
     secrets:
       production-release-app-private-key:
-        description: Private key for production-release-app-client-id. When set, Buildchain creates production release PRs with that GitHub App installation token.
+        description:
+          Private key for production-release-app-client-id. When set, Buildchain creates
+          production release PRs with that GitHub App installation token.
         required: false
       production-release-pr-token:
         description: Optional narrowly scoped token for production release PR creation.
@@ -755,7 +748,9 @@ on:
         description: Production release PR URL opened after staging apply
         value: ${{ jobs.open-production-release-pr.outputs.production-release-pr-url }}
       release-pr-status:
-        description: "Production release PR handoff status: created, updated, permission-denied, summary-only, disabled, or failed"
+        description:
+          "Production release PR handoff status: created, updated, permission-denied,
+          summary-only, disabled, or failed"
         value: ${{ jobs.open-production-release-pr.outputs.release-pr-status }}
       buildchain-runtime-ref:
         description: Resolved Buildchain runtime ref

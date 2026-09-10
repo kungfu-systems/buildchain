@@ -12,15 +12,13 @@ import {
   devDeliveryContentRoot,
   submitDevDeliveryCandidate,
 } from "../packages/core/dev-delivery/dev-delivery-warrant.js";
-import {
-  cliOptions,
-  evaluatePullRequest,
-  GhCliClient,
-  GitHubClient,
-  renderMarkdownSummary,
-  runDevPrAdmission,
-  runDevPrAutoMerge,
-} from "../packages/core/dev-delivery/commands/dev-pr-auto-merge.mjs";
+import { evaluatePullRequest } from "../packages/core/dev-delivery/admission/readiness.js";
+import { GhCliClient } from "../packages/core/dev-delivery/admission/gh-cli-client.js";
+import { GitHubClient } from "../packages/core/dev-delivery/admission/github-client.js";
+import { renderMarkdownSummary } from "../packages/core/dev-delivery/admission/report.js";
+import { runDevPrAdmission } from "../packages/core/dev-delivery/admission/targeted.js";
+import { runDevPrAutoMerge } from "../packages/core/dev-delivery/admission/queue.js";
+import { cliOptions } from "../packages/core/dev-delivery/commands/dev-pr-auto-merge.mjs";
 import { readCurrentDeliveryQueueState } from "../packages/core/dev-delivery/commands/dev-pr-delivery-warrant.mjs";
 test("targeted CLI defaults to an explicit readiness label", () => {
   const options = cliOptions([
@@ -378,12 +376,16 @@ test("queue admission accepts blocked state but requires exact Project Cut proof
 test("reusable admission reaches immutable Warrant and Project Cut verification", () => {
   const graph = inspectWorkflowJob(".github/workflows/public-ops-dev-auto-merge.yml", "admission");
   assert.ok(graph.workflow.on.workflow_call.inputs["project-cut-proof-json"]);
-  assert.ok(graph.steps.some(step => step.run?.includes('source.mjs" project-cut')));
-  assert.match(graph.modules.get("packages/core/dev-delivery/nodes/source-proof.mjs"), /"verify-replay"/u);
-  assert.ok(graph.modules.has("packages/core/dev-delivery/nodes/reservation-readback.mjs"));
-  const qualification = graph.steps.find(step => step.name === "Qualify exact source before scheduling");
-  assert.match(qualification.env.BUILDCHAIN_DEV_PR_WARRANT_MODE, /delivery-warrant-mode == 'required'/u);
-  assert.match(qualification.env.BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT, /queue-admission-context/u);
+  const qualification = graph.steps.find(step => step.uses?.endsWith("/dev-delivery/candidate/qualify-source"));
+  assert.ok(qualification);
+  assert.equal(qualification.with["request-json"], "${{ inputs.request-json }}");
+  assert.equal(graph.actions.get("actions/dev-delivery/candidate/qualify-source").runs.using, "node24");
+  assert.match(graph.modules.get("packages/core/dev-delivery/candidate/admission.js"), /verifyProjectCutReplayProof\(proof\)/u);
+  assert.match(graph.modules.get("packages/core/dev-delivery/candidate/admission.js"), /verification.reason !== "exact-project-cut-replay"/u);
+  assert.ok(graph.modules.has("packages/core/dev-delivery/admission/transaction.js"));
+  const policy = graph.modules.get("packages/core/dev-delivery/admission/request.js");
+  assert.match(policy, /input\["delivery-warrant-mode"\] === "required"/u);
+  assert.match(policy, /input\["queue-admission-context"\]/u);
 });
 
 test("merge mode merges eligible PRs sequentially and honors max-merges", async () => {

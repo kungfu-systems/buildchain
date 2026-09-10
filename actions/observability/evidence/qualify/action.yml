@@ -1,0 +1,12 @@
+name: Build and qualify observed evidence
+description: Build and qualify observed evidence
+inputs:
+  request-json:
+    description: Typed observed evidence request.
+    required: true
+  token:
+    description: Evidence generation read credential.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

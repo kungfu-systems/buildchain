@@ -1,0 +1,25 @@
+name: Retain read-back publication settlement
+description: Retain read-back publication settlement.
+inputs:
+  runtime-sha:
+    description: Exact admitted runtime commit.
+    required: true
+  candidate-sha:
+    description: Exact original candidate commit.
+    required: true
+  token:
+    description: Explicit scoped GitHub credential.
+    required: true
+  apply-outcome:
+    description: Observed APPLY action outcome.
+    required: true
+outputs:
+  receipt-json:
+    description: receipt json
+  receipt-root:
+    description: receipt root
+  status:
+    description: status
+runs:
+  using: node24
+  main: dist/index.js

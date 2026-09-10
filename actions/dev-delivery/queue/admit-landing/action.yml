@@ -1,0 +1,44 @@
+name: Admit exact qualified candidates to protected delivery
+description: Admit exact qualified candidates to protected delivery.
+inputs:
+  runtime-sha:
+    description: Admitted runtime-sha.
+    required: true
+  request-json:
+    description: Admitted request-json.
+    required: true
+  branch:
+    description: Admitted branch.
+    required: true
+  project-cut-proof-root:
+    description: Admitted project-cut-proof-root.
+    required: false
+  token:
+    description: Admitted token.
+    required: true
+outputs:
+  evaluated-count:
+    description: Verified evaluated-count.
+  merged-count:
+    description: Verified merged-count.
+  enqueued-count:
+    description: Verified enqueued-count.
+  action-count:
+    description: Verified action-count.
+  skipped-count:
+    description: Verified skipped-count.
+  final-base-sha:
+    description: Verified final-base-sha.
+  targeted:
+    description: Verified targeted.
+  targeted-ok:
+    description: Verified targeted-ok.
+  admission-state:
+    description: Verified admission-state.
+  receipt-root:
+    description: Verified receipt-root.
+  result-path:
+    description: Verified result-path.
+runs:
+  using: node24
+  main: dist/index.js

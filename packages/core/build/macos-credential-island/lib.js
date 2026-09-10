@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
+import { Buffer } from "node:buffer";
 import fs from "node:fs";
 import path from "node:path";
-
 import { validateArtifactSigningRequest } from "../artifact-signing.js";
 
 export const INPUT_CONTRACT = "buildchain.macos-credential-input/v1";

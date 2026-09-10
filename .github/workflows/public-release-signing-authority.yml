@@ -65,12 +65,11 @@ jobs:
         if: ${{ always() }}
       - name: Admit immutable signing requests
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/signing-authority-intake
+        uses: ./.buildchain/workflow-shell/actions/release/signing/intake
         with:
-          secrets-buildchain-authority-token: ${{ secrets.BUILDCHAIN_AUTHORITY_TOKEN }}
-          secrets-buildchain-promotion-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          authority-token: ${{ secrets.BUILDCHAIN_AUTHORITY_TOKEN }}
+          promotion-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
           request-json: ${{ toJSON(inputs) }}
-          matrix-json: ${{ toJSON(matrix) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
         if: ${{ always() }}
   detached:
@@ -99,11 +98,11 @@ jobs:
         if: ${{ always() }}
       - name: Detached signature ${{ matrix.request.id }}
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/signing-authority-detached
+        uses: ./.buildchain/workflow-shell/actions/release/signing/detached
         with:
           request-json: ${{ toJSON(inputs) }}
-          matrix-json: ${{ toJSON(matrix) }}
-          secrets-buildchain-detached-private-key-pkcs8-base64: ${{ secrets.BUILDCHAIN_DETACHED_PRIVATE_KEY_PKCS8_BASE64 }}
+          item-json: ${{ toJSON(matrix.request) }}
+          private-key-base64: ${{ secrets.BUILDCHAIN_DETACHED_PRIVATE_KEY_PKCS8_BASE64 }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
         if: ${{ always() }}
   macos:
@@ -132,15 +131,15 @@ jobs:
         if: ${{ always() }}
       - name: Developer ID ${{ matrix.request.id }}
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/signing-authority-macos
+        uses: ./.buildchain/workflow-shell/actions/release/signing/macos
         with:
           request-json: ${{ toJSON(inputs) }}
-          matrix-json: ${{ toJSON(matrix) }}
-          secrets-buildchain-macos-certificate-p12-base64: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64 }}
-          secrets-buildchain-macos-certificate-password: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD }}
-          secrets-buildchain-macos-notary-api-key-p8-base64: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64 }}
-          secrets-buildchain-macos-notary-api-key-id: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_ID }}
-          secrets-buildchain-macos-notary-api-issuer: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_ISSUER }}
+          item-json: ${{ toJSON(matrix.request) }}
+          certificate-base64: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64 }}
+          certificate-password: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD }}
+          notary-key-base64: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64 }}
+          notary-key-id: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_ID }}
+          notary-issuer: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_ISSUER }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
         if: ${{ always() }}
   windows:
@@ -169,12 +168,12 @@ jobs:
         if: ${{ always() }}
       - name: Authenticode ${{ matrix.request.id }}
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/signing-authority-windows
+        uses: ./.buildchain/workflow-shell/actions/release/signing/windows
         with:
           request-json: ${{ toJSON(inputs) }}
-          matrix-json: ${{ toJSON(matrix) }}
-          secrets-buildchain-windows-certificate-pfx-base64: ${{ secrets.BUILDCHAIN_WINDOWS_CERTIFICATE_PFX_BASE64 }}
-          secrets-buildchain-windows-certificate-password: ${{ secrets.BUILDCHAIN_WINDOWS_CERTIFICATE_PASSWORD }}
+          item-json: ${{ toJSON(matrix.request) }}
+          certificate-base64: ${{ secrets.BUILDCHAIN_WINDOWS_CERTIFICATE_PFX_BASE64 }}
+          certificate-password: ${{ secrets.BUILDCHAIN_WINDOWS_CERTIFICATE_PASSWORD }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
         if: ${{ always() }}
   deliver:
@@ -202,7 +201,7 @@ jobs:
         if: ${{ always() }}
       - name: Publish immutable signed result set
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/signing-authority-deliver
+        uses: ./.buildchain/workflow-shell/actions/release/signing/deliver
         with:
           request-json: ${{ toJSON(inputs) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}

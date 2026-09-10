@@ -59,7 +59,7 @@ release candidate consumed the caller-supplied family evidence exactly.
 Promotion workflows that should not rebuild artifacts can enable:
 
 ```yaml
-- uses: kungfu-systems/buildchain/actions/release/promote-ref@v3
+- uses: kungfu-systems/buildchain/actions/release/promotion/ref@v3
   with:
     token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
     sha: ${{ needs.build.outputs.publish-source-sha }}

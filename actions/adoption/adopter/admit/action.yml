@@ -1,0 +1,50 @@
+name: admit-adopter
+description: Validate exact adopter selection and floating consumer policy.
+inputs:
+  request-json:
+    description: Current adopter qualification request.
+    required: true
+  workflow-sha:
+    description: Exact defining runtime commit.
+    required: true
+outputs:
+  receipt-root:
+    description: Rooted policy receipt.
+    value: ${{ steps.policy.outputs.v4-consumer-policy-receipt-root }}
+  consumer-source-sha:
+    description: Exact admitted consumer.
+    value: ${{ steps.selection.outputs.sha }}
+runs:
+  using: composite
+  steps:
+    - name: Prepare the defining runtime
+      id: core
+      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+    - name: Validate exact selection
+      id: selection
+      uses: ./.buildchain/workflow-shell/actions/adoption/adopter/select
+      with:
+        request-json: ${{ inputs.request-json }}
+        workflow-sha: ${{ inputs.workflow-sha }}
+    - name: Check out admitted consumer
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ steps.selection.outputs.repository }}
+        ref: ${{ steps.selection.outputs.sha }}
+        path: .buildchain/consumer
+        persist-credentials: false
+    - name: Admit current public contract
+      id: policy
+      uses: ./.buildchain/workflow-shell/actions/adoption/adopter/admit-policy
+      with:
+        request-json: ${{ inputs.request-json }}
+        workflow-sha: ${{ inputs.workflow-sha }}
+    - name: Preserve rooted policy
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name:
+          v4-adopter-delivery-policy-${{ fromJSON(inputs.request-json).consumer
+          }}-${{ github.sha }}
+        path: ${{ steps.policy.outputs.v4-consumer-policy-receipt-path }}
+        include-hidden-files: true
+        if-no-files-found: error

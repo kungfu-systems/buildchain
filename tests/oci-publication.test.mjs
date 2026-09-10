@@ -1,3 +1,4 @@
+import { resolveCandidateProviderInputs } from "../packages/core/release/promote-candidate/evidence-inputs.js";
 import {
   hash,
   fixture,
@@ -10,11 +11,10 @@ import path from "node:path";
 import test from "node:test";
 import { domainContentRoot } from "../packages/core/contracts/canonical-contracts.js";
 import { verifyOciPublicationBundle } from "../packages/core/publication/oci-publication-bundle.js";
-import { resolveOciCandidate } from "../packages/core/publication/commands/publication-candidate-kind.mjs";
+import { resolveOciCandidate } from "../packages/core/publication/candidate/kind.js";
 
-import { createRecoveredPublication } from "../packages/core/release/commands/resume-from-candidate-run.mjs";
+import { createRecoveredPublication } from "../packages/core/release/recovery/publication.js";
 import {
-  resolveCandidateProviderInputs,
   sealedCandidateVersion,
   planProductPublication,
 } from "../packages/core/release/promote-candidate/product-provider.js";

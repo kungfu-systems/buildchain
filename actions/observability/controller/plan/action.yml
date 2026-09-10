@@ -1,0 +1,43 @@
+name: Controller plan
+description: Bind registered controller inputs to exact source and runtime identities.
+inputs:
+  controller-id:
+    description: Registered controller ID.
+    required: true
+  registry:
+    description: Exact runtime controller registry.
+    default: .buildchain/runtime/dist/site/controller-registry.json
+  source-repository:
+    description: Source repository.
+    required: true
+  source-sha:
+    description: Immutable source commit.
+    required: true
+  runtime-ref:
+    description: Admitted runtime selector.
+    required: true
+  runtime-sha:
+    description: Immutable runtime commit.
+    required: true
+  contract-digest:
+    description: Admitted runtime contract digest.
+    required: true
+  inputs-json:
+    description: Typed controller request inputs.
+    default: "{}"
+  input-boundary:
+    description: Declared strict or workflow-call input boundary.
+    default: ""
+  plan-path:
+    description: Output plan evidence path.
+    default: .buildchain/controller/plan.json
+outputs:
+  controller-plan-path:
+    description: Controller plan path.
+  controller-plan-json:
+    description: Controller plan json.
+  controller-plan-digest:
+    description: Controller plan digest.
+runs:
+  using: node24
+  main: dist/index.js

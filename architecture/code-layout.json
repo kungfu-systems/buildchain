@@ -33,7 +33,7 @@
     "workflowStepsPerJob": 8,
     "workflowInlineScriptLines": 0,
     "compositeImplementationLines": 160,
-    "compositeInlineScriptLines": 12,
+    "compositeInlineScriptLines": 0,
     "cliEntryLines": 12
   },
   "cliEntrypoints": ["bin/buildchain.mjs"],
@@ -42,13 +42,14 @@
     ".github/workflows/.release-promote.yml": "contracts/promotion-invocation-v1.schema.json"
   },
   "publicActionNodes": [
-    "build/github-attestation",
-    "build/macos-credential-island",
-    "build/run-lifecycle",
-    "build/validate-config",
-    "governance/report-issue",
-    "release/promote-candidate",
-    "release/promote-ref",
-    "release/settle"
+    "build/artifact/prepare-attestation",
+    "build/artifact/seal-attestation",
+    "build/credential/macos-island",
+    "build/lifecycle/run",
+    "build/lifecycle/validate",
+    "governance/incident/report",
+    "release/promotion/candidate",
+    "release/promotion/ref",
+    "release/tail/settle"
   ]
 }

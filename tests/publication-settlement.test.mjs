@@ -4,16 +4,16 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { publicationSettlementFixture } from "./helpers/publication-settlement.mjs";
-import * as binaryEvidence from "../packages/core/publication/commands/binary-publication-evidence.mjs";
+import * as binaryEvidence from "../packages/core/publication/binary/evidence.js";
 import { collectGitHubReleasePassport } from "../packages/core/release/passport/collection.js";
 import {
   verifyPublicationSettlement,
   SETTLEMENT_ASSET,
-} from "../packages/core/publication/commands/publication-settlement.mjs";
+} from "../packages/core/publication/settlement/transaction.js";
 import {
   readBinaryPublicationEvidence,
   prepareBinaryAssetPaths,
-} from "../packages/core/publication/commands/binary-publication-evidence.mjs";
+} from "../packages/core/publication/binary/evidence.js";
 
 const fixture = await publicationSettlementFixture();
 const documents = fixture.documents;
@@ -178,10 +178,10 @@ test("failed next-development cannot hide receipt validation or grant SETTLE wri
     settle,
     /needs\.apply\.result == 'success'|contents: write/u,
   );
-  assert.match(settle, /actions\/release\/promote-settle/u);
+  assert.match(settle, /actions\/release\/promotion\/settle/u);
   const adapter = fs.readFileSync(
     new URL(
-      "../packages/core/release/nodes/promotion-settlement.mjs",
+      "../packages/core/publication/settlement/actions.js",
       import.meta.url,
     ),
     "utf8",
@@ -189,7 +189,7 @@ test("failed next-development cannot hide receipt validation or grant SETTLE wri
   assert.match(adapter, /verifyPublicationSettlement/u);
   const binary = fs.readFileSync(
     new URL(
-      "../actions/release/binary-assets-publish/action.yml",
+      "../actions/release/binary/publish/action.yml",
       import.meta.url,
     ),
     "utf8",
@@ -201,13 +201,13 @@ test("failed next-development cannot hide receipt validation or grant SETTLE wri
     ),
     /--clobber/u,
   );
-  assert.match(binary, /binary-publication-evidence\.mjs publish/u);
+  assert.match(binary, /uses: \.\/\.buildchain\/runtime\/actions\/publication\/binary\/publish/u);
 });
 
 test("immutable upload checks every collision before writing and rejects absent provider readback", async (t) => {
   const crypto = await import("node:crypto");
   const { releaseAssetClient } =
-    await import("../packages/core/providers/commands/release-asset-client.mjs");
+    await import("../packages/core/providers/github/release-assets.js");
   const directory = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-assets-client-"),
   );
@@ -336,12 +336,12 @@ test("stable binary Passport uses verified publication version despite alpha sou
     write: (name, value) => writes.set(name, value),
   };
   await binaryEvidence.writeBinaryPublicationEvidence({
-    client,
+    workspace: cwd, client,
     repository: "kungfu-systems/buildchain",
     tag: settlement.release.tag,
     sourceSha: settlement.release.sourceSha,
   });
-  const release = writes.get(".buildchain/publication-evidence/release.json");
+  const release = writes.get(path.join(cwd, ".buildchain/publication-evidence/release.json"));
   const collected = collectGitHubReleasePassport({
     cwd,
     tag: settlement.release.tag,
@@ -362,7 +362,7 @@ test("stable binary Passport uses verified publication version despite alpha sou
     assert.equal(actual, "4.1.0");
   assert.equal(passport.release.channel, "stable");
   assert.deepEqual(
-    writes.get(`.buildchain/publication-evidence/${SETTLEMENT_ASSET}`),
+    writes.get(path.join(cwd, `.buildchain/publication-evidence/${SETTLEMENT_ASSET}`)),
     settlement,
   );
   const workflow = fs.readFileSync(
@@ -374,10 +374,11 @@ test("stable binary Passport uses verified publication version despite alpha sou
   );
   assert.match(
     workflow,
-    /actions\/build\/binary-distribution-passport/,
+    /actions\/build\/binary\/passport/,
   );
-  const { binaryPassportOptions } = await import("../packages/core/build/nodes/binary-distribution.mjs");
-  const options = binaryPassportOptions({ RELEASE_TAG: settlement.release.tag }, name => writes.get(name));
+  const { binaryPassportOptions } = await import("../packages/core/build/binary/distribution.js");
+  for (const [file, value] of writes) { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, JSON.stringify(value)); }
+  const options = binaryPassportOptions({ workspace: cwd, tag: settlement.release.tag });
   assert.equal(options.packageVersion, "4.1.0");
   assert.match(
     workflow,

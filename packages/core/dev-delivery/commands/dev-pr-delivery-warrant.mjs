@@ -1,5 +1,6 @@
 import fs from "node:fs";
-import { defaultDevDeliveryStateRef, GitHubDevDeliveryStore } from "./dev-delivery-warrant.mjs";
+import { defaultDevDeliveryStateRef } from "../warrant/values.js";
+import { GitHubDevDeliveryStore } from "../../providers/dev-delivery/store.js";
 import { qualifyPreEnqueueReadback } from "./dev-pr-prequeue-guard.mjs";
 
 const ROOT_PATTERN = /^sha256:[0-9a-f]{64}$/;

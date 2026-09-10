@@ -35,7 +35,7 @@ jobs:
         if: ${{ always() }}
       - name: Dry-run npm publish
         id: node
-        uses: ./.buildchain/workflow-shell/actions/publication/npm-dry-run
+        uses: ./.buildchain/workflow-shell/actions/publication/npm/preview
         with:
           request-json: ${{ toJSON(inputs) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}

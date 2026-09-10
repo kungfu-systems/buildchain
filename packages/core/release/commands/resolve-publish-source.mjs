@@ -2,12 +2,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import {
-  createResolvedReleaseManifest,
-  parsePublishSourceRef,
-  resolvePublishSourceLock,
-  writeGitHubOutputs,
-} from "../../build/commands/build-contract-core.mjs";
+import { createResolvedReleaseManifest } from "../source/manifest.js";
+import { parsePublishSourceRef, resolvePublishSourceLock } from "../source/coordinates.js";
+import { writeGitHubOutputs } from "../../providers/commands/github-output.mjs";
 import {
   resolvePublishSourceRefSha,
   sourceRefFromEnv,

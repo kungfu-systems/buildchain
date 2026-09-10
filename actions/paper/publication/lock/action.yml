@@ -1,0 +1,20 @@
+name: Lock exact Paper publication target
+description: Lock exact Paper publication target.
+inputs:
+  request-json:
+    description: request-json
+    required: true
+  candidate-json:
+    description: candidate-json
+    required: true
+  token:
+    description: token
+    required: true
+outputs:
+  target-json:
+    description: target-json
+  provider-json:
+    description: provider-json
+runs:
+  using: node24
+  main: dist/index.js

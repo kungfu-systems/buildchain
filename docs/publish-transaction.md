@@ -53,7 +53,7 @@ It is not the GitHub Actions run id.
 
 ## Durable State
 
-`actions/release/promote-ref` stores release transaction state in a
+`actions/release/promotion/ref` stores release transaction state in a
 machine-managed Git branch:
 
 ```text
@@ -166,7 +166,7 @@ commands = [
 ]
 ```
 
-`actions/release/promote-ref` runs `lifecycle.publish` only when
+`actions/release/promotion/ref` runs `lifecycle.publish` only when
 `publish-transaction: "true"` is set or when a `publish-command` input is
 provided. The action sets:
 
@@ -314,7 +314,7 @@ For package sets, `package_set_order = "platforms-first-main-last"` makes the
 main package the visibility gate. Platform package side effects are planned or
 retried first, and the main package or main dist-tag move happens last.
 
-When the transaction reaches `complete`, `actions/release/promote-ref`
+When the transaction reaches `complete`, `actions/release/promotion/ref`
 generates `.buildchain/release-passport/buildchain.release.json` and persists
 the `release-passport/*` files into the durable `buildchain/release-state/...`
 ref. The passport is the stable release artifact for agents and people: it
@@ -603,7 +603,7 @@ node packages/core/release/commands/release-transaction.mjs abort --version v3.0
 
 The CLI is a diagnostic and local repair surface. It reports the durable
 `state_ref`, but remote durable-ref writes and public Git ref finalization are
-owned by `actions/release/promote-ref`, because that action runs inside the
+owned by `actions/release/promotion/ref`, because that action runs inside the
 same governed GitHub permissions and branch-protection checks as release
 promotion. In other words, CLI `finalize` can mark the local transaction state
 complete after valid evidence; the machine-operated public finalization path is

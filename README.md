@@ -239,7 +239,7 @@ Consumers can report Buildchain-owned workflow failures directly to the
 Buildchain repository with a scoped issue-write token:
 
 ```yaml
-- uses: kungfu-systems/buildchain/actions/governance/report-issue@v4
+- uses: kungfu-systems/buildchain/actions/governance/incident/report@v4
   if: failure()
   with:
     token: ${{ steps.buildchain-issue-token.outputs.token }}
@@ -306,31 +306,33 @@ plus fail-closed product-evidence gates for KFD-4, KFD-5, and KFD-7. These
 gates preserve product-owned qualification and support decisions; they do not
 turn a schema-valid record into certification or shipped support.
 
-Buildchain's action registry contains fifteen active entries. Six are
-direct consumer integration actions:
+Reusable workflows are the primary consumer API. The generated action registry
+indexes the capability/group/operation hierarchy and marks direct action contracts.
+The direct consumer integration actions are:
 
-- `actions/build/validate-config`
-- `actions/build/run-lifecycle`
-- `actions/release/promote-ref`
-- `actions/governance/report-issue`
-- `actions/release/settle`
-- `actions/release/promote-candidate`
+- `actions/build/lifecycle/validate`
+- `actions/build/lifecycle/run`
+- `actions/release/promotion/ref`
+- `actions/governance/incident/report`
+- `actions/release/tail/settle`
+- `actions/release/promotion/candidate`
 
-Two additional release-authority components are also registered and versioned:
+Three additional release-authority components are also registered and versioned:
 
-- `actions/build/github-attestation`
-- `actions/build/macos-credential-island`
+- `actions/build/artifact/prepare-attestation`
+- `actions/build/artifact/seal-attestation`
+- `actions/build/credential/macos-island`
 
 Seven shared build components have explicit ownership in
 `architecture/build-orchestration.json`:
 
-- [`actions/build/resolve-plan`](actions/build/resolve-plan/action.yml)
-- [`actions/build/prepare-environment`](actions/build/prepare-environment/action.yml)
-- [`actions/build/run-stage`](actions/build/run-stage/action.yml)
-- [`actions/build/transfer-artifact`](actions/build/transfer-artifact/action.yml)
-- [`actions/build/sign-artifact`](actions/build/sign-artifact/action.yml)
-- [`actions/build/attest-artifact`](actions/build/attest-artifact/action.yml)
-- [`actions/build/finalize-result`](actions/build/finalize-result/action.yml)
+- [`actions/build/lifecycle/plan`](actions/build/lifecycle/plan/action.yml)
+- [`actions/build/lifecycle/prepare`](actions/build/lifecycle/prepare/action.yml)
+- [`actions/build/lifecycle/stage`](actions/build/lifecycle/stage/action.yml)
+- [`actions/build/artifact/transfer`](actions/build/artifact/transfer/action.yml)
+- [`actions/build/artifact/sign`](actions/build/artifact/sign/action.yml)
+- [`actions/build/artifact/attest`](actions/build/artifact/attest/action.yml)
+- [`actions/build/artifact/finalize`](actions/build/artifact/finalize/action.yml)
 
 `dist/site/workflow-registry.json#actions` is the machine-readable inventory;
 this split keeps the older four-action consumer snapshot from being mistaken for
@@ -367,7 +369,7 @@ Stable consumers should reference actions and workflows through floating major
 refs after reviewing the exact release passport:
 
 ```yaml
-uses: kungfu-systems/buildchain/actions/build/validate-config@v4
+uses: kungfu-systems/buildchain/actions/build/lifecycle/validate@v4
 ```
 
 ```yaml

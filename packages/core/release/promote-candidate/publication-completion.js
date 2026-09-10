@@ -1,6 +1,6 @@
 import fs from "node:fs";
-import { settlePublication } from "../../publication/commands/publication-settlement.mjs";
-import { releaseAssetClient } from "../../providers/commands/release-asset-client.mjs";
+import { settlePublication } from "../../publication/settlement/transaction.js";
+import { releaseAssetClient } from "../../providers/github/release-assets.js";
 import { advanceAlphaNextDevelopment, advanceStableNextDevelopment } from "./product-provider.js";
 
 export async function completePublicationDevelopment(

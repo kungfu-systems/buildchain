@@ -13,22 +13,13 @@ import {
   validateReleaseCandidatePassport,
 } from "../packages/core/release/release-candidate.js";
 import { generateReleaseCandidatePassportCli } from "../packages/core/publication/commands/generate-release-candidate-passport.mjs";
-import {
-  generatePublishRequiredArtifacts,
-  githubDownload,
-  readNpmPackageArtifact,
-  resolveReleaseCandidateArtifacts,
-  releaseCandidateDownloadEnabled,
-  releaseCandidateRuntimeSha,
-  selectReleaseAssetPaths,
-  selectMergedChannelPullRequest,
-  selectPayloadArtifacts,
-  selectReleaseCandidateArtifacts,
-  selectReleaseCandidateRun,
-  selectReleaseCandidateRuns,
-  verifyArtifactArchive,
-} from "../packages/core/release/commands/release-candidate-resolver.mjs";
-import { createResolvedPublicationSealedBundle } from "../packages/core/publication/commands/publication-candidate-sealer.mjs";
+import { generatePublishRequiredArtifacts, readNpmPackageArtifact, selectReleaseAssetPaths, selectPayloadArtifacts } from "../packages/core/release/candidate/payloads.js";
+import { selectReleaseCandidateArtifacts } from "../packages/core/release/candidate/selection.js";
+import { verifyArtifactArchive } from "../packages/core/release/candidate/transport.js";
+import { githubDownload } from "../packages/core/release/candidate/transport.js";
+import { resolveReleaseCandidateArtifacts } from "../packages/core/release/candidate/resolve.js";
+import { releaseCandidateDownloadEnabled, releaseCandidateRuntimeSha, selectMergedChannelPullRequest, selectReleaseCandidateRun, selectReleaseCandidateRuns } from "../packages/core/release/candidate/selection.js";
+import { createResolvedPublicationSealedBundle } from "../packages/core/publication/candidate/sealing.js";
 import {
   buildWorkflowFrictionBody,
   classifyWorkflowFriction,

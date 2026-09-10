@@ -16,6 +16,7 @@ export function normalizePromotionOptions(options) {
     reconciliationWorkspace: "",
     publishTransaction: false,
     publishCommand: "",
+    publishProvider: undefined,
     publishEvidencePath: "",
     transactionStatePath: "",
     expectedTransactionId: "",
@@ -88,6 +89,13 @@ export function normalizePromotionOptions(options) {
     "tagUpdateOctokit",
   ]) {
     if (normalized[key] === undefined) normalized[key] = normalized.octokit;
+  }
+  if (normalized.publishProvider !== undefined) {
+    const provider = normalized.publishProvider;
+    if (!provider || provider.kind !== "npm" || typeof provider.directory !== "string" || !provider.directory.trim() || Object.keys(provider).sort().join(",") !== "directory,kind") throw new Error("Publication provider must declare exactly npm kind and package directory");
+    if (normalized.publishCommand) throw new Error("Publication provider and consumer publish command are mutually exclusive");
+    if (normalized.publishRematerializeOnResume) throw new Error("Sealed npm provider cannot rematerialize publication inputs");
+    normalized.publishTransaction = true;
   }
   return normalized;
 }

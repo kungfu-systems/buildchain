@@ -5,11 +5,9 @@ import path from "node:path";
 import crypto from "node:crypto";
 import test from "node:test";
 import YAML from "yaml";
-import {
-  verifyCoordinates,
-  validateBinaryCapability,
-  writeChecksums,
-} from "../packages/core/release/nodes/binary-assets.mjs";
+import { verifySourceRuntimeCheckouts } from "../packages/core/runtime/checkout-identity.js";
+import { validateBinaryCapability } from "../packages/core/publication/binary/capability.js";
+import { writeChecksums } from "../packages/core/build/binary/checksums.js";
 const sha = "d".repeat(40),
   runtime = "e".repeat(40),
   digest = "a".repeat(64);
@@ -64,7 +62,7 @@ test("binary authority binds exact source, bundle, publisher, environment and ex
 });
 test("binary runtime and source checkout must both match admitted immutable identities", () => {
   const calls = [];
-  verifyCoordinates({ RUNTIME_SHA: runtime, SOURCE_SHA: sha }, (_cmd, args) => {
+  verifySourceRuntimeCheckouts({ sourceDirectory: ".", runtimeDirectory: ".buildchain/runtime", runtimeSha: runtime, sourceSha: sha }, (_cmd, args) => {
     calls.push(args);
     return args[1] === "." ? sha : runtime;
   });
@@ -74,19 +72,19 @@ test("binary runtime and source checkout must both match admitted immutable iden
   );
   assert.throws(
     () =>
-      verifyCoordinates(
-        { RUNTIME_SHA: "v4-alpha", SOURCE_SHA: sha },
+      verifySourceRuntimeCheckouts(
+        { sourceDirectory: ".", runtimeDirectory: ".buildchain/runtime", runtimeSha: "v4-alpha", sourceSha: sha },
         () => runtime,
       ),
     /exact commit/,
   );
   assert.throws(
     () =>
-      verifyCoordinates(
-        { RUNTIME_SHA: runtime, SOURCE_SHA: sha },
+      verifySourceRuntimeCheckouts(
+        { sourceDirectory: ".", runtimeDirectory: ".buildchain/runtime", runtimeSha: runtime, sourceSha: sha },
         () => runtime,
       ),
-    /SOURCE_SHA does not match/,
+    /Source does not match/,
   );
 });
 test("binary checksums cover sorted files once and replace the prior manifest atomically", async (t) => {
@@ -132,21 +130,22 @@ test("binary publication retains protected environment and only immutable asset 
     actions: "read",
     contents: "write",
   });
-  const action = load("actions/release/binary-assets-publish/action.yml");
+  const action = load("actions/release/binary/publish/action.yml");
   assert.ok(
     action.runs.steps.find((s) =>
-      s.run?.includes("binary-publication-evidence.mjs publish"),
+      s.uses?.endsWith("/publication/binary/publish"),
     ),
   );
   assert.ok(
-    action.runs.steps.find((s) => s.run?.includes('binary-assets.mjs" verify')),
+    action.runs.steps.find((s) => s.uses?.endsWith("/source/verify-checkouts")),
   );
+  assert.ok(action.runs.steps.every(step => step.uses && !step.run && !step.shell));
   const source = JSON.stringify(action);
   assert.doesNotMatch(source, /--clobber|startsWith\(/);
   assert.ok(
     action.runs.steps.findIndex(
       (s) => s.name === "Verify source and runtime coordinates",
     ) <
-      action.runs.steps.findIndex((s) => s.uses?.endsWith("/runtime/prepare")),
+      action.runs.steps.findIndex((s) => s.uses?.endsWith("/runtime/environment/prepare")),
   );
 });

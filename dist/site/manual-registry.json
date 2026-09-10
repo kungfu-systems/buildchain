@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:c93b86b68fd11e3a14ec44adca196695ea03d59a5c61c88f2183feeaf4ae979d",
+      "digest": "sha256:b2ab8f50515e3259bf8217bb1686c839b8bed6ce1e8612b1b5e7cec870e31166",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -78,7 +78,7 @@
       "title": "GitHub-native Linux artifact attestation",
       "path": "docs/github-artifact-attestation.md",
       "plane": "verify",
-      "digest": "sha256:0d4d9fe7dc53f47ed5c39fe70919240d5f8b9232305a633d44d3cd1d7bb53e0b",
+      "digest": "sha256:1d3bff2f7e5d49a7c0d5e430ec24d62c84f643d2ea6f97f591f925f6f5acea3a",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -136,7 +136,7 @@
       "title": "Release Candidate Passport",
       "path": "docs/release-candidate.md",
       "plane": "verify",
-      "digest": "sha256:8b5b03881495bc87335b3192a8fc517bf9ae6298ef2eb934d5c6de6dd91b82fb",
+      "digest": "sha256:2a129a426b364e4ea93ed269b7c5aa725268526e2eaa799dae24a48086f11ea1",
       "capabilityGroup": "reusable-build",
       "audience": [
         "release-operator",
@@ -236,7 +236,7 @@
       "title": "Consumer issue reporting",
       "path": "docs/consumer-issue-reporting.md",
       "plane": "use",
-      "digest": "sha256:8ad5dafc1ab41b94527fa086bfffd0d31fe08778b4af5c99c2e580331e7706a7",
+      "digest": "sha256:fb492b70f4a8db14d670cdb1503416439c5a9554048e9eadbccd547769b704f3",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
         "consumer",
@@ -292,7 +292,7 @@
       "title": "Migration inventory",
       "path": "docs/migration-inventory.md",
       "plane": "verify",
-      "digest": "sha256:de32149e135c94d873807031a604ce46dff550fc96225bbeb9e5bfe66809ce52",
+      "digest": "sha256:3796f5b306c3402c24257542474a9767bf81d953526b50484798749ad869d041",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -306,7 +306,7 @@
       "title": "Ownership",
       "path": "docs/ownership.md",
       "plane": "why",
-      "digest": "sha256:12dbeb79c117d112a3f5495cb589ee4f6167899cdd4dae3d1af3d6f2ba8fd9d5",
+      "digest": "sha256:ec711580e467e807f6430a7d37ddbee1b3a6aa979bf93f5f26c85e702753c084",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer"
@@ -333,7 +333,7 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:9b0c1d4d4e0bd44b45a6e09cf7efec8449bcc0b127e6ca653b118cf7d5e92a8c",
+      "digest": "sha256:2b7f6d3c8df25cd37fe8028690fc2d9cdce80de873341ef815f800c4ace880db",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -362,7 +362,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:d70af61b545c35c9a4438706a499a629ce25c85320e0e45fd49e24b95c3e18bb",
+      "digest": "sha256:adfdaa78016bd1156fc8e08560879daf786af462f20334cb1a837ca50c62e759",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -419,7 +419,7 @@
       "title": "Lifecycle protocol",
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
-      "digest": "sha256:b45feb2b3998556aa06c455618a8220e4361f6d732c21e0d04a9d782d94a6ffb",
+      "digest": "sha256:630bc3b568abe02c35e4e3115c856d609ea3178b92fc071112188e1e47efc035",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -462,7 +462,7 @@
       "title": "Publish transaction",
       "path": "docs/publish-transaction.md",
       "plane": "verify",
-      "digest": "sha256:15b07753285dd0c1fca07815ccc8a45d58b098310f951d6d1ce6662607b0d90b",
+      "digest": "sha256:d2acad45ad98f66202c59d9b46732ccc41694d56a273115b6fc66aff519ad3dd",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator"
@@ -490,7 +490,7 @@
       "title": "Declarative release-tail provider plane",
       "path": "docs/release-tail-provider-plane.md",
       "plane": "use",
-      "digest": "sha256:c5d7e2c5606cc2b65b34b38d697ff0cefa18a5b4e9a68d89fb836c755a2c5569",
+      "digest": "sha256:1f6dba3988dec2a406cb93cb2e0259e07c5bc54c361bdfc73d67471a06a67814",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -505,7 +505,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:64b056923c0cad095ea6fcc8d63bd75bb59e471af723c9998b829081131fa6cd",
+      "digest": "sha256:f42b63f0632dfda36fb209c50458f9d21b4717b321f0ad6741db9c343fab986e",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",

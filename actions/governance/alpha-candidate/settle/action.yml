@@ -1,0 +1,87 @@
+name: alpha-candidate-patrol-settle
+description: Execute the alpha-candidate-patrol settle capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed candidate policy request.
+    required: true
+  observation-json:
+    description: Exact prior observation.
+    required: true
+  pull-request-body-prefix:
+    description: Source-owned PR body prefix.
+    required: true
+  token:
+    description: Protected settlement credential.
+    required: true
+outputs:
+  promotion-pr:
+    description: promotion-pr node result.
+    value: ${{ steps.settle.outputs.promotion-pr }}
+  controller-state:
+    description: controller-state node result.
+    value: ${{ steps.settle.outputs.controller-state }}
+  active-candidate-pr:
+    description: active-candidate-pr node result.
+    value: ${{ steps.settle.outputs.active-candidate-pr }}
+  next-candidate-sha:
+    description: next-candidate-sha node result.
+    value: ${{ steps.settle.outputs.next-candidate-sha }}
+  settlement-action:
+    description: settlement-action node result.
+    value: ${{ steps.settle.outputs.settlement-action }}
+  prior-state-root:
+    description: prior-state-root node result.
+    value: ${{ steps.settle.outputs.prior-state-root }}
+  train-root:
+    description: train-root node result.
+    value: ${{ steps.settle.outputs.train-root }}
+  cut-root:
+    description: cut-root node result.
+    value: ${{ steps.settle.outputs.cut-root }}
+  candidate-generation:
+    description: candidate-generation node result.
+    value: ${{ steps.settle.outputs.candidate-generation }}
+  candidate-tree-sha:
+    description: candidate-tree-sha node result.
+    value: ${{ steps.settle.outputs.candidate-tree-sha }}
+  runtime-sha:
+    description: runtime-sha node result.
+    value: ${{ steps.settle.outputs.runtime-sha }}
+  cut-created-at:
+    description: cut-created-at node result.
+    value: ${{ steps.settle.outputs.cut-created-at }}
+  drift-root:
+    description: drift-root node result.
+    value: ${{ steps.settle.outputs.drift-root }}
+  hold-root:
+    description: hold-root node result.
+    value: ${{ steps.settle.outputs.hold-root }}
+runs:
+  using: composite
+  steps:
+    - name: Checkout Buildchain runtime
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+        ref: ${{ fromJSON(inputs.observation-json).runtime-sha }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Reconcile and settle exact-source candidate
+      id: settle
+      uses: ./.buildchain/runtime/actions/governance/alpha-candidate/reconcile
+      with:
+        request-json: ${{ inputs.request-json }}
+        observation-json: ${{ inputs.observation-json }}
+        pull-request-body-prefix: ${{ inputs.pull-request-body-prefix }}
+        token: ${{ inputs.token }}
+        settlement-authorized: "true"
+    - name: Upload protected settlement decision
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-dev-alpha-candidate-settlement-${{ steps.settle.outputs.selected-sha }}
+        path: ${{ steps.settle.outputs.result-path }}
+        if-no-files-found: error
+        retention-days: 30

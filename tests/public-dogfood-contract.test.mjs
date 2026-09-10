@@ -13,11 +13,12 @@ import {
 const root = path.resolve(import.meta.dirname, "..");
 const protectedDogfoodRef = PUBLIC_DOGFOOD_ALPHA_REF;
 const fixturePaths = [
-  "actions/build/verify-check",
+  "actions/build/verification/repository",
   "architecture/workflow-taxonomy.json",
-  ...["consumer-admission", "qualify", "reconcile"].map(
-    (phase) => `actions/build/stage-capsule-canary-${phase}`,
-  ),
+  "actions/build/stage-capsule",
+  "packages/core/build/stage-capsule/actions.js",
+  "packages/core/build/stage-capsule/canary.js",
+  "packages/core/build/verification/source.js",
   ".buildchain/buildchain.toml",
   ".gitattributes",
   ".github/workflows",
@@ -118,11 +119,9 @@ test("the gate rejects legacy profiles and removal from protected Verify", () =>
     /retains private marker/u,
   );
 
-  const unprotected = mutate("actions/build/verify-check/action.yml", (text) =>
-    text.replace(
-      "node .buildchain/runtime/bin/buildchain.mjs lifecycle run verify",
-      "run: true",
-    ),
+  const unprotected = mutate(
+    "packages/core/build/verification/source.js",
+    (text) => text.replaceAll("qualifySourceLifecycle", "unqualifiedLifecycle"),
   );
   assert.throws(
     () => checkPublicDogfoodContract(unprotected),
@@ -171,18 +170,22 @@ test("the gate rejects private composite qualification and consumer-Node executi
   fs.mkdirSync(directory, { recursive: true });
   fs.writeFileSync(
     path.join(directory, "action.yml"),
-    "runs:\n  using: composite\n  steps:\n    - uses: ./.buildchain/workflow-shell/actions/build/stage-capsule-canary-qualify\n",
+    "runs:\n  using: composite\n  steps:\n    - uses: ./.buildchain/workflow-shell/actions/build/stage-capsule/qualify\n",
   );
   assert.throws(
     () => checkPublicDogfoodContract(targetRoot),
     /outside the public Canary nodes/,
   );
   const unbound = mutate(
-    "actions/build/stage-capsule-canary-qualify/action.yml",
-    (text) => text.replaceAll('"$BUILDCHAIN_NODE" ', "node "),
+    "packages/core/build/stage-capsule/canary.js",
+    (text) =>
+      text.replaceAll(
+        "BUILDCHAIN_NODE: process.execPath",
+        "BUILDCHAIN_NODE: process.env.CONSUMER_NODE",
+      ),
   );
   assert.throws(
     () => checkPublicDogfoodContract(unbound),
-    /bound runtime and consumer source/,
+    /Canary lifecycle lost bound execution/,
   );
 });

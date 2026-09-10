@@ -1,96 +1,26 @@
-import * as core from "@actions/core";
-import fs from "node:fs";
 import path from "node:path";
-import {
-  createGitHubArtifactAttestationEvidence,
-  prepareGitHubArtifactAttestation,
-} from "../github-artifact-attestation.js";
-
-function input(name, required = false) {
-  return core.getInput(name, { required }).trim();
+import { installationRoot } from "../../runtime/installation-root.js";
+import { verifyCheckoutIdentity } from "../../runtime/checkout-identity.js";
+import { validateAttestationInput } from "./admission.js";
+import { prepareAttestation, sealAttestation } from "./transaction.js";
+export function admitAttestationAction(core, env) {
+ const input = JSON.parse(core.getInput("request-json", { required: true }));
+ validateAttestationInput({ runtimeSha: input["buildchain-ref"], definitionSha: core.getInput("definition-sha", { required: true }), evidenceRunId: input["evidence-run-id"], currentRunId: env.GITHUB_RUN_ID,
+  sourceSha: input["source-sha"], currentSourceSha: env.GITHUB_SHA, subjectRelativePath: input["subject-relative-path"], platformManifestRelativePath: input["platform-manifest-relative-path"], releasePassportRelativePath: input["release-passport-relative-path"] });
 }
-
-function parseJson(value, label) {
-  try {
-    return JSON.parse(value);
-  } catch (error) {
-    throw new Error(`${label} must be valid JSON: ${error.message}`);
-  }
+const input = (core, name) => core.getInput(name, { required: true });
+function runtime(core) { verifyCheckoutIdentity({ directory: installationRoot(import.meta.url), sha: input(core, "runtime-sha"), label: "Attester runtime" }); }
+export function prepareAttestationAction(core, env) {
+ runtime(core);
+ const outputs = prepareAttestation({ subjectPath: input(core, "subject-path"), platformManifestPath: input(core, "platform-manifest-path"), releasePassportPath: input(core, "release-passport-path"),
+  policy: JSON.parse(input(core, "policy-json")), expectedBuildchainRef: input(core, "runtime-sha"), expectedCallerRepository: env.GITHUB_REPOSITORY, expectedSourceSha: env.GITHUB_SHA,
+  outputDir: path.join(env.GITHUB_WORKSPACE, ".buildchain/github-artifact-attestation") });
+ for (const [key, value] of Object.entries(outputs)) core.setOutput(key, value);
 }
-
-function writeJson(filePath, value) {
-  fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
-}
-
-function workflowEvidence() {
-  const repository = process.env.GITHUB_REPOSITORY || "";
-  const runId = process.env.GITHUB_RUN_ID || "";
-  return {
-    repository,
-    runId,
-    runAttempt: process.env.GITHUB_RUN_ATTEMPT || "",
-    job: process.env.GITHUB_JOB || "",
-    url: `${process.env.GITHUB_SERVER_URL || "https://github.com"}/${repository}/actions/runs/${runId}`,
-  };
-}
-
-async function main() {
-  const mode = input("mode", true);
-  const outputDir = path.resolve(
-    input("output-dir") || ".buildchain/github-artifact-attestation",
-  );
-  if (mode === "prepare") {
-    const preparation = prepareGitHubArtifactAttestation({
-      subjectPath: input("subject-path", true),
-      platformManifestPath: input("platform-manifest-path", true),
-      releasePassportPath: input("release-passport-path", true),
-      policy: parseJson(input("policy-json", true), "policy-json"),
-      expectedBuildchainRef: input("expected-buildchain-ref", true),
-      expectedCallerRepository: input("expected-caller-repository", true),
-      expectedSourceSha: input("expected-source-sha", true),
-    });
-    const predicatePath = path.join(outputDir, "predicate.json");
-    const preparationPath = path.join(outputDir, "preparation.json");
-    writeJson(predicatePath, preparation.predicate);
-    writeJson(preparationPath, preparation);
-    core.setOutput("subject-name", preparation.policy.subject.name);
-    core.setOutput("subject-path", preparation.subjectPath);
-    core.setOutput("subject-digest", preparation.policy.subject.digest);
-    core.setOutput("predicate-type", preparation.predicateType);
-    core.setOutput("predicate-path", predicatePath);
-    core.setOutput("preparation-path", preparationPath);
-    core.setOutput("preparation-json", JSON.stringify(preparation));
-    return;
-  }
-  if (mode === "finalize") {
-    const stagedBundlePath = path.join(outputDir, "sigstore-bundle.json");
-    fs.mkdirSync(outputDir, { recursive: true });
-    fs.copyFileSync(input("bundle-path", true), stagedBundlePath);
-    const evidence = createGitHubArtifactAttestationEvidence({
-      preparation: parseJson(
-        input("preparation-json", true),
-        "preparation-json",
-      ),
-      attestationId: input("attestation-id", true),
-      attestationUrl: input("attestation-url", true),
-      bundlePath: stagedBundlePath,
-      workflow: workflowEvidence(),
-    });
-    const evidencePath = path.join(
-      outputDir,
-      "github-artifact-attestation-evidence.json",
-    );
-    writeJson(evidencePath, evidence);
-    core.setOutput("evidence-path", evidencePath);
-    core.setOutput("evidence-root", evidence.evidenceRoot);
-    core.setOutput("bundle-digest", evidence.attestation.bundle.digest);
-    core.setOutput("bundle-path", stagedBundlePath);
-    return;
-  }
-  throw new Error("mode must be prepare or finalize");
-}
-
-export async function runAction() {
-  return main().catch((error) => core.setFailed(error.message));
+export function sealAttestationAction(core, env) {
+ runtime(core);
+ const outputs = sealAttestation({ runtimeSha: input(core, "runtime-sha"), sourceSha: env.GITHUB_SHA, outputDir: path.join(env.GITHUB_WORKSPACE, ".buildchain/github-artifact-attestation"), preparation: JSON.parse(input(core, "preparation-json")),
+  bundlePath: input(core, "bundle-path"), attestationId: input(core, "attestation-id"), attestationUrl: input(core, "attestation-url"), token: input(core, "token"), environment: env,
+  workflow: { repository: env.GITHUB_REPOSITORY, runId: env.GITHUB_RUN_ID, runAttempt: env.GITHUB_RUN_ATTEMPT, job: env.GITHUB_JOB, url: `${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}` } });
+ for (const [key, value] of Object.entries(outputs)) core.setOutput(key, value);
 }

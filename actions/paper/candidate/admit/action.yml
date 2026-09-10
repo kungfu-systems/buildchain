@@ -1,0 +1,105 @@
+name: admit-candidate
+description: Paper admit candidate.
+inputs:
+  request-json:
+    description: request-json
+    required: true
+  candidate-plan-json:
+    description: candidate-plan-json
+    required: true
+  capability-json:
+    description: capability-json
+    required: true
+  app-client-id:
+    description: app-client-id
+    required: true
+  app-private-key:
+    description: app-private-key
+    required: true
+  write-token:
+    description: write-token
+    required: true
+  source-checkout-outcome:
+    description: source-checkout-outcome
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Admit source checkout
+      id: source-boundary
+      if: ${{ always() }}
+      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      with:
+        source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
+    - name: Checkout exact admitted Buildchain runtime
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+        ref: ${{ fromJSON(inputs.candidate-plan-json).runtime-sha }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - name: Prepare exact admitted Buildchain runtime
+      id: core-node
+      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Acquire narrow generated-write authority
+      id: credential
+      uses: ./.buildchain/workflow-shell/actions/providers/github/token
+      with:
+        client-id: ${{ inputs.app-client-id }}
+        private-key: ${{ inputs.app-private-key }}
+        fallback-token: ${{ inputs.write-token }}
+        failure-policy: strict
+        require-token: "true"
+        permission-checks: write
+        permission-contents: write
+        permission-pull-requests: write
+    - name: Download admitted candidate
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name: ${{ fromJSON(inputs.candidate-plan-json).publication-artifact-name }}
+        path: .buildchain/admitted/artifact
+    - name: Download candidate controller
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name: ${{ fromJSON(inputs.candidate-plan-json).controller-receipt-artifact }}
+        path: .buildchain/admitted/controller
+    - name: Verify candidate and initialize publication controller
+      id: candidate
+      uses: ./.buildchain/runtime/actions/paper/candidate/verify
+      with:
+        request-json: ${{ inputs.request-json }}
+        candidate-plan-json: ${{ inputs.candidate-plan-json }}
+        capability-json: ${{ inputs.capability-json }}
+    - name: Retain publication plan
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ steps.candidate.outputs.controller-plan-artifact }}
+        path: .buildchain/paper-controller/plan.json
+        if-no-files-found: error
+outputs:
+  candidate-json:
+    description: candidate-json
+    value: ${{ steps.candidate.outputs.candidate-json }}
+  package-name:
+    description: package-name
+    value: ${{ steps.candidate.outputs.package-name }}
+  package-version:
+    description: package-version
+    value: ${{ steps.candidate.outputs.package-version }}
+  controller-plan-json:
+    description: controller-plan-json
+    value: ${{ steps.candidate.outputs.controller-plan-json }}
+  controller-plan-digest:
+    description: controller-plan-digest
+    value: ${{ steps.candidate.outputs.controller-plan-digest }}
+  controller-plan-artifact:
+    description: controller-plan-artifact
+    value: ${{ steps.candidate.outputs.controller-plan-artifact }}
+  token:
+    description: token
+    value: ${{ steps.credential.outputs.token }}
+  plan-outcome:
+    description: Candidate admission and controller plan outcome.
+    value: ${{ steps.candidate.outcome }}

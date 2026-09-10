@@ -85,14 +85,14 @@ test("stable recovery uses the published stable version of an exact alpha candid
     "4.0.2",
   );
   const engine = fs.readFileSync(
-    new URL("../packages/core/workflow/commands/universal-workflow-engine.mjs", import.meta.url),
+    new URL("../packages/core/workflow/engine/release-promotion.js", import.meta.url),
     "utf8",
   );
   assert.match(
     engine,
-    /observeProductPublicationRecovery\(repository, route\.requestedSha, version, route\.channel\)/u,
+    /observeProductPublicationRecovery\(\s*repository,\s*route\.requestedSha,\s*version,\s*route\.channel,/u,
   );
-  assert.match(engine, /candidateVersion: version, channel: route\.channel/u);
+  assert.match(engine, /candidateVersion: version,\s*channel: route\.channel/u);
 });
 
 test("stable recovery retains patch, source and exact-tag rejection boundaries", () => {

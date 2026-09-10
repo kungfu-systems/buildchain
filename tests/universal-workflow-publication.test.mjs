@@ -8,14 +8,14 @@ import { sha, policy, request, reviewEvidence, consumerObservation } from "./uni
 test("real universal promotion materializes one rooted product intent before APPLY", () => {
   const engine = fs.readFileSync(
     new URL(
-      "../packages/core/workflow/commands/universal-workflow-engine.mjs",
+      "../packages/core/workflow/engine/release-promotion.js",
       import.meta.url,
     ),
     "utf8",
   );
-  const intent = engine.indexOf("await materializeProductPublicationIntent({");
+  const intent = engine.indexOf("await materializeProductPublicationIntent(");
   const apply = engine.indexOf(
-    '".buildchain/candidate/actions/release/promote-candidate/dist/index.js"',
+    "await promoteReleaseCandidate(publicationRequest",
   );
   assert.ok(intent >= 0 && apply > intent);
   assert.match(
@@ -26,14 +26,8 @@ test("real universal promotion materializes one rooted product intent before APP
     engine,
     /"resume-transaction-id": payload\.inputs\["resume-transaction-id"\]/u,
   );
-  assert.match(
-    engine,
-    /BUILDCHAIN_SOURCE_TIMESTAMP: sourceTimestamp[\s\S]*BUILDCHAIN_SEALED_BUNDLE_MANIFEST:[\s\S]*BUILDCHAIN_REQUIRED_ARTIFACTS_PATH:/u,
-  );
-  assert.match(
-    engine,
-    /BUILDCHAIN_CANDIDATE_VERSION:\s*candidate\.publicationVersion \|\| candidate\.version[\s\S]*BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: recoveredVersion[\s\S]*productPublicationIntent = JSON\.parse\(fs\.readFileSync\(productPublicationIntentPath\)\)[\s\S]*version: productPublicationIntent\.version,\s*tag: productPublicationIntent\.exactTag/u,
-  );
+  assert.match(engine, /sourceTimestamp,[\s\S]*manifestPath: candidate.paths.sealedBundleManifest,[\s\S]*requiredArtifactsPath: candidate.paths.publishRequiredArtifacts/u);
+  assert.match(engine, /candidateVersion: version,[\s\S]*recoveredVersion,[\s\S]*fs.readFileSync\(productPublicationIntentPath\),[\s\S]*version: productPublicationIntent.version,\s*tag: productPublicationIntent.exactTag/u);
   const version = "4.0.2-alpha.11",
     candidateVersion = "4.0.2-alpha.10",
     sourceSha = sha("4"),
@@ -258,13 +252,13 @@ test("Bootstrap preserves caller permissions and retains evidence in its termina
   const topology = parseYaml(workflow);
   assert.ok(
     topology.jobs.settle.steps.some((step) =>
-      step.uses?.endsWith("/actions/workflow/bootstrap-settle"),
+      step.uses?.endsWith("/actions/workflow/bootstrap/settle"),
     ),
   );
   const terminal = parseYaml(
     fs.readFileSync(
       new URL(
-        "../actions/workflow/bootstrap-settle/action.yml",
+        "../actions/workflow/bootstrap/settle/action.yml",
         import.meta.url,
       ),
       "utf8",

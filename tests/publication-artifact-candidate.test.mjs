@@ -13,7 +13,7 @@ import {
   createPublicationArtifactCandidate,
   resolvePublicationCandidateFile,
 } from "../packages/core/publication/publication-artifact-candidate.js";
-import { buildPublicationArtifactCandidate } from "../packages/core/publication/commands/publication-artifact-candidate.mjs";
+import { buildPublicationArtifactCandidate } from "../packages/core/publication/candidate/artifact.js";
 import {
   createPublicationAdmission,
   createPublicationAuthorityRegistry,

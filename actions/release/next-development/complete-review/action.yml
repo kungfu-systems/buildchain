@@ -1,0 +1,22 @@
+name: Approve and enqueue verified next-development transition
+description: Require exact protected source, publication and independent review evidence before advancing development.
+inputs:
+  token:
+    description: token
+    required: true
+  approval-token:
+    description: approval-token
+    required: true
+  mutation-token:
+    description: mutation-token
+    required: true
+outputs:
+  review-path:
+    description: review-path
+  head-sha:
+    description: head-sha
+  review-id:
+    description: review-id
+runs:
+  using: node24
+  main: dist/index.js

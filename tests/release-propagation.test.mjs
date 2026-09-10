@@ -1005,14 +1005,16 @@ test("release propagation reusable workflow exposes authorized Work phases", () 
   assert.deepEqual(workflow.jobs.propagate.steps.slice(1).map(step => step.id), ["propagation-plan", "propagation-materialize", "propagation-deliver"]);
   assert.ok(workflow.jobs.propagate.steps.every(step => step.uses && !step.run));
   assert.equal(workflow.jobs.propagate.concurrency["cancel-in-progress"], false);
-  const readNode = name => YAML.parse(fs.readFileSync(path.join(root, "actions", "release", name, "action.yml"), "utf8"));
-  const plan = readNode("propagation-plan"), materialize = readNode("propagation-materialize"), deliver = readNode("propagation-deliver");
-  assert.ok(plan.runs.steps.some(step => step.uses === "./.buildchain/workflow-shell/actions/runtime/prepare"));
-  assert.equal(plan.runs.steps.find(step => step.id === "propagation-work").if, undefined);
-  assert.ok(materialize.runs.steps.every(step => step.if.includes("propagation-work-outputs-execute")));
+  const readNode = name => YAML.parse(fs.readFileSync(path.join(root, "actions", "release", "propagation", name, "action.yml"), "utf8"));
+  const plan = readNode("plan"), materialize = readNode("materialize"), deliver = readNode("deliver");
+  assert.ok(plan.runs.steps.some(step => step.uses === "./.buildchain/workflow-shell/actions/runtime/environment/prepare"));
+  assert.equal(plan.runs.steps.find(step => step.id === "capture").if, undefined);
+  assert.equal(materialize.runs.using, "node24");
+  assert.equal(workflow.jobs.propagate.steps[2].uses, "./.buildchain/runtime/actions/release/propagation/materialize");
   assert.equal(workflow.jobs.propagate.steps.at(-1).if, "${{ always() }}");
-  assert.equal(deliver.runs.steps[0].run.trim(), "exit 1");
-  assert.match(deliver.runs.steps.find(step => step.id === "controller-receipt").if, /always/);
+  assert.ok(deliver.runs.steps[0].uses.endsWith("/workflow/admission/reject"));
+  assert.match(deliver.runs.steps.find(step => step.id === "report").if, /always/);
+  assert.ok([...plan.runs.steps, ...deliver.runs.steps].every(step => step.uses && !step.run));
 });
 
 test("package release propagation config is strict and source-package bound", () => {

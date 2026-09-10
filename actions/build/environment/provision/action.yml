@@ -1,0 +1,17 @@
+name: Prepare exact consumer source and governed runner tools
+description: Prepare exact consumer source and governed runner tools.
+inputs:
+  plan:
+    required: true
+    description: Rooted build plan
+  platform:
+    description: Declared build platform
+  tools:
+    description: Prepare declared native tools and runner evidence
+    default: "false"
+  token:
+    description: Scoped source checkout credential
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

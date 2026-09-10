@@ -4,9 +4,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import YAML from "yaml";
-import { run as intent } from "../packages/core/release/nodes/promotion-intent.mjs";
-import { run as recover } from "../packages/core/release/nodes/promotion-recovery.mjs";
-import { verify } from "../packages/core/runtime/nodes/provider-closure.mjs";
+import { qualifyPromotionSource } from "../packages/core/release/promotion/source-intent.js";
+import { recoverProductPublicationVersion } from "../packages/core/release/promotion/product-state.js";
+import { productPublicationReader } from "../packages/core/providers/github/product-publication.js";
+import {
+  verify,
+  activateProviderClosure,
+} from "../packages/core/runtime/provider-closure.js";
 const root = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const sha = "a".repeat(40),
   next = "b".repeat(40),
@@ -16,6 +20,34 @@ const context = {
   sha,
   ref: "refs/heads/alpha/v4/v4.1",
 };
+async function intent({ context, github, core, env }) {
+  const result = await qualifyPromotionSource(
+    {
+      requestedSha: context.sha,
+      targetRef: context.ref.replace(/^refs\/heads\//, ""),
+      requestedChannel: env.INPUT_CHANNEL,
+    },
+    productPublicationReader(
+      github,
+      `${context.repo.owner}/${context.repo.repo}`,
+    ),
+  );
+  for (const [key, value] of Object.entries(result)) core.setOutput(key, value);
+}
+async function recover({ context, github, core, env }) {
+  const version = await recoverProductPublicationVersion(
+    {
+      requestedSha: env.BUILDCHAIN_REQUESTED_SHA,
+      candidateVersion: env.BUILDCHAIN_CANDIDATE_VERSION,
+      explicitResume: env.BUILDCHAIN_EXPLICIT_RESUME === "true",
+    },
+    productPublicationReader(
+      github,
+      `${context.repo.owner}/${context.repo.repo}`,
+    ),
+  );
+  core.setOutput("version", version);
+}
 const read = (file) =>
   YAML.parse(fs.readFileSync(path.join(root, file), "utf8"));
 function routeFixture({
@@ -150,18 +182,44 @@ test("provider closure rejects mutable identities and tree drift before exposing
       verify(env, (_command, args) => (args.at(-1) === "HEAD" ? sha : next)),
     /does not match/,
   );
-  const action = read("actions/runtime/provider-closure/action.yml");
-  const verification = action.runs.steps.findIndex(
-    (step) => step.name === "Verify the privileged executable closure",
+  const action = read("actions/runtime/closure/prepare-provider/action.yml");
+  assert.ok(
+    action.runs.steps
+      .at(-1)
+      .uses.endsWith("/actions/runtime/closure/activate-provider"),
   );
-  const install = action.runs.steps.findIndex((step) =>
-    step.run?.includes("pnpm@11.7.0 install"),
-  );
-  assert.ok(verification >= 0 && verification < install);
-  assert.match(
-    action.runs.steps[install].run,
-    /--frozen-lockfile --ignore-scripts/,
-  );
+  for (const failure of ["verify", "install", null]) {
+    const calls = [];
+    const ports = Object.fromEntries(
+      ["verify", "install", "expose"].map((name) => [
+        name,
+        (value) => {
+          calls.push(name);
+          if (name === failure) throw new Error(name);
+          if (name === "install")
+            assert.deepEqual(value, {
+              directory: ".buildchain/runtime",
+              production: false,
+              ignoreScripts: true,
+            });
+        },
+      ]),
+    );
+    if (failure)
+      assert.throws(
+        () => activateProviderClosure({ sha, tree }, ports),
+        new RegExp(failure),
+      );
+    else activateProviderClosure({ sha, tree }, ports);
+    assert.deepEqual(
+      calls,
+      failure === "verify"
+        ? ["verify"]
+        : failure === "install"
+          ? ["verify", "install"]
+          : ["verify", "install", "expose"],
+    );
+  }
 });
 test("promotion jobs retain authority separation, runtime selector precedence, and always-run evidence tails", () => {
   const workflow = read(".github/workflows/.release-promote.yml");
@@ -173,25 +231,31 @@ test("promotion jobs retain authority separation, runtime selector precedence, a
     actions: "read",
     contents: "read",
   });
-  assert.match(workflow.jobs.apply.if, /!fromJSON\(inputs.request-json\).dry-run/);
-  const apply = read("actions/release/promote-apply/action.yml");
-  const interrupted = apply.runs.steps.find(
-    (s) => s.id === "interrupted-provider",
+  assert.match(
+    workflow.jobs.apply.if,
+    /!fromJSON\(inputs.request-json\).dry-run/,
   );
-  assert.equal(interrupted["continue-on-error"], true);
+  const apply = read("actions/release/promotion/apply/action.yml");
+  const interrupted = apply.runs.steps.find((s) => s.id === "provider");
+  assert.match(
+    interrupted["continue-on-error"],
+    /provider-failure-after-capability/,
+  );
   assert.match(
     apply.runs.steps.find((s) => s.id === "resume").if,
-    /steps.interrupted-provider.outcome == 'failure'/,
+    /steps.provider.outcome == 'failure'/,
   );
   assert.match(apply.runs.steps.at(-1).if, /always\(\)/);
   assert.match(
     apply.runs.steps.find((s) => s.id === "publication-settlement").if,
     /always\(\)/,
   );
-  const qualify = read("actions/release/promote-qualify/action.yml");
+  const qualify = read("actions/release/promotion/qualify/action.yml");
   const prepare = qualify.runs.steps.findIndex((s) =>
-    s.uses?.endsWith("/actions/runtime/prepare"),
+    s.uses?.endsWith("/actions/runtime/environment/prepare"),
   );
-  assert.ok(prepare < qualify.runs.steps.findIndex((s) => s.id === "intent"));
+  assert.ok(
+    prepare < qualify.runs.steps.findIndex((s) => s.id === "qualification"),
+  );
   assert.equal(qualify.runs.steps[prepare].if, undefined);
 });

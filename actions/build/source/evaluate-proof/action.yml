@@ -1,0 +1,27 @@
+name: Evaluate exact merge-group source proof
+description: Evaluate exact merge-group source proof
+inputs:
+  request-json:
+    description: Typed public source qualification request.
+    required: true
+  runtime-ref:
+    description: runtime-ref admitted qualification coordinates.
+    required: true
+  identities-json:
+    description: identities-json admitted qualification coordinates.
+    required: true
+  candidate-json:
+    description: candidate-json admitted qualification coordinates.
+    required: true
+outputs:
+  reuse:
+    description: reuse qualification evidence.
+  reason:
+    description: reason qualification evidence.
+  proof-root:
+    description: proof-root qualification evidence.
+  decision-root:
+    description: decision-root qualification evidence.
+runs:
+  using: node24
+  main: dist/index.js

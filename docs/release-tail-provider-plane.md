@@ -30,7 +30,7 @@ The frozen boundary and migration inventory remain in
 - Node: `@kungfu-tech/buildchain/release-tail-provider-plane`,
   `release-tail-provider-adapters`, and `release-tail-compatibility`.
 - CLI: `buildchain release-tail plan|init|status|verify|compat`.
-- Action: `kungfu-systems/buildchain/actions/release/settle@<exact-ref>`.
+- Action: `kungfu-systems/buildchain/actions/release/tail/settle@<exact-ref>`.
 - reusable workflow: `kungfu-systems/buildchain/.github/workflows/public-release-tail.yml@<exact-ref>`.
 
 The Action is the provider-executing entry point. The CLI compiles, initializes,

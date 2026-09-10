@@ -1,0 +1,12 @@
+name: Release propagation materialize
+description: Materialize and verify one authorized downstream release update transaction.
+inputs:
+  request-json:
+    description: Typed public propagation request.
+    required: true
+  node-path:
+    description: Prepared Node executable for consumer lifecycle commands.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

@@ -6,18 +6,19 @@ import path from "node:path";
 import YAML from "yaml";
 import {
   demoContainerArguments,
-  demoFinalizationArguments,
   runDemoContainer,
-} from "../packages/core/build/nodes/demo-adapter.mjs";
-import { resolveSourceArtifact } from "../packages/core/build/nodes/demo-artifact-coordinate.mjs";
+} from "../packages/core/build/demo/container.js";
+import { qualifyDemoAdapter, renderQualifiedDemo } from "../packages/core/build/demo/adapter-transactions.js";
+import { resolveArtifactCoordinate } from "../packages/core/build/artifact-coordinate.js";
 const env = {
-  GITHUB_WORKSPACE: "/tmp/demo fixture",
-  RENDERER_IMAGE: `ghcr.io/demo/renderer@sha256:${"a".repeat(64)}`,
-  SOURCE_SHA: "b".repeat(40),
-  MEDIA_PROFILE: "archive-v1",
-  GATE_ROOT: `sha256:${"c".repeat(64)}`,
-  ADAPTER_PATH: "scripts/demo $(touch injected)",
-  GITHUB_OUTPUT: "/tmp/output",
+  workspace: "/tmp/demo fixture",
+  runtimeRoot: "/tmp/demo fixture/.buildchain/runtime",
+  rendererImage: `ghcr.io/demo/renderer@sha256:${"a".repeat(64)}`,
+  sourceSha: "b".repeat(40),
+  mediaProfile: "archive-v1",
+  gateRoot: `sha256:${"c".repeat(64)}`,
+  adapterPath: "scripts/demo $(touch injected)",
+  githubOutput: "/tmp/output",
 };
 test("all demo containers retain immutable image, isolated filesystem and disabled network", () => {
   for (const operation of [
@@ -30,11 +31,11 @@ test("all demo containers retain immutable image, isolated filesystem and disabl
     assert.equal(args[args.indexOf("--network") + 1], "none");
     assert.ok(args.includes("--read-only"));
     assert.match(args[args.indexOf("--tmpfs") + 1], /noexec,nosuid/);
-    assert.ok(args.includes(env.RENDERER_IMAGE));
+    assert.ok(args.includes(env.rendererImage));
     assert.throws(
       () =>
         demoContainerArguments(
-          { ...env, RENDERER_IMAGE: "renderer:latest" },
+          { ...env, rendererImage: "renderer:latest" },
           operation,
         ),
       /immutable/,
@@ -52,14 +53,22 @@ test("all demo containers retain immutable image, isolated filesystem and disabl
     false,
   );
 });
-test("demo finalization preserves evidence coordinates and literal adapter arguments", () => {
-  const gate = demoFinalizationArguments(env, "finalize-gate", () => true);
-  assert.equal(gate[gate.indexOf("--adapter") + 1], env.ADAPTER_PATH);
-  assert.equal(gate[gate.indexOf("--source-sha") + 1], env.SOURCE_SHA);
-  assert.ok(gate.includes("--media-inspection"));
-  const media = demoFinalizationArguments(env, "finalize-media", () => false);
-  assert.equal(media[media.indexOf("--gate-root") + 1], env.GATE_ROOT);
-  assert.equal(media.includes("--media-inspection"), false);
+test("adapter qualification completes its bounded transaction before sealing exact coordinates", () => {
+ const calls = []; let received;
+ const result = qualifyDemoAdapter(env, {
+  runAdapter: request => { calls.push("adapter"); assert.equal(request.adapter, env.adapterPath); },
+  prepareSmoke: () => calls.push("prepare"), runContainer: (_request, operation) => calls.push(operation),
+  finalizeGate: request => { received = request; calls.push("seal"); return { root: env.gateRoot }; },
+ });
+ assert.deepEqual(calls, ["adapter", "prepare", "smoke", "seal"]);
+ assert.equal(received.sourceSha, env.sourceSha); assert.equal(result.root, env.gateRoot);
+});
+test("Gate rejection prevents rendering and inspection effects", t => {
+ const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "demo-render-reject-"));
+ t.after(() => fs.rmSync(workspace, { recursive: true, force: true }));
+ let rendered = false;
+ assert.throws(() => renderQualifiedDemo({ ...env, workspace }, { verifyGate: () => { throw new Error("Gate root drift"); }, runContainer: () => { rendered = true; } }), /Gate root drift/u);
+ assert.equal(rendered, false);
 });
 test("container provider failure retains original exit status", (t) => {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "demo-provider-"));
@@ -68,7 +77,7 @@ test("container provider failure retains original exit status", (t) => {
   assert.throws(
     () =>
       runDemoContainer(
-        { ...env, GITHUB_WORKSPACE: cwd },
+        { ...env, workspace: cwd },
         "smoke",
         (program, args) => {
           calls.push({ program, args });
@@ -97,7 +106,7 @@ test("artifact resolution rejects ambiguous, missing and digest-mismatched coord
       [{ name: "source" }, { name: "source" }],
     ]) {
       await assert.rejects(
-        resolveSourceArtifact({
+        resolveArtifactCoordinate({name: "source", digest: `sha256:${"d".repeat(64)}`, sourceSha: "a".repeat(40), runAttempt: "1"}, {
           github: {
             paginate: async () => artifacts,
             rest: { actions: { listWorkflowRunArtifacts() {} } },
@@ -125,11 +134,11 @@ test("demo public component retains gate-before-render and diagnostic failure co
   assert.equal(workflow.jobs.render.needs, "gate");
   for (const phase of ["gate", "render"]) {
     const action = YAML.parse(
-      fs.readFileSync(`actions/build/demo-adapter-${phase}/action.yml`, "utf8"),
+      fs.readFileSync(`actions/build/demo/adapter-${phase}/action.yml`, "utf8"),
     );
     assert.equal(
       workflow.jobs[phase].steps.at(-1).uses,
-      `./.buildchain/workflow-shell/actions/build/demo-adapter-${phase}`,
+      `./.buildchain/workflow-shell/actions/build/demo/adapter-${phase}`,
     );
     assert.match(action.runs.steps.at(-1).if, /always/);
   }

@@ -1,0 +1,20 @@
+name: exercise-platform adopter qualification
+description: Admit exact consumer policy or qualify public delivery and platform
+  evidence through named domain APIs.
+inputs:
+  request-json:
+    description: request-json admitted adopter input.
+    required: true
+  workflow-sha:
+    description: workflow-sha admitted adopter input.
+    required: true
+  consumer-sha:
+    description: consumer-sha admitted adopter input.
+    required: true
+  platform:
+    description: platform admitted adopter input.
+    required: true
+outputs: {}
+runs:
+  using: node24
+  main: dist/index.js

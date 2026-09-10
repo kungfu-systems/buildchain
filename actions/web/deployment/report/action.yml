@@ -1,0 +1,31 @@
+name: Report Web deployment evidence
+description: Summarize observed channel effects and write the staging or
+  production release passport even after failure.
+inputs:
+  request-json:
+    description: Typed public Web request.
+    required: true
+  channel:
+    description: Admitted deployment channel.
+    required: true
+  runtime-sha:
+    description: Exact runtime revision.
+    required: false
+  rollback-pointer:
+    description: Runtime rollback selector.
+    required: false
+  release-pr:
+    description: Verified production release pull request.
+    required: false
+  release-source:
+    description: Verified production release source.
+    required: false
+  job-status:
+    description: Actual caller job status after deployment and artifact upload.
+    required: true
+  token:
+    description: Scoped release feedback credential.
+    required: false
+runs:
+  using: node24
+  main: dist/index.js

@@ -1,5 +1,5 @@
 import os from "node:os";
-import { runLifecycle } from "../commands/run-lifecycle-core.mjs";
+import { runLifecycle } from "../lifecycle/transaction.js";
 import {
   printJson,
   readBooleanFlag,

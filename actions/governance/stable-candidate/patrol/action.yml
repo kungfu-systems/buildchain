@@ -1,0 +1,72 @@
+name: stable-candidate-patrol
+description: Execute the stable-candidate-patrol patrol capability within its caller job boundary.
+inputs:
+  runtime-ref:
+    description: Exact runtime ref; defaults to this workflow SHA.
+    required: true
+  runtime-repository:
+    description: Runtime repository.
+    required: true
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  secrets-promotion-token:
+    description: Explicit scoped provider credential.
+    required: true
+  secrets-approval-token:
+    description: Explicit scoped provider credential.
+    required: true
+  policy-json:
+    description: Repository stable release policy variables.
+    required: true
+outputs:
+  result-path:
+    description: result-path node result.
+    value: ${{ steps.patrol.outputs.result-path }}
+  selected:
+    description: selected node result.
+    value: ${{ steps.patrol.outputs.selected }}
+  selected-version:
+    description: selected-version node result.
+    value: ${{ steps.patrol.outputs.selected-version }}
+  selected-sha:
+    description: selected-sha node result.
+    value: ${{ steps.patrol.outputs.selected-sha }}
+  stable-version:
+    description: stable-version node result.
+    value: ${{ steps.patrol.outputs.stable-version }}
+  promotion-pr:
+    description: promotion-pr node result.
+    value: ${{ steps.patrol.outputs.promotion-pr }}
+runs:
+  using: composite
+  steps:
+    - name: Checkout Buildchain runtime
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ inputs.runtime-repository }}
+        ref: ${{ inputs.runtime-ref }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - name: Checkout caller policy source
+      uses: actions/checkout@v7.0.0
+      with:
+        path: .buildchain/source
+        persist-credentials: false
+    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Reconcile stable candidate lifecycle
+      id: patrol
+      uses: ./.buildchain/runtime/actions/governance/stable-candidate/reconcile
+      with:
+        request-json: ${{ inputs.request-json }}
+        policy-json: ${{ inputs.policy-json }}
+        token: ${{ inputs.secrets-promotion-token || github.token }}
+        approval-token: ${{ inputs.secrets-approval-token || github.token }}
+    - name: Upload stable candidate patrol result
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-stable-candidate-patrol-${{ steps.patrol.outputs.artifact-line }}
+        path: ${{ steps.patrol.outputs.result-path }}
+        if-no-files-found: error

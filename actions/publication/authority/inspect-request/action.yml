@@ -1,0 +1,9 @@
+name: inspect-request
+description: Admit exact publication authority and bind independently verified evidence.
+runs:
+  using: node24
+  main: dist/index.js
+inputs:
+  request-json:
+    description: Explicit request-json.
+    required: true

@@ -1,11 +1,9 @@
+import { requireCurrentIndependentApproval } from "../packages/core/release/next-development/approval.js";
 import assert from "node:assert/strict";
 import test from "node:test";
-import {
-  assertReviewRun,
-  assertReviewPull,
-  verifyNextDevelopmentReview,
-  approveNextDevelopment,
-} from "../packages/core/release/commands/next-development-review.mjs";
+import { assertReviewRun, assertReviewPull } from "../packages/core/release/next-development/review-policy.js";
+import { verifyNextDevelopmentReview } from "../packages/core/release/next-development/verification.js";
+import { approveNextDevelopment } from "../packages/core/release/next-development/approval.js";
 
 const repository = "kungfu-systems/buildchain";
 const headSha = "a".repeat(40),
@@ -250,4 +248,11 @@ test("stable next patch requires completed stable evidence and exact protected-b
   assert.equal(regenerated, true);
   f.options.publication = async () => ({ release: { channel: "alpha" }, documents: { passport: { release: { version: "4.0.2" }, source: { treeHash: "tree" } } } });
   await assert.rejects(verifyNextDevelopmentReview(f.options), /stable publication evidence/u);
+});
+
+test("a later independent change request or dismissed review fences queue admission", () => {
+  const plan = { headSha, reviewId: 91 }, approval = { id: 91, user: { login: "kungfu-origin" }, commit_id: headSha, state: "APPROVED" };
+  requireCurrentIndependentApproval([approval], plan);
+  for (const state of ["CHANGES_REQUESTED", "DISMISSED"]) assert.throws(() => requireCurrentIndependentApproval([approval, { ...approval, id: 92, state }], plan), /no longer qualifies/);
+  assert.throws(() => requireCurrentIndependentApproval([{ ...approval, commit_id: baseSha }], plan), /no longer qualifies/);
 });

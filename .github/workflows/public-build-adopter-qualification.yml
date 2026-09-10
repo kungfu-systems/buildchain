@@ -71,7 +71,7 @@ jobs:
           persist-credentials: false
       - name: Validate exact adopter selection and floating consumer policy.
         id: node
-        uses: ./.buildchain/workflow-shell/actions/adoption/admit-adopter
+        uses: ./.buildchain/workflow-shell/actions/adoption/adopter/admit
         with:
           request-json: ${{ toJSON(inputs) }}
           workflow-sha: ${{ job.workflow_sha }}
@@ -99,7 +99,7 @@ jobs:
           persist-credentials: false
       - name: Execute current failure, retry, exact readback and independent driver verification.
         id: node
-        uses: ./.buildchain/workflow-shell/actions/adoption/qualify-adopter
+        uses: ./.buildchain/workflow-shell/actions/adoption/adopter/qualify
         with:
           request-json: ${{ toJSON(inputs) }}
           workflow-sha: ${{ job.workflow_sha }}
@@ -119,7 +119,7 @@ jobs:
           persist-credentials: false
       - name: Require exactly one consistent report for every declared platform.
         id: node
-        uses: ./.buildchain/workflow-shell/actions/adoption/reconcile-adopters
+        uses: ./.buildchain/workflow-shell/actions/adoption/adopter/reconcile
         with:
           request-json: ${{ toJSON(inputs) }}
           workflow-sha: ${{ job.workflow_sha }}

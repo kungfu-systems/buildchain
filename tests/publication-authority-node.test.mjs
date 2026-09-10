@@ -8,26 +8,24 @@ import {
   requireImmutableAuthority,
   requireSealedInputs,
   requireManagedInputs,
-} from "../packages/core/publication/nodes/authority-admission.mjs";
-import {
-  controlPlaneArguments,
-  resolveControllerEvidence,
-  recordAuthorityDryRun,
-  exportAuthorityResult,
-} from "../packages/core/publication/nodes/authority-io.mjs";
-import { payloadFor } from "../packages/core/publication/nodes/authority-evidence.mjs";
+} from "../packages/core/publication/authority/admission.js";
+import { publicationControlPlaneRequest } from "../packages/core/publication/authority/control-plane.js";
+import { referencedControllerArtifact } from "../packages/core/publication/authority/evidence.js";
+import { qualifyPublicationAuthority } from "../packages/core/publication/authority/result.js";
+import { payloadFor as readPayload } from "../packages/core/publication/authority/evidence.js";
 import {
   validateCapabilityBinding,
   verifySealedAdmission,
-} from "../packages/core/publication/nodes/authority-verification.mjs";
+} from "../packages/core/publication/authority/verification.js";
 
+const payloadFor = manifest => readPayload(manifest, path.join(process.cwd(), ".buildchain/publication-evidence/payloads"));
 const sha = "a".repeat(40);
-function workspace(fn) {
+async function workspace(fn) {
   const old = process.cwd(),
     root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-authority-node-"));
   process.chdir(root);
   try {
-    return fn(root);
+    return await fn(root);
   } finally {
     process.chdir(old);
     fs.rmSync(root, { recursive: true, force: true });
@@ -35,99 +33,81 @@ function workspace(fn) {
 }
 function managed(extra = {}) {
   return {
-    GITHUB_REPOSITORY: "acme/project",
-    BUILDCHAIN_REPOSITORY: "kungfu-systems/buildchain",
-    BUILDCHAIN_SOURCE_SHA: sha,
-    BUILDCHAIN_TARGET_REF: "alpha/v4/v4.1",
-    BUILDCHAIN_PUBLICATION_VERSION: "4.1.0-alpha.0",
-    BUILDCHAIN_AUTO_ADMISSION_KIND: "release-candidate",
-    BUILDCHAIN_EVIDENCE_REPOSITORY: "acme/project",
-    BUILDCHAIN_PUBLISHER_WORKFLOW_PATH:
+    callerRepository: "acme/project",
+    buildchainRepository: "kungfu-systems/buildchain",
+    sourceSha: sha,
+    targetRef: "alpha/v4/v4.1",
+    publicationVersion: "4.1.0-alpha.0",
+    autoAdmissionKind: "release-candidate",
+    evidenceRepository: "acme/project",
+    publisherWorkflowPath:
       ".github/workflows/public-release-promote.yml",
-    BUILDCHAIN_PUBLICATION_TARGET: "npm:@acme/project",
-    BUILDCHAIN_PACKAGE_NAME: "@acme/project",
-    BUILDCHAIN_AUTO_NO_GATE: "true",
+    publicationTarget: "npm:@acme/project",
+    packageName: "@acme/project",
+    autoNoGate: true,
     ...extra,
   };
 }
 test("authority admission rejects mutable runtimes, incomplete evidence, obsolete channels and conflicting gate sources", () => {
-  requireImmutableAuthority({ BUILDCHAIN_AUTHORITY_REF: sha });
+  requireImmutableAuthority({ buildchainRef: sha });
   for (const ref of ["v4-alpha", "a".repeat(64), ""])
     assert.throws(
-      () => requireImmutableAuthority({ BUILDCHAIN_AUTHORITY_REF: ref }),
+      () => requireImmutableAuthority({ buildchainRef: ref }),
       /exact/,
     );
   assert.throws(() => requireSealedInputs({}), /before artifact download/);
   requireManagedInputs(managed());
   requireManagedInputs(
-    managed({ BUILDCHAIN_TARGET_REF: "publish-gate/major" }),
+    managed({ targetRef: "publish-gate/major" }),
   );
   for (const extra of [
-    { BUILDCHAIN_TARGET_REF: "major-gate" },
-    { BUILDCHAIN_EVIDENCE_REPOSITORY: "attacker/project" },
-    { BUILDCHAIN_GATE_AGGREGATE_JSON: "{}" },
-    { BUILDCHAIN_CONSUMER_QUALIFICATION_REQUIRED: "true" },
-    { BUILDCHAIN_CONSUMER_GATE_CONTROLLER_SHA: sha },
+    { targetRef: "major-gate" },
+    { evidenceRepository: "attacker/project" },
+    { gateAggregateJson: "{}" },
+    { consumerQualificationRequired: true },
+    { consumerGateControllerSha: sha },
   ])
     assert.throws(() => requireManagedInputs(managed(extra)));
 });
 test("binary and artifact authority use distinct exact publisher and gate contracts", () => {
   const binary = managed({
-    BUILDCHAIN_AUTO_ADMISSION_KIND: "binary-release-assets",
-    BUILDCHAIN_EVIDENCE_REPOSITORY: "kungfu-systems/buildchain",
-    BUILDCHAIN_PUBLISHER_WORKFLOW_PATH:
+    autoAdmissionKind: "binary-release-assets",
+    evidenceRepository: "kungfu-systems/buildchain",
+    publisherWorkflowPath:
       ".github/workflows/.release-binary-assets.yml",
   });
   requireManagedInputs(binary);
   assert.throws(
     () =>
-      requireManagedInputs({ ...binary, BUILDCHAIN_GATE_AGGREGATE_JSON: "{}" }),
+      requireManagedInputs({ ...binary, gateAggregateJson: "{}" }),
     /exactly one/,
   );
   assert.throws(
     () =>
       requireManagedInputs({
         ...binary,
-        BUILDCHAIN_PUBLISHER_WORKFLOW_PATH: ".github/workflows/other.yml",
+        publisherWorkflowPath: ".github/workflows/other.yml",
       }),
     /sealed binary/,
   );
   requireManagedInputs(
-    managed({ BUILDCHAIN_AUTO_ADMISSION_KIND: "publication-artifact" }),
+    managed({ autoAdmissionKind: "publication-artifact" }),
   );
 });
-test("publication audits pass input values as literal argv and preserve provider-specific boundaries", () => {
-  const input = {
-    "evidence-repository": "acme/repo",
-    "buildchain-repository": "kungfu-systems/buildchain",
-    "target-ref": "alpha/v4/v4.1",
-    "source-sha": sha,
-    "buildchain-ref": sha,
-    "publisher-workflow-path": ".github/workflows/publish.yml",
-    "required-status-check": "check",
-    "publication-version": "4.1.0-alpha.0",
-    "package-name": "$(touch /tmp/never)",
-    "publication-target": "npm:pkg",
-  };
-  const npm = controlPlaneArguments(input, "candidate");
-  assert.equal(npm[npm.indexOf("--package") + 1], input["package-name"]);
-  assert.equal(
-    npm[npm.indexOf("--publisher-mode") + 1],
-    "npm-trusted-publisher",
-  );
-  const binary = controlPlaneArguments(input, "binary");
-  assert.equal(
-    binary[binary.indexOf("--environment") + 1],
-    "buildchain-release-assets",
-  );
-  assert.ok(binary.includes("--allow-release-reconciliation"));
-  assert.ok(!binary.includes("--package"));
-  const github = controlPlaneArguments(
-    { ...input, "publication-target": "github-release:acme/repo" },
-    "candidate",
-  );
-  assert.equal(github[github.indexOf("--publisher-mode") + 1], "github-token");
-  assert.throws(() => controlPlaneArguments(input, "unknown"), /Unknown/);
+test("publication audits preserve literal inputs and provider-specific boundaries", () => {
+ const input = { evidenceRepository: "acme/repo", buildchainRepository: "kungfu-systems/buildchain", targetRef: "alpha/v4/v4.1", sourceSha: sha, buildchainRef: sha,
+  publisherWorkflowPath: ".github/workflows/publish.yml", requiredStatusCheck: "check", publicationVersion: "4.1.0-alpha.0", packageName: "$(touch /tmp/never)", publicationTarget: "npm:pkg" };
+ const npm = publicationControlPlaneRequest({ ...input, autoAdmissionKind: "release-candidate" });
+ assert.equal(npm.packageName, input.packageName);
+ assert.equal(npm.publisherMode, "npm-trusted-publisher");
+ const binary = publicationControlPlaneRequest({ ...input, autoAdmissionKind: "binary-release-assets" });
+ assert.equal(binary.environment, "buildchain-release-assets");
+ assert.equal(binary.allowReleaseReconciliation, true);
+ assert.equal(binary.environmentRef, "v4.1.0-alpha.0");
+ assert.equal(binary.environmentRefType, "tag");
+ const github = publicationControlPlaneRequest({ ...input, autoAdmissionKind: "release-candidate", publicationTarget: "github-release:acme/repo" });
+ assert.equal(github.publisherMode, "github-token");
+ assert.throws(() => publicationControlPlaneRequest({ ...input, autoAdmissionKind: "unknown" }), /Unknown/);
 });
 test("controller artifact selection rejects ambiguity and workflow output injection", () =>
   workspace((root) => {
@@ -141,24 +121,20 @@ test("controller artifact selection rejects ambiguity and workflow output inject
         controllerReceipts: [{ artifact: "exact-controller" }],
       }),
     );
-    resolveControllerEvidence(env);
-    assert.equal(
-      fs.readFileSync(env.GITHUB_OUTPUT, "utf8"),
-      "controller-artifact=exact-controller\n",
-    );
+    assert.equal(referencedControllerArtifact(path.dirname(dir)), "exact-controller");
     fs.writeFileSync(
       file,
       JSON.stringify({
         controllerReceipts: [{ artifact: "controller\nforged=value" }],
       }),
     );
-    assert.throws(() => resolveControllerEvidence(env), /line breaks/);
+    assert.throws(() => referencedControllerArtifact(path.dirname(dir)), /invalid/);
     fs.mkdirSync(path.join(dir, "duplicate"));
     fs.copyFileSync(
       file,
       path.join(dir, "duplicate", "release-candidate-passport.json"),
     );
-    assert.throws(() => resolveControllerEvidence(env), /exactly one/);
+    assert.throws(() => referencedControllerArtifact(path.dirname(dir)), /exactly one/);
   }));
 test("candidate payload evidence rejects unsafe artifact names, traversal and escaping symlinks", () =>
   workspace((root) => {
@@ -192,13 +168,13 @@ test("candidate payload evidence rejects unsafe artifact names, traversal and es
   }));
 test("capability binding requires explicit qualification and exact runtime/version/predicate", () => {
   const env = {
-    BUILDCHAIN_AUTO_ADMISSION_KIND: "release-candidate",
-    BUILDCHAIN_PLANNED_PUBLICATION_VERSION: "4.1.0-alpha.0",
-    BUILDCHAIN_CONSUMER_QUALIFICATION_REQUIRED: "false",
+    autoAdmissionKind: "release-candidate",
+    publicationVersion: "4.1.0-alpha.0",
+    consumerQualificationRequired: false,
   };
   const value = {
     runtimeSha: sha,
-    version: env.BUILDCHAIN_PLANNED_PUBLICATION_VERSION,
+    version: env.publicationVersion,
     qualification: { required: false },
   };
   validateCapabilityBinding(value, env, sha);
@@ -232,8 +208,8 @@ test("capability binding requires explicit qualification and exact runtime/versi
         },
         {
           ...env,
-          BUILDCHAIN_CONSUMER_QUALIFICATION_REQUIRED: "true",
-          BUILDCHAIN_CONSUMER_PREDICATE_ID: "expected",
+          consumerQualificationRequired: true,
+          consumerPredicateId: "expected",
         },
         sha,
       ),
@@ -243,35 +219,22 @@ test("capability binding requires explicit qualification and exact runtime/versi
 test("wrong authority checkout is rejected before GitHub evidence requests", async () => {
   let requests = 0;
   await assert.rejects(
-    verifySealedAdmission(
-      {
-        BUILDCHAIN_PUBLICATION_ADMISSION_JSON: JSON.stringify({
-          repository: "acme/project",
-          sourceSha: sha,
-        }),
-        BUILDCHAIN_AUTHORITY_REF: sha,
-      },
-      {
-        execute: () => "b".repeat(40),
-        request: async () => {
-          requests++;
-          throw Error("unexpected request");
-        },
-      },
-    ),
+    verifySealedAdmission({ request: { buildchainRef: sha }, runtimeRoot: "fixture", admission: { repository: "acme/project", sourceSha: sha } }, {
+      verifyCheckout: () => { throw new Error("runtime checkout mismatch"); },
+      tree: async () => { requests++; throw new Error("unexpected request"); },
+    }),
     /runtime checkout mismatch/,
   );
   assert.equal(requests, 0);
 });
-test("dry-run receipt has no publishing capability and workflow retains permissions and explicit phase edges", () =>
-  workspace((root) => {
-    recordAuthorityDryRun();
-    const env = { GITHUB_OUTPUT: path.join(root, "output") };
-    exportAuthorityResult(env);
-    const text = fs.readFileSync(env.GITHUB_OUTPUT, "utf8");
-    assert.match(text, /"decision":"dry-run"/);
-    assert.match(text, /capability-digest=\n/);
-  }));
+test("dry-run has no publication authority and never invokes verification", () =>
+ workspace(async root => {
+  const outputs = await qualifyPublicationAuthority({ request: { dryRun: true }, workspace: root }, () => { throw new Error("dry-run attempted authority verification"); });
+  assert.equal(JSON.parse(outputs["capability-json"]).decision, "dry-run");
+  assert.equal(outputs["capability-digest"], "");
+  assert.equal(outputs["gate-aggregate-json"], "");
+  assert.equal(JSON.parse(fs.readFileSync(path.join(root, ".buildchain/publication-authority/capability.json"), "utf8")).decision, "dry-run");
+ }));
 test("publication authority exposes five phase nodes with original least-privilege job boundary", () => {
   const w = YAML.parse(
     fs.readFileSync(".github/workflows/.release-authority.yml", "utf8"),
@@ -285,11 +248,11 @@ test("publication authority exposes five phase nodes with original least-privile
   });
   assert.ok(w.jobs.verify.steps.every((s) => s.uses && !s.run));
   const admit = YAML.parse(
-    fs.readFileSync("actions/publication/authority-admit/action.yml", "utf8"),
+    fs.readFileSync("actions/publication/authority/admit/action.yml", "utf8"),
   );
   assert.ok(
     admit.runs.steps.findIndex(
-      (s) => s.name === "Require an immutable authority runtime",
+      (s) => s.uses?.endsWith("/authority/inspect-request"),
     ) <
       admit.runs.steps.findIndex(
         (s) => s.name === "Checkout exact Buildchain authority runtime",
@@ -297,11 +260,14 @@ test("publication authority exposes five phase nodes with original least-privile
   );
   const candidate = YAML.parse(
     fs.readFileSync(
-      "actions/publication/authority-candidate-evidence/action.yml",
+      "actions/publication/authority/candidate-evidence/action.yml",
       "utf8",
     ),
   );
   const gate = candidate.runs.steps.find((s) => s.id === "consumer-gate");
-  assert.match(gate.run, /\$GITHUB_WORKSPACE\/\.buildchain\/authority-runtime/);
-  assert.match(gate.env.BUILDCHAIN_NODE_PATH, /inputs.node-path/);
+  assert.equal(gate.uses, "./.buildchain/authority-runtime/actions/publication/authority/qualify-consumer-gate");
+  for (const name of ["admit", "candidate-evidence", "artifact-evidence", "verify"]) {
+   const action = YAML.parse(fs.readFileSync(`actions/publication/authority/${name}/action.yml`, "utf8"));
+   assert.ok(action.runs.steps.every(step => step.uses && !step.run && !step.shell));
+  }
 });

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { verifyComposeQualification } from "../packages/core/publication/oci-compose-qualification.js";
-import { promoteComposePreview } from "../packages/core/publication/commands/oci-compose-preview.mjs";
+import { promoteComposePreview } from "../packages/core/publication/oci/preview-promotion.js";
 const sha = "a".repeat(40),
   digest = "sha256:" + "b".repeat(64),
   old = "sha256:" + "c".repeat(64);

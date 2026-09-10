@@ -2,7 +2,6 @@ name: Buildchain OCI Compose Preview
 
 on:
   workflow_call:
-
     inputs:
     secrets:
       BUILDCHAIN_PROMOTION_TOKEN:
@@ -33,7 +32,7 @@ jobs:
           persist-credentials: false
       - name: Execute oci-compose-preview-promote
         id: node
-        uses: ./.buildchain/workflow-shell/actions/publication/oci-compose-preview-promote
+        uses: ./.buildchain/workflow-shell/actions/publication/oci/promote-preview
         with:
-          job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
-          secrets-buildchain-promotion-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          workflow-sha: ${{ job.workflow_sha }}
+          promotion-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}

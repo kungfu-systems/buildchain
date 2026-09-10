@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 44059,
-    "current": 35998
+    "measuredExcess": 39588,
+    "current": 31527
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -268,62 +268,6 @@
           }
         }
       },
-      "packages/core/build/commands/auditable-demo.mjs": {
-        "baseline": {
-          "lines": 1324
-        },
-        "current": {
-          "lines": 1324
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "packages/core/build/commands/build-contract-core.mjs": {
-        "baseline": {
-          "lines": 1229
-        },
-        "current": {
-          "lines": 1208
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "packages/core/build/commands/finalize-native-artifact-signing-result.mjs": {
-        "baseline": {
-          "functions": {
-            "finalizeNativeArtifactSigningResult@58": {
-              "lines": 201
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "finalizeNativeArtifactSigningResult@58": {
-              "lines": 201
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "finalizeNativeArtifactSigningResult@58": {
-              "lines": 180
-            }
-          }
-        }
-      },
-      "packages/core/build/commands/run-lifecycle-core.mjs": {
-        "baseline": {
-          "lines": 885
-        },
-        "current": {
-          "lines": 848
-        },
-        "target": {
-          "lines": 600
-        }
-      },
       "packages/core/build/github-artifact-attestation.js": {
         "baseline": {
           "lines": 642
@@ -443,32 +387,6 @@
           }
         }
       },
-      "packages/core/dev-delivery/commands/dev-delivery-two-phase.mjs": {
-        "baseline": {
-          "functions": {
-            "runTwoPhaseDelivery@211": {
-              "lines": 200,
-              "complexity": 35
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "runTwoPhaseDelivery@211": {
-              "lines": 200,
-              "complexity": 35
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "runTwoPhaseDelivery@211": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
-        }
-      },
       "packages/core/dev-delivery/commands/dev-delivery-warrant-options.mjs": {
         "baseline": {
           "functions": {
@@ -488,53 +406,6 @@
           "functions": {
             "devDeliveryCliOptions@56": {
               "lines": 180
-            }
-          }
-        }
-      },
-      "packages/core/dev-delivery/commands/dev-pr-auto-merge.mjs": {
-        "baseline": {
-          "lines": 1222,
-          "functions": {
-            "evaluatePullRequest@204": {
-              "complexity": 31
-            },
-            "runDevPrAdmission@767": {
-              "complexity": 32
-            },
-            "runDevPrAutoMerge@909": {
-              "lines": 186,
-              "complexity": 53
-            }
-          }
-        },
-        "current": {
-          "lines": 1222,
-          "functions": {
-            "evaluatePullRequest@204": {
-              "complexity": 31
-            },
-            "runDevPrAdmission@767": {
-              "complexity": 32
-            },
-            "runDevPrAutoMerge@909": {
-              "lines": 186,
-              "complexity": 53
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "evaluatePullRequest@204": {
-              "complexity": 25
-            },
-            "runDevPrAdmission@767": {
-              "complexity": 25
-            },
-            "runDevPrAutoMerge@909": {
-              "lines": 180,
-              "complexity": 25
             }
           }
         }
@@ -582,58 +453,6 @@
         "target": {
           "functions": {
             "createProviderFinalizerBoundary@305": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/governance/commands/audit-github-governance.mjs": {
-        "baseline": {
-          "functions": {
-            "collectGithubGovernanceAudit@286": {
-              "lines": 181,
-              "complexity": 35
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "collectGithubGovernanceAudit@286": {
-              "lines": 181,
-              "complexity": 35
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "collectGithubGovernanceAudit@286": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/governance/commands/audit-publication-control-plane.mjs": {
-        "baseline": {
-          "functions": {
-            "main@199": {
-              "lines": 322,
-              "complexity": 92
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "main@199": {
-              "lines": 322,
-              "complexity": 92
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "main@199": {
               "lines": 180,
               "complexity": 25
             }
@@ -903,32 +722,6 @@
           }
         }
       },
-      "packages/core/providers/commands/locked-source-checkout.mjs": {
-        "baseline": {
-          "functions": {
-            "lockedSourceCheckout@386": {
-              "lines": 194,
-              "complexity": 31
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "lockedSourceCheckout@386": {
-              "lines": 194,
-              "complexity": 31
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "lockedSourceCheckout@386": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
-        }
-      },
       "packages/core/publication/publication-artifact.js": {
         "baseline": {
           "lines": 641
@@ -989,148 +782,6 @@
           "lines": 600
         }
       },
-      "packages/core/release/commands/dev-alpha-candidate-patrol.mjs": {
-        "baseline": {
-          "lines": 1197,
-          "functions": {
-            "normalizeDevAlphaPatrolOptions@240": {
-              "complexity": 33
-            },
-            "runDevAlphaCandidatePatrol@582": {
-              "lines": 333,
-              "complexity": 53
-            },
-            "createGitHubChannelCandidateClient@920": {
-              "lines": 208
-            }
-          }
-        },
-        "current": {
-          "lines": 1197,
-          "functions": {
-            "normalizeDevAlphaPatrolOptions@240": {
-              "complexity": 33
-            },
-            "runDevAlphaCandidatePatrol@582": {
-              "lines": 333,
-              "complexity": 53
-            },
-            "createGitHubChannelCandidateClient@920": {
-              "lines": 208
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "normalizeDevAlphaPatrolOptions@240": {
-              "complexity": 25
-            },
-            "runDevAlphaCandidatePatrol@582": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "createGitHubChannelCandidateClient@920": {
-              "lines": 180
-            }
-          }
-        }
-      },
-      "packages/core/release/commands/release-candidate-resolver.mjs": {
-        "baseline": {
-          "lines": 854,
-          "functions": {
-            "resolveReleaseCandidateArtifacts@475": {
-              "lines": 309,
-              "complexity": 62
-            },
-            "resolveReleaseCandidateArtifactsCli@773": {
-              "complexity": 29
-            }
-          }
-        },
-        "current": {
-          "lines": 842,
-          "functions": {
-            "resolveReleaseCandidateArtifacts@475": {
-              "lines": 297,
-              "complexity": 60
-            },
-            "resolveReleaseCandidateArtifactsCli@773": {
-              "complexity": 29
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "resolveReleaseCandidateArtifacts@475": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "resolveReleaseCandidateArtifactsCli@773": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/release/commands/release-line-policy.mjs": {
-        "baseline": {
-          "functions": {
-            "getBumpKeyword@126": {
-              "complexity": 35
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "getBumpKeyword@126": {
-              "complexity": 31
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "getBumpKeyword@126": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/release/commands/resume-from-candidate-run.mjs": {
-        "baseline": {
-          "lines": 1125
-        },
-        "current": {
-          "lines": 1117
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "packages/core/release/commands/stable-candidate-patrol.mjs": {
-        "baseline": {
-          "functions": {
-            "runStableCandidatePatrol@141": {
-              "complexity": 31
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "runStableCandidatePatrol@141": {
-              "complexity": 31
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "runStableCandidatePatrol@141": {
-              "complexity": 25
-            }
-          }
-        }
-      },
       "packages/core/release/commands/stable-release-gate.mjs": {
         "baseline": {
           "functions": {
@@ -1187,7 +838,7 @@
         "current": {
           "functions": {
             "createDurableTransactionOperations@80": {
-              "lines": 376
+              "lines": 378
             }
           }
         },
@@ -1269,7 +920,7 @@
             "createVersionStateOperations@131": {
               "lines": 415
             },
-            "createVersionStateCommit@243": {
+            "createVersionStateCommit@244": {
               "lines": 286,
               "complexity": 27
             }
@@ -1278,9 +929,9 @@
         "current": {
           "functions": {
             "createVersionStateOperations@131": {
-              "lines": 412
+              "lines": 413
             },
-            "createVersionStateCommit@243": {
+            "createVersionStateCommit@244": {
               "lines": 285,
               "complexity": 26
             }
@@ -1291,7 +942,7 @@
             "createVersionStateOperations@131": {
               "lines": 180
             },
-            "createVersionStateCommit@243": {
+            "createVersionStateCommit@244": {
               "lines": 180,
               "complexity": 25
             }
@@ -1452,39 +1103,10 @@
           }
         }
       },
-      "packages/core/web/commands/web-surface-production-release-pr.mjs": {
-        "baseline": {
-          "lines": 712,
-          "functions": {
-            "webSurfaceProductionReleasePrCli@558": {
-              "complexity": 38
-            }
-          }
-        },
-        "current": {
-          "lines": 712,
-          "functions": {
-            "webSurfaceProductionReleasePrCli@558": {
-              "complexity": 38
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "webSurfaceProductionReleasePrCli@558": {
-              "complexity": 25
-            }
-          }
-        }
-      },
       "packages/core/web/commands/web-surface.mjs": {
         "baseline": {
           "functions": {
-            "compactWebSurfaceApplyResult@188": {
-              "complexity": 27
-            },
-            "webSurfaceCli@229": {
+            "webSurfaceCli@63": {
               "lines": 223,
               "complexity": 58
             }
@@ -1492,10 +1114,7 @@
         },
         "current": {
           "functions": {
-            "compactWebSurfaceApplyResult@188": {
-              "complexity": 27
-            },
-            "webSurfaceCli@229": {
+            "webSurfaceCli@63": {
               "lines": 223,
               "complexity": 58
             }
@@ -1503,10 +1122,7 @@
         },
         "target": {
           "functions": {
-            "compactWebSurfaceApplyResult@188": {
-              "complexity": 25
-            },
-            "webSurfaceCli@229": {
+            "webSurfaceCli@63": {
               "lines": 180,
               "complexity": 25
             }
@@ -1539,23 +1155,12 @@
           }
         }
       },
-      "packages/core/workflow/commands/universal-workflow-engine.mjs": {
-        "baseline": {
-          "lines": 620
-        },
-        "current": {
-          "lines": 606
-        },
-        "target": {
-          "lines": 600
-        }
-      },
       "scripts/check-inventory.mjs": {
         "baseline": {
           "lines": 1515
         },
         "current": {
-          "lines": 1332
+          "lines": 1331
         },
         "target": {
           "lines": 600
@@ -1899,7 +1504,7 @@
           "lines": 714
         },
         "current": {
-          "lines": 607
+          "lines": 609
         },
         "target": {
           "lines": 600
@@ -1910,7 +1515,7 @@
           "lines": 1389
         },
         "current": {
-          "lines": 1389
+          "lines": 1375
         },
         "target": {
           "lines": 600
@@ -1946,15 +1551,15 @@
         "baseline": {
           "lines": 3181,
           "functions": {
-            "<anonymous@1415>@1415": {
+            "<anonymous@1404>@1404": {
               "lines": 206
             }
           }
         },
         "current": {
-          "lines": 2568,
+          "lines": 2563,
           "functions": {
-            "<anonymous@1415>@1415": {
+            "<anonymous@1404>@1404": {
               "lines": 206
             }
           }
@@ -1962,7 +1567,7 @@
         "target": {
           "lines": 600,
           "functions": {
-            "<anonymous@1415>@1415": {
+            "<anonymous@1404>@1404": {
               "lines": 180
             }
           }
@@ -1972,21 +1577,15 @@
         "baseline": {
           "lines": 4639,
           "functions": {
-            "<anonymous@279>@279": {
-              "lines": 183
-            },
-            "<anonymous@1512>@1512": {
+            "<anonymous@1511>@1511": {
               "lines": 188
             }
           }
         },
         "current": {
-          "lines": 1766,
+          "lines": 1765,
           "functions": {
-            "<anonymous@279>@279": {
-              "lines": 183
-            },
-            "<anonymous@1512>@1512": {
+            "<anonymous@1511>@1511": {
               "lines": 188
             }
           }
@@ -1994,10 +1593,7 @@
         "target": {
           "lines": 600,
           "functions": {
-            "<anonymous@279>@279": {
-              "lines": 180
-            },
-            "<anonymous@1512>@1512": {
+            "<anonymous@1511>@1511": {
               "lines": 180
             }
           }
@@ -2051,10 +1647,10 @@
           }
         },
         "current": {
-          "lines": 1010,
+          "lines": 1008,
           "functions": {
             "<anonymous@426>@426": {
-              "lines": 585,
+              "lines": 583,
               "complexity": 40
             }
           }
@@ -2074,7 +1670,7 @@
           "lines": 1422
         },
         "current": {
-          "lines": 1384
+          "lines": 1382
         },
         "target": {
           "lines": 600
@@ -2126,17 +1722,6 @@
           "lines": 600
         }
       },
-      "tests/dev-delivery-warrant-command.test.mjs": {
-        "baseline": {
-          "lines": 626
-        },
-        "current": {
-          "lines": 602
-        },
-        "target": {
-          "lines": 600
-        }
-      },
       "tests/dev-delivery-warrant.test.mjs": {
         "baseline": {
           "lines": 841
@@ -2153,7 +1738,7 @@
           "lines": 1415
         },
         "current": {
-          "lines": 1412
+          "lines": 1414
         },
         "target": {
           "lines": 600
@@ -2164,7 +1749,7 @@
           "lines": 714
         },
         "current": {
-          "lines": 679
+          "lines": 675
         },
         "target": {
           "lines": 600
@@ -2228,7 +1813,7 @@
           }
         },
         "current": {
-          "lines": 719,
+          "lines": 712,
           "functions": {
             "<anonymous@233>@233": {
               "lines": 229
@@ -2485,7 +2070,7 @@
           "lines": 1217
         },
         "current": {
-          "lines": 1045
+          "lines": 1039
         },
         "target": {
           "lines": 600
@@ -2496,7 +2081,7 @@
           "lines": 1327
         },
         "current": {
-          "lines": 1327
+          "lines": 1318
         },
         "target": {
           "lines": 600
@@ -2518,7 +2103,7 @@
           "lines": 1355
         },
         "current": {
-          "lines": 1086
+          "lines": 1088
         },
         "target": {
           "lines": 600
@@ -2529,7 +2114,7 @@
           "lines": 2231
         },
         "current": {
-          "lines": 2231
+          "lines": 2228
         },
         "target": {
           "lines": 600
@@ -2543,7 +2128,7 @@
           "jobs": 14
         },
         "current": {
-          "lines": 792,
+          "lines": 787,
           "jobs": 14
         },
         "target": {
@@ -2561,19 +2146,19 @@
     "scripts/check-inventory.mjs",
     ".github/workflows/.build.yml",
     "tests/dev-delivery-minimal-request.test.mjs",
-    "scripts/generate-channel-promotion-workflow.mjs",
     "tests/build-configuration.test.mjs",
-    ".github/workflows/build.yml",
     "tests/release-candidate-recovery.test.mjs",
+    ".github/workflows/build.yml",
     ".github/workflows/self-build-fixture.yml",
-    "scripts/check-maintainability.mjs",
+    "scripts/generate-channel-promotion-workflow.mjs",
     "tests/github-governance-authority.test.mjs",
     "tests/maintainability.test.mjs",
     "tests/oci-publication.test.mjs",
-    "tests/release-tail-provider-plane.test.mjs",
     ".github/workflows/.release-promote.yml",
     ".github/workflows/public-build-adopter-qualification.yml",
-    ".github/workflows/public-build-stage-capsule-canary.yml"
+    ".github/workflows/public-build-stage-capsule-canary.yml",
+    ".github/workflows/public-release-promote.yml",
+    ".github/workflows/self-build-verify.yml"
   ],
   "burnDownSlices": [
     {
@@ -2581,7 +2166,7 @@
       "path": "tests/build-surface.test.mjs",
       "metric": "lines",
       "baseline": 4639,
-      "current": 1766
+      "current": 1765
     }
   ]
 }

@@ -3,7 +3,6 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import ts from "typescript";
 import YAML from "yaml";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -14,34 +13,34 @@ const json = (value) => JSON.stringify(value, null, 2) + "\n";
 const digest = (value) => `sha256:${crypto.createHash("sha256").update(value).digest("hex")}`;
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 const files = new Map();
-const pending = ["packages/core/workflow/nodes/bootstrap-recovery.mjs"];
+// Traverse action composition, shipping committed JS bundles for trusted shell
+// actions. Candidate-owned actions remain supplied by the reviewed checkout.
+const pending = ["actions/workflow/recovery/admit", "actions/workflow/recovery/execute", "actions/workflow/recovery/settle"];
+const visited = new Set();
 while (pending.length) {
-  const file = pending.pop();
-  if (files.has(file)) continue;
-  const text = read(file);
-  files.set(file, text);
-  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
-  const visit = (node) => {
-    if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier) {
-      const specifier = node.moduleSpecifier.text;
-      if (specifier.startsWith("node:")) return;
-      assert.ok(specifier.startsWith("."), `Recovery must start without installed dependencies: ${file}: ${specifier}`);
-      const dependency = path.posix.normalize(path.posix.join(path.posix.dirname(file), specifier));
-      assert.ok(dependency.startsWith("packages/core/"), `Recovery dependency escapes its runtime layer: ${dependency}`);
-      pending.push(dependency);
+  const directory = pending.pop();
+  if (visited.has(directory)) continue;
+  visited.add(directory);
+  const file = `${directory}/action.yml`, action = YAML.parse(read(file));
+  if (action.runs.using === "composite") {
+    for (const step of action.runs.steps) {
+      assert.ok(step.uses && !step.run && !step.shell, `Recovery action must only compose actions: ${file}`);
+      if (step.uses.startsWith(shell)) {
+        pending.push(step.uses.slice(shell.length));
+        step.uses = step.uses.replace(shell, `${shell}${installed}/`);
+      } else if (step.uses.startsWith("./")) {
+        assert.ok(step.uses.startsWith("./.buildchain/candidate/actions/"), `Unexpected recovery authority: ${step.uses}`);
+      }
     }
-    if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword)
-      throw new Error(`Recovery distribution requires statically closed imports: ${file}`);
-    ts.forEachChild(node, visit);
-  };
-  visit(source);
+  } else {
+    assert.equal(action.runs.using, "node24", `Unsupported recovery action runtime: ${file}`);
+    for (const entry of [action.runs.main, action.runs.pre, action.runs.post].filter(Boolean)) {
+      assert.ok(/^dist\/[a-zA-Z0-9._-]+\.js$/.test(entry), `Recovery action must ship bundled entries: ${file}`);
+      files.set(`${directory}/${entry}`, read(`${directory}/${entry}`));
+    }
+  }
+  files.set(file, YAML.stringify(action, { lineWidth: 0, aliasDuplicateObjects: false }));
 }
-const actionNames = ["bootstrap-recovery-admit", "bootstrap-recovery-execute", "bootstrap-recovery-settle"];
-for (const name of actionNames) {
-  const file = `actions/workflow/${name}/action.yml`;
-  files.set(file, read(file).replaceAll(`${shell}actions/runtime/prepare`, `${shell}${installed}/actions/runtime/prepare`));
-}
-files.set("actions/runtime/prepare/action.yml", read("actions/runtime/prepare/action.yml"));
 files.set("package.json", json({
   name: "buildchain-consumer-recovery",
   private: true,
@@ -68,6 +67,15 @@ files.set("manifest.json", json(manifest));
 const expected = new Map([...files].map(([file, text]) => [`${bundle}/${file}`, text]));
 expected.set("templates/universal-buildchain-bootstrap-recovery.yml", workflowText);
 const check = process.argv.includes("--check");
+if (!check) {
+  const previousPath = path.join(root, bundle, "manifest.json");
+  const previous = fs.existsSync(previousPath) ? JSON.parse(fs.readFileSync(previousPath, "utf8")) : { files: [] };
+  for (const { path: file } of previous.files) {
+    assert.ok(!path.isAbsolute(file) && !file.split("/").includes(".."), `Unsafe generated recovery path: ${file}`);
+    const target = `${bundle}/${file}`;
+    if (!expected.has(target)) fs.rmSync(path.join(root, target), { force: true });
+  }
+}
 for (const [file, text] of expected) {
   if (check) assert.equal(read(file), text, `Recovery distribution drift: ${file}`);
   else {

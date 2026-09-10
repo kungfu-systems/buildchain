@@ -4,11 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import {
-  BUILDCHAIN_COMPILER_CACHE_PREPARATION_CONTRACT,
-  prepareCompilerCacheEvidence,
-  verifyCompilerCacheActivity,
-} from "../packages/core/build/commands/compiler-cache-evidence.mjs";
+import { BUILDCHAIN_COMPILER_CACHE_PREPARATION_CONTRACT, prepareCompilerCacheEvidence, verifyCompilerCacheActivity } from "../packages/core/build/cache/compiler-evidence.js";
 import { createStructuredCacheEvidence } from "../packages/core/observability/diagnostics.js";
 
 function commandResult(stdout = "") {
@@ -150,6 +146,7 @@ test("required preparation fails closed when sccache is unavailable", () => {
   assert.throws(
     () =>
       prepareCompilerCacheEvidence({
+        cwd: process.cwd(),
         env: {
           BUILDCHAIN_COMPILER_CACHE_PROVIDER: "sccache",
           BUILDCHAIN_COMPILER_CACHE_REQUIRED: "true",

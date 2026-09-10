@@ -1,0 +1,51 @@
+name: check-runtime-contract
+description: Verify the selected Web runtime contract and report observed consumer drift.
+inputs:
+  request-json:
+    description: Typed public Web request.
+    required: true
+  runtime-json:
+    description: Admitted runtime coordinates.
+    required: true
+  workflow-ref:
+    description: Defining workflow reference.
+    required: true
+  source-sha:
+    description: Verified source revision.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Check Buildchain contract lock
+      id: contract-lock
+      uses: ./.buildchain/runtime/actions/runtime/contract/check
+      with:
+        request-json: ${{ inputs.request-json }}
+        runtime-ref: ${{ fromJSON(inputs.runtime-json).runtime-ref }}
+        runtime-sha: ${{ fromJSON(inputs.runtime-json).runtime-sha }}
+        runtime-class: ${{ fromJSON(inputs.runtime-json).runtime-class }}
+        workflow-ref: ${{ inputs.workflow-ref }}
+        runtime-override: ${{ fromJSON(inputs.runtime-json).runtime-override }}
+    - name: Report consumer Buildchain contract drift
+      if: ${{ always() && steps.contract-lock.outputs.contract-lock-issue-needed == 'true' }}
+      uses: ./.buildchain/runtime/actions/governance/incident/report
+      with:
+        token: ${{ github.token }}
+        target-repository: ${{ github.repository }}
+        title: "[Buildchain contract] ${{ github.repository }} drift on ${{
+          fromJSON(inputs.runtime-json).runtime-ref }}"
+        failure-code: buildchain-contract-${{ steps.contract-lock.outputs.contract-lock-status }}
+        buildchain-ref: ${{ fromJSON(inputs.runtime-json).runtime-ref }}
+        buildchain-version: ${{ steps.contract-lock.outputs.contract-digest }}
+        consumer-repository: ${{ github.repository }}
+        consumer-ref: ${{ github.ref }}
+        consumer-sha: ${{ inputs.source-sha }}
+        workflow: ${{ github.workflow }}
+        run-id: ${{ github.run_id }}
+        run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        summary: "Buildchain floating runtime contract drift: ${{
+          steps.contract-lock.outputs.contract-lock-status }}"
+        body-file: ${{ steps.contract-lock.outputs.contract-lock-issue-body-file }}
+        labels: buildchain-contract-drift
+        comment-cooldown-hours: "24"
+        fail-on-error: "false"

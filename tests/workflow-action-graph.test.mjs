@@ -7,8 +7,8 @@ import { inspectWorkflowJob, localActionDirectory } from "../scripts/workflow-ac
 
 test("source closure follows capability-specific checkout names without admitting escaping paths", () => {
   for (const root of ["workflow-shell", "attester-runtime", "release-tail-runtime"])
-    assert.equal(localActionDirectory(`./.buildchain/${root}/actions/release/settle`), "actions/release/settle");
-  for (const uses of ["./.buildchain/../actions/release/settle", "./other/actions/release/settle", "./actions/release/../settle"])
+    assert.equal(localActionDirectory(`./.buildchain/${root}/actions/release/tail/settle`), "actions/release/tail/settle");
+  for (const uses of ["./.buildchain/../actions/release/tail/settle", "./other/actions/release/tail/settle", "./actions/release/../settle"])
     assert.equal(localActionDirectory(uses), null);
 });
 
@@ -20,11 +20,11 @@ function fixture(t, phase, extra = []) {
     fs.writeFileSync(path.join(root, file), typeof value === "string" ? value : JSON.stringify(value));
   };
   const action = steps => ({ runs: { using: "composite", steps } });
-  write("workflow.yml", { jobs: { delivery: { steps: [{ uses: "./actions/workflow/dispatch", with: { phase } }] } } });
-  write("actions/workflow/dispatch/action.yml", action([{ uses: "./actions/workflow/phase", with: { phase: "${{ inputs.phase }}" } }]));
-  write("actions/workflow/phase/action.yml", action([
-    { if: "${{ always() && inputs.phase == 'execute' }}", run: 'node "$GITHUB_ACTION_PATH/../../../packages/core/workflow/execute.mjs"' },
-    { if: "${{ inputs.phase == 'seal' && (success() || failure()) }}", run: 'node "$GITHUB_ACTION_PATH/../../../packages/core/workflow/seal.mjs"' },
+  write("workflow.yml", { jobs: { delivery: { steps: [{ uses: "./actions/workflow/fixture/dispatch", with: { phase } }] } } });
+  write("actions/workflow/fixture/dispatch/action.yml", action([{ uses: "./actions/workflow/fixture/phase", with: { phase: "${{ inputs.phase }}" } }]));
+  write("actions/workflow/fixture/phase/action.yml", action([
+    { if: "${{ always() && inputs.phase == 'execute' }}", run: 'node "$GITHUB_ACTION_PATH/../../../../packages/core/workflow/execute.mjs"' },
+    { if: "${{ inputs.phase == 'seal' && (success() || failure()) }}", run: 'node "$GITHUB_ACTION_PATH/../../../../packages/core/workflow/seal.mjs"' },
     ...extra,
   ]));
   write("packages/core/workflow/execute.mjs", "export const execute = true;\n");
@@ -45,12 +45,12 @@ test("unknown phase retains both possible closures", t => {
 
 test("a phase disjunction cannot hide a reachable module", t => {
   const graph = inspectWorkflowJob("workflow.yml", "delivery", fixture(t, "execute", [
-    { if: "${{ inputs.phase == 'seal' || success() }}", run: 'node "$GITHUB_ACTION_PATH/../../../packages/core/workflow/seal.mjs"' },
+    { if: "${{ inputs.phase == 'seal' || success() }}", run: 'node "$GITHUB_ACTION_PATH/../../../../packages/core/workflow/seal.mjs"' },
   ]));
   assert.ok(graph.modules.has("packages/core/workflow/seal.mjs"));
 });
 
 test("reachable composite cycles fail without hiding behind a phase", t => {
-  const root = fixture(t, "execute", [{ if: "${{ inputs.phase == 'execute' }}", uses: "./actions/workflow/dispatch", with: { phase: "execute" } }]);
+  const root = fixture(t, "execute", [{ if: "${{ inputs.phase == 'execute' }}", uses: "./actions/workflow/fixture/dispatch", with: { phase: "execute" } }]);
   assert.throws(() => inspectWorkflowJob("workflow.yml", "delivery", root), /Composite action cycle/);
 });

@@ -69,18 +69,18 @@ test("primary and recovery shells are non-circular and retain opposite fault rou
     assert.ok(job.steps.some((step) => step.uses?.includes(".buildchain/bootstrap-recovery/actions/workflow/")));
     assert.ok(job.steps.every((step) => !Object.hasOwn(step, "run")));
   }
-  const settle = read("actions/workflow/bootstrap-recovery-settle/action.yml");
+  const settle = read("actions/workflow/recovery/settle/action.yml");
   assert.match(settle, /Seal receipt outside candidate authority/);
   assert.doesNotMatch(settle, /candidate.*universal-workflow-engine.*terminal/);
 });
 
 test("candidate-owned faults execute only after exact admission", () => {
-  const action = YAML.parse(read("actions/workflow/bootstrap-recovery-admit/action.yml"));
+  const action = YAML.parse(read("actions/workflow/recovery/admit/action.yml"));
   const review = action.runs.steps.findIndex((step) => /independent review/.test(step.name || ""));
-  const install = action.runs.steps.findIndex((step) => step.uses?.endsWith("actions/runtime/prepare"));
+  const install = action.runs.steps.findIndex((step) => step.uses?.endsWith("actions/runtime/environment/prepare"));
   const admit = action.runs.steps.findIndex((step) => step.id === "admit");
   assert.ok(review >= 0 && review < install && install < admit);
-  const execute = YAML.parse(read("actions/workflow/bootstrap-recovery-execute/action.yml"));
+  const execute = YAML.parse(read("actions/workflow/recovery/execute/action.yml"));
   const candidate = execute.runs.steps.find((step) => step.name === "Checkout exact admitted candidate");
   assert.equal(candidate.with.ref, "${{ fromJSON(inputs.needs-recovery-admit-outputs-runtime-sha) }}");
   assert.ok(execute.runs.steps.every((step) => !/train\/v4|v4-alpha/.test(JSON.stringify(step))));

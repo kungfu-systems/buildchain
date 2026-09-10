@@ -1,0 +1,42 @@
+name: signing-authority-deliver
+description: Execute the signing-authority deliver capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Admit source checkout
+      id: source-boundary
+      if: ${{ always() }}
+      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      with:
+        source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
+    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .
+    - uses: actions/download-artifact@v7.0.0
+      with:
+        pattern: authority-result-*-${{ fromJSON(inputs.request-json).correlation-id }}
+        path: .buildchain/provider-results
+    - uses: actions/download-artifact@v7.0.0
+      with:
+        name: authority-intake-${{ fromJSON(inputs.request-json).correlation-id }}
+        path: .buildchain/authority-intake
+    - name: Merge and verify the complete signed result set
+      uses: ./actions/build/signing/qualify-delivery
+      with:
+        request-json: ${{ inputs.request-json }}
+    - name: Publish immutable signed result delivery
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ fromJSON(inputs.request-json).result-artifact-name }}
+        path: .buildchain/authority-result
+        include-hidden-files: true
+        if-no-files-found: error
+        retention-days: 30
+        compression-level: 0
