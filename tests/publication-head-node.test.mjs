@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import { EOL } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
@@ -123,7 +124,7 @@ test("request rejection always fails and treats its reason as data", () => {
     },
   );
   assert.equal(result.status, 1, result.error?.message);
-  assert.equal(result.stdout, `::error::${reason}\n`);
+  assert.equal(result.stdout, `::error::${reason}${EOL}`);
 });
 test("all rejection nodes retain their workflow-owned conditions and scoped permissions", () => {
   for (const name of ["daily", "weekly", "monthly"]) {

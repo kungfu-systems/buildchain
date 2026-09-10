@@ -99,9 +99,9 @@ export async function writeBinaryPublicationEvidence(options) {
     options.workspace,
     ".buildchain/publication-evidence",
   );
-  options.client.write(`${directory}/${SETTLEMENT_ASSET}`, settlement);
+  options.client.write(path.join(directory, SETTLEMENT_ASSET), settlement);
   const release = settlement.documents.passport.release;
-  options.client.write(`${directory}/release.json`, {
+  options.client.write(path.join(directory, "release.json"), {
     channel: release.channel,
     publishedVersion: release.version,
     versionLabel: release.version,

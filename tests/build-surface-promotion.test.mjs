@@ -2463,8 +2463,8 @@ test("run-lifecycle action accepts hyphenated GitHub Action inputs", () => {
     assert.equal(manifest.artifactName, "libnode-shaped-linux-x64-test");
     assert.equal(manifest.platform.id, "linux-x64");
     assert.equal(summary.artifactName, "libnode-shaped-linux-x64-test");
-    assert.match(outputs, /artifact-summary-json<<([^\n]+)\n\{"contract":"kungfu-buildchain-artifact-summary"/);
-    assert.match(outputs, /expected-artifacts-ok<<([^\n]+)\ntrue\n\1/);
+    assert.match(outputs, /artifact-summary-json<<([^\r\n]+)\r?\n\{"contract":"kungfu-buildchain-artifact-summary"/);
+    assert.match(outputs, /expected-artifacts-ok<<([^\r\n]+)\r?\ntrue\r?\n\1/);
     assert.equal(diagnostics.process.requestedParallelism, 4);
     assert.equal(diagnostics.process.observedConcurrency.max, 2);
     assert.equal(diagnostics.links.artifactName, "libnode-shaped-linux-x64-test");
