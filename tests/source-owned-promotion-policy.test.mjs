@@ -1,4 +1,7 @@
-import { createBuildchainContractWorld, evaluateBuildchainContractLock } from "../packages/core/contracts/buildchain-contract.js";
+import {
+  createBuildchainContractWorld,
+  evaluateBuildchainContractLock,
+} from "../packages/core/contracts/buildchain-contract.js";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -7,6 +10,8 @@ import { execFileSync } from "node:child_process";
 import test from "node:test";
 import YAML from "yaml";
 import Ajv2020 from "ajv/dist/2020.js";
+import { data, Evaluator, Lexer, Parser } from "@actions/expressions";
+import { routePromotion } from "../packages/core/release/promotion/routing.js";
 import {
   scanFloatingConsumerPolicy,
   consumerPolicyScannerRoot,
@@ -20,6 +25,36 @@ const policy = JSON.parse(
   fs.readFileSync("architecture/floating-consumer-policy.json", "utf8"),
 );
 const rootValue = `sha256:${"e".repeat(64)}`;
+const readYaml = (file) => YAML.parse(fs.readFileSync(file, "utf8"));
+function render(expression, context) {
+  const functions = [
+    {
+      name: "always",
+      minArgs: 0,
+      maxArgs: 0,
+      call: () => new data.BooleanData(true),
+    },
+  ];
+  const values = JSON.parse(JSON.stringify(context), data.reviver);
+  return expression.replace(/\$\{\{\s*([\s\S]*?)\s*\}\}/gu, (_, source) => {
+    const parsed = new Parser(
+      new Lexer(source).lex().tokens,
+      Object.keys(context),
+      functions,
+    ).parse();
+    return new Evaluator(
+      parsed,
+      values,
+      new Map(functions.map((f) => [f.name, f])),
+    )
+      .evaluate()
+      .coerceString();
+  });
+}
+const project = (fields, context) =>
+  Object.fromEntries(
+    Object.entries(fields).map(([key, value]) => [key, render(value, context)]),
+  );
 function fixture(t) {
   const root = fs.mkdtempSync(
     path.join(os.tmpdir(), "source-owned-promotion-"),
@@ -146,6 +181,134 @@ test("same-commit public promotion authenticates a definition independent of the
     );
   }
 });
+test("promotion jobs preserve every declared node output across job boundaries", () => {
+  const api = readYaml(workflow);
+  for (const [job, action] of [
+    ["resolve-promotion", "resolve"],
+    ["consumer-admission", "admit"],
+  ]) {
+    const node = readYaml(`actions/release/promotion/${action}/action.yml`);
+    assert.deepEqual(
+      Object.keys(api.jobs[job].outputs).sort(),
+      Object.keys(node.outputs).sort(),
+      job,
+    );
+    for (const name of Object.keys(node.outputs))
+      assert.equal(
+        api.jobs[job].outputs[name],
+        `\${{ steps.node.outputs.${name} }}`,
+      );
+  }
+});
+test("rendered promotion selection admits the exact defining repository and rejects lost or foreign identities", async (t) => {
+  const f = fixture(t),
+    api = readYaml(workflow);
+  const resolved = await routePromotion({
+    github: {
+      rest: {
+        repos: {
+          getCommit: async () => ({ data: { sha: f.args.definitionSha } }),
+        },
+      },
+    },
+    context: { ref: "refs/heads/dev/v4/v4.1" },
+    request: {
+      schema: "buildchain.promotion-request/v1",
+      "target-ref": "alpha/v4/v4.1",
+      "target-sha": f.args.sourceSha,
+    },
+    workflowRepository: repository,
+    workflowSha: f.args.definitionSha,
+    workflowRef: `${repository}/${workflow}@refs/heads/dev/v4/v4.1`,
+    packageVersion: "4.1.0-alpha.0",
+  });
+  const resolve = readYaml("actions/release/promotion/resolve/action.yml");
+  const outputs = project(
+    Object.fromEntries(
+      Object.entries(resolve.outputs).map(([key, value]) => [key, value.value]),
+    ),
+    {
+      steps: {
+        route: { outputs: resolved },
+        bind: {
+          outputs: {
+            "contract-lock-path": ".buildchain/alpha-contract-lock.json",
+            "contract-lock-digest": rootValue,
+          },
+        },
+      },
+    },
+  );
+  const jobOutputs = project(api.jobs["resolve-promotion"].outputs, {
+    steps: { node: { outputs } },
+  });
+  const call = api.jobs["consumer-admission"].steps.find(
+    (step) => step.id === "node",
+  );
+  const inputs = project(call.with, {
+    needs: { "resolve-promotion": { outputs: jobOutputs } },
+  });
+  const admission = readYaml("actions/release/promotion/admit/action.yml");
+  const policyStep = admission.runs.steps.find((step) => step.id === "policy");
+  const policyInputs = project(policyStep.with, {
+    inputs,
+    github: { sha: f.args.sourceSha, workflow_sha: f.args.definitionSha },
+  });
+  const result = f.scan({
+    definitionRepository: policyInputs["definition-repository"],
+    definitionSha: policyInputs["definition-sha"],
+    sourceSha: policyInputs["source-sha"],
+    resolvedWorkflowSha: policyInputs["workflow-sha"],
+    resolvedRuntimeSha: policyInputs["runtime-sha"],
+    expectedInvocationChannel: policyInputs["expected-channel"],
+    stableLockPath: policyInputs["stable-lock-path"],
+    alphaLockPath: policyInputs["alpha-lock-path"],
+  });
+  assert.equal(result.ok, true, JSON.stringify(result.failures));
+  assert.equal(result.receipt.invocation.definition.repository, repository);
+  assert.equal(
+    result.receipt.invocation.definition.commitSha,
+    f.args.definitionSha,
+  );
+  assert.notEqual(result.receipt.caller.sourceSha, f.args.definitionSha);
+  for (const definitionRepository of ["", "foreign/repository"])
+    assert.ok(
+      f
+        .scan({ definitionRepository })
+        .failures.some(
+          (failure) => failure.code === "invocation-definition-invalid",
+        ),
+    );
+});
+test("promotion preserves failed admission receipts without admitting later publication", () => {
+  const admission = readYaml("actions/release/promotion/admit/action.yml");
+  const preserve = admission.runs.steps.find(
+    (step) => step.name === "Preserve rooted admission",
+  );
+  assert.equal(typeof preserve.if, "string");
+  for (const outcome of ["success", "failure"])
+    assert.equal(
+      render(preserve.if, {
+        steps: {
+          policy: {
+            outcome,
+            outputs: { "v4-consumer-policy-receipt-path": "receipt.json" },
+          },
+        },
+      }),
+      "true",
+    );
+  assert.equal(
+    render(preserve.if, {
+      steps: { policy: { outcome: "failure", outputs: {} } },
+    }),
+    "false",
+  );
+  assert.equal(
+    admission.runs.steps.find((step) => step.id === "invocation").if,
+    undefined,
+  );
+});
 test("source-owned admission rejects foreign identity, wrong commits and private or Stage Capsule entrypoints", (t) => {
   const f = fixture(t);
   for (const change of [
@@ -226,18 +389,36 @@ test("all Buildchain promotion callers use the current public request API at the
 
 test("old published lock incompatibility is bypassed only after exact local definition proof", (t) => {
   const f = fixture(t);
-  const lock = JSON.parse(fs.readFileSync(path.join(f.caller, ".buildchain/alpha-contract-lock.json")));
+  const lock = JSON.parse(
+    fs.readFileSync(
+      path.join(f.caller, ".buildchain/alpha-contract-lock.json"),
+    ),
+  );
   const current = createBuildchainContractWorld({ root: process.cwd() });
-  lock.buildchain.surfaces = [{ ...current.surfaces[0], breakingDigest: rootValue }];
-  fs.writeFileSync(path.join(f.caller, ".buildchain/alpha-contract-lock.json"), JSON.stringify(lock));
+  lock.buildchain.surfaces = [
+    { ...current.surfaces[0], breakingDigest: rootValue },
+  ];
+  fs.writeFileSync(
+    path.join(f.caller, ".buildchain/alpha-contract-lock.json"),
+    JSON.stringify(lock),
+  );
   const compatibility = evaluateBuildchainContractLock({
-    lock, current,
-    runtimeRef: "v4-alpha", runtimeSha: f.args.resolvedWorkflowSha,
-    runtimeClass: "alpha", workflowShellRef: "v4-alpha", expectedChannel: "alpha", expectedMajor: "v4",
+    lock,
+    current,
+    runtimeRef: "v4-alpha",
+    runtimeSha: f.args.resolvedWorkflowSha,
+    runtimeClass: "alpha",
+    workflowShellRef: "v4-alpha",
+    expectedChannel: "alpha",
+    expectedMajor: "v4",
   });
   assert.equal(compatibility.ok, false);
   assert.equal(f.scan().ok, true);
   const unproved = f.scan({ definitionSha: "a".repeat(40) });
   assert.equal(unproved.ok, false);
-  assert.ok(unproved.failures.some(failure => failure.code === "invocation-definition-invalid"));
+  assert.ok(
+    unproved.failures.some(
+      (failure) => failure.code === "invocation-definition-invalid",
+    ),
+  );
 });

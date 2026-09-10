@@ -175,6 +175,7 @@ jobs:
     permissions:
       contents: read
     outputs:
+      repository: ${{ steps.node.outputs.repository }}
       channel: ${{ steps.node.outputs.channel }}
       publication-channel: ${{ steps.node.outputs.publication-channel }}
       target-ref: ${{ steps.node.outputs.target-ref }}
