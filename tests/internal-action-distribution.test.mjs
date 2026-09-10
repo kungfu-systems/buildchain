@@ -219,3 +219,33 @@ test("shared action build closes WASM resources and the isolated bundle fails cl
   fs.writeFileSync(artifact, bytes);
   assert.notEqual(run().status, 0);
 });
+
+test("bundled Rust shadow adapter starts its subprocess at the installation root", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-shadow-bundle-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const repository = fileURLToPath(new URL("..", import.meta.url));
+  for (const file of ["package.json", "bin/buildchain.mjs", "architecture/code-layout.json"]) {
+    fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
+    fs.copyFileSync(path.join(repository, file), path.join(root, file));
+  }
+  const directory = path.join(root, "actions/dev-delivery/warrant/fixture");
+  fs.mkdirSync(directory, { recursive: true });
+  fs.writeFileSync(path.join(directory, "package.json"), '{"type":"module"}');
+  const observed = path.join(root, "observed-cwd");
+  const child = `require('node:fs').writeFileSync(${JSON.stringify(observed)}, process.cwd()); process.stdin.resume(); process.stdout.write('invalid-json');`;
+  const authority = path.join(repository, "packages/core/dev-delivery/delivery-warrant-shadow-adapter.js");
+  fs.writeFileSync(path.join(directory, "index.js"),
+    `import { invokeRustShadowHost } from ${JSON.stringify(authority)};\n` +
+    `try { await invokeRustShadowHost({ timeoutMs: 5000 }, { command: process.execPath, arguments: ['-e', ${JSON.stringify(child)}] }); } catch (error) { console.log(error.code); }\n`);
+  const build = spawnSync(process.execPath, [
+    path.join(repository, "node_modules/tsup/dist/cli-default.js"), "index.js", "--format", "esm",
+    "--config", path.join(repository, "scripts/tsup-action.config.mjs"),
+  ], { cwd: directory, encoding: "utf8" });
+  assert.equal(build.status, 0, build.stdout + build.stderr);
+  const run = spawnSync(process.execPath, [path.join(directory, "dist/index.js")], {
+    cwd: os.tmpdir(), encoding: "utf8", timeout: 10000,
+  });
+  assert.equal(run.status, 0, run.stdout + run.stderr);
+  assert.match(run.stdout, /host-response-invalid/);
+  assert.equal(fs.realpathSync(fs.readFileSync(observed, "utf8")), fs.realpathSync(root));
+});
