@@ -72,7 +72,7 @@ export function createBuildArtifactStore({
   ) {
     const result = await client.downloadArtifact(ref.id, {
       path: target,
-      expectedHash: ref.digest.replace(/^sha256:/u, ""),
+      expectedHash: `sha256:${ref.digest.replace(/^sha256:/u, "")}`,
       ...findOptions(repository, runId, token),
     });
     if (result.digestMismatch)
