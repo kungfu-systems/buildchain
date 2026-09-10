@@ -1,0 +1,33 @@
+name: Admit GitHub credential scope
+description: Validate a single repository and the App credential contract before token creation.
+inputs:
+  repository:
+    description: Target repository.
+    default: ""
+  client-configured:
+    description: Whether client ID is configured.
+    default: "false"
+  app-id-configured:
+    description: Whether App ID is configured.
+    default: "false"
+  private-key-configured:
+    description: Whether private key is configured.
+    default: "false"
+  failure-policy:
+    description: App credential failure policy.
+    default: fallback
+  organization:
+    description: Explicit organization installation scope; mutually exclusive with repository.
+    default: ""
+outputs:
+  repository:
+    description: Admitted repository.
+  owner:
+    description: Admitted owner.
+  name:
+    description: Admitted name.
+  requested:
+    description: Admitted requested.
+runs:
+  using: node24
+  main: dist/index.js

@@ -600,10 +600,10 @@ function actionCapabilityGroup(id) {
 function buildSitePages() {
   const docsPages = listMarkdownFiles("docs").map((relPath) => sitePage(relPath, "manual", "/docs"));
   const actionPages = actionInventory(root)
-    .map(({ directory, capability, node }) => ({ file: `${directory}/README.md`, capability, node }))
+    .map(({ directory, capability, group, node }) => ({ file: `${directory}/README.md`, capability, group, node }))
     .filter(({ file }) => fs.existsSync(path.join(root, file)))
-    .map(({ file, capability, node }) => sitePage(file, "action", "/actions", {
-      id: `action:${capability}/${node}`, slug: `${capability}/${node}`, route: `/actions/${capability}/${node}`,
+    .map(({ file, capability, group, node }) => sitePage(file, "action", "/actions", {
+      id: `action:${capability}/${group}/${node}`, slug: `${capability}/${group}/${node}`, route: `/actions/${capability}/${group}/${node}`,
     }));
   const fixturePages = immediateReadmes("fixtures").map((relPath) => sitePage(relPath, "fixture", "/fixtures"));
   const apiPages = [
@@ -756,7 +756,7 @@ function buildSiteBundle() {
     deterministicInputs: [
       "README.md",
       "docs/*.md",
-      "actions/*/*/README.md",
+      "actions/*/*/*/README.md",
       "fixtures/*/README.md",
       "packages/core/README.md",
       "package.json#exports",
@@ -906,7 +906,7 @@ function buildSiteBundle() {
         }),
       };
     }),
-    actionSource: "actions/*/*/action.yml reverse input enumeration",
+    actionSource: "actions/*/*/*/action.yml reverse input enumeration",
     actions: actionSurfaceAudit({ root, actionCapabilityGroup, publicSurfaceLifecycle }),
   };
   const controllerRegistry = createControllerRegistry({ workflows: workflowRegistry.workflows });

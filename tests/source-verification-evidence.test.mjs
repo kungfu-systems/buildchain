@@ -5,13 +5,9 @@ import test from "node:test";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import {
-  discoverVerification,
-  planVerification,
-  readProofArchive,
-  sealVerification,
-  verificationIdentity,
-} from "../packages/core/build/commands/source-verification-evidence.mjs";
+import { discoverVerification, readProofArchive } from "../packages/core/build/verification/discovery.js";
+import { planVerification, sealVerification } from "../packages/core/build/verification/proof.js";
+import { verificationIdentity } from "../packages/core/build/verification/identity.js";
 
 const r = `sha256:${"1".repeat(64)}`;
 
@@ -27,9 +23,9 @@ test("verification identity hashes the complete tracked WASM above the default s
     wasm,
     manifestPath,
     ".github/workflows/self-build-verify.yml",
-    "actions/build/verify-check/action.yml",
-    "actions/build/verify-stage-capsule-checkpoints/action.yml",
-    "actions/runtime/prepare/action.yml",
+    "actions/build/verification/repository/action.yml",
+    "actions/build/stage-capsule/verify-checkpoints/action.yml",
+    "actions/runtime/environment/prepare/action.yml",
     "package.json",
     ".buildchain/buildchain.toml",
     "packages/core/build/commands/source-verification-evidence.mjs",
@@ -82,6 +78,12 @@ test("verification identity hashes the complete tracked WASM above the default s
         ]),
       ),
     );
+    fs.mkdirSync("actions/build/verification/qualify-source", { recursive: true });
+    fs.writeFileSync("actions/build/verification/qualify-source/index.js", "export const changed = true;\n");
+    git(["add", "actions/build/verification/qualify-source/index.js"]);
+    git(["-c", "user.name=Buildchain Test", "-c", "user.email=buildchain@example.test", "-c", "commit.gpgsign=false", "commit", "-m", "new verification implementation"]);
+    const changed = verificationIdentity({ env: { ...process.env, GITHUB_REPOSITORY: "owner/repo", ImageOS: "fixture", ImageVersion: "1" }, command: (name, args) => name === "git" ? git(args) : `${name}-fixture` });
+    assert.notEqual(changed.checkDefinitionRoot, actual.checkDefinitionRoot);
   } finally {
     process.chdir(root);
     fs.rmSync(fixture, { recursive: true, force: true });

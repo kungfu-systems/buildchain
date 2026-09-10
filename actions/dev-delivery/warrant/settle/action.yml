@@ -1,0 +1,61 @@
+name: Settle terminal delivery
+description: Owned settle node of protected dev delivery.
+inputs:
+  request-json:
+    description: Typed public workflow inputs, serialized once by the caller.
+    required: true
+  github-token:
+    description: Provider token; supplied only in a credentialed job.
+    required: false
+    default: ""
+  runtime-ref:
+    description: Exact terminal runtime ref, supplied by the defining workflow.
+    required: false
+    default: ""
+outputs:
+  evidence-integration-proof-root:
+    description: evidence-integration-proof-root.
+    value: ${{ steps.close.outputs.integration-proof-root }}
+  close-receipt-root:
+    description: close-receipt-root.
+    value: ${{ steps.close.outputs.close-receipt-root }}
+  close-final-state-root:
+    description: close-final-state-root.
+    value: ${{ steps.close.outputs.final-state-root }}
+  close-successor-wake-json:
+    description: close-successor-wake-json.
+    value: ${{ steps.close.outputs.successor-wake-json }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v6.4.0
+      with:
+        node-version: "24"
+    - name: Checkout Buildchain runtime
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+        ref: ${{ inputs.runtime-ref }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Settle terminal authority and wake successor
+      id: close
+      uses: ./.buildchain/runtime/actions/dev-delivery/warrant/close-event
+      with:
+        runtime-ref: ${{ inputs.runtime-ref }}
+        request-json: ${{ inputs.request-json }}
+        token: ${{ inputs.github-token || github.token }}
+    - name: Upload terminal Warrant evidence
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name:
+          buildchain-dev-delivery-close-${{ fromJSON(inputs.request-json).expected-pr-number }}-${{
+          fromJSON(inputs.request-json).outcome }}
+        path: .buildchain/dev-delivery/
+        if-no-files-found: error
+        retention-days: 30
+        overwrite: true
+      if: ${{ always() }}

@@ -3,11 +3,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import {
-  classifyRetryableFailure,
-  createGitHubDevQualificationClient,
-  runDevQualificationPatrol,
-} from "../packages/core/dev-delivery/commands/dev-qualification-patrol.mjs";
+import { classifyRetryableFailure } from "../packages/core/dev-delivery/qualification/model.js";
+import { createGitHubDevQualificationClient } from "../packages/core/dev-delivery/qualification/github-client.js";
+import { runDevQualificationPatrol } from "../packages/core/dev-delivery/qualification/controller.js";
 
 const SHA = "a".repeat(40);
 const OLD_SHA = "b".repeat(40);

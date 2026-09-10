@@ -105,7 +105,7 @@ jobs:
           path: .buildchain/workflow-shell
           persist-credentials: false
       - name: Reject manual apply
-        uses: ./.buildchain/workflow-shell/actions/workflow/reject-request
+        uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
         with:
           reason: Manual apply requires a fresh sealed publication admission. Provide admission, runner, control-plane audit, expected bindings, and used nonces JSON.
   reject-invalid-durable-recovery:
@@ -122,7 +122,7 @@ jobs:
           path: .buildchain/workflow-shell
           persist-credentials: false
       - name: Require exact recovery SHA
-        uses: ./.buildchain/workflow-shell/actions/workflow/reject-request
+        uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
         with:
           reason: Durable transaction recovery requires the exact original transaction source SHA.
   reject-invalid-candidate-recovery:
@@ -139,7 +139,7 @@ jobs:
           path: .buildchain/workflow-shell
           persist-credentials: false
       - name: Require exact candidate recovery identity
-        uses: ./.buildchain/workflow-shell/actions/workflow/reject-request
+        uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
         with:
           reason: Candidate recovery requires an exact channel, source, candidate, tree, and runtime identity.
   classify-workflow-run:
@@ -168,7 +168,7 @@ jobs:
         if: ${{ always() }}
       - name: Classify exact publication head
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/promote-classify-workflow-run
+        uses: ./.buildchain/workflow-shell/actions/release/promotion/classify
         if: ${{ always() }}
         with:
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}

@@ -366,7 +366,7 @@ function validateCurrentBoundary(root, inventory, issues) {
   }
   const graph = inspectWorkflowJob(boundary.canonicalPublisher, "apply", root);
   if (
-    !graph.actions.has("actions/release/promote-candidate") ||
+    !graph.actions.has("actions/release/promotion/candidate") ||
     [...graph.modules.keys()].some((file) => file.includes("/promote-ref/"))
   )
     issues.push(

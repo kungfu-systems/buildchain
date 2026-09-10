@@ -1,0 +1,12 @@
+name: Resolve immutable called workflow runtime
+description: Resolve immutable called workflow runtime.
+inputs:
+  workflow-sha:
+    description: GitHub called workflow commit
+    required: true
+outputs:
+  sha:
+    description: sha
+runs:
+  using: node24
+  main: dist/index.js

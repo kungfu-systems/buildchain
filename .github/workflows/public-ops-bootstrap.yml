@@ -51,7 +51,7 @@ jobs:
           persist-credentials: false
       - name: Admit exact reviewed candidate
         id: node
-        uses: ./.buildchain/workflow-shell/actions/workflow/bootstrap-admit
+        uses: ./.buildchain/workflow-shell/actions/workflow/bootstrap/admit
         with:
           job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
           request-json: ${{ toJSON(inputs) }}
@@ -79,7 +79,7 @@ jobs:
         if: ${{ always() }}
       - name: Execute exact admitted candidate
         id: node
-        uses: ./.buildchain/workflow-shell/actions/workflow/bootstrap-execute
+        uses: ./.buildchain/workflow-shell/actions/workflow/bootstrap/execute
         with:
           needs-admit-outputs-runtime-sha: ${{ toJSON(needs.admit.outputs.runtime-sha) }}
           needs-admit-outputs-capability-id: ${{ toJSON(needs.admit.outputs.capability-id) }}
@@ -108,7 +108,7 @@ jobs:
           persist-credentials: false
       - name: Seal terminal receipt outside candidate authority
         id: node
-        uses: ./.buildchain/workflow-shell/actions/workflow/bootstrap-settle
+        uses: ./.buildchain/workflow-shell/actions/workflow/bootstrap/settle
         with:
           job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
           needs-admit-outputs-admission-json: ${{ toJSON(needs.admit.outputs.admission-json) }}

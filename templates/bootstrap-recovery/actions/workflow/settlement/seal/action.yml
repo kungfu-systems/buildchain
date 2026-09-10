@@ -1,0 +1,17 @@
+name: seal universal workflow settlement
+description: Coordinate exact request, review and terminal evidence through a named workflow authority API.
+inputs:
+  admission-json:
+    description: admission-json exact workflow authority input.
+    required: true
+  result-json:
+    description: result-json exact workflow authority input.
+    required: true
+outputs:
+  terminal-receipt-json:
+    description: terminal-receipt-json rooted workflow evidence.
+  terminal-receipt-root:
+    description: terminal-receipt-root rooted workflow evidence.
+runs:
+  using: node24
+  main: dist/index.js

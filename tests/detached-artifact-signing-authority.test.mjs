@@ -7,8 +7,8 @@ import test from "node:test";
 
 import { createArtifactSigningRequest } from "../packages/core/build/artifact-signing.js";
 import { verifyDetachedArtifactSignature } from "../packages/core/build/detached-artifact-signature.js";
-import { signDetachedArtifactRequests } from "../packages/core/build/commands/sign-detached-artifact-requests.mjs";
-import { verifyArtifactSigningResults } from "../packages/core/build/commands/verify-artifact-signing-results.mjs";
+import { signDetachedArtifactRequests } from "../packages/core/build/signing/detached.js";
+import { verifyArtifactSigningResults } from "../packages/core/build/signing/verify-results.js";
 
 function digest(value) {
   return `sha256:${crypto.createHash("sha256").update(value).digest("hex")}`;

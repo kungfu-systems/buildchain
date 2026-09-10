@@ -1,5 +1,5 @@
 name: Binary Release Assets
-'on':
+on:
   workflow_dispatch:
     inputs:
       buildchain-ref:
@@ -14,7 +14,7 @@ name: Binary Release Assets
       publication-used-nonces-json:
         description: JSON array of already consumed admission nonces.
         required: true
-        default: '[]'
+        default: "[]"
 permissions:
   contents: read
 jobs:
@@ -31,18 +31,19 @@ jobs:
       target-ref: ${{ steps.node.outputs.target-ref }}
       publication-version: ${{ steps.node.outputs.publication-version }}
     steps:
-    - name: Check out workflow implementation
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ job.workflow_repository }}
-        ref: ${{ job.workflow_sha }}
-        path: .buildchain/workflow-shell
-        persist-credentials: false
-    - name: Resolve exact binary publication transaction
-      id: node
-      uses: ./.buildchain/workflow-shell/actions/release/binary-publication-coordinates
-      with:
-        request-json: ${{ toJSON(inputs) }}
+      - name: Check out workflow implementation
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
+          persist-credentials: false
+      - name: Resolve exact binary publication transaction
+        id: node
+        uses: ./.buildchain/workflow-shell/actions/release/binary/coordinates
+        with:
+          request-json: ${{ toJSON(inputs) }}
+          token: ${{ github.token }}
   publish:
     needs: resolve
     uses: ./.github/workflows/.release-binary-assets.yml

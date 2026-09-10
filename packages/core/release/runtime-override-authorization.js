@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { pathToFileURL } from "node:url";
+import * as runtime from "../consumer/runtime-ref-resume-authority.js";
 
 const EXACT_SHA = /^[0-9a-f]{40}$/u;
 const OFFICIAL_REF = /^v4(?:-alpha)?$/u;
@@ -169,7 +169,7 @@ function trackedRuntimePersistencePaths(consumerRoot) {
       "ls-files",
       "--",
       ".github/workflows",
-      ".github/actions",
+      "actions",
       ".buildchain",
     ],
     { encoding: "utf8" },
@@ -188,14 +188,6 @@ export async function authorizePromotionRuntimeOverride({
 
   const { requestedRef, runtimeSha } = normalizeRequestedSelection(request);
   const consumerRoot = path.resolve(request.consumerRoot || process.cwd());
-  const runtimeModulePath = path.resolve(
-    request.runtimeModulePath ||
-      path.join(
-        process.cwd(),
-        ".buildchain/router/packages/core/consumer/runtime-ref-resume-authority.js",
-      ),
-  );
-  const runtime = await import(pathToFileURL(runtimeModulePath).href);
   const policyDocument = JSON.parse(
     fs.readFileSync(path.resolve(request.consumerPolicyReceiptPath), "utf8"),
   );

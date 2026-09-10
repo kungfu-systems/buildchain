@@ -68,11 +68,11 @@ jobs:
           persist-credentials: false
       - name: Admit exact retained candidate
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/tail-reseal-plan
+        uses: ./.buildchain/workflow-shell/actions/release/reseal/plan
         with:
-          job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
           request-json: ${{ toJSON(inputs) }}
-          secrets-buildchain-evidence-read-token: ${{ secrets.BUILDCHAIN_EVIDENCE_READ_TOKEN }}
+          workflow-sha: ${{ job.workflow_sha }}
+          evidence-read-token: ${{ secrets.BUILDCHAIN_EVIDENCE_READ_TOKEN }}
   platforms:
     name: Retain or reseal ${{ matrix.platform.name }}
     needs: plan
@@ -101,21 +101,19 @@ jobs:
         if: ${{ always() }}
       - name: Retain or reseal ${{ matrix.platform.name }}
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/tail-reseal-platforms
+        uses: ./.buildchain/workflow-shell/actions/release/reseal/platforms
         with:
-          needs-plan-outputs-runtime-sha: ${{ toJSON(needs.plan.outputs.runtime-sha) }}
-          needs-plan-outputs-request-artifact: ${{ toJSON(needs.plan.outputs.request-artifact) }}
-          needs-plan-outputs-source-run-id: ${{ toJSON(needs.plan.outputs.source-run-id) }}
           matrix-json: ${{ toJSON(matrix) }}
-          secrets-buildchain-evidence-read-token: ${{ secrets.BUILDCHAIN_EVIDENCE_READ_TOKEN }}
-          needs-plan-outputs-signing-authority-repository: ${{ toJSON(needs.plan.outputs.signing-authority-repository) }}
-          needs-plan-outputs-signing-authority-run-id: ${{ toJSON(needs.plan.outputs.signing-authority-run-id) }}
-          needs-plan-outputs-signing-result-artifact: ${{ toJSON(needs.plan.outputs.signing-result-artifact) }}
-          secrets-buildchain-signing-token: ${{ secrets.BUILDCHAIN_SIGNING_TOKEN }}
           request-json: ${{ toJSON(inputs) }}
-          needs-plan-outputs-signing-provider-readback-root: ${{ toJSON(needs.plan.outputs.signing-provider-readback-root) }}
-          needs-plan-outputs-release-tail-provider-readback-root: ${{ toJSON(needs.plan.outputs.release-tail-provider-readback-root) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+          runtime-sha: ${{ needs.plan.outputs.runtime-sha }}
+          request-artifact: ${{ needs.plan.outputs.request-artifact }}
+          source-run-id: ${{ needs.plan.outputs.source-run-id }}
+          evidence-read-token: ${{ secrets.BUILDCHAIN_EVIDENCE_READ_TOKEN }}
+          signing-authority-repository: ${{ needs.plan.outputs.signing-authority-repository }}
+          signing-authority-run-id: ${{ needs.plan.outputs.signing-authority-run-id }}
+          signing-result-artifact: ${{ needs.plan.outputs.signing-result-artifact }}
+          signing-token: ${{ secrets.BUILDCHAIN_SIGNING_TOKEN }}
         if: ${{ always() }}
   seal:
     name: Seal standard candidate Passport
@@ -136,14 +134,9 @@ jobs:
           persist-credentials: false
       - name: Seal standard candidate Passport
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/tail-reseal-seal
+        uses: ./.buildchain/workflow-shell/actions/release/reseal/seal
         with:
-          needs-plan-outputs-runtime-sha: ${{ toJSON(needs.plan.outputs.runtime-sha) }}
-          needs-plan-outputs-request-artifact: ${{ toJSON(needs.plan.outputs.request-artifact) }}
-          needs-plan-outputs-platforms-json: ${{ toJSON(needs.plan.outputs.platforms-json) }}
-          needs-plan-outputs-source-sha: ${{ toJSON(needs.plan.outputs.source-sha) }}
-          needs-plan-outputs-target-version: ${{ toJSON(needs.plan.outputs.target-version) }}
-          needs-plan-outputs-source-tree-sha: ${{ toJSON(needs.plan.outputs.source-tree-sha) }}
           request-json: ${{ toJSON(inputs) }}
-          needs-plan-outputs-consumer-policy-receipt-root: ${{ toJSON(needs.plan.outputs.consumer-policy-receipt-root) }}
-          needs-plan-outputs-warrant-readback-root: ${{ toJSON(needs.plan.outputs.warrant-readback-root) }}
+          runtime-sha: ${{ needs.plan.outputs.runtime-sha }}
+          request-artifact: ${{ needs.plan.outputs.request-artifact }}
+          source-sha: ${{ needs.plan.outputs.source-sha }}

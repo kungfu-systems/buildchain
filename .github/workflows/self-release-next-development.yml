@@ -44,7 +44,7 @@ jobs:
         if: ${{ always() }}
       - name: Execute next-development-review
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/next-development-review
+        uses: ./.buildchain/workflow-shell/actions/release/next-development/review
         with:
           secrets-buildchain-approval-token: ${{ secrets.BUILDCHAIN_APPROVAL_TOKEN }}
           secrets-buildchain-promotion-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}

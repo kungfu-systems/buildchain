@@ -33,7 +33,7 @@ jobs:
           path: .buildchain/workflow-shell
           persist-credentials: false
       - name: Audit managed-zone governance
-        uses: ./.buildchain/workflow-shell/actions/governance/audit
+        uses: ./.buildchain/workflow-shell/actions/governance/repository/audit
         with:
           auditor-app-id: ${{ vars.KUNGFU_GOVERNANCE_AUDITOR_APP_ID }}
           auditor-private-key: ${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}

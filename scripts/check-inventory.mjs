@@ -121,7 +121,7 @@ const requiredPaths = [
   "packages/core/build/commands/auditable-demo.mjs",
   "packages/core/build/commands/auditable-demo-platform.mjs",
   "packages/core/build/commands/auditable-demo-transport-smoke.mjs",
-  "packages/core/providers/commands/auditable-demo-capture.py",
+  "packages/core/providers/demo/capture-worker.py",
   "packages/core/build/commands/resolve-artifact-coordinates.mjs",
   "packages/core/providers/commands/artifact-relay-s3.mjs",
   "packages/core/build/commands/anchored-version-material.mjs",
@@ -294,7 +294,7 @@ const reusableBuildWorkflow = fs.readFileSync(
 for (const requiredSnippet of [
   "workflow-ref: ${{ job.workflow_ref }}",
   "workflow-sha: ${{ job.workflow_sha }}",
-  "actions/build/resolve-plan",
+  "actions/build/lifecycle/plan",
 ]) {
   if (!reusableBuildWorkflow.includes(requiredSnippet)) {
     throw new Error(`reusable build workflow missing called-workflow identity: ${requiredSnippet}`);
@@ -468,7 +468,7 @@ for (const expectedFile of ["bin/", "scripts/", "packages/core/", "docs/*.md"]) 
     throw new Error(`root package files must include ${expectedFile}`);
   }
 }
-for (const expectedFile of ["dist/site/", "actions/*/*/README.md", "fixtures/*/README.md"]) {
+for (const expectedFile of ["dist/site/", "actions/*/*/*/README.md", "fixtures/*/README.md"]) {
   if (!rootPackage.files?.includes(expectedFile)) {
     throw new Error(`root package files must include ${expectedFile}`);
   }
@@ -744,7 +744,7 @@ const mapActionIndex = fs.readFileSync(path.join(root, "docs/MAP.md"), "utf8");
 const retrospectiveActionIndex = fs.readFileSync(path.join(root, ".github/retrospectives/2026-07-10-buildchain-consolidation.md"), "utf8");
 const buildOwners = JSON.parse(fs.readFileSync(path.join(root, "architecture/build-orchestration.json"), "utf8")).owners;
 const declaredPublicActions = JSON.parse(fs.readFileSync(path.join(root,"architecture/code-layout.json"),"utf8")).publicActionNodes;
-if (JSON.stringify(registeredActionIds) !== JSON.stringify(actionInventory(root).map(action => `${action.capability}/${action.node}`).sort()))
+if (JSON.stringify(registeredActionIds) !== JSON.stringify(actionInventory(root).map(action => `${action.capability}/${action.group}/${action.node}`).sort()))
   throw new Error("action catalog must cover the current hierarchical action inventory");
 if (JSON.stringify(workflowRegistry.actions.filter(action => action.apiRole === "public").map(action => action.id).sort()) !== JSON.stringify([...declaredPublicActions].sort()))
   throw new Error("action catalog must distinguish public contracts from implementation nodes");
@@ -756,7 +756,7 @@ for (const actionId of declaredPublicActions) {
 if (!retrospectiveActionIndex.includes("snapshot of the four consumer-facing actions")) {
   throw new Error("the v2 four-action retrospective must remain explicitly classified as historical");
 }
-if (!pageRegistry.pages?.some((page) => page.sourcePath === "actions/release/promote-ref/README.md")) {
+if (!pageRegistry.pages?.some((page) => page.sourcePath === "actions/release/promotion/ref/README.md")) {
   throw new Error("page-registry.json must include action manuals");
 }
 if (!pageRegistry.pages?.some((page) => page.sourcePath === "packages/core/README.md" && page.category === "api")) {
@@ -932,7 +932,7 @@ for (const requiredSnippet of [
   }
 }
 const releaseLineDryRunScript = fs.readFileSync(path.join(root, "packages/core/release/commands/release-line-dry-run.mjs"), "utf8");
-const standaloneBinaryScript = fs.readFileSync(path.join(root, "scripts/build-standalone-binary.mjs"), "utf8");
+const standaloneBinaryScript = ["build", "bundle"].map(name => fs.readFileSync(path.join(root, `packages/core/build/standalone/${name}.js`), "utf8")).join("\n");
 for (const requiredSnippet of [
   "explainReleaseLineDryRun",
   "formatReleaseLineDryRun",
@@ -946,11 +946,11 @@ if (commonJsSourcePattern.test(releaseLineDryRunScript)) {
   throw new Error("packages/core/release/commands/release-line-dry-run.mjs must use ESM syntax");
 }
 for (const requiredSnippet of [
-  "../packages/core/observability/logging.js",
+  "../../observability/logging.js",
   "standalone.cli-bundle.create",
   "BUILDCHAIN_EMBEDDED_PACKAGE_VERSION",
   "BUILDCHAIN_EMBEDDED_ENTRYPOINT",
-  "noExternal: [\"smol-toml\",",
+  "noExternal: [/.*/]",
   "--macho-segment-name",
   "mainFormat: \"commonjs\"",
   "standalone.sea-blob.create",
@@ -971,8 +971,8 @@ const buildchainRefPromotionWorkflow = fs.readFileSync(path.join(root, ".github/
 const binaryDistributionWorkflow = fs.readFileSync(path.join(root, ".github/workflows/self-build-binary-distribution.yml"), "utf8");
 const binaryReleaseAssetsWorkflow = fs.readFileSync(path.join(root, ".github/workflows/.release-binary-assets.yml"), "utf8");
 const selfHostedRunnerSmokeWorkflow = fs.readFileSync(path.join(root, ".github/workflows/self-ops-runner-smoke.yml"), "utf8");
-const npmDryRunScript = fs.readFileSync(path.join(root, "packages/core/publication/commands/npm-publish-dry-run.mjs"), "utf8");
-const npmPublishTransactionScript = fs.readFileSync(path.join(root, "packages/core/publication/commands/npm-publish-transaction.mjs"), "utf8");
+const npmDryRunScript = fs.readFileSync(path.join(root, "packages/core/publication/npm/preview.js"), "utf8").replace(/\s+/gu, " ");
+const npmPublishTransactionScript = ["transaction", "environment"].map(name => fs.readFileSync(path.join(root, `packages/core/publication/npm/${name}.js`), "utf8")).join("\n");
 const rootPackageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
 const selfReleaseImpactPath = path.resolve(
   root,
@@ -1013,7 +1013,7 @@ const workflowDir = path.join(root, ".github/workflows");
 for (const workflowFile of fs.readdirSync(workflowDir).filter((entry) => entry.endsWith(".yml"))) {
   const workflowPath = path.join(workflowDir, workflowFile);
   const workflowSource = fs.readFileSync(workflowPath, "utf8");
-  if (!/uses:\s*(?:\.\/\.buildchain\/runtime\/actions\/release\/promote-ref|\.\/actions\/release\/promote-ref|.*\/actions\/release\/promote-ref(?:@|$))/m.test(workflowSource)) {
+  if (!/uses:\s*(?:\.\/\.buildchain\/runtime\/actions\/release\/promotion\/ref|\.\/actions\/release\/promotion\/ref|.*\/actions\/release\/promotion\/ref(?:@|$))/m.test(workflowSource)) {
     continue;
   }
   for (const requiredSnippet of [
@@ -1039,7 +1039,7 @@ for (const retiredWorkflow of [
     throw new Error(`${retiredWorkflow} is fully retired and must remain deleted`);
   }
 }
-const promoteBuildchainRefAction = fs.readFileSync(path.join(root, "actions/release/promote-ref/action.yml"), "utf8");
+const promoteBuildchainRefAction = fs.readFileSync(path.join(root, "actions/release/promotion/ref/action.yml"), "utf8");
 const promoteBuildchainRefIndex = ["packages/core/release/promote-ref/release-tail.js", "packages/core/release/github-release.js", "packages/core/release/release-tail-provider-adapters.js"].map((entry) => fs.readFileSync(path.join(root, entry), "utf8")).join("\n");
 for (const requiredSnippet of [
   "github-release:",
@@ -1065,7 +1065,7 @@ for (const requiredSnippet of [
 }
 for (const forbiddenSnippet of [
   "run: node packages/core/release/commands/release-candidate-resolver.mjs",
-  "uses: ./actions/release/promote-ref",
+  "uses: ./actions/release/promotion/ref",
 ]) {
   if (buildchainRefPromotionWorkflow.includes(forbiddenSnippet)) {
     throw new Error(`buildchain ref promotion workflow must use the declarative wrapper, found manual snippet: ${forbiddenSnippet}`);
@@ -1102,7 +1102,7 @@ if (/runs-on:\s*self-hosted/.test(npmPublishWorkflow)) {
   throw new Error("npm publish workflow must use GitHub-hosted runners for trusted publishing");
 }
 assertBinaryInventory(root);
-if (!inspectWorkflowJob(".github/workflows/self-ops-runner-smoke.yml", "smoke", root).steps.some(step => step.env?.BUILDCHAIN_RUNNER_KIND === "self-hosted")) {
+if (!inspectWorkflowJob(".github/workflows/self-ops-runner-smoke.yml", "smoke", root).modules.get("packages/core/build/verification/runner.js")?.includes('runnerKind: "self-hosted"')) {
   throw new Error("self-hosted smoke must identify its actual runner kind");
 }
 
@@ -1118,7 +1118,7 @@ if (inventory.release !== "buildchain-v4.1") {
   throw new Error("inventory release must be buildchain-v4.1");
 }
 
-if (inventory.stableRefs?.actions !== "kungfu-systems/buildchain/actions/<capability>/<node>@v4") {
+if (inventory.stableRefs?.actions !== "kungfu-systems/buildchain/actions/<capability>/<group>/<operation>@v4") {
   throw new Error("inventory stable action ref must point at @v4");
 }
 
@@ -1177,13 +1177,12 @@ if (!Array.isArray(inventory.retiredWorkflowsExcluded) || inventory.retiredWorkf
 }
 
 const actualActionInventory = actionInventory(root);
-const internalActions = inventory.internalActions;
-const shippedActions = internalActions;
-if (inventory.compositeActionOwnership !== "architecture/code-layout.json")
-  throw new Error("composite action ownership must use the closed architecture contract");
-const actualNodeActions = actualActionInventory.filter(action => action.using === "node24").map(action => action.directory).sort();
-if (JSON.stringify(actualNodeActions) !== JSON.stringify(shippedActions.map(action => action.path).sort()))
-  throw new Error("Node action inventory differs from the actual hierarchical distribution");
+if (inventory.actionOwnership !== "architecture/action-taxonomy.json")
+  throw new Error("action ownership must use the closed capability/group/operation taxonomy");
+const shippedActions = actualActionInventory.filter(action => action.using === "node24").map(action => ({
+  path: action.directory, runtime: action.using, build: "tsup", bundle: action.bundles.find(file => file.endsWith("/index.js")),
+}));
+const publicActionNodes = new Set(JSON.parse(fs.readFileSync(path.join(root, "architecture/code-layout.json"), "utf8")).publicActionNodes);
 for (const retiredRepo of inventory.retiredActionsExcluded || []) {
   const retiredPath = path.join(root, "actions", retiredRepo.replace(/^action-/, ""));
   if (fs.existsSync(retiredPath)) {
@@ -1215,16 +1214,16 @@ for (const action of shippedActions) {
   const packageJsonPath = path.join(actionPath, "package.json");
   const tsupConfigPath = path.join(actionPath, "tsup.config.mjs");
   const bundlePath = path.join(root, action.bundle);
-  for (const required of [actionYmlPath, packageJsonPath, bundlePath, path.join(actionPath, "README.md")]) {
+  for (const required of [actionYmlPath, packageJsonPath, bundlePath, ...(publicActionNodes.has(action.path.replace(/^actions\//u, "")) ? [path.join(actionPath, "README.md")] : [])]) {
     if (!fs.existsSync(required)) {
       throw new Error(`missing action artifact: ${path.relative(root, required)}`);
     }
   }
   const actionYml = fs.readFileSync(actionYmlPath, "utf8");
-  if (!/using:\s*["']node24["']/.test(actionYml)) {
+  if (!/using:\s*["']?node24["']?\s*$/mu.test(actionYml)) {
     throw new Error(`${action.path}/action.yml must use node24`);
   }
-  if (!/main:\s*["']dist\/index\.js["']/.test(actionYml)) {
+  if (!/main:\s*["']?dist\/index\.js["']?\s*$/mu.test(actionYml)) {
     throw new Error(`${action.path}/action.yml must point at dist/index.js`);
   }
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));

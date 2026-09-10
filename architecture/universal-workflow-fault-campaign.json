@@ -40,9 +40,9 @@
     },
     {
       "id": "action",
-      "injectionTarget": "actions/release/promote-candidate/action.yml",
+      "injectionTarget": "actions/release/promotion/candidate/action.yml",
       "recoveryRoute": "exact-train-candidate",
-      "recoveryTarget": "actions/release/promote-candidate/dist/index.js"
+      "recoveryTarget": "actions/release/promotion/candidate/dist/index.js"
     },
     {
       "id": "cli-runtime",

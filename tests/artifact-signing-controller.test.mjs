@@ -14,11 +14,11 @@ import {
   sealArtifactSigningControlRequest,
   settleArtifactSigningControl,
   validateArtifactSigningControlRequest,
-} from "../packages/core/build/commands/artifact-signing-controller.mjs";
+} from "../packages/core/build/signing/control.js";
 import {
   dispatchArtifactSigningAuthority,
   validateArtifactSigningAuthorityRun,
-} from "../packages/core/build/commands/dispatch-artifact-signing-authority.mjs";
+} from "../packages/core/build/signing/dispatch.js";
 
 const sourceSha = "1".repeat(40);
 const treeSha = "2".repeat(40);

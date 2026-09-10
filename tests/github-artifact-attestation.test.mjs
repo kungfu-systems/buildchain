@@ -192,13 +192,13 @@ test("final Linux build manifest creates the exact v3 attestation policy", () =>
 
 test("reusable signer verifies the actual certificate identity before retaining evidence", () => {
   const graph = inspectWorkflowJob(".github/workflows/public-release-artifact-attestation.yml", "attest");
-  const names = graph.steps.map(step => step.name);
-  const verified = names.indexOf("Verify actual GitHub signer identity before retaining evidence");
-  assert.ok(verified >= 0 && verified < names.indexOf("Seal retained attestation evidence"));
-  const source = graph.modules.get("packages/core/release/nodes/artifact-attestation.mjs");
+  const source = graph.modules.get("packages/core/providers/github/artifact-attestation.js");
+  const transaction = graph.modules.get("packages/core/build/github-attestation/transaction.js");
+  assert.ok(transaction.indexOf("verify({") < transaction.indexOf("fs.copyFileSync(bundlePath"));
   for (const flag of ["--repo", "--signer-workflow", "--signer-digest", "--source-digest", "--predicate-type", "--bundle", "--deny-self-hosted-runners"])
     assert.ok(source.includes(flag), `missing exact provider verification flag ${flag}`);
-  assert.ok(graph.actions.has("actions/build/github-attestation"));
+  assert.ok(graph.actions.has("actions/build/artifact/prepare-attestation"));
+  assert.ok(graph.actions.has("actions/build/artifact/seal-attestation"));
 });
 
 test("preparation binds exact subject, original runner manifest, source tree, Buildchain SHA, and Release Passport", () => {

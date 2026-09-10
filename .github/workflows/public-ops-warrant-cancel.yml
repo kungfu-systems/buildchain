@@ -3,18 +3,73 @@ name: Dev Delivery Warrant Queued Candidate Cancel
 on:
   workflow_call:
     inputs:
-      buildchain-repository: { description: "Buildchain runtime repository", default: "kungfu-systems/buildchain", type: string, required: false }
-      buildchain-ref: { description: "Optional explicit runtime ref. Empty binds the defining workflow SHA.", default: "", type: string, required: false }
-      target-branch: { description: "Protected dev branch", type: string, required: true }
-      expected-pr-number: { description: "Exact PR owning the queued candidate", type: number, required: true }
-      expected-candidate-id: { description: "Exact queued candidate content root", type: string, required: true }
-      expected-source-head-sha: { description: "Exact source head recorded in the queue", type: string, required: true }
-      observed-source-head-sha: { description: "Exact source head observed on the terminal event", type: string, required: true }
-      expected-old-state-root: { description: "Exact queue root observed by the caller", type: string, required: true }
-      event-action: { description: "closed, cancelled, or dequeued", type: string, required: true }
-      outcome: { description: "cancelled or dequeued", type: string, required: true }
-      terminal-evidence-root: { description: "Exact immutable terminal event evidence root", type: string, required: true }
-      reason: { description: "Visible terminal reason", default: "", type: string, required: false }
+      buildchain-repository:
+        {
+          description: "Buildchain runtime repository",
+          default: "kungfu-systems/buildchain",
+          type: string,
+          required: false,
+        }
+      buildchain-ref:
+        {
+          description: "Optional explicit runtime ref. Empty binds the defining workflow SHA.",
+          default: "",
+          type: string,
+          required: false,
+        }
+      target-branch:
+        { description: "Protected dev branch", type: string, required: true }
+      expected-pr-number:
+        {
+          description: "Exact PR owning the queued candidate",
+          type: number,
+          required: true,
+        }
+      expected-candidate-id:
+        {
+          description: "Exact queued candidate content root",
+          type: string,
+          required: true,
+        }
+      expected-source-head-sha:
+        {
+          description: "Exact source head recorded in the queue",
+          type: string,
+          required: true,
+        }
+      observed-source-head-sha:
+        {
+          description: "Exact source head observed on the terminal event",
+          type: string,
+          required: true,
+        }
+      expected-old-state-root:
+        {
+          description: "Exact queue root observed by the caller",
+          type: string,
+          required: true,
+        }
+      event-action:
+        {
+          description: "closed, cancelled, or dequeued",
+          type: string,
+          required: true,
+        }
+      outcome:
+        { description: "cancelled or dequeued", type: string, required: true }
+      terminal-evidence-root:
+        {
+          description: "Exact immutable terminal event evidence root",
+          type: string,
+          required: true,
+        }
+      reason:
+        {
+          description: "Visible terminal reason",
+          default: "",
+          type: string,
+          required: false,
+        }
     secrets:
       github-token:
         description: "Token permitted to advance the Buildchain Warrant state ref"
@@ -47,7 +102,7 @@ jobs:
           persist-credentials: false
       - name: Cancel exact non-active queued candidate
         id: node
-        uses: ./.buildchain/workflow-shell/actions/dev-delivery/warrant-cancel
+        uses: ./.buildchain/workflow-shell/actions/dev-delivery/warrant/cancel
         with:
           runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
           runtime-repository: ${{ inputs.buildchain-repository || job.workflow_repository }}

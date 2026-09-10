@@ -541,10 +541,10 @@ test("architecture freezes the public consumer path, rollback, and authority cei
   assert.match(workflow, /needs: stage-capsule-checkpoints/u);
   assert.match(
     fs.readFileSync(
-      path.join(root, "actions/build/verify-check/action.yml"),
+      path.join(root, "actions/build/verification/repository/action.yml"),
       "utf8",
     ),
-    /lifecycle run verify/u,
+    /actions\/build\/verification\/qualify-source/u,
   );
   const packageScripts = JSON.parse(
     fs.readFileSync(path.join(root, "package.json")),
@@ -558,39 +558,40 @@ test("architecture freezes the public consumer path, rollback, and authority cei
     path.join(root, ".github/workflows/public-build-stage-capsule-canary.yml"),
     "utf8",
   );
-  const canaryNodes = ["consumer-admission", "qualify", "reconcile"]
+  const canaryNodes = ["admit-consumer", "qualify", "reconcile"]
     .map((phase) =>
       fs.readFileSync(
-        path.join(
-          root,
-          `actions/build/stage-capsule-canary-${phase}/action.yml`,
-        ),
+        path.join(root, `actions/build/stage-capsule/${phase}/action.yml`),
         "utf8",
       ),
     )
     .join("\n");
   assert.match(canaryWorkflow, /workflow_call:/u);
-  assert.match(
-    canaryWorkflow,
-    /job-workflow-sha: \$\{\{ toJSON\(job\.workflow_sha\) \}\}/u,
-  );
-  assert.doesNotMatch(canaryNodes, /\$\{BUILDCHAIN_WORKFLOW_SHA,,\}/u);
+  assert.match(canaryWorkflow, /workflow-sha: \$\{\{ job\.workflow_sha \}\}/u);
   assert.equal(
-    canaryNodes.match(/tr '\[:upper:\]' '\[:lower:\]'/gu)?.length,
+    (canaryNodes.match(/actions\/runtime\/selection\/workflow/g) || []).length,
     3,
   );
   assert.match(
     canaryNodes,
-    /BUILDCHAIN_RUNTIME_SHA: \$\{\{ steps\.runtime\.outputs\.sha \}\}/u,
+    /workflow-sha: \$\{\{ steps.runtime.outputs.sha \}\}/u,
   );
-  assert.match(canaryNodes, /CONSUMER_SOURCE_SHA: \$\{\{ github\.sha \}\}/u);
-  assert.match(canaryNodes, /--runtime-ref "\$\{BUILDCHAIN_RUNTIME_SHA\}"/u);
+  const action = fs.readFileSync(
+    path.join(root, "packages/core/build/stage-capsule/actions.js"),
+    "utf8",
+  );
+  assert.match(action, /sourceSha: env.GITHUB_SHA/);
+  assert.match(action, /Stage Capsule runtime differs from called workflow/);
+  assert.match(action, /Stage Capsule consumer differs from invoked source/);
+  const canary = fs.readFileSync(
+    path.join(root, "packages/core/build/stage-capsule/canary.js"),
+    "utf8",
+  );
+  assert.match(canary, /\["install", "build", "verify"\]/u);
+  assert.match(canary, /stageName: stage,\s*required: true/u);
   assert.match(
-    canaryNodes,
-    /--consumer-source-revision "\$\{CONSUMER_SOURCE_SHA\}"/u,
+    canary,
+    /runtimeRef: runtimeSha,\s*consumerSourceRevision: sourceSha/u,
   );
-  assert.match(canaryWorkflow, /defaults:\n      run:\n        shell: bash/u);
-  for (const stage of ["install", "build", "verify"])
-    assert.match(canaryNodes, new RegExp(`lifecycle run ${stage}`, "u"));
   assert.doesNotMatch(canaryNodes, /lifecycle run publish|self-hosted|aws/iu);
 });

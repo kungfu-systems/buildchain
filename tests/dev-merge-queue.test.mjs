@@ -12,7 +12,7 @@ import {
   resolveRulesetBypassActors,
   selectMergeQueueMethod,
   validateMergeGroupWorkflows,
-} from "../packages/core/dev-delivery/commands/dev-merge-queue.mjs";
+} from "../packages/core/dev-delivery/merge-queue-policy.js";
 
 const REPOSITORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 

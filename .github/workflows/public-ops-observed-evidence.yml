@@ -69,7 +69,7 @@ jobs:
           path: .buildchain/workflow-shell
           persist-credentials: false
       - name: Admit evidence publisher
-        uses: ./.buildchain/workflow-shell/actions/observability/admit-evidence-publisher
+        uses: ./.buildchain/workflow-shell/actions/observability/evidence/admit-publisher
       - name: Checkout caller default branch
         uses: actions/checkout@v7.0.0
         with:
@@ -86,7 +86,7 @@ jobs:
         if: ${{ always() }}
       - name: Execute observed-evidence-publish
         id: node
-        uses: ./.buildchain/workflow-shell/actions/observability/publish-evidence
+        uses: ./.buildchain/workflow-shell/actions/observability/evidence/publish
         with:
           runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
           request-json: ${{ toJSON(inputs) }}

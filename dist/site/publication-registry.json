@@ -8,7 +8,7 @@
   "deterministicInputs": [
     "README.md",
     "docs/*.md",
-    "actions/*/*/README.md",
+    "actions/*/*/*/README.md",
     "fixtures/*/README.md",
     "packages/core/README.md",
     "package.json#exports",

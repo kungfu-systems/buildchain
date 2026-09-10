@@ -4,11 +4,9 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { inspectWorkflowJob } from "../scripts/workflow-action-graph.mjs";
-import {
-  GitHubDevDeliveryStore,
-  defaultDevDeliveryStateRef,
-  runDevDeliveryCommand,
-} from "../packages/core/dev-delivery/commands/dev-delivery-warrant.mjs";
+import { GitHubDevDeliveryStore } from "../packages/core/providers/dev-delivery/store.js";
+import { defaultDevDeliveryStateRef } from "../packages/core/dev-delivery/warrant/values.js";
+import { runDevDeliveryCommand } from "../packages/core/dev-delivery/warrant/service.js";
 import {
   createIntegrationDeliveryProof,
   createDevDeliveryQueue,
@@ -319,18 +317,13 @@ test("terminal failure settlement reconciles a concurrent identical winner as an
   assert.equal(result.concurrencyRecovery.initialCommitSha, "a".repeat(40));
 });
 
-test("terminal workflow reaches exact settlement and wakes only a committed successor", () => {
-  const graph = inspectWorkflowJob(".github/workflows/public-ops-warrant-close.yml", "close", REPOSITORY_ROOT);
-  assert.equal(graph.job.steps.at(-1).with.phase, "terminal");
-  assert.ok(graph.modules.has("packages/core/dev-delivery/nodes/terminal-settlement.mjs"));
-  const close = graph.steps.find(step => step.id === "close");
-  assert.match(close.run, /settle\.mjs" close/u);
-  assert.match(close.env.EXPECTED_PR, /expected-pr-number/u);
-  assert.match(close.env.EXPECTED_HEAD, /expected-head-sha/u);
-  const wake = graph.steps.find(step => step.name === "Wake exact queued successor");
-  assert.match(wake.if, /steps\.close\.outcome == 'success' && steps\.close\.outputs\.successor-wake-json != 'null'/u);
-  assert.match(wake.run, /settle\.mjs" wake/u);
-  assert.equal(wake.env.SUCCESSOR_WAKE, "${{ steps.close.outputs.successor-wake-json }}");
+test("terminal workflow reaches a typed settlement transaction", () => {
+ const graph = inspectWorkflowJob(".github/workflows/public-ops-warrant-close.yml", "close", REPOSITORY_ROOT);
+ assert.equal(graph.job.steps.at(-1).with.phase, undefined);
+ assert.ok(graph.modules.has("packages/core/dev-delivery/warrant/terminal.js"));
+ const close = graph.steps.find(step => step.id === "close");
+ assert.ok(close.uses.endsWith("/warrant/close-event"));
+ assert.equal(close.with["request-json"], "${{ inputs.request-json }}");
 });
 
 test("queued cancellation persists once and repeats as an exact no-op", async () => {

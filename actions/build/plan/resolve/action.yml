@@ -1,0 +1,26 @@
+name: Resolve admitted build plan
+description: Admit exact source and runtime, resolve runners and root the build execution contract.
+inputs:
+  config-path:
+    description: Optional project TOML locator
+    required: false
+    default: ""
+  workflow-ref:
+    description: GitHub called workflow identity
+    required: true
+  workflow-sha:
+    description: Exact GitHub called workflow SHA
+    required: true
+  control-token:
+    description: Runner inventory authority
+    required: false
+    default: ""
+  token:
+    description: Scoped repository read and drift reporting credential
+    required: true
+outputs:
+  plan:
+    description: Rooted build execution plan
+runs:
+  using: node24
+  main: dist/index.js

@@ -9,9 +9,9 @@ import { createSourceQualificationProof } from "../packages/core/dev-delivery/de
 import {
   pathsAtQualifiedSource,
   qualifiedRunBase,
-  sourceProofPaths,
-} from "../packages/core/dev-delivery/nodes/source-paths.mjs";
-import { successorDispatchPayload } from "../packages/core/dev-delivery/nodes/terminal-settlement.mjs";
+} from "../packages/core/dev-delivery/candidate/source-paths.js";
+import { resolveCandidateAffectedPaths } from "../packages/core/dev-delivery/candidate/evidence.js";
+import { successorDispatchPayload } from "../packages/core/dev-delivery/warrant/terminal-policy.js";
 
 test("successor wake carries exact source coordinates without an oversized path array", () => {
   const wake = {
@@ -72,16 +72,16 @@ test("source paths reconstruct a large rename and deletion from the exact qualif
   git("add", ".");
   commit("large source change");
   const env = {
-    GITHUB_REPOSITORY: "kungfu-systems/buildchain",
-    TARGET_BRANCH: "dev/v4/v4.1",
-    EXPECTED_HEAD: git("rev-parse", "HEAD"),
+    repository: "kungfu-systems/buildchain",
+    branch: "dev/v4/v4.1",
+    expectedHead: git("rev-parse", "HEAD"),
   };
-  env.SOURCE_IDENTITY_ROOT = devDeliveryContentRoot({
+  env.sourceIdentityRoot = devDeliveryContentRoot({
     schema: "kungfu.buildchain.source-identity/v1",
-    repository: env.GITHUB_REPOSITORY,
-    protectedBase: env.TARGET_BRANCH,
+    repository: env.repository,
+    protectedBase: env.branch,
     qualifiedBase: base,
-    sourceHead: env.EXPECTED_HEAD,
+    sourceHead: env.expectedHead,
     sourceTree: git("rev-parse", "HEAD^{tree}"),
   });
   const actual = pathsAtQualifiedSource(directory, base, env);
@@ -91,18 +91,18 @@ test("source paths reconstruct a large rename and deletion from the exact qualif
     () =>
       pathsAtQualifiedSource(directory, base, {
         ...env,
-        SOURCE_IDENTITY_ROOT: `sha256:${"0".repeat(64)}`,
+        sourceIdentityRoot: `sha256:${"0".repeat(64)}`,
       }),
     /source identity root drift/u,
   );
 });
 
 test("path reconstruction rejects failed runs and another PR or head", () => {
-  const env = { EXPECTED_PR: "7", EXPECTED_HEAD: "a".repeat(40) };
+  const env = { pullRequestNumber: "7", expectedHead: "a".repeat(40) };
   const run = {
     conclusion: "success",
     event: "pull_request",
-    head_sha: env.EXPECTED_HEAD,
+    head_sha: env.expectedHead,
     pull_requests: [{ number: 7, base: { sha: "b".repeat(40) } }],
   };
   assert.equal(qualifiedRunBase(run, env), "b".repeat(40));
@@ -133,37 +133,13 @@ test("later nodes recover omitted paths only from an exact untampered source pro
     shardEvidenceRoots: [root],
     qualifiedAt: "2026-09-09T18:00:00Z",
   });
-  const env = {
-    AFFECTED_PATHS: "[]",
-    GITHUB_REPOSITORY: proof.repository,
-    TARGET_BRANCH: proof.protectedBase,
-    EXPECTED_HEAD: proof.sourceHead,
-    SOURCE_IDENTITY_ROOT: root,
-    SOURCE_PROOF_ROOT: proof.proofRoot,
+  const request = {
+    affectedPaths: [], sourceProofRoot: proof.proofRoot,
+    source: { repository: proof.repository, protectedBase: proof.protectedBase, sourceHead: proof.sourceHead, sourceIdentityRoot: root }, readProof: () => proof,
   };
-  assert.deepEqual(
-    JSON.parse(sourceProofPaths(env, () => proof)),
-    proof.affectedPaths,
-  );
-  const resealed = createSourceQualificationProof({
-    ...proof,
-    affectedPaths: ["omitted.js"],
-  });
-  assert.throws(
-    () => sourceProofPaths(env, () => resealed),
-    /admitted source proof root/u,
-  );
-  assert.throws(
-    () =>
-      sourceProofPaths(env, () => ({
-        ...proof,
-        affectedPaths: ["omitted.js"],
-      })),
-    /proof-root-drift/u,
-  );
-  assert.throws(
-    () =>
-      sourceProofPaths({ ...env, EXPECTED_HEAD: "b".repeat(40) }, () => proof),
-    /sourceHead-mismatch/u,
-  );
+  assert.deepEqual(resolveCandidateAffectedPaths(request), proof.affectedPaths);
+  const resealed = createSourceQualificationProof({ ...proof, affectedPaths: ["omitted.js"] });
+  assert.throws(() => resolveCandidateAffectedPaths({ ...request, readProof: () => resealed }), /admitted source proof root/u);
+  assert.throws(() => resolveCandidateAffectedPaths({ ...request, readProof: () => ({ ...proof, affectedPaths: ["omitted.js"] }) }), /proof-root-drift/u);
+  assert.throws(() => resolveCandidateAffectedPaths({ ...request, source: { ...request.source, sourceHead: "b".repeat(40) } }), /sourceHead-mismatch/u);
 });

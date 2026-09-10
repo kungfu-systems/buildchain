@@ -1,0 +1,29 @@
+name: Qualify a checked-in demo adapter through bounded renderer smoke
+description: Qualify a checked-in demo adapter through bounded renderer smoke.
+inputs:
+  runtime-sha:
+    description: Exact runtime-sha.
+    required: true
+  source-sha:
+    description: Exact source-sha.
+    required: true
+  renderer-image:
+    description: Exact renderer-image.
+    required: true
+  media-profile:
+    description: Exact media-profile.
+    required: true
+  adapter-path:
+    description: Exact adapter-path.
+    required: true
+  adapter-arguments-json:
+    description: Exact adapter-arguments-json.
+    required: false
+outputs:
+  gate-root:
+    description: Verified gate-root.
+  gate-artifact-name:
+    description: Verified gate-artifact-name.
+runs:
+  using: node24
+  main: dist/index.js

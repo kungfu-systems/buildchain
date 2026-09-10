@@ -39,7 +39,7 @@ jobs:
           persist-credentials: false
       - name: Execute bootstrap-recovery-admit
         id: node
-        uses: ./.buildchain/workflow-shell/.buildchain/bootstrap-recovery/actions/workflow/bootstrap-recovery-admit
+        uses: ./.buildchain/workflow-shell/.buildchain/bootstrap-recovery/actions/workflow/recovery/admit
         with:
           request-json: ${{ toJSON(inputs) }}
   recovery-execute:
@@ -77,7 +77,7 @@ jobs:
         if: ${{ always() }}
       - name: Execute bootstrap-recovery-execute
         id: node
-        uses: ./.buildchain/workflow-shell/.buildchain/bootstrap-recovery/actions/workflow/bootstrap-recovery-execute
+        uses: ./.buildchain/workflow-shell/.buildchain/bootstrap-recovery/actions/workflow/recovery/execute
         with:
           needs-recovery-admit-outputs-runtime-sha: ${{ toJSON(needs.recovery-admit.outputs.runtime-sha) }}
           request-json: ${{ toJSON(inputs) }}
@@ -107,7 +107,7 @@ jobs:
           persist-credentials: false
       - name: Execute bootstrap-recovery-settle
         id: node
-        uses: ./.buildchain/workflow-shell/.buildchain/bootstrap-recovery/actions/workflow/bootstrap-recovery-settle
+        uses: ./.buildchain/workflow-shell/.buildchain/bootstrap-recovery/actions/workflow/recovery/settle
         with:
           needs-recovery-admit-outputs-admission-json: ${{ toJSON(needs.recovery-admit.outputs.admission-json) }}
           needs-recovery-execute-outputs-result-json: ${{ toJSON(needs.recovery-execute.outputs.result-json) }}

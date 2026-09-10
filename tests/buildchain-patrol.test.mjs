@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {
-  normalizePatrolOptions,
-  renderPatrolMarkdownSummary,
-  runBuildchainPatrol,
-} from "../packages/core/governance/commands/buildchain-patrol.mjs";
+import { normalizePatrolOptions } from "../packages/core/governance/patrol/options.js";
+import { renderPatrolMarkdownSummary } from "../packages/core/governance/patrol/report.js";
+import { runBuildchainPatrol } from "../packages/core/governance/patrol/controller.js";
 
 function pr(overrides = {}) {
   return {

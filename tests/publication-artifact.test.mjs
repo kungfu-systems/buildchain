@@ -18,7 +18,7 @@ import {
 import {
   compareSemver,
   hydratePublishedPublicationRegistry,
-} from "../packages/core/publication/commands/publication-registry-hydrate.mjs";
+} from "../packages/core/publication/candidate/registry-hydration.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const fixture = path.join(root, "fixtures", "publication-artifact-shaped");

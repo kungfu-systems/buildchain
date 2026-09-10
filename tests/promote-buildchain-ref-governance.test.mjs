@@ -1030,7 +1030,7 @@ test("strict release promotion binds a generated version commit to the exact rec
               data: {
                 files: [
                   { filename: "packages/core/release/promote-ref/lib.js" },
-                  { filename: "actions/release/promote-ref/dist/index.js" },
+                  { filename: "actions/release/promotion/ref/dist/index.js" },
                   { filename: "tests/promote-buildchain-ref.test.mjs" },
                 ],
               },
@@ -1326,7 +1326,7 @@ test("strict release promotion accepts recovery from floating alpha material aft
           data: {
             files: [
               { filename: "packages/core/release/promote-ref/lib.js" },
-              { filename: "actions/release/promote-ref/dist/index.js" },
+              { filename: "actions/release/promotion/ref/dist/index.js" },
               { filename: "tests/promote-buildchain-ref.test.mjs" },
             ],
           },

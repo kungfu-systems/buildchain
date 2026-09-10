@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { scanConsumerPolicy, consumerPolicyOutputs } from "../policy-scan.js";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -8,7 +9,7 @@ import {
   scanFloatingConsumerPolicy,
   consumerPolicyScannerRoot,
 } from "../floating-consumer-policy.js";
-import { writeGitHubOutputs } from "../../build/commands/build-contract-core.mjs";
+import { writeGitHubOutputs } from "../../providers/commands/github-output.mjs";
 const RUNTIME_ROOT = path.resolve(import.meta.dirname, "../../../..");
 function parseArgs(argv) {
   const options = {};
@@ -52,10 +53,9 @@ export function scanCommand(options = {}) {
         ".buildchain/evidence/consumer-policy-receipt.json",
       ),
   );
-  const policy = readJson(
-    path.join(RUNTIME_ROOT, "architecture/floating-consumer-policy.json"),
-  );
-  const result = scanFloatingConsumerPolicy({
+  const result = scanConsumerPolicy({
+    runtimeRoot: RUNTIME_ROOT,
+    output,
     root,
     invocationRoot,
     definitionRepository:
@@ -88,19 +88,8 @@ export function scanCommand(options = {}) {
         "BUILDCHAIN_ALPHA_CONTRACT_LOCK_PATH",
         ".buildchain/alpha-contract-lock.json",
       ),
-    policy,
-    scannerRoot: consumerPolicyScannerRoot(),
   });
-  writeJson(output, result);
-  writeGitHubOutputs({
-    "v4-consumer-policy-status": result.ok ? "passed" : "failed",
-    "v4-consumer-policy-receipt-path": output,
-    "v4-consumer-policy-receipt-root": result.receiptRoot,
-    "v4-consumer-policy-receipt-json": JSON.stringify(result.receipt),
-    "v4-consumer-policy-channel": result.receipt.invocation.channel,
-    "v4-consumer-policy-selector": result.receipt.invocation.visibleSelector,
-    "v4-consumer-policy-scanner-root": result.receipt.policy.scannerRoot,
-  });
+  writeGitHubOutputs(consumerPolicyOutputs(result, output));
   return result;
 }
 

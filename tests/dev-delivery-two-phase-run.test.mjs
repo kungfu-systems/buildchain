@@ -10,11 +10,9 @@ import {
   createNativeExecutionReceipt,
   createNativeQualificationProof,
 } from "../packages/core/dev-delivery/dev-delivery-warrant.js";
-import {
-  composeCandidate,
-  GitHubTwoPhaseClient,
-  runTwoPhaseDelivery,
-} from "../packages/core/dev-delivery/commands/dev-delivery-two-phase.mjs";
+import { composeCandidate } from "../packages/core/dev-delivery/native/candidate.js";
+import { GitHubTwoPhaseClient } from "../packages/core/providers/dev-delivery/candidate.js";
+import { runTwoPhaseDelivery } from "../packages/core/dev-delivery/native/qualification.js";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 const HEAD = "a".repeat(40);

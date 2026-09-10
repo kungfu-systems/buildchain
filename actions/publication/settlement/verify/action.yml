@@ -1,0 +1,19 @@
+name: Verify terminal publication settlement
+description: Verify terminal publication settlement.
+inputs:
+  runtime-sha:
+    description: Exact admitted runtime commit.
+    required: true
+  candidate-sha:
+    description: Exact original candidate commit.
+    required: true
+outputs:
+  receipt-json:
+    description: receipt json
+  receipt-root:
+    description: receipt root
+  status:
+    description: status
+runs:
+  using: node24
+  main: dist/index.js

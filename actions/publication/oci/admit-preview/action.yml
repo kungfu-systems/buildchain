@@ -1,0 +1,21 @@
+name: admit-preview
+description:
+  Verify public OCI qualification and retain exact digest-bound preview
+  evidence.
+inputs:
+  workflow-sha:
+    description: Exact called workflow commit.
+    required: true
+  token:
+    description: Scoped release provider credential.
+    required: true
+outputs:
+  artifact-id:
+    description: Verified qualification artifact-id.
+  run-id:
+    description: Verified qualification run-id.
+  source-sha:
+    description: Verified qualification source-sha.
+runs:
+  using: node24
+  main: dist/index.js

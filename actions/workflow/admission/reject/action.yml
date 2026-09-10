@@ -1,0 +1,9 @@
+name: Reject admitted request
+description: Fail with the bounded reason supplied by the workflow admission policy.
+inputs:
+  reason:
+    description: Reason this request cannot be executed.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

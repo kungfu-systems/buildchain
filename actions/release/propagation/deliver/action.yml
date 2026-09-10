@@ -1,0 +1,104 @@
+name: Release propagation delivery
+description: Reconcile release delivery and always publish observed Work and controller evidence.
+inputs:
+  request-json:
+    description: Typed public propagation request.
+    required: true
+  token:
+    description: Scoped downstream GitHub credential.
+    required: true
+  runtime-ready:
+    description: Selected runtime preparation succeeded.
+    required: true
+  controller-plan-digest:
+    description: Emitted controller plan digest.
+    required: true
+  propagation-key:
+    description: Exact propagation key.
+    required: true
+  predecessors-ok:
+    description: Planning and materialization both succeeded.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Require successful predecessor nodes
+      if: ${{ inputs.predecessors-ok != 'true' }}
+      uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
+      with:
+        reason: Release propagation predecessors did not succeed
+    - name: Reconcile downstream delivery
+      id: reconcile
+      if: ${{ always() && inputs.runtime-ready == 'true' }}
+      uses: ./.buildchain/runtime/actions/release/propagation/reconcile
+      with:
+        request-json: ${{ inputs.request-json }}
+        predecessors-ok: ${{ inputs.predecessors-ok }}
+        token: ${{ inputs.token || github.token }}
+    - name: Upload captured Work
+      id: work-upload
+      if: ${{ always() && steps.reconcile.outputs.work-root != '' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ format('buildchain-release-propagation-work-{0}', inputs.propagation-key) }}
+        path: |-
+          .buildchain/release-propagation/work.json
+          .buildchain/release-propagation/work-status.json
+          .buildchain/release-propagation/stage-receipt.json
+        if-no-files-found: error
+    - name: Upload propagation evidence
+      id: upload
+      if: ${{ always() && inputs.controller-plan-digest != '' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-release-propagation-plan
+        path: .buildchain/release-propagation/*
+        if-no-files-found: error
+    - name: Report controller outcome
+      id: report
+      if: ${{ always() && inputs.controller-plan-digest != '' }}
+      uses: ./.buildchain/runtime/actions/release/propagation/report
+      with:
+        request-json: ${{ inputs.request-json }}
+        upload-outcome: ${{ steps.upload.outcome }}
+        work-upload-outcome: ${{ steps.work-upload.outcome }}
+        reconcile-outcome: ${{ steps.reconcile.outcome }}
+        cancelled: ${{ cancelled() }}
+    - name: Upload controller receipt
+      if: ${{ always() && steps.report.outputs.controller-receipt-digest != '' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ format('buildchain-release-propagation-controller-receipt-{0}', github.sha) }}
+        path: .buildchain/controller/receipt.json
+        if-no-files-found: error
+outputs:
+  controller-receipt-json:
+    description: controller-receipt-json
+    value: ${{ steps.report.outputs.controller-receipt-json }}
+  controller-receipt-digest:
+    description: controller-receipt-digest
+    value: ${{ steps.report.outputs.controller-receipt-digest }}
+  controller-receipt-status:
+    description: controller-receipt-status
+    value: ${{ steps.report.outputs.controller-receipt-status }}
+  propagation-receipt-json:
+    description: propagation-receipt-json
+    value: ${{ steps.reconcile.outputs.receipt-json }}
+  propagation-receipt-digest:
+    description: propagation-receipt-digest
+    value: ${{ steps.reconcile.outputs.receipt-digest }}
+  propagation-work-json:
+    description: propagation-work-json
+    value: ${{ steps.reconcile.outputs.work-json }}
+  propagation-work-root:
+    description: propagation-work-root
+    value: ${{ steps.reconcile.outputs.work-root }}
+  propagation-work-next-action:
+    description: propagation-work-next-action
+    value: ${{ steps.reconcile.outputs.next-action }}
+  controller-plan-artifact:
+    description: Controller plan artifact.
+    value: ${{ format('buildchain-release-propagation-controller-plan-{0}', github.sha) }}
+  controller-receipt-artifact:
+    description: Controller receipt artifact.
+    value: ${{ format('buildchain-release-propagation-controller-receipt-{0}', github.sha) }}

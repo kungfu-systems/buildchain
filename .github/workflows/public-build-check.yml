@@ -138,7 +138,7 @@ jobs:
         if: ${{ always() }}
       - name: check
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/source-check
+        uses: ./.buildchain/workflow-shell/actions/build/source/qualify
         with:
           runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
           runtime-repository: ${{ inputs.buildchain-repository || job.workflow_repository }}

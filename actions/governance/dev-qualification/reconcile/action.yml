@@ -1,0 +1,35 @@
+name: Reconcile exact-source Dev qualification
+description: Observe current qualification or revalidate its exact action and source before bounded mutation.
+inputs:
+  request-json:
+    description: Typed qualification request.
+    required: true
+  mode:
+    description: observe or apply.
+    required: true
+  observation-json:
+    description: Prior observed action and source.
+    default: "{}"
+  token:
+    description: Scoped qualification credential.
+    required: true
+outputs:
+  result-path:
+    description: result path
+  state:
+    description: state
+  action:
+    description: action
+  reason:
+    description: reason
+  source-sha:
+    description: source sha
+  pending-sha:
+    description: pending sha
+  active-run-id:
+    description: active run id
+  decision-root:
+    description: decision root
+runs:
+  using: node24
+  main: dist/index.js

@@ -64,7 +64,9 @@ on:
         type: string
         required: false
       platforms-json:
-        description: "Optional runner objects: id, name, platform, runner JSON string, capabilities, non-sensitive scalar environment, and optional required=false"
+        description:
+          "Optional runner objects: id, name, platform, runner JSON string, capabilities, non-sensitive scalar
+          environment, and optional required=false"
         default: ""
         type: string
         required: false
@@ -87,7 +89,9 @@ on:
         type: string
         required: false
       checkout-cache-reference-repository-template:
-        description: Trusted runner-local bare reference repository template. Supports {owner}, {repo}, {repository}, {repositorySlug}, and {sha}.
+        description:
+          Trusted runner-local bare reference repository template. Supports {owner}, {repo}, {repository},
+          {repositorySlug}, and {sha}.
         default: ""
         type: string
         required: false
@@ -214,11 +218,10 @@ jobs:
           persist-credentials: false
       - name: Gate profile / plan
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/gate-profile-plan
+        uses: ./.buildchain/workflow-shell/actions/build/gate/plan
         with:
           request-json: ${{ toJSON(inputs) }}
-          matrix-json: ${{ toJSON(matrix) }}
-          job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
+          workflow-sha: ${{ job.workflow_sha }}
   run-gates:
     name: Gate profile / ${{ matrix.gate.name }}
     needs: plan
@@ -241,14 +244,14 @@ jobs:
           persist-credentials: false
       - name: Gate profile / ${{ matrix.gate.name }}
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/gate-profile-run-gates
+        uses: ./.buildchain/workflow-shell/actions/build/gate/execute
         with:
           request-json: ${{ toJSON(inputs) }}
-          needs-plan-outputs-buildchain-runtime-sha: ${{ toJSON(needs.plan.outputs.buildchain-runtime-sha) }}
-          needs-plan-outputs-source-sha: ${{ toJSON(needs.plan.outputs.source-sha) }}
-          needs-plan-outputs-buildchain-runtime-ref: ${{ toJSON(needs.plan.outputs.buildchain-runtime-ref) }}
           matrix-json: ${{ toJSON(matrix) }}
-          needs-plan-outputs-gate-matrix-artifact: ${{ toJSON(needs.plan.outputs.gate-matrix-artifact) }}
+          runtime-sha: ${{ needs.plan.outputs.buildchain-runtime-sha }}
+          source-sha: ${{ needs.plan.outputs.source-sha }}
+          runtime-ref: ${{ needs.plan.outputs.buildchain-runtime-ref }}
+          plan-artifact: ${{ needs.plan.outputs.gate-matrix-artifact }}
   aggregate:
     name: Gate profile / aggregate
     needs:
@@ -275,12 +278,12 @@ jobs:
           persist-credentials: false
       - name: Gate profile / aggregate
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/gate-profile-aggregate
+        uses: ./.buildchain/workflow-shell/actions/build/gate/aggregate
         with:
           request-json: ${{ toJSON(inputs) }}
-          needs-plan-outputs-buildchain-runtime-sha: ${{ toJSON(needs.plan.outputs.buildchain-runtime-sha) }}
-          needs-plan-outputs-gate-matrix-artifact: ${{ toJSON(needs.plan.outputs.gate-matrix-artifact) }}
-          needs-plan-outputs-controller-plan-artifact: ${{ toJSON(needs.plan.outputs.controller-plan-artifact) }}
-          needs-plan-outputs-source-sha: ${{ toJSON(needs.plan.outputs.source-sha) }}
-          needs-plan-result: ${{ toJSON(needs.plan.result) }}
-          needs-run-gates-result: ${{ toJSON(needs.run-gates.result) }}
+          runtime-sha: ${{ needs.plan.outputs.buildchain-runtime-sha }}
+          plan-artifact: ${{ needs.plan.outputs.gate-matrix-artifact }}
+          controller-plan-artifact: ${{ needs.plan.outputs.controller-plan-artifact }}
+          source-sha: ${{ needs.plan.outputs.source-sha }}
+          plan-result: ${{ needs.plan.result }}
+          execution-result: ${{ needs.run-gates.result }}

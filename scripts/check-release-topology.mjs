@@ -24,10 +24,10 @@ function read(relative) {
 const LOCAL_MODULE_EXTENSIONS = ["", ".js", ".mjs", ".cjs"];
 const PRIVILEGED_ENTRYPOINTS = [
   "packages/core/release/promote-candidate/action.js",
-  "packages/core/publication/commands/binary-publication-evidence.mjs",
-  "packages/core/release/commands/next-development-review.mjs",
-  "packages/core/publication/commands/oci-compose-preview.mjs",
-  "packages/core/publication/commands/publication-settlement.mjs",
+  "packages/core/publication/binary/action.js",
+  "packages/core/release/next-development/actions.js",
+  "packages/core/publication/oci/preview-actions.js",
+  "packages/core/publication/settlement/actions.js",
 ];
 
 export function localModuleSpecifiers(source) {
@@ -163,9 +163,9 @@ export function discoverReleaseAuthorityClosure() {
   const privilegedModules = discoverStaticModuleClosure(PRIVILEGED_ENTRYPOINTS);
   const rustWasmArtifact = "packages/core/runtime/buildchain-domain.wasm";
   const rustWasmDistributions = [
-    "actions/release/promote-ref/dist/buildchain-domain.wasm",
-    "actions/release/settle/dist/buildchain-domain.wasm",
-    "actions/release/promote-candidate/dist/buildchain-domain.wasm",
+    "actions/release/promotion/ref/dist/buildchain-domain.wasm",
+    "actions/release/tail/settle/dist/buildchain-domain.wasm",
+    "actions/release/promotion/candidate/dist/buildchain-domain.wasm",
   ];
   const excludedRefPromotionModules = productionFiles(
     "packages/core/release/promote-ref",
@@ -230,33 +230,56 @@ function permission(block, name) {
 function workflowSnapshot(relative) {
   const workflow = readWorkflow(relative, root);
   const source = read(relative);
-  const jobs = Object.keys(workflow.jobs).sort().map((id) => {
-    const graph = inspectWorkflowJob(relative, id, root);
-    const job = graph.job;
-    const block = JSON.stringify({ job, steps: graph.steps });
-    const permissions = job.permissions || workflow.permissions || {};
-    const inheritedPublisher = typeof permissions !== "string" && !Object.keys(permissions).length &&
-      graph.steps.some((step) => /actions\/release\/promote-candidate$/.test(step.uses || ""));
-    const contents = permissions.contents || (inheritedPublisher ? "inherited" : null);
-    const idToken = permissions["id-token"] || (inheritedPublisher ? "inherited" : null);
-    return {
-      id, kind: job.uses ? "reusable-call" : "runner", uses: job.uses || null,
-      permissions: { contents, idToken },
-      carriers: {
-        artifactDownload: graph.steps.some((step) => step.uses?.startsWith("actions/download-artifact@")),
-        artifactUpload: graph.steps.some((step) => step.uses?.startsWith("actions/upload-artifact@")),
-        jobOutput: Object.keys(job.outputs || {}).length > 0,
-      },
-      mutationSignals: [
-        (["write", "inherited"].includes(contents)) && "contents-write",
-        (["write", "inherited"].includes(idToken)) && "oidc-write",
-        /actions\/release\/promote-(?:candidate|ref)/u.test(block) && "promotion-runtime",
-        /(?:git push|npm publish|gh release (?:create|upload))/u.test(block) && "direct-publication-command",
-      ].filter(Boolean),
-    };
-  });
-  return { path: relative, triggers: Object.keys(workflow.on || {}).sort(), jobs,
-    reusableEdges: Object.values(workflow.jobs).flatMap((job) => job.uses ? [job.uses] : []).sort() };
+  const jobs = Object.keys(workflow.jobs)
+    .sort()
+    .map((id) => {
+      const graph = inspectWorkflowJob(relative, id, root);
+      const job = graph.job;
+      const block = JSON.stringify({ job, steps: graph.steps });
+      const permissions = job.permissions || workflow.permissions || {};
+      const inheritedPublisher =
+        typeof permissions !== "string" &&
+        !Object.keys(permissions).length &&
+        graph.steps.some((step) =>
+          /actions\/release\/promotion\/candidate$/.test(step.uses || ""),
+        );
+      const contents =
+        permissions.contents || (inheritedPublisher ? "inherited" : null);
+      const idToken =
+        permissions["id-token"] || (inheritedPublisher ? "inherited" : null);
+      return {
+        id,
+        kind: job.uses ? "reusable-call" : "runner",
+        uses: job.uses || null,
+        permissions: { contents, idToken },
+        carriers: {
+          artifactDownload: graph.steps.some((step) =>
+            step.uses?.startsWith("actions/download-artifact@"),
+          ),
+          artifactUpload: graph.steps.some((step) =>
+            step.uses?.startsWith("actions/upload-artifact@"),
+          ),
+          jobOutput: Object.keys(job.outputs || {}).length > 0,
+        },
+        mutationSignals: [
+          ["write", "inherited"].includes(contents) && "contents-write",
+          ["write", "inherited"].includes(idToken) && "oidc-write",
+          /actions\/release\/promotion\/(?:candidate|ref)/u.test(block) &&
+            "promotion-runtime",
+          /(?:git push|npm publish|gh release (?:create|upload))/u.test(
+            block,
+          ) && "direct-publication-command",
+        ].filter(Boolean),
+      };
+    });
+  return {
+    path: relative,
+    triggers: Object.keys(workflow.on || {}).sort(),
+    jobs,
+    reusableEdges: Object.values(workflow.jobs)
+      .flatMap((job) => (job.uses ? [job.uses] : []))
+      .sort(),
+  };
 }
 
 export function discoverReleaseTopology(
@@ -354,16 +377,11 @@ export function findUnknownReleaseTopology(
 ) {
   const declared = new Set(workflowPaths);
   return allWorkflowPaths
-    .filter(
-      (relative) =>
-        !declared.has(
-          relative,
-        ),
-    )
+    .filter((relative) => !declared.has(relative))
     .filter((relative) => {
       const source = readWorkflow(relative);
       const usesReleaseAuthority = parseYamlUses(source).some(({ value }) =>
-        /(?:release-candidate-promote|promote-buildchain-ref|release-tail|actions\/release\/promote-(?:candidate|ref)|\.github\/workflows\/(?:public-release-promote|\.release-promote))/u.test(
+        /(?:release-candidate-promote|promote-buildchain-ref|release-tail|actions\/release\/promotion\/(?:candidate|ref)|\.github\/workflows\/(?:public-release-promote|\.release-promote))/u.test(
           value,
         ),
       );
@@ -431,10 +449,10 @@ function assertAuthorityClosure(ledger) {
     closure.privilegedExecutableClosure.root,
     /^sha256:[0-9a-f]{64}$/u,
   );
-  const reachableRefPromotionEngines = closure.excludedRefPromotionModules.filter(
-    (relative) =>
+  const reachableRefPromotionEngines =
+    closure.excludedRefPromotionModules.filter((relative) =>
       closure.privilegedExecutableClosure.modules.includes(relative),
-  );
+    );
   assert.deepEqual(
     reachableRefPromotionEngines,
     [],
@@ -463,16 +481,45 @@ function assertAuthorityClosure(ledger) {
       new RegExp(pattern, "u"),
       `legacy release engine remains reachable: ${pattern}`,
     );
-  const canonicalWorkflow = read(
+  const canonicalWorkflow = read(".github/workflows/.release-promote.yml");
+  const qualify = inspectWorkflowJob(
     ".github/workflows/.release-promote.yml",
+    "qualify",
+    root,
   );
-  const qualify = inspectWorkflowJob(".github/workflows/.release-promote.yml", "qualify", root);
-  assert.ok(qualify.modules.has("packages/core/release/commands/release-candidate-adapter.mjs"));
-  const apply = inspectWorkflowJob(".github/workflows/.release-promote.yml", "apply", root);
-  assert.ok(apply.modules.has("packages/core/release/promote-candidate/action.js"));
-  assert.match(apply.modules.get("packages/core/release/promote-candidate/action.js"), /release-invocation\.json[\s\S]*release-transaction\.json[\s\S]*release-receipt\.json/);
-  const settle = inspectWorkflowJob(".github/workflows/.release-promote.yml", "settle", root);
-  assert.match(JSON.stringify(settle.steps), /release-receipt\.json/);
+  assert.ok(
+    qualify.modules.has("packages/core/release/promotion/qualification.js"),
+  );
+  const apply = inspectWorkflowJob(
+    ".github/workflows/.release-promote.yml",
+    "apply",
+    root,
+  );
+  assert.ok(
+    apply.modules.has("packages/core/release/promote-candidate/action.js"),
+  );
+  assert.match(
+    apply.modules.get(
+      "packages/core/release/promote-candidate/release-documents.js",
+    ),
+    /release-invocation\.json[\s\S]*release-transaction\.json/,
+  );
+  assert.match(
+    apply.modules.get(
+      "packages/core/release/promote-candidate/provider-settlement.js",
+    ),
+    /release-receipt\.json/,
+  );
+  const settle = inspectWorkflowJob(
+    ".github/workflows/.release-promote.yml",
+    "settle",
+    root,
+  );
+  assert.ok(settle.actions.has("actions/publication/settlement/verify"));
+  assert.match(
+    settle.modules.get("packages/core/publication/settlement/actions.js"),
+    /verifyPublicationSettlement/,
+  );
 }
 
 export function checkReleaseTopology() {

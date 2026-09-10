@@ -158,9 +158,6 @@ test("promotion runtime override roots provider reachability and source persiste
   );
   const request = {
     consumerRoot,
-    runtimeModulePath: path.resolve(
-      "packages/core/consumer/runtime-ref-resume-authority.js",
-    ),
     consumerPolicyReceiptPath: policyPath,
     consumerPolicyReceiptRoot: ROOT_A,
     sourceSha: SHA_A,

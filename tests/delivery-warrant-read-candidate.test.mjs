@@ -8,7 +8,7 @@ import {
   runDeliveryWarrantReadCandidate,
 } from "../packages/core/dev-delivery/delivery-warrant-read-candidate.js";
 import { domainContentRoot } from "../packages/core/contracts/canonical-contracts.js";
-import { runDevDeliveryCommand } from "../packages/core/dev-delivery/commands/dev-delivery-warrant.mjs";
+import { runDevDeliveryCommand } from "../packages/core/dev-delivery/warrant/service.js";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 const OBSERVED_AT = "2026-08-08T12:00:00.000Z";

@@ -1,0 +1,105 @@
+name: sign-build-artifact
+description: Dispatch signing authority, finalize verified bytes, or run the isolated macOS credential instance.
+inputs:
+  plan:
+    description: Rooted build plan
+    required: true
+  platform:
+    description: Selected platform
+    required: true
+  kind:
+    description: artifact or credential
+    required: true
+  control-token:
+    description: Detached authority token
+    required: false
+    default: ""
+  certificate-p12-base64:
+    description: Credential instance only
+    required: false
+    default: ""
+  certificate-password:
+    description: Credential instance only
+    required: false
+    default: ""
+  notary-api-key-p8-base64:
+    description: Credential instance only
+    required: false
+    default: ""
+  notary-api-key-id:
+    description: Credential instance only
+    required: false
+    default: ""
+  notary-api-issuer:
+    description: Credential instance only
+    required: false
+    default: ""
+  expected-team-id:
+    description: Credential instance only
+    required: false
+    default: ""
+  certificate-sha1:
+    description: Credential instance only
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Configure scoped artifact transport
+      if: ${{ fromJSON(inputs.plan).transfer.mode == 's3-to-github-artifacts' }}
+      uses: aws-actions/configure-aws-credentials@v6.1.0
+      with:
+        role-to-assume: ${{ fromJSON(inputs.plan).environment.transfer.download_role_arn }}
+        aws-region: ${{ fromJSON(inputs.plan).transfer.s3Region }}
+        audience: ${{ fromJSON(inputs.plan).transfer.oidcAudience }}
+    - name: Complete detached signing and finalization
+      if: ${{ inputs.kind == 'artifact' }}
+      id: final
+      with:
+        plan: ${{ inputs.plan }}
+        platform: ${{ inputs.platform }}
+        token: ${{ github.token }}
+        control-token: ${{ inputs.control-token }}
+      uses: ./.buildchain/runtime/actions/build/signing/complete
+    - name: Validate sealed credential input
+      if: ${{ inputs.kind == 'credential' }}
+      id: identity
+      with:
+        plan: ${{ inputs.plan }}
+        platform: ${{ inputs.platform }}
+        token: ${{ github.token }}
+      uses: ./.buildchain/runtime/actions/build/credential/admit
+    - name: Sign and notarize sealed macOS input
+      if: ${{ inputs.kind == 'credential' }}
+      id: credential
+      uses: ./.buildchain/runtime/actions/build/credential/macos-island
+      with:
+        input-root: .buildchain/credential-input
+        output-root: .buildchain/credential-output
+        source-repository: ${{ github.repository }}
+        source-sha: ${{ fromJSON(inputs.plan).source.sha }}
+        source-tree-sha: ${{ fromJSON(inputs.plan).source.tree_sha }}
+        source-ref: ${{ fromJSON(inputs.plan).source.ref }}
+        buildchain-runtime-sha: ${{ fromJSON(inputs.plan).identity.sha }}
+        artifact-name:
+          ${{ format('{0}-macos-credential-{1}', fromJSON(inputs.plan).artifacts.name, fromJSON(inputs.plan).source.sha)
+          }}
+        platform-id: ${{ format('{0}-credential', fromJSON(inputs.platform).id) }}
+        artifact-relative-output: product/release
+        expected-bundle-id: ${{ steps.identity.outputs.bundle-id }}
+        expected-team-id: ${{ inputs.expected-team-id }}
+        certificate-sha1: ${{ inputs.certificate-sha1 }}
+        certificate-p12-base64: ${{ inputs.certificate-p12-base64 }}
+        certificate-password: ${{ inputs.certificate-password }}
+        notary-api-key-p8-base64: ${{ inputs.notary-api-key-p8-base64 }}
+        notary-api-key-id: ${{ inputs.notary-api-key-id }}
+        notary-api-issuer: ${{ inputs.notary-api-issuer }}
+    - name: Publish signed credential evidence
+      if: ${{ inputs.kind == 'credential' }}
+      with:
+        plan: ${{ inputs.plan }}
+        platform: ${{ inputs.platform }}
+        token: ${{ github.token }}
+        artifact-root: ${{ steps.credential.outputs.artifact-root }}
+        manifest-path: ${{ steps.credential.outputs.manifest-path }}
+      uses: ./.buildchain/runtime/actions/build/credential/retain

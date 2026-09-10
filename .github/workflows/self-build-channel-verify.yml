@@ -22,4 +22,4 @@ jobs:
           path: .buildchain/workflow-shell
           persist-credentials: false
       - name: Verify channel lineage
-        uses: ./.buildchain/workflow-shell/actions/release/verify-lineage
+        uses: ./.buildchain/workflow-shell/actions/release/line/verify-lineage

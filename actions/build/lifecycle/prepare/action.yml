@@ -1,0 +1,62 @@
+name: prepare-build-environment
+description: Prepare runtime dependencies, exact source and declared toolchains.
+inputs:
+  plan:
+    description: Rooted build plan
+    required: true
+  platform:
+    description: Selected platform
+    required: false
+    default: ""
+  checkout-source:
+    description: Whether this instance consumes source
+    required: false
+    default: "false"
+  tools:
+    description: Whether project toolchains are needed
+    required: false
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: Setup configured Node
+      uses: actions/setup-node@v6.4.0
+      with:
+        node-version: ${{ inputs.tools == 'true' && fromJSON(inputs.plan).tools.node || '24' }}
+    - name: Install exact runtime dependencies
+      uses: ./.buildchain/runtime/actions/runtime/dependencies/install
+      with:
+        directory: .buildchain/runtime
+    - name: Prepare exact source and runner evidence
+      if: ${{ inputs.checkout-source == 'true' }}
+      uses: ./.buildchain/runtime/actions/build/environment/provision
+      with:
+        plan: ${{ inputs.plan }}
+        platform: ${{ inputs.platform }}
+        tools: ${{ inputs.tools }}
+        token: ${{ github.token }}
+    - name: Setup configured Go
+      if: ${{ inputs.tools == 'true' && fromJSON(inputs.plan).tools.setup_go }}
+      uses: actions/setup-go@v6.5.0
+      with:
+        go-version: ${{ fromJSON(inputs.plan).tools.go }}
+        cache: false
+    - name: Setup configured Rust
+      if: ${{ inputs.tools == 'true' && runner.os != 'Windows' && fromJSON(inputs.plan).tools.setup_rust }}
+      uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+      with:
+        toolchain: ${{ fromJSON(inputs.plan).tools.rust }}
+      env:
+        RUSTUP_DIST_SERVER:
+          ${{ fromJSON(inputs.plan).environment.tools.rustup_dist_server || 'https://static.rust-lang.org'
+          }}
+        RUSTUP_UPDATE_ROOT:
+          ${{ fromJSON(inputs.plan).environment.tools.rustup_update_root || 'https://static.rust-lang.org/rustup'
+          }}
+    - name: Install isolated Windows Rust toolchain
+      if: ${{ inputs.tools == 'true' && runner.os == 'Windows' && fromJSON(inputs.plan).tools.setup_rust }}
+      uses: ./.buildchain/runtime/actions/runtime/toolchain/windows-rust
+      with:
+        toolchain: ${{ fromJSON(inputs.plan).tools.rust }}
+        dist-server: ${{ fromJSON(inputs.plan).environment.tools.rustup_dist_server }}
+        update-root: ${{ fromJSON(inputs.plan).environment.tools.rustup_update_root }}

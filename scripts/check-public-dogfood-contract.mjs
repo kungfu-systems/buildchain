@@ -33,7 +33,7 @@ jobs:
       node-version: "24"
       go-version: "1.25.x"
       install-artifact-path: node_modules/.modules.yaml
-      build-artifact-path: actions/build/run-lifecycle/dist/index.js
+      build-artifact-path: actions/build/lifecycle/run/dist/index.js
       verify-artifact-path: dist/site
 `;
 }
@@ -68,6 +68,11 @@ function assertNoPrivateMarkers(relative, text) {
 }
 
 const CANARY_PHASES = ["consumer-admission", "qualify", "reconcile"];
+const CANARY_NODES = {
+  "consumer-admission": "admit-consumer",
+  qualify: "qualify",
+  reconcile: "reconcile",
+};
 
 function assertReusableWorkflow(root) {
   const reusable = read(root, REUSABLE_PATH);
@@ -75,11 +80,11 @@ function assertReusableWorkflow(root) {
   if (!Object.hasOwn(workflow.on || {}, "workflow_call"))
     fail("Canary must expose workflow_call");
   const nodes = CANARY_PHASES.map((phase) => {
-    const nodePath = `actions/build/stage-capsule-canary-${phase}`;
+    const nodePath = `actions/build/stage-capsule/${CANARY_NODES[phase]}`;
     const call = workflow.jobs?.[phase]?.steps?.at(-1);
     if (
       call?.uses !== `./.buildchain/workflow-shell/${nodePath}` ||
-      call.with?.["job-workflow-sha"] !== "${{ toJSON(job.workflow_sha) }}" ||
+      call.with?.["workflow-sha"] !== "${{ job.workflow_sha }}" ||
       call.with?.["request-json"] !== "${{ toJSON(inputs) }}"
     )
       fail(
@@ -97,7 +102,7 @@ function assertReusableWorkflow(root) {
     prepare < 0 ||
     prepare >= consumerNode ||
     steps[prepare].uses !==
-      "./.buildchain/workflow-shell/actions/runtime/prepare"
+      "./.buildchain/workflow-shell/actions/runtime/environment/prepare"
   )
     fail(
       "Canary must bind the Buildchain runtime before selecting the consumer Node version",
@@ -107,29 +112,45 @@ function assertReusableWorkflow(root) {
     "${{ fromJSON(inputs.request-json).node-version }}"
   )
     fail("Canary must preserve the requested consumer Node version");
-  for (const stage of ["install", "build", "verify"]) {
-    const step = steps.find((step) =>
-      step.run?.includes(`lifecycle run ${stage}`),
-    );
-    if (
-      !step ||
-      !step.run.startsWith('"$BUILDCHAIN_NODE" ') ||
-      step.env?.BUILDCHAIN_NODE !==
-        "${{ steps.buildchain-runtime.outputs.node-path }}" ||
-      step.env?.BUILDCHAIN_SOURCE_SHA !== "${{ github.sha }}"
-    )
-      fail(
-        `${REUSABLE_PATH} must execute lifecycle.${stage} with the bound runtime and consumer source`,
-      );
-  }
-  const campaign = steps.find((step) =>
-    step.run?.includes("stage-capsule-qualification.mjs campaign"),
+  const campaign = steps.find(
+    (step) =>
+      step.uses ===
+      "./.buildchain/runtime/actions/build/stage-capsule/qualify-consumer",
   );
   if (
-    campaign?.env?.CONSUMER_SOURCE_SHA !== "${{ github.sha }}" ||
-    campaign?.env?.BUILDCHAIN_RUNTIME_SHA !== "${{ steps.runtime.outputs.sha }}"
+    campaign?.with?.["workflow-sha"] !== "${{ steps.runtime.outputs.sha }}" ||
+    campaign?.with?.["request-json"] !== "${{ inputs.request-json }}" ||
+    campaign?.with?.platform !== "${{ fromJSON(inputs.matrix-json).platform }}"
   )
     fail("Canary campaign lost its exact source/runtime bindings");
+  const action = YAML.parse(
+    read(root, "actions/build/stage-capsule/qualify-consumer/action.yml"),
+  );
+  if (action.runs.using !== "node24" || action.runs.main !== "dist/index.js")
+    fail(
+      "Canary must execute its qualification with the bundled Buildchain Node runtime",
+    );
+  const adapter = read(root, "packages/core/build/stage-capsule/actions.js");
+  for (const binding of [
+    "runtimeRoot",
+    "runtimeSha",
+    "sourceSha: env.GITHUB_SHA",
+    "qualifyStageCapsuleConsumer",
+  ])
+    if (!adapter.includes(binding))
+      fail(`Canary action lost exact binding: ${binding}`);
+  const transaction = read(root, "packages/core/build/stage-capsule/canary.js");
+  for (const binding of [
+    '["install", "build", "verify"]',
+    "runLifecycle(",
+    "BUILDCHAIN_NODE: process.execPath",
+    "consumerSourceRevision: sourceSha",
+    "runtimeRef: runtimeSha",
+  ])
+    if (!transaction.includes(binding))
+      fail(`Canary lifecycle lost bound execution: ${binding}`);
+  if (steps.some((step) => step.run || step.shell))
+    fail("Canary composite must only compose actions");
   const go = steps.find((step) => step.uses?.startsWith("actions/setup-go@"));
   if (go?.if !== "fromJSON(inputs.request-json).go-version != ''")
     fail("Canary must retain its optional declared Go toolchain");
@@ -149,7 +170,8 @@ function assertReusableWorkflow(root) {
 function assertActionInventory(root) {
   const allowed = new Set(
     CANARY_PHASES.map(
-      (phase) => `actions/build/stage-capsule-canary-${phase}/action.yml`,
+      (phase) =>
+        `actions/build/stage-capsule/${CANARY_NODES[phase]}/action.yml`,
     ),
   );
   function visit(relative) {
@@ -163,6 +185,11 @@ function assertActionInventory(root) {
         const source = read(root, child);
         if (
           source.includes("actions/build/stage-capsule-canary-") ||
+          Object.values(CANARY_NODES).some((node) =>
+            source.includes(`actions/build/stage-capsule/${node}`),
+          ) ||
+          source.includes("actions/build/stage-capsule/qualify-consumer") ||
+          source.includes("actions/build/stage-capsule/aggregate-consumer") ||
           source.includes(
             "packages/core/build/commands/stage-capsule-qualification.mjs",
           )
@@ -187,7 +214,10 @@ function assertWorkflowInventory(root) {
       (text.includes(
         "packages/core/build/commands/stage-capsule-qualification.mjs",
       ) ||
-        text.includes("actions/build/stage-capsule-canary-"))
+        text.includes("actions/build/stage-capsule-canary-") ||
+        Object.values(CANARY_NODES).some((node) =>
+          text.includes(`actions/build/stage-capsule/${node}`),
+        ))
     )
       fail(`${relative} invokes the private qualification script directly`);
     if (
@@ -203,7 +233,7 @@ function assertWorkflowInventory(root) {
 function assertProtectedVerify(root) {
   const verify = read(root, ".github/workflows/self-build-verify.yml");
   const parsed = YAML.parse(verify);
-  const nodePath = "actions/build/verify-check/action.yml";
+  const nodePath = "actions/build/verification/repository/action.yml";
   if (
     parsed.jobs.check.needs !== "stage-capsule-checkpoints" ||
     parsed.jobs.check.steps.at(-1).uses !==
@@ -213,13 +243,17 @@ function assertProtectedVerify(root) {
       "Verify must bind the protected check node after Stage Capsule checkpoints",
     );
   const implementation = read(root, nodePath);
+  const steps = YAML.parse(implementation).runs.steps;
+  const qualify = steps.find((step) => step.id === "source-verification");
+  if (qualify?.uses !== "./actions/build/verification/qualify-source")
+    fail("Verify is missing its owned source qualification action");
+  const transaction = read(root, "packages/core/build/verification/source.js");
   for (const required of [
-    "name: Run declared verify lifecycle (full source tests and generated artifact checks)",
-    "node .buildchain/runtime/bin/buildchain.mjs lifecycle run verify",
-    "run: node packages/core/build/commands/source-verification-evidence.mjs plan",
-    "run: node packages/core/build/commands/source-verification-evidence.mjs seal",
+    "selectSourceVerification",
+    "qualifySourceLifecycle",
+    "sealSourceVerification",
   ])
-    if (!implementation.includes(required))
+    if (!transaction.includes(required))
       fail(`Verify is missing protected gate ${required}`);
   for (const forbidden of [
     "stage-capsule-qualification:",

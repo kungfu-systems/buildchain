@@ -1,0 +1,13 @@
+name: Install an isolated Windows Rust toolchain
+description: Install an isolated Windows Rust toolchain.
+inputs:
+  toolchain:
+    description: Exact declared Rust toolchain
+    required: true
+  dist-server:
+    description: Governed Rust distribution mirror
+  update-root:
+    description: Governed rustup update mirror
+runs:
+  using: node24
+  main: dist/index.js

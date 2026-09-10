@@ -3,7 +3,6 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import zlib from "node:zlib";
-
 import { loadBuildchainConfig } from "../consumer/buildchain-config.js";
 import { writePublicationArtifact } from "./publication-artifact.js";
 import { preparePublicationNpmPackage } from "./publication-package.js";
@@ -331,28 +330,28 @@ function sourceFacts(cwd, requestedSha = "") {
   };
 }
 
-function toolchainFacts(config) {
+function toolchainFacts(config, selected) {
   const publication = config.publication || {};
   const declared = publication.toolchain || {};
   const type = String(
-    process.env.BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE ||
+    (selected ? selected.type : process.env.BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE) ||
       declared.type ||
       "custom-command",
   ).trim();
   const facts = {
     type,
     image: String(
-      process.env.BUILDCHAIN_PUBLICATION_TOOLCHAIN_IMAGE ||
+      (selected ? selected.image : process.env.BUILDCHAIN_PUBLICATION_TOOLCHAIN_IMAGE) ||
         declared.image ||
         "",
     ).trim(),
     digest: String(
-      process.env.BUILDCHAIN_PUBLICATION_TOOLCHAIN_DIGEST ||
+      (selected ? selected.digest : process.env.BUILDCHAIN_PUBLICATION_TOOLCHAIN_DIGEST) ||
         declared.digest ||
         "",
     ).trim(),
     command: String(
-      process.env.BUILDCHAIN_PUBLICATION_TOOLCHAIN_COMMAND ||
+      (selected ? selected.command : process.env.BUILDCHAIN_PUBLICATION_TOOLCHAIN_COMMAND) ||
         declared.command ||
         "",
     ).trim(),
@@ -875,6 +874,7 @@ export function verifyPublicationReproducibility({
   pullToolchain = true,
   packageName = "",
   allowUnpinnedToolchain = false,
+  toolchain: selectedToolchain,
   overlayPaths = [DEFAULT_REGISTRY_INPUT_DIR, DEFAULT_REGISTRY_HYDRATION],
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
@@ -885,7 +885,7 @@ export function verifyPublicationReproducibility({
     );
   }
   const source = sourceFacts(resolvedCwd, sourceSha);
-  const toolchain = toolchainFacts(loaded.config);
+  const toolchain = toolchainFacts(loaded.config, selectedToolchain);
   if (toolchain.type === "latex-docker" && pullToolchain) {
     run("docker", ["pull", toolchain.imageRef], {
       cwd: resolvedCwd,

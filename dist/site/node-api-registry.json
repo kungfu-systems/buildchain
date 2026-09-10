@@ -3645,11 +3645,11 @@
       "id": "packages/core/build/anchored-version-material.js#createAnchoredVersionMaterialEvidence",
       "name": "createAnchoredVersionMaterialEvidence",
       "kind": "function",
-      "signature": "function createAnchoredVersionMaterialEvidence({ cwd = process.cwd(), targetChannel = \"\", targetRef = \"\", alphaRef = \"\", releaseRef = \"HEAD\", runLifecycle = true, } = {})",
+      "signature": "function createAnchoredVersionMaterialEvidence({ cwd = process.cwd(), targetChannel = \"\", targetRef = \"\", alphaRef = \"\", releaseRef = \"HEAD\", runLifecycle = true, environment = process.env, } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ cwd = process.cwd(), targetChannel = \"\", targetRef = \"\", alphaRef = \"\", releaseRef = \"HEAD\", runLifecycle = true, } = {}"
+          "signature": "{ cwd = process.cwd(), targetChannel = \"\", targetRef = \"\", alphaRef = \"\", releaseRef = \"HEAD\", runLifecycle = true, environment = process.env, } = {}"
         }
       ],
       "returns": "unknown",
@@ -6452,11 +6452,11 @@
       "id": "packages/core/consumer/buildchain-config.js#runLifecycleStage",
       "name": "runLifecycleStage",
       "kind": "function",
-      "signature": "function runLifecycleStage({ cwd = process.cwd(), loadedConfig, name, stage, env: extraEnv, timeoutMinutes })",
+      "signature": "function runLifecycleStage({ cwd = process.cwd(), loadedConfig, name, stage, env: extraEnv, baseEnv = process.env, timeoutMinutes })",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ cwd = process.cwd(), loadedConfig, name, stage, env: extraEnv, timeoutMinutes }"
+          "signature": "{ cwd = process.cwd(), loadedConfig, name, stage, env: extraEnv, baseEnv = process.env, timeoutMinutes }"
         }
       ],
       "returns": "unknown",
@@ -6751,7 +6751,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/floating-consumer-policy.js",
-        "line": 78
+        "line": 79
       },
       "example": "import { consumerPolicyScannerRoot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6780,7 +6780,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/floating-consumer-policy.js",
-        "line": 89
+        "line": 90
       },
       "example": "import { resolveFloatingConsumerPolicyAuthority } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6809,7 +6809,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/floating-consumer-policy.js",
-        "line": 431
+        "line": 432
       },
       "example": "import { scanFloatingConsumerPolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -17942,6 +17942,39 @@
       ]
     },
     {
+      "id": "packages/core/publication/publication-authority.js#validatePublicationCapability",
+      "name": "validatePublicationCapability",
+      "kind": "function",
+      "signature": "function validatePublicationCapability(capability, now = new Date())",
+      "parameters": [
+        {
+          "name": "capability",
+          "signature": "capability"
+        },
+        {
+          "name": "now",
+          "signature": "now = new Date()"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication/publication-authority.js",
+        "line": 955
+      },
+      "example": "import { validatePublicationCapability } from \"@kungfu-tech/buildchain/publication-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/publication/publication-authority.js#verifyPublicationAdmission",
       "name": "verifyPublicationAdmission",
       "kind": "function",
@@ -19416,7 +19449,7 @@
       ],
       "source": {
         "path": "packages/core/publication/publication-reproducibility.js",
-        "line": 12
+        "line": 11
       },
       "example": "import { PUBLICATION_REPRODUCIBILITY_RECEIPT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19429,11 +19462,11 @@
       "id": "packages/core/publication/publication-reproducibility.js#verifyPublicationReproducibility",
       "name": "verifyPublicationReproducibility",
       "kind": "function",
-      "signature": "function verifyPublicationReproducibility({ cwd = process.cwd(), sourceSha = \"\", output = DEFAULT_OUTPUT, promote = false, keepWorkspaces = false, pullToolchain = true, packageName = \"\", allowUnpinnedToolchain = false, overlayPaths = [DEFAULT_REGISTRY_INPUT_DIR, DEFAULT_REGISTRY_HYDRATION], } = {})",
+      "signature": "function verifyPublicationReproducibility({ cwd = process.cwd(), sourceSha = \"\", output = DEFAULT_OUTPUT, promote = false, keepWorkspaces = false, pullToolchain = true, packageName = \"\", allowUnpinnedToolchain = false, toolchain: selectedToolchain, overlayPaths = [DEFAULT_REGISTRY_INPUT_DIR, DEFAULT_REGISTRY_HYDRATION], } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ cwd = process.cwd(), sourceSha = \"\", output = DEFAULT_OUTPUT, promote = false, keepWorkspaces = false, pullToolchain = true, packageName = \"\", allowUnpinnedToolchain = false, overlayPaths = [DEFAULT_REGISTRY_INPUT_DIR, DEFAULT_REGISTRY_HYDRATION], } = {}"
+          "signature": "{ cwd = process.cwd(), sourceSha = \"\", output = DEFAULT_OUTPUT, promote = false, keepWorkspaces = false, pullToolchain = true, packageName = \"\", allowUnpinnedToolchain = false, toolchain: selectedToolchain, overlayPaths = [DEFAULT_REGISTRY_INPUT_DIR, DEFAULT_REGISTRY_HYDRATION], } = {}"
         }
       ],
       "returns": "unknown",
@@ -19445,7 +19478,7 @@
       ],
       "source": {
         "path": "packages/core/publication/publication-reproducibility.js",
-        "line": 869
+        "line": 868
       },
       "example": "import { verifyPublicationReproducibility } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -27760,7 +27793,7 @@
       "specifier": "@kungfu-tech/buildchain/anchored-version-material",
       "export": "./anchored-version-material",
       "target": "./packages/core/build/anchored-version-material.js",
-      "digest": "sha256:ee72835bc5005007992349a3b1fe1c10734769a3591fc09f9302031e28987668",
+      "digest": "sha256:fb3080d6d786de224220222d52eaeba01edff4dcca5a46b087689f6274217953",
       "summary": "Anchored/manual derived version material preflight, exact-tree binding, and digest evidence APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -27784,7 +27817,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/contracts/buildchain-contract.js",
-      "digest": "sha256:8a327134dec3b9ddb44e95735f9de0bbc00ce13c0df45ba3df3232c9589b7995",
+      "digest": "sha256:1feb15dd03e3475d5507b6b90e8bf4a65d3676c4effc502fd0ff00b5b32c1ba7",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -29001,7 +29034,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-reproducibility",
       "export": "./publication-reproducibility",
       "target": "./packages/core/publication/publication-reproducibility.js",
-      "digest": "sha256:b0747193bcf4b1b468285faedd693f3ba00e335a7a9c5e6aab608cae14c8e50f",
+      "digest": "sha256:d027569bed07f6136d20cbcafe289f55ef04493ab680f7dbfc8b7e097fbdee11",
       "summary": "Two-clean-build publication byte reproducibility receipt APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -29073,14 +29106,14 @@
       "specifier": "@kungfu-tech/buildchain/publication-authority",
       "export": "./publication-authority",
       "target": "./packages/core/publication/publication-authority.js",
-      "digest": "sha256:92e73c40bb1441a5b2149b54d719c0ee630a8ff79c135d6e96b402c30cca3477",
+      "digest": "sha256:971b42173f73b294881f33fa1b9a878faadedf4d1ef47237bc066d1ed94ffdf6",
       "summary": "Sealed publication authority registry, runner provenance, control-plane audit, admission, and independent verification APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 24,
+      "symbolCount": 25,
       "symbolIds": [
         "packages/core/publication/publication-authority.js#CONSUMER_PUBLICATION_DECISION_CONTRACT",
         "packages/core/publication/publication-authority.js#createConsumerPublicationDecision",
@@ -29104,6 +29137,7 @@
         "packages/core/publication/publication-authority.js#publicationGateAggregateBindings",
         "packages/core/publication/publication-authority.js#RUNNER_PROVENANCE_CLASSES",
         "packages/core/publication/publication-authority.js#RUNNER_PROVENANCE_CONTRACT",
+        "packages/core/publication/publication-authority.js#validatePublicationCapability",
         "packages/core/publication/publication-authority.js#verifyPublicationAdmission",
         "packages/core/publication/publication-authority.js#verifyPublicationQualificationReceipt"
       ],
@@ -29169,7 +29203,7 @@
       "specifier": "@kungfu-tech/buildchain/github-governance-authority",
       "export": "./github-governance-authority",
       "target": "./packages/core/governance/github-governance-authority.js",
-      "digest": "sha256:1ece23e7d80e5f29b0cb71e11611b74430d97b2e1f3881b0580e7c2bc0b85c5d",
+      "digest": "sha256:be414477863edbb8d38f540ec2f0c9025b32e9e8e14ad7ce6846125943f9dbbd",
       "summary": "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -29798,7 +29832,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/adoption/buildchain-kfd-claims.js",
-      "digest": "sha256:569556ced29fe48e7d038c0c50c32638376775d8eb6a107cc0908c324d7b6a06",
+      "digest": "sha256:6655f2c6a891f3c62a5577aee2b1ecff6e40dbc4ba5f2f566a0db8326e4e5967",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -29856,7 +29890,7 @@
       "specifier": "@kungfu-tech/buildchain/floating-consumer-policy",
       "export": "./floating-consumer-policy",
       "target": "./packages/core/consumer/floating-consumer-policy.js",
-      "digest": "sha256:3105e66fcb4fa1e13fd3b507da3c15c92d6d1c7ac33f96de2a85da5589d7706c",
+      "digest": "sha256:54ded9063be50a7e0cb95959594b46dbbb39ed2c4319e9c04c41356ad3b746aa",
       "summary": "Semantic floating-selector admission, dual-lock receipt, and independent v4 consumer certification APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -30096,12 +30130,12 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:9b0c1d4d4e0bd44b45a6e09cf7efec8449bcc0b127e6ca653b118cf7d5e92a8c"
+      "digest": "sha256:2b7f6d3c8df25cd37fe8028690fc2d9cdce80de873341ef815f800c4ace880db"
     },
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:d70af61b545c35c9a4438706a499a629ce25c85320e0e45fd49e24b95c3e18bb"
+      "digest": "sha256:adfdaa78016bd1156fc8e08560879daf786af462f20334cb1a837ca50c62e759"
     },
     {
       "id": "build-facts",

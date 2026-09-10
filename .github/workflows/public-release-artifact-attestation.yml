@@ -112,7 +112,7 @@ jobs:
           persist-credentials: false
       - name: Attest sealed Linux release artifact
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/artifact-attestation-attest
+        uses: ./.buildchain/workflow-shell/actions/release/signing/attest
         with:
           definition-sha: ${{ job.workflow_sha }}
           runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}

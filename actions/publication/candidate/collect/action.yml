@@ -1,0 +1,90 @@
+name: collect-candidate
+description: Publication collect candidate.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  runtime-outcome:
+    description: Admitted publication runtime result.
+    required: true
+  controller-plan-outcome:
+    description: Exact preceding publication node result.
+    required: true
+  runtime-checkout-outcome:
+    description: Exact preceding publication node result.
+    required: true
+  controller-identities-outcome:
+    description: Exact preceding publication node result.
+    required: true
+  predecessors-ok:
+    description: Both planning and build succeeded.
+    required: true
+  outcomes-json:
+    description: Observed publication qualification stage outcomes.
+    required: false
+  manifest-path:
+    description: Exact preceding publication node result.
+    required: true
+  passport-path:
+    description: Exact preceding publication node result.
+    required: true
+  source-sha:
+    description: Exact preceding publication node result.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Require successful predecessor nodes
+      if: ${{ inputs.predecessors-ok != 'true' }}
+      uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
+      with:
+        reason: Require successful predecessor nodes failed
+    - name: Upload publication artifact
+      id: artifact-upload
+      uses: actions/upload-artifact@v6.0.0
+      with:
+        name: ${{ fromJSON(inputs.request-json).artifact-name }}-${{ github.sha }}
+        path: |
+          ${{ fromJSON(inputs.request-json).artifact-paths }}
+          ${{ fromJSON(inputs.request-json).working-directory }}/.buildchain/publication/**
+          ${{ fromJSON(inputs.request-json).working-directory }}/.buildchain/paper-release/**
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
+        if-no-files-found: error
+        include-hidden-files: true
+    - name: Create publication-artifact controller receipt
+      id: controller-receipt
+      if: ${{ always() && inputs.controller-plan-outcome == 'success' }}
+      uses: ./.buildchain/runtime/actions/publication/candidate/record-evidence
+      with:
+        request-json: ${{ inputs.request-json }}
+        runtime-outcomes-json: '["${{ inputs.runtime-outcome }}","${{ inputs.runtime-checkout-outcome }}","${{ inputs.controller-identities-outcome }}"]'
+        outcomes-json: ${{ inputs.outcomes-json }}
+        upload-outcome: ${{ steps.artifact-upload.outcome }}
+        manifest-path: ${{ inputs.manifest-path }}
+        passport-path: ${{ inputs.passport-path }}
+        source-sha: ${{ inputs.source-sha }}
+    - name: Upload publication-artifact controller receipt
+      if: ${{ always() && steps.controller-receipt.outcome == 'success' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-publication-controller-receipt-${{ inputs.source-sha }}
+        path: .buildchain/controller/receipt.json
+        if-no-files-found: error
+    - name: Enforce qualifying publication-artifact controller receipt
+      if: ${{ always() && inputs.controller-plan-outcome == 'success' && steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
+      uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
+      with:
+        reason: "Publication controller receipt is not qualifying: ${{ steps.controller-receipt.outputs.controller-receipt-status }}"
+outputs:
+  publication-artifact-name:
+    description: publication-artifact-name node result.
+    value: ${{ fromJSON(inputs.request-json).artifact-name }}-${{ github.sha }}
+  controller-receipt-json:
+    description: controller-receipt-json node result.
+    value: ${{ steps.controller-receipt.outputs.controller-receipt-json }}
+  controller-receipt-digest:
+    description: controller-receipt-digest node result.
+    value: ${{ steps.controller-receipt.outputs.controller-receipt-digest }}
+  controller-receipt-status:
+    description: controller-receipt-status node result.
+    value: ${{ steps.controller-receipt.outputs.controller-receipt-status }}

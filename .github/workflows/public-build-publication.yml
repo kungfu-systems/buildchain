@@ -196,12 +196,14 @@ jobs:
           persist-credentials: false
       - name: Admit publication runtime
         id: runtime
-        uses: ./.buildchain/workflow-shell/actions/publication/admit-runtime
+        uses: ./.buildchain/workflow-shell/actions/runtime/selection/admit
         with:
+          purpose: publication
           repository: ${{ inputs.buildchain-repository }}
           ref: ${{ inputs.buildchain-ref }}
           workflow-sha: ${{ job.workflow_sha }}
           workflow-ref: ${{ job.workflow_ref }}
+          token: ${{ github.token }}
       - name: Checkout source
         id: source
         uses: actions/checkout@v7.0.0
@@ -219,11 +221,11 @@ jobs:
         if: ${{ always() }}
       - name: Publication plan candidate.
         id: plan-candidate
-        uses: ./.buildchain/workflow-shell/actions/publication/plan-candidate
+        uses: ./.buildchain/workflow-shell/actions/publication/candidate/plan
         with:
           request-json: ${{ toJSON(inputs) }}
-          job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
-          job-workflow-ref: ${{ toJSON(job.workflow_ref) }}
+          workflow-sha: ${{ job.workflow_sha }}
+          workflow-ref: ${{ job.workflow_ref }}
           runtime-sha: ${{ steps.runtime.outputs.runtime-sha }}
           runtime-ref: ${{ steps.runtime.outputs.runtime-ref }}
           runtime-class: ${{ steps.runtime.outputs.runtime-class }}
@@ -232,26 +234,22 @@ jobs:
         if: ${{ always() }}
       - name: Publication build candidate.
         id: build-candidate
-        uses: ./.buildchain/workflow-shell/actions/publication/build-candidate
+        uses: ./.buildchain/workflow-shell/actions/publication/candidate/build
         with:
           request-json: ${{ toJSON(inputs) }}
-          core-node-outputs-node-path: ${{ steps.plan-candidate.outputs.core-node-outputs-node-path }}
+          runtime-sha: ${{ steps.plan-candidate.outputs.runtime-sha }}
       - name: Publication collect candidate.
         id: collect-candidate
-        uses: ./.buildchain/workflow-shell/actions/publication/collect-candidate
+        uses: ./.buildchain/workflow-shell/actions/publication/candidate/collect
         with:
           request-json: ${{ toJSON(inputs) }}
           runtime-outcome: ${{ steps.runtime.outcome }}
-          core-node-outputs-node-path: ${{ steps.plan-candidate.outputs.core-node-outputs-node-path }}
           controller-plan-outcome: ${{ steps.plan-candidate.outputs.controller-plan-outcome }}
           runtime-checkout-outcome: ${{ steps.plan-candidate.outputs.runtime-checkout-outcome }}
           controller-identities-outcome: ${{ steps.plan-candidate.outputs.controller-identities-outcome }}
-          build-outcome: ${{ steps.build-candidate.outputs.build-outcome }}
-          verify-outcome: ${{ steps.build-candidate.outputs.verify-outcome }}
-          manifest-outcome: ${{ steps.build-candidate.outputs.manifest-outcome }}
-          package-outcome: ${{ steps.build-candidate.outputs.package-outcome }}
-          manifest-outputs-manifest-path: ${{ steps.build-candidate.outputs.manifest-outputs-manifest-path }}
-          manifest-outputs-passport-path: ${{ steps.build-candidate.outputs.manifest-outputs-passport-path }}
-          controller-identities-outputs-source-sha: ${{ steps.plan-candidate.outputs.controller-identities-outputs-source-sha }}
+          outcomes-json: ${{ steps.build-candidate.outputs.outcomes-json }}
+          manifest-path: ${{ steps.build-candidate.outputs.publication-manifest-path }}
+          passport-path: ${{ steps.build-candidate.outputs.publication-passport-path }}
+          source-sha: ${{ steps.plan-candidate.outputs.controller-identities-outputs-source-sha }}
           predecessors-ok: ${{ steps.plan-candidate.outcome == 'success' && steps.build-candidate.outcome == 'success' }}
         if: ${{ always() }}

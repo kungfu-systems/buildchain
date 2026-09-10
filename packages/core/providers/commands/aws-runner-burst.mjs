@@ -34,6 +34,7 @@ export function main() {
   if (mode === "evidence") {
     const result = createRunnerEvidence({
       provider: process.env.BUILDCHAIN_BURST_PROVIDER,
+      region: process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || "",
       project: process.env.BUILDCHAIN_BURST_PROJECT,
       repository: process.env.BUILDCHAIN_BURST_SOURCE_REPOSITORY,
       sourceSha: process.env.BUILDCHAIN_BURST_SOURCE_SHA,

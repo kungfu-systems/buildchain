@@ -125,9 +125,9 @@ jobs:
         if: ${{ always() }}
       - name: Publish sealed binary release assets
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/binary-assets-publish
+        uses: ./.buildchain/workflow-shell/actions/release/binary/publish
         with:
           request-json: ${{ toJSON(inputs) }}
-          needs-publication-authority-outputs-capability-json: ${{ toJSON(needs.publication-authority.outputs.capability-json) }}
+          capability-json: ${{ needs.publication-authority.outputs.capability-json }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
         if: ${{ always() }}

@@ -1,0 +1,38 @@
+name: Admit a fresh provider finalizer from sealed native evidence and heartbeat continuity
+description: Admit a fresh provider finalizer from sealed native evidence and heartbeat continuity.
+inputs:
+  runtime-sha:
+    description: Admitted runtime-sha.
+    required: true
+  runtime-selection-root:
+    description: Admitted runtime-selection-root.
+    required: true
+  runner-environment:
+    description: Admitted runner-environment.
+    required: true
+  branch:
+    description: Admitted branch.
+    required: true
+  pull-request:
+    description: Admitted pull-request.
+    required: true
+  source-head:
+    description: Admitted source-head.
+    required: true
+  token:
+    description: Admitted token.
+    required: true
+outputs:
+  transfer-root:
+    description: Verified transfer-root.
+  boundary-root:
+    description: Verified boundary-root.
+  native-outcome:
+    description: Verified native-outcome.
+  native-job-id:
+    description: Verified native-job-id.
+  seal-job-id:
+    description: Verified seal-job-id.
+runs:
+  using: node24
+  main: dist/index.js

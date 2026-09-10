@@ -1,3 +1,4 @@
+import { actionInventory } from "../packages/core/contracts/action-inventory.js";
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -20,11 +21,9 @@ import { spawnSyncCommand } from "../packages/core/runtime/spawn-command.js";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const coreDirectory = path.join(root, "packages", "core", "runtime");
 const artifactPath = path.join(coreDirectory, "buildchain-domain.wasm");
-const actionArtifacts = [
-  "actions/release/promote-ref/dist/buildchain-domain.wasm",
-  "actions/release/settle/dist/buildchain-domain.wasm",
-  "actions/release/promote-candidate/dist/buildchain-domain.wasm",
-];
+const actionArtifacts = actionInventory(root).flatMap((action) =>
+  action.bundles.filter((file) => file.endsWith(".wasm")),
+);
 
 function sha256(bytes) {
   return crypto.createHash("sha256").update(bytes).digest("hex");

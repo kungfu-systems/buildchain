@@ -1,0 +1,32 @@
+name: Qualify all captured demos and apply explicit advisory rendering policy
+description: Qualify all captured demos and apply explicit advisory rendering policy.
+inputs:
+  runtime-sha:
+    description: Admitted runtime-sha.
+    required: true
+  source-sha:
+    description: Admitted source-sha.
+    required: true
+  renderer-image:
+    description: Admitted renderer-image.
+    required: true
+  scenario-path:
+    description: Admitted scenario-path.
+    required: true
+  media-profile:
+    description: Admitted media-profile.
+    required: true
+  render-media:
+    description: Admitted render-media.
+    required: true
+  render-failure-advisory:
+    description: Admitted render-failure-advisory.
+    required: true
+outputs:
+  name:
+    description: Verified name.
+  render-result:
+    description: Verified render-result.
+runs:
+  using: node24
+  main: dist/index.js

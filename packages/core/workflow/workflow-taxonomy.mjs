@@ -208,10 +208,17 @@ function validateGateIntegration(root, errors) {
       errors.push(`required Verify workflow lacks ${trigger}`);
   }
   const checkJob = verify.match(/^  check:\n([\s\S]*?)(?=^  [\w-]+:|(?![\s\S]))/mu)?.[1] || "";
-  const verifyNode = "./.buildchain/workflow-shell/actions/build/verify-check";
-  const verifyAction = read("actions/build/verify-check/action.yml");
+  const verifyNode = "./.buildchain/workflow-shell/actions/build/verification/repository";
+  const verifyAction = read("actions/build/verification/repository/action.yml");
+  const sourceAction = read("actions/build/verification/qualify-source/action.yml");
+  const sourceVerification = read("packages/core/build/verification/source.js");
+  const sourceLifecycle = read("packages/core/build/source/lifecycle.js");
   if (!parseYamlUses(checkJob).some(call => call.value === verifyNode) ||
-      !/run: node \.buildchain\/runtime\/bin\/buildchain\.mjs lifecycle run verify[^\n]*--required/u.test(verifyAction))
+      !parseYamlUses(verifyAction).some(call => call.value === "./actions/build/verification/qualify-source") ||
+      !/using: node24/u.test(sourceAction) ||
+      !/qualify = qualifySourceLifecycle/u.test(sourceVerification) ||
+      !/mode: "verify"/u.test(sourceVerification) ||
+      !/lifecycle\(\{[\s\S]*stageName,[\s\S]*required: true/u.test(sourceLifecycle))
     errors.push("required Verify lifecycle integration is missing");
   const owners = read(".github/CODEOWNERS")
     .split(/\r?\n/u)

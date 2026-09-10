@@ -31,8 +31,8 @@ import {
   summarizeProcessSamples,
   validateAnchoredPackageRelease,
 } from "@kungfu-tech/buildchain/diagnostics";
-import { resolveSpawnCommand, usesShellForSpawnCommand } from "../scripts/build-standalone-binary.mjs";
-import { createReleaseEvidenceBundle } from "../packages/core/publication/commands/create-release-bundle.mjs";
+import { resolveSpawnCommand, usesShellForSpawnCommand } from "../packages/core/runtime/spawn-command.js";
+import { createReleaseEvidenceBundle } from "../packages/core/build/release-evidence-bundle.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");

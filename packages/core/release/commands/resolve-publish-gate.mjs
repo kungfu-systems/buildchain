@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { pathToFileURL } from "node:url";
-import { resolvePublishGate, writeGitHubOutputs } from "../../build/commands/build-contract-core.mjs";
+import { resolvePublishGate } from "../promotion/publish-gate.js";
+import { writeGitHubOutputs } from "../../providers/commands/github-output.mjs";
 
 function readEnv(name, fallback = "") {
   return process.env[name] || fallback;

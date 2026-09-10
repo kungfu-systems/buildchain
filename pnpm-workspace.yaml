@@ -1,9 +1,9 @@
 packages:
-  - "actions/*/*"
+  - "actions/*/*/*"
   - "packages/*"
 onlyBuiltDependencies:
   - esbuild
 allowBuilds:
   esbuild: true
 minimumReleaseAgeExclude:
-  - '@kungfu-tech/kfd'
+  - "@kungfu-tech/kfd"

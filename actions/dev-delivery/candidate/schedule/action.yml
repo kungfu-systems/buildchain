@@ -1,0 +1,51 @@
+name: Submit qualified evidence and reserve or hand off the exact delivery turn
+description: Submit qualified evidence and reserve or hand off the exact delivery turn.
+inputs:
+  runtime-sha:
+    description: Admitted runtime-sha.
+    required: true
+  request-json:
+    description: Admitted request-json.
+    required: true
+  branch:
+    description: Admitted branch.
+    required: true
+  source-proof-root:
+    description: Admitted source-proof-root.
+    required: false
+  qualification-outcome:
+    description: Admitted qualification-outcome.
+    required: false
+  proof-outcome:
+    description: Admitted proof-outcome.
+    required: false
+  predecessors-ok:
+    description: Admitted predecessors-ok.
+    required: true
+  token:
+    description: Admitted token.
+    required: true
+outputs:
+  warrant-outcome:
+    description: Verified warrant-outcome.
+  warrant-receipt-root:
+    description: Verified warrant-receipt-root.
+  warrant-state-root:
+    description: Verified warrant-state-root.
+  warrant-state-commit:
+    description: Verified warrant-state-commit.
+  native-proof-root:
+    description: Verified native-proof-root.
+  decision-root:
+    description: Verified decision-root.
+  qualification-receipt-root:
+    description: Verified qualification-receipt-root.
+  handoff-required:
+    description: Verified handoff-required.
+  handoff-dispatched:
+    description: Verified handoff-dispatched.
+  already-qualified:
+    description: Verified already-qualified.
+runs:
+  using: node24
+  main: dist/index.js

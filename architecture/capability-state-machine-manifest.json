@@ -140,7 +140,7 @@
       "id": "publish-transaction",
       "owner": "Buildchain package and release publication plane",
       "sourceInventoryId": "publish-transaction",
-      "surfaces": ["action:release/promote-ref", "cli:release-transaction"],
+      "surfaces": ["action:release/promotion/ref", "cli:release-transaction"],
       "migrationPhase": "legacy-retired"
     },
     {
@@ -202,7 +202,7 @@
       "surfaces": [
         "export:./release-tail-provider-plane",
         "cli:release-tail",
-        "action:release/settle",
+        "action:release/tail/settle",
         "workflow:public-release-tail"
       ],
       "migrationPhase": "legacy-retired"

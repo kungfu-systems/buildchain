@@ -1,0 +1,18 @@
+name: Settle the independently verified native failure
+description: Settle the independently verified native failure.
+inputs:
+  runtime-sha:
+    description: Admitted runtime-sha.
+    required: true
+  branch:
+    description: Admitted branch.
+    required: true
+  token:
+    description: Admitted token.
+    required: true
+outputs:
+  receipt-root:
+    description: Verified receipt-root.
+runs:
+  using: node24
+  main: dist/index.js

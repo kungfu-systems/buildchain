@@ -27,7 +27,7 @@ jobs:
           persist-credentials: false
       - name: Binary distribution preflight
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/binary-distribution-preflight
+        uses: ./.buildchain/workflow-shell/actions/build/binary/preflight
         with:
           request-json: ${{ toJSON(inputs) }}
   binary:
@@ -67,7 +67,7 @@ jobs:
         if: ${{ always() }}
       - name: Build ${{ matrix.platform }}
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/binary-distribution-binary
+        uses: ./.buildchain/workflow-shell/actions/build/binary/build
         with:
           matrix-json: ${{ toJSON(matrix) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
@@ -101,7 +101,7 @@ jobs:
         if: ${{ always() }}
       - name: Collect release passport
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/binary-distribution-passport
+        uses: ./.buildchain/workflow-shell/actions/build/binary/passport
         with:
           request-json: ${{ toJSON(inputs) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
@@ -126,4 +126,4 @@ jobs:
           persist-credentials: false
       - name: Dispatch sealed binary asset publication
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/binary-distribution-dispatch-publication
+        uses: ./.buildchain/workflow-shell/actions/build/binary/dispatch-publication

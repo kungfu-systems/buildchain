@@ -1,0 +1,17 @@
+name: Verify retained bytes and complete bounded signing tail
+description: Verify retained bytes and complete bounded signing tail.
+inputs:
+  runtime-sha:
+    description: Admitted runtime commit
+    required: true
+  platform:
+    description: Declared retained platform
+    required: true
+  finalization-command:
+    description: Declared macOS finalization command
+  signing-token:
+    description: Scoped signing authority credential
+outputs: {}
+runs:
+  using: node24
+  main: dist/index.js

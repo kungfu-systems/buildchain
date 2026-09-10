@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { verifyReleaseFinalization } from "../packages/core/release/commands/release-finalization-review.mjs";
-import { assertReviewPull, assertReviewRun } from "../packages/core/release/commands/next-development-review.mjs";
+import { verifyReleaseFinalization } from "../packages/core/release/next-development/finalization.js";
+import { assertReviewPull, assertReviewRun } from "../packages/core/release/next-development/review-policy.js";
 
 function fixture() {
   const baseSha = "a".repeat(40), headSha = "b".repeat(40), stateSha = "c".repeat(40);

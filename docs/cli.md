@@ -1030,7 +1030,7 @@ buildchain transaction inspect --version v4.0.1-alpha.2
 
 It reads or locally initializes the durable transaction record and validates
 available publish evidence. Remote durable refs and public Git ref finalization
-remain owned by `actions/release/promote-ref`; the CLI inspection surface is
+remain owned by `actions/release/promotion/ref`; the CLI inspection surface is
 for preflight and recovery reasoning before a maintainer reruns or resumes a
 promotion.
 

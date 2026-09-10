@@ -170,11 +170,11 @@ test("Paper API always settles an admitted plan and exposes its own final receip
     "${{ jobs.publish.outputs.controller-receipt-json }}",
   );
   const action = YAML.parse(
-    fs.readFileSync("actions/paper/settle-publication/action.yml", "utf8"),
+    fs.readFileSync("actions/paper/publication/settle/action.yml", "utf8"),
   );
   assert.match(
-    action.runs.steps.find((step) => step.id === "controller-receipt").if,
-    /always\(\).*controller-plan-outcome/,
+    action.runs.steps.find((step) => step.id === "receipt").if,
+    /always\(\).*plan-outcome/,
   );
   assert.match(action.runs.steps.at(-1).if, /always\(\)/);
 });

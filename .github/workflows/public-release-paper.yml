@@ -245,55 +245,33 @@ jobs:
         if: ${{ always() }}
       - name: Paper admit candidate.
         id: admit-candidate
-        uses: ./.buildchain/workflow-shell/actions/paper/admit-candidate
+        uses: ./.buildchain/workflow-shell/actions/paper/candidate/admit
         with:
           request-json: ${{ toJSON(inputs) }}
-          needs-publication-candidate-outputs-runtime-sha: ${{ toJSON(needs.publication-candidate.outputs.runtime-sha) }}
-          secrets-buildchain-generated-write-app-client-id: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID }}
-          secrets-buildchain-generated-write-app-private-key: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY }}
-          secrets-buildchain-generated-write-token: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN }}
-          needs-publication-candidate-outputs-publication-artifact-name: ${{ toJSON(needs.publication-candidate.outputs.publication-artifact-name) }}
-          needs-publication-candidate-outputs-controller-receipt-artifact: ${{ toJSON(needs.publication-candidate.outputs.controller-receipt-artifact) }}
-          needs-publication-authority-outputs-capability-json: ${{ toJSON(needs.publication-authority.outputs.capability-json) }}
-          needs-publication-candidate-outputs-package-name: ${{ toJSON(needs.publication-candidate.outputs.package-name) }}
-          needs-publication-candidate-outputs-package-version: ${{ toJSON(needs.publication-candidate.outputs.package-version) }}
-          needs-publication-candidate-outputs-publish-dist-tag: ${{ toJSON(needs.publication-candidate.outputs.publish-dist-tag) }}
+          candidate-plan-json: ${{ toJSON(needs.publication-candidate.outputs) }}
+          capability-json: ${{ needs.publication-authority.outputs.capability-json }}
+          app-client-id: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID }}
+          app-private-key: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY }}
+          write-token: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
         if: ${{ always() }}
       - name: Paper publish candidate.
         id: publish-candidate
-        uses: ./.buildchain/workflow-shell/actions/paper/publish-candidate
+        uses: ./.buildchain/workflow-shell/actions/paper/candidate/publish
         with:
           request-json: ${{ toJSON(inputs) }}
-          secrets-buildchain-generated-write-token: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN }}
-          core-node-outputs-node-path: ${{ steps.admit-candidate.outputs.core-node-outputs-node-path }}
-          generated-write-app-token-outputs-token: ${{ steps.admit-candidate.outputs.generated-write-app-token-outputs-token }}
-          candidate-outputs-package-version: ${{ steps.admit-candidate.outputs.candidate-outputs-package-version }}
-          candidate-outputs-exact-tag: ${{ steps.admit-candidate.outputs.candidate-outputs-exact-tag }}
-          candidate-outputs-package-dir: ${{ steps.admit-candidate.outputs.candidate-outputs-package-dir }}
-          candidate-outputs-sealed-bundle-root: ${{ steps.admit-candidate.outputs.candidate-outputs-sealed-bundle-root }}
-          candidate-outputs-sealed-bundle-manifest: ${{ steps.admit-candidate.outputs.candidate-outputs-sealed-bundle-manifest }}
-          candidate-outputs-required-artifacts-json: ${{ steps.admit-candidate.outputs.candidate-outputs-required-artifacts-json }}
-          candidate-outputs-dist-tag: ${{ steps.admit-candidate.outputs.candidate-outputs-dist-tag }}
-          candidate-outputs-package-name: ${{ steps.admit-candidate.outputs.candidate-outputs-package-name }}
-          candidate-outputs-build-summary-path: ${{ steps.admit-candidate.outputs.candidate-outputs-build-summary-path }}
-          candidate-outputs-manifest-path: ${{ steps.admit-candidate.outputs.candidate-outputs-manifest-path }}
-          candidate-outputs-github-release-artifact-paths: ${{ steps.admit-candidate.outputs.candidate-outputs-github-release-artifact-paths }}
+          candidate-json: ${{ steps.admit-candidate.outputs.candidate-json }}
+          token: ${{ steps.admit-candidate.outputs.token }}
       - name: Paper settle publication.
         id: settle-publication
-        uses: ./.buildchain/workflow-shell/actions/paper/settle-publication
+        uses: ./.buildchain/workflow-shell/actions/paper/publication/settle
         with:
           request-json: ${{ toJSON(inputs) }}
-          secrets-buildchain-generated-write-token: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN }}
-          promote-outcome: ${{ steps.publish-candidate.outputs.promote-outcome }}
-          candidate-outputs-package-name: ${{ steps.admit-candidate.outputs.candidate-outputs-package-name }}
-          candidate-outputs-package-version: ${{ steps.admit-candidate.outputs.candidate-outputs-package-version }}
-          promote-outputs-public-release-tag: ${{ steps.publish-candidate.outputs.promote-outputs-public-release-tag }}
-          target-outputs-sha: ${{ steps.publish-candidate.outputs.target-outputs-sha }}
-          target-outputs-channel: ${{ steps.publish-candidate.outputs.target-outputs-channel }}
-          promote-outputs-release-passport-path: ${{ steps.publish-candidate.outputs.promote-outputs-release-passport-path }}
-          core-node-outputs-node-path: ${{ steps.admit-candidate.outputs.core-node-outputs-node-path }}
-          controller-plan-outcome: ${{ steps.admit-candidate.outputs.controller-plan-outcome }}
+          candidate-json: ${{ steps.admit-candidate.outputs.candidate-json }}
+          publication-json: ${{ steps.publish-candidate.outputs.publication-json }}
+          target-json: ${{ steps.publish-candidate.outputs.target-json }}
+          token: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN || github.token }}
+          plan-outcome: ${{ steps.admit-candidate.outputs.plan-outcome }}
           publish-outcome: ${{ steps.publish-candidate.outcome }}
-          candidate-outputs-manifest-path: ${{ steps.admit-candidate.outputs.candidate-outputs-manifest-path }}
+          promote-outcome: ${{ steps.publish-candidate.outputs.promote-outcome }}
         if: ${{ always() }}

@@ -1,0 +1,19 @@
+{
+  "name": "@kungfu-systems/buildchain-build-lifecycle-run",
+  "version": "4.1.0-alpha.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "author": "Keren Dong",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsup index.js --format esm --config ../../../../scripts/tsup-action.config.mjs && node ../../../../scripts/strip-trailing-whitespace.mjs dist/index.js"
+  },
+  "dependencies": {
+    "smol-toml": "1.7.0",
+    "@actions/core": "1.11.1"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1"
+  }
+}

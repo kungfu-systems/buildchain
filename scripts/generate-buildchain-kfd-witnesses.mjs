@@ -15,7 +15,7 @@ import {
   BUILDCHAIN_KFD3_ARTIFACT_WITNESS_PATH,
   BUILDCHAIN_KFD3_PREBUILD_WITNESS_PATH,
 } from "../packages/core/contracts/buildchain-layout.js";
-import { writeGitHubOutputs } from "../packages/core/build/commands/build-contract-core.mjs";
+import { writeGitHubOutputs } from "../packages/core/providers/commands/github-output.mjs";
 
 function parseArgs(argv = process.argv.slice(2)) {
   const args = {

@@ -1,7 +1,9 @@
-import { resolvePublicationRuntime } from "../packages/core/publication/nodes/runtime.mjs";
-import { resolveWebRuntime } from "../packages/core/web/nodes/runtime.mjs";
-import { resolveGateRuntime } from "../packages/core/build/nodes/gate-runtime.mjs";
-import { webApplyInputGate } from "../packages/core/web/nodes/apply-input-gate.mjs";
+import { createS3ObjectClient } from "../packages/core/providers/artifact-relay/s3-client.js";
+import { compactProductionReleasePrSummary } from "../packages/core/web/release-pr-summary.js";
+import { resolvePublicationRuntime } from "./helpers/runtime-selection.mjs";
+import { resolveWebRuntime } from "./helpers/runtime-selection.mjs";
+import { resolveGateRuntime } from "./helpers/runtime-selection.mjs";
+import { admitWebApplyInputs } from "../packages/core/web/apply-admission.js";
 import { inspectWorkflowJob, readWorkflow } from "../scripts/workflow-action-graph.mjs";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -10,51 +12,39 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import {
-  DEFAULT_ARTIFACT_NAME_TEMPLATE,
-  LINUX_CONTAINER_PRESETS,
-  createResolvedReleaseManifest,
-  parsePublishSourceRef,
-  parseExpectedArtifactsJson,
-  resolvePublishChannelTargetRef,
-  verifyPublishChannelPrLineage,
-  planPackageSetPublish,
-  resolveArtifactContract,
-  resolvePublishGate,
-  resolvePublishSourceLock,
-  resolveRunnerMatrix,
-  verifyPublishChannelRef,
-  verifyPublishSourceLock,
-} from "../packages/core/build/commands/build-contract-core.mjs";
+import { DEFAULT_ARTIFACT_NAME_TEMPLATE, resolveArtifactContract } from "../packages/core/build/artifact/naming.js";
+import { LINUX_CONTAINER_PRESETS } from "../packages/core/build/runner/presets.js";
+import { createResolvedReleaseManifest } from "../packages/core/release/source/manifest.js";
+import { parsePublishSourceRef, resolvePublishChannelTargetRef, resolvePublishSourceLock, verifyPublishSourceLock } from "../packages/core/release/source/coordinates.js";
+import { parseExpectedArtifactsJson } from "../packages/core/build/artifact/expectations.js";
+import { verifyPublishChannelPrLineage, verifyPublishChannelRef } from "../packages/core/release/source/lineage.js";
+import { planPackageSetPublish } from "../packages/core/publication/npm/package-plan.js";
+import { resolvePublishGate } from "../packages/core/release/promotion/publish-gate.js";
+import { resolveRunnerMatrix } from "../packages/core/build/runner/matrix.js";
 import { aggregateBuildSummaryCli } from "../packages/core/build/commands/aggregate-build-summary.mjs";
 import { aggregateDiagnosticsSummaryCli } from "../packages/core/observability/commands/aggregate-diagnostics-summary.mjs";
 import {
   cleanupRelayArtifacts,
   downloadRelayArtifacts,
   uploadRelayArtifacts,
-} from "../packages/core/providers/commands/artifact-relay-s3.mjs";
+} from "../packages/core/providers/artifact-relay/transactions.js";
 import {
   RELEASE_REVIEW_MARKER,
   renderReleaseReviewComment,
   resolveReleaseReviewState,
-} from "../packages/core/web/commands/web-surface-release-pr-review.mjs";
-import {
-  compactProductionReleasePrSummary,
-  createProductionReleasePrHandoff,
-  openProductionReleasePr,
-  recordProductionReleasePrOutcome,
-  releaseBranchName,
-  readStagingReleasePrSummary,
-  renderProductionReleasePrBody,
-  webSurfaceProductionReleasePrCli,
-} from "../packages/core/web/commands/web-surface-production-release-pr.mjs";
-import { compactWebSurfaceApplyResult } from "../packages/core/web/commands/web-surface.mjs";
+} from "../packages/core/web/release-review.js";
+import { createProductionReleasePrHandoff, releaseBranchName, renderProductionReleasePrBody } from "../packages/core/web/release-pr-handoff.js";
+import { openProductionReleasePr } from "../packages/core/web/release-pr-provider.js";
+import { recordProductionReleasePrOutcome } from "../packages/core/web/release-pr-transaction.js";
+import { readStagingReleasePrSummary, webSurfaceProductionReleasePrCli } from "../packages/core/web/commands/web-surface-production-release-pr.mjs";
+import { compactWebSurfaceApplyResult } from "../packages/core/web/deployment/apply-evidence.js";
+
 import {
   RELEASE_FEEDBACK_MARKERS,
   createWebSurfaceReleasePassport,
   normalizeActorIdentity,
   renderWebSurfaceReleaseFeedbackComment,
-} from "../packages/core/web/commands/web-surface-release-feedback.mjs";
+} from "../packages/core/web/release-feedback.js";
 import {
   currentGitHubRefSha,
   resolvePublishSourceRefSha,
@@ -64,7 +54,7 @@ import {
   createReleaseCandidatePassport,
 } from "../packages/core/release/release-candidate.js";
 import { validatePromotionReleaseCandidate } from "../packages/core/release/promote-ref/internal/candidate-admission.js";
-import { resolveReleaseCandidateArtifacts } from "../packages/core/release/commands/release-candidate-resolver.mjs";
+import { resolveReleaseCandidateArtifacts } from "../packages/core/release/candidate/resolve.js";
 import {
   classifyBuildchainRuntimeRef,
   normalizeRequestedRuntimeRef,
@@ -78,7 +68,7 @@ import {
   contractForSelfDogfoodEvaluation,
   resolveSelfDogfoodMajor,
 } from "../packages/core/release/self-dogfood-version.js";
-import { runLifecycle } from "../packages/core/build/commands/run-lifecycle-core.mjs";
+import { runLifecycle } from "../packages/core/build/lifecycle/transaction.js";
 import { verifyPublishChannelRefCli } from "../packages/core/release/commands/verify-publish-channel-ref.mjs";
 import { verifyPublishSourceLockCli } from "../packages/core/release/commands/verify-publish-source-lock.mjs";
 import {
@@ -177,7 +167,7 @@ test("public reusable controllers expose source-bound plan and always-aggregated
     ".github/workflows/public-release-propagation.yml",
   ];
   assert.match(readRepoText(".github/workflows/.build.yml"), /result:/u);
-  assert.match(readRepoText("packages/core/build/commands/finalize.mjs"), /controllerReceipt/u);
+  assert.match(readRepoText("packages/core/build/summary/finalization.js"), /controllerReceipt/u);
   for (const workflow of workflows) {
     const source = readRepoText(workflow);
     assert.match(
@@ -210,16 +200,17 @@ test("public reusable controllers expose source-bound plan and always-aggregated
     const parsed = readWorkflow(executedFile);
     const graphs = Object.keys(parsed.jobs).map(id => inspectWorkflowJob(executedFile, id));
     const steps = graphs.flatMap(graph => graph.steps);
-    const plans = steps.filter(step => step.env?.BUILDCHAIN_CONTROLLER_SOURCE_SHA);
-    assert.ok(plans.length, `${workflow} must bind controller source identity`);
-    for (const plan of plans) {
-      assert.ok(plan.env.BUILDCHAIN_CONTROLLER_RUNTIME_SHA);
-      assert.ok(plan.env.BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST);
-      if (plan.env.BUILDCHAIN_CONTROLLER_INPUTS_JSON === "${{ toJSON(inputs) }}")
-        assert.equal(plan.env.BUILDCHAIN_CONTROLLER_INPUT_BOUNDARY, "workflow-call");
+    const modules = graphs.flatMap(graph => [...graph.modules.values()]).join("\n");
+    assert.match(modules, /planControllerEvidence\(/, `${workflow} must create an admitted plan`);
+    for (const plan of steps.filter(step => step.uses?.endsWith("/observability/controller/plan"))) {
+      for (const key of ["source-sha", "runtime-sha", "contract-digest"]) assert.ok(plan.with[key], key);
+      assert.equal(plan.with["input-boundary"], "workflow-call");
     }
-    assert.ok(graphs.some(graph => graph.steps.some(step => step.env?.BUILDCHAIN_CONTROLLER_STAGES_JSON && (step.if?.includes("always()") || graph.job.if?.includes("always()")))), `${workflow} must aggregate even after failure`);
-    assert.ok(steps.some(step => step.if?.includes("controller-receipt-qualifying != 'true'")), `${workflow} must reject nonqualifying receipts`);
+    assert.ok(graphs.some(graph => graph.steps.some(step =>
+      /(?:receipt|finalize|collect|report)/.test(step.uses || "") &&
+      (step.if?.includes("always()") || graph.job.if?.includes("always()")))), `${workflow} must aggregate even after failure`);
+    assert.ok(steps.some(step => step.if?.includes("controller-receipt-qualifying != 'true'")) ||
+      /if \(!receipt.qualifying\)/.test(modules) || (modules.includes("accepted: captureOnly || receipt.qualifying") && modules.includes("if (!accepted)")), `${workflow} must reject nonqualifying receipts`);
   }
 
   const gateEnvelope = JSON.stringify(inspectWorkflowJob(".github/workflows/.build-gate-profile.yml", "aggregate").steps);
@@ -242,14 +233,15 @@ test("publication artifact workflow exposes paper artifact contract", () => {
     assert.ok(inputs[key], key);
   const names = graph.steps.map(step => step.name);
   for (const [before, after] of [
-    ["Check Buildchain contract lock", "Prove publication reproducibility"],
-    ["Hydrate cumulative publication registry", "Prove publication reproducibility"],
-    ["Verify publication", "Read qualified publication artifact manifest"],
+    ["Check Buildchain contract lock", "Qualify reproducible publication and package"],
+    ["Qualify reproducible publication and package", "Upload publication artifact"],
   ]) assert.ok(names.indexOf(before) >= 0 && names.indexOf(before) < names.indexOf(after));
+  const qualification = graph.modules.get("packages/core/publication/candidate/qualification.js");
+  assert.match(qualification, /hydrate[\s\S]*prove[\s\S]*verifyCommand[\s\S]*manifest[\s\S]*bind/);
   const upload = graph.steps.find(step => step.name === "Upload publication artifact");
   assert.equal(upload.with["include-hidden-files"], true);
   assert.equal(upload.with["if-no-files-found"], "error");
-  for (const file of ["publication-reproducibility.js", "nodes/qualified-manifest.mjs", "nodes/qualified-package.mjs"])
+  for (const file of ["publication-reproducibility.js", "candidate/manifest.js", "candidate/paper-package.js"])
     assert.ok(graph.modules.has(`packages/core/publication/${file}`));
   const reproducibility = graph.modules.get("packages/core/publication/publication-reproducibility.js");
   assert.match(reproducibility, /"--network=none"/);
@@ -263,16 +255,16 @@ test("paper release workflow publishes declared npm package with source lock and
   assert.equal(promote.with["publish-mode"], "publish-final-version");
   assert.equal(promote.with["publish-auth"], "trusted-publishing");
   assert.equal(promote.with["require-publish-source-lock"], "true");
-  for (const field of ["ref", "sha", "locked"])
-    assert.match(promote.with[`publish-source-${field}`], new RegExp(`steps\\.publish-gate\\.outputs\\.${field}`));
-  assert.match(promote.with["publish-command"], /npm-publish-transaction\.mjs/);
+  for (const [field, target] of [["ref", "gateRef"], ["sha", "sha"], ["locked", "locked"]])
+    assert.equal(promote.with[`publish-source-${field}`], "${{ fromJSON(steps.target.outputs.target-json)." + target + " }}");
+  assert.equal(promote.with["publish-provider-json"], "${{ steps.target.outputs.provider-json }}");
   assert.match(promote.with["publish-sealed-bundle-manifest"], /sealed-bundle-manifest/);
-  assert.match(promote.with["github-release-artifact-paths"], /candidate-outputs/);
+  assert.match(promote.with["github-release-artifact-paths"], /candidate-json/);
   assert.match(promote.with["release-passport-product-name"], /release-passport-product-name/);
   assert.equal(graph.job.permissions.contents, "read");
   assert.equal(graph.job.permissions["id-token"], "write");
-  assert.ok(graph.modules.has("packages/core/paper/nodes/admitted-candidate.mjs"));
-  assert.ok(graph.modules.has("packages/core/paper/nodes/release-envelope.mjs"));
+  assert.ok(graph.modules.has("packages/core/paper/publication/candidate.js"));
+  assert.ok(graph.modules.has("packages/core/paper/publication/envelope.js"));
   assert.ok(!JSON.stringify(graph.job).match(/NODE_AUTH_TOKEN|NPM_TOKEN|secrets: inherit/));
 });
 
@@ -338,11 +330,10 @@ test("artifact relay uploads to S3 and downloads verified GitHub artifact payloa
   );
 
   const oldPath = process.env.PATH;
-  const oldFakeRoot = process.env.BUILDCHAIN_ARTIFACT_RELAY_FAKE_S3_ROOT;
+  const client = createS3ObjectClient({ fakeRoot: fakeS3Root });
   process.env.PATH = "";
-  process.env.BUILDCHAIN_ARTIFACT_RELAY_FAKE_S3_ROOT = fakeS3Root;
   try {
-    const manifest = await uploadRelayArtifacts({
+    const { manifest } = await uploadRelayArtifacts({ client,
       workspace,
       manifestPath: ".buildchain/artifacts/linux-x64/relay-manifest.json",
       bucket: "relay-bucket",
@@ -393,7 +384,7 @@ test("artifact relay uploads to S3 and downloads verified GitHub artifact payloa
     assert.equal(manifest.groups.length, 4);
     assert.ok(fs.existsSync(path.join(fakeS3Root, "relay-bucket")));
 
-    const download = await downloadRelayArtifacts({
+    const download = await downloadRelayArtifacts({ client,
       inputRoot: path.join(workspace, ".buildchain", "artifacts", "linux-x64"),
       outputRoot: path.join(workspace, "relayed"),
       region: "cn-north-1",
@@ -438,7 +429,7 @@ test("artifact relay uploads to S3 and downloads verified GitHub artifact payloa
       ),
       "payload\n",
     );
-    const cleanup = await cleanupRelayArtifacts({
+    const cleanup = await cleanupRelayArtifacts({ client,
       inputRoot: path.join(workspace, ".buildchain", "artifacts", "linux-x64"),
       region: "cn-north-1",
       platformId: "linux-x64",
@@ -452,19 +443,15 @@ test("artifact relay uploads to S3 and downloads verified GitHub artifact payloa
     assert.deepEqual(remainingObjects, []);
   } finally {
     process.env.PATH = oldPath;
-    if (oldFakeRoot === undefined) {
-      delete process.env.BUILDCHAIN_ARTIFACT_RELAY_FAKE_S3_ROOT;
-    } else {
-      process.env.BUILDCHAIN_ARTIFACT_RELAY_FAKE_S3_ROOT = oldFakeRoot;
-    }
+
   }
 });
 
 test("release-candidate promotion converges on one canonical v4 publisher", () => {
   const graph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "apply");
   assert.deepEqual(Object.keys(graph.workflow.jobs), ["qualify", "apply", "settle"]);
-  assert.ok(graph.actions.has("actions/release/promote-candidate"));
-  assert.ok(!graph.actions.has("actions/release/promote-ref"));
+  assert.ok(graph.actions.has("actions/release/promotion/candidate"));
+  assert.ok(!graph.actions.has("actions/release/promotion/ref"));
   const publicWorkflow = readWorkflow(".github/workflows/public-release-promote.yml");
   assert.deepEqual(publicWorkflow.jobs.invoke.needs, ["resolve-promotion", "consumer-admission"]);
   assert.equal(publicWorkflow.jobs.invoke.uses, "./.github/workflows/.release-promote.yml");
@@ -478,32 +465,33 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.doesNotMatch(JSON.stringify(graph.job), /NODE_AUTH_TOKEN|NPM_TOKEN|BUILDCHAIN_PROMOTION_TOKEN/);
   const names = graph.steps.map(step => step.name);
   const requireBefore = (a, b) => assert.ok(names.indexOf(a) >= 0 && names.indexOf(a) < names.indexOf(b));
-  requireBefore("Require complete sealed publication evidence", "Download exact release-candidate passport evidence");
-  requireBefore("Download referenced controller receipt evidence", "Verify sealed publication admission");
+  requireBefore("Admit immutable authority request and evidence requirements", "Download exact release-candidate passport evidence");
+  requireBefore("Download referenced controller receipt evidence", "Verify sealed admission or retain a non-authorizing dry-run result");
   requireBefore("Checkout exact consumer Gate subject", "Assemble consumer Gate from exact downloaded evidence");
   requireBefore("Checkout exact consumer Gate controller", "Assemble consumer Gate from exact downloaded evidence");
-  for (const file of ["authority-admission.mjs", "authority-consumer-gate.mjs", "authority-verification.mjs", "authority-governance.mjs"])
-    assert.ok(graph.modules.has(`packages/core/publication/nodes/${file}`));
-  const verification = graph.modules.get("packages/core/publication/nodes/authority-verification.mjs");
+  for (const file of ["admission.js", "consumer-gate.js", "verification.js", "governance.js"])
+    assert.ok(graph.modules.has(`packages/core/publication/authority/${file}`));
+  const verification = graph.modules.get("packages/core/publication/authority/verification.js");
   assert.match(verification, /verifyPublicationAdmission/);
-  assert.match(verification, /actualRuntimeSha !== expectedAuthorityRuntimeSha/);
-  assert.match(verification, /git\/commits\/\$\{admission.sourceSha\}/);
-  const verifier = graph.steps.find(step => step.name === "Verify sealed publication admission");
-  for (const key of ["BUILDCHAIN_USED_NONCES_JSON", "BUILDCHAIN_PUBLICATION_ADMISSION_JSON", "BUILDCHAIN_AUTHORITY_REF"])
-    assert.ok(verifier.env[key], key);
+  assert.match(verification, /capability.runtimeSha !== actualRuntimeSha/);
+  assert.match(verification, /sourceSha: admission.sourceSha/);
+  const verifier = graph.steps.find(step => step.name === "Verify sealed admission or retain a non-authorizing dry-run result");
+  for (const key of ["request-json", "admission-bundle-json", "consumer-gate-json", "token"])
+    assert.ok(verifier.with[key], key);
+  assert.match(verification, /sha: request.buildchainRef/);
+  assert.match(verification, /usedNonces,/);
 });
 
 test("self-publication admission assembly binds downloaded evidence without publication credentials", () => {
-  const script = readRepoText(
-    "packages/core/release/commands/assemble-self-publication-admission.mjs",
-  );
+  const script = ["assembly", "candidate-evidence", "seal", "gate", "runner"].map(name =>
+    readRepoText(`packages/core/publication/authority/${name}.js`)).join("\n");
   assert.match(script, /createPublicationArtifactManifestSet/);
   assert.match(script, /createPublicationGateDecision/);
   assert.match(script, /createRunnerProvenance/);
   assert.match(script, /createPublicationAdmission/);
-  assert.match(script, /required\("BUILDCHAIN_PUBLICATION_VERSION"\)/);
+  assert.match(script, /request.publicationVersion/);
   assert.match(script, /admitted source tree does not match release candidate/);
-  assert.match(script, /BUILDCHAIN_ALLOW_NO_GATE/);
+  assert.match(script, /request.autoNoGate !== true/);
   assert.match(script, /managed-release-candidate-no-gate/);
   assert.match(script, /policyDigest: gateBindings\.policyDigest/);
   assert.doesNotMatch(script, /policyDigest: gateAggregate\.policyDigest/);
@@ -516,14 +504,14 @@ test("self-publication admission assembly binds downloaded evidence without publ
 
 test("publication artifact admission uses validated Gate policy bindings", () => {
   const script = readRepoText(
-    "packages/core/publication/commands/assemble-publication-artifact-admission.mjs",
+    "packages/core/publication/authority/seal.js",
   );
   assert.match(script, /policyDigest: gateBindings\.policyDigest/);
   assert.doesNotMatch(script, /policyDigest: gateAggregate\.policyDigest/);
 });
 
 test("publication control-plane audit defers npm OIDC authorization to the publish transaction", () => {
-  const script = readRepoText("packages/core/governance/commands/audit-publication-control-plane.mjs");
+  const script = ["collection", "source-authorization", "policy-values", "audit"].map(name => readRepoText(`packages/core/governance/publication/${name}.js`)).join("\n") + readRepoText("packages/core/governance/commands/audit-publication-control-plane.mjs");
   assert.match(script, /provider-at-transaction/);
   assert.match(script, /authorizationDeferred: true/);
   assert.match(script, /configurationRead: false/);
@@ -578,8 +566,8 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   for (const key of ["enqueued-count", "action-count", "admission-state", "admission-receipt-root"])
     assert.ok(api.outputs[key]);
   assert.equal(api.inputs["legacy-active-owner-binding-json"], undefined);
-  assert.ok(graph.modules.has("packages/core/dev-delivery/nodes/source-proof.mjs"));
-  assert.ok(graph.modules.has("packages/core/dev-delivery/nodes/reservation-readback.mjs"));
+  assert.ok(graph.modules.has("packages/core/dev-delivery/candidate/admission.js"));
+  assert.ok(graph.modules.has("packages/core/dev-delivery/warrant/reservation-readback.js"));
   assert.match(graph.workflow.concurrency.group, /buildchain-dev-pr-admission-/u);
   const verify = readWorkflow(".github/workflows/self-build-verify.yml");
   assert.ok(Object.hasOwn(verify.on, "pull_request"));
@@ -591,10 +579,12 @@ test("queued Warrant cancellation workflow binds exact terminal event authority"
   const action = graph.steps.find(step => step.id === "cancel");
   for (const key of ["expected-candidate-id", "expected-source-head-sha", "observed-source-head-sha", "expected-old-state-root", "terminal-evidence-root"])
     assert.ok(graph.workflow.on.workflow_call.inputs[key]);
-  assert.match(action.env.EXPECTED_OLD_STATE_ROOT, /expected-old-state-root/);
-  assert.match(action.env.TERMINAL_EVIDENCE_ROOT, /terminal-evidence-root/);
+  assert.equal(action.with["request-json"], "${{ inputs.request-json }}");
+  assert.match(action.uses, /warrant\/cancel-queued$/);
+  const cancellation = graph.modules.get("packages/core/dev-delivery/warrant/actions.js");
+  for (const field of ["expected-old-state-root", "terminal-evidence-root"]) assert.ok(cancellation.includes(field));
   assert.equal((graph.job.permissions || graph.workflow.permissions).contents, "write");
-  assert.match(graph.modules.get("packages/core/dev-delivery/nodes/cancel.mjs"), /cancel-queued/);
+  assert.ok(graph.modules.has("packages/core/dev-delivery/warrant/cancellation.js"));
   assert.ok(graph.steps.some(step => step.uses?.startsWith("actions/upload-artifact@") && step.if.includes("always()")));
 });
 
@@ -645,12 +635,14 @@ test("PR-controlled native delivery and provider finalization use distinct hoste
   assert.deepEqual(finalizer.job.needs, ["admission", "native-execution", "seal-native-execution", "delivery-heartbeat"]);
   assert.equal(finalizer.job.permissions.contents, "write");
   const boundary = finalizer.steps.findIndex(step => step.name === "Prove fresh provider finalizer job and runner boundary");
-  const proof = finalizer.steps.findIndex(step => step.name === "Verify transferred native proof before provider mutation");
-  const mutation = finalizer.steps.findIndex(step => step.name === "Independently recheck and atomically qualify native proof");
-  assert.ok(boundary >= 0 && proof > boundary && mutation > proof);
-  assert.match(finalizer.steps[mutation].if, /steps\.boundary\.outputs\.native-outcome == 'success' && steps\.proof-verification\.outcome == 'success'/u);
-  for (const module of ["native-qualification.mjs", "provider-boundary.mjs", "failure-settlement.mjs"])
-    assert.ok(finalizer.modules.has(`packages/core/dev-delivery/nodes/${module}`), module);
+  const qualification = finalizer.steps.findIndex(step => step.name === "Verify and qualify transferred native proof");
+  assert.ok(boundary >= 0 && qualification > boundary);
+  assert.match(finalizer.steps[qualification].if, /steps\.boundary\.outcome == 'success' && steps\.boundary\.outputs\.native-outcome == 'success'/u);
+  const transaction = finalizer.modules.get("packages/core/dev-delivery/native/transactions.js");
+  const qualified = transaction.slice(transaction.indexOf("export async function qualifyTransferredNative"));
+  assert.match(qualified, /verifyNativeProofFile[\s\S]*runTwoPhaseDelivery/);
+  for (const module of ["native/qualification.js", "native/provider-boundary.js", "warrant/failure-settlement.js"])
+    assert.ok(finalizer.modules.has(`packages/core/dev-delivery/${module}`), module);
   for (const graph of Object.values(graphs)) for (const step of graph.steps) {
     if (step.uses?.startsWith("actions/upload-artifact@") && /^buildchain-dev-delivery-(?:control|native-raw|native-sealed|heartbeat)-/u.test(step.with.name))
       assert.match(step.with.name, /github\.run_id.*github\.run_attempt/u);
@@ -671,16 +663,18 @@ test("declared merge queue governance reconciles automatically on dev changes", 
     workflow,
     /BUILDCHAIN_GOVERNANCE_TOKEN \|\| secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token/,
   );
-  assert.match(inspectWorkflowJob(".github/workflows/self-ops-merge-queue.yml", "reconcile").modules.get("packages/core/dev-delivery/nodes/merge-queue.mjs"), /--from-config/);
+  assert.match(inspectWorkflowJob(".github/workflows/self-ops-merge-queue.yml", "reconcile").modules.get("packages/core/dev-delivery/queue/reconciliation-action.js"), /reconcileConfiguredDevMergeQueue\(/);
   assert.match(workflow, /github\.event_name == 'push' \|\| inputs\.apply/);
 });
 
 test("patrol workflow family exposes daily weekly monthly reusable entries and dogfood schedules", () => {
   const graph = inspectWorkflowJob(".github/workflows/public-ops-patrol.yml", "patrol");
   const execute = graph.steps.find(step => step.id === "execute");
-  assert.match(execute.run, /buildchain-patrol\.mjs/);
-  for (const [key, field] of [["BUILDCHAIN_PATROL_CADENCE", "cadence"], ["BUILDCHAIN_PATROL_DRY_RUN", "dry-run"]])
-    assert.match(execute.env[key], new RegExp(`fromJSON\\(inputs.request-json\\).${field}`));
+  assert.match(execute.uses, /governance\/repository\/reconcile-patrol$/);
+  assert.equal(execute.with["request-json"], "${{ inputs.request-json }}");
+  const action = graph.modules.get("packages/core/governance/patrol/action.js");
+  assert.match(action, /cadence: request.cadence/);
+  assert.match(action, /dryRun: request\["dry-run"\]/);
   assert.ok(graph.steps.some(step => step.uses?.startsWith("actions/upload-artifact@")));
   for (const cadence of ["daily", "weekly", "monthly"]) {
     const workflow = readWorkflow(`.github/workflows/public-ops-patrol-${cadence}.yml`);
@@ -701,39 +695,43 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   assert.equal(graph.workflow.concurrency["cancel-in-progress"], false);
   for (const field of ["release-now", "auto-promote", "auto-merge"])
     assert.ok(graph.workflow.on.workflow_call.inputs[field]);
-  assert.ok(graph.modules.has("packages/core/release/commands/stable-candidate-patrol.mjs"));
-  assert.ok(graph.modules.has("packages/core/release/commands/stable-candidate-policy.mjs"));
-  const approval = graph.steps.find(step => step.env?.GH_TOKEN);
-  assert.match(approval.env.GH_TOKEN, /inputs.secrets-approval-token \|\| github.token/);
+  assert.ok(graph.modules.has("packages/core/release/stable-patrol/controller.js"));
+  assert.ok(graph.modules.has("packages/core/release/stable-patrol/options.js"));
+  const approval = graph.steps.find(step => step.with?.["approval-token"]);
+  assert.match(approval.with["approval-token"], /inputs.secrets-approval-token \|\| github.token/);
   const qualification = readWorkflow(".github/workflows/self-build-stable-candidate-qualification.yml");
   assert.deepEqual(qualification.on.workflow_run.workflows, ["Buildchain Alpha Self-Dogfood"]);
   const qualified = inspectWorkflowJob(".github/workflows/self-build-stable-candidate-qualification.yml", Object.keys(qualification.jobs)[0]);
-  assert.ok(qualified.modules.has("packages/core/release/commands/stable-candidate-qualification.mjs"));
+  assert.ok(qualified.modules.has("packages/core/release/qualification/public-build.js"));
   assert.doesNotMatch(JSON.stringify(qualified.steps), /secrets\.|canary-ref|candidate-sha/);
   assert.ok(qualified.steps.some(step => step.uses?.startsWith("actions/download-artifact@") && step.with["run-id"]));
 });
 
 test("check workflow exposes source and verify modes through the declared nodes", () => {
   const workflow = readRepoText(".github/workflows/public-build-check.yml");
-  const node = readRepoText("actions/build/source-check/action.yml");
-  const proof = readRepoText("actions/build/source-proof/action.yml");
-  const execution = readRepoText("actions/build/check-lifecycle/action.yml");
-  const verify = readRepoText("actions/build/verify-check/action.yml");
+  const node = readRepoText("actions/build/source/qualify/action.yml");
+  const proof = readRepoText("actions/build/source/proof/action.yml");
+  const execution = readRepoText("actions/build/source/check-lifecycle/action.yml");
+  const verify = readRepoText("actions/build/verification/repository/action.yml");
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /mode:/);
   assert.match(workflow, /default: "?verify"?/);
   assert.match(workflow, /inputs\.mode == 'source' && inputs\.source-proof-reuse/);
   assert.match(workflow, /github\.event\.pull_request\.head\.sha \|\| github\.sha/);
   assert.match(workflow, /runtime-ref: \$\{\{ inputs\.buildchain-ref \|\| job\.workflow_sha \}\}/);
-  assert.match(node, /actions\/build\/source-proof/);
-  assert.match(node, /actions\/build\/check-lifecycle/);
+  assert.match(node, /actions\/build\/source\/proof/);
+  assert.match(node, /actions\/build\/source\/check-lifecycle/);
   assert.match(node, /steps.source-proof.outputs.verify-reuse != 'true'/);
   assert.match(proof, /steps.source-proof-download.outcome == 'success'/);
-  assert.match(execution, /Run declared install lifecycle/);
-  assert.match(execution, /Run selected check lifecycle/);
+  assert.match(execution, /actions\/build\/source\/run-check/);
+  const lifecycle = readRepoText("packages/core/build/source/lifecycle.js");
+  assert.match(lifecycle, /\["install", "install", "-install"\][\s\S]*\["check", stage, ""\]/);
+  assert.match(lifecycle, /stageName,[\s\S]*required: true/);
   assert.match(node, /retention-days: 14/);
-  assert.match(verify, /lifecycle run install/);
-  assert.match(verify, /lifecycle run verify/);
+  assert.match(verify, /actions\/build\/verification\/qualify-source/);
+  const qualification = readRepoText("packages/core/build/verification/source.js");
+  assert.match(qualification, /qualify = qualifySourceLifecycle/);
+  assert.match(qualification, /mode: "verify"/);
   assert.doesNotMatch(workflow + node + proof + execution, /\|\| 'v3'/);
 });
 
@@ -787,8 +785,8 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.equal(workflow.on.workflow_call.inputs["buildchain-contract-drift-issue-mode"].default, "compatible-and-breaking");
   const plan = inspectWorkflowJob(file, "plan"), names = plan.steps.map(step => step.name);
   assert.ok(workflow.jobs.plan.needs.includes("apply-input-gate"));
-  assert.ok(names.indexOf("Check Buildchain contract lock") >= 0 && names.indexOf("Check Buildchain contract lock") < names.indexOf("Run caller build"));
-  assert.ok(plan.actions.has("actions/governance/report-issue"));
+  assert.ok(names.indexOf("Check Buildchain contract lock") >= 0 && names.indexOf("Check Buildchain contract lock") < names.indexOf("Build and plan the admitted channel"));
+  assert.ok(plan.actions.has("actions/governance/incident/report"));
   for (const id of ["preview-apply", "preview-cleanup", "staging-apply", "production-apply"]) {
     const graph = inspectWorkflowJob(file, id);
     assert.equal(graph.job.permissions["id-token"], "write");
@@ -805,18 +803,18 @@ test("web-surface side-effect jobs and sealed production paths have explicit aut
   const plan = inspectWorkflowJob(file, "plan");
   assert.equal(plan.job.permissions["pull-requests"], "write");
   assert.equal(plan.job.permissions.issues, "write");
-  assert.ok(plan.modules.has("packages/core/web/commands/web-surface-release-pr-review.mjs"));
+  assert.ok(plan.modules.has("packages/core/web/release-review.js"));
   const decision = inspectWorkflowJob(file, "publication-decision");
-  assert.ok(decision.modules.has("packages/core/web/commands/web-surface-production-decision.mjs"));
+  assert.ok(decision.modules.has("packages/core/web/production-decision.js"));
   const authority = inspectWorkflowJob(file, "publication-authority");
   assert.match(authority.job.if, /needs.publication-decision.outputs.approved == 'true'/);
-  assert.ok(authority.steps.some(step => step.name === "Create qualifying pre-publication controller receipt"));
+  assert.ok(authority.steps.some(step => step.name === "Seal Web publication admission"));
   const production = inspectWorkflowJob(file, "production-apply");
   assert.match(production.job.if, /needs.publication-authority.result == 'success'/);
   assert.match(production.job.if, /needs.external-publication-authority.result == 'success'/);
   const names = production.steps.map(step => step.name);
-  assert.ok(names.indexOf("Verify sealed production capability before artifact download") >= 0);
-  assert.ok(names.indexOf("Verify sealed production capability before artifact download") < names.indexOf("Download web-surface artifact"));
+  assert.ok(names.indexOf("Verify sealed capability before artifact download") >= 0);
+  assert.ok(names.indexOf("Verify sealed capability before artifact download") < names.indexOf("Download web-surface artifact"));
   assert.ok(names.indexOf("Download web-surface artifact") < names.indexOf("Configure production AWS credentials"));
 });
 
@@ -1081,7 +1079,7 @@ test("web-surface release-intent suppression records a durable control-plane out
       pullNumber: 42,
       sourceSha: "abcdef1234567890abcdef1234567890abcdef12",
     },
-    { BUILDCHAIN_LOG_PATH: logPath },
+    { logPath },
   );
 
   const event = JSON.parse(fs.readFileSync(logPath, "utf8").trim());
@@ -1359,7 +1357,7 @@ test("web-surface release PR review comments only on matching release PRs", () =
     eventName: "pull_request",
     eventAction: "opened",
     repository: "kungfu-systems/site-kungfu-tech",
-    productionReleaseOnMain: "true",
+    productionReleaseOnMain: true,
     productionReleaseLabel: "buildchain-release",
     productionReleaseHeadPrefix: "feature/release-",
   });
@@ -1372,7 +1370,7 @@ test("web-surface release PR review comments only on matching release PRs", () =
       eventName: "pull_request",
       eventAction: "opened",
       repository: "kungfu-systems/site-kungfu-tech",
-      productionReleaseOnMain: "true",
+      productionReleaseOnMain: true,
       productionReleaseLabel: "buildchain-release",
       productionReleaseHeadPrefix: "feature/release-",
     },
@@ -1460,11 +1458,12 @@ test("web-surface release feedback passport records responsibility and renders s
 
 test("binary distribution exposes only current evidence production", () => {
   const workflow = readRepoText(".github/workflows/self-build-binary-distribution.yml");
-  const preflight = readRepoText("actions/build/binary-distribution-preflight/action.yml");
+  const preflight = readRepoText("actions/build/binary/preflight/action.yml");
   assert.match(workflow, /needs: preflight/);
-  assert.match(preflight, /Validate binary distribution coordinates/);
+  assert.equal(readWorkflow("actions/build/binary/preflight/action.yml").runs.using, "node24");
+  assert.match(readRepoText("packages/core/build/binary/actions.js"), /admitBinaryDistributionAction/);
   assert.doesNotMatch(workflow, /upload-release/);
-  assert.match(workflow, /actions\/build\/binary-distribution-passport/);
+  assert.match(workflow, /actions\/build\/binary\/passport/);
 });
 
 test("binary evidence publication remains isolated from the canonical v4 publisher", () => {
@@ -1479,8 +1478,8 @@ test("binary evidence publication remains isolated from the canonical v4 publish
   assert.doesNotMatch(evidence, /gh release create|gh release upload/);
   assert.match(evidence, /Dispatch sealed binary asset publication/);
   assert.match(publication, /environment: buildchain-release-assets/);
-  assert.match(publication, /actions\/release\/binary-assets-publish/);
-  assert.match(readRepoText("actions/release/binary-assets-publish/action.yml"), /binary-publication-evidence\.mjs publish/);
+  assert.match(publication, /actions\/release\/binary\/publish/);
+  assert.match(readRepoText("actions/release/binary/publish/action.yml"), /actions\/publication\/binary\/publish/);
   assert.match(
     publicPublication,
     /uses: \.\/\.github\/workflows\/\.release-binary-assets\.yml/,
@@ -1700,13 +1699,13 @@ test("runtime selection accepts official channels and gates train or SHA overrid
 
 test("runtime-aware workflows bind the defining workflow identity to their runtime resolver", () => {
   for (const [file, id, module] of [
-    ["public-build-publication", "publication", "publication/nodes/runtime.mjs"],
-    ["public-release-web", "runtime", "web/nodes/runtime.mjs"],
-    [".build-gate-profile", "plan", "build/nodes/gate-runtime.mjs"],
+    ["public-build-publication", "publication", "runtime/runtime-selection.js"],
+    ["public-release-web", "runtime", "runtime/runtime-selection.js"],
+    [".build-gate-profile", "plan", "runtime/runtime-selection.js"],
   ]) {
     const graph = inspectWorkflowJob(`.github/workflows/${file}.yml`, id);
     assert.ok(graph.modules.has(`packages/core/${module}`));
-    assert.ok(graph.steps.some(step => step.env?.BUILDCHAIN_WORKFLOW_SHA));
+    assert.ok(graph.steps.some(step => step.uses?.endsWith("/runtime/selection/admit") && step.with?.["workflow-sha"]));
     assert.ok(graph.job.steps.some(step => JSON.stringify(step.with).includes("job.workflow_sha")));
   }
   const paper = readWorkflow(".github/workflows/public-release-paper.yml");
@@ -1716,14 +1715,14 @@ test("runtime-aware workflows bind the defining workflow identity to their runti
 
 test("ordinary builds cannot authorize opaque runtimes", () => {
   const workflow = readRepoText(".github/workflows/.build.yml");
-  assert.match(readRepoText("packages/core/build/commands/plan.mjs"), /BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: false/u);
+  assert.match(readRepoText("packages/core/build/plan/admission.js"), /allowOpaqueRuntime: false/u);
   assert.doesNotMatch(workflow, /pinned-self|runtime-override == 'true'/u);
 });
 
 test("web-surface release PR close hands production to the protected main push", () => {
-  assert.equal(webApplyInputGate({ EVENT_NAME: "pull_request", EVENT_ACTION: "closed", PRODUCTION_DECISION_APPROVED: "false" })["web-surface-channel"], "");
-  assert.equal(webApplyInputGate({ EVENT_NAME: "push", REF_NAME: "main", PRODUCTION_DECISION_APPROVED: "true" })["web-surface-channel"], "production");
-  assert.match(readRepoText("packages/core/web/commands/web-surface-production-decision.mjs"), /release-pr-verified-awaiting-main-push/);
+  assert.equal(admitWebApplyInputs({ event: {name: "pull_request", action: "closed"}, decisionApproved: false })["web-surface-channel"], "");
+  assert.equal(admitWebApplyInputs({ event: {name: "push", refName: "main"}, decisionApproved: true })["web-surface-channel"], "production");
+  assert.match(readRepoText("packages/core/web/production-decision.js"), /release-pr-verified-awaiting-main-push/);
 });
 
 test("runtime-aware workflows pin defining workflow bytes independently of caller merge refs", async () => {

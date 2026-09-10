@@ -12,7 +12,7 @@ import {
   validateInfraContractProject,
   verifyInfraContractEvidenceBundle,
 } from "./infra-contract-core.mjs";
-import { writeGitHubOutputs } from "../../build/commands/build-contract-core.mjs";
+import { writeGitHubOutputs } from "./github-output.mjs";
 
 const INFRA_CONTRACT_CI_CONTRACT = "kungfu-buildchain-infra-contract-ci";
 

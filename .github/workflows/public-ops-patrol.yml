@@ -134,7 +134,7 @@ jobs:
           persist-credentials: false
       - name: Patrol protected development
         id: patrol
-        uses: ./.buildchain/workflow-shell/actions/governance/patrol
+        uses: ./.buildchain/workflow-shell/actions/governance/repository/patrol
         with:
           request-json: ${{ toJSON(inputs) }}
           runtime-repository: ${{ inputs.buildchain-repository || job.workflow_repository }}

@@ -16,7 +16,7 @@ import {
   verifyTailResealReceipt,
 } from "../packages/core/release/tail-reseal-receipt.js";
 import { domainContentRoot } from "../packages/core/contracts/canonical-contracts.js";
-import { verifyTailResealPlatform } from "../packages/core/release/commands/tail-reseal.mjs";
+import { verifyTailResealPlatform } from "../packages/core/release/reseal/platform.js";
 import {
   TAIL_RESEAL_REQUIRED_SUCCESS_JOBS,
   validateTailResealGitHubEvidence,

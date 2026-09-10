@@ -91,7 +91,7 @@ function workspace(fixture) {
     fs.mkdirSync(path.dirname(actionPath), { recursive: true });
     fs.writeFileSync(
       actionPath,
-      `name: wrapper\nruns:\n  using: composite\n  steps:\n    - uses: kungfu-systems/buildchain/actions/build/run-lifecycle@${"a".repeat(40)}\n`,
+      `name: wrapper\nruns:\n  using: composite\n  steps:\n    - uses: kungfu-systems/buildchain/actions/build/lifecycle/run@${"a".repeat(40)}\n`,
     );
   } else {
     fs.writeFileSync(
@@ -176,9 +176,10 @@ test("shared YAML semantic layer ignores uses-like text inside run blocks", () =
 
 test("source scan treats materialized Buildchain runtime actions as transient", () => {
   const callerRoot = workspace(fixtures.cases[0]);
+  const transient = "./.buildchain/runtime/actions/governance/incident/report";
   fs.writeFileSync(
     path.join(callerRoot, ".github/workflows/runtime-action.yml"),
-    "jobs:\n  report:\n    steps:\n      - uses: ./.buildchain/runtime/actions/governance/report-issue\n",
+    `jobs:\n  report:\n    steps:\n      - uses: ${transient}\n`,
   );
   const result = scanFloatingConsumerPolicy({
     root: callerRoot,
@@ -190,12 +191,7 @@ test("source scan treats materialized Buildchain runtime actions as transient", 
     scannerRoot: ROOT,
   });
   assert.equal(result.ok, true, JSON.stringify(result.failures));
-  assert.ok(
-    result.invocations.every(
-      (entry) =>
-        entry.uses !== "./.buildchain/runtime/actions/governance/report-issue",
-    ),
-  );
+  assert.ok(result.invocations.every((entry) => entry.uses !== transient));
 });
 
 test("caller source and channel disambiguate repeated public targets", () => {

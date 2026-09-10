@@ -23,9 +23,10 @@ Core contains JavaScript business logic and provider IO, grouped by the closed
 capabilities in [`architecture/code-layout.json`](../../architecture/code-layout.json).
 See [Code organization](../../docs/code-organization.md) for the complete layout.
 
-Workflow node adapters live in each capability's `nodes/`, command-line handlers
-in `cli/`, and executable capability tools in `commands/`. Related domain modules
-have responsibility names. The root `index.js` is the public API aggregation;
+Each capability groups its business transactions, action adapters and supporting
+modules by responsibility. Action adapters invoke named transaction APIs; they do
+not dispatch old CLI steps. Command-line handlers live in `cli/`, and executable
+capability tools in `commands/` delegate to the same core modules. The root `index.js` is the public API aggregation;
 implementation modules import their actual owner directly.
 
 Core cannot depend on `actions`, `.github/workflows`, `bin`, or repository

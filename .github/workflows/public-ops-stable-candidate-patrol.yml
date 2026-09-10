@@ -1,94 +1,99 @@
 name: Buildchain Stable Candidate Patrol
-
 on:
   workflow_call:
     inputs:
       buildchain-repository:
-        description: "Buildchain runtime repository"
-        default: "kungfu-systems/buildchain"
+        description: Buildchain runtime repository
+        default: kungfu-systems/buildchain
         type: string
         required: false
       buildchain-ref:
-        description: "Optional explicit runtime ref. Empty binds the defining workflow SHA."
+        description: Optional explicit runtime ref. Empty binds the defining workflow SHA.
         default: ""
         type: string
         required: false
       target-branch:
-        description: "Stable release branch. Empty maps the caller dev/vN/vN.M branch to release/vN/vN.M."
+        description: Stable release branch. Empty maps the caller dev/vN/vN.M branch to release/vN/vN.M.
         default: ""
         type: string
         required: false
       ledger-ref:
-        description: "Durable machine branch for the candidate ledger. Empty derives it from the release line."
+        description: Durable machine branch for the candidate ledger. Empty derives it from the release line.
         default: ""
         type: string
         required: false
       minimum-soak-seconds:
-        description: "Minimum interval after the final required check"
+        description: Minimum interval after the final required check
         default: 0
         type: number
         required: false
       required-checks:
-        description: "Comma/newline separated commit status contexts or check-run names; alpha-release is the prerelease publication fact"
+        description:
+          Comma/newline separated commit status contexts or check-run names; alpha-release is the
+          prerelease publication fact
         default: ""
         type: string
         required: false
       revoked-versions:
-        description: "Exact alpha versions explicitly revoked by repository policy"
+        description: Exact alpha versions explicitly revoked by repository policy
         default: ""
         type: string
         required: false
       revoke-reason:
-        description: "Auditable reason applied to revoked versions"
-        default: "repository-policy-revocation"
+        description: Auditable reason applied to revoked versions
+        default: repository-policy-revocation
         type: string
         required: false
       hold:
-        description: "Hold scheduled stable selection for the whole repository"
+        description: Hold scheduled stable selection for the whole repository
         default: false
         type: boolean
         required: false
       hold-reason:
-        description: "Auditable repository hold reason"
+        description: Auditable repository hold reason
         default: ""
         type: string
         required: false
       release-now:
-        description: "Exact alpha version selected by explicit human authority; bypasses schedule/soak but not revocation or source identity"
+        description:
+          Exact alpha version selected by explicit human authority; bypasses schedule/soak but
+          not revocation or source identity
         default: ""
         type: string
         required: false
       auto-promote:
-        description: "Create the exact source-lock stable PR for the selected candidate"
+        description: Create the exact source-lock stable PR for the selected candidate
         default: false
         type: boolean
         required: false
       auto-merge:
-        description: "Enable GitHub auto-merge on the generated stable PR"
+        description: Enable GitHub auto-merge on the generated stable PR
         default: false
         type: boolean
         required: false
       merge-method:
         description: "GitHub auto-merge method: merge, squash, or rebase"
-        default: "merge"
+        default: merge
         type: string
         required: false
       auto-approve:
-        description: "Approve the generated PR with an independent approval token, or the caller github.token when repository policy permits"
+        description:
+          Approve the generated PR with an independent approval token, or the caller github.token
+          when repository policy permits
         default: false
         type: boolean
         required: false
       dry-run:
-        description: "Evaluate only; do not persist the ledger or create refs/PRs"
+        description: Evaluate only; do not persist the ledger or create refs/PRs
         default: true
         type: boolean
         required: false
     secrets:
       promotion-token:
-        description: "Repository-owned token used for durable ledger, source-lock branch and PR writes"
+        description: Repository-owned token used for durable ledger, source-lock branch and PR writes
         required: false
       approval-token:
-        description: "Independent repository-owned token used only to approve the generated PR"
+        description: Independent repository-owned token used only to approve the generated PR
         required: false
     outputs:
       result-path:
@@ -103,18 +108,17 @@ on:
         value: ${{ jobs.patrol.outputs.stable-version }}
       promotion-pr:
         value: ${{ jobs.patrol.outputs.promotion-pr }}
-
 permissions:
   actions: write
   contents: write
   pull-requests: write
   checks: read
   statuses: read
-
 concurrency:
-  group: buildchain-stable-candidate-patrol-${{ github.repository }}-${{ inputs.target-branch || github.ref_name }}
+  group:
+    buildchain-stable-candidate-patrol-${{ github.repository }}-${{ inputs.target-branch ||
+    github.ref_name }}
   cancel-in-progress: false
-
 jobs:
   patrol:
     runs-on: ubuntu-24.04
@@ -135,10 +139,11 @@ jobs:
           persist-credentials: false
       - name: Execute stable-candidate-patrol
         id: node
-        uses: ./.buildchain/workflow-shell/actions/governance/stable-candidate-patrol
+        uses: ./.buildchain/workflow-shell/actions/governance/stable-candidate/patrol
         with:
           runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
           runtime-repository: ${{ inputs.buildchain-repository || job.workflow_repository }}
           request-json: ${{ toJSON(inputs) }}
           secrets-promotion-token: ${{ secrets.promotion-token }}
           secrets-approval-token: ${{ secrets.approval-token }}
+          policy-json: ${{ toJSON(vars) }}

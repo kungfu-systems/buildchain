@@ -1,0 +1,36 @@
+name: record-evidence
+description: Qualify publication bytes and preserve controller evidence through failure.
+inputs:
+  request-json:
+    description: Explicit request-json.
+    required: true
+  runtime-outcomes-json:
+    description: Explicit runtime-outcomes-json.
+    required: true
+  outcomes-json:
+    description: Explicit outcomes-json.
+    required: false
+  upload-outcome:
+    description: Explicit upload-outcome.
+    required: true
+  manifest-path:
+    description: Explicit manifest-path.
+    required: false
+  passport-path:
+    description: Explicit passport-path.
+    required: false
+  source-sha:
+    description: Explicit source-sha.
+    required: true
+outputs:
+  controller-receipt-json:
+    description: Verified controller-receipt-json.
+  controller-receipt-digest:
+    description: Verified controller-receipt-digest.
+  controller-receipt-status:
+    description: Verified controller-receipt-status.
+  controller-receipt-qualifying:
+    description: Verified controller-receipt-qualifying.
+runs:
+  using: node24
+  main: dist/index.js

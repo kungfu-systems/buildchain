@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { runDevDeliveryCommand } from "../packages/core/dev-delivery/commands/dev-delivery-warrant.mjs";
+import { runDevDeliveryCommand } from "../packages/core/dev-delivery/warrant/service.js";
 import {
   createDevDeliveryQueue,
   createNativeCommandContract,

@@ -1,6 +1,7 @@
+import { githubRequest } from "../packages/core/providers/github/signing-request.js";
 import assert from "node:assert/strict";
 import test from "node:test";
-import { githubRequest, resolveAuthorityDispatchRef } from "../packages/core/build/commands/dispatch-artifact-signing-authority.mjs";
+import { resolveAuthorityDispatchRef } from "../packages/core/build/signing/dispatch.js";
 
 test("authority polling retries transient GET transport failures without replaying dispatch POSTs", async () => {
   let getAttempts = 0;

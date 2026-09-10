@@ -4,7 +4,11 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { parse as parseYaml } from "yaml";
 import { actionInventory } from "../packages/core/contracts/action-inventory.js";
-import { inspectWorkflowJob, localActionDirectory } from "./workflow-action-graph.mjs";
+import { inspectActionTaxonomy } from "../packages/core/contracts/action-taxonomy.js";
+import {
+  inspectWorkflowJob,
+  localActionDirectory,
+} from "./workflow-action-graph.mjs";
 
 function filesBelow(root, relative) {
   return fs
@@ -89,9 +93,43 @@ function scriptLines(step) {
   );
 }
 
+export function inspectCompositeSteps(metadata, label) {
+  const issues = [];
+  if (/\boutputs\.[\w-]*(?:fromJSON|toJSON)\(/u.test(JSON.stringify(metadata)))
+    issues.push(
+      `${label}: output property contains an invalid expression call`,
+    );
+  for (const step of metadata.runs?.steps || []) {
+    const location = `${label}/${step.id || step.name || "step"}`;
+    if (typeof step.uses !== "string" || !step.uses.trim())
+      issues.push(
+        `${location}: composite steps must invoke an action with uses`,
+      );
+    for (const key of ["run", "shell", "working-directory"])
+      if (Object.hasOwn(step, key))
+        issues.push(`${location}: composite cannot own ${key}`);
+    if (Object.hasOwn(step.with || {}, "script"))
+      issues.push(
+        `${location}: composite cannot pass executable script to another action`,
+      );
+  }
+  return issues;
+}
+
 export function inspectWorkflowNodes(source, label, budgets) {
   const issues = [];
   const workflow = parseYaml(source);
+  for (const event of ["workflow_call", "workflow_dispatch"]) {
+    const declaration = workflow.on?.[event];
+    for (const field of ["inputs", "outputs", "secrets"]) {
+      if (!declaration || !Object.hasOwn(declaration, field)) continue;
+      const value = declaration[field];
+      if (!value || typeof value !== "object" || Array.isArray(value))
+        issues.push(
+          `${label}: ${event}.${field} must be a mapping when declared`,
+        );
+    }
+  }
   for (const [id, job] of Object.entries(workflow.jobs || {})) {
     if (!job.steps) continue;
     if (job.steps.length > budgets.workflowStepsPerJob)
@@ -146,11 +184,13 @@ export function inspectCompositeAdmission(root, workflow, label = "workflow") {
       const metadata = parseYaml(
         fs.readFileSync(path.join(root, actionPath), "utf8"),
       );
-      const guard = metadata.runs.steps[0];
+      const guard = metadata.runs.steps?.[0];
       if (
-        guard.id !== "source-boundary" ||
-        guard.if !== "${{ inputs.source-checkout-outcome != 'success' }}" ||
-        guard.run.trim() !== "exit 1"
+        guard?.id !== "source-boundary" ||
+        guard.if !== "${{ always() }}" ||
+        localActionDirectory(guard.uses) !== "actions/build/source/admit" ||
+        guard.with?.["source-checkout-outcome"] !==
+          "${{ inputs.source-checkout-outcome }}"
       )
         issues.push(
           `${label}#${name}: failed source checkout can execute node business steps`,
@@ -162,8 +202,11 @@ export function inspectCompositeAdmission(root, workflow, label = "workflow") {
 
 export function inspectPublicActionNodes(actions, publicNodes) {
   const issues = [];
-  if (!Array.isArray(publicNodes)) return ["public Action registry must be an array"];
-  const known = new Set(actions.map(action => action.directory.replace(/^actions\//u, "")));
+  if (!Array.isArray(publicNodes))
+    return ["public Action registry must be an array"];
+  const known = new Set(
+    actions.map((action) => action.directory.replace(/^actions\//u, "")),
+  );
   const seen = new Set();
   for (const node of publicNodes) {
     if (seen.has(node)) issues.push(`duplicate public Action node: ${node}`);
@@ -175,20 +218,41 @@ export function inspectPublicActionNodes(actions, publicNodes) {
 
 export function inspectRequestJsonFields(graph, requestFields) {
   const issues = [];
-  const workflowInputs = graph.workflow.on?.workflow_call?.inputs || graph.workflow.on?.workflow_dispatch?.inputs || {};
-  const scopes = new Map([["", { inputs: new Set(Object.keys(workflowInputs)), request: requestFields }]]);
+  const workflowInputs =
+    graph.workflow.on?.workflow_call?.inputs ||
+    graph.workflow.on?.workflow_dispatch?.inputs ||
+    {};
+  const scopes = new Map([
+    [
+      "",
+      { inputs: new Set(Object.keys(workflowInputs)), request: requestFields },
+    ],
+  ]);
   for (const step of graph.steps) {
     const scope = scopes.get(step.ancestry.join(" > "));
     if (scope?.request) {
-      for (const match of JSON.stringify(step).matchAll(/fromJSON\(inputs\.request-json\)\.([a-zA-Z0-9-]+)/gu)) {
-        if (!scope.request.has(match[1])) issues.push(`${step.ancestry.at(-1) || "workflow"}: undeclared request field ${match[1]}`);
+      for (const match of JSON.stringify(step).matchAll(
+        /fromJSON\(inputs\.request-json\)\.([a-zA-Z0-9-]+)/gu,
+      )) {
+        if (!scope.request.has(match[1]))
+          issues.push(
+            `${step.ancestry.at(-1) || "workflow"}: undeclared request field ${match[1]}`,
+          );
       }
     }
     const directory = localActionDirectory(step.uses);
     if (!directory) continue;
     const value = step.with?.["request-json"];
-    const request = value === "${{ toJSON(inputs) }}" ? scope?.inputs : value === "${{ inputs.request-json }}" ? scope?.request : undefined;
-    scopes.set([...step.ancestry, directory].join(" > "), { inputs: new Set(Object.keys(graph.actions.get(directory).inputs || {})), request });
+    const request =
+      value === "${{ toJSON(inputs) }}"
+        ? scope?.inputs
+        : value === "${{ inputs.request-json }}"
+          ? scope?.request
+          : undefined;
+    scopes.set([...step.ancestry, directory].join(" > "), {
+      inputs: new Set(Object.keys(graph.actions.get(directory).inputs || {})),
+      request,
+    });
   }
   return [...new Set(issues)];
 }
@@ -212,6 +276,17 @@ export function checkCodeLayout(root) {
       issues.push(`packages/core/${entry.name}: undeclared runtime owner`);
   }
   const actions = actionInventory(root);
+  issues.push(
+    ...inspectActionTaxonomy(
+      actions,
+      JSON.parse(
+        fs.readFileSync(
+          path.join(root, "architecture/action-taxonomy.json"),
+          "utf8",
+        ),
+      ),
+    ),
+  );
   issues.push(...inspectPublicActionNodes(actions, policy.publicActionNodes));
   for (const file of filesBelow(root, "bin")) {
     if (!policy.cliEntrypoints?.includes(file))
@@ -231,6 +306,9 @@ export function checkCodeLayout(root) {
       "utf8",
     );
     if (action.using === "composite") {
+      issues.push(
+        ...inspectCompositeSteps(parseYaml(metadata), action.directory),
+      );
       const implementation = metadata
         .slice(metadata.search(/^runs:/mu))
         .trim()
@@ -272,9 +350,21 @@ export function checkCodeLayout(root) {
     issues.push(...inspectCompositeAdmission(root, workflow, file));
     issues.push(...inspectWorkflowNodes(source, file, policy.budgets));
     const schemaPath = policy.workflowRequestSchemas?.[file];
-    const requestFields = schemaPath ? new Set(Object.keys(JSON.parse(fs.readFileSync(path.join(root, schemaPath), "utf8")).properties)) : undefined;
+    const requestFields = schemaPath
+      ? new Set(
+          Object.keys(
+            JSON.parse(fs.readFileSync(path.join(root, schemaPath), "utf8"))
+              .properties,
+          ),
+        )
+      : undefined;
     for (const jobId of Object.keys(workflow.jobs || {})) {
-      issues.push(...inspectRequestJsonFields(inspectWorkflowJob(file, jobId, root), requestFields).map(issue => `${file}#${jobId}: ${issue}`));
+      issues.push(
+        ...inspectRequestJsonFields(
+          inspectWorkflowJob(file, jobId, root),
+          requestFields,
+        ).map((issue) => `${file}#${jobId}: ${issue}`),
+      );
     }
   }
   return {

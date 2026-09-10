@@ -1461,14 +1461,14 @@ export function getPublishContract(loadedConfig) {
   return loadedConfig?.config?.publish;
 }
 
-export function runLifecycleStage({ cwd = process.cwd(), loadedConfig, name, stage, env: extraEnv, timeoutMinutes }) {
+export function runLifecycleStage({ cwd = process.cwd(), loadedConfig, name, stage, env: extraEnv, baseEnv = process.env, timeoutMinutes }) {
   const lifecycle = loadedConfig?.config?.lifecycle || {};
   const selected = stage || getLifecycleStage(loadedConfig, name);
   if (!selected) {
     return false;
   }
   const env = {
-    ...process.env,
+    ...baseEnv,
     ...(lifecycle.env || {}),
     ...(selected.env || {}),
     ...(extraEnv || {}),

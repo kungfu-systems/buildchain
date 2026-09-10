@@ -9,7 +9,7 @@ import { releaseTailRoot } from "../packages/core/release/release-tail-provider-
 import {
   settlePublication,
   SETTLEMENT_ASSET,
-} from "../packages/core/publication/commands/publication-settlement.mjs";
+} from "../packages/core/publication/settlement/transaction.js";
 
 const original = (await publicationSettlementFixture()).documents;
 const repository = original.invocation.candidate.repository;

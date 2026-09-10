@@ -1,0 +1,48 @@
+name: Admit immutable tail reseal plan
+description: Admit immutable tail reseal plan.
+inputs:
+  runtime-sha:
+    description: Admitted called workflow commit
+    required: true
+  request-json:
+    description: Public tail reseal request
+    required: true
+  token:
+    description: Scoped source and signing evidence read credential
+    required: true
+outputs:
+  platforms-json:
+    description: platforms json
+  source-run-id:
+    description: source run id
+  source-run-attempt:
+    description: source run attempt
+  source-sha:
+    description: source sha
+  source-tree-sha:
+    description: source tree sha
+  runtime-sha:
+    description: runtime sha
+  consumer-policy-receipt-root:
+    description: consumer policy receipt root
+  warrant-readback-root:
+    description: warrant readback root
+  signing-provider-readback-root:
+    description: signing provider readback root
+  release-tail-provider-readback-root:
+    description: release tail provider readback root
+  signing-authority-repository:
+    description: signing authority repository
+  signing-authority-run-id:
+    description: signing authority run id
+  signing-result-artifact:
+    description: signing result artifact
+  target-version:
+    description: target version
+  plan-root:
+    description: plan root
+  admission-root:
+    description: admission root
+runs:
+  using: node24
+  main: dist/index.js

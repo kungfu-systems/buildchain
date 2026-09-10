@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { pathToFileURL } from "node:url";
-import { parsePublishSourceRef, verifyPublishSourceLock } from "../../build/commands/build-contract-core.mjs";
+import { parsePublishSourceRef, verifyPublishSourceLock } from "../source/coordinates.js";
 import { normalizeSourceRef, resolvePublishSourceRefSha } from "./publish-source-ref-resolver.mjs";
 
 function readEnv(env, name, fallback = "") {

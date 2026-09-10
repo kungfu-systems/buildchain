@@ -56,7 +56,7 @@ test("APPLY retains one rooted transaction and SETTLE reads its receipt", () => 
   assert.ok(applyGraph.steps.some(step => step.name === "Resume the same transaction journal"));
   const settleGraph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "settle");
   assert.match(JSON.stringify(settleGraph.steps), /release-receipt\.json/);
-  assert.match([...settleGraph.modules.values()].join("\n"), /receipt-root=/);
+  assert.match([...settleGraph.modules.values()].join("\n"), /core.setOutput\("receipt-root", receipt.receiptRoot\)/);
 });
 
 test("only APPLY carries provider mutation permissions", () => {
@@ -73,7 +73,7 @@ test("only APPLY carries provider mutation permissions", () => {
   assert.match(qualify, /permissions:\n(?:      [a-z-]+: read\n)*      contents: read/u);
   assert.doesNotMatch(qualify, /contents: write|id-token: write/);
   assert.doesNotMatch(apply, /^    permissions:/mu);
-  assert.ok(inspectWorkflowJob(".github/workflows/.release-promote.yml", "apply").actions.has("actions/release/promote-candidate"));
+  assert.ok(inspectWorkflowJob(".github/workflows/.release-promote.yml", "apply").actions.has("actions/release/promotion/candidate"));
   assert.match(settle, /permissions:\n(?:      [a-z-]+: read\n)*      contents: read/u);
   assert.doesNotMatch(settle, /contents: write|id-token: write/);
 });

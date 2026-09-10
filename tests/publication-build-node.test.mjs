@@ -4,10 +4,10 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import YAML from "yaml";
-import { resolvePublicationRuntime } from "../packages/core/publication/nodes/runtime.mjs";
-import { provePublicationReproducibility } from "../packages/core/publication/nodes/candidate-build.mjs";
-import { readQualifiedManifest } from "../packages/core/publication/nodes/qualified-manifest.mjs";
-import { bindQualifiedPackage } from "../packages/core/publication/nodes/qualified-package.mjs";
+import { resolvePublicationRuntime } from "./helpers/runtime-selection.mjs";
+import { provePublicationReproducibility } from "../packages/core/publication/candidate/reproducibility.js";
+import { readQualifiedManifest } from "../packages/core/publication/candidate/manifest.js";
+import { bindQualifiedPackage } from "../packages/core/publication/candidate/paper-package.js";
 const sha = "a".repeat(40),
   env = {
     BUILDCHAIN_REPOSITORY: "kungfu-systems/buildchain",
@@ -93,9 +93,8 @@ test("publication build records failed evidence and denies an unqualified packag
       () =>
         provePublicationReproducibility(
           {
-            GITHUB_SHA: sha,
-            INPUT_PREPARE_PAPER_PACKAGE: "true",
-            INPUT_PACKAGE_NAME: "@acme/paper",
+            cwd: process.cwd(), sourceSha: sha,
+            preparePaperPackage: true, packageName: "@acme/paper",
           },
           (options) => {
             seen.push(options);
@@ -113,7 +112,7 @@ test("publication build records failed evidence and denies an unqualified packag
       false,
     );
     const result = provePublicationReproducibility(
-      { GITHUB_SHA: sha, INPUT_PREPARE_PAPER_PACKAGE: "false" },
+      { cwd: process.cwd(), sourceSha: sha, preparePaperPackage: false },
       () => ({ status: "passed", qualifying: false }),
     );
     assert.equal(result.status, "passed");
@@ -127,8 +126,7 @@ test("qualified manifest rejects a passing but non-qualifying Paper build", asyn
     );
     await assert.rejects(
       readQualifiedManifest({
-        INPUT_PREPARE_PAPER_PACKAGE: "true",
-        GITHUB_OUTPUT: path.join(root, "output"),
+        cwd: root, preparePaperPackage: true,
       }),
       /not qualifying/,
     );
@@ -150,7 +148,7 @@ test("qualified package binding rejects provider errors, duplicate packs and int
         builds: [{ npmPackage: { integrity: "sha512-exact" } }],
       }),
     );
-    const settings = { GITHUB_OUTPUT: path.join(root, "output") };
+    const settings = { cwd: root };
     await assert.rejects(
       bindQualifiedPackage(settings, () => ({ status: 17 })),
       (error) => error.status === 17,
@@ -172,7 +170,7 @@ test("qualified package binding rejects provider errors, duplicate packs and int
       })),
       /integrity changed/,
     );
-    assert.ok(!fs.existsSync(settings.GITHUB_OUTPUT));
+    assert.ok(!fs.existsSync(path.join(root, "output")));
   }));
 test("publication workflow preserves runtime admission before source checkout and always collects failure receipts", () => {
   const w = YAML.parse(
@@ -190,18 +188,14 @@ test("publication workflow preserves runtime admission before source checkout an
   );
   assert.equal(steps.at(-1).if, "${{ always() }}");
   const build = YAML.parse(
-    fs.readFileSync("actions/publication/build-candidate/action.yml", "utf8"),
+    fs.readFileSync("actions/publication/candidate/build/action.yml", "utf8"),
   );
-  const verify = build.runs.steps.find((s) => s.id === "verify");
-  assert.equal(
-    verify.env.BUILDCHAIN_VERIFY_COMMAND,
-    "${{ fromJSON(inputs.request-json).verify-command }}",
-  );
-  assert.match(verify.run, /\$BUILDCHAIN_VERIFY_COMMAND/);
+  assert.ok(build.runs.steps.every(step => step.uses && !step.run && !step.shell));
+  assert.equal(build.runs.steps.at(-1).uses, "./.buildchain/runtime/actions/publication/candidate/qualify");
   const collect = YAML.parse(
-    fs.readFileSync("actions/publication/collect-candidate/action.yml", "utf8"),
+    fs.readFileSync("actions/publication/candidate/collect/action.yml", "utf8"),
   );
-  assert.equal(collect.runs.steps[0].run.trim(), "exit 1");
+  assert.ok(collect.runs.steps[0].uses.endsWith("/workflow/admission/reject"));
   assert.match(
     collect.runs.steps.find((s) => s.id === "controller-receipt").if,
     /always/,

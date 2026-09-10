@@ -731,7 +731,7 @@ test("credential island bundle loads before validating runner inputs", () => {
   const root = path.resolve(import.meta.dirname, "..");
   const bundlePath = path.join(
     root,
-    "actions/build/macos-credential-island/dist/index.js",
+    "actions/build/credential/macos-island/dist/index.js",
   );
   const bundle = fs.readFileSync(bundlePath, "utf8");
   const result = spawnSync(process.execPath, [bundlePath], {
@@ -753,7 +753,7 @@ test("credential island bundle loads before validating runner inputs", () => {
 test("public action and workflow keep credentials outside the build matrix", () => {
   const root = path.resolve(import.meta.dirname, "..");
   const action = fs.readFileSync(
-    path.join(root, "actions/build/macos-credential-island/action.yml"),
+    path.join(root, "actions/build/credential/macos-island/action.yml"),
     "utf8",
   );
   const implementation = fs.readFileSync(
@@ -811,16 +811,16 @@ test("public action and workflow keep credentials outside the build matrix", () 
     /assembleDmgWithRetry\([\s\S]*?signAndVerifyDmg\(assembly\.imagePath,[\s\S]*?const notarization = submitNotary\([\s\S]*?staple\(assembly\.imagePath\)[\s\S]*?COPYFILE_EXCL/,
   );
   assert.match(implementation, /dmgCodesign: true/);
-  const sign = fs.readFileSync(path.join(root, "actions/build/sign-artifact/action.yml"), "utf8");
-  const stage = fs.readFileSync(path.join(root, "packages/core/build/commands/stage.mjs"), "utf8");
-  const plan = fs.readFileSync(path.join(root, "packages/core/build/commands/plan.mjs"), "utf8");
-  assert.match(stage, /CSC_IDENTITY_AUTO_DISCOVERY: plan.build.macos_signing.app_path \? "false"/u);
-  assert.match(stage, /seal-macos-credential-input.mjs/u);
+  const sign = fs.readFileSync(path.join(root, "actions/build/artifact/sign/action.yml"), "utf8");
+  const stage = fs.readFileSync(path.join(root, "packages/core/build/lifecycle/stage.js"), "utf8");
+  const plan = fs.readFileSync(path.join(root, "packages/core/build/plan/matrices.js"), "utf8");
+  assert.match(stage, /CSC_IDENTITY_AUTO_DISCOVERY: plan.build.macos_signing.app_path\s*\? "false"/u);
+  assert.match(stage, /sealMacosCredentialInput\(/u);
   assert.match(plan, /macOS signing requires a governed credential environment/u);
   assert.match(workflow, /checkout-source:.*matrix.platform.kind == 'artifact'/u);
   assert.match(workflow, /matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_CERTIFICATE/u);
   assert.match(sign, /inputs.kind == 'credential'/u);
-  assert.match(sign, /uses: .\/.buildchain\/runtime\/actions\/build\/macos-credential-island/u);
+  assert.match(sign, /uses: .\/.buildchain\/runtime\/actions\/build\/credential\/macos-island/u);
   assert.match(sign, /expected-bundle-id:.*steps.identity.outputs.bundle-id/u);
   assert.doesNotMatch(implementation, /execSync|shell:\s*true/);
   assert.match(implementation, /schema:\s*EVIDENCE_CONTRACT/);

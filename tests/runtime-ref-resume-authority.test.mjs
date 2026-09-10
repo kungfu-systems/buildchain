@@ -13,7 +13,7 @@ import {
   verifyRuntimeAuthorizationReceipt,
   verifyRuntimeResumeLineage,
 } from "../packages/core/consumer/runtime-ref-resume-authority.js";
-import { finalizeRuntimeResumeEvidence } from "../packages/core/release/commands/resume-from-candidate-run.mjs";
+import { finalizeRuntimeResumeEvidence } from "../packages/core/release/recovery/runtime.js";
 import { collectGitHubReleasePassport } from "../packages/core/release/passport/collection.js";
 import { createReleasePassport } from "../packages/core/release/passport/assembly.js";
 
@@ -583,7 +583,7 @@ test("source scan closes runtime selectors inside multiline workflow and action 
   write(workflow, envelope('{ "buildchain-ref": "v4" }'));
   write(
     path.join(root, "actions/promotion/submit/action.yml"),
-    `runs:\n  using: composite\n  steps:\n    - uses: ./.buildchain/runtime/actions/release/promote-ref\n      with:\n        invocation-json: >\n          { "buildchain-ref":\n            "${SHA_B}" }\n`,
+    `runs:\n  using: composite\n  steps:\n    - uses: ./.buildchain/runtime/actions/release/promotion/ref\n      with:\n        invocation-json: >\n          { "buildchain-ref":\n            "${SHA_B}" }\n`,
   );
   const actionScan = scanRuntimeSelectorPersistence({ root });
   assert.ok(

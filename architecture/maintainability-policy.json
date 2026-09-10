@@ -13,30 +13,30 @@
     "rationale": "Preserve the accepted 66,712 governance ledger at the exact protected Wave 4 cut while charging every subsequent source, Rust, test, and workflow line, function, job, step, and decision excess one-for-one. The fixed calibration offset cannot hide new debt because both the measured ledger and calibrated total are recomputed from the complete exact debt map."
   },
   "exceptionBudget": {
-    "maxTotal": 76,
+    "maxTotal": 39,
     "maxByCollection": {
-      "approvedExistingDebtTransitions": 19,
-      "approvedNewFileTransitions": 22,
-      "approvedExtractedDebt": 20,
-      "approvedTestDebtTransitions": 9,
-      "approvedWorkflowDebtTransitions": 6,
+      "approvedExistingDebtTransitions": 7,
+      "approvedNewFileTransitions": 9,
+      "approvedExtractedDebt": 16,
+      "approvedTestDebtTransitions": 6,
+      "approvedWorkflowDebtTransitions": 1,
       "approvedPublicSurfaceTransitions": 0
     },
     "rationale": "Wave 4 freezes both the aggregate exception inventory and every exception class at the exact protected baseline; reductions may ratchet these ceilings downward, but entries cannot be moved between classes to create hidden headroom."
   },
   "repositoryBudgets": {
     "baselineRevision": "9569f69c2cb609372b8a3d65ce5dec8fb7b34a84",
-    "maxHandMaintainedSourceFiles": 760,
-    "maxHandMaintainedSourceLines": 187037,
+    "maxHandMaintainedSourceFiles": 1295,
+    "maxHandMaintainedSourceLines": 203392,
     "maxWorkflowFiles": 68,
     "maxWorkflowLines": 8715,
     "latestTransition": "Buildchain 4.1 responsibility layers and capability modules.",
     "latestTransitionRationale": "The authorized breaking 4.1 restructuring replaces workflow implementation and historical forwarders with semantic actions and bounded capability modules. Ratchet repository totals at the measured cut; retain frozen per-file, function, exception and calibrated debt limits. Composite implementation and inline shell remain independently bounded by the code-layout gate. Require independent governance review.",
     "rationale": "Bounded modules separate candidate, evidence, native proof and execution, canonical failure verification, closed-set execution transfer, process-boundary verification, Warrant state and qualification, authority state, qualification, Landing acquisition, verified-attempt admission, Landing settlement and fence validation, provider attempt and heartbeat readback, sealed terminal evidence, hosted heartbeat, resume, store, options, command-specific adapters, and CLI orchestration responsibilities. The protected delivery workflow gives candidate and seal jobs no provider write credential, recursively rejects transfer drift, scopes every transfer artifact to the exact provider run attempt, chains every durable heartbeat state and receipt root on a distinct hosted runner domain, and permits qualification or exact failure settlement only after the finalizer verifies live jobs and the latest durable authority state. Public Landing admission and heartbeat always perform non-injectable fresh exact-attempt provider readback, tolerate only a not-yet-materialized seal job while retaining exact native and duplicate-job rejection, and heartbeat-loss coordination never invokes GitHub's run-scoped cancellation API where a successor rerun could race. The hosted process boundary anchors trust in the kernel-resolved versioned Runner.Worker path while accepting an equivalent argv-zero spelling with the same basename; its public boundary marker is allowed only at the one exact non-secret value, so a forged value under the same credential-like name still fails closed. The credentialless transfer seal validates the rooted native reuse decision against the Warrant-bound source, closure, dependency, toolchain, environment and command inputs; qualifiedBase stays in the proof and decision where it is rooted and later independently rechecked, rather than being assumed on the Warrant schema. V2 mutation cannot initialize a second empty authority beside a legacy ref: migration reads and roots the canonical live v1 ref, rechecks it, applies the explicit configured v2 policy, and atomically replaces its bytes through one expected-old non-force update, so old v1 controllers fail closed while the prior commit remains immutable history. Candidate ancestry classifies the GitHub artifact runtime token as credential authority. Every Landing settlement, including an unexpired fence, requires product-owned terminal readback. Terminal cleanup reads the immutable historical attempt, derives workflow and hosted Landing job identity from live run data, reads the exact protected ref head and compares containment against that immutable SHA, and seals merged only when the admitted merge-group head is contained by that protected base; a later different-head merge settles the old attempt as dequeued. Terminal normalization preserves transfer, finalizer boundary, native and seal job, admitted provider attempt, protected-base head, containment result, and terminal readback coordinates. The public reusable workflow truthfully retains its single-flight v1 authority without advertising v2 migration, while bounded v2 remains a separate opt-in CLI, Node API, and schema contract; the tracked self-caller stays on public v4-alpha with matching stable and alpha locks, and transient train selection is dispatch-only. Next-development parity adds one versioned transition authority, one durable controller, one bounded reservation adapter, and pure public-contract recovery evidence while retaining the existing thin floating-channel callers byte-for-byte. The floating-consumer gate reuses the existing contract-world evaluator so SHA drift passes only under the selected lock's compatibility policy, breaking surface drift still fails closed, and external certification reconstructs the receipt from the observed workflow SHA rather than the lock's historical evidence SHA. Tail reseal adds no Stage Capsule effect or general rebuild authority: it verifies the exact retained four-platform bytes, admits one known macOS tail failure through live provider readback, fences signing and finalization to explicit credentials and Warrant identity, and requires standard candidate Passport plus provider and protected readback. Compatibility Facts parity isolates canonical encoding, temporal verification, lifecycle validation, fixture projection, public authority projection, and CLI adaptation into bounded modules; legacy digest and proof arrays are derived only from exact current Fact lineage. Publication Rehearsal adds no production release authority: the content-addressed capsule contract binds source, candidate, manifest, config, canonical data-only provider bindings, provider policy, observations and core version separately from filesystem, runtime and rehearsal-only provider authority; simulate, replay and explicitly authorized provider rehearsal all reuse the release-tail planner, while same-commit local dogfood resolves the new reusable contract and exact current runtime before external callers remain on floating v4-alpha. Cross-runtime candidate recovery preserves original runtime and provider roots and creates resume lineage only after exact public ref, tag, ancestry, npm version and integrity readback. Adopter Delivery restores the reviewed public v3 gate, drivers, Passport binding, N-1 bootstrap and exact archive loader through one public v4 surface while keeping provider and release authority explicit non-claims. Floating Alpha bootstrap uses only the existing exact resolver and protected Alpha private shell to move an otherwise stale floating shell, retains public v4 stable promotion, and removes itself after protected readback. CI lane change-budget enforcement adds a bounded parser, evaluator, guard, and tests without creating another merge authority.",
     "governance": "legacy-debt-sunset-2026q4",
-    "maxActionDefinitions": 135,
-    "maxActionDefinitionLines": 12177,
-    "maxAutomationImplementationLines": 207929
+    "maxActionDefinitions": 283,
+    "maxActionDefinitionLines": 12399,
+    "maxAutomationImplementationLines": 224420
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -89,16 +89,6 @@
       "maxLines": 625,
       "rationale": "The reviewed v4 authority keeps exact-runtime authorization, source and lock binding, fresh-attempt Stage Capsule reuse, floating-ref movement, final readback, and Passport lineage verification in one bounded public module; persistence scanning is separately owned and this exact ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
-    },
-    "packages/core/workflow/commands/universal-workflow-engine.mjs": {
-      "maxLines": 620,
-      "rationale": "The exact candidate engine adds only a fail-closed OIDC preflight and a fixed npm 11.13.0 trusted-publishing shim under the already admitted ephemeral runtime path. This lets a reviewed Train candidate execute through an older floating Alpha Bootstrap shell without broadening capability, permission, provider, or mutation authority; this exact live-repair ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "packages/core/release/commands/resume-from-candidate-run.mjs": {
-      "maxLines": 1125,
-      "rationale": "The candidate recovery adapter retains the existing artifact normalization and immutable recovery receipt boundary while adding fresh authorized cross-runtime Stage Capsule resume material, post-publication ref, tag, ancestry, and npm readback, and rooted Release Passport lineage. Its main orchestration remains below the default function length and complexity limits, and this exact file ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
     }
   },
   "approvedExistingDebtTransitions": {
@@ -129,44 +119,9 @@
       "rationale": "Inventory retains the complete recovery and publication authority set and additionally locks the bounded protected-Alpha private-shell bootstrap, declarative built-in tail, and absence of a new public recovery input; this exact post-integration ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "packages/core/release/commands/release-candidate-resolver.mjs": {
-      "maxLines": 853,
-      "maxFunctionLines": 308,
-      "maxFunctionComplexity": 61,
-      "rationale": "The shared candidate resolver retains bounded archive streaming, payload size and sha256 validation while locating and validating candidate-bound Stage Capsule and publication qualification evidence. Exact publication version selection now prefers the sealed npm bundle without widening the orchestration function, and these lower exact ceilings cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "packages/core/build/commands/auditable-demo.mjs": {
-      "maxLines": 1330,
-      "rationale": "The existing Gate validator admits an explicit bounded long-form duration class while preserving the standard 60-second default and exact capture-to-scene binding; this exact post-integration ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "packages/core/release/commands/dev-alpha-candidate-patrol.mjs": {
-      "maxLines": 1197,
-      "rationale": "The existing single-flight exact-source Alpha controller delegates next-development reservation validation to the bounded core reader, carries the rooted result into selection, and retains the no-publication boundary; this exact ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "packages/core/build/commands/build-contract-core.mjs": {
-      "maxLines": 1229,
-      "rationale": "Runner matrix resolution now binds one explicit GitHub-hosted identity and exact hosted versus relay projections so artifact transport cannot cross regions unnecessarily; this exact post-integration ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
     "scripts/generate-site-bundle.mjs": {
       "maxLines": 1502,
       "rationale": "Lifecycle metadata and CLI registry parity are generated centrally across the latest upstream public surface while the largest generator function remains at or below its prior size and complexity ceilings.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "packages/core/build/commands/run-lifecycle-core.mjs": {
-      "maxLines": 886,
-      "maxFunctionLines": 472,
-      "maxFunctionComplexity": 74,
-      "rationale": "The runtime action now enforces the audited compiler-cache activity gate immediately after a successful build, so consumers receive fail-closed verification before their reusable workflow shell advances; exact existing function complexity does not increase.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "packages/core/dev-delivery/commands/dev-pr-auto-merge.mjs": {
-      "maxLines": 1224,
-      "maxFunctionComplexity": 53,
-      "rationale": "The existing Dev PR controller now supports one targeted exact-head Agent admission path with typed receipts and PR-visible diagnostics while preserving independent approval, required-check, same-repository, readiness, and merge-queue gates; this exact post-integration ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
     "scripts/check-maintainability.mjs": {
@@ -190,12 +145,6 @@
     "packages/core/dev-delivery/commands/dev-delivery-authority.mjs#devDeliveryAuthorityCliOptions": {
       "maxLines": 207,
       "rationale": "The authority CLI parser keeps the complete explicit flag-to-environment compatibility mapping, including exact provider run and job coordinates for independent expired-Landing readback, in one declarative function while execution remains separately owned; this exact extracted mapping ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "packages/core/dev-delivery/commands/dev-delivery-two-phase.mjs#runTwoPhaseDelivery": {
-      "maxLines": 200,
-      "maxComplexity": 35,
-      "rationale": "The two-phase coordinator keeps provisional selection, credentialless native-only execution, post-exit credentialed proof reuse and qualification, heartbeat, landing handoff, and fail-closed cleanup under one fenced transaction; this exact bounded orchestration ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
     "packages/core/dev-delivery/commands/dev-delivery-warrant-options.mjs#devDeliveryCliOptions": {
@@ -263,11 +212,6 @@
       "maxLines": 490,
       "maxComplexity": 58,
       "rationale": "The existing externally guarded npm bootstrap transaction moved intact into an independently owned Paper module with an explicit runtime seam; this exact inherited debt ceiling cannot grow.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "packages/core/dev-delivery/commands/dev-pr-auto-merge.mjs#runDevPrAdmission": {
-      "maxComplexity": 32,
-      "rationale": "The targeted admission transaction keeps exact PR and head revalidation, explicit readiness mutation, independent approval and check observation, queue status, and typed receipt emission in one auditable function; this exact complexity ceiling cannot grow.",
       "governance": "legacy-debt-sunset-2026q4"
     },
     "scripts/maintainability-domain-metrics.mjs#rustTokens": {

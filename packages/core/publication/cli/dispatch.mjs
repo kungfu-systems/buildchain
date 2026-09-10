@@ -1,4 +1,4 @@
-import { npmPublishDryRun } from "../commands/npm-publish-dry-run.mjs";
+import { npmPublishDryRun } from "../npm/preview.js";
 import { runPublicationArtifactCli } from "../commands/publication-artifact.mjs";
 import { runPublicationPackageCli } from "../commands/publication-package.mjs";
 import { runPublicationReproducibilityCli } from "../commands/publication-reproducibility.mjs";

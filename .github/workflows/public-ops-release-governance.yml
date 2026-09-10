@@ -1,66 +1,61 @@
 name: Release Governance Reconcile
-
 on:
   workflow_call:
     inputs:
       branch:
-        description: "Managed dev/alpha/release branch whose required checks will be inspected"
+        description: Managed dev/alpha/release branch whose required checks will be inspected
         required: true
         type: string
       candidate-sha:
-        description: "Already-tested pull request head SHA used to derive the emitted aggregate check"
+        description: Already-tested pull request head SHA used to derive the emitted aggregate check
         required: true
         type: string
       apply:
-        description: "Replace stale Buildchain aggregate contexts while preserving all other required checks"
+        description: Replace stale Buildchain aggregate contexts while preserving all other required checks
         default: false
         required: false
         type: boolean
       buildchain-ref:
-        description: "Optional explicit runtime ref. Empty binds the defining workflow SHA."
+        description: Optional explicit runtime ref. Empty binds the defining workflow SHA.
         default: ""
         required: false
         type: string
     secrets:
       governance-token:
-        description: "Token with read access to checks and administration access to branch protection"
+        description: Token with read access to checks and administration access to branch protection
         required: false
       BUILDCHAIN_PROMOTION_TOKEN:
-        description: "Repository promotion token used by direct workflow dispatch"
+        description: Repository promotion token used by direct workflow dispatch
         required: false
   workflow_dispatch:
     inputs:
       branch:
-        description: "Managed dev/alpha/release branch whose required checks will be inspected"
+        description: Managed dev/alpha/release branch whose required checks will be inspected
         required: true
         type: string
       candidate-sha:
-        description: "Already-tested pull request head SHA used to derive the emitted aggregate check"
+        description: Already-tested pull request head SHA used to derive the emitted aggregate check
         required: true
         type: string
       apply:
-        description: "Replace stale Buildchain aggregate contexts while preserving all other required checks"
+        description: Replace stale Buildchain aggregate contexts while preserving all other required checks
         default: false
         required: false
         type: boolean
       buildchain-ref:
-        description: "Buildchain runtime ref containing the reconciliation command"
+        description: Buildchain runtime ref containing the reconciliation command
         default: ""
         required: false
         type: string
-
 permissions:
   actions: read
   checks: read
   contents: read
   pull-requests: read
-
 jobs:
   reconcile:
     name: Reconcile required build aggregate
     runs-on: ubuntu-24.04
-    env:
-      GH_TOKEN: ${{ secrets['governance-token'] || secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
     steps:
       - name: Check out workflow implementation
         uses: actions/checkout@v7.0.0
@@ -71,7 +66,8 @@ jobs:
           persist-credentials: false
       - name: Reconcile required build aggregate
         id: node
-        uses: ./.buildchain/workflow-shell/actions/governance/release-governance-reconcile
+        uses: ./.buildchain/workflow-shell/actions/governance/release/reconcile
         with:
           runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
           request-json: ${{ toJSON(inputs) }}
+          token: ${{ secrets['governance-token'] || secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}

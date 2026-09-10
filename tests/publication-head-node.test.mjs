@@ -1,10 +1,25 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import { EOL } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 import YAML from "yaml";
-import { run } from "../packages/core/release/nodes/publication-head.mjs";
+import { classifyProductPublication } from "../packages/core/release/promotion/product-state.js";
+import { productPublicationReader } from "../packages/core/providers/github/product-publication.js";
+async function run({ env, github, context, core }) {
+  const result = await classifyProductPublication(
+    {
+      requestedSha: env.BUILDCHAIN_TARGET_SHA,
+      targetRef: env.BUILDCHAIN_TARGET_REF,
+    },
+    productPublicationReader(
+      github,
+      `${context.repo.owner}/${context.repo.repo}`,
+    ),
+  );
+  for (const [key, value] of Object.entries(result)) core.setOutput(key, value);
+}
 const root = path.resolve(import.meta.dirname, "..");
 const sha = "d".repeat(40),
   source = "e".repeat(40),
@@ -95,17 +110,21 @@ test("publication classifier detects one exact finalized state without admitting
 test("request rejection always fails and treats its reason as data", () => {
   const action = YAML.parse(
     fs.readFileSync(
-      path.join(root, "actions/workflow/reject-request/action.yml"),
+      path.join(root, "actions/workflow/admission/reject/action.yml"),
       "utf8",
     ),
   );
   const reason = "Request rejected: $(printf unexpected-execution)";
-  const result = spawnSync("bash", ["-c", action.runs.steps[0].run], {
-    env: { ...process.env, BUILDCHAIN_REJECTION: reason },
-    encoding: "utf8",
-  });
+  const result = spawnSync(
+    process.execPath,
+    [path.join(root, "actions/workflow/admission/reject", action.runs.main)],
+    {
+      env: { ...process.env, INPUT_REASON: reason },
+      encoding: "utf8",
+    },
+  );
   assert.equal(result.status, 1, result.error?.message);
-  assert.equal(result.stdout, `::error::${reason}\n`);
+  assert.equal(result.stdout, `::error::${reason}${EOL}`);
 });
 test("all rejection nodes retain their workflow-owned conditions and scoped permissions", () => {
   for (const name of ["daily", "weekly", "monthly"]) {
@@ -120,7 +139,7 @@ test("all rejection nodes retain their workflow-owned conditions and scoped perm
     assert.deepEqual(job.permissions, {});
     assert.equal(
       job.steps.at(-1).uses,
-      "./.buildchain/workflow-shell/actions/workflow/reject-request",
+      "./.buildchain/workflow-shell/actions/workflow/admission/reject",
     );
   }
   const workflow = YAML.parse(
@@ -139,7 +158,7 @@ test("all rejection nodes retain their workflow-owned conditions and scoped perm
     assert.deepEqual(job.permissions, { contents: "read" });
     assert.equal(
       job.steps.at(-1).uses,
-      "./.buildchain/workflow-shell/actions/workflow/reject-request",
+      "./.buildchain/workflow-shell/actions/workflow/admission/reject",
     );
   }
 });

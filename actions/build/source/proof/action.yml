@@ -1,0 +1,76 @@
+name: source-proof
+description: Locate, download and verify an accepted source proof within the caller check.
+inputs:
+  request-json:
+    description: request-json
+    required: true
+  runtime-ref:
+    description: runtime-ref
+    required: true
+  identities-json:
+    description: identities-json
+    required: true
+outputs:
+  lookup-found:
+    description: lookup-found proof result.
+    value: ${{ steps.source-proof-lookup.outputs.found }}
+  lookup-reason:
+    description: lookup-reason proof result.
+    value: ${{ steps.source-proof-lookup.outputs.reason }}
+  lookup-run-id:
+    description: lookup-run-id proof result.
+    value: ${{ steps.source-proof-lookup.outputs.run-id }}
+  lookup-source-head:
+    description: lookup-source-head proof result.
+    value: ${{ steps.source-proof-lookup.outputs.source-head }}
+  lookup-artifact-name:
+    description: lookup-artifact-name proof result.
+    value: ${{ steps.source-proof-lookup.outputs.artifact-name }}
+  lookup-workflow-path:
+    description: lookup-workflow-path proof result.
+    value: ${{ steps.source-proof-lookup.outputs.workflow-path }}
+  verify-proof-root:
+    description: verify-proof-root proof result.
+    value: ${{ steps.source-proof-verify.outputs.proof-root }}
+  verify-reuse:
+    description: verify-reuse proof result.
+    value: ${{ steps.source-proof-verify.outputs.reuse }}
+  verify-reason:
+    description: verify-reason proof result.
+    value: ${{ steps.source-proof-verify.outputs.reason }}
+  verify-decision-root:
+    description: verify-decision-root proof result.
+    value: ${{ steps.source-proof-verify.outputs.decision-root }}
+runs:
+  using: composite
+  steps:
+    - name: Locate exact accepted pull-request source proof
+      id: source-proof-lookup
+      if: ${{ fromJSON(inputs.request-json).mode == 'source' &&
+        fromJSON(inputs.request-json).source-proof-reuse && github.event_name ==
+        'merge_group' }}
+      continue-on-error: true
+      uses: ./.buildchain/workflow-shell/actions/build/source/locate-proof
+      with:
+        token: ${{ github.token }}
+    - name: Download exact accepted pull-request source proof
+      id: source-proof-download
+      if: ${{ steps.source-proof-lookup.outputs.found == 'true' }}
+      continue-on-error: true
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name: ${{ steps.source-proof-lookup.outputs.artifact-name }}
+        path: .buildchain/source-proof
+        github-token: ${{ github.token }}
+        repository: ${{ github.repository }}
+        run-id: ${{ steps.source-proof-lookup.outputs.run-id }}
+    - name: Verify exact source proof for this merge group
+      id: source-proof-verify
+      if: ${{ steps.source-proof-download.outcome == 'success' }}
+      continue-on-error: true
+      uses: ./.buildchain/runtime/actions/build/source/evaluate-proof
+      with:
+        request-json: ${{ inputs.request-json }}
+        runtime-ref: ${{ inputs.runtime-ref }}
+        identities-json: ${{ inputs.identities-json }}
+        candidate-json: ${{ toJSON(steps.source-proof-lookup.outputs) }}

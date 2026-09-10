@@ -53,7 +53,7 @@
         "cliCommandCount": 27,
         "nodeApiCount": 23,
         "workflowCount": 0,
-        "actionCount": 49
+        "actionCount": 94
       },
       "manuals": [
         "docs/release-passport.md",
@@ -90,7 +90,7 @@
         "cliCommandCount": 10,
         "nodeApiCount": 17,
         "workflowCount": 1,
-        "actionCount": 41
+        "actionCount": 91
       },
       "manuals": [
         "docs/auditable-demo.md",
@@ -159,7 +159,7 @@
         "cliCommandCount": 2,
         "nodeApiCount": 2,
         "workflowCount": 0,
-        "actionCount": 14
+        "actionCount": 24
       },
       "manuals": [
         "docs/release-propagation.md",
@@ -225,7 +225,7 @@
         "cliCommandCount": 13,
         "nodeApiCount": 7,
         "workflowCount": 0,
-        "actionCount": 15
+        "actionCount": 30
       },
       "manuals": [
         "docs/consumer-issue-reporting.md",
@@ -258,7 +258,7 @@
         "cliCommandCount": 13,
         "nodeApiCount": 16,
         "workflowCount": 11,
-        "actionCount": 0
+        "actionCount": 1
       },
       "manuals": [
         "docs/github-governance-authority.md",
@@ -295,11 +295,11 @@
       "maturity": "stable",
       "counts": {
         "manualCount": 3,
-        "pageCount": 12,
+        "pageCount": 13,
         "cliCommandCount": 0,
         "nodeApiCount": 2,
         "workflowCount": 56,
-        "actionCount": 12
+        "actionCount": 34
       },
       "manuals": [
         "docs/cli.md",

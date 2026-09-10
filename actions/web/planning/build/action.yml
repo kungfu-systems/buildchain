@@ -1,0 +1,36 @@
+name: Build and plan Web deployment
+description: Run the admitted consumer build and verification, then produce one
+  exact channel plan.
+inputs:
+  request-json:
+    description: Typed public Web request.
+    required: true
+  runtime-json:
+    description: Admitted runtime coordinates.
+    required: true
+  intent-json:
+    description: Verified release intent.
+    required: true
+  selection-json:
+    description: Admitted channel and preview alias.
+    required: true
+outputs:
+  web-surface-channel:
+    description: web-surface-channel
+  web-surface-alias:
+    description: web-surface-alias
+  web-surface-url:
+    description: web-surface-url
+  web-surface-urls-json:
+    description: web-surface-urls-json
+  web-surface-manifest-json:
+    description: web-surface-manifest-json
+  web-surface-cleanup-plan-json:
+    description: web-surface-cleanup-plan-json
+  build-outcome:
+    description: build-outcome
+  verify-outcome:
+    description: verify-outcome
+runs:
+  using: node24
+  main: dist/index.js

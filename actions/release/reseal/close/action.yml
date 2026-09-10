@@ -1,0 +1,14 @@
+name: Seal standard candidate and complete tail readback evidence
+description: Seal standard candidate and complete tail readback evidence.
+inputs:
+  runtime-sha:
+    description: Admitted runtime commit
+    required: true
+outputs:
+  release-candidate-passport-json:
+    description: release candidate passport json
+  receipt-root:
+    description: receipt root
+runs:
+  using: node24
+  main: dist/index.js

@@ -1,0 +1,12 @@
+name: Report and enforce governance qualification
+description: Report and enforce governance qualification
+inputs:
+  token:
+    description: Caller incident reporting credential.
+    required: true
+  credential-json:
+    description: Non-secret read credential selection.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

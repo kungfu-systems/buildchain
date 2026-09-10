@@ -4,8 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
 import test from "node:test";
-import { verifyVersionStateDelta } from "../packages/core/release/commands/verify-version-state-delta.mjs";
-import { planVersionProjection } from "../packages/core/build/commands/source-verification-evidence.mjs";
+import { verifyVersionStateDelta } from "../packages/core/release/version-state/verification.js";
+import { planVersionProjection } from "../packages/core/build/verification/discovery.js";
 
 function fixture(t) {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-delta-test-"));
@@ -120,7 +120,7 @@ test("version-only delta regenerates all declared outputs from the exact base", 
 test("version projection ignores ambient archive line-ending conversion", (t) => {
   const { cwd, baseSha, headSha, nodeModules } = fixture(t);
   const moduleUrl = new URL(
-    "../packages/core/release/commands/verify-version-state-delta.mjs",
+    "../packages/core/release/version-state/verification.js",
     import.meta.url,
   ).href;
   const result = spawnSync(

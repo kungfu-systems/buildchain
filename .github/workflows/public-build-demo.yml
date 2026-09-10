@@ -1,5 +1,4 @@
 name: Buildchain Declarative Binary Auditable Demo
-
 on:
   workflow_call:
     inputs:
@@ -67,15 +66,12 @@ on:
         value: ${{ jobs.qualify.outputs.render-result }}
       publication-pr-url:
         value: ${{ jobs.publish.outputs.pr-url }}
-
 permissions:
   actions: read
   contents: read
-
 concurrency:
   group: declarative-auditable-demo-${{ github.repository }}-${{ github.ref }}-${{ inputs.binary-artifact-digest }}
   cancel-in-progress: false
-
 jobs:
   capture:
     name: Capture every declared demo
@@ -95,11 +91,10 @@ jobs:
           persist-credentials: false
       - name: Capture every declared demo
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/demo-capture
+        uses: ./.buildchain/workflow-shell/actions/build/demo/capture
         with:
           request-json: ${{ toJSON(inputs) }}
-          job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
-
+          workflow-sha: ${{ job.workflow_sha }}
   qualify:
     name: Gate and render every declared demo
     needs: capture
@@ -119,18 +114,19 @@ jobs:
           persist-credentials: false
       - name: Gate and render every declared demo
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/demo-qualify
+        uses: ./.buildchain/workflow-shell/actions/build/demo/qualify
         with:
-          needs-capture-outputs-source-sha: ${{ toJSON(needs.capture.outputs.source-sha) }}
           request-json: ${{ toJSON(inputs) }}
-          job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
-          needs-capture-outputs-capture-artifact-name: ${{ toJSON(needs.capture.outputs.capture-artifact-name) }}
-          needs-capture-outputs-capture-artifact-digest: ${{ toJSON(needs.capture.outputs.capture-artifact-digest) }}
-
+          workflow-sha: ${{ job.workflow_sha }}
+          source-sha: ${{ needs.capture.outputs.source-sha }}
+          capture-artifact-name: ${{ needs.capture.outputs.capture-artifact-name }}
+          capture-artifact-digest: ${{ needs.capture.outputs.capture-artifact-digest }}
   publish:
     name: Open protected materialization pull request
     if: ${{ (inputs.materialize && inputs.render-media && needs.qualify.outputs.render-result == 'success') }}
-    needs: [ capture, qualify ]
+    needs:
+      - capture
+      - qualify
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -149,11 +145,11 @@ jobs:
           persist-credentials: false
       - name: Open protected materialization pull request
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/demo-publish
+        uses: ./.buildchain/workflow-shell/actions/build/demo/publish
         with:
-          secrets-demo-update-token: ${{ secrets.DEMO_UPDATE_TOKEN }}
           request-json: ${{ toJSON(inputs) }}
-          needs-capture-outputs-source-sha: ${{ toJSON(needs.capture.outputs.source-sha) }}
-          job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
-          needs-capture-outputs-capture-artifact-name: ${{ toJSON(needs.capture.outputs.capture-artifact-name) }}
-          needs-qualify-outputs-evidence-artifact-name: ${{ toJSON(needs.qualify.outputs.evidence-artifact-name) }}
+          workflow-sha: ${{ job.workflow_sha }}
+          source-sha: ${{ needs.capture.outputs.source-sha }}
+          capture-artifact-name: ${{ needs.capture.outputs.capture-artifact-name }}
+          evidence-artifact-name: ${{ needs.qualify.outputs.evidence-artifact-name }}
+          update-token: ${{ secrets.DEMO_UPDATE_TOKEN }}

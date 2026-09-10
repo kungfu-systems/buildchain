@@ -90,7 +90,7 @@ jobs:
 
       - name: Execute the declarative provider plane
         id: release-tail
-        uses: ./.buildchain/release-tail-runtime/actions/release/settle
+        uses: ./.buildchain/release-tail-runtime/actions/release/tail/settle
         with:
           declaration: ${{ inputs.declaration-path }}
           provider-bindings: ${{ inputs.provider-bindings-path }}

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { spawnSync } from "node:child_process";
+import { waitForCloudFrontInvalidations } from "../deployment/cloudfront-wait.js";
+import { writeJson, assertApplySucceeded, writeFailureResult, compactWebSurfaceApplyResult } from "../deployment/apply-evidence.js";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -13,7 +14,7 @@ import {
   preflightWebSurfaceProduction,
   validateWebSurfaceProject,
 } from "./web-surface-core.mjs";
-import { writeGitHubOutputs } from "../../build/commands/build-contract-core.mjs";
+import { writeGitHubOutputs } from "../../providers/commands/github-output.mjs";
 
 function readArg(name, fallback = "") {
   const index = process.argv.indexOf(`--${name}`);
@@ -31,15 +32,7 @@ function readBooleanArg(name, fallback = true) {
   return value === "true" || value === "1";
 }
 
-function writeJson(result, outputPath) {
-  const json = `${JSON.stringify(result, null, 2)}\n`;
-  if (outputPath) {
-    fs.mkdirSync(path.dirname(path.resolve(outputPath)), { recursive: true });
-    fs.writeFileSync(outputPath, json);
-  } else {
-    process.stdout.write(json);
-  }
-}
+
 
 function readJsonFileArg(name) {
   const value = readArg(name, "");
@@ -49,182 +42,23 @@ function readJsonFileArg(name) {
   return JSON.parse(fs.readFileSync(path.resolve(value), "utf8"));
 }
 
-function assertApplySucceeded(result) {
-  if (result.status === "failed") {
-    printApplyFailureSummary(result);
-    throw new Error(`web-surface ${result.contract} failed; see apply result for operation details`);
-  }
-}
 
-function operationFailureSummary(result) {
-  const failed = (result.operations || []).find((operation) => operation.status === "failed");
-  if (!failed) {
-    return "";
-  }
-  const stderr = String(failed.stderr || "").trim();
-  const stdout = String(failed.stdout || "").trim();
-  return [
-    `web-surface failed operation: ${failed.action || "unknown"}`,
-    `surface: ${failed.surface || "unknown"}`,
-    failed.command ? `command: ${failed.command} ${(failed.args || []).join(" ")}` : "",
-    failed.exitCode !== null && failed.exitCode !== undefined ? `exitCode: ${failed.exitCode}` : "",
-    stderr ? `stderr: ${stderr}` : "",
-    stdout ? `stdout: ${stdout}` : "",
-  ].filter(Boolean).join("\n");
-}
 
-function printApplyFailureSummary(result) {
-  const summary = operationFailureSummary(result);
-  if (summary) {
-    console.error(summary);
-  }
-}
 
-function argValue(args = [], name = "") {
-  const index = args.indexOf(name);
-  return index === -1 ? "" : String(args[index + 1] || "");
-}
 
-export function cloudFrontInvalidationWaitTargets(result = {}) {
-  const targets = [];
-  const seen = new Set();
-  for (const operation of result.operations || []) {
-    if (operation.action !== "invalidate-cdn" || operation.status !== "applied") {
-      continue;
-    }
-    const args = Array.isArray(operation.args) ? operation.args : [];
-    if (args[0] !== "cloudfront" || args[1] !== "create-invalidation") {
-      continue;
-    }
-    const distributionId = argValue(args, "--distribution-id");
-    if (!distributionId || !operation.stdout) {
-      continue;
-    }
-    let data;
-    try {
-      data = JSON.parse(operation.stdout);
-    } catch {
-      continue;
-    }
-    const invalidationId = data?.Invalidation?.Id || "";
-    if (!invalidationId) {
-      continue;
-    }
-    const key = `${distributionId}:${invalidationId}`;
-    if (seen.has(key)) {
-      continue;
-    }
-    seen.add(key);
-    targets.push({
-      distributionId,
-      invalidationId,
-      surface: operation.surface || "",
-    });
-  }
-  return targets;
-}
 
-function defaultCloudFrontWaitRunner(args) {
-  const result = spawnSync("aws", args, {
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-  return {
-    status: result.status,
-    stdout: String(result.stdout || ""),
-    stderr: String(result.stderr || result.error?.message || ""),
-  };
-}
 
-export function waitForCloudFrontInvalidations(result = {}, { commandRunner = defaultCloudFrontWaitRunner } = {}) {
-  return cloudFrontInvalidationWaitTargets(result).map((target) => {
-    const args = [
-      "cloudfront",
-      "wait",
-      "invalidation-completed",
-      "--distribution-id",
-      target.distributionId,
-      "--id",
-      target.invalidationId,
-    ];
-    const outcome = commandRunner(args, target);
-    if (outcome.status !== 0) {
-      throw new Error(
-        `cloudfront invalidation ${target.invalidationId} for ${target.distributionId} did not complete` +
-        (outcome.stderr ? `: ${String(outcome.stderr).trim()}` : ""),
-      );
-    }
-    return {
-      ...target,
-      status: "completed",
-    };
-  });
-}
 
-function writeFailureResult({ output, mode, cwd, error }) {
-  if (!output) {
-    return null;
-  }
-  const resolvedOutput = path.resolve(output);
-  if (fs.existsSync(resolvedOutput)) {
-    return JSON.parse(fs.readFileSync(resolvedOutput, "utf8"));
-  }
-  const result = {
-    schemaVersion: 1,
-    contract: mode === "cleanup-apply"
-      ? "kungfu-buildchain-web-surface-cleanup-apply"
-      : "kungfu-buildchain-web-surface-deploy-apply",
-    status: "failed",
-    error: {
-      message: String(error?.message || error),
-    },
-    cwd,
-    generatedAt: new Date().toISOString(),
-  };
-  writeJson(result, resolvedOutput);
-  return result;
-}
 
-export function compactWebSurfaceApplyResult(result = {}) {
-  const manifest = result.manifest && typeof result.manifest === "object" ? result.manifest : {};
-  return {
-    schemaVersion: 1,
-    contract: "kungfu-buildchain-web-surface-deploy-apply-summary",
-    sourceContract: result.contract || "",
-    channel: result.channel || manifest.channel || "",
-    alias: result.alias || manifest.alias || "",
-    applyMode: result.applyMode || "",
-    status: result.status || "",
-    actor: result.actor || "",
-    runId: result.runId || "",
-    appliedAt: result.appliedAt || "",
-    url: result.url || "",
-    urls: result.urls && typeof result.urls === "object" ? result.urls : {},
-    sourceSha: result.sourceSha || manifest.sourceSha || "",
-    artifactHash: result.artifactHash || manifest.artifactHash || "",
-    adapter: result.adapter || "",
-    target: result.target || "",
-    objectPrefix: result.objectPrefix || "",
-    manifestKey: result.manifestKey || "",
-    invalidationPaths: Array.isArray(result.invalidationPaths) ? result.invalidationPaths : [],
-    immutablePreservation: Array.isArray(result.immutablePreservation)
-      ? result.immutablePreservation
-      : [],
-    surfaceBindings: Array.isArray(result.surfaceBindings)
-      ? result.surfaceBindings.map((binding) => ({
-          surface: binding.surface || "",
-          pathPrefix: binding.pathPrefix || "",
-          objectPrefix: binding.objectPrefix || "",
-          url: binding.url || "",
-          manifestKey: binding.manifestKey || "",
-          accessControl: binding.accessControl || "",
-          healthStrategy: binding.healthStrategy || "",
-          mutableDeleteExcludes: binding.mutableDeleteExcludes || [],
-          observedEvidenceOwnership: binding.observedEvidenceOwnership || null,
-        }))
-      : [],
-  };
-}
+
+
+
+
+
+
+
+
+
 
 export function webSurfaceCli() {
   const mode = readArg("mode", process.env.BUILDCHAIN_WEB_SURFACE_MODE || "validate");

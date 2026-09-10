@@ -1,3 +1,4 @@
+import { propagationControllerStages } from "../packages/core/release/propagation/report.js";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -20,7 +21,7 @@ import {
 import {
   resolveControllerInputBoundary,
   selectWorkflowCallInputs,
-} from "../packages/core/observability/commands/controller-evidence.mjs";
+} from "../packages/core/observability/controller-input-boundary.js";
 
 const SOURCE_SHA = "a".repeat(40);
 const RUNTIME_SHA = "b".repeat(40);
@@ -256,16 +257,16 @@ test("release propagation plans admit optional consumer stages recorded as skipp
 
 test("release propagation workflow emits only stages declared by its controller descriptor", () => {
   const graph = inspectWorkflowJob(".github/workflows/public-release-propagation.yml", "propagate");
-  const receipt = graph.steps.filter(step => step.env?.BUILDCHAIN_CONTROLLER_STAGES_JSON);
+  const receipt = graph.steps.filter(step => step.uses?.endsWith("/actions/release/propagation/report"));
   assert.equal(receipt.length, 1, "propagation must emit one controller receipt");
-  const emitted = JSON.parse(receipt[0].env.BUILDCHAIN_CONTROLLER_STAGES_JSON).map(stage => stage.id);
+  const emitted = propagationControllerStages({ stages: {} }, { upload: "skipped", workUpload: "skipped", reconcile: "skipped" }).map(stage => stage.id);
   const declared = descriptor("release-propagation").expected.stages.map((stage) => stage.id);
 
   assert.deepEqual(emitted, declared);
 });
 
 test("build finalizer emits every stage declared by its controller descriptor", async () => {
-  const { buildControllerStages } = await import("../packages/core/build/commands/finalize.mjs");
+  const { buildControllerStages } = await import("../packages/core/build/summary/execution.js");
   const plan = { platforms: [{ id: "linux" }], lifecycle: Object.fromEntries(["install", "build", "verify"].map((id) => [id, { configured: true }])) };
   const records = [{ stages: { install: "success", build: "success", verify: "success" } }];
   const stages = buildControllerStages(plan, { sign: { result: "success" }, attest: { result: "skipped" } }, records, true);

@@ -1,3 +1,5 @@
+import path from "node:path";
+import { installationRoot } from "../runtime/installation-root.js";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import {
@@ -31,16 +33,7 @@ function contentRoot(domain, value) {
   return `sha256:${hash.digest("hex")}`;
 }
 
-function defaultPolicy() {
-  return JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../architecture/universal-workflow-train-admission.json",
-        import.meta.url,
-      ),
-    ),
-  );
-}
+function defaultPolicy() { return JSON.parse(fs.readFileSync(path.join(installationRoot(import.meta.url), "architecture/universal-workflow-train-admission.json"), "utf8")); }
 
 function exactSha(value, label) {
   const normalized = String(value || "").toLowerCase();

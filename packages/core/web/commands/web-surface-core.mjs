@@ -5,10 +5,10 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
-import { fileURLToPath } from "node:url";
+import { installationRoot } from "../../runtime/installation-root.js";
 import { loadBuildchainConfig, validateBuildchainConfig } from "../../consumer/buildchain-config.js";
 import { createSurfaceTimestampPolicy } from "../../contracts/surface-manifest.js";
-import { validateInstallerPublication, verifyInstallerPublicReadback } from "../../publication/commands/installer-publication.mjs";
+import { validateInstallerPublication, verifyInstallerPublicReadback } from "../../publication/installer/evidence.js";
 import {
   classifyPreviewAlias,
   resolveChannelUrl,
@@ -33,7 +33,7 @@ import {
   mutableCacheControlArgs,
 } from "./web-surface-routing.mjs";
 
-const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+const commandDirectory = () => path.join(installationRoot(import.meta.url), "packages/core/web/commands");
 
 const DEFAULT_RETENTION = Object.freeze({
   preview: {
@@ -503,7 +503,7 @@ function directoryIndexRoutingStrategy(binding) {
 
 function cloudFrontDirectoryIndexRewriteOperations(bindings) {
   const seen = new Set();
-  const helper = path.join(moduleDir, "web-surface-cloudfront-rewrite.mjs");
+  const helper = path.join(commandDirectory(), "web-surface-cloudfront-rewrite.mjs");
   return bindings
     .filter((binding) => directoryIndexRewriteMode(binding) === "buildchain")
     .map((binding) => binding.distributionId || "")
@@ -2051,7 +2051,7 @@ function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding
     immutable?.declaredPrefixes?.includes(installer.immutablePath)
       ? installer
       : null;
-  const immutableVerifier = path.join(moduleDir, "web-surface-immutable-object.mjs");
+  const immutableVerifier = path.join(commandDirectory(), "web-surface-immutable-object.mjs");
   const verifyImmutable = (phase) => (immutable?.files || []).map((file) => ({
     action: `verify-immutable-artifact-${phase}`,
     surface: binding.surface,

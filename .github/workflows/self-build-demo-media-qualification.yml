@@ -48,14 +48,6 @@ jobs:
             rendererImage: ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:b70a2f5631665f685280bc9d7434c5ed5cf48b760b728873734d0c47bff72b25
             rendererSourceRef: refs/tags/v1.3.0-alpha.20
             rendererSourceSha: b3cebc2deb5f140af74db24b1b45233ac6733ef1
-    env:
-      MEDIA_PROFILE: ${{ matrix.profile }}
-      MEDIA_FIXTURE: ${{ matrix.fixture }}
-      EVIDENCE_FILE: ${{ matrix.evidence }}
-      RENDERER_IMAGE: ${{ matrix.rendererImage }}
-      RENDERER_SOURCE_REPOSITORY: kungfu-systems/build-images
-      RENDERER_SOURCE_REF: ${{ matrix.rendererSourceRef }}
-      RENDERER_SOURCE_SHA: ${{ matrix.rendererSourceSha }}
     steps:
       - name: Checkout exact source
         uses: actions/checkout@v7.0.0
@@ -72,7 +64,7 @@ jobs:
         if: ${{ always() }}
       - name: qualify-${{ matrix.profile }}
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/demo-media-qualification-qualify
+        uses: ./.buildchain/workflow-shell/actions/build/demo/qualify-media
         with:
           matrix-json: ${{ toJSON(matrix) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}

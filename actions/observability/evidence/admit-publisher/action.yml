@@ -1,0 +1,5 @@
+name: Admit observed evidence publisher
+description: Admit scheduled or manually requested evidence from the caller default branch.
+runs:
+  using: node24
+  main: dist/index.js

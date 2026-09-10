@@ -17,20 +17,14 @@ import {
   validateReleaseCandidateRecoveryReceipt,
   verifyReleaseCandidateRecovery,
 } from "../packages/core/release/release-candidate-recovery.js";
-import {
-  candidateArtifactNames,
-  createRecoveredPublication,
-  createRecoveredPublicationCandidate,
-  normalizePlatformManifests,
-  resolveAnchorRecoveryRequest,
-  resolveRecoveredCandidateVersion,
-  resolveRecoveredPublicationVersion,
-  resolveRuntimeResumePublicRuntimeSha,
-  trackedRuntimePersistenceScan,
-  validateRuntimeResumePublicReadback,
-  verifyReleaseCandidateStageCapsules,
-} from "../packages/core/release/commands/resume-from-candidate-run.mjs";
-import { createReleaseCandidateStageCapsules } from "../packages/core/publication/commands/generate-release-candidate-passport.mjs";
+import { candidateArtifactNames, normalizePlatformManifests } from "../packages/core/release/recovery/artifacts.js";
+import { createRecoveredPublication, createRecoveredPublicationCandidate } from "../packages/core/release/recovery/publication.js";
+import { resolveAnchorRecoveryRequest } from "../packages/core/release/recovery/provenance.js";
+import { resolveRecoveredCandidateVersion, resolveRecoveredPublicationVersion } from "../packages/core/publication/candidate/kind.js";
+import { resolveRuntimeResumePublicRuntimeSha, validateRuntimeResumePublicReadback } from "../packages/core/release/recovery/readback.js";
+import { trackedRuntimePersistenceScan } from "../packages/core/release/recovery/runtime.js";
+import { verifyReleaseCandidateStageCapsules } from "../packages/core/release/recovery/capsules.js";
+import { createReleaseCandidateStageCapsules } from "../packages/core/publication/candidate/stage-capsules.js";
 
 const SOURCE_SHA = "1".repeat(40);
 const TARGET_SHA = "2".repeat(40);
@@ -950,7 +944,7 @@ test("workflow recovery resumes through the same canonical publisher transaction
     "utf8",
   );
   const candidateAdapter = fs.readFileSync(
-    new URL("../packages/core/release/commands/release-candidate-adapter.mjs", import.meta.url),
+    new URL("../packages/core/release/promotion/candidate.js", import.meta.url),
     "utf8",
   );
   const requestSchema = JSON.parse(fs.readFileSync(new URL("../contracts/promotion-request-v1.schema.json", import.meta.url), "utf8"));
@@ -977,18 +971,18 @@ test("workflow recovery resumes through the same canonical publisher transaction
     /uses: \.\/\.github\/workflows\/public-release-promote\.yml/,
   );
   assert.doesNotMatch(recovery, /^  (?:alpha|stable|install|publish):/m);
-  assert.match(advanced, /actions\/release\/promote-qualify/);
-  const qualificationNode = fs.readFileSync(new URL("../actions/release/promote-qualify/action.yml", import.meta.url), "utf8");
-  const applyNode = fs.readFileSync(new URL("../actions/release/promote-apply/action.yml", import.meta.url), "utf8");
+  assert.match(advanced, /actions\/release\/promotion\/qualify/);
+  const qualificationNode = fs.readFileSync(new URL("../actions/release/promotion/qualify/action.yml", import.meta.url), "utf8");
+  const applyNode = fs.readFileSync(new URL("../actions/release/promotion/apply/action.yml", import.meta.url), "utf8");
   assert.match(
     qualificationNode,
-    /node \.buildchain\/runtime\/packages\/core\/release\/commands\/release-candidate-adapter\.mjs/,
+    /uses: \.\/\.buildchain\/runtime\/actions\/release\/promotion\/qualify-candidate/,
   );
   assert.match(
     candidateAdapter,
-    /packages\/core\/release\/commands\/resume-from-candidate-run\.mjs/,
+    /from "\.\.\/recovery\/candidate\.js"/,
   );
-  assert.match(advanced, /actions\/release\/promote-apply/);
+  assert.match(advanced, /actions\/release\/promotion\/apply/);
   assert.match(applyNode, /Resume the same transaction journal/);
   assert.match(
     refPromotion,

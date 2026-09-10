@@ -415,10 +415,10 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
     topologyLedger.authorityClosure.privilegedExecutableClosure.entrypoints,
     [
       "packages/core/release/promote-candidate/action.js",
-      "packages/core/publication/commands/binary-publication-evidence.mjs",
-      "packages/core/release/commands/next-development-review.mjs",
-      "packages/core/publication/commands/oci-compose-preview.mjs",
-      "packages/core/publication/commands/publication-settlement.mjs",
+      "packages/core/publication/binary/action.js",
+      "packages/core/release/next-development/actions.js",
+      "packages/core/publication/oci/preview-actions.js",
+      "packages/core/publication/settlement/actions.js",
     ],
   );
   assert.match(
@@ -443,9 +443,9 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
     /legacy-promote|v4-declarative-promote/u,
   );
   const graph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "apply");
-  assert.ok(graph.actions.has("actions/release/promote-candidate"));
+  assert.ok(graph.actions.has("actions/release/promotion/candidate"));
   assert.equal(graph.job.steps.find(step => step.id === "node").with["needs-qualify-outputs-requested-sha"], "${{ toJSON(needs.qualify.outputs.requested-sha) }}");
-  for (const step of graph.steps.filter(step => step.uses?.endsWith("/actions/release/promote-candidate")))
+  for (const step of graph.steps.filter(step => step.uses?.endsWith("/actions/release/promotion/candidate")))
     assert.equal(step.with["source-sha"], "${{ fromJSON(inputs.needs-qualify-outputs-requested-sha) }}");
   assert.match(
     publicWrapper,
@@ -464,7 +464,7 @@ test("closed-world discovery rejects an undeclared release topology workflow", (
       ["known.yml", "new.yml", "unrelated.yml"],
       (relative) =>
         relative === "new.yml"
-          ? "uses: kungfu-systems/buildchain/actions/release/promote-ref@v4"
+          ? "uses: kungfu-systems/buildchain/actions/release/promotion/ref@v4"
           : "jobs:\n  check:\n    runs-on: ubuntu-24.04\n",
     ),
     ["new.yml"],

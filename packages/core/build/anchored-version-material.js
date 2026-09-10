@@ -122,6 +122,7 @@ export function createAnchoredVersionMaterialEvidence({
   alphaRef = "",
   releaseRef = "HEAD",
   runLifecycle = true,
+  environment = process.env,
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const loadedConfig = loadBuildchainConfig(resolvedCwd);
@@ -184,7 +185,7 @@ export function createAnchoredVersionMaterialEvidence({
         loadedConfig,
         name: "install",
         stage: installStage,
-        env: lifecycleEnv,
+        env: lifecycleEnv, baseEnv: environment,
       });
     }
     const versionStateStage =
@@ -194,14 +195,14 @@ export function createAnchoredVersionMaterialEvidence({
       loadedConfig,
       name: "version-state",
       stage: versionStateStage,
-      env: lifecycleEnv,
+      env: lifecycleEnv, baseEnv: environment,
     });
     runLifecycleStage({
       cwd: resolvedCwd,
       loadedConfig,
       name: "verify",
       stage: getLifecycleStage(loadedConfig, "verify"),
-      env: lifecycleEnv,
+      env: lifecycleEnv, baseEnv: environment,
     });
   }
   const derivedStatus = gitStatus(resolvedCwd);

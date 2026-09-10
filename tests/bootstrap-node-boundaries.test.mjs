@@ -3,11 +3,11 @@ import assert from "node:assert/strict";
 import {
   reviewedCandidateEvidence,
   bootstrapVersionLine,
-} from "../packages/core/workflow/nodes/bootstrap-review.mjs";
+} from "../packages/core/workflow/admission/review.js";
 import {
   recoveryCoordinates,
   recoveryTerminalReceipt,
-} from "../packages/core/workflow/nodes/recovery-contract.mjs";
+} from "../packages/core/workflow/admission/recovery.js";
 
 const sha = (x) => x.repeat(40);
 const root = (x) => `sha256:${x.repeat(64)}`;

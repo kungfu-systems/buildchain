@@ -1,12 +1,12 @@
-export async function reportGovernanceIncident({ github, context }) {
+export async function reportGovernanceIncident({ github, context, auditRoot, nonQualifying }) {
   const title = "[governance] Managed zone is non-qualifying";
   const marker = "<!-- kungfu-github-governance-authority-drift -->";
   const body = [
     marker,
     "The scheduled GitHub governance authority audit failed closed.",
     "",
-    `Non-qualifying repositories: ${process.env.NON_QUALIFYING}`,
-    `Audit root: \`${process.env.AUDIT_ROOT}\``,
+    `Non-qualifying repositories: ${nonQualifying}`,
+    `Audit root: \`${auditRoot}\``,
     `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
     "",
     "Use the sanitized run artifact for exact remediation pointers. Do not paste private provider payloads into this issue.",

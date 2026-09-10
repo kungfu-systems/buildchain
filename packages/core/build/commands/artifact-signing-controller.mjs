@@ -1,240 +1,9 @@
 #!/usr/bin/env node
-import fs from "node:fs";
-import path from "node:path";
 import { pathToFileURL } from "node:url";
-
-import {
-  RECEIPT_CONTRACT,
-  artifactSigningControlRequestOutputs,
-  assertArtifactSigningControlRequestContext,
-  digestDocument,
-  normalizeControllerStatus,
-  readArtifactSigningControlRequest,
-  required,
-  sealArtifactSigningControlRequest,
-  validateArtifactSigningControlRequest,
-  validateArtifactSigningControllerReceipt,
-} from "./artifact-signing-controller-core.mjs";
-import {
-  assertArtifactSigningDelegationContext,
-  artifactSigningDelegationOutputs,
-  createArtifactSigningDelegation,
-  readArtifactSigningDelegation,
-} from "./artifact-signing-delegation.mjs";
-import { writeGitHubOutputs } from "./build-contract-core.mjs";
-
-export {
-  artifactSigningCorrelation,
-  artifactSigningRequestRoot,
-  artifactSigningControlRequestOutputs,
-  assertArtifactSigningControlRequestContext,
-  createArtifactSigningControlRequest,
-  readArtifactSigningControlRequest,
-  sealArtifactSigningControlRequest,
-  validateArtifactSigningControlRequest,
-  validateArtifactSigningControllerReceipt,
-} from "./artifact-signing-controller-core.mjs";
-
-function authorityRuntimeShaFromEnvironment() {
-  return process.env.BUILDCHAIN_AUTHORITY_RUNTIME_SHA || "";
-}
-
-export function settleArtifactSigningControl({
-  request,
-  authorityStatus = process.env.BUILDCHAIN_AUTHORITY_STATUS || "failed",
-  authorityRunId = process.env.BUILDCHAIN_AUTHORITY_RUN_ID || "",
-  authorityRuntimeSha = authorityRuntimeShaFromEnvironment(),
-  authorityRunUrl = process.env.BUILDCHAIN_AUTHORITY_RUN_URL || "",
-  authorityResultArtifact = process.env.BUILDCHAIN_SIGNING_RESULT_ARTIFACT ||
-    "",
-  authorityCorrelationId = process.env.BUILDCHAIN_AUTHORITY_CORRELATION_ID ||
-    "",
-  authorityConclusion = process.env.BUILDCHAIN_AUTHORITY_CONCLUSION || "",
-  controllerRepository = process.env.GITHUB_REPOSITORY,
-  controllerRunId = process.env.GITHUB_RUN_ID,
-  controllerRunAttempt = process.env.GITHUB_RUN_ATTEMPT || "1",
-  controllerJob = process.env.GITHUB_JOB || "artifact-signing-control",
-  controllerRunnerOs = process.env.RUNNER_OS || "Linux",
-  controllerStartedAt = process.env.BUILDCHAIN_CONTROLLER_STARTED_AT ||
-    new Date().toISOString(),
-  controllerCompletedAt = process.env.BUILDCHAIN_CONTROLLER_COMPLETED_AT ||
-    new Date().toISOString(),
-  receiptPath = process.env.BUILDCHAIN_SIGNING_CONTROLLER_RECEIPT_PATH,
-  delegationPath = process.env.BUILDCHAIN_SIGNING_DELEGATION_PATH,
-} = {}) {
-  const control = validateArtifactSigningControlRequest(request);
-  const status = normalizeControllerStatus(authorityStatus);
-  const expectedStatus = control.request.count === 0 ? "skipped" : "succeeded";
-  const qualifying =
-    status === expectedStatus &&
-    (control.request.count === 0 || authorityConclusion === "success");
-  if (
-    authorityCorrelationId &&
-    authorityCorrelationId !== control.authority.correlationId
-  ) {
-    throw new Error("authority correlation does not match control request");
-  }
-  if (
-    authorityResultArtifact &&
-    authorityResultArtifact !== control.authority.resultArtifact
-  ) {
-    throw new Error("authority result artifact does not match control request");
-  }
-  const receipt = {
-    schemaVersion: 1,
-    contract: RECEIPT_CONTRACT,
-    requestDigest: control.digest,
-    source: control.source,
-    runtime: {
-      repository: control.runtime.repository,
-      sha: control.runtime.sha,
-    },
-    platform: control.platform,
-    request: control.request,
-    authority: {
-      repository: control.authority.repository,
-      runtimeSha: authorityRuntimeSha,
-      runId: control.request.count > 0 ? authorityRunId : "",
-      runUrl: control.request.count > 0 ? authorityRunUrl : "",
-      resultArtifact: control.request.count > 0 ? authorityResultArtifact : "",
-      correlationId: control.authority.correlationId,
-      conclusion:
-        control.request.count > 0
-          ? authorityConclusion || status
-          : "not-required",
-    },
-    controller: {
-      repository: controllerRepository,
-      runId: controllerRunId,
-      runAttempt: Number(controllerRunAttempt),
-      job: controllerJob,
-      runnerOs: controllerRunnerOs,
-      startedAt: controllerStartedAt,
-      completedAt: controllerCompletedAt,
-      status,
-    },
-    qualifying,
-  };
-  receipt.digest = digestDocument(receipt);
-  const validatedReceipt = validateArtifactSigningControllerReceipt(receipt);
-  const resolvedReceiptPath = path.resolve(
-    required(receiptPath, "controller receipt path"),
-  );
-  fs.mkdirSync(path.dirname(resolvedReceiptPath), { recursive: true });
-  fs.writeFileSync(
-    resolvedReceiptPath,
-    `${JSON.stringify(validatedReceipt, null, 2)}\n`,
-  );
-
-  let delegation = null;
-  if (validatedReceipt.qualifying) {
-    delegation = createArtifactSigningDelegation({
-      sourceRepository: control.source.repository,
-      sourceRunId: control.source.runId,
-      sourceRunAttempt: control.source.runAttempt,
-      sourceSha: control.source.sha,
-      sourceTreeSha: control.source.treeSha,
-      runtimeRepository: control.runtime.repository,
-      runtimeSha: control.runtime.sha,
-      platformId: control.platform.id,
-      platformName: control.platform.name,
-      requestCount: control.request.count,
-      requestArtifact: control.request.artifact,
-      requestRoot: control.request.root,
-      authorityRunId: validatedReceipt.authority.runId,
-      authorityRuntimeSha: validatedReceipt.authority.runtimeSha,
-      resultArtifact: validatedReceipt.authority.resultArtifact,
-      artifactName: control.artifact.name,
-      manifestArtifact: control.artifact.manifestArtifact,
-      diagnosticsArtifact: control.artifact.diagnosticsArtifact,
-      workingDirectory: control.workingDirectory,
-      controllerMode: "detached",
-      controllerReceiptDigest: validatedReceipt.digest,
-    });
-    const resolvedDelegationPath = path.resolve(
-      required(delegationPath, "delegation path"),
-    );
-    fs.mkdirSync(path.dirname(resolvedDelegationPath), { recursive: true });
-    fs.writeFileSync(
-      resolvedDelegationPath,
-      `${JSON.stringify(delegation, null, 2)}\n`,
-    );
-  }
-  return { receipt: validatedReceipt, delegation };
-}
-
-export function readArtifactSigningControllerReceipt(
-  inputPath = process.env.BUILDCHAIN_SIGNING_CONTROLLER_RECEIPT_PATH,
-) {
-  const target = path.resolve(required(inputPath, "controller receipt path"));
-  return validateArtifactSigningControllerReceipt(
-    JSON.parse(fs.readFileSync(target, "utf8")),
-  );
-}
-
-export function assertArtifactSigningControllerReceipt({
-  request,
-  receipt,
-  delegation,
-}) {
-  const control = validateArtifactSigningControlRequest(request);
-  const result = validateArtifactSigningControllerReceipt(receipt);
-  const finalDelegation = assertArtifactSigningDelegationContext(delegation, {
-    sourceRepository: control.source.repository,
-    sourceRunId: control.source.runId,
-    sourceRunAttempt: control.source.runAttempt,
-    sourceSha: control.source.sha,
-    runtimeRepository: control.runtime.repository,
-    runtimeSha: control.runtime.sha,
-    platformId: control.platform.id,
-  });
-  const comparisons = [
-    [result.requestDigest, control.digest, "control request digest"],
-    [result.source.treeSha, control.source.treeSha, "source tree SHA"],
-    [result.request.root, control.request.root, "request root"],
-    [result.request.artifact, control.request.artifact, "request artifact"],
-    [
-      result.authority.correlationId,
-      control.authority.correlationId,
-      "correlation",
-    ],
-    [
-      result.authority.runId,
-      finalDelegation.authority.runId,
-      "authority run ID",
-    ],
-    [
-      result.authority.runtimeSha,
-      finalDelegation.authority.runtimeSha,
-      "authority runtime SHA",
-    ],
-    [
-      result.authority.resultArtifact,
-      finalDelegation.authority.resultArtifact,
-      "authority result artifact",
-    ],
-    [
-      finalDelegation.controller.receiptDigest,
-      result.digest,
-      "controller receipt digest",
-    ],
-    [
-      finalDelegation.request.root,
-      result.request.root,
-      "delegation request root",
-    ],
-  ];
-  for (const [actual, expected, label] of comparisons) {
-    if (actual !== expected) {
-      throw new Error(`artifact signing controller ${label} mismatch`);
-    }
-  }
-  if (!result.qualifying) {
-    throw new Error("artifact signing controller receipt is not qualifying");
-  }
-  return { request: control, receipt: result, delegation: finalDelegation };
-}
-
+import { sealArtifactSigningControlRequest, readArtifactSigningControlRequest, assertArtifactSigningControlRequestContext, artifactSigningControlRequestOutputs } from "../signing/request.js";
+import { settleArtifactSigningControl, assertArtifactSigningControllerReceipt, readArtifactSigningControllerReceipt } from "../signing/control.js";
+import { readArtifactSigningDelegation, artifactSigningDelegationOutputs } from "../signing/delegation.js";
+import { writeGitHubOutputs } from "../../providers/commands/github-output.mjs";
 function expectedContext() {
   return {
     sourceRepository: process.env.BUILDCHAIN_EXPECTED_SOURCE_REPOSITORY || "",
@@ -255,19 +24,60 @@ if (
   try {
     const mode = process.argv[2] || "seal";
     if (mode === "seal") {
-      sealArtifactSigningControlRequest();
+      sealArtifactSigningControlRequest({ outputPath: process.env.BUILDCHAIN_SIGNING_CONTROL_REQUEST_PATH, ...{
+  sourceRepository: process.env.GITHUB_REPOSITORY,
+  sourceRunId: process.env.GITHUB_RUN_ID,
+  sourceRunAttempt: process.env.GITHUB_RUN_ATTEMPT || "1",
+  sourceSha: process.env.BUILDCHAIN_SOURCE_SHA,
+  sourceTreeSha: process.env.BUILDCHAIN_SOURCE_TREE_SHA,
+  runtimeRepository: process.env.BUILDCHAIN_RUNTIME_REPOSITORY,
+  runtimeRef: process.env.BUILDCHAIN_RUNTIME_REF,
+  runtimeSha: process.env.BUILDCHAIN_RUNTIME_SHA,
+  platformId: process.env.BUILDCHAIN_PLATFORM_ID,
+  platformName: process.env.BUILDCHAIN_PLATFORM_NAME,
+  requestCount: process.env.BUILDCHAIN_SIGNING_REQUEST_COUNT || "0",
+  requestArtifact: process.env.BUILDCHAIN_SIGNING_REQUEST_ARTIFACT || "",
+  requestIndexPath: process.env.BUILDCHAIN_SIGNING_REQUEST_INDEX,
+  authorityRepository: process.env.BUILDCHAIN_AUTHORITY_REPOSITORY,
+  resultArtifact: process.env.BUILDCHAIN_SIGNING_RESULT_ARTIFACT || "",
+  artifactName: process.env.BUILDCHAIN_ARTIFACT_NAME,
+  manifestArtifact: process.env.BUILDCHAIN_MANIFEST_ARTIFACT_NAME,
+  diagnosticsArtifact: process.env.BUILDCHAIN_DIAGNOSTICS_ARTIFACT_NAME,
+  workingDirectory: process.env.BUILDCHAIN_SIGNING_CWD || ".",
+} });
     } else if (mode === "outputs") {
       const request = assertArtifactSigningControlRequestContext(
-        readArtifactSigningControlRequest(),
+        readArtifactSigningControlRequest(process.env.BUILDCHAIN_SIGNING_CONTROL_REQUEST_PATH),
         expectedContext(),
       );
       writeGitHubOutputs(artifactSigningControlRequestOutputs(request));
     } else if (mode === "settle") {
       const request = assertArtifactSigningControlRequestContext(
-        readArtifactSigningControlRequest(),
+        readArtifactSigningControlRequest(process.env.BUILDCHAIN_SIGNING_CONTROL_REQUEST_PATH),
         expectedContext(),
       );
-      const { receipt, delegation } = settleArtifactSigningControl({ request });
+      const { receipt, delegation } = settleArtifactSigningControl({ request, ...{
+  authorityStatus: process.env.BUILDCHAIN_AUTHORITY_STATUS || "failed",
+  authorityRunId: process.env.BUILDCHAIN_AUTHORITY_RUN_ID || "",
+  authorityRunUrl: process.env.BUILDCHAIN_AUTHORITY_RUN_URL || "",
+  authorityResultArtifact: process.env.BUILDCHAIN_SIGNING_RESULT_ARTIFACT ||
+    "",
+  authorityCorrelationId: process.env.BUILDCHAIN_AUTHORITY_CORRELATION_ID ||
+    "",
+  authorityConclusion: process.env.BUILDCHAIN_AUTHORITY_CONCLUSION || "",
+  controllerRepository: process.env.GITHUB_REPOSITORY,
+  controllerRunId: process.env.GITHUB_RUN_ID,
+  controllerRunAttempt: process.env.GITHUB_RUN_ATTEMPT || "1",
+  controllerJob: process.env.GITHUB_JOB || "artifact-signing-control",
+  controllerRunnerOs: process.env.RUNNER_OS || "Linux",
+  controllerStartedAt: process.env.BUILDCHAIN_CONTROLLER_STARTED_AT ||
+    new Date().toISOString(),
+  controllerCompletedAt: process.env.BUILDCHAIN_CONTROLLER_COMPLETED_AT ||
+    new Date().toISOString(),
+  receiptPath: process.env.BUILDCHAIN_SIGNING_CONTROLLER_RECEIPT_PATH,
+  delegationPath: process.env.BUILDCHAIN_SIGNING_DELEGATION_PATH,
+  authorityRuntimeSha: process.env.BUILDCHAIN_AUTHORITY_RUNTIME_SHA || "",
+} });
       writeGitHubOutputs({
         "controller-status": receipt.controller.status,
         "controller-receipt-digest": receipt.digest,
@@ -276,13 +86,13 @@ if (
       });
     } else if (mode === "verify") {
       const request = assertArtifactSigningControlRequestContext(
-        readArtifactSigningControlRequest(),
+        readArtifactSigningControlRequest(process.env.BUILDCHAIN_SIGNING_CONTROL_REQUEST_PATH),
         expectedContext(),
       );
       const checked = assertArtifactSigningControllerReceipt({
         request,
-        receipt: readArtifactSigningControllerReceipt(),
-        delegation: readArtifactSigningDelegation(),
+        receipt: readArtifactSigningControllerReceipt(process.env.BUILDCHAIN_SIGNING_CONTROLLER_RECEIPT_PATH),
+        delegation: readArtifactSigningDelegation(process.env.BUILDCHAIN_SIGNING_DELEGATION_PATH),
       });
       writeGitHubOutputs({
         ...artifactSigningDelegationOutputs(checked.delegation),

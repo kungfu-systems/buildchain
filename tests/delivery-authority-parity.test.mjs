@@ -842,7 +842,7 @@ test("every implemented parity disposition has an executable behavioral proof", 
     ),
   );
   const autoMergeRuntime = fs.readFileSync(
-    path.join(repositoryRoot, "packages/core/dev-delivery/commands/dev-pr-auto-merge.mjs"),
+    path.join(repositoryRoot, "packages/core/dev-delivery/admission/policy.js"),
     "utf8",
   );
   const authorityInputs = [
@@ -979,9 +979,7 @@ test("every implemented parity disposition has an executable behavioral proof", 
       authorityInputs.every(
         (input) => input in caller.with && input in template.with,
       ) &&
-      autoMergeRuntime.includes(
-        'activeLeaseContext: String(options.activeLeaseContext || (choiceOption(options.warrantMode, VALID_WARRANT_MODES, "off", "delivery Warrant mode") === "required" ? "Queue family lease/exact" : "")).trim(),',
-      ) &&
+      /activeLeaseContext: String\([\s\S]*options.activeLeaseContext[\s\S]*VALID_WARRANT_MODES[\s\S]*"required"[\s\S]*"Queue family lease\/exact"/.test(autoMergeRuntime) &&
       JSON.stringify(
         executeWorkflowMapping(caller, dispatchContext, mappingNames),
       ) === JSON.stringify(expectedMapping) &&

@@ -1,0 +1,12 @@
+name: Publish immutable evidence and advance its aliases
+description: Publish immutable evidence and advance its aliases
+inputs:
+  request-json:
+    description: Typed observed evidence request.
+    required: true
+outputs:
+  receipt-path:
+    description: Durable publication receipt.
+runs:
+  using: node24
+  main: dist/index.js

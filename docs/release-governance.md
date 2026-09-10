@@ -89,7 +89,7 @@ Buildchain implements the same governance loop with:
   exact published package and site facts from
   `packages/core/adoption/buildchain-kfd-claims.js` instead of relying on prose release
   notes;
-- `actions/release/promote-ref` for branch, tag, version-state, and
+- `actions/release/promotion/ref` for branch, tag, version-state, and
   governance checks;
 - package-manager adapters that can update version state for pnpm, npm, and
   yarn style repositories;
@@ -1014,8 +1014,8 @@ When debugging or extending release behavior, read in this order:
 3. `.github/workflows/self-release-promote.yml`
 4. `.github/workflows/public-release-promote.yml`
 5. `.github/workflows/.release-promote.yml`
-6. `actions/release/promote-ref/README.md`
-7. `actions/release/promote-ref/src/`
+6. `actions/release/promotion/ref/README.md`
+7. `actions/release/promotion/ref/src/`
 8. `docs/migration-inventory.md`
 
 That path gives the policy first, the workflow trigger second, and the action

@@ -1,0 +1,61 @@
+name: verify-check
+description: Execute the verify check capability within its caller job boundary.
+runs:
+  using: composite
+  steps:
+    - name: Admit source checkout
+      id: source-boundary
+      if: ${{ always() }}
+      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      with:
+        source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
+    - name: Checkout Buildchain runtime
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ github.repository }}
+        ref: ${{ github.sha }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - uses: actions/setup-node@v6.4.0
+      with:
+        node-version: "24"
+    - uses: actions/setup-go@v6.5.0
+      with:
+        go-version: 1.25.x
+    - name: Prepare exact Rust and WASM toolchain
+      uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+      with:
+        toolchain: 1.96.0
+        targets: wasm32-unknown-unknown
+    - name: Install locked runtime dependencies
+      uses: ./.buildchain/workflow-shell/actions/runtime/dependencies/install
+      with:
+        directory: .buildchain/runtime
+    - name: Qualify exact repository source
+      id: source-verification
+      uses: ./actions/build/verification/qualify-source
+      with:
+        token: ${{ github.token }}
+    - name: Upload immutable source verification proof
+      if: ${{ steps.source-verification.outputs.proof-sealed == 'true' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: source-verification-${{ github.sha }}-${{ github.run_attempt }}
+        path: .buildchain/source-verification/evidence.json
+        include-hidden-files: true
+        if-no-files-found: error
+        retention-days: 1
+    - name: Upload check evidence
+      if: always()
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-check
+        path: |
+          .buildchain/artifacts/
+          .buildchain/source-verification/decision.json
+        include-hidden-files: true
+        if-no-files-found: error
+inputs:
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true

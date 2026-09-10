@@ -16,13 +16,10 @@ import {
   preflightWebSurfaceProduction,
   validateWebSurfaceProject,
 } from "../packages/core/web/commands/web-surface-core.mjs";
-import {
-  cloudFrontInvalidationWaitTargets,
-  compactWebSurfaceApplyResult,
-  waitForCloudFrontInvalidations,
-  webSurfaceCli,
-} from "../packages/core/web/commands/web-surface.mjs";
-import { runLifecycle } from "../packages/core/build/commands/run-lifecycle-core.mjs";
+import { webSurfaceCli } from "../packages/core/web/commands/web-surface.mjs";
+import { compactWebSurfaceApplyResult } from "../packages/core/web/deployment/apply-evidence.js";
+import { cloudFrontInvalidationWaitTargets, waitForCloudFrontInvalidations } from "../packages/core/web/deployment/cloudfront-wait.js";
+import { runLifecycle } from "../packages/core/build/lifecycle/transaction.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 

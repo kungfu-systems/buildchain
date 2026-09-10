@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import YAML from "yaml";
-import { selfDogfoodReady } from "../packages/core/workflow/nodes/self-dogfood-readiness.mjs";
-import { selfDogfoodCoordinates } from "../packages/core/workflow/nodes/self-dogfood.mjs";
+import { selfDogfoodReady } from "../packages/core/workflow/dogfood/readiness.js";
+import { selfDogfoodCoordinates } from "../packages/core/workflow/dogfood/transactions.js";
 const sha = "a".repeat(40);
 function readiness() {
   return {
@@ -104,10 +104,8 @@ test("self-dogfood rejects foreign heads, changed bases and malformed caller coo
   assert.throws(
     () =>
       selfDogfoodCoordinates({
-        EVENT_NAME: "workflow_dispatch",
-        DISPATCH_CANDIDATE_SHA: sha,
-        DISPATCH_CONSUMER_SHA: sha,
-        DISPATCH_PULL_REQUEST: "1\nforged=value",
+        eventName: "workflow_dispatch", event: {},
+        request: { "candidate-sha": sha, "consumer-sha": sha, "pull-request": "1\nforged=value" },
       }),
     /exact immutable/,
   );
@@ -128,7 +126,7 @@ test("self-dogfood uses the current public workflow without a published channel 
   }
   const action = YAML.parse(
     fs.readFileSync(
-      "actions/workflow/bootstrap-dogfood-prepare/action.yml",
+      "actions/workflow/dogfood/prepare/action.yml",
       "utf8",
     ),
   );
@@ -139,8 +137,8 @@ test("self-dogfood uses the current public workflow without a published channel 
   assert.ok(readinessIndex >= 0);
   assert.match(generator.if, /steps.readiness.outputs.ready == 'true'/);
   assert.match(
-    generator.run,
-    /\.buildchain\/candidate\/packages\/core\/workflow\/nodes/,
+    generator.uses,
+    /\.buildchain\/candidate\/actions\/workflow\/dogfood\/generate/,
   );
   assert.equal(
     action.outputs.ready.value,

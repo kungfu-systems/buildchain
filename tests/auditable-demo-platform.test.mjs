@@ -7,8 +7,10 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 
-import { adaptCapture, materializeDemo, prepareArtifact, validateScenario } from "../packages/core/build/commands/auditable-demo-platform.mjs";
-import { runTransportSmoke } from "../packages/core/build/commands/auditable-demo-transport-smoke.mjs";
+import { adaptCapture } from "../packages/core/build/demo/capture.js";
+import { materializeDemo } from "../packages/core/build/demo/materialization.js";
+import { prepareArtifact, validateScenario } from "../packages/core/build/demo/scenario.js";
+import { runTransportSmoke } from "../packages/core/build/demo/transport-smoke.js";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 function temporary(t) {
@@ -134,7 +136,7 @@ function capture(t, demoId, transformScenario = null) {
   }
   const output = path.join(value.root, `capture-${demoId}`);
   const result = spawnSync("python3", [
-    path.join(ROOT, "packages/core/providers/commands/auditable-demo-capture.py"),
+    path.join(ROOT, "packages/core/providers/demo/capture-worker.py"),
     "--artifact-root", value.artifact,
     "--scenario", value.scenarioPath,
     "--source-coordinate", value.coordinate,
@@ -400,7 +402,7 @@ test("capture keeps demos isolated and fails closed on binary metadata drift", {
   metadata.sha256 = "0".repeat(64);
   writeJson(path.join(drifted.artifact, "fixture.json"), metadata);
   const result = spawnSync("python3", [
-    path.join(ROOT, "packages/core/providers/commands/auditable-demo-capture.py"), "--artifact-root", drifted.artifact,
+    path.join(ROOT, "packages/core/providers/demo/capture-worker.py"), "--artifact-root", drifted.artifact,
     "--scenario", drifted.scenarioPath, "--source-coordinate", drifted.coordinate,
     "--demo-id", "shared-state", "--network-isolation", "test-only", "--output", path.join(drifted.root, "drifted"),
   ], { encoding: "utf8", env: { ...process.env, BUILDCHAIN_AUDITABLE_DEMO_TEST: "1" } });
@@ -428,7 +430,7 @@ test("capture enforces the total deadline inside a running step", { skip: proces
   writeJson(value.scenarioPath, declared);
   const started = Date.now();
   const result = spawnSync("python3", [
-    path.join(ROOT, "packages/core/providers/commands/auditable-demo-capture.py"),
+    path.join(ROOT, "packages/core/providers/demo/capture-worker.py"),
     "--artifact-root", value.artifact,
     "--scenario", value.scenarioPath,
     "--source-coordinate", value.coordinate,
@@ -589,17 +591,17 @@ test("materializer verifies exact bundles and updates README idempotently", { sk
 
 test("reusable builds run transport simulation within verify before shared upload", () => {
   const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/.build.yml"), "utf8");
-  const stage = fs.readFileSync(path.join(ROOT, "packages/core/build/commands/stage.mjs"), "utf8");
+  const stage = fs.readFileSync(path.join(ROOT, "packages/core/build/lifecycle/stage.js"), "utf8");
   const lanes = workflow.match(/  build-(?:native|container):[\s\S]+?(?=\n  [a-z-]+:)/gu);
   assert.equal(lanes.length, 2);
-  for (const lane of lanes) assert.ok(lane.indexOf("stage: verify") < lane.indexOf("actions/build/transfer-artifact"));
-  assert.match(stage, /stage === "verify"[\s\S]*auditable-demo-transport-smoke.mjs/u);
+  for (const lane of lanes) assert.ok(lane.indexOf("stage: verify") < lane.indexOf("actions/build/artifact/transfer"));
+  assert.match(stage, /stage === "verify"[\s\S]*runTransportSmoke\(/u);
 });
 
 test("recursive dogfood resolves the reviewed setup-node action commit", () => {
   const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/self-build-demo-dogfood.yml"), "utf8");
-  assert.match(workflow, /actions\/build\/demo-dogfood-exact-binary/u);
-  const node = fs.readFileSync(path.join(ROOT, "actions/build/demo-dogfood-exact-binary/action.yml"), "utf8");
+  assert.match(workflow, /actions\/build\/demo\/qualify-binary/u);
+  const node = fs.readFileSync(path.join(ROOT, "actions/build/demo/qualify-binary/action.yml"), "utf8");
   assert.match(
     node,
     /actions\/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e/u,

@@ -20,7 +20,7 @@ import {
   publicationGateAggregateBindings,
   verifyPublicationAdmission,
 } from "../packages/core/publication/publication-authority.js";
-import { resolveWebSurfaceProductionDecision } from "../packages/core/web/commands/web-surface-production-decision.mjs";
+import { resolveWebSurfaceProductionDecision } from "../packages/core/web/production-decision.js";
 
 const SOURCE_SHA = "1".repeat(40);
 const TREE_SHA = "2".repeat(40);

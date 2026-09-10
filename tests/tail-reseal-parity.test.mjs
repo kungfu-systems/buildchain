@@ -46,25 +46,34 @@ test("tail-reseal parity matrix roots the captured v3 authority and complete v4 
 test("public tail workflow delegates to scoped nodes and keeps effects outside Capsule reuse", () => {
   const workflow = read(".github/workflows/public-ops-tail-reseal.yml");
   const nodes = ["plan", "platforms", "seal"]
-    .map((phase) => read(`actions/release/tail-reseal-${phase}/action.yml`))
+    .map((phase) => read(`actions/release/reseal/${phase}/action.yml`))
     .join("\n");
-  const implementation = read("packages/core/release/nodes/tail-reseal.mjs");
+  const implementation = read("packages/core/release/reseal/readbacks.js");
   assert.match(workflow, /workflow_call:/u);
-  assert.match(
-    workflow,
-    /job-workflow-sha: \$\{\{ toJSON\(job\.workflow_sha\) \}\}/u,
-  );
+  assert.match(workflow, /workflow-sha: \$\{\{ job\.workflow_sha \}\}/u);
   for (const phase of ["plan", "platforms", "seal"])
-    assert.ok(workflow.includes(`actions/release/tail-reseal-${phase}`));
-  for (const required of [
-    "tail-reseal admit",
-    "tail-reseal verify-platform",
-    "--mode retained",
-    "--mode resealed",
-    "Generate standard v4 candidate Release Passport",
-    "BUILDCHAIN_V4_POLICY_RECEIPT_JSON:",
-  ])
-    assert.ok(nodes.includes(required), required);
+    assert.ok(workflow.includes(`actions/release/reseal/${phase}`));
+  for (const action of ["admit", "finalize-platform", "close"])
+    assert.ok(nodes.includes(`/actions/release/reseal/${action}`));
+  const finalization = read(
+    "packages/core/release/reseal/finalize-platform.js",
+  );
+  assert.match(
+    finalization,
+    /mode: "retained"[\s\S]*verifyResealProviderReadbacks\([\s\S]*mode: "resealed"/,
+  );
+  assert.match(
+    finalization,
+    /platformId === "macos-arm64"[\s\S]*hostPlatform !== "darwin"/,
+  );
+  assert.match(
+    read("packages/core/release/reseal/seal.js"),
+    /writeReleaseCandidatePassport\(/,
+  );
+  assert.match(
+    read("packages/core/release/reseal/admission.js"),
+    /consumerPolicyReceiptRoot/,
+  );
   for (const required of [
     "signing-provider-readback.json",
     "release-tail-provider-readback.json",
@@ -81,7 +90,9 @@ test("public tail workflow delegates to scoped nodes and keeps effects outside C
   assert.equal(
     nodes
       .split("\n")
-      .filter((line) => line.includes("BUILDCHAIN_SIGNING_TOKEN:")).length,
+      .filter((line) =>
+        line.includes("signing-token: ${{ inputs.signing-token }}"),
+      ).length,
     1,
   );
 });
@@ -113,11 +124,15 @@ test("CLI, Node exports, schema, docs, and protected macOS rehearsal expose one 
   );
   assert.match(read("docs/MAP.md"), /v4-tail-reseal\.md/u);
   const verify = read(
-    "actions/build/verify-stage-capsule-checkpoints/action.yml",
+    "actions/build/stage-capsule/verify-checkpoints/action.yml",
   );
   assert.match(
     verify,
-    /fromJSON\(inputs.matrix-json\).platform == 'macos-arm64'/u,
+    /platform: \$\{\{ fromJSON\(inputs.matrix-json\).platform \}\}/u,
   );
-  assert.match(verify, /scripts\/tail-reseal-macos-rehearsal\.mjs/u);
+  assert.match(verify, /actions\/build\/stage-capsule\/rehearse/u);
+  assert.match(
+    read("packages/core/build/stage-capsule/rehearsal/verify.js"),
+    /platform === "macos-arm64"\s*\? rehearseTailResealMacos\(/u,
+  );
 });

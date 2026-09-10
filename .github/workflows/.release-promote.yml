@@ -159,6 +159,7 @@ jobs:
       product-publication-intent-root: ${{ steps.node.outputs.product-publication-intent-root }}
       candidate-source-sha: ${{ steps.node.outputs.candidate-source-sha }}
       candidate-artifact: ${{ steps.node.outputs.candidate-artifact }}
+      recovery-receipt-path: ${{ steps.node.outputs.recovery-receipt-path }}
       candidate-passport-path: ${{ steps.node.outputs.candidate-passport-path }}
       candidate-build-summary-path: ${{ steps.node.outputs.candidate-build-summary-path }}
       stage-capsules-path: ${{ steps.node.outputs.stage-capsules-path }}
@@ -177,7 +178,7 @@ jobs:
           persist-credentials: false
       - name: QUALIFY canonical v4 release invocation inputs
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/promote-qualify
+        uses: ./.buildchain/workflow-shell/actions/release/promotion/qualify
         with:
           runtime-ref: ${{ fromJSON(inputs.request-json).promotion-runtime-sha }}
           runtime-repository: ${{ fromJSON(inputs.request-json).buildchain-repository || job.workflow_repository }}
@@ -222,7 +223,7 @@ jobs:
         if: ${{ always() }}
       - name: APPLY one rooted provider transaction
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/promote-apply
+        uses: ./.buildchain/workflow-shell/actions/release/promotion/apply
         with:
           needs-qualify-outputs-runtime-sha: ${{ toJSON(needs.qualify.outputs.runtime-sha) }}
           needs-qualify-outputs-runtime-tree: ${{ toJSON(needs.qualify.outputs.runtime-tree) }}
@@ -233,6 +234,7 @@ jobs:
           needs-qualify-outputs-exact-tag: ${{ toJSON(needs.qualify.outputs.exact-tag) }}
           needs-qualify-outputs-channel: ${{ toJSON(needs.qualify.outputs.channel) }}
           needs-qualify-outputs-target-ref: ${{ toJSON(needs.qualify.outputs.target-ref) }}
+          needs-qualify-outputs-recovery-receipt-path: ${{ toJSON(needs.qualify.outputs.recovery-receipt-path) }}
           needs-qualify-outputs-candidate-passport-path: ${{ toJSON(needs.qualify.outputs.candidate-passport-path) }}
           needs-qualify-outputs-candidate-build-summary-path: ${{ toJSON(needs.qualify.outputs.candidate-build-summary-path) }}
           needs-qualify-outputs-stage-capsules-path: ${{ toJSON(needs.qualify.outputs.stage-capsules-path) }}
@@ -272,7 +274,7 @@ jobs:
           persist-credentials: false
       - name: SETTLE terminal ReleaseReceipt projection
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/promote-settle
+        uses: ./.buildchain/workflow-shell/actions/release/promotion/settle
         with:
           needs-qualify-outputs-action: ${{ toJSON(needs.qualify.outputs.action) }}
           request-json: ${{ inputs.request-json }}

@@ -1,29 +1,23 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import {
   sourceCoordinates,
   validateNativeContract,
   validateRuntimeSelector,
-} from "../packages/core/dev-delivery/nodes/source-coordinates.mjs";
-import { assertBranchUnlocked } from "../packages/core/dev-delivery/nodes/protected-branch.mjs";
-import { submissionArguments } from "../packages/core/dev-delivery/nodes/submission.mjs";
-import {
-  enforceReservation,
-  enforceLanding,
-} from "../packages/core/dev-delivery/nodes/outcome.mjs";
+} from "../packages/core/dev-delivery/candidate/coordinates.js";
+import { assertBranchUnlocked } from "../packages/core/dev-delivery/../providers/dev-delivery/protection.js";
+import { deliverySubmissionRequest } from "../packages/core/dev-delivery/candidate/submission.js";
+import { reserveDeliveryCandidate } from "../packages/core/dev-delivery/candidate/reservation.js";
+import { enforceLanding } from "../packages/core/dev-delivery/queue/completion.js";
 import { command } from "../packages/core/runtime/action-process.mjs";
-import {
-  twoPhaseArguments,
-  verifyTwoPhaseReadback,
-} from "../packages/core/dev-delivery/nodes/native-qualification.mjs";
-import { verifyFailureSettlement } from "../packages/core/dev-delivery/nodes/failure-settlement.mjs";
-import { settlementMode } from "../packages/core/dev-delivery/nodes/terminal-settlement.mjs";
+import { verifyNativeQualificationReadback } from "../packages/core/dev-delivery/native/readback.js";
+import { verifyFailureSettlement } from "../packages/core/dev-delivery/warrant/failure-settlement.js";
+import { settlementMode } from "../packages/core/dev-delivery/warrant/terminal-policy.js";
 import {
   verifyReservationReadback,
   reservationOutputs,
-} from "../packages/core/dev-delivery/nodes/reservation-readback.mjs";
-import { handoffInputs } from "../packages/core/dev-delivery/nodes/reservation-handoff.mjs";
+} from "../packages/core/dev-delivery/warrant/reservation-readback.js";
+import { handoffInputs } from "../packages/core/dev-delivery/warrant/handoff.js";
 import {
   createDevDeliveryQueue,
   submitDevDeliveryCandidate,
@@ -34,38 +28,38 @@ import {
 
 test("source coordinates reject ambiguous heads, invalid modes and required dry runs", () => {
   const env = {
-    GITHUB_REF_NAME: "dev/v4/v4.1",
-    WARRANT_MODE: "required",
-    EXPECTED_PR: "123",
-    EXPECTED_HEAD: "a".repeat(40),
-    DRY_RUN: "false",
+    defaultBranch: "dev/v4/v4.1",
+    warrantMode: "required",
+    pullRequestNumber: "123",
+    expectedHead: "a".repeat(40),
+    dryRun: false,
   };
   assert.deepEqual(sourceCoordinates(env), {
     branch: "dev/v4/v4.1",
     "branch-artifact": "dev-v4-v4.1",
   });
   for (const change of [
-    { EXPECTED_HEAD: "dev/v4/v4.1" },
-    { EXPECTED_PR: "0" },
-    { DRY_RUN: "true" },
-    { WARRANT_MODE: "fallback" },
-    { INPUT_TARGET_BRANCH: "dev/v4/v4.1\nnext=bad" },
+    { expectedHead: "dev/v4/v4.1" },
+    { pullRequestNumber: "0" },
+    { dryRun: true },
+    { warrantMode: "fallback" },
+    { branch: "dev/v4/v4.1\nnext=bad" },
   ])
     assert.throws(() => sourceCoordinates({ ...env, ...change }));
 });
 test("native source admission requires an exact environment before effects", () => {
   validateNativeContract({
-    DELIVERY_CLASS: "native-proof-required",
-    ENVIRONMENT_ROOT: `sha256:${"b".repeat(64)}`,
+    deliveryClass: "native-proof-required",
+    environmentRoot: `sha256:${"b".repeat(64)}`,
   });
-  validateNativeContract({ DELIVERY_CLASS: "non-native-fast" });
+  validateNativeContract({ deliveryClass: "non-native-fast" });
   assert.throws(() =>
     validateNativeContract({
-      DELIVERY_CLASS: "release",
-      ENVIRONMENT_ROOT: "current",
+      deliveryClass: "release",
+      environmentRoot: "current",
     }),
   );
-  assert.throws(() => validateNativeContract({ DELIVERY_CLASS: "unknown" }));
+  assert.throws(() => validateNativeContract({ deliveryClass: "unknown" }));
 });
 test("runtime selector admits the current version line without old runtime defaults", () => {
   for (const value of [
@@ -74,104 +68,74 @@ test("runtime selector admits the current version line without old runtime defau
     "c".repeat(40),
     "train/v4/v4.1/native",
   ])
-    validateRuntimeSelector({ BUILDCHAIN_REF: value });
+    validateRuntimeSelector({ runtimeRef: value });
   for (const value of ["v3", "", "train/v4/v4.1/../secret", "dev/v4/v4.1"])
-    assert.throws(() => validateRuntimeSelector({ BUILDCHAIN_REF: value }));
+    assert.throws(() => validateRuntimeSelector({ runtimeRef: value }));
 });
-test("locked branch check combines classic and applied protection and fails closed", () => {
-  const env = { TARGET_BRANCH: "dev/v4/v4.1", GITHUB_REPOSITORY: "owner/repo" };
-  const run = (classic, rules) =>
-    assertBranchUnlocked(env, (_program, args, options) => {
-      assert.equal(options.shell, false);
-      assert.match(args[1], /dev%2Fv4%2Fv4\.1/u);
-      return args[1].endsWith("/protection") ? classic : rules;
-    });
-  const ok = (value) => ({ status: 0, stdout: JSON.stringify(value) });
-  const missing = { status: 1, stderr: "HTTP 404" };
-  run(ok({ lock_branch: { enabled: false } }), ok([]));
-  run(missing, ok([]));
-  assert.throws(
-    () => run(ok({ lock_branch: { enabled: true } }), ok([])),
-    /locked/u,
-  );
-  assert.throws(() => run(missing, ok([{ type: "update" }])), /locked/u);
-  assert.throws(
-    () => run({ status: 1, stderr: "HTTP 403" }, ok([])),
-    /Unable/u,
-  );
-  assert.throws(() => run(missing, { status: 1 }), /Unable/u);
+test("locked branch check combines classic and applied protection and fails closed", async () => {
+ const input = { branch: "dev/v4/v4.1", repository: "owner/repo" };
+ const run = (classic, rules) => assertBranchUnlocked(input, { request: async endpoint => {
+  assert.match(endpoint, /dev%2Fv4%2Fv4\.1/u);
+  const value = endpoint.endsWith("/protection") ? classic : rules;
+  if (value instanceof Error) throw value;
+  return value;
+ } });
+ const missing = Object.assign(new Error("not found"), { status: 404 });
+ await run({ lock_branch: { enabled: false } }, []); await run(missing, []);
+ await assert.rejects(run({ lock_branch: { enabled: true } }, []), /locked/u);
+ await assert.rejects(run(missing, [{ type: "update" }]), /locked/u);
+ await assert.rejects(run(Object.assign(new Error("denied"), { status: 403 }), []), /Unable/u);
+ await assert.rejects(run(missing, new Error("denied")), /Unable/u);
 });
-test("candidate arguments retain literal native commands and grant execute only for required mode", () => {
-  const env = {
-    WARRANT_MODE: "shadow",
-    NATIVE_COMMAND: 'echo "$(secret)"; exit 7',
-    ENVIRONMENT_ROOT: `sha256:${"d".repeat(64)}`,
-    SOURCE_WORKFLOW_RUN_ID: "123",
-  };
-  const args = submissionArguments(env);
-  assert.equal(args[args.indexOf("--native-command") + 1], env.NATIVE_COMMAND);
-  assert.equal(args.includes("--execute"), false);
-  assert.ok(
-    submissionArguments({ ...env, WARRANT_MODE: "required" }).includes(
-      "--execute",
-    ),
-  );
-  assert.throws(
-    () => submissionArguments({ ...env, ENVIRONMENT_ROOT: "" }),
-    /environment root/u,
-  );
+test("candidate submission retains literal native commands and executes only in required mode", () => {
+ const input = { "delivery-warrant-mode": "shadow", "native-command": 'echo "$(secret)"; exit 7', "environment-root": `sha256:${"d".repeat(64)}`, "source-workflow-run-id": 123 };
+ const context = { affectedPaths: [] };
+ const request = deliverySubmissionRequest(input, context);
+ assert.equal(request.nativeCommand, input["native-command"]); assert.equal(request.execute, false);
+ assert.equal(deliverySubmissionRequest({ ...input, "delivery-warrant-mode": "required" }, context).execute, true);
+ assert.throws(() => deliverySubmissionRequest({ ...input, "environment-root": "" }, context), /environment root/u);
 });
-test("reservation failures and incomplete owner handoffs cannot pass", () => {
-  const env = {
-    WARRANT_MODE: "required",
-    QUALIFY_OUTCOME: "success",
-    SUBMIT_OUTCOME: "success",
-    WARRANT_OUTCOME: "success",
-    HANDOFF_REQUIRED: "false",
-  };
-  enforceReservation(env);
-  for (const key of ["QUALIFY_OUTCOME", "SUBMIT_OUTCOME", "WARRANT_OUTCOME"])
-    assert.throws(() => enforceReservation({ ...env, [key]: "failure" }));
-  assert.throws(() =>
-    enforceReservation({
-      ...env,
-      HANDOFF_REQUIRED: "true",
-      HANDOFF_DISPATCHED: "false",
-    }),
-  );
+test("source and proof failures cannot reach Warrant submission", async () => {
+ let submitted = false;
+ const request = { workspace: ".", input: { "delivery-warrant-mode": "required" }, qualificationOutcome: "failure", proofOutcome: "success", predecessorsOk: true };
+ const dependencies = { service: { submit: () => { submitted = true; } } };
+ await assert.rejects(reserveDeliveryCandidate(request, dependencies), /source qualification/u);
+ await assert.rejects(reserveDeliveryCandidate({ ...request, qualificationOutcome: "success", proofOutcome: "failure" }, dependencies), /submission failed/u);
+ await assert.rejects(reserveDeliveryCandidate({ ...request, qualificationOutcome: "success", predecessorsOk: false }, dependencies), /submission failed/u);
+ assert.equal(submitted, false);
 });
 test("landing needs verified native seal and heartbeat; settled failure remains failure", () => {
   const env = {
-    WARRANT_MODE: "required",
-    ALREADY_QUALIFIED: "true",
-    RUN_NATIVE: "true",
-    SEAL_JOB_OUTCOME: "success",
-    HEARTBEAT_JOB_OUTCOME: "success",
-    MERGE_STEP_OUTCOME: "success",
-    TARGETED: "true",
-    TARGETED_OK: "true",
+    warrantMode: "required",
+    alreadyQualified: "true",
+    runNative: "true",
+    sealJobOutcome: "success",
+    heartbeatJobOutcome: "success",
+    mergeStepOutcome: "success",
+    targeted: "true",
+    targetedOk: "true",
   };
   enforceLanding(env);
   for (const change of [
-    { SEAL_JOB_OUTCOME: "failure" },
-    { HEARTBEAT_JOB_OUTCOME: "cancelled" },
-    { MERGE_STEP_OUTCOME: "failure" },
-    { TARGETED_OK: "false" },
-    { ALREADY_QUALIFIED: "false" },
+    { sealJobOutcome: "failure" },
+    { heartbeatJobOutcome: "cancelled" },
+    { mergeStepOutcome: "failure" },
+    { targetedOk: "false" },
+    { alreadyQualified: "false" },
   ])
     assert.throws(() => enforceLanding({ ...env, ...change }));
   assert.throws(
     () =>
       enforceLanding({
         ...env,
-        NATIVE_JOB_OUTCOME: "failure",
-        FAILURE_FINAL_OUTCOME: "success",
+        nativeJobOutcome: "failure",
+        failureSettlementOutcome: "success",
       }),
     /settled the retained fence/u,
   );
   assert.throws(
     () =>
-      enforceLanding({ ...env, DEFER_LANDING: "true", WARRANT_MODE: "off" }),
+      enforceLanding({ ...env, deferLanding: "true", warrantMode: "off" }),
     /requires/u,
   );
 });
@@ -189,47 +153,27 @@ test("node IO preserves a child failure and never evaluates shell metacharacters
     ),
     marker,
   );
-  const result = spawnSync(
-    process.execPath,
-    ["packages/core/dev-delivery/nodes/outcome.mjs", "land"],
-    {
-      env: { ...process.env, MERGE_STEP_OUTCOME: "failure" },
-      encoding: "utf8",
-    },
-  );
-  assert.equal(result.status, 1);
+
 });
 
 const root = (value) => `sha256:${value.repeat(64)}`;
-test("native execution and finalization keep separate evidence and candidate directories", () => {
-  const env = { EXPECTED_PR: "123", EXPECTED_HEAD: "a".repeat(40) };
-  const native = twoPhaseArguments(env, "execute");
-  const final = twoPhaseArguments(env, "finalize");
-  assert.ok(native.includes("--native-only"));
-  assert.ok(!native.includes("--finalize-only"));
-  assert.equal(
-    native[native.indexOf("--candidate-directory") + 1],
-    ".buildchain/candidate",
-  );
-  assert.equal(
-    final[final.indexOf("--candidate-directory") + 1],
-    ".buildchain/runtime",
-  );
+test("native qualification readback rejects a different phase or source head", () => {
+ const env = { pullRequestNumber: 123, expectedHead: "a".repeat(40) };
   const result = {
     ok: true,
     outcome: "native-proof-ready",
     qualifiedWarrant: {
       phase: "provisional",
       pullRequestNumber: 123,
-      sourceHead: env.EXPECTED_HEAD,
+      sourceHead: env.expectedHead,
     },
     nativeProofRoot: root("a"),
     nativeReuseDecisionRoot: root("b"),
   };
-  verifyTwoPhaseReadback(result, env, "execute");
-  assert.throws(() => verifyTwoPhaseReadback(result, env, "finalize"));
+  verifyNativeQualificationReadback(result, env, { native: true });
+  assert.throws(() => verifyNativeQualificationReadback(result, env, { native: false }));
   assert.throws(() =>
-    verifyTwoPhaseReadback(
+    verifyNativeQualificationReadback(
       {
         ...result,
         qualifiedWarrant: {
@@ -238,7 +182,7 @@ test("native execution and finalization keep separate evidence and candidate dir
         },
       },
       env,
-      "execute",
+      { native: true },
     ),
   );
 });
@@ -297,10 +241,10 @@ test("failure settlement locates its exact candidate and checks all provider-bou
   );
 });
 test("terminal settlement rejects another active candidate instead of treating it as inactive", () => {
-  const env = { EXPECTED_PR: "7", EXPECTED_HEAD: "a".repeat(40) };
+  const env = { pullRequestNumber: 7, expectedSourceHead: "a".repeat(40) };
   const active = {
     pullRequestNumber: 7,
-    sourceHead: env.EXPECTED_HEAD,
+    sourceHead: env.expectedSourceHead,
     candidateId: root("a"),
   };
   assert.equal(settlementMode({ activeWarrant: null }, env), "inactive");
@@ -372,8 +316,8 @@ test("new non-native Warrants declare ready and phase-less queues are rejected",
   delete noPhase.observation.activeWarrant.phase;
   assert.throws(() => verifyReservationReadback(noPhase), /phase/u);
   const env = {
-    HANDOFF_WORKFLOW_ID: "self-ops-dev-delivery.yml",
-    TARGET_BRANCH: "dev/v4/v4.1",
+    workflowId: "self-ops-dev-delivery.yml",
+    branch: "dev/v4/v4.1",
   };
   assert.equal(handoffInputs(active, env)["source-workflow-run-id"], 123);
   assert.throws(

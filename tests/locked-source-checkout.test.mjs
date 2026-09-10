@@ -4,13 +4,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import {
-  LOCKED_SOURCE_CHECKOUT_CONTRACT,
-  ISOLATED_GIT_GLOBAL_CONFIG,
-  fetchSourceCommit,
-  runBoundedFetch,
-  lockedSourceCheckout,
-} from "../packages/core/providers/commands/locked-source-checkout.mjs";
+import { LOCKED_SOURCE_CHECKOUT_CONTRACT, ISOLATED_GIT_GLOBAL_CONFIG } from "../packages/core/providers/source-checkout/values.js";
+import { fetchSourceCommit, runBoundedFetch } from "../packages/core/providers/source-checkout/fetch.js";
+import { lockedSourceCheckout } from "../packages/core/providers/source-checkout/transaction.js";
 
 function git(args, cwd) {
   return execFileSync("git", args, {

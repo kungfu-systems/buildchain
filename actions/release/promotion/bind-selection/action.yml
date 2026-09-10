@@ -1,0 +1,17 @@
+name: Bind promotion checkouts and contract lock
+description: Bind promotion checkouts and contract lock.
+inputs:
+  request-json:
+    description: Complete typed promotion request.
+    required: true
+  selection-json:
+    description: Exact selected identities and contract lock.
+    required: true
+outputs:
+  contract-lock-path:
+    description: contract lock path
+  contract-lock-digest:
+    description: contract lock digest
+runs:
+  using: node24
+  main: dist/index.js

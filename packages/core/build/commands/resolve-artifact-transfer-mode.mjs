@@ -4,86 +4,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-const VALID_MODES = new Set(["github-artifacts", "s3-to-github-artifacts"]);
-
-function firstValue(...values) {
-  return values.find((value) => String(value || "").trim()) || "";
-}
-
+import { resolveArtifactTransfer } from "../artifact/transfer-policy.js";
 function resolveArtifactTransferMode(env = process.env) {
-  const mode = env.INPUT_TRANSFER_MODE || "github-artifacts";
-  if (!VALID_MODES.has(mode)) {
-    throw new Error(
-      `artifact-transfer-mode must be github-artifacts or s3-to-github-artifacts, got: ${mode}`,
-    );
-  }
-  if (mode === "github-artifacts") {
-    return {
-      mode,
-      s3Bucket: "",
-      s3Region: "",
-      s3Prefix: "",
-      oidcAudience: "",
-    };
-  }
-  if (env.INPUT_RELAY_REQUIRED === "false") {
-    return {
-      mode: "github-artifacts",
-      s3Bucket: "",
-      s3Region: "",
-      s3Prefix: "",
-      oidcAudience: "",
-    };
-  }
-  const s3Bucket = firstValue(env.INPUT_S3_BUCKET, env.VAR_S3_BUCKET);
-  const s3Region = firstValue(env.INPUT_S3_REGION, env.VAR_S3_REGION);
-  const s3Prefix = firstValue(
-    env.INPUT_S3_PREFIX,
-    env.VAR_S3_PREFIX,
-    "buildchain-artifacts",
-  );
-  const uploadRole = firstValue(
-    env.INPUT_S3_UPLOAD_ROLE_ARN,
-    env.VAR_S3_UPLOAD_ROLE_ARN,
-    env.SECRET_S3_UPLOAD_ROLE_ARN,
-    env.INPUT_S3_ROLE_ARN,
-    env.VAR_S3_ROLE_ARN,
-    env.SECRET_S3_ROLE_ARN,
-  );
-  const downloadRole = firstValue(
-    env.INPUT_S3_DOWNLOAD_ROLE_ARN,
-    env.VAR_S3_DOWNLOAD_ROLE_ARN,
-    env.SECRET_S3_DOWNLOAD_ROLE_ARN,
-    env.INPUT_S3_ROLE_ARN,
-    env.VAR_S3_ROLE_ARN,
-    env.SECRET_S3_ROLE_ARN,
-  );
-  if (!s3Bucket) {
-    throw new Error(
-      "artifact-transfer-mode=s3-to-github-artifacts requires artifact-relay-s3-bucket or BUILDCHAIN_ARTIFACT_RELAY_S3_BUCKET",
-    );
-  }
-  if (!s3Region) {
-    throw new Error(
-      "artifact-transfer-mode=s3-to-github-artifacts requires artifact-relay-s3-region or BUILDCHAIN_ARTIFACT_RELAY_S3_REGION",
-    );
-  }
-  if (!uploadRole) {
-    throw new Error(
-      "artifact-transfer-mode=s3-to-github-artifacts requires an upload role ARN input, variable, or secret",
-    );
-  }
-  if (!downloadRole) {
-    throw new Error(
-      "artifact-transfer-mode=s3-to-github-artifacts requires a download role ARN input, variable, or secret",
-    );
-  }
-  const oidcAudience = firstValue(
-    env.INPUT_OIDC_AUDIENCE,
-    env.VAR_OIDC_AUDIENCE,
-    s3Region.startsWith("cn-") ? "sts.amazonaws.com.cn" : "sts.amazonaws.com",
-  );
-  return { mode, s3Bucket, s3Region, s3Prefix, oidcAudience };
+  return resolveArtifactTransfer({ mode: env.INPUT_TRANSFER_MODE || "github-artifacts", relayRequired: env.INPUT_RELAY_REQUIRED !== "false",
+    bucket: env.INPUT_S3_BUCKET || env.VAR_S3_BUCKET, region: env.INPUT_S3_REGION || env.VAR_S3_REGION,
+    prefix: env.INPUT_S3_PREFIX || env.VAR_S3_PREFIX,
+    uploadRole: env.INPUT_S3_UPLOAD_ROLE_ARN || env.VAR_S3_UPLOAD_ROLE_ARN || env.SECRET_S3_UPLOAD_ROLE_ARN,
+    downloadRole: env.INPUT_S3_DOWNLOAD_ROLE_ARN || env.VAR_S3_DOWNLOAD_ROLE_ARN || env.SECRET_S3_DOWNLOAD_ROLE_ARN,
+    oidcAudience: env.INPUT_OIDC_AUDIENCE || env.VAR_OIDC_AUDIENCE });
 }
 
 function writeArtifactTransferOutputs(outputPath, resolution) {

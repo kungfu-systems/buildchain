@@ -9,12 +9,12 @@ import { spawnSync } from "node:child_process";
 import { createArtifactSigningRequest } from "../packages/core/build/artifact-signing.js";
 import {
   resolveAuthorityDispatchRef,
-} from "../packages/core/build/commands/dispatch-artifact-signing-authority.mjs";
-import { finalizeNativeArtifactSigningResult } from "../packages/core/build/commands/finalize-native-artifact-signing-result.mjs";
-import { inspectArtifactSigningRequests } from "../packages/core/build/commands/inspect-artifact-signing-requests.mjs";
-import { importArtifactSigningResults } from "../packages/core/build/commands/import-artifact-signing-results.mjs";
-import { materializeArtifactSigningRequest } from "../packages/core/build/commands/materialize-artifact-signing-request.mjs";
-import { verifyArtifactSigningResults } from "../packages/core/build/commands/verify-artifact-signing-results.mjs";
+} from "../packages/core/build/signing/dispatch.js";
+import { finalizeNativeArtifactSigningResult } from "../packages/core/build/signing/native-result.js";
+import { inspectArtifactSigningRequests } from "../packages/core/build/signing/intake.js";
+import { importArtifactSigningResults } from "../packages/core/build/signing/import-results.js";
+import { materializeArtifactSigningRequest } from "../packages/core/build/signing/materialize.js";
+import { verifyArtifactSigningResults } from "../packages/core/build/signing/verify-results.js";
 
 const FORMAL_AUTHORITY_REF = "authority/v4/v4.1/artifact-signing";
 
@@ -467,11 +467,11 @@ test("Buildchain authority owns native credentials and performs provider verific
     "utf8",
   );
   const macosAction = fs.readFileSync(
-    path.join(root, "actions/release/signing-authority-macos/action.yml"),
+    path.join(root, "actions/release/signing/macos/action.yml"),
     "utf8",
   );
   const deliveryAction = fs.readFileSync(
-    path.join(root, "actions/release/signing-authority-deliver/action.yml"),
+    path.join(root, "actions/release/signing/deliver/action.yml"),
     "utf8",
   );
   const releaseVerify = fs.readFileSync(
@@ -485,14 +485,14 @@ test("Buildchain authority owns native credentials and performs provider verific
   const macos = fs.readFileSync(
     path.join(
       root,
-      "packages/core/build/commands/sign-macos-mach-o-request.sh",
+      "packages/core/providers/signing/macos/sign-request.sh",
     ),
     "utf8",
   );
   const windows = fs.readFileSync(
     path.join(
       root,
-      "packages/core/providers/commands/sign-windows-authenticode-request.ps1",
+      "packages/core/providers/signing/windows/sign-request.ps1",
     ),
     "utf8",
   );
@@ -509,7 +509,7 @@ test("Buildchain authority owns native credentials and performs provider verific
   );
   assert.match(
     deliveryAction,
-    /Verify complete signed result set on GitHub-hosted infrastructure/,
+    /uses: \.\/actions\/build\/signing\/qualify-delivery/,
   );
   assert.match(releaseVerify, /authority\/\*\/\*\/artifact-signing/);
   assert.match(
@@ -527,23 +527,16 @@ test("Buildchain authority owns native credentials and performs provider verific
   assert.match(macos, /list-keychains -d user -s "\$\{keychain_path\}"/);
   assert.match(macos, /Buildchain macOS authority: sign exact Mach-O payload/);
   assert.match(macos, /sign compound archive Mach-O payloads/);
-  assert.match(
-    macosAction,
-    /BUILDCHAIN_ARTIFACT_KIND: \$\{\{ fromJSON\(inputs\.matrix-json\)\.request\.kind \}\}/,
-  );
-  assert.match(
-    macosAction,
-    /BUILDCHAIN_ENTITLEMENTS_PROFILE: \$\{\{ fromJSON\(inputs\.matrix-json\)\.request\.entitlementsProfile \}\}/,
-  );
-  assert.match(
-    macosAction,
-    /BUILDCHAIN_ENTITLEMENTS_PATHS: \$\{\{ fromJSON\(inputs\.matrix-json\)\.request\.entitlementsPaths \}\}/,
-  );
+  const nativeProvider = fs.readFileSync(path.join(root, "packages/core/providers/signing/native.js"), "utf8");
+  assert.match(nativeProvider, /BUILDCHAIN_ARTIFACT_KIND: artifact.kind/);
+  assert.match(nativeProvider, /BUILDCHAIN_ENTITLEMENTS_PROFILE:\s*signature.entitlementsProfile/);
+  assert.match(nativeProvider, /BUILDCHAIN_ENTITLEMENTS_PATHS: \(signature.entitlementsPaths/);
+  assert.match(macosAction, /uses: \.\/actions\/build\/signing\/sign-macos/);
   assert.match(macos, /--entitlements-profile "\$\{entitlements_profile\}"/);
   assert.match(macos, /--entitlements-paths "\$\{entitlements_paths\}"/);
   assert.match(
     macosAction,
-    /Developer ID sign, notarize, and staple Apple application[\s\S]*uses: \.\/actions\/build\/macos-credential-island/,
+    /Developer ID sign, notarize, and staple Apple application[\s\S]*uses: \.\/actions\/build\/credential\/macos-island/,
   );
   assert.match(macos, /codesign --verify --strict/);
   assert.match(macos, /notarytool submit/);
@@ -650,7 +643,7 @@ esac
         [
           path.resolve(
             import.meta.dirname,
-            "../packages/core/providers/commands/sign-macos-compound-archive.py",
+            "../packages/core/providers/signing/macos/compound-archive.py",
           ),
           "--archive",
           archive,

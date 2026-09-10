@@ -26,16 +26,16 @@ test("real lifecycle artifacts survive transfer and isolated finalization; provi
     GITHUB_RUN_ID: "123", GITHUB_RUN_ATTEMPT: "1", GITHUB_JOB: "sign", RUNNER_OS: "Linux",
     GITHUB_OUTPUT: path.join(workspace, "outputs") });
   t.after(() => { for (const key of Object.keys(process.env)) if (!(key in previous)) delete process.env[key]; Object.assign(process.env, previous); });
-  const { resolveBuildConfiguration } = await import("../packages/core/build/commands/resolve-build-configuration.mjs");
-  const { resolveRunnerMatrix } = await import("../packages/core/build/commands/build-contract-core.mjs");
-  const { buildMatrices } = await import("../packages/core/build/commands/plan.mjs");
-  const { rootOf } = await import("../packages/core/build/commands/context.mjs");
-  const { transferBuild, downloadBuild } = await import("../packages/core/build/commands/transfer.mjs");
-  const { controlSigning, finalizeSigning } = await import("../packages/core/build/commands/sign.mjs");
-  const { loadFinalArtifact } = await import("../packages/core/build/commands/attest.mjs");
-  const { finalizeBuild } = await import("../packages/core/build/commands/finalize.mjs");
+  const { resolveBuildConfiguration } = await import("../packages/core/build/plan/configuration.js");
+  const { resolveRunnerMatrix } = await import("../packages/core/build/runner/matrix.js");
+  const { buildMatrices } = await import("../packages/core/build/plan/matrices.js");
+  const { rootOf } = await import("../packages/core/build/plan/values.js");
+  const { createBuildArtifactServices } = await import("../packages/core/build/artifact/services.js");
+  const { createBuildSigningService } = await import("../packages/core/build/signing/transaction.js");
+  const { runLifecycle } = await import("../packages/core/build/lifecycle/transaction.js");
+  const { createBuildFinalizationService } = await import("../packages/core/build/summary/finalization.js");
   const { createControllerPlan } = await import("../packages/core/observability/controller-evidence.js");
-  const { artifactNames } = await import("../packages/core/build/commands/artifact-contract.mjs");
+  const { artifactNames } = await import("../packages/core/build/artifact/contracts.js");
   const { plan } = resolveBuildConfiguration({ root: source, repository: "kungfu-systems/buildchain",
     workflowRef: "kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha", workflowSha: "a".repeat(40),
     sourceSha: git("rev-parse", "HEAD"), sourceRef: "refs/heads/dev/v4/v4.0" });
@@ -58,7 +58,7 @@ test("real lifecycle artifacts survive transfer and isolated finalization; provi
   plan.root = rootOf(plan);
   Object.assign(process.env, { BUILDCHAIN_PLAN: JSON.stringify(plan), BUILDCHAIN_PLATFORM: JSON.stringify(platform) });
   for (const stage of ["install", "build", "verify"]) {
-    const run = spawnSync(process.execPath, [path.join(repo, "packages/core/build/commands/stage.mjs")], {
+    const run = spawnSync(process.execPath, [path.join(repo, "tests/helpers/build-stage-process.mjs")], {
       cwd: workspace, encoding: "utf8", env: { ...process.env, BUILDCHAIN_STAGE: stage },
     });
     assert.equal(run.status, 0, `${stage}\n${run.stdout}\n${run.stderr}`);
@@ -86,7 +86,10 @@ test("real lifecycle artifacts survive transfer and isolated finalization; provi
     }
     return { digestMismatch };
   });
-  await transferBuild();
+  const services = createBuildArtifactServices({ plan, workspace, sourceRoot: source }, { token: "test-token" });
+  const { transferBuild, downloadBuild, loadFinalArtifact } = services;
+  const { controlSigning, finalizeSigning } = createBuildSigningService({ plan, platform, workspace, sourceRoot: source, services, controller: { job: "sign", runnerOs: "Linux" }, consumerEnvironment: process.env }, { executeLifecycle: runLifecycle });
+  await transferBuild(platform);
   const names = artifactNames(plan, platform);
   assert.ok([...objects.values()].some((item) => item.name === names.execution));
   await controlSigning();
@@ -95,21 +98,20 @@ test("real lifecycle artifacts survive transfer and isolated finalization; provi
   fs.rmSync(source, { recursive: true });
   fs.mkdirSync(source);
   await finalizeSigning();
-  const final = await loadFinalArtifact(plan, platform, path.join(workspace, "final-readback"));
+  const final = await loadFinalArtifact(platform, path.join(workspace, "final-readback"));
   assert.equal(final.result.state, "unsigned");
   assert.equal(final.result.payload.name, names.final);
   assert.equal(final.manifest.artifactName, names.final);
   assert.ok(final.manifest.files.some((entry) => entry.path === "dist/libnode-shaped.txt"));
   assert.equal(final.result.controller.qualifying, true);
-  t.mock.method(globalThis, "fetch", async () => ({ ok: true, json: async () => ({ artifacts: [...objects.values()].map((item) => ({
-    ...item, digest: `sha256:${item.digest}`, expired: false, expires_at: "2099-01-01T00:00:00Z", size_in_bytes: 100,
-  })) }) }));
+  const { finalizeBuild } = createBuildFinalizationService({ plan, workspace, services, workflow: { name: "Build", serverUrl: "https://github.com" } }, {
+    readProviderArtifacts: async () => [...objects.values()].map(item => ({ ...item, digest: `sha256:${item.digest}`, expired: false, expires_at: "2099-01-01T00:00:00Z", size_in_bytes: 100 })) });
   const originalCwd = process.cwd();
   process.chdir(workspace);
   try {
     process.env.BUILDCHAIN_JOBS = JSON.stringify({ "build-native": { result: "success" }, "build-container": { result: "skipped" },
       sign: { result: "success" }, attest: { result: "skipped" } });
-    await finalizeBuild();
+    await finalizeBuild(JSON.parse(process.env.BUILDCHAIN_JOBS));
     const result = JSON.parse(fs.readFileSync(path.join(workspace, ".buildchain/result/record.json")));
     assert.equal(result.status, "success");
     assert.equal(result.artifacts.payloads[0].id, final.result.payload.id);
@@ -118,13 +120,13 @@ test("real lifecycle artifacts survive transfer and isolated finalization; provi
     const failedJobs = JSON.parse(process.env.BUILDCHAIN_JOBS);
     failedJobs.sign.result = "failure";
     process.env.BUILDCHAIN_JOBS = JSON.stringify(failedJobs);
-    await assert.rejects(finalizeBuild(), /Build job sign/);
+    await assert.rejects(finalizeBuild(JSON.parse(process.env.BUILDCHAIN_JOBS)), /Build job sign/);
     const failedReceipt = JSON.parse(fs.readFileSync(path.join(workspace, ".buildchain/controller/receipt.json")));
     assert.equal(failedReceipt.qualifying, false);
     assert.equal(failedReceipt.stages.find((stage) => stage.id === "build").status, "passed");
   } finally { process.chdir(originalCwd); }
   digestMismatch = true;
-  await assert.rejects(downloadBuild(plan, platform, path.join(workspace, "corrupt")), /digest mismatch/);
+  await assert.rejects(downloadBuild(platform, path.join(workspace, "corrupt")), /digest mismatch/);
   digestMismatch = false;
   providerFailure = true;
   await assert.rejects(finalizeSigning(), /provider unavailable/);

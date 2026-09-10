@@ -1,0 +1,16 @@
+name: Qualify real consumer lifecycle and clean process recovery
+description: Qualify real consumer lifecycle and clean process recovery.
+inputs:
+  workflow-sha:
+    description: Exact called workflow runtime
+    required: true
+  request-json:
+    description: Public Stage Capsule qualification request
+    required: true
+  platform:
+    description: Declared consumer platform
+    required: true
+outputs: {}
+runs:
+  using: node24
+  main: dist/index.js

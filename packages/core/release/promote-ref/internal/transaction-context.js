@@ -45,6 +45,7 @@ export function preparePublishTransactionContext({
   line,
   publishTransaction,
   publishCommand = "",
+  publishProvider,
   publishEvidencePath = "",
   transactionStatePath = "",
   expectedTransactionId = "",
@@ -67,7 +68,7 @@ export function preparePublishTransactionContext({
 }) {
   const lifecyclePublish = getLifecycleStage(loadedConfig, "publish");
   const enabled = Boolean(
-    publishTransaction || publishCommand || lifecyclePublish,
+    publishTransaction || publishCommand || publishProvider || lifecyclePublish,
   );
   if (!enabled) {
     return undefined;
@@ -158,6 +159,7 @@ export function preparePublishTransactionContext({
     channel,
     line,
     publishCommand,
+    publishProvider,
     publishRematerializeOnResume,
     actor,
     runId,

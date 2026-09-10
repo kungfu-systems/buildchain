@@ -27,7 +27,10 @@ jobs:
     name: Seal Buildchain npm product payload
     needs:
       - libnode-shaped
-    if: ${{ needs.libnode-shaped.result == 'success' && ((github.event_name == 'pull_request' && (startsWith(github.base_ref, 'alpha/') || startsWith(github.base_ref, 'release/'))) || github.event_name == 'workflow_dispatch') }}
+    if:
+      ${{ needs.libnode-shaped.result == 'success' && ((github.event_name == 'pull_request' &&
+      (startsWith(github.base_ref, 'alpha/') || startsWith(github.base_ref, 'release/'))) || github.event_name ==
+      'workflow_dispatch') }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
@@ -49,8 +52,8 @@ jobs:
         if: ${{ always() }}
       - name: Seal Buildchain npm product payload
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/package-candidate
+        uses: ./.buildchain/workflow-shell/actions/build/artifact/package
         with:
-          needs-libnode-shaped-outputs-release-candidate-artifact: ${{ toJSON(needs.libnode-shaped.outputs.release-candidate-artifact) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+          passport-artifact: ${{ needs.libnode-shaped.outputs.release-candidate-artifact }}
         if: ${{ always() }}

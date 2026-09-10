@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {
-  createGitHubStableCandidateClient,
-  normalizeStableCandidatePatrolOptions,
-  runStableCandidatePatrol,
-} from "../packages/core/release/commands/stable-candidate-patrol.mjs";
+import { normalizeStableCandidatePatrolOptions } from "../packages/core/release/stable-patrol/options.js";
+import { createGitHubStableCandidateClient } from "../packages/core/release/stable-patrol/github-client.js";
+import { runStableCandidatePatrol } from "../packages/core/release/stable-patrol/controller.js";
 
 const SHA4 = "4".repeat(40);
 const SHA5 = "5".repeat(40);

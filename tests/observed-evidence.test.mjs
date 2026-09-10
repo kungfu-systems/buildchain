@@ -4,7 +4,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { publishObservedEvidence, validateObservedEvidenceBundle } from "../packages/core/observability/commands/observed-evidence.mjs";
+import { publishObservedEvidence } from "../packages/core/observability/evidence/publication.js";
+import { validateObservedEvidenceBundle } from "../packages/core/observability/evidence/bundle.js";
 
 function fixture({ withProjection = false } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "observed-evidence-"));

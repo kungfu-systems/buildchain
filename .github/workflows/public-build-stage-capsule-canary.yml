@@ -47,10 +47,10 @@ jobs:
           persist-credentials: false
       - name: Admit floating-only v4 consumer source
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/stage-capsule-canary-consumer-admission
+        uses: ./.buildchain/workflow-shell/actions/build/stage-capsule/admit-consumer
         with:
-          job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
           request-json: ${{ toJSON(inputs) }}
+          workflow-sha: ${{ job.workflow_sha }}
   qualify:
     name: Real lifecycle (${{ matrix.platform }})
     needs: consumer-admission
@@ -84,12 +84,12 @@ jobs:
         if: ${{ always() }}
       - name: Real lifecycle (${{ matrix.platform }})
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/stage-capsule-canary-qualify
+        uses: ./.buildchain/workflow-shell/actions/build/stage-capsule/qualify
         with:
-          job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
           request-json: ${{ toJSON(inputs) }}
           matrix-json: ${{ toJSON(matrix) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+          workflow-sha: ${{ job.workflow_sha }}
         if: ${{ always() }}
   reconcile:
     name: Reconcile exact three-platform evidence
@@ -107,7 +107,7 @@ jobs:
           persist-credentials: false
       - name: Reconcile exact three-platform evidence
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/stage-capsule-canary-reconcile
+        uses: ./.buildchain/workflow-shell/actions/build/stage-capsule/reconcile
         with:
-          job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
           request-json: ${{ toJSON(inputs) }}
+          workflow-sha: ${{ job.workflow_sha }}

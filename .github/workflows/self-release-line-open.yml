@@ -46,16 +46,6 @@ jobs:
   bootstrap:
     name: Bootstrap release line
     runs-on: ubuntu-24.04
-    env:
-      GH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
-      BUILDCHAIN_MAJOR: ${{ inputs.major }}
-      BUILDCHAIN_MINOR: ${{ inputs.minor }}
-      BUILDCHAIN_SOURCE_REF: ${{ inputs.source-ref }}
-      BUILDCHAIN_INITIAL_VERSION: ${{ inputs.initial-version }}
-      BUILDCHAIN_REQUIRED_STATUS_CHECK: ${{ inputs.required-status-check }}
-      BUILDCHAIN_CREATE_ALPHA_PR: ${{ inputs.create-alpha-pr }}
-      BUILDCHAIN_SET_DEFAULT_BRANCH: ${{ inputs.set-default-branch }}
-      BUILDCHAIN_APPLY: ${{ inputs.apply }}
     steps:
       - name: Checkout source ref
         uses: actions/checkout@v4
@@ -69,13 +59,15 @@ jobs:
         with:
           repository: ${{ job.workflow_repository }}
           ref: ${{ job.workflow_sha }}
-          path: .buildchain/runtime
+          path: .buildchain/workflow-shell
           persist-credentials: false
         if: ${{ always() }}
       - name: Bootstrap release line
         id: node
-        uses: ./.buildchain/runtime/actions/release/line-open
+        uses: ./.buildchain/workflow-shell/actions/release/line/open
         with:
           request-json: ${{ toJSON(inputs) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+          token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          workflow-sha: ${{ job.workflow_sha }}
         if: ${{ always() }}

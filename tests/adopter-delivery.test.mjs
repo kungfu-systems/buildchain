@@ -146,6 +146,6 @@ test("candidate dispatch binds an external adopter through the admitted source o
   );
   assert.equal(
     workflow.jobs["consumer-admission"].steps[1].uses,
-    "./.buildchain/workflow-shell/actions/adoption/admit-adopter",
+    "./.buildchain/workflow-shell/actions/adoption/adopter/admit",
   );
 });

@@ -6,8 +6,8 @@ import { spawnSync } from "node:child_process";
 import path from "node:path";
 import test from "node:test";
 import { generateChannelPromotionWorkflow } from "../scripts/generate-channel-promotion-workflow.mjs";
-import { resolvePromotionChannel } from "../packages/core/release/commands/promotion-channel-router.mjs";
-import { resolvePromotionIdentities } from "../packages/core/release/commands/promotion-identity-resolver.mjs";
+import { resolvePromotionChannel } from "../packages/core/release/promotion/channel.js";
+import { resolvePromotionIdentities } from "../packages/core/release/promotion/identities.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const base = {

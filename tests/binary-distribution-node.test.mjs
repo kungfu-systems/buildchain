@@ -5,10 +5,11 @@ import os from "node:os";
 import path from "node:path";
 import YAML from "yaml";
 import {
-  binaryDistributionPreflight,
+  admitBinaryDistribution,
   binaryPassportOptions,
-  checksumBinaryArtifacts,
-} from "../packages/core/build/nodes/binary-distribution.mjs";
+} from "../packages/core/build/binary/distribution.js";
+import { writeChecksums } from "../packages/core/build/binary/checksums.js";
+import { createBuildchainLogger } from "../packages/core/observability/logging.js";
 const env = {
   RELEASE_TAG: "v4.1.0-alpha.1",
   GITHUB_REF: "refs/tags/v4.1.0-alpha.1",
@@ -20,49 +21,34 @@ const env = {
   GITHUB_RUN_ATTEMPT: "1",
 };
 test("binary distribution rejects historical majors and mismatched dispatch refs before the build matrix", () => {
-  binaryDistributionPreflight(env);
+  admitBinaryDistribution({ tag: env.RELEASE_TAG, ref: env.GITHUB_REF, sourceSha: env.GITHUB_SHA });
   assert.throws(
     () =>
-      binaryDistributionPreflight({
-        ...env,
-        RELEASE_TAG: "v3.0.9",
-        GITHUB_REF: "refs/tags/v3.0.9",
+      admitBinaryDistribution({
+        sourceSha: env.GITHUB_SHA,
+        tag: "v3.0.9",
+        ref: "refs/tags/v3.0.9",
       }),
     /current v4/,
   );
   assert.throws(
     () =>
-      binaryDistributionPreflight({
-        ...env,
-        GITHUB_REF: "refs/heads/dev/v4/v4.1",
+      admitBinaryDistribution({
+        sourceSha: env.GITHUB_SHA, tag: env.RELEASE_TAG,
+        ref: "refs/heads/dev/v4/v4.1",
       }),
     /exact release tag/,
   );
 });
-test("binary passport requires the exact settled version with no legacy base passport", () => {
-  const options = binaryPassportOptions(env, () => ({
-    publishedVersion: "4.1.0-alpha.1",
-  }));
-  assert.equal(options.packageVersion, "4.1.0-alpha.1");
-  assert.equal(options.basePassportJson, undefined);
-  assert.deepEqual(options.releaseEvidenceJsons, [
-    ".buildchain/publication-evidence/buildchain-publication-settlement.json",
-  ]);
-  assert.equal(
-    options.workflow.url,
-    "https://github.com/kungfu-systems/buildchain/actions/runs/123",
-  );
-  assert.throws(
-    () => binaryPassportOptions(env, () => ({ publishedVersion: "4.0.10" })),
-    /must match/,
-  );
-  assert.throws(
-    () =>
-      binaryPassportOptions(env, () => {
-        throw new Error("missing evidence");
-      }),
-    /missing evidence/,
-  );
+test("binary passport requires exact settled version and binds the settlement file", t => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "binary-passport-")); t.after(() => fs.rmSync(workspace, { recursive: true, force: true }));
+  const directory = path.join(workspace, ".buildchain/publication-evidence"); fs.mkdirSync(directory, { recursive: true });
+  const file = path.join(directory, "release.json"); fs.writeFileSync(file, JSON.stringify({ publishedVersion: "4.1.0-alpha.1" }));
+  const input = { workspace, tag: env.RELEASE_TAG, sourceSha: env.SOURCE_SHA, repository: env.GITHUB_REPOSITORY, workflow: { url: "https://github.com/kungfu-systems/buildchain/actions/runs/123" } };
+  const options = binaryPassportOptions(input); assert.equal(options.packageVersion, "4.1.0-alpha.1"); assert.equal(options.basePassportJson, undefined);
+  assert.deepEqual(options.releaseEvidenceJsons, [path.join(directory, "buildchain-publication-settlement.json")]); assert.equal(options.workflow.url, input.workflow.url);
+  fs.writeFileSync(file, JSON.stringify({ publishedVersion: "4.0.10" })); assert.throws(() => binaryPassportOptions(input), /must match/);
+  fs.unlinkSync(file); assert.throws(() => binaryPassportOptions(input), /ENOENT/);
 });
 test("binary checksums retain span success and failure evidence without a shell pipeline", async (t) => {
   const previous = process.cwd();
@@ -75,13 +61,15 @@ test("binary checksums retain span success and failure evidence without a shell 
   fs.mkdirSync("dist/binary", { recursive: true });
   fs.writeFileSync("dist/binary/a archive.tgz", "fixture");
   const input = { ...env, BUILDCHAIN_LOG_PATH: path.join(cwd, "events.jsonl") };
-  await checksumBinaryArtifacts(input);
+  const logger = createBuildchainLogger({ cwd, path: input.BUILDCHAIN_LOG_PATH, source: "buildchain", component: "workflow", phase: "passport" });
+  const checksum = () => logger.span("release-passport.checksums", {}, () => writeChecksums("dist/binary"));
+  await checksum();
   assert.match(
     fs.readFileSync("dist/binary/checksums.txt", "utf8"),
     /^[0-9a-f]{64}  \.\/a archive.tgz\n$/,
   );
   fs.unlinkSync("dist/binary/a archive.tgz");
-  await assert.rejects(checksumBinaryArtifacts(input), /contains no files/);
+  await assert.rejects(checksum(), /contains no files/);
   const events = fs
     .readFileSync(input.BUILDCHAIN_LOG_PATH, "utf8")
     .trim()
@@ -113,12 +101,12 @@ test("binary workflow has one current settlement path and preserves the dispatch
   );
   const passport = YAML.parse(
     fs.readFileSync(
-      "actions/build/binary-distribution-passport/action.yml",
+      "actions/build/binary/passport/action.yml",
       "utf8",
     ),
   );
   const evidence = passport.runs.steps.find(
-    (s) => s.name === "Read exact publication settlement",
+    (s) => s.uses === "./actions/build/binary/qualify",
   );
   assert.ok(evidence);
   assert.equal(evidence.if, undefined);

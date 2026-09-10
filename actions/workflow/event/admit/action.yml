@@ -1,0 +1,17 @@
+name: Admit workflow event trust
+description: Admit workflow event trust.
+inputs:
+  head-repository:
+    description: Pull request head repository
+  require-trusted:
+    description: Require repository-owned pull requests
+    default: "true"
+  untrusted-policy:
+    description: Fail or skip untrusted events
+    default: fail
+outputs:
+  trusted:
+    description: Whether the event may reach consumer execution
+runs:
+  using: node24
+  main: dist/index.js

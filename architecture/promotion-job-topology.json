@@ -37,7 +37,7 @@
       {
         "name": "Resolve and bind promotion identities",
         "id": "node",
-        "uses": "./.buildchain/workflow-shell/actions/release/resolve-promotion",
+        "uses": "./.buildchain/workflow-shell/actions/release/promotion/resolve",
         "with": {
           "request-json": "${{ inputs.request-json }}",
           "workflow-sha": "${{ job.workflow_sha }}",
@@ -73,7 +73,7 @@
       {
         "name": "Admit consumer and authorize runtime",
         "id": "node",
-        "uses": "./.buildchain/workflow-shell/actions/release/admit-promotion",
+        "uses": "./.buildchain/workflow-shell/actions/release/promotion/admit",
         "with": {
           "request-json": "${{ needs.resolve-promotion.outputs.request-json }}",
           "selection-json": "${{ toJSON(needs.resolve-promotion.outputs) }}"

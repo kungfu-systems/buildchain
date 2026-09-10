@@ -66,7 +66,7 @@ test("release promotion workflow routes through the canonical invocation boundar
   const node = graph.job.steps.find(step => step.id === "node");
   for (const [port, output] of [["publisher-workflow-sha", "publisher-sha"], ["runtime-commit", "runtime-sha"]]) {
     assert.equal(node.with[`needs-qualify-outputs-${output}`], `${'${{'} toJSON(needs.qualify.outputs.${output}) }}`);
-    const publishers = graph.steps.filter(step => step.uses?.endsWith("/actions/release/promote-candidate"));
+    const publishers = graph.steps.filter(step => step.uses?.endsWith("/actions/release/promotion/candidate"));
     assert.ok(publishers.length > 0);
     for (const publisher of publishers) assert.equal(publisher.with[port], `${'${{'} fromJSON(inputs.needs-qualify-outputs-${output}) }}`);
   }

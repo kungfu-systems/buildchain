@@ -24,7 +24,7 @@ import {
 import {
   resolveVerifierSourceRevision,
   selectGithubGovernanceRepositories,
-} from "../packages/core/governance/commands/audit-github-governance.mjs";
+} from "../packages/core/governance/audit/identity.js";
 import {
   githubApiFailureIsAbsence,
   resolveGithubProtectionTargetPolicy,
@@ -40,9 +40,9 @@ const CODEOWNERS = `* @kungfu-origin
 /.github/workflows/public-release-paper.yml @kungfu-origin
 /.github/workflows/self-release-line-open.yml @kungfu-origin
 /.github/workflows/public-release-promote.yml @kungfu-origin
-/actions/release/promote-ref/action.yml @kungfu-origin
-/actions/release/promote-ref/dist/index.js @kungfu-origin
-/actions/release/promote-ref/index.js @kungfu-origin
+/actions/release/promotion/ref/action.yml @kungfu-origin
+/actions/release/promotion/ref/dist/index.js @kungfu-origin
+/actions/release/promotion/ref/index.js @kungfu-origin
 /packages/core/release/promote-ref/lib.js @kungfu-origin
 /packages/core/governance/buildchain-publication-authority.js @kungfu-origin
 /packages/core/governance/github-governance-authority.js @kungfu-origin
@@ -1117,10 +1117,10 @@ test("publication authority recollects live App-authenticated governance instead
   assert.match(mint.if, /KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY != ''/);
   assert.equal(mint["continue-on-error"], true);
   const audit = graph.steps.find(step => step.name === "Collect and verify exact live GitHub governance authority");
-  assert.match(audit.env.GH_TOKEN, /steps.governance-auditor.outputs.token.*inputs.secrets-buildchain-governance-read-token.*github.token/);
+  assert.match(audit.with.token, /steps.governance-auditor.outputs.token.*inputs.governance-read-token.*github.token/);
   assert.deepEqual(graph.job.permissions, { actions: "read", checks: "read", contents: "read", "pull-requests": "read" });
-  const source = graph.modules.get("packages/core/publication/nodes/authority-governance.mjs");
-  assert.match(source, /auditGovernance\(env\)/);
+  const source = graph.modules.get("packages/core/publication/authority/governance.js");
+  assert.match(source, /collect = collectGithubGovernanceAudit[\s\S]*const audit = collect\(/);
   assert.match(source, /audit.inventory\?\.targetCount !== 1/);
   assert.match(source, /verifyGithubGovernanceReceipt/);
   assert.doesNotMatch(source, /JSON.parse\(serialized\)/);

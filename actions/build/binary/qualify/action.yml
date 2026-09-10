@@ -1,0 +1,12 @@
+name: Bind and qualify binary passport and release evidence
+description: Bind and qualify binary passport and release evidence
+inputs:
+  tag:
+    description: tag admitted binary distribution input.
+    required: true
+  token:
+    description: token admitted binary distribution input.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

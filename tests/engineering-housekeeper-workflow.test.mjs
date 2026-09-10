@@ -2,13 +2,9 @@ import { inspectWorkflowJob, readWorkflow } from "../scripts/workflow-action-gra
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
-import {
-  applyHousekeeperWorkflowScope,
-  createHousekeeperWorkflowPlan,
-  normalizeHousekeeperWorkflowOptions,
-  renderHousekeeperWorkflowReport,
-  selectHousekeeperActions,
-} from "../packages/core/governance/commands/engineering-housekeeper-workflow.mjs";
+import { applyHousekeeperWorkflowScope, createHousekeeperWorkflowPlan, selectHousekeeperActions } from "../packages/core/governance/housekeeping/transactions.js";
+import { normalizeHousekeeperWorkflowOptions } from "../packages/core/governance/housekeeping/options.js";
+import { renderHousekeeperWorkflowReport } from "../packages/core/governance/housekeeping/report.js";
 
 const repository = "kungfu-systems/buildchain";
 const targetBranch = "dev/v3/v3.0";
