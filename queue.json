@@ -3,8 +3,8 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 22,
-  "fencingCounter": 7,
+  "generation": 23,
+  "fencingCounter": 8,
   "policy": {
     "agingSeconds": 900,
     "maxPriority": 2,
@@ -12,7 +12,44 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": null,
+  "activeWarrant": {
+    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
+    "phase": "ready",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v4/v4.1",
+    "candidateId": "sha256:e2c7666bd2eec5c5a21561abd3eadb93c498debe17107f5dce9a09e2b0097d26",
+    "pullRequestNumber": 3698,
+    "sourceHead": "38c9e97b25bd1896b87e5677ebd551535b11f71f",
+    "sourceRoot": "sha256:8bbea8446ef1bf30e900df888a78f442ecd4dc6e4c28c7f9ba37af4b9922d8e7",
+    "sourceIdentityRoot": "sha256:ebdd8bc1e1cfc83c7d5dd76b52c5b83b8aa753f215529084355549f93b26618d",
+    "sourcePatchRoot": "sha256:de3de645bf5dbe3bbef68baeb66bc69395887baef7f76df28db7d8249013b7a3",
+    "sourceProofRoot": "sha256:fb255f35a4f996375c6cf3606c6555c692e83c793ae67e394f5f69aef4cb3614",
+    "planRoot": "sha256:763707924a9d6122a7a9ccb50cd08317450dcb0fbcc330e0267e99cb975f18bb",
+    "closureRoot": "sha256:4d4149dc48f653942d22532c4e0e18300c90febb8c96b83cf30a7d42bd19b418",
+    "dependencyRoot": "sha256:1d08dcc3271c51c7ae5f5423cce34a7166d503422708e914bbe8167f6fce4ec1",
+    "toolchainRoot": "sha256:9ffcadb59dd18f0082fd1e4a1179d13b728020a5be7a4b73e7b0e6f64b5a781a",
+    "affectedPaths": [
+      "actions/build/artifact/finalize/dist/index.js",
+      "actions/build/artifact/retain/dist/index.js",
+      "actions/build/attestation/prepare-build/dist/index.js",
+      "actions/build/attestation/verify-build/dist/index.js",
+      "actions/build/credential/admit/dist/index.js",
+      "actions/build/credential/retain/dist/index.js",
+      "actions/build/signing/complete/dist/index.js",
+      "packages/core/build/artifact/store.js",
+      "tests/build-artifact-pipeline.test.mjs"
+    ],
+    "shardEvidenceRoots": [],
+    "sourceWorkflowRunId": 34512514797,
+    "deliveryClass": "non-native-fast",
+    "priority": "ordinary",
+    "generation": 8,
+    "expectedOldStateRoot": "sha256:4243983feb3219ea1d04dbf2edbd813c59020a0ce0c4ab927fe1d1f61cec181f",
+    "issuedAt": "2026-09-10T18:18:12.007Z",
+    "expiresAt": "2026-09-10T19:18:12.007Z",
+    "fencingToken": "sha256:4270369b0b75d5251edba9623dd94d06efda6c6cf4f7e9ada185a9b99adb0b1f",
+    "nextAction": "Replay on the exact current dev base, prove required checks, then enqueue the unchanged PR head."
+  },
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -4381,10 +4418,10 @@
       "sourceWorkflowRunId": 34512514797,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-10T18:18:08.195Z",
-      "updatedAt": "2026-09-10T18:18:08.195Z",
+      "updatedAt": "2026-09-10T18:18:12.007Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
+      "status": "selected",
       "terminal": null,
       "affectedPaths": [
         "actions/build/artifact/finalize/dist/index.js",
@@ -4400,6 +4437,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-10T18:18:08.195Z",
-  "stateRoot": "sha256:4243983feb3219ea1d04dbf2edbd813c59020a0ce0c4ab927fe1d1f61cec181f"
+  "updatedAt": "2026-09-10T18:18:12.007Z",
+  "stateRoot": "sha256:ec0e6380011c81972ff8a2e07211ae71dca143152f4a01c616739ecdb6169a13"
 }
