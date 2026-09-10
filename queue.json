@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 15,
+  "generation": 16,
   "fencingCounter": 5,
   "policy": {
     "agingSeconds": 900,
@@ -4254,8 +4254,40 @@
         "tests/promotion-workflow-request.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.1",
+      "pullRequestNumber": 3693,
+      "sourceRoot": "sha256:3f4c663f5a3eb6ab1b94198d2780bd1c0c37266646b02f969feb59f78372b993",
+      "sourceIdentityRoot": "sha256:c1be12fde96b8a011a20c4cc8947adf6eea4cda15d364941b7b49eb79321c219",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:8a77da0d9deb2341a9aa8b6362ec3ad8b76d9ddbec33530dc0abe9d1c6669b68",
+      "sourceHead": "71088ea0a785dcf9816d2a70667330790ca987fa",
+      "sourcePatchRoot": "sha256:9502f0560511b9dad3db8f1768f107faad274d456cd526032e9de77dd6172dff",
+      "sourceProofRoot": "sha256:6edde098c26c7f34e8e2fc35d94bcfe63fb2f72db4bd2fcb159322b0e5d0f3c3",
+      "planRoot": "sha256:3b66f1088db8c0d4acc3674be43793dc4a15055656bc686f0a4086cea46e4acf",
+      "closureRoot": "sha256:353c4e3647dde11f8627cf65344f35ada5b0ac680ce8befbf75795921d3741b9",
+      "dependencyRoot": "sha256:372566a17cea118639025ed8de1b192136402c9ad752b684fb2f94fa1015f158",
+      "toolchainRoot": "sha256:2cdb06b365bbb3cdf79bced096b32fcd3967bd26159110bb32b8b9c064e32335",
+      "sourceWorkflowRunId": 34494911419,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-10T15:31:09.235Z",
+      "updatedAt": "2026-09-10T15:31:09.235Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".github/workflows/public-release-promote.yml",
+        "actions/release/promotion/admit/action.yml",
+        "architecture/promotion-job-topology.json",
+        "dist/site/buildchain-contract.json",
+        "tests/source-owned-promotion-policy.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-10T14:49:12.626Z",
-  "stateRoot": "sha256:8f586b38dd818e9684729409e3a0969bf79a25cd16d8de51f56cd73e63083286"
+  "updatedAt": "2026-09-10T15:31:09.235Z",
+  "stateRoot": "sha256:01879d1e7ed33f779d241f4304bb08bbb54511101c903cc307b4a38fb8458275"
 }
