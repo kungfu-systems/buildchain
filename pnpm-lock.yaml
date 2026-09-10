@@ -29,6 +29,9 @@ importers:
         specifier: 1.7.0
         version: 1.7.0
     devDependencies:
+      "@actions/expressions":
+        specifier: 0.3.61
+        version: 0.3.61
       ajv:
         specifier: 8.17.1
         version: 8.17.1
@@ -1531,6 +1534,13 @@ packages:
       {
         integrity: sha512-6xH/puSoNBXb72VPlZVm7vQ+svQpFyA96qdDBvhB8eNZOE8LtPf9L4oAsfzK/crCL8YZ+19fKYVnM63Sl+Xzlw==,
       }
+
+  "@actions/expressions@0.3.61":
+    resolution:
+      {
+        integrity: sha512-Ig+tXELvTjlqxQAWBQnLNn2dPpNraLMdSnT+vDzDPmJtbNUhIAH/Z9kVT8pZ8UtJi9vUGs8hwHE8JFJmbOnLEA==,
+      }
+    engines: { node: ">= 20" }
 
   "@actions/github@6.0.1":
     resolution:
@@ -3698,6 +3708,8 @@ snapshots:
   "@actions/exec@3.0.0":
     dependencies:
       "@actions/io": 3.0.2
+
+  "@actions/expressions@0.3.61": {}
 
   "@actions/github@6.0.1":
     dependencies:
