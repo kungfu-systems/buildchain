@@ -6,7 +6,7 @@
   "hold": {
     "enabled": false,
     "reason": "",
-    "updatedAt": "2026-09-11T21:26:30.112Z"
+    "updatedAt": "2026-09-11T21:27:27.045Z"
   },
   "candidates": [
     {
@@ -259,7 +259,7 @@
       }
     }
   ],
-  "updatedAt": "2026-09-11T21:14:09.000Z",
+  "updatedAt": "2026-09-11T21:27:27.045Z",
   "stableReleases": [
     {
       "version": "4.1.1",
