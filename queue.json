@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 33,
+  "generation": 34,
   "fencingCounter": 11,
   "policy": {
     "agingSeconds": 900,
@@ -5298,8 +5298,44 @@
         "tests/version-generator-dependencies.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.1",
+      "pullRequestNumber": 3706,
+      "sourceRoot": "sha256:d655a65c65808b0fd6854b9d6b4d3733220ee46a1fc1ff48fdbe0344c4cf624b",
+      "sourceIdentityRoot": "sha256:b15b7e8814ffff02ca9f1779422e25a63f95aa6441fc8fc99b97c77111d676af",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:c59f431aa682bc3d0d44d28f8eae78603399bc79e0c13d74e2378367289e191a",
+      "sourceHead": "0edfb352cef9d9837ac39bc2b45eb2bd53b2108a",
+      "sourcePatchRoot": "sha256:63e79688106febbc29ffec8a12318bc49ea633967648af6374b7f3679adf2b15",
+      "sourceProofRoot": "sha256:614a3fcb57afec09b87368d33f93605359684ccb9d0902d0036861d0d5a4f7bf",
+      "planRoot": "sha256:0e259b62caf619a1a487a144f99a8ce9fd2fdbda46b62015eb936a15abf6f9e0",
+      "closureRoot": "sha256:61449dac94beb2d943269988aa89ed573276a33a0e033e2e097198da18c46872",
+      "dependencyRoot": "sha256:a1afe1d34d65937d0ff5d6d21f8992625d95f7e583941f86990375faa8d41ea7",
+      "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
+      "sourceWorkflowRunId": 34588790551,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-11T10:31:50.596Z",
+      "updatedAt": "2026-09-11T10:31:50.596Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "actions/runtime/selection/resolve/dist/index.js",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/page-registry.json",
+        "dist/site/public-surface-audit.json",
+        "docs/runtime-entry.md",
+        "packages/core/runtime/entry/github.js",
+        "tests/runtime-entry-activation.test.mjs",
+        "tests/runtime-entry-provider.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-11T10:28:16.305Z",
-  "stateRoot": "sha256:81b198fc4406300347266ea3dc9f53774c76463653a14300664ae52b97b85d30"
+  "updatedAt": "2026-09-11T10:31:50.596Z",
+  "stateRoot": "sha256:87a840bbda2cf1cc8828287ecd920e5b9f84b7146a9051181d0c0db48e09a422"
 }
