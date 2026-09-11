@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 51,
+  "generation": 52,
   "fencingCounter": 17,
   "policy": {
     "agingSeconds": 900,
@@ -5551,8 +5551,42 @@
         ".buildchain/contract-lock.json"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.1",
+      "pullRequestNumber": 3717,
+      "sourceRoot": "sha256:9e78e9ed38e552aaefa62a629c7d105429c9ab530c8a559e66c06f757455f546",
+      "sourceIdentityRoot": "sha256:b201c3bfac619862e7205ea567b0c4407a62c9ce2775582ca9533848099d6a56",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:e9ba697b892bfeb99e7ac34baaa282b914ae4df7c58b5f81a33d7149d9c34b48",
+      "sourceHead": "1016fbed8e1cd10096a448f7507de87b378a02be",
+      "sourcePatchRoot": "sha256:b43f90b0c7012d69fab10b3cab170f1048193ab25e5ad5837d13c3a2353c36a8",
+      "sourceProofRoot": "sha256:bef5982481bc38daf9af242707858c3361a2bb0e98b9bece8485343f55a9a855",
+      "planRoot": "sha256:8d1fa9d02d8d4f017cf1de08b3cd30c742fead21e550686a8fe529d7087068b4",
+      "closureRoot": "sha256:7683ea586112338f1d5c9d4ea8b00c146bbda0c0e4970a34fe749958581967bb",
+      "dependencyRoot": "sha256:f64aeb63cdbe8acc5a4ffca3163a1b1ab352903f2f094ab94df83f1f7efa423b",
+      "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
+      "sourceWorkflowRunId": 34621808889,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-11T16:35:56.814Z",
+      "updatedAt": "2026-09-11T16:35:56.814Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "actions/release/line/bootstrap/dist/index.js",
+        "actions/release/next-development/complete-review/dist/index.js",
+        "actions/release/next-development/qualify/dist/index.js",
+        "packages/core/providers/github-cli-api.js",
+        "tests/github-cli-api.test.mjs",
+        "tests/paper-scaffold-channels.test.mjs",
+        "tests/paper.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-11T14:34:25.408Z",
-  "stateRoot": "sha256:2a9ed0f1433b7748f35b694df2960570f51e65c8bd922e586a6b02ed1f7fdef4"
+  "updatedAt": "2026-09-11T16:35:56.814Z",
+  "stateRoot": "sha256:25382d2f06be344134030dae95039691fc9b09238d32d482dc78212c9880a584"
 }
