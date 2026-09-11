@@ -4,6 +4,21 @@ const MAX_TRANSPORT_RETRIES = 4;
 export function nextDevelopmentQueueFailure(error) {
   const status = Number(error?.status || error?.response?.status || 0);
   const message = String(error?.message || "");
+  if (
+    [401, 403, 404, 409, 422].includes(status) &&
+    !(status === 403 && /rate limit/iu.test(message))
+  )
+    return "rejected";
+  if (Array.isArray(error?.errors) && error.errors.length) {
+    if (isTransientGitHubGraphqlError(error)) return "transient";
+    const kinds = error.errors.map((detail) => {
+      const code = detail.type || detail.extensions?.code;
+      return code && code !== "UNPROCESSABLE"
+        ? "rejected"
+        : nextDevelopmentQueueFailure({ message: detail.message });
+    });
+    return kinds.every((kind) => kind === kinds[0]) ? kinds[0] : "rejected";
+  }
   if (/already.*queue|queue.*already/iu.test(message)) return "queued";
   if (/already.*merged|merged.*already/iu.test(message)) return "merged";
   if (
@@ -28,6 +43,16 @@ export function assertNextDevelopmentPull(pull, headSha, base) {
     throw new Error("next-development pull request was closed without merge");
 }
 
+async function recoverQueuedMutation(options) {
+  try {
+    return await observeNextDevelopmentQueue(options);
+  } catch (error) {
+    if (nextDevelopmentQueueFailure(error) !== "transient")
+      throw Object.assign(error, { releaseTailClass: "conflict" });
+    return false;
+  }
+}
+
 export async function enqueueNextDevelopmentPullRequest({
   mutationOctokit,
   pull,
@@ -49,6 +74,11 @@ export async function enqueueNextDevelopmentPullRequest({
       const kind = nextDevelopmentQueueFailure(error);
       if (kind === "queued" || kind === "merged") return;
       if (
+        kind === "transient" &&
+        (await recoverQueuedMutation({ mutationOctokit, pull, headSha }))
+      )
+        return;
+      if (
         kind === "rejected" ||
         poll === maxPolls ||
         (kind === "transient" && transientRetries++ >= MAX_TRANSPORT_RETRIES)
@@ -61,3 +91,5 @@ export async function enqueueNextDevelopmentPullRequest({
     }
   }
 }
+import { isTransientGitHubGraphqlError } from "../../providers/github/graphql-errors.js";
+import { observeNextDevelopmentQueue } from "./next-development-queue-observation.js";
