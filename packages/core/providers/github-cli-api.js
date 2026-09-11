@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { createGitHubGraphqlError } from "./github/graphql-errors.js";
 
 function apiFailure(cause) {
   let response;
@@ -16,7 +17,9 @@ function apiFailure(cause) {
     messages.join("; ") ||
     (typeof response?.message === "string" ? response.message : "") ||
     `GitHub API command failed with exit code ${cause.status ?? 1}`;
-  const error = new Error(message);
+  const error = messages.length
+    ? createGitHubGraphqlError(response.errors)
+    : new Error(message);
   error.exitCode = cause.status ?? 1;
   const status = Number(response?.status);
   if (Number.isInteger(status) && status >= 100 && status <= 599)

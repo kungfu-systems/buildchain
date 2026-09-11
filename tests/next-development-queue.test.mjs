@@ -14,7 +14,17 @@ async function queue(errors, options = {}) {
     pull: { node_id: "PR_exact" },
     headSha,
     mutationOctokit: {
-      graphql: async (_query, variables) => {
+      graphql: async (query, variables) => {
+        if (query.startsWith("query"))
+          return {
+            node: {
+              id: "PR_exact",
+              headRefOid: headSha,
+              state: "OPEN",
+              merged: false,
+              mergeQueueEntry: null,
+            },
+          };
         requests.push(variables);
         const error = errors.shift();
         if (error) throw error;

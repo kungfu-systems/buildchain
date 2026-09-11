@@ -2,6 +2,7 @@ import { requireCurrentIndependentApproval } from "./approval.js";
 import { REVIEWER } from "./review-policy.js";
 import { observe } from "./observation.js";
 import { enqueueNextDevelopmentPullRequest } from "../promote-candidate/next-development-queue.js";
+import { createGitHubGraphqlError } from "../../providers/github/graphql-errors.js";
 export async function enqueueVerifiedDevelopmentReview({
   client,
   repository,
@@ -39,9 +40,7 @@ export async function enqueueVerifiedDevelopmentReview({
       graphql: async (query, variables) => {
         const result = client.post("graphql", { query, variables });
         if (result.errors?.length)
-          throw new Error(
-            result.errors.map((error) => error.message).join("; "),
-          );
+          throw createGitHubGraphqlError(result.errors);
         return result.data;
       },
     },
