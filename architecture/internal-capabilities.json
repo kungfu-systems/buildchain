@@ -566,7 +566,6 @@
     "packages/core/release/commands/release-propagation.mjs",
     "packages/core/release/commands/release-tail.mjs",
     "packages/core/release/commands/tail-reseal.mjs",
-    "packages/core/release/commands/verify-promotion-router-binding.sh",
     "packages/core/release/line/action.js",
     "packages/core/release/line/governance.js",
     "packages/core/release/line/plan.js",
@@ -1034,8 +1033,7 @@
       "id": "release-workflow-promotion-routing",
       "owner": "Buildchain maintainers",
       "implementation": [
-        "packages/core/release/commands/promotion-routing-evidence.mjs",
-        "packages/core/release/commands/verify-promotion-router-binding.sh"
+        "packages/core/release/commands/promotion-routing-evidence.mjs"
       ],
       "tests": [
         "tests/promotion-routing-evidence.test.mjs",

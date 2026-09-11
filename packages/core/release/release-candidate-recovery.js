@@ -282,7 +282,7 @@ function validatePlatformPayloads(passport, artifacts, platformManifests, platfo
   }
 }
 
-function validateProductPayloads({ passport, artifacts, productPayloadManifests, candidateRoot, buildSummaryRoot, runtimeSha }) {
+function validateProductPayloads({ passport, artifacts, productPayloadManifests, candidateRoot, buildSummaryRoot }) {
   const byName = new Map(artifacts.map((artifact) => [artifact.name, artifact]));
   for (const [index, manifest] of (productPayloadManifests || []).entries()) {
     if (manifest?.contract !== "kungfu-buildchain-product-payload-manifest/v1") {
@@ -293,7 +293,6 @@ function validateProductPayloads({ passport, artifacts, productPayloadManifests,
     assertEqual(manifest.candidateRoot, candidateRoot, "candidate-root-mismatch", "product payload candidate root", "Use the product payload sealed for this exact candidate.");
     assertEqual(manifest.buildSummaryRoot, buildSummaryRoot, "build-summary-root-mismatch", "product payload build summary root", "Use the payload produced from the exact candidate summary.");
     assertEqual(manifest.source?.tree, passport.source?.treeHash, "source-tree-mismatch", "product payload source tree", "Use payload bytes produced from the exact candidate tree.");
-    assertEqual(manifest.runtimeSha, runtimeSha, "runtime-mismatch", "product payload candidate runtime", "Use payload evidence created by the candidate runtime.");
     const artifact = byName.get(manifest.artifactName);
     if (!artifact) fail("artifact-missing", `product payload artifact is missing: ${manifest.artifactName}`, "Restore the exact product payload artifact.");
     const manifestName = String(manifest.manifestPath || "product-payload-manifest.json");

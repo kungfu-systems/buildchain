@@ -189,7 +189,6 @@ function normalizeConsumerPolicyEvidence(value, expected = {}) {
     receiptRoot: value.receiptRoot || "",
     repository: expected.repository,
     sourceSha: expected.sourceSha,
-    resolvedRuntimeSha: expected.runtimeSha,
   });
   if (!verification.ok) {
     throw new Error(`consumer policy receipt invalid: ${verification.failures.map((failure) => failure.code).join(", ")}`);
@@ -403,7 +402,6 @@ export function createReleaseCandidatePassport({
   const normalizedConsumerPolicy = normalizeConsumerPolicyEvidence(consumerPolicyReceipt, {
     repository: repository || normalizedSummary.git?.repository || "",
     sourceSha: normalizedSummary.publishSource?.ref === "publish-gate/anchor" ? (consumerPolicyReceipt?.receipt || consumerPolicyReceipt)?.caller?.sourceSha : sourceSha,
-    runtimeSha: resolvedBuildchain.sha,
   });
   if (isBuildchainRuntime(resolvedBuildchain) && !normalizedConsumerPolicy) {
     throw new Error("Buildchain v4 release candidate passport requires a valid floating consumer policy receipt");

@@ -1820,7 +1820,6 @@ Owner: Buildchain maintainers
 ### Implementation
 
 - `packages/core/release/commands/promotion-routing-evidence.mjs`
-- `packages/core/release/commands/verify-promotion-router-binding.sh`
 
 ### Contracts
 

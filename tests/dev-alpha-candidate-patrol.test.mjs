@@ -652,7 +652,7 @@ test("controller restart resumes the frozen candidate while dev moves", async ()
   );
 });
 
-test("candidate, Alpha base, runtime and route drift produce rooted holds", () => {
+test("candidate, Alpha base and route drift produce rooted holds", () => {
   const base = {
     releaseTrain: releaseTrain(),
     repository: patrolOptions.repository,
@@ -670,7 +670,6 @@ test("candidate, Alpha base, runtime and route drift produce rooted holds", () =
     [{ sourceLockSha: SOURCE_SHA }, "candidate-ref-drift"],
     [{ candidateTreeSha: SOURCE_SHA }, "candidate-tree-drift"],
     [{ alphaBaseSha: SOURCE_SHA }, "alpha-base-drift"],
-    [{ buildchainRuntimeSha: SOURCE_SHA }, "runtime-drift"],
     [{ repository: "kungfu-systems/other" }, "invalid-authority"],
   ]) {
     const result = reconcileActiveReleaseTrain({ ...base, ...overrides });
@@ -678,6 +677,9 @@ test("candidate, Alpha base, runtime and route drift produce rooted holds", () =
     assert.equal(result.hold.code, code);
     assert.match(result.hold.holdRoot, /^sha256:[0-9a-f]{64}$/u);
   }
+  const repaired = reconcileActiveReleaseTrain({ ...base, buildchainRuntimeSha: SOURCE_SHA });
+  assert.notEqual(repaired.status, "held");
+  assert.equal(repaired.train.releaseCut.candidateSha, ACTIVE_SHA);
 });
 
 test("duplicate observations are idempotent and explicit supersession is terminal", () => {

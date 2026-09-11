@@ -14,14 +14,14 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:72fba06daca690e446f18c2a6314e13a5a19294e49f11f0a236caf3bbdbb76ab",
+    "compatibilityDigest": "sha256:b1088f1c224329b16cd23c285bc69334aa1ee102e5b44d5c09aaf156d76821b6",
     "majorLine": "v4"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "f439cc5f33c64486e8a2c9de6e782d1dd62f8cb49106ce5c20c4ecc593f79a66",
+    "sha256": "f0a030d1b42f401a999a711ae56563716b967eae38cf1b1b3aa9f884b450d1b5",
     "summary": {
       "cliCommandCount": 117,
       "workflowCount": 67,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "f439cc5f33c64486e8a2c9de6e782d1dd62f8cb49106ce5c20c4ecc593f79a66",
+      "sha256": "f0a030d1b42f401a999a711ae56563716b967eae38cf1b1b3aa9f884b450d1b5",
       "summary": {
         "cliCommandCount": 117,
         "workflowCount": 67,
@@ -3330,7 +3330,7 @@
         },
         {
           "id": "cli:paper-resume",
-          "name": "buildchain paper resume [--cwd <dir>] [--buildchain-ref <ref>] [--execute] [--json]",
+          "name": "buildchain paper resume [--cwd <dir>] [--runtime-ref <ref>] [--execute] [--json]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",

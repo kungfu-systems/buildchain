@@ -6,7 +6,7 @@ import {
   verifyGithubGovernanceReceipt,
 } from "../../governance/github-governance-authority.js";
 export function verifyLivePublicationGovernance(
-  { repository, targetRef, runtimeSha, runtimeRoot, outputRoot, token },
+  { repository, targetRef, runtimeSha, outputRoot, token },
   collect = collectGithubGovernanceAudit,
 ) {
   if (!repository || !targetRef || !token)
@@ -16,7 +16,6 @@ export function verifyLivePublicationGovernance(
 
   fs.mkdirSync(outputRoot, { recursive: true });
   const audit = collect({
-    root: runtimeRoot,
     token,
     organization: repository.split("/")[0],
     repository,
@@ -46,7 +45,6 @@ export function verifyLivePublicationGovernance(
     expectedRepository: repository,
     expectedTargetRef: targetRef,
     expectedPolicyRoot: BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY.policyRoot,
-    expectedVerifierSourceRevision: runtimeSha,
   });
   fs.writeFileSync(
     path.join(outputRoot, "github-governance-receipt.json"),

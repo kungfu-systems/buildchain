@@ -30,7 +30,7 @@ test("workflow event transports sourceRoot without exposing a retired CLI pair",
   fs.rmSync(directory, { recursive: true, force: true });
 });
 
-for (const [largeProof, mismatchedRuntime] of [[false, false], [true, false], [false, true]]) test(`dev delivery request ${mismatchedRuntime ? "rejects mismatched runtime" : "binds exact candidate entry"}${largeProof ? " with a proof above command-line limits" : ""}`, () => {
+for (const [largeProof, mismatchedRuntime] of [[false, false], [true, false], [false, true]]) test(`dev delivery request ${mismatchedRuntime ? "accepts independent runtime" : "binds exact candidate entry"}${largeProof ? " with a proof above command-line limits" : ""}`, () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-delivery-request-"));
   const gh = path.join(directory, "gh");
   const payloadPath = path.join(directory, "payload.json");
@@ -54,22 +54,16 @@ for (const [largeProof, mismatchedRuntime] of [[false, false], [true, false], [f
   const result = spawnSync("bash", [path.join(repositoryRoot, "packages/core/dev-delivery/commands/dev-delivery-request.sh"), "7", "--execute", "--json"], {
     cwd: repositoryRoot,
     encoding: "utf8",
-    env: { ...process.env, GH_TOKEN: "", GITHUB_TOKEN: "", PATH: `${directory}:${process.env.PATH}`, BUILDCHAIN_WORK_SOURCE_ROOT: sourceRoot },
+    env: { ...process.env, GH_TOKEN: "", GITHUB_TOKEN: "", PATH: `${directory}:${process.env.PATH}`, BUILDCHAIN_WORK_SOURCE_ROOT: sourceRoot, BUILDCHAIN_RUNTIME_REF: mismatchedRuntime ? "train/v4/v4.1/repair" : "" },
   });
-  if (mismatchedRuntime) {
-    assert.equal(result.status, 1);
-    assert.match(result.stderr, /workflow and runtime must match the exact PR head/u);
-    assert.equal(fs.existsSync(payloadPath), false);
-    fs.rmSync(directory, { recursive: true, force: true });
-    return;
-  }
   assert.equal(result.status, 0, result.stderr);
   assert.equal(JSON.parse(result.stdout).workflowId, availableWorkflow);
   assert.equal(JSON.parse(result.stdout).sourceHead, head);
   const payload = JSON.parse(fs.readFileSync(payloadPath, "utf8"));
   assert.equal(payload.ref, "feature/candidate");
   assert.equal(payload.inputs["target-branch"], "dev/v4/v4.0");
-  assert.equal(payload.inputs["buildchain-ref"], head);
+  assert.equal(payload.inputs["runtime-ref"], mismatchedRuntime ? "train/v4/v4.1/repair" : "");
+  assert.equal(payload.inputs["buildchain-ref"], undefined);
   if (largeProof) {
     assert.deepEqual(JSON.parse(payload.inputs["affected-paths-json"]), []);
     assert.ok(JSON.stringify(payload.inputs).length < 65535);

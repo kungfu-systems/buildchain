@@ -89,31 +89,9 @@
       "id": "dev-pr-auto-merge",
       "kind": "workflow",
       "path": ".github/workflows/public-ops-dev-auto-merge.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@v4-alpha",
-      "requiredInputs": [],
-      "requiredOutputs": [
-        "action-count",
-        "admission-receipt-root",
-        "admission-state",
-        "enqueued-count",
-        "evaluated-count",
-        "final-base-sha",
-        "merged-count",
-        "native-execution-transfer-root",
-        "native-proof-root",
-        "native-reuse-decision-root",
-        "project-cut-proof-root",
-        "provider-finalizer-boundary-root",
-        "provider-heartbeat-receipt-root",
-        "qualified-warrant-receipt-root",
-        "skipped-count",
-        "source-proof-root",
-        "warrant-receipt-root",
-        "warrant-state-commit",
-        "warrant-state-root"
-      ],
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@v4",
       "breakingDefaults": {
-        "runtimeSelectorDefault": "v4",
+        "runtimeSelectorDefault": "consumer-contract-lock-or-entry",
         "authorityMode": "two-phase-delivery-warrant",
         "boundedAuthorityWorkflowIntegration": "not-advertised",
         "boundedAuthoritySupportedSurfaces": [
@@ -121,11 +99,20 @@
           "node-api",
           "schema"
         ],
-        "publicFloatingCaller": "v4-alpha",
-        "durableSelfDeliveryRef": "v4-alpha",
+        "publicFloatingCaller": "v4",
+        "durableSelfDeliveryRef": "v4",
         "independentHeartbeatRunner": "macos-15",
         "candidateCredentialAccess": "forbidden"
       },
+      "guarantees": [
+        "this reusable workflow executes the single-flight v1 Delivery Warrant and does not advertise bounded v2 Landing integration",
+        "bounded v2 authority is a separate opt-in CLI, Node API, and schema surface whose controller deployment must be explicit",
+        "candidate execution and evidence sealing receive no provider write credentials",
+        "a separate credentialed hosted runner durably heartbeats the exact fence through provider-confirmed native and seal completion",
+        "the finalizer validates rooted heartbeat continuity and latest durable state before qualification, failure settlement, or landing",
+        "durable consumers call the public floating workflow and may route a train or exact runtime only through trusted non-persistent dispatch input"
+      ],
+      "requiredInputs": [],
       "optionalInputs": [
         "active-lease-context",
         "affected-paths-json",
@@ -170,15 +157,28 @@
         "toolchain-root",
         "warrant-lease-seconds"
       ],
-      "guarantees": [
-        "this reusable workflow executes the single-flight v1 Delivery Warrant and does not advertise bounded v2 Landing integration",
-        "bounded v2 authority is a separate opt-in CLI, Node API, and schema surface whose controller deployment must be explicit",
-        "candidate execution and evidence sealing receive no provider write credentials",
-        "a separate credentialed hosted runner durably heartbeats the exact fence through provider-confirmed native and seal completion",
-        "the finalizer validates rooted heartbeat continuity and latest durable state before qualification, failure settlement, or landing",
-        "durable consumers call the public floating workflow and may route a train or exact runtime only through trusted non-persistent dispatch input"
+      "requiredOutputs": [
+        "action-count",
+        "admission-receipt-root",
+        "admission-state",
+        "enqueued-count",
+        "evaluated-count",
+        "final-base-sha",
+        "merged-count",
+        "native-execution-transfer-root",
+        "native-proof-root",
+        "native-reuse-decision-root",
+        "project-cut-proof-root",
+        "provider-finalizer-boundary-root",
+        "provider-heartbeat-receipt-root",
+        "qualified-warrant-receipt-root",
+        "skipped-count",
+        "source-proof-root",
+        "warrant-receipt-root",
+        "warrant-state-commit",
+        "warrant-state-root"
       ],
-      "breakingDigest": "sha256:1eeed4d0ca83cd79b37eb563d13aea8d824f724afa7dbd02ca96f10e2bbc2da4",
+      "breakingDigest": "sha256:1bd7d62abdf4f14c84010093aa044ff99eeabc92705d965e13043908cfec87ac",
       "auditDigest": "sha256:8d159b9c50369a159680aea8d453d9f72deee7b19637995acef27e77b7b8d6a5"
     },
     {
@@ -981,7 +981,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:abecc92b1769641911db63b9409716c45e18dc190f9ced9d8e9c704d226828b3"
+      "auditDigest": "sha256:c1ceec726aa1d12ec03d6963fbb8e4950857a7e69250f2d45c399c9470ea9344"
     },
     {
       "contractVersion": 1,
@@ -1003,7 +1003,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:531e8c2de68ff27bf18f460095ca963e76a59a78157b08087085fdb19fdc91f8"
+      "auditDigest": "sha256:e88cb115ee4261b72b5dc8a6f7c21d39e2f62a2bba3a39e9042cf96b053f4c36"
     },
     {
       "contractVersion": 1,
@@ -2403,6 +2403,6 @@
   "compatibilityFactRegistryRoot": "sha256:ea8f656c9fd74aa2d2fb9b7807e7daa39a708f6a7cd37ab7d154eac7be5605a6",
   "compatibilityFactCutRoot": "sha256:58f33e498596505a26b6fc3c7ae5acef847ff699eee6c7e17a7b318a40bdf0d6",
   "compatibilityProofRegistryRoot": "sha256:2f6477405c7891b754b33ad6515d55618bd320e7cdc59330d7cc645e17201e72",
-  "compatibilityDigest": "sha256:72fba06daca690e446f18c2a6314e13a5a19294e49f11f0a236caf3bbdbb76ab",
-  "contractDigest": "sha256:943ad516b060fd3d4f0fb2763b2d83082201081513137c8d4a9df74d3fc29edb"
+  "compatibilityDigest": "sha256:b1088f1c224329b16cd23c285bc69334aa1ee102e5b44d5c09aaf156d76821b6",
+  "contractDigest": "sha256:ffc9c3f30d0a570afa91433429b7bcabaf1ef8055e0ed1af82f0dda2d950aeff"
 }

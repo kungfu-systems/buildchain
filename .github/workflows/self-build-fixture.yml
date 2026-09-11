@@ -16,6 +16,11 @@ on:
         type: string
         required: false
         default: ""
+      resume-run-id:
+        description: Original failed fixture build; preserve its source and valid checkpoints.
+        type: string
+        required: false
+        default: ""
       contract-lock:
         description: Optional consumer runtime lock path.
         type: string
@@ -39,6 +44,7 @@ jobs:
         uses: $/actions/runtime/selection/resolve
         with:
           runtime-ref: ${{ inputs.runtime-ref }}
+          resume-run-id: ${{ inputs.resume-run-id }}
           contract-lock: ${{ inputs.contract-lock }}
           workflow-ref: ${{ job.workflow_ref }}
           workflow-sha: ${{ job.workflow_sha }}
@@ -69,7 +75,7 @@ jobs:
       - name: Checkout exact candidate source
         uses: actions/checkout@v7.0.0
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ fromJSON(needs.execution-runtime.outputs.selection).source.sha }}
           persist-credentials: false
         id: source-checkout
       - name: Prepare selected execution runtime

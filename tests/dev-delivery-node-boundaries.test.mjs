@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import {
   sourceCoordinates,
   validateNativeContract,
-  validateRuntimeSelector,
 } from "../packages/core/dev-delivery/candidate/coordinates.js";
 import { assertBranchUnlocked } from "../packages/core/dev-delivery/../providers/dev-delivery/protection.js";
 import { deliverySubmissionRequest } from "../packages/core/dev-delivery/candidate/submission.js";
@@ -61,17 +60,7 @@ test("native source admission requires an exact environment before effects", () 
   );
   assert.throws(() => validateNativeContract({ deliveryClass: "unknown" }));
 });
-test("runtime selector admits the current version line without old runtime defaults", () => {
-  for (const value of [
-    "v4",
-    "v4-alpha",
-    "c".repeat(40),
-    "train/v4/v4.1/native",
-  ])
-    validateRuntimeSelector({ runtimeRef: value });
-  for (const value of ["v3", "", "train/v4/v4.1/../secret", "dev/v4/v4.1"])
-    assert.throws(() => validateRuntimeSelector({ runtimeRef: value }));
-});
+
 test("locked branch check combines classic and applied protection and fails closed", async () => {
  const input = { branch: "dev/v4/v4.1", repository: "owner/repo" };
  const run = (classic, rules) => assertBranchUnlocked(input, { request: async endpoint => {

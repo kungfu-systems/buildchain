@@ -211,7 +211,8 @@ test("build fixture keeps project settings in TOML and seals exact candidate byt
   assert.match(config, /environment = "github-hosted-container"/u);
   assert.match(config, /release_candidate = true/u);
   assert.match(workflow, /uses: kungfu-systems\/buildchain\/.github\/workflows\/build.yml@v4/u);
-  assert.match(workflow, /ref: \$\{\{ github\.sha \}\}/u);
+  assert.match(workflow, /ref: \$\{\{ fromJSON\(needs\.execution-runtime\.outputs\.selection\)\.source\.sha \}\}/u);
+  assert.match(workflow, /resume-run-id: \$\{\{ inputs\.resume-run-id \}\}/u);
   const graph = inspectWorkflowJob(".github/workflows/self-build-fixture.yml", "buildchain-package-candidate");
   assert.match(graph.job.steps.find(step => step.id === "node").with["passport-artifact"], /needs\.libnode-shaped\.outputs\.release-candidate-artifact/u);
   const download = graph.steps.findIndex(step => step.name === "Download exact Release Candidate Passport");

@@ -4,6 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import YAML from "yaml";
+import { scaffoldBuildWorkflow, scaffoldVerifyWorkflow, scaffoldReleaseWorkflow } from "../packages/core/paper/operations/scaffold-workflows.js";
+import { publicationRehearsalWorkflow } from "../packages/core/publication/publication-rehearsal-projection.js";
 import { auditRuntimeEntry } from "../scripts/check-runtime-entry.mjs";
 function fixture(t, steps) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "runtime-entry-architecture-"));
@@ -27,4 +29,26 @@ for(const [name,steps,reason] of [
   ["independent runtime checkout",[{uses:"actions/checkout@v7",with:{path:".buildchain/runtime"}},business],"acquisition belongs"],
 ])test(`architecture rejects ${name}`,t=>{
   assert.ok(auditRuntimeEntry(fixture(t,steps)).issues.some(issue=>issue.includes(reason)));
+});
+
+test("business JavaScript cannot bypass preparation with git clone", t => {
+  const root = fixture(t, [prepare, business]);
+  const directory = path.join(root, "packages/core/release");
+  fs.mkdirSync(directory, { recursive: true });
+  fs.writeFileSync(path.join(directory, "acquire.js"), 'execFileSync("git", ["clone", repository, ".buildchain/runtime"]);');
+  assert.ok(auditRuntimeEntry(root).issues.some(issue => issue.includes("business code cannot acquire")));
+});
+
+test("generated consumers use declared public inputs and a floating entry", () => {
+  const repository = path.resolve(import.meta.dirname, "..");
+  for (const generate of [scaffoldBuildWorkflow, scaffoldVerifyWorkflow, scaffoldReleaseWorkflow, publicationRehearsalWorkflow]) {
+    const workflow = YAML.parse(generate("v4-alpha"));
+    for (const job of Object.values(workflow.jobs)) {
+      const match = job.uses.match(/^kungfu-systems\/buildchain\/(.+)@v4-alpha$/u);
+      assert.ok(match, job.uses);
+      const entry = YAML.parse(fs.readFileSync(path.join(repository, match[1]), "utf8"));
+      for (const input of Object.keys(job.with || {})) assert.ok(Object.hasOwn(entry.on.workflow_call.inputs, input), `${job.uses}: ${input}`);
+    }
+  }
+  assert.throws(() => publicationRehearsalWorkflow("train/v4/v4.1/repair"), /floating public entry/);
 });

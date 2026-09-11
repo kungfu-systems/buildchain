@@ -36,11 +36,3 @@ export function validateNativeContract(request) {
     "environment-root must be an exact sha256 content root before required native Warrant admission",
   );
 }
-export function validateRuntimeSelector(request) {
-  requireValue(
-    /^(?:v4(?:-alpha)?|[0-9a-f]{40}|train\/v4\/v4\.\d+\/[a-z0-9][a-z0-9._-]*)$/u.test(
-      request.runtimeRef || "",
-    ),
-    "buildchain-ref must be an exact SHA, v4, v4-alpha, or a v4 capability train",
-  );
-}

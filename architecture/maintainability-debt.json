@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 38857,
-    "current": 30796
+    "measuredExcess": 38852,
+    "current": 30791
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -492,17 +492,20 @@
             },
             "createGithubRulesetGovernanceRolloutPlan@1190": {
               "complexity": 36
+            },
+            "createGithubRulesetGovernanceRolloutPlan@1185": {
+              "complexity": 36
             }
           }
         },
         "current": {
-          "lines": 1367,
+          "lines": 1362,
           "functions": {
             "evaluateGithubGovernanceSnapshot@695": {
               "lines": 189,
               "complexity": 41
             },
-            "createGithubRulesetGovernanceRolloutPlan@1190": {
+            "createGithubRulesetGovernanceRolloutPlan@1185": {
               "complexity": 36
             }
           }
@@ -515,6 +518,9 @@
               "complexity": 25
             },
             "createGithubRulesetGovernanceRolloutPlan@1190": {
+              "complexity": 25
+            },
+            "createGithubRulesetGovernanceRolloutPlan@1185": {
               "complexity": 25
             }
           }
@@ -996,18 +1002,27 @@
             },
             "validateReleaseCandidatePassport@474": {
               "complexity": 38
+            },
+            "normalizeFamilyReleaseEvidence@231": {
+              "complexity": 26
+            },
+            "createReleaseCandidatePassport@367": {
+              "complexity": 37
+            },
+            "validateReleaseCandidatePassport@472": {
+              "complexity": 38
             }
           }
         },
         "current": {
           "functions": {
-            "normalizeFamilyReleaseEvidence@232": {
+            "normalizeFamilyReleaseEvidence@231": {
               "complexity": 26
             },
-            "createReleaseCandidatePassport@368": {
+            "createReleaseCandidatePassport@367": {
               "complexity": 36
             },
-            "validateReleaseCandidatePassport@474": {
+            "validateReleaseCandidatePassport@472": {
               "complexity": 37
             }
           }
@@ -1030,6 +1045,15 @@
               "complexity": 25
             },
             "validateReleaseCandidatePassport@474": {
+              "complexity": 25
+            },
+            "normalizeFamilyReleaseEvidence@231": {
+              "complexity": 25
+            },
+            "createReleaseCandidatePassport@367": {
+              "complexity": 25
+            },
+            "validateReleaseCandidatePassport@472": {
               "complexity": 25
             }
           }
@@ -1575,13 +1599,16 @@
             },
             "<anonymous@1401>@1401": {
               "lines": 206
+            },
+            "<anonymous@1402>@1402": {
+              "lines": 206
             }
           }
         },
         "current": {
-          "lines": 2560,
+          "lines": 2561,
           "functions": {
-            "<anonymous@1401>@1401": {
+            "<anonymous@1402>@1402": {
               "lines": 206
             }
           }
@@ -1593,6 +1620,9 @@
               "lines": 180
             },
             "<anonymous@1401>@1401": {
+              "lines": 180
+            },
+            "<anonymous@1402>@1402": {
               "lines": 180
             }
           }
@@ -1689,7 +1719,7 @@
           "lines": 1422
         },
         "current": {
-          "lines": 1382
+          "lines": 1384
         },
         "target": {
           "lines": 600
@@ -1780,13 +1810,16 @@
           "functions": {
             "<anonymous@818>@818": {
               "lines": 205
+            },
+            "<anonymous@814>@814": {
+              "lines": 205
             }
           }
         },
         "current": {
-          "lines": 1136,
+          "lines": 1133,
           "functions": {
-            "<anonymous@818>@818": {
+            "<anonymous@814>@814": {
               "lines": 205
             }
           }
@@ -1795,6 +1828,9 @@
           "lines": 600,
           "functions": {
             "<anonymous@818>@818": {
+              "lines": 180
+            },
+            "<anonymous@814>@814": {
               "lines": 180
             }
           }

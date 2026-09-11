@@ -21,7 +21,7 @@ ai_provenance:
 
 Buildchain 4.1 uses responsibility layers, then capability directories. The
 reusable workflow is the primary consumer API. This development line is
-`4.1.0-alpha.0`; these changes do not themselves publish an alpha release.
+`4.1.0-alpha.1`; these changes do not themselves publish an alpha release.
 
 ```text
 .github/workflows/                 Consumer APIs and hosted job topology

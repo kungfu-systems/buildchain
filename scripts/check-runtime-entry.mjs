@@ -60,12 +60,29 @@ function auditAction(step, { file, at, prepared }, issues) {
   if (file.startsWith("actions/") && uses === preparation)
     issues.push(`${at}: business composites cannot prepare a second runtime`);
 }
+function auditBusinessAcquisition(root, directory, issues) {
+  const absolute = path.join(root, directory);
+  if (!fs.existsSync(absolute)) return;
+  for (const entry of fs.readdirSync(absolute, { withFileTypes: true })) {
+    const file = `${directory}/${entry.name}`;
+    if (entry.isDirectory()) {
+      if (!["node_modules", "dist"].includes(entry.name)) auditBusinessAcquisition(root, file, issues);
+      continue;
+    }
+    if (!/\.(?:[cm]?js|sh|py|ps1)$/u.test(file) || file.startsWith("packages/core/runtime/entry/")) continue;
+    const source = fs.readFileSync(path.join(root, file), "utf8");
+    const runtime = /\.buildchain\/(?:runtime|workflow-shell|promotion-router)|BUILDCHAIN_RUNTIME_(?:ROOT|SHA)/u.test(source);
+    const acquisition = /["'](?:clone|checkout)["']|git\s+(?:clone|checkout)/u.test(source);
+    if (runtime && acquisition) issues.push(`${file}: business code cannot acquire an execution runtime`);
+  }
+}
 export function auditRuntimeEntry(root) {
   const issues = [];
   const files = [
     ...yamlFiles(root, "actions"),
     ...yamlFiles(root, ".github/workflows"),
   ];
+  auditBusinessAcquisition(root, "packages/core", issues);
   let acquisitions = 0;
   for (const file of files) {
     const doc = YAML.parse(fs.readFileSync(path.join(root, file), "utf8"));

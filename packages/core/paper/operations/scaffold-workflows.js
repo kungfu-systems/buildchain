@@ -7,6 +7,11 @@ export function scaffoldBuildWorkflow(
 
 on:
   workflow_dispatch:
+    inputs:
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        required: false
+        default: ""
   pull_request:
   push:
     branches:
@@ -22,6 +27,7 @@ jobs:
   publication:
     uses: kungfu-systems/buildchain/.github/workflows/public-build-publication.yml@${entryRef}
     with:
+      runtime-ref: \${{ inputs.runtime-ref || '' }}
       contract-lock: .buildchain/contract-lock.json
       toolchain-type: config
       verify-command: make check
@@ -39,6 +45,11 @@ on:
       - "alpha/v*/v*"
       - "release/v*/v*"
   workflow_dispatch:
+    inputs:
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        required: false
+        default: ""
 
 permissions:
   actions: read
@@ -49,6 +60,7 @@ jobs:
   check:
     uses: kungfu-systems/buildchain/.github/workflows/public-build-check.yml@${entryRef}
     with:
+      runtime-ref: \${{ inputs.runtime-ref || '' }}
       require-version-state: true
       upload-artifacts: true
 `;
@@ -64,6 +76,11 @@ export function scaffoldReleaseWorkflow(
 
 on:
   workflow_dispatch:
+    inputs:
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        required: false
+        default: ""
   push:
     branches:
       - "alpha/**"
@@ -83,6 +100,7 @@ jobs:
       issues: write
       pull-requests: write
     with:
+      runtime-ref: \${{ inputs.runtime-ref || '' }}
       contract-lock: .buildchain/contract-lock.json
       publisher-workflow-path: .github/workflows/public-release-paper.yml
       toolchain-type: config

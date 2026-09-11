@@ -12773,7 +12773,7 @@
       ],
       "source": {
         "path": "packages/core/governance/github-governance-authority.js",
-        "line": 1364
+        "line": 1359
       },
       "example": "import { BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12797,7 +12797,7 @@
       ],
       "source": {
         "path": "packages/core/governance/github-governance-authority.js",
-        "line": 1366
+        "line": 1361
       },
       "example": "import { BUILDCHAIN_GITHUB_GOVERNANCE_PROTECTED_PATHS } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12912,7 +12912,7 @@
       ],
       "source": {
         "path": "packages/core/governance/github-governance-authority.js",
-        "line": 933
+        "line": 928
       },
       "example": "import { createGithubGovernanceRolloutPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12941,7 +12941,7 @@
       ],
       "source": {
         "path": "packages/core/governance/github-governance-authority.js",
-        "line": 1111
+        "line": 1106
       },
       "example": "import { createGithubRulesetBypassRolloutPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12970,7 +12970,7 @@
       ],
       "source": {
         "path": "packages/core/governance/github-governance-authority.js",
-        "line": 1190
+        "line": 1185
       },
       "example": "import { createGithubRulesetGovernanceRolloutPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -13211,7 +13211,7 @@
       ],
       "source": {
         "path": "packages/core/governance/github-governance-authority.js",
-        "line": 1026
+        "line": 1021
       },
       "example": "import { normalizeGithubBranchProtectionSnapshot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -13240,7 +13240,7 @@
       ],
       "source": {
         "path": "packages/core/governance/github-governance-authority.js",
-        "line": 1096
+        "line": 1091
       },
       "example": "import { normalizeGithubRulesetSnapshot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -13340,7 +13340,7 @@
       "id": "packages/core/governance/github-governance-authority.js#verifyGithubGovernanceReceipt",
       "name": "verifyGithubGovernanceReceipt",
       "kind": "function",
-      "signature": "function verifyGithubGovernanceReceipt(receipt, { expectedOrganization, expectedRepository, expectedRepositoryIdentityRoot, expectedTargetRef, expectedPolicyRoot, expectedVerifierSourceRevision, now = new Date().toISOString(), } = {})",
+      "signature": "function verifyGithubGovernanceReceipt(receipt, { expectedOrganization, expectedRepository, expectedRepositoryIdentityRoot, expectedTargetRef, expectedPolicyRoot, now = new Date().toISOString(), } = {})",
       "parameters": [
         {
           "name": "receipt",
@@ -13348,7 +13348,7 @@
         },
         {
           "name": "parameter2",
-          "signature": "{ expectedOrganization, expectedRepository, expectedRepositoryIdentityRoot, expectedTargetRef, expectedPolicyRoot, expectedVerifierSourceRevision, now = new Date().toISOString(), } = {}"
+          "signature": "{ expectedOrganization, expectedRepository, expectedRepositoryIdentityRoot, expectedTargetRef, expectedPolicyRoot, now = new Date().toISOString(), } = {}"
         }
       ],
       "returns": "unknown",
@@ -16206,11 +16206,11 @@
       "id": "packages/core/paper/operations/plans.js#createPaperResumePlan",
       "name": "createPaperResumePlan",
       "kind": "function",
-      "signature": "function createPaperResumePlan({ cwd = process.cwd(), buildchainRef = \"\", } = {})",
+      "signature": "function createPaperResumePlan({ cwd = process.cwd(), runtimeRef = \"\", } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ cwd = process.cwd(), buildchainRef = \"\", } = {}"
+          "signature": "{ cwd = process.cwd(), runtimeRef = \"\", } = {}"
         }
       ],
       "returns": "unknown",
@@ -21583,7 +21583,7 @@
       ],
       "source": {
         "path": "packages/core/release/release-candidate-recovery.js",
-        "line": 581
+        "line": 580
       },
       "example": "import { recoveryFailure } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21718,7 +21718,7 @@
       ],
       "source": {
         "path": "packages/core/release/release-candidate-recovery.js",
-        "line": 442
+        "line": 441
       },
       "example": "import { verifyReleaseCandidateRecovery } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21747,7 +21747,7 @@
       ],
       "source": {
         "path": "packages/core/release/release-candidate.js",
-        "line": 368
+        "line": 367
       },
       "example": "import { createReleaseCandidatePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21853,7 +21853,7 @@
       ],
       "source": {
         "path": "packages/core/release/release-candidate.js",
-        "line": 474
+        "line": 472
       },
       "example": "import { validateReleaseCandidatePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -28561,7 +28561,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-rehearsal-projection",
       "export": "./publication-rehearsal-projection",
       "target": "./packages/core/publication/publication-rehearsal-projection.js",
-      "digest": "sha256:24f9131c8b4b8836a8a38fee2abcb3e5c970fce1b7a79e8cb782c4dab1c9dbe8",
+      "digest": "sha256:baf6517164dc657c8d28b866fc00f86a79be8459ffe4f55833da195056766c4b",
       "summary": "Compatibility projection helpers that emit only the current source-bound v4 publication rehearsal configuration and workflow.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -29093,7 +29093,7 @@
       "specifier": "@kungfu-tech/buildchain/github-governance-authority",
       "export": "./github-governance-authority",
       "target": "./packages/core/governance/github-governance-authority.js",
-      "digest": "sha256:be414477863edbb8d38f540ec2f0c9025b32e9e8e14ad7ce6846125943f9dbbd",
+      "digest": "sha256:78a4a33e1791d97de21d31f24d1aaf1e10a9cc17090c25f025c9d48e66b1bd61",
       "summary": "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -29239,7 +29239,7 @@
       "specifier": "@kungfu-tech/buildchain/release-candidate",
       "export": "./release-candidate",
       "target": "./packages/core/release/release-candidate.js",
-      "digest": "sha256:c7acc6d45224a2e697e27271f53426dd300e073bb20701278f667f7497e6d0fc",
+      "digest": "sha256:1ab612bf423620c0d4fb48811e5fe5ef00f5bb68d0f684918839a78354b72912",
       "summary": "PR-stage release-candidate artifact, passport, and promote-only resolver APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -29266,7 +29266,7 @@
       "specifier": "@kungfu-tech/buildchain/release-candidate-recovery",
       "export": "./release-candidate-recovery",
       "target": "./packages/core/release/release-candidate-recovery.js",
-      "digest": "sha256:646c7e3b966cce194bfe3f2226295a5f8b5e51c7fb2fba33d8c90268cbd28387",
+      "digest": "sha256:0d91887a6e1d5d12535a4a3701a22b5ac2e49abb0d692e5e42fe26ac4d6cc5df",
       "summary": "Fail-closed verification and immutable receipts for reusing a successful sealed candidate run without rebuilding product payloads.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -30020,7 +30020,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:0117b071ca3d991400d93c41e2e1e37cf44e268ef635350694bb5cbd8e6e124a"
+      "digest": "sha256:ba1b9db61750646d507f086f0f267965a94b6c1276ab6d9f958ca4645b2a5073"
     },
     {
       "id": "build-facts",

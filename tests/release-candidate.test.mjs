@@ -1297,7 +1297,7 @@ test("generateReleaseCandidatePassportCli writes GitHub outputs for workflow reu
       `${JSON.stringify(sampleBuildSummary(), null, 2)}\n`,
     );
     process.env = {
-      ...previousEnv,
+      ...Object.fromEntries(Object.entries(previousEnv).filter(([key]) => !key.startsWith("BUILDCHAIN_") && !key.startsWith("GITHUB_"))),
       GITHUB_REPOSITORY: "kungfu-systems/libnode",
       GITHUB_OUTPUT: path.join(cwd, "outputs.txt"),
     };

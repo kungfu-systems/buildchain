@@ -430,7 +430,7 @@
       {
         "id": "paper-resume",
         "source": "bin/buildchain.mjs",
-        "usage": "buildchain paper resume [--cwd <dir>] [--buildchain-ref <ref>] [--execute] [--json]"
+        "usage": "buildchain paper resume [--cwd <dir>] [--runtime-ref <ref>] [--execute] [--json]"
       },
       {
         "id": "paper-scaffold",
@@ -10830,9 +10830,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "064977352dff4ecf6696c7b91e7bb6cc647a2e87aa89c5dddd8127340f6d949c",
+    "cliRegistryDigest": "e43fdb0289df88871f3f0febbe04dcb9311a252a2b1df9b3a83a2d10c9d4a70f",
     "workflowRegistryDigest": "f6c205601a9ee262363efaa672ff9190b7054f7d4ad98102825aca89dc545a4a",
-    "pageRegistryDigest": "9b5dc07d7e040a7b8d59285d14684ea7250c2016b79b483b3dd82e25ee7b16f9"
+    "pageRegistryDigest": "f178b78bded0540b5df8e0365abb8b79f263a0a7f0d59eeacdf3d46e54681fae"
   },
   "comparison": {
     "missingCliRegistry": [],

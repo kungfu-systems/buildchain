@@ -12,41 +12,13 @@ export function normalizeMembership(result) {
       };
 }
 
-export function resolveVerifierSourceRevision(
-  root,
-  requested = "",
-  run = spawnSync,
-) {
+export function readVerifierSourceRevision(root, run = spawnSync) {
   const result = run("git", ["-C", root, "rev-parse", "HEAD"], {
     encoding: "utf8",
     timeout: 10_000,
   });
-  const revision = String(result.stdout || "").trim();
-  if (result.status !== 0 || !/^[0-9a-f]{40}$/i.test(revision)) {
-    throw new Error("verifier source revision is unavailable");
-  }
-  const cleanliness = run(
-    "git",
-    ["-C", root, "diff", "--quiet", "HEAD", "--"],
-    {
-      encoding: "utf8",
-      timeout: 10_000,
-    },
-  );
-  if (cleanliness.status !== 0) {
-    throw new Error("verifier checkout contains tracked drift");
-  }
-  const normalized = revision.toLowerCase();
-  if (
-    requested &&
-    (!/^[0-9a-f]{40}$/i.test(requested) ||
-      requested.toLowerCase() !== normalized)
-  ) {
-    throw new Error(
-      "requested verifier source revision does not match the current checkout",
-    );
-  }
-  return normalized;
+  if (result.status !== 0) throw new Error("verifier source provenance is unavailable");
+  return String(result.stdout || "").trim();
 }
 
 export function addMinutes(iso, minutes) {

@@ -133,7 +133,7 @@ export function createPaperAlphaPlan({
 }
 export function createPaperResumePlan({
   cwd = process.cwd(),
-  buildchainRef = "",
+  runtimeRef = "",
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const status = collectPaperStatus({ cwd: resolvedCwd });
@@ -179,7 +179,7 @@ export function createPaperResumePlan({
   const command = [
     "gh workflow run .github/workflows/public-release-paper.yml",
     targetRef ? `--ref ${targetRef}` : "",
-    buildchainRef ? `-f buildchain-ref=${buildchainRef}` : "",
+    runtimeRef ? `-f runtime-ref=${runtimeRef}` : "",
   ]
     .filter(Boolean)
     .join(" ");

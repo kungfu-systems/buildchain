@@ -236,6 +236,10 @@ function createTreeEquivalentReleaseImpact({
 }
 
 function assertAllowedLocalChanges(cwd, allowedPaths) {
+  const dependencies = fs.lstatSync(path.join(cwd, "node_modules"), { throwIfNoEntry: false });
+  if (dependencies?.isSymbolicLink()) {
+    throw new Error("Unexpected local changes: ?? node_modules (dependency bridge)");
+  }
   const allowed = new Set(allowedPaths);
   const output = execSync("git status --porcelain --untracked-files=all", {
     cwd,

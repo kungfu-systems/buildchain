@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import { getOctokit } from "@actions/github";
-import { installationRoot } from "../../runtime/installation-root.js";
 import {
   collectGovernanceEvidence,
   finalizeGovernanceEvidence,
@@ -17,8 +16,7 @@ export function collectGovernanceEvidenceAction(core, env) {
     repository: scoped ? env.GITHUB_REPOSITORY : "",
     targetRef:
       event.pull_request?.base?.ref || event.merge_group?.base_ref || "",
-    sourceSha: env.GITHUB_SHA,
-    runtimeRoot: installationRoot(import.meta.url),
+    runtimeSha: env.BUILDCHAIN_RUNTIME_SHA,
     workspace: env.GITHUB_WORKSPACE,
     token: core.getInput("token", { required: true }),
   });

@@ -339,7 +339,7 @@ name: Build
 on:
   workflow_dispatch:
     inputs:
-      buildchain-ref:
+      runtime-ref:
         description: "Temporary Buildchain runtime ref for trusted manual validation"
         required: false
         default: ""
@@ -358,7 +358,7 @@ jobs:
   publication:
     uses: kungfu-systems/buildchain/.github/workflows/public-build-publication.yml@v4
     with:
-      buildchain-ref: \${{ inputs.buildchain-ref || '' }}
+      runtime-ref: \${{ inputs.runtime-ref || '' }}
       toolchain-type: config
       verify-command: make check
       artifact-name: publication-artifact
