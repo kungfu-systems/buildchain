@@ -39,6 +39,7 @@ export function qualifyBuildBackboneAction(_core, env) {
       "--test",
       "tests/build-orchestration.test.mjs",
       "tests/build-artifact-pipeline.test.mjs",
+      "tests/dev-delivery-minimal-request.test.mjs",
     ],
     { cwd: root, env },
   );
