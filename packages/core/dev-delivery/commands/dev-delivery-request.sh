@@ -65,11 +65,12 @@ qualified_base="$(jq -r --argjson number "$number" '.pull_requests[] | select(.n
 for revision in "$source_head" "$qualified_base"; do
   git cat-file -e "$revision^{commit}" 2>/dev/null || git fetch --no-tags origin "$revision"
 done
-affected_paths="$(git diff --name-only --no-renames "$qualified_base...$source_head" | jq -Rsc 'split("\n") | map(select(length > 0)) | sort')"
+affected_paths="$(git diff --name-only --no-renames "$qualified_base...$source_head" | jq -Rsc 'split("\n") | map(rtrimstr("\r")) | map(select(length > 0)) | sort')"
 [ "$(jq length <<<"$affected_paths")" -gt 0 ] || { echo "buildchain dev deliver: PR has no source changes" >&2; exit 1; }
 
 paths_at_head() {
   while IFS= read -r item; do
+    item="${item%$'\r'}"
     if git cat-file -e "$source_head:$item" 2>/dev/null; then printf '%s\n' "$item"; fi
   done | jq -Rsc 'split("\n") | map(select(length > 0)) | sort'
 }
