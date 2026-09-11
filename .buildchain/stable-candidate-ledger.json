@@ -6,7 +6,7 @@
   "hold": {
     "enabled": false,
     "reason": "",
-    "updatedAt": "2026-09-11T17:09:34.428Z"
+    "updatedAt": "2026-09-11T18:28:25.908Z"
   },
   "candidates": [
     {
@@ -176,9 +176,43 @@
         "requestedAt": "2026-09-11T15:48:06.165Z",
         "authority": "human"
       }
+    },
+    {
+      "version": "4.1.1-alpha.0",
+      "stableVersion": "4.1.1",
+      "sha": "92ce28afbe7757f6594c0a592334c0a65772835b",
+      "tag": "v4.1.1-alpha.0",
+      "publishedAt": "2026-09-11T18:05:26.000Z",
+      "state": "revoked",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-09-11T18:28:25.908Z",
+        "soakStartedAt": "",
+        "soakElapsedSeconds": 0,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-09-11T18:05:26.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v4.1.1-alpha.0"
+          },
+          {
+            "id": "status:buildchain-canary/buildchain-zero-input",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          }
+        ]
+      },
+      "decision": {
+        "reason": "Publication 34631001672 exposed an unhandled GitHub internal enqueue response; recovery 34632056172 completed the original publication. Preserve this alpha while a subsequent alpha includes the queue response repair before stable promotion.",
+        "actor": "repository-policy",
+        "updatedAt": "2026-09-11T18:28:25.908Z"
+      }
     }
   ],
-  "updatedAt": "2026-09-11T17:09:34.428Z",
+  "updatedAt": "2026-09-11T18:28:25.908Z",
   "stableReleases": [
     {
       "version": "4.0.9",
