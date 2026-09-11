@@ -113,7 +113,7 @@
       "./package.json": "./package.json",
       "./oci-publication": "./packages/core/publication/oci-publication-bundle.js",
       "./floating-consumer-policy": "./packages/core/consumer/floating-consumer-policy.js",
-      "./runtime-ref-resume-authority": "./packages/core/consumer/runtime-ref-resume-authority.js",
+      "./runtime-resume-lineage": "./packages/core/release/recovery/lineage.js",
       "./tail-reseal": "./packages/core/release/tail-reseal.js",
       "./tail-reseal-receipt": "./packages/core/release/tail-reseal-receipt.js",
       "./publication-rehearsal": "./packages/core/publication/publication-rehearsal.js",

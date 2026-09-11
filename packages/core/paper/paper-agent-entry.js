@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { paperRuntimeSourceMatches } from "./paper-runtime-channels.js";
 
 import {
   PAPER_PATHS,
@@ -281,14 +280,11 @@ export function collectPaperAgentEntry({
   buildchainSha = "",
   mode = "contract",
   env = process.env,
-  runtimeAdmission,
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const developmentRef = paperDevelopmentRef(resolvedCwd);
   const source = readJson(path.resolve(resolvedCwd, PAPER_PATHS.agentEntry));
   const entry = source.value || {};
-  const effectiveBuildchainSha =
-    buildchainSha || String(entry.runtime?.sourceSha || "");
   const packageJson =
     readJson(path.resolve(resolvedCwd, "package.json")).value || {};
   const pinPath = path.resolve(resolvedCwd, PAPER_PATHS.versionPin);
@@ -333,13 +329,6 @@ export function collectPaperAgentEntry({
         packageJson.devDependencies?.["@kungfu-tech/buildchain"] === versionPin,
       "The agent-entry contract, version pin, and exact Buildchain dependency agree.",
       "buildchain paper migrate --write --json && pnpm install --lockfile-only",
-    ),
-    workCheck(
-      "agent-entry.runtime-source",
-      GIT_SHA_PATTERN.test(effectiveBuildchainSha) &&
-        paperRuntimeSourceMatches(entry.runtime, effectiveBuildchainSha, mode, runtimeAdmission),
-      "The executing Buildchain source is pinned locally or admitted by its v4 channel contract in CI.",
-      "buildchain paper migrate --write --json",
     ),
     workCheck(
       "agent-entry.development-ref",

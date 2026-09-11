@@ -13,9 +13,8 @@ inputs:
 outputs:
   controller-plan-artifact:
     description: controller-plan-artifact node result.
-    value:
-      buildchain-web-surface-controller-plan-${{ fromJSON(inputs.intent-json).production-source-sha
-      }}
+    value: buildchain-web-surface-controller-plan-${{
+      fromJSON(inputs.intent-json).production-source-sha }}
   controller-plan-json:
     description: controller-plan-json node result.
     value: ${{ steps.controller-plan.outputs.controller-plan-json }}
@@ -25,17 +24,6 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Checkout Buildchain runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
-        ref: ${{ fromJSON(inputs.runtime-json).runtime-sha }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - name: Prepare exact Buildchain runtime
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Initialize Web controller
       id: controller-plan
       uses: ./.buildchain/runtime/actions/web/controller/initialize
@@ -46,8 +34,7 @@ runs:
     - name: Upload web-surface controller plan
       uses: actions/upload-artifact@v7.0.1
       with:
-        name:
-          buildchain-web-surface-controller-plan-${{ fromJSON(inputs.intent-json).production-source-sha
-          }}
+        name: buildchain-web-surface-controller-plan-${{
+          fromJSON(inputs.intent-json).production-source-sha }}
         path: .buildchain/controller/plan.json
         if-no-files-found: error

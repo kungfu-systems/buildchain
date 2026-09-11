@@ -624,7 +624,7 @@ export {
 
 export * from "./release/release-propagation.js";
 export * from "./consumer/floating-consumer-policy.js";
-export * from "./consumer/runtime-ref-resume-authority.js";
+export * from "./release/recovery/lineage.js";
 export * from "./publication/publication-qualification.js";
 
 export {

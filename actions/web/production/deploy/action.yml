@@ -41,20 +41,9 @@ runs:
     - name: Admit source checkout
       id: source-boundary
       if: ${{ always() }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      uses: ./.buildchain/runtime/actions/build/source/admit
       with:
         source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
-    - name: Checkout Buildchain runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
-        ref: ${{ fromJSON(inputs.needs-runtime-outputs-runtime-sha) }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - name: Prepare exact Buildchain Node runtime
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Download web-surface plan
       uses: actions/download-artifact@v7.0.0
       with:
@@ -63,11 +52,15 @@ runs:
     - name: Verify sealed capability before artifact download
       uses: ./.buildchain/runtime/actions/web/publication/verify-capability
       with:
-        capability-json:
-          ${{ fromJSON(inputs.needs-publication-authority-outputs-capability-json) ||
-          fromJSON(inputs.needs-external-publication-authority-outputs-capability-json) }}
-        candidate-json: ${{ fromJSON(inputs.needs-publication-authority-outputs-candidate-json) }}
-        source-sha: ${{ fromJSON(inputs.needs-release-intent-outputs-production-source-sha) }}
+        capability-json: ${{
+          fromJSON(inputs.needs-publication-authority-outputs-capability-json)
+          ||
+          fromJSON(inputs.needs-external-publication-authority-outputs-capability-json)
+          }}
+        candidate-json: ${{
+          fromJSON(inputs.needs-publication-authority-outputs-candidate-json) }}
+        source-sha: ${{
+          fromJSON(inputs.needs-release-intent-outputs-production-source-sha) }}
         runtime-sha: ${{ fromJSON(inputs.needs-runtime-outputs-runtime-sha) }}
         environment: ${{ fromJSON(inputs.request-json).production-environment }}
         role-arn: ${{ fromJSON(inputs.request-json).production-aws-role-arn }}
@@ -78,7 +71,7 @@ runs:
         path: ${{ fromJSON(inputs.request-json).working-directory }}/${{
           fromJSON(inputs.request-json).artifact-path }}
     - name: Configure production AWS credentials
-      uses: ./.buildchain/workflow-shell/actions/providers/aws/configure
+      uses: ./.buildchain/runtime/actions/providers/aws/configure
       with:
         role: ${{ fromJSON(inputs.request-json).production-aws-role-arn }}
         region: ${{ fromJSON(inputs.request-json).aws-region }}
@@ -106,11 +99,15 @@ runs:
       with:
         request-json: ${{ inputs.request-json }}
         channel: production
-        job-status: ${{ job.status == 'cancelled' && 'cancelled' || github.action_status == 'failure' && 'failure' || 'success' }}
+        job-status: ${{ job.status == 'cancelled' && 'cancelled' || github.action_status
+          == 'failure' && 'failure' || 'success' }}
         runtime-sha: ${{ fromJSON(inputs.needs-runtime-outputs-runtime-sha) }}
         rollback-pointer: ${{ fromJSON(inputs.needs-runtime-outputs-rollback-ref) }}
-        release-pr: ${{ fromJSON(inputs.needs-release-intent-outputs-production-release-pr) }}
-        release-source: ${{ fromJSON(inputs.needs-release-intent-outputs-production-release-source) }}
+        release-pr: ${{
+          fromJSON(inputs.needs-release-intent-outputs-production-release-pr) }}
+        release-source: ${{
+          fromJSON(inputs.needs-release-intent-outputs-production-release-source)
+          }}
         token: ${{ github.token }}
     - name: Upload production release passport
       if: ${{ always() }}

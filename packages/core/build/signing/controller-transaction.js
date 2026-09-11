@@ -42,7 +42,6 @@ export async function controlSigning(context) {
       authority = (
         await dispatch({
           authorityRepository: request.authority.repository,
-          authorityRef: request.runtime.ref,
           runtimeSha: request.runtime.sha,
           sourceRepository: plan.run.repository,
           sourceRunId: plan.run.id,

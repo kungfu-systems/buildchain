@@ -34,11 +34,16 @@ jobs:
     uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4
 ```
 
-Use `@v4-alpha` to select the alpha runtime. The exact called workflow SHA is
-the runtime SHA; a second runtime selector cannot override it. Both the public
-`build.yml` and the `.build.yml` backbone expose exactly one optional input:
-`config-path`. Neither accepts command overrides, runtime refs, arbitrary JSON
-configuration or legacy aliases.
+Use `@v4-alpha` for the alpha entry. The entry selects the execution runtime
+from a transient `runtime-ref`, the selected `contract-lock`, or its own commit
+by default. The build API also accepts `config-path` and `resume-run-id`;
+`runtime-selection` transports the entry decision through nested workflows.
+All project commands and build options remain in TOML.
+
+A new recovery dispatch can pass a repaired train and the original failed run
+ID through the same entry. It restores matching retained build outputs, executes
+remaining verification and reads back provider effects. An entry defect requires
+an upgraded published entry and a full run. See [Runtime entry](runtime-entry.md).
 
 ## Project discovery
 
@@ -118,8 +123,9 @@ Other optional project sections are:
 | `build.evidence` | Repository files containing gate and candidate-family evidence |
 
 Declarative signing targets continue to belong to `[signing.artifacts]`.
-The 4.1 formal signing contract requires `authority/v4/v4.1/artifact-signing`
-with the protected `buildchain-artifact-signing` environment.
+Signing uses `public-release-signing-authority.yml@v4`, passes the selected runtime
+through its runtime parameter and retains the protected
+`buildchain-artifact-signing` environment.
 Credentials, authority profiles and signer identities cannot be supplied through
 that declaration. See [Release Candidate](release-candidate.md)
 and [GitHub Artifact Attestation](github-artifact-attestation.md).

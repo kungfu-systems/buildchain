@@ -17,9 +17,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Prepare the defining runtime
-      id: core
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
     - name: Check out admitted consumer
       uses: actions/checkout@v7.0.0
       with:
@@ -29,7 +26,7 @@ runs:
         path: .buildchain/consumer
         persist-credentials: false
     - name: Exercise public delivery and readback
-      uses: ./.buildchain/workflow-shell/actions/adoption/adopter/exercise-platform
+      uses: ./.buildchain/runtime/actions/adoption/adopter/exercise-platform
       with:
         request-json: ${{ inputs.request-json }}
         workflow-sha: ${{ inputs.workflow-sha }}
@@ -38,8 +35,7 @@ runs:
     - name: Preserve exact platform evidence
       uses: actions/upload-artifact@v7.0.1
       with:
-        name:
-          v4-adopter-delivery-${{ fromJSON(inputs.request-json).consumer }}-${{
+        name: v4-adopter-delivery-${{ fromJSON(inputs.request-json).consumer }}-${{
           inputs.platform }}-${{ github.sha }}
         path: .buildchain/adopter-delivery/**/*.json
         include-hidden-files: true

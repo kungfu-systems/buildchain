@@ -94,7 +94,11 @@ command = "npm publish"
   return consumerRoot;
 }
 
-function externalCampaign(platform, consumerRoot = externalConsumer()) {
+function externalCampaign(
+  platform,
+  consumerRoot = externalConsumer(),
+  command = "campaign",
+) {
   const workRoot = temp(`qualification-sample-consumer-${platform}`);
   const evidenceRoot = lifecycleEvidence(platform, runtimeRef, [
     "install",
@@ -103,7 +107,7 @@ function externalCampaign(platform, consumerRoot = externalConsumer()) {
   ]);
   const args = [
     "packages/core/build/commands/stage-capsule-qualification.mjs",
-    "campaign",
+    command,
     "--work-root",
     workRoot,
     "--platform",
@@ -129,7 +133,7 @@ function externalCampaign(platform, consumerRoot = externalConsumer()) {
     consumerRoot,
     evidenceRoot,
     workRoot,
-    report: JSON.parse(result.stdout),
+    report: command === "seed" ? null : JSON.parse(result.stdout),
   };
 }
 
@@ -333,20 +337,16 @@ test("external lifecycle and clean-process binding drift fail closed with typed 
     assert.match(result.stderr, new RegExp(expected, "u"));
   }
 
-  const seeded = externalCampaign("linux-x64");
+  const seeded = externalCampaign("linux-x64", externalConsumer(), "seed");
   const resumeArgs = seeded.args.slice();
   resumeArgs[1] = "resume";
-  const runtimeIndex = resumeArgs.indexOf("--runtime-ref") + 1;
-  resumeArgs[runtimeIndex] = "f".repeat(40);
-  const runtimeDrift = spawnSync(process.execPath, resumeArgs, {
+  resumeArgs[resumeArgs.indexOf("--runtime-ref") + 1] = "f".repeat(40);
+  const repaired = spawnSync(process.execPath, resumeArgs, {
     cwd: root,
     encoding: "utf8",
   });
-  assert.notEqual(runtimeDrift.status, 0);
-  assert.match(
-    runtimeDrift.stderr,
-    /stage-capsule-campaign-runtime-ref-drift/u,
-  );
+  assert.equal(repaired.status, 0, repaired.stderr);
+  assert.equal(JSON.parse(repaired.stdout).runtimeRef, "f".repeat(40));
 });
 
 test("aggregate CLI reads clean-run reports and emits the same qualification root", () => {
@@ -403,7 +403,7 @@ test("output drift, a failed fault, and incomplete consumer evidence are rejecte
   );
 });
 
-test("one explicit v3 switch rolls back without destroying retained state", () => {
+test("disabling checkpoint reuse preserves retained state", () => {
   const workRoot = path.join(temp("qualification-rollback"), "unused");
   const result = spawnSync(
     process.execPath,
@@ -499,7 +499,7 @@ test("architecture freezes the public consumer path, rollback, and authority cei
     architecture.publicConsumerDogfood.excludedStages.publish,
     "provider-mutation",
   );
-  assert.equal(architecture.publicConsumerDogfood.validationRef, "v4-alpha");
+  assert.equal(architecture.publicConsumerDogfood.validationRef, "v4");
   assert.equal(
     architecture.publicConsumerDogfood.reusableWorkflow,
     "kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml",
@@ -538,7 +538,7 @@ test("architecture freezes the public consumer path, rollback, and authority cei
   );
   assert.doesNotMatch(workflow, /stage-capsule-qualification:/u);
   assert.doesNotMatch(workflow, /stage-capsule-qualification\.mjs/u);
-  assert.match(workflow, /needs: stage-capsule-checkpoints/u);
+  assert.match(workflow, /needs:\s*- stage-capsule-checkpoints/u);
   assert.match(
     fs.readFileSync(
       path.join(root, "actions/build/verification/repository/action.yml"),
@@ -568,20 +568,18 @@ test("architecture freezes the public consumer path, rollback, and authority cei
     .join("\n");
   assert.match(canaryWorkflow, /workflow_call:/u);
   assert.match(canaryWorkflow, /workflow-sha: \$\{\{ job\.workflow_sha \}\}/u);
-  assert.equal(
-    (canaryNodes.match(/actions\/runtime\/selection\/workflow/g) || []).length,
-    3,
-  );
-  assert.match(
-    canaryNodes,
-    /workflow-sha: \$\{\{ steps.runtime.outputs.sha \}\}/u,
-  );
+  assert.doesNotMatch(canaryNodes, /actions\/runtime\/selection\/workflow/);
+  const prepare = /uses: \$\/actions\/runtime\/environment\/prepare/g;
+  assert.equal((canaryWorkflow.match(prepare) || []).length, 3);
   const action = fs.readFileSync(
     path.join(root, "packages/core/build/stage-capsule/actions.js"),
     "utf8",
   );
   assert.match(action, /sourceSha: env.GITHUB_SHA/);
-  assert.match(action, /Stage Capsule runtime differs from called workflow/);
+  assert.doesNotMatch(
+    action,
+    /Stage Capsule runtime differs from called workflow/,
+  );
   assert.match(action, /Stage Capsule consumer differs from invoked source/);
   const canary = fs.readFileSync(
     path.join(root, "packages/core/build/stage-capsule/canary.js"),

@@ -28,7 +28,6 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - sources: `packages/core/build/macos-credential-island/action.js`
 - sources: `packages/core/build/macos-credential-island/lib.js`
 - sources: `packages/core/consumer/buildchain-config.js`
-- sources: `packages/core/consumer/runtime-ref-resume-authority.js`
 - sources: `packages/core/contracts/buildchain-contract.js`
 - sources: `packages/core/dev-delivery/commands/dev-delivery-authority.mjs`
 - sources: `packages/core/dev-delivery/commands/dev-delivery-warrant-options.mjs`
@@ -109,6 +108,7 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - tests: `tests/release-propagation.test.mjs`
 - tests: `tests/web-surface.test.mjs`
 - workflows: `.github/workflows/public-release-web.yml`
+- workflows: `.github/workflows/self-ops-bootstrap-dogfood.yml`
 
 ### Current top twenty maintenance hotspots
 
@@ -132,6 +132,8 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - `.github/workflows/public-build-stage-capsule-canary.yml`
 - `.github/workflows/public-release-oci-compose-preview.yml`
 - `.github/workflows/public-release-promote.yml`
+- `.github/workflows/self-build-verify.yml`
+- `.github/workflows/self-release-promote.yml`
 
 ## action-process-runtime
 
@@ -324,6 +326,31 @@ Owner: Buildchain release maintainers
 
 - `node --test tests/binary-publication-coordinates-node.test.mjs`
 
+## build-checkpoint-recovery
+
+Owner: Buildchain build maintainers
+
+### Implementation
+
+- `packages/core/build/recovery/checkpoint.js`
+- `packages/core/build/recovery/transaction.js`
+
+### Contracts
+
+- `architecture/runtime-entry.json`
+
+### Tests
+
+- `tests/build-runtime-recovery.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/build-runtime-recovery.test.mjs`
+
 ## build-gate-profile
 
 Owner: Buildchain maintainers
@@ -342,7 +369,6 @@ Owner: Buildchain maintainers
 - `packages/core/build/gate/plan.js`
 - `packages/core/providers/toolchain/codebuild-policy.js`
 - `packages/core/providers/toolchain/codebuild.js`
-- `packages/core/runtime/runtime-selection.js`
 
 ### Contracts
 
@@ -564,7 +590,6 @@ Owner: Buildchain maintainers
 
 - `packages/core/contracts/action-inventory.js`
 - `packages/core/contracts/action-taxonomy.js`
-- `packages/core/contracts/runtime-contract-action.js`
 - `packages/core/contracts/runtime-contract-inspection.js`
 - `scripts/check-code-layout.mjs`
 
@@ -1233,7 +1258,6 @@ Owner: Buildchain release maintainers
 - `packages/core/release/recovery/readback.js`
 - `packages/core/release/recovery/runtime.js`
 - `packages/core/release/recovery/transactions.js`
-- `packages/core/runtime/provider-closure.js`
 
 ### Contracts
 
@@ -1367,17 +1391,13 @@ Owner: Buildchain release maintainers
 
 ### Implementation
 
-- `packages/core/consumer/channel-selection.js`
-- `packages/core/consumer/invocation-selector.js`
 - `packages/core/consumer/policy-admission.js`
 - `packages/core/consumer/policy-scan.js`
-- `packages/core/consumer/workflow-definition-authority.js`
 - `packages/core/release/promotion-request.js`
 - `packages/core/release/promotion/actions.js`
 - `packages/core/release/promotion/admission.js`
 - `packages/core/release/promotion/candidate.js`
 - `packages/core/release/promotion/channel.js`
-- `packages/core/release/promotion/identities.js`
 - `packages/core/release/promotion/publish-gate.js`
 - `packages/core/release/promotion/qualification-action.js`
 - `packages/core/release/promotion/qualification.js`
@@ -1394,7 +1414,7 @@ Owner: Buildchain release maintainers
 - `tests/promotion-qualification-transaction.test.mjs`
 - `tests/promotion-request.test.mjs`
 - `tests/promotion-routing-node.test.mjs`
-- `tests/source-owned-promotion-policy.test.mjs`
+- `tests/public-invocation-policy.test.mjs`
 
 ### Generated outputs
 
@@ -1402,31 +1422,7 @@ Owner: Buildchain release maintainers
 
 ### Minimal validation
 
-- `node --test tests/promotion-qualification-transaction.test.mjs tests/promotion-request.test.mjs tests/promotion-routing-node.test.mjs tests/source-owned-promotion-policy.test.mjs`
-
-## promotion-runtime-override-authorization
-
-Owner: Buildchain release governance maintainers
-
-### Implementation
-
-- `packages/core/release/runtime-override-authorization.js`
-
-### Contracts
-
-- `.github/workflows/public-release-promote.yml`
-
-### Tests
-
-- `tests/authorize-promotion-runtime-override.test.mjs`
-
-### Generated outputs
-
-- None.
-
-### Minimal validation
-
-- `node --test tests/authorize-promotion-runtime-override.test.mjs`
+- `node --test tests/promotion-qualification-transaction.test.mjs tests/promotion-request.test.mjs tests/promotion-routing-node.test.mjs tests/public-invocation-policy.test.mjs`
 
 ## promotion-version-state
 
@@ -1951,6 +1947,40 @@ Owner: Buildchain release governance maintainers
 
 - `node --test tests/workflow-call-contract.test.mjs tests/public-surface-audit.test.mjs`
 
+## runtime-entry
+
+Owner: Buildchain runtime maintainers
+
+### Implementation
+
+- `packages/core/runtime/entry/actions.js`
+- `packages/core/runtime/entry/activation.js`
+- `packages/core/runtime/entry/github.js`
+- `packages/core/runtime/entry/recovery.js`
+- `packages/core/runtime/entry/selection.js`
+- `scripts/check-runtime-entry.mjs`
+
+### Contracts
+
+- `architecture/runtime-entry.json`
+- `docs/runtime-entry.md`
+
+### Tests
+
+- `tests/runtime-entry-selection.test.mjs`
+- `tests/runtime-entry-activation.test.mjs`
+- `tests/runtime-entry-provider.test.mjs`
+- `tests/runtime-entry-architecture.test.mjs`
+
+### Generated outputs
+
+- `actions/runtime/selection/resolve/dist/index.js`
+- `actions/runtime/environment/activate/dist/index.js`
+
+### Minimal validation
+
+- `node --test tests/runtime-entry-selection.test.mjs tests/runtime-entry-activation.test.mjs tests/runtime-entry-provider.test.mjs tests/runtime-entry-architecture.test.mjs`
+
 ## runtime-provider-foundations
 
 Owner: Buildchain runtime provider foundations maintainers
@@ -1964,11 +1994,9 @@ Owner: Buildchain runtime provider foundations maintainers
 - `packages/core/runtime/consumer-shell.js`
 - `packages/core/runtime/installation-root.js`
 - `packages/core/runtime/locked-dependencies.js`
-- `packages/core/runtime/runtime-selection-action.js`
 - `packages/core/runtime/toolchain/actions.js`
 - `packages/core/runtime/toolchain/user-paths.js`
 - `packages/core/runtime/toolchain/windows-rust.js`
-- `packages/core/runtime/workflow-runtime.js`
 
 ### Contracts
 
@@ -2264,7 +2292,7 @@ Owner: Buildchain architecture maintainers
 - `packages/core/build/stage-capsule/rehearsal/run.js`
 - `packages/core/build/stage-capsule/rehearsal/verify.js`
 - `packages/core/build/stage-capsule/rehearsal/worker.js`
-- `packages/core/consumer/runtime-ref-resume-authority.js`
+- `packages/core/release/recovery/lineage.js`
 - `packages/core/consumer/runtime-selector-persistence.js`
 - `packages/core/governance/commands/architecture.mjs`
 - `packages/core/release/commands/tail-reseal.mjs`
@@ -2299,7 +2327,7 @@ Owner: Buildchain architecture maintainers
 - `architecture/stage-capsule-store-contract.json`
 - `architecture/platform-stage-checkpoints.json`
 - `architecture/stage-capsule-qualification.json`
-- `architecture/runtime-ref-resume-authority.json`
+- `architecture/runtime-resume-lineage.json`
 - `contracts/v4-host-contract-v1.schema.json`
 - `contracts/v4-provider-operation-journal-v1.schema.json`
 - `contracts/v4-release-activation-shadow-v1.schema.json`
@@ -2314,14 +2342,13 @@ Owner: Buildchain architecture maintainers
 - `contracts/fixtures/v4-release-activation-shadow-v1/shared.json`
 - `contracts/fixtures/v4-stable-publication-fence-v1/shared.json`
 - `contracts/fixtures/v4-partial-mutation-recovery-v1/shared.json`
-- `contracts/v4-runtime-ref-resume-authority-v1.schema.json`
-- `contracts/fixtures/v4-runtime-ref-resume-authority-v1/scenario.json`
+- `contracts/runtime-resume-lineage-v2.schema.json`
+- `contracts/fixtures/runtime-resume-lineage-v2/scenario.json`
 - `architecture/tail-reseal-parity.json`
 - `contracts/v4-tail-reseal-v1.schema.json`
 - `contracts/fixtures/v4-tail-reseal-v1/valid.json`
 - `.github/workflows/public-ops-tail-reseal.yml`
 - `docs/v4-stage-capsule.md`
-- `docs/v4-runtime-ref-resume-authority.md`
 - `docs/v4-tail-reseal.md`
 
 ### Tests
@@ -2337,7 +2364,7 @@ Owner: Buildchain architecture maintainers
 - `tests/stage-capsule-store.test.mjs`
 - `tests/platform-stage-checkpoints.test.mjs`
 - `tests/stage-capsule-qualification.test.mjs`
-- `tests/runtime-ref-resume-authority.test.mjs`
+- `tests/runtime-resume-lineage.test.mjs`
 - `tests/tail-reseal.test.mjs`
 - `tests/tail-reseal-parity.test.mjs`
 - `tests/stage-capsule-qualification.test.mjs`
@@ -2348,7 +2375,7 @@ Owner: Buildchain architecture maintainers
 
 ### Minimal validation
 
-- `node --test tests/architecture.test.mjs tests/bridge.test.mjs tests/provider-operation-journal.test.mjs tests/provider-readback-idempotency.test.mjs tests/release-activation-shadow.test.mjs tests/stable-publication-fence.test.mjs tests/partial-mutation-recovery-qualification.test.mjs tests/stage-capsule.test.mjs tests/stage-capsule-store.test.mjs tests/platform-stage-checkpoints.test.mjs tests/stage-capsule-qualification.test.mjs tests/runtime-ref-resume-authority.test.mjs tests/tail-reseal.test.mjs tests/tail-reseal-parity.test.mjs`
+- `node --test tests/architecture.test.mjs tests/bridge.test.mjs tests/provider-operation-journal.test.mjs tests/provider-readback-idempotency.test.mjs tests/release-activation-shadow.test.mjs tests/stable-publication-fence.test.mjs tests/partial-mutation-recovery-qualification.test.mjs tests/stage-capsule.test.mjs tests/stage-capsule-store.test.mjs tests/platform-stage-checkpoints.test.mjs tests/stage-capsule-qualification.test.mjs tests/runtime-resume-lineage.test.mjs tests/tail-reseal.test.mjs tests/tail-reseal-parity.test.mjs`
 
 ## v4-compatibility-facts
 
@@ -2493,7 +2520,6 @@ Owner: Buildchain workflow maintainers
 
 ### Implementation
 
-- `packages/core/workflow/commands/universal-workflow-backflow.mjs`
 - `packages/core/workflow/commands/universal-workflow-engine.mjs`
 - `packages/core/workflow/universal-workflow-bootstrap.js`
 - `scripts/check-universal-workflow-bootstrap.mjs`
@@ -2502,14 +2528,12 @@ Owner: Buildchain workflow maintainers
 
 - `architecture/universal-workflow-bootstrap.json`
 - `architecture/universal-workflow-fault-campaign.json`
-- `architecture/universal-workflow-train-admission.json`
+- `architecture/universal-workflow-capability-policy.json`
 - `.github/workflows/public-ops-bootstrap.yml`
 - `.github/workflows/self-ops-bootstrap-dogfood.yml`
-- `templates/universal-buildchain-bootstrap-recovery.yml`
 
 ### Tests
 
-- `tests/universal-workflow-backflow.test.mjs`
 - `tests/universal-workflow-bootstrap.test.mjs`
 - `tests/universal-workflow-fault-campaign.test.mjs`
 - `tests/universal-workflow-self-dogfood.test.mjs`
@@ -2521,7 +2545,7 @@ Owner: Buildchain workflow maintainers
 
 ### Minimal validation
 
-- `node --test tests/universal-workflow-backflow.test.mjs tests/universal-workflow-bootstrap.test.mjs tests/universal-workflow-fault-campaign.test.mjs tests/universal-workflow-self-dogfood.test.mjs tests/universal-api-boundary.test.mjs`
+- `node --test tests/universal-workflow-bootstrap.test.mjs tests/universal-workflow-fault-campaign.test.mjs tests/universal-workflow-self-dogfood.test.mjs tests/universal-api-boundary.test.mjs`
 
 ## web-deployment-transactions
 
@@ -2638,13 +2662,10 @@ Owner: Buildchain workflow maintainers
 
 - `packages/core/workflow/admission/actions.js`
 - `packages/core/workflow/admission/recovery.js`
-- `packages/core/workflow/admission/review.js`
 - `packages/core/workflow/admission/transactions.js`
 - `packages/core/workflow/event-trust.js`
-- `packages/core/workflow/installation.js`
 - `packages/core/workflow/request-rejection.js`
 - `packages/core/workflow/settlement/actions.js`
-- `packages/core/workflow/settlement/backflow.js`
 
 ### Contracts
 
@@ -2653,16 +2674,14 @@ Owner: Buildchain workflow maintainers
 ### Tests
 
 - `tests/bootstrap-node-boundaries.test.mjs`
-- `tests/bootstrap-recovery-distribution.test.mjs`
 
 ### Generated outputs
 
-- `templates/bootstrap-recovery`
-- `templates/universal-buildchain-bootstrap-recovery.yml`
+- None.
 
 ### Minimal validation
 
-- `node --test tests/bootstrap-node-boundaries.test.mjs tests/bootstrap-recovery-distribution.test.mjs`
+- `node --test tests/bootstrap-node-boundaries.test.mjs`
 
 ## workflow-engine
 

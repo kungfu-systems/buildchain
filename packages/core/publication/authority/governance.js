@@ -5,7 +5,6 @@ import {
   BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY,
   verifyGithubGovernanceReceipt,
 } from "../../governance/github-governance-authority.js";
-import { verifyCheckoutIdentity } from "../../runtime/checkout-identity.js";
 export function verifyLivePublicationGovernance(
   { repository, targetRef, runtimeSha, runtimeRoot, outputRoot, token },
   collect = collectGithubGovernanceAudit,
@@ -14,11 +13,7 @@ export function verifyLivePublicationGovernance(
     throw new Error(
       "Live GitHub governance verification requires an exact repository, target ref and scoped credential",
     );
-  verifyCheckoutIdentity({
-    directory: runtimeRoot,
-    sha: runtimeSha,
-    label: "Governance verifier",
-  });
+
   fs.mkdirSync(outputRoot, { recursive: true });
   const audit = collect({
     root: runtimeRoot,

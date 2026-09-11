@@ -818,7 +818,7 @@ test("public action and workflow keep credentials outside the build matrix", () 
   assert.match(stage, /sealMacosCredentialInput\(/u);
   assert.match(plan, /macOS signing requires a governed credential environment/u);
   assert.match(workflow, /checkout-source:.*matrix.platform.kind == 'artifact'/u);
-  assert.match(workflow, /matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_CERTIFICATE/u);
+  assert.match(workflow, /matrix.platform.kind == 'credential' &&\s+secrets.BUILDCHAIN_MACOS_CERTIFICATE/u);
   assert.match(sign, /inputs.kind == 'credential'/u);
   assert.match(sign, /uses: .\/.buildchain\/runtime\/actions\/build\/credential\/macos-island/u);
   assert.match(sign, /expected-bundle-id:.*steps.identity.outputs.bundle-id/u);

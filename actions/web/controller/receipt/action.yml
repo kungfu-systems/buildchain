@@ -11,7 +11,8 @@ outputs:
   controller-receipt-artifact:
     description: controller-receipt-artifact node result.
     value: buildchain-web-surface-controller-receipt-${{
-      fromJSON(inputs.observations-json).release-intent.outputs.production-source-sha }}
+      fromJSON(inputs.observations-json).release-intent.outputs.production-source-sha
+      }}
   controller-receipt-json:
     description: controller-receipt-json node result.
     value: ${{ steps.controller-receipt.outputs.controller-receipt-json }}
@@ -24,26 +25,19 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Checkout Buildchain runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
-        ref: ${{ fromJSON(inputs.observations-json).runtime.outputs.runtime-sha }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - name: Prepare exact Buildchain runtime
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Download web-surface controller plan
       uses: actions/download-artifact@v7.0.0
       with:
-        name: ${{ fromJSON(inputs.observations-json).controller-plan.outputs.controller-plan-artifact }}
+        name: ${{
+          fromJSON(inputs.observations-json).controller-plan.outputs.controller-plan-artifact
+          }}
         path: .buildchain/controller
     - name: Download web-surface deployment plan
       if: ${{ fromJSON(inputs.observations-json).plan.result == 'success' &&
-        (fromJSON(inputs.observations-json).plan.outputs.web-surface-channel != '' ||
-        fromJSON(inputs.observations-json).plan.outputs.web-surface-cleanup-plan-json != '') }}
+        (fromJSON(inputs.observations-json).plan.outputs.web-surface-channel !=
+        '' ||
+        fromJSON(inputs.observations-json).plan.outputs.web-surface-cleanup-plan-json
+        != '') }}
       uses: actions/download-artifact@v7.0.0
       with:
         name: buildchain-web-surface-plans
@@ -54,10 +48,12 @@ runs:
       with:
         observations-json: ${{ inputs.observations-json }}
     - name: Upload Web controller receipt
-      if: ${{ always() && steps.controller-receipt.outputs.controller-receipt-digest != '' }}
+      if: ${{ always() && steps.controller-receipt.outputs.controller-receipt-digest
+        != '' }}
       uses: actions/upload-artifact@v7.0.1
       with:
         name: buildchain-web-surface-controller-receipt-${{
-          fromJSON(inputs.observations-json).release-intent.outputs.production-source-sha }}
+          fromJSON(inputs.observations-json).release-intent.outputs.production-source-sha
+          }}
         path: .buildchain/controller/receipt.json
         if-no-files-found: error

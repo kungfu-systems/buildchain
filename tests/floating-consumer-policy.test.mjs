@@ -471,7 +471,7 @@ test("v4 release candidate passports require and hash the source/runtime-bound r
   assert.equal(validation.ok, false);
   assert.ok(
     validation.errors.some((message) =>
-      message.includes("runtime-sha-mismatch"),
+      message.includes("receipt-root-mismatch"),
     ),
   );
   assert.ok(validation.errors.includes("candidate hash mismatch"));

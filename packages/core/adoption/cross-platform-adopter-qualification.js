@@ -43,11 +43,10 @@ function validateSourceBinding(binding) {
     "source binding",
   );
   if (
-    !SHA.test(binding.runtimeSha || "") ||
     !SHA.test(binding.consumerSha || "") ||
     !ROOT.test(binding.inputRoot || "")
   )
-    fail("report requires exact runtime, consumer and input roots");
+    fail("report requires exact consumer and input roots");
 }
 
 function validateExecutionEvidence(execution) {
@@ -171,25 +170,15 @@ export function qualifyCrossPlatformAdopters({ reports, consumers }) {
     fail(
       `platform matrix mismatch; missing=${missing.join(",") || "none"}; unexpected=${unexpected.join(",") || "none"}`,
     );
-  const reference = normalized[0].sourceBinding;
-  for (const report of normalized.slice(1)) {
-    if (
-      report.sourceBinding.runtimeSha !== reference.runtimeSha
-    )
-      fail("all platform reports must bind the same exact source and matrix");
-  }
   for (const consumer of consumers) {
     const rows = normalized.filter(report => report.consumer === consumer);
-    if (rows.some(report => !same(report.sourceBinding, rows[0].sourceBinding)))
+    if (rows.some(report => report.sourceBinding.consumerSha !== rows[0].sourceBinding.consumerSha || report.sourceBinding.inputRoot !== rows[0].sourceBinding.inputRoot))
       fail("each consumer must bind the same exact source and input on every platform");
   }
   const orderedReports = expectedKeys.map((key) => reportByKey.get(key));
   const body = {
     schemaVersion: 1,
     contract: CROSS_PLATFORM_ADOPTER_QUALIFICATION_CONTRACT,
-    sourceBinding: {
-      runtimeSha: reference.runtimeSha,
-    },
     consumers: [...consumers],
     platforms: [...CROSS_PLATFORM_ADOPTER_PLATFORMS],
     reports: orderedReports.map(({ consumer, platform, reportRoot, sourceBinding }) => ({

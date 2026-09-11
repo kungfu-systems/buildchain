@@ -4,7 +4,7 @@ import { parseReusableWorkflowInterface } from "../packages/core/contracts/workf
 test("the build backbone has six jobs, seven owned actions and one optional locator", () => {
   const policy = JSON.parse(readRepoText("architecture/build-orchestration.json"));
   const source = readRepoText(policy.backbone);
-  assert.deepEqual([...source.matchAll(/^  ([a-z][a-z-]+):$/gmu)].map((m) => m[1]).filter((name) => name !== "workflow_call"), policy.jobs);
+  assert.deepEqual([...source.matchAll(/^  ([a-z][a-z-]+):$/gmu)].map((m) => m[1]).filter((name) => name !== "workflow_call" && name !== policy.entryJob), policy.jobs);
   assert.ok(source.split("\n").length - 1 <= policy.maximumBackboneLines);
   assert.ok(readRepoText(policy.facade).split("\n").length - 1 <= policy.maximumFacadeLines);
   assert.equal(Object.keys(policy.owners).length, 7);
@@ -16,16 +16,16 @@ test("the build backbone has six jobs, seven owned actions and one optional loca
   assert.ok(policy.modules.length >= Object.keys(policy.owners).length);
   for (const file of policy.modules) assert.ok(readRepoText(file).split("\n").length - 1 <= policy.maximumModuleLines, file);
   for (const file of [policy.backbone, policy.facade]) {
-    assert.deepEqual(parseReusableWorkflowInterface(readRepoText(file)).inputs.map(({ name, required }) => ({ name, required })), [{ name: "config-path", required: false }]);
+    assert.deepEqual(parseReusableWorkflowInterface(readRepoText(file)).inputs.map(({ name, required }) => ({ name, required })), [...policy.ordinaryInputs,...policy.entryInputs].sort().map(name => ({name,required:false})));
     assert.doesNotMatch(readRepoText(file), /\brun:|source-json|transfer-json|plan-json|publish-source-/u);
   }
   assert.deepEqual(parseReusableWorkflowInterface(source).outputs, ["result"]);
   const plan = workflowJob("plan");
-  assert.match(plan, /ref: \$\{\{ job.workflow_sha \}\}/u);
-  assert.match(plan, /ref: \$\{\{ github.sha \}\}/u);
+  assert.match(plan, /uses: \$\/actions\/runtime\/environment\/prepare/u);
+  assert.match(plan, /needs.execution-runtime.outputs.source-sha/u);
   assert.doesNotMatch(plan, /id-token: write/u);
   assertOrder(readRepoText("packages/core/build/plan/resolve.js"), ["Untrusted source", "const { plan } = resolveBuildConfiguration", "plan.admission = await admitBuildSource", "await resolveBuildReleaseSource", "await resolveBuildRunners"]);
-  assertOrder(readRepoText("packages/core/build/plan/admission.js"), ["const policy = scanConsumerPolicy", "validatePackageManagerContract({", "const lock = inspectRuntimeContract", "assertRuntimeContractAccepted(lock)"]);
+  assertOrder(readRepoText("packages/core/build/plan/admission.js"), ["const policy = scanConsumerPolicy", "validatePackageManagerContract({"]);
 });
 
 test("native and container jobs keep install, build and verify together", () => {

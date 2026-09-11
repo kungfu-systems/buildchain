@@ -5,13 +5,13 @@ import path from "node:path";
 import test from "node:test";
 
 import {
-  PUBLIC_DOGFOOD_ALPHA_REF,
+  PUBLIC_DOGFOOD_ENTRY_REF,
   checkPublicDogfoodContract,
   expectedPublicDogfoodWorkflow,
 } from "../scripts/check-public-dogfood-contract.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
-const protectedDogfoodRef = PUBLIC_DOGFOOD_ALPHA_REF;
+const protectedDogfoodRef = PUBLIC_DOGFOOD_ENTRY_REF;
 const fixturePaths = [
   "actions/build/verification/repository",
   "architecture/workflow-taxonomy.json",
@@ -98,14 +98,18 @@ test("the gate rejects a second private workflow or direct qualification job", (
   );
 });
 
-test("the gate permits only the floating v4-alpha source selector", () => {
+test("the gate requires the public v4 entry", () => {
   const feature = mutate(
     "architecture/stage-capsule-qualification.json",
-    (text) => text.replace(protectedDogfoodRef, "feature/private-candidate"),
+    (text) => {
+      const value = JSON.parse(text);
+      value.publicConsumerDogfood.validationRef = "feature/private-candidate";
+      return JSON.stringify(value);
+    },
   );
   assert.throws(
     () => checkPublicDogfoodContract(feature),
-    /floating v4-alpha channel/u,
+    /public|floating|validation/u,
   );
 });
 
@@ -170,7 +174,7 @@ test("the gate rejects private composite qualification and consumer-Node executi
   fs.mkdirSync(directory, { recursive: true });
   fs.writeFileSync(
     path.join(directory, "action.yml"),
-    "runs:\n  using: composite\n  steps:\n    - uses: ./.buildchain/workflow-shell/actions/build/stage-capsule/qualify\n",
+    "runs:\n  using: composite\n  steps:\n    - uses: ./.buildchain/runtime/actions/build/stage-capsule/qualify\n",
   );
   assert.throws(
     () => checkPublicDogfoodContract(targetRoot),

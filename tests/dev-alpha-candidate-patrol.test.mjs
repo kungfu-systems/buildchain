@@ -1367,7 +1367,7 @@ test("reusable workflow retains the no-publication boundary", () => {
   const observe = inspectWorkflowJob(file, "observe"), settle = inspectWorkflowJob(file, "settle");
   assert.equal(observe.job.permissions.contents, "read");
   assert.equal(settle.job.permissions.contents, "write");
-  assert.equal(settle.job.needs, "observe");
+  assert.deepEqual(settle.job.needs, ["observe", "execution-runtime"]);
   assert.doesNotMatch(JSON.stringify(observe.job), /secrets.promotion-token/);
   const observation = observe.steps.find(step => step.id === "observe");
   const settlement = settle.steps.find(step => step.id === "settle");

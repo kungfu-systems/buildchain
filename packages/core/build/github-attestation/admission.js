@@ -1,14 +1,6 @@
 import { requireValue } from "../../runtime/action-process.mjs";
 export function validateAttestationInput(request) {
   requireValue(
-    /^[0-9a-f]{40}$/u.test(request.runtimeSha || ""),
-    "buildchain-ref must be an exact 40-hex commit",
-  );
-  requireValue(
-    request.runtimeSha === request.definitionSha,
-    "attester runtime must match the defining signer workflow SHA",
-  );
-  requireValue(
     request.evidenceRunId === request.currentRunId,
     "attestation inputs must come from the current caller workflow run",
   );

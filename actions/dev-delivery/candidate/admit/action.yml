@@ -41,24 +41,14 @@ runs:
         node-version: "24"
     - name: Admit delivery coordinates and native contract
       id: target
-      uses: ./.buildchain/workflow-shell/actions/dev-delivery/candidate/inspect-request
+      uses: ./.buildchain/runtime/actions/dev-delivery/candidate/inspect-request
       with:
         request-json: ${{ inputs.request-json }}
-    - name: Checkout Buildchain runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
-        ref: ${{ fromJSON(inputs.request-json).buildchain-ref }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Qualify and seal exact source evidence
       id: source
       uses: ./.buildchain/runtime/actions/dev-delivery/candidate/qualify-source
       with:
-        runtime-ref: ${{ fromJSON(inputs.request-json).buildchain-ref }}
+        runtime-ref: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
         request-json: ${{ inputs.request-json }}
         branch: ${{ steps.target.outputs.branch }}
         token: ${{ inputs.github-token || github.token }}

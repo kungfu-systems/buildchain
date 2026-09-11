@@ -56,7 +56,7 @@ test("public self-dogfood remains the exact thin reusable consumer path", () => 
     result.caller,
     ".github/workflows/self-build-public-consumer-dogfood.yml",
   );
-  assert.equal(result.validationRef, "v4-alpha");
+  assert.equal(result.validationRef, "v4");
   for (const workflow of [
     ".github/workflows/self-build-public-consumer-dogfood.yml",
     ".github/workflows/self-build-alpha-dogfood.yml",

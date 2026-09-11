@@ -16,7 +16,7 @@ export async function resumeFromCandidateRunCli() {
   try {
     const result = await resumeFromCandidateRun({
       token: env("GITHUB_TOKEN"), apiUrl: env("GITHUB_API_URL", "https://api.github.com"), recoveryRunId: env("GITHUB_RUN_ID"), recoveryRunAttempt: env("GITHUB_RUN_ATTEMPT", "1"),
-      authorizationPath: path.resolve(".buildchain/release-candidate/runtime-authorization.json"), authorizationJson: env("BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON"), authorizationRoot: env("BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT"),
+
       repository: requiredEnv("BUILDCHAIN_RESUME_CANDIDATE_REPOSITORY"),
       targetRepository: env("GITHUB_REPOSITORY"),
       candidateRunId: requiredEnv("BUILDCHAIN_RESUME_CANDIDATE_RUN_ID"),
@@ -27,7 +27,6 @@ export async function resumeFromCandidateRunCli() {
       targetSha: requiredEnv("BUILDCHAIN_RESUME_TARGET_SHA"),
       expectedSourceTree: env("BUILDCHAIN_RESUME_EXPECTED_SOURCE_TREE"),
       expectedCandidateRoot: env("BUILDCHAIN_RESUME_EXPECTED_CANDIDATE_ROOT"),
-      candidateRuntimeSha: requiredEnv("BUILDCHAIN_RESUME_EXPECTED_CANDIDATE_RUNTIME_SHA"),
       runtimeSha: requiredEnv("BUILDCHAIN_RESUME_RUNTIME_SHA"),
       transactionId: env("BUILDCHAIN_RESUME_TRANSACTION_ID"), rematerializeOnResume: env("BUILDCHAIN_PUBLISH_REMATERIALIZE_ON_RESUME") === "true",
       artifactName: env("BUILDCHAIN_ARTIFACT_NAME"),
@@ -61,7 +60,7 @@ export async function resumeFromCandidateRunCli() {
       "release-candidate-stage-capsules-path": result.paths.stageCapsules,
       "release-candidate-publication-qualification-path": result.paths.publicationQualification,
       "v4-runtime-resume-evidence-path": result.paths.runtimeResumeEvidence,
-      "v4-runtime-resume-finalize-command": result.paths.runtimeResumeEvidence ? "node .buildchain/runtime/promotion-shell/packages/core/release/commands/resume-from-candidate-run.mjs finalize" : "",
+      "v4-runtime-resume-finalize-command": result.paths.runtimeResumeEvidence ? "node .buildchain/runtime/packages/core/release/commands/resume-from-candidate-run.mjs finalize" : "",
       "release-candidate-root": result.candidateRoot,
       "release-candidate-artifact-root": result.artifactRoot,
       "publish-sealed-bundle-root": result.paths.sealedBundleRoot,

@@ -3,7 +3,6 @@ import path from "node:path";
 import {
   createBuildchainContractLock,
   createBuildchainContractWorld,
-  finalizeBuildchainContractWorld,
   readBuildchainContractWorld,
 } from "../contracts/buildchain-contract.js";
 import {
@@ -94,12 +93,10 @@ function workflowErrors(cwd, authority, workflow) {
     return ["paper workflow authority is incomplete"];
   if (!fileDigestMatches(cwd, workflow.path, workflow.sourceDigest))
     return [`paper workflow source digest mismatch: ${workflow.path}`];
-  const floating = /^v4(?:-alpha)?$/.test(authority.runtime?.ref || "");
-  const refs = floating
-    ? workflow.reusablePath === ".github/workflows/public-release-paper.yml"
+  const refs =
+    workflow.reusablePath === ".github/workflows/public-release-paper.yml"
       ? ["v4-alpha", "v4"]
-      : ["v4-alpha"]
-    : [authority.runtime.resolvedSha];
+      : ["v4-alpha"];
   const text = fs.readFileSync(path.resolve(cwd, workflow.path), "utf8");
   const errors = [];
   if (
@@ -113,13 +110,11 @@ function workflowErrors(cwd, authority, workflow) {
     errors.push(
       `paper workflow reusable source is not exact: ${workflow.path}`,
     );
+  if (/^\s*buildchain-ref:/mu.test(text))
+    errors.push(
+      `paper workflow has a retired runtime selector: ${workflow.path}`,
+    );
   if (
-    (floating || workflow.reusablePath !== ".github/workflows/public-build-check.yml") &&
-    refs.some((ref) => !text.includes(`buildchain-ref: ${ref}\n`))
-  )
-    errors.push(`paper workflow runtime input is not exact: ${workflow.path}`);
-  if (
-    floating &&
     [
       ...text.matchAll(/uses:\s*kungfu-systems\/buildchain\/[^\s@]+@([^\s]+)/g),
     ].some((match) => !refs.includes(match[1]))
@@ -161,7 +156,7 @@ export function paperProvisioningWorkflowErrors(cwd, authority) {
     )
   )
     errors.push("paper contract lock bytes differ from provisioning authority");
-  if (/^v4(?:-alpha)?$/.test(authority.runtime?.ref || "")) {
+  {
     for (const [ref, lockPath] of [
       ["v4", ".buildchain/contract-lock.json"],
       ["v4-alpha", PAPER_ALPHA_LOCK],
@@ -175,24 +170,19 @@ export function paperProvisioningWorkflowErrors(cwd, authority) {
   return errors;
 }
 
-export function paperRuntimeSourceMatches(runtime, sha, mode, admission) {
-  return (
-    runtime?.sourceSha === sha ||
-    (mode === "ci" &&
-      /^4\./.test(runtime?.version || "") &&
-      ([runtime?.channels?.v4, runtime?.channels?.["v4-alpha"]].includes(sha) ||
-        (admission?.compatible === true &&
-          admission.sha === sha &&
-          /^v4(?:-alpha)?$/.test(admission.ref))))
-  );
-}
-
 export function selectPaperRuntime(runtime, authority) {
-  const channel = Object.values(authority?.admission?.channels || {}).find(
-    (entry) => entry.resolvedSha === runtime.resolvedSha,
-  );
-  const ref =
-    channel?.ref || (runtime.version.includes("-") ? "v4-alpha" : "v4");
+  const preferredRef =
+    authority?.runtime?.ref ||
+    (runtime.version.includes("-") ? "v4-alpha" : "v4");
+  const channels = authority?.admission?.channels || {};
+  const preferred = channels[preferredRef];
+  const channel =
+    preferred?.resolvedSha === runtime.resolvedSha
+      ? preferred
+      : Object.values(channels).find(
+          (entry) => entry.resolvedSha === runtime.resolvedSha,
+        );
+  const ref = channel?.ref || preferredRef;
   return authority?.admission?.channels?.[ref] ? { ...runtime, ref } : runtime;
 }
 
@@ -202,39 +192,6 @@ export function paperRuntimeLockPath(cwd, runtime, authority) {
     authority?.admission?.channels?.[runtime.ref]?.lockPath ||
       ".buildchain/contract-lock.json",
   );
-}
-
-function channelWorld(root, ref, current) {
-  if (current) return current;
-  const sha = gitValue(root, [
-    "rev-parse",
-    "--verify",
-    `refs/tags/${ref}^{commit}`,
-  ]);
-  const text =
-    sha &&
-    gitValue(root, ["show", `${sha}:dist/site/buildchain-contract.json`]);
-  if (!/^[0-9a-f]{40}$/.test(sha) || !text) {
-    throw new Error(
-      `Paper migration needs the fetched ${ref} tag or an explicit ${ref === "v4" ? "stable" : "alpha"} Buildchain root`,
-    );
-  }
-  const published = JSON.parse(text);
-  if (!Array.isArray(published.compatibilityFacts)) {
-    throw new Error(`Paper ${ref} needs the current Buildchain contract format`);
-  }
-  const world = finalizeBuildchainContractWorld(published);
-  if (
-    published.contractDigest !== world.contractDigest ||
-    published.compatibilityDigest !== world.compatibilityDigest
-  ) {
-    throw new Error(`Paper ${ref} contract digest mismatch`);
-  }
-  return {
-    sha,
-    world,
-    acceptedAt: gitValue(root, ["show", "-s", "--format=%cI", sha]),
-  };
 }
 
 function explicitWorld(root, ref) {
@@ -281,9 +238,7 @@ export function paperChannels({
     ["v4", ".buildchain/contract-lock.json", stableBuildchainRoot],
     ["v4-alpha", PAPER_ALPHA_LOCK, alphaBuildchainRoot],
   ]) {
-    const resolved = explicitRoot
-      ? explicitWorld(explicitRoot, ref)
-      : channelWorld(buildchainRoot, ref, ref === selectedRef ? current : null);
+    const resolved = explicitRoot ? explicitWorld(explicitRoot, ref) : current;
     if (resolved.world.majorLine !== "v4")
       throw new Error(`Paper ${ref} contract must belong to v4`);
     const existing = readJson(path.join(cwd, lockPath)).value;

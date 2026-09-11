@@ -11,28 +11,15 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Checkout exact candidate verifier
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: kungfu-systems/buildchain
-        ref: ${{ inputs.candidate-sha }}
-        path: .buildchain/candidate
-        persist-credentials: false
-    - name: Prepare independently reviewed verifier
-      id: core-node
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/candidate
     - name: Verify all three execution pairs
-      uses: ./.buildchain/candidate/actions/workflow/dogfood/compare
+      uses: ./.buildchain/runtime/actions/workflow/dogfood/compare
       with:
         candidate-sha: ${{ inputs.candidate-sha }}
         observations-json: ${{ inputs.observations-json }}
     - name: Retain Exact-candidate self-dogfood evidence
       uses: actions/upload-artifact@v7.0.0
       with:
-        name: universal-train-self-dogfood-${{
-          inputs.candidate-sha }}
+        name: universal-train-self-dogfood-${{ inputs.candidate-sha }}
         path: .buildchain/self-dogfood
         if-no-files-found: error
         retention-days: 30

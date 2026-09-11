@@ -65,7 +65,7 @@ export function createPublicationArtifactCandidate({
   const normalizedRepository = requiredString(repository, "repository");
   const normalizedSourceSha = normalizeGitSha(sourceSha, "sourceSha");
   const normalizedSourceTreeSha = normalizeGitSha(sourceTreeSha, "sourceTreeSha");
-  const normalizedRuntimeSha = normalizeGitSha(runtimeSha, "runtimeSha");
+  const normalizedRuntimeSha = runtimeSha;
   if (manifest?.contract !== MANIFEST_CONTRACT) throw new Error("publication artifact manifest contract mismatch");
   if (passport?.contract !== PASSPORT_CONTRACT || passport.status !== "passed") {
     throw new Error("publication artifact passport is not qualifying");
@@ -82,7 +82,7 @@ export function createPublicationArtifactCandidate({
   }
   const controllerValidation = validateControllerReceipt(controllerReceipt, {
     expectedSourceSha: normalizedSourceSha,
-    expectedRuntimeSha: normalizedRuntimeSha,
+
   });
   if (!controllerValidation.ok || !controllerValidation.qualifying) {
     throw new Error(`publication artifact controller receipt did not qualify: ${controllerValidation.issues.join("; ")}`);

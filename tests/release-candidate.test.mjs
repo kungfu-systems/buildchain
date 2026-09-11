@@ -348,7 +348,7 @@ test("release candidate passport binds controller receipts to source and runtime
   passport.controllerReceipts[0].runtimeSha = "5".repeat(40);
   assert.match(
     validateReleaseCandidatePassport({ passport, buildSummary }).errors.join("; "),
-    /runtime SHA mismatch/,
+    /candidate hash mismatch/,
   );
 });
 
@@ -398,11 +398,11 @@ test("release candidate passport derives channel from PR base when publish chann
     buildSummary,
   });
   assert.equal(passport.target.channel, "alpha");
-  const legacyNone = {
+  const tamperedTarget = {
     ...passport,
     target: { ...passport.target, channel: "none" },
   };
-  assert.equal(validateReleaseCandidatePassport({ passport: legacyNone, targetChannel: "alpha" }).ok, true);
+  assert.equal(validateReleaseCandidatePassport({ passport: tamperedTarget, targetChannel: "alpha" }).ok, false);
 });
 
 test("release candidate validation rejects stale source and summary evidence", () => {

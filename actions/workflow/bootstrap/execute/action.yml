@@ -32,32 +32,12 @@ runs:
     - name: Admit source checkout
       id: source-boundary
       if: ${{ always() }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      uses: ./.buildchain/runtime/actions/build/source/admit
       with:
         source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
-    - uses: actions/setup-node@v6.4.0
-      with:
-        node-version: "24"
-    - name: Checkout exact admitted candidate
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: kungfu-systems/buildchain
-        ref: ${{ fromJSON(inputs.needs-admit-outputs-runtime-sha) }}
-        path: .buildchain/candidate
-        persist-credentials: false
-    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/candidate
-    - name: Install release-promotion consumer dependencies
-      if: ${{ fromJSON(inputs.needs-admit-outputs-capability-id) == 'release-candidate-promote' }}
-      uses: ./.buildchain/workflow-shell/actions/runtime/dependencies/install
-      with:
-        directory: .
-        production: "false"
-        ignore-scripts: "true"
     - name: Execute exact admitted candidate
       id: execute
-      uses: ./.buildchain/candidate/actions/workflow/engine/execute
+      uses: ./.buildchain/runtime/actions/workflow/engine/execute
       with:
         request-json: ${{ fromJSON(inputs.request-json).request-json }}
         admission-json: ${{ fromJSON(inputs.needs-admit-outputs-admission-json) }}

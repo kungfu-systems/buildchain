@@ -1,5 +1,6 @@
 name: sign-build-artifact
-description: Dispatch signing authority, finalize verified bytes, or run the isolated macOS credential instance.
+description: Dispatch signing authority, finalize verified bytes, or run the
+  isolated macOS credential instance.
 inputs:
   plan:
     description: Rooted build plan
@@ -81,9 +82,9 @@ runs:
         source-tree-sha: ${{ fromJSON(inputs.plan).source.tree_sha }}
         source-ref: ${{ fromJSON(inputs.plan).source.ref }}
         buildchain-runtime-sha: ${{ fromJSON(inputs.plan).identity.sha }}
-        artifact-name:
-          ${{ format('{0}-macos-credential-{1}', fromJSON(inputs.plan).artifacts.name, fromJSON(inputs.plan).source.sha)
-          }}
+        artifact-name: ${{ format('{0}-macos-credential-{1}',
+          fromJSON(inputs.plan).artifacts.name,
+          fromJSON(inputs.plan).source.sha) }}
         platform-id: ${{ format('{0}-credential', fromJSON(inputs.platform).id) }}
         artifact-relative-output: product/release
         expected-bundle-id: ${{ steps.identity.outputs.bundle-id }}

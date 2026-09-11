@@ -41,18 +41,6 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Checkout exact Buildchain workflow runtime
-      uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
-      with:
-        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
-        ref: ${{ inputs.workflow-sha }}
-        path: .buildchain/runtime
-        clean: true
-        persist-credentials: false
-    - name: Prepare exact workflow runtime
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Download exact passing Gate bundle
       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
       with:
@@ -81,7 +69,8 @@ runs:
       if: ${{ always() }}
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
       with:
-        name: auditable-demo-render-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+        name: auditable-demo-render-diagnostics-${{ github.run_id }}-${{
+          github.run_attempt }}
         path: render-diagnostics
         if-no-files-found: warn
         retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}

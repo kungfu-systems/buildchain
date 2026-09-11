@@ -101,13 +101,12 @@ test("Paper publication and readback failures retain nonqualifying controller re
     assert.equal(receipt.kind, "receipt");
   }
 });
-test("Paper admission rejects a candidate for another source or runtime", () => {
+test("Paper admission binds candidate source while permitting a repaired runtime", () => {
   const { candidateReceipt } = fixture();
+  assert.doesNotThrow(() => createPaperControllerPlan({descriptor: descriptor("paper-release"), candidateReceipt, source, runtime: {...runtime, sha: "e".repeat(40)}, inputs: {}}));
   for (const patch of [
     { source: { ...source, sha: "e".repeat(40) } },
     { source: { ...source, repository: "example/other" } },
-    { runtime: { ...runtime, sha: "e".repeat(40) } },
-    { runtime: { ...runtime, contractDigest: `sha256:${"e".repeat(64)}` } },
   ])
     assert.throws(
       () =>
@@ -119,7 +118,7 @@ test("Paper admission rejects a candidate for another source or runtime", () => 
           inputs: {},
           ...patch,
         }),
-      /exact source and runtime/,
+      /exact source/,
     );
 });
 test("Paper settlement cannot qualify a changed candidate or substituted or absent Passport", () => {

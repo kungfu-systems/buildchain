@@ -26,8 +26,6 @@ if (command === "inspect") {
   emit({
     schema: "kungfu-buildchain-v4-universal-workflow-inspection/v1",
     requestRoot: universalWorkflowRequestRoot(request),
-    mode: request.mode,
-    candidate: request.candidate,
     consumer: request.consumer,
     capability: request.capability,
   });
@@ -36,15 +34,12 @@ if (command === "inspect") {
     admitUniversalWorkflow({
       request: readJsonEnvironment("BUILDCHAIN_UNIVERSAL_REQUEST_JSON"),
       policy: readJsonEnvironment("BUILDCHAIN_UNIVERSAL_ADMISSION_POLICY_JSON"),
-      observedRefSha: process.env.BUILDCHAIN_UNIVERSAL_OBSERVED_SHA,
+      runtime: readJsonEnvironment("BUILDCHAIN_RUNTIME_SELECTION"),
       observedConsumerRepository:
         process.env.BUILDCHAIN_UNIVERSAL_CONSUMER_REPOSITORY,
       observedConsumerSha: process.env.BUILDCHAIN_UNIVERSAL_CONSUMER_SHA,
       observedConsumerWorkflowRef:
         process.env.BUILDCHAIN_UNIVERSAL_CONSUMER_WORKFLOW_REF,
-      reviewEvidence: readJsonEnvironment(
-        "BUILDCHAIN_UNIVERSAL_REVIEW_EVIDENCE_JSON",
-      ),
       now: process.env.BUILDCHAIN_UNIVERSAL_OBSERVED_AT,
     }),
   );
@@ -54,7 +49,7 @@ if (command === "inspect") {
   );
   const admission = readJsonEnvironment("BUILDCHAIN_UNIVERSAL_ADMISSION_JSON");
   emit(await executeAdmittedWorkflow(request, admission, {
-    engineSha: process.env.BUILDCHAIN_UNIVERSAL_ENGINE_SHA, runtimeRoot: installationRoot(import.meta.url),
+    runtimeRoot: installationRoot(import.meta.url),
     ...providerExecutionContext({ token: process.env.GH_TOKEN || process.env.GITHUB_TOKEN || "", mutationToken: process.env.BUILDCHAIN_PROMOTION_TOKEN || "", env: process.env }),
   }));
 } else if (command === "terminal") {

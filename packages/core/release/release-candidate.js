@@ -215,7 +215,6 @@ function validateConsumerPolicyEvidence(passport, check) {
 }
 
 function validateEvidenceBoundCandidateHash(passport, check) {
-  if (!passport.familyEvidence && !passport.consumerPolicy) return;
   const expectedCandidateHash = sha256Json({
     repository: passport.repository,
     target: passport.target,
@@ -413,7 +412,7 @@ export function createReleaseCandidatePassport({
     receipts: controllerReceipts,
     references: controllerReceiptReferences,
     expectedSourceSha: sourceSha,
-    expectedRuntimeSha: optionalString(buildchain.sha || normalizedSummary.runtime?.sha),
+
     requirePassed: true,
   });
   const candidate = {
@@ -578,7 +577,7 @@ export function validateReleaseCandidatePassport({
     for (const [index, reference] of (passport.controllerReceipts || []).entries()) {
       const validation = validateControllerReceiptReference(reference, {
         expectedSourceSha: passport.source?.headSha || "",
-        expectedRuntimeSha: passport.buildchain?.sha || "",
+
         requirePassed: true,
       });
       for (const issue of validation.issues) check(false, `controllerReceipts[${index}]: ${issue}`);

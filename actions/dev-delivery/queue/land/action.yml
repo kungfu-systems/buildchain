@@ -29,7 +29,8 @@ inputs:
     required: false
     default: ""
   predecessors-ok:
-    description: Whether prior job steps succeeded; artifact upload and result enforcement still run on failure.
+    description: Whether prior job steps succeeded; artifact upload and result
+      enforcement still run on failure.
     required: true
 outputs:
   merge-evaluated-count:
@@ -61,33 +62,36 @@ runs:
   steps:
     - name: Run Buildchain dev PR auto-merge
       id: merge
-      if:
-        inputs.predecessors-ok == 'true' && (fromJSON(inputs.request-json).defer-landing != true &&
-        fromJSON(inputs.needs-json).admission.outputs.handoff-required != 'true' &&
-        (fromJSON(inputs.request-json).delivery-warrant-mode != 'required' ||
-        fromJSON(inputs.needs-json).admission.outputs.already-qualified == 'true' || inputs.native-final-outcome ==
-        'success'))
+      if: inputs.predecessors-ok == 'true' &&
+        (fromJSON(inputs.request-json).defer-landing != true &&
+        fromJSON(inputs.needs-json).admission.outputs.handoff-required != 'true'
+        && (fromJSON(inputs.request-json).delivery-warrant-mode != 'required' ||
+        fromJSON(inputs.needs-json).admission.outputs.already-qualified ==
+        'true' || inputs.native-final-outcome == 'success'))
       continue-on-error: true
       uses: ./.buildchain/runtime/actions/dev-delivery/queue/admit-landing
       with:
         runtime-sha: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-sha }}
         request-json: ${{ inputs.request-json }}
         branch: ${{ fromJSON(inputs.needs-json).admission.outputs.target-branch }}
-        project-cut-proof-root: ${{ fromJSON(inputs.needs-json).admission.outputs.project-cut-proof-root }}
+        project-cut-proof-root: ${{
+          fromJSON(inputs.needs-json).admission.outputs.project-cut-proof-root
+          }}
         token: ${{ inputs.github-token || github.token }}
     - name: Upload dev PR auto-merge plan
       if: always() && fromJSON(inputs.request-json).defer-landing != true
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: buildchain-dev-pr-auto-merge-${{ fromJSON(inputs.needs-json).admission.outputs.branch-artifact }}
+        name: buildchain-dev-pr-auto-merge-${{
+          fromJSON(inputs.needs-json).admission.outputs.branch-artifact }}
         path: .buildchain/dev-pr-auto-merge/result.json
         if-no-files-found: error
     - name: Upload Dev Delivery Warrant evidence
       if: always() && fromJSON(inputs.request-json).delivery-warrant-mode != 'off'
       uses: actions/upload-artifact@v7.0.1
       with:
-        name:
-          buildchain-dev-delivery-warrant-${{ fromJSON(inputs.needs-json).admission.outputs.branch-artifact }}-${{
+        name: buildchain-dev-delivery-warrant-${{
+          fromJSON(inputs.needs-json).admission.outputs.branch-artifact }}-${{
           fromJSON(inputs.request-json).expected-pr-number }}
         path: |
           .buildchain/dev-delivery/
@@ -102,7 +106,7 @@ runs:
         overwrite: true
     - name: Enforce targeted admission result
       if: always()
-      uses: ./.buildchain/workflow-shell/actions/dev-delivery/queue/complete
+      uses: ./.buildchain/runtime/actions/dev-delivery/queue/complete
       with:
         merge-step-outcome: ${{ steps.merge.outcome }}
         defer-landing: ${{ fromJSON(inputs.request-json).defer-landing }}

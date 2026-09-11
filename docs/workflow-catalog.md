@@ -38,7 +38,6 @@ Register ownership before adding a workflow. `pnpm run check:workflows` validate
 | [public-build-publication.yml](../.github/workflows/public-build-publication.yml) | build | reusable | active | Buildchain Publication Artifact |
 | [public-build-stage-capsule-canary.yml](../.github/workflows/public-build-stage-capsule-canary.yml) | build | reusable | active | V4 Stage Capsule Canary |
 | [public-ops-alpha-candidate-patrol.yml](../.github/workflows/public-ops-alpha-candidate-patrol.yml) | ops | reusable | active | Buildchain Dev to Alpha Candidate Patrol |
-| [public-ops-bootstrap-recovery.yml](../.github/workflows/public-ops-bootstrap-recovery.yml) | ops | reusable | active | Universal Buildchain Bootstrap Recovery |
 | [public-ops-bootstrap.yml](../.github/workflows/public-ops-bootstrap.yml) | ops | reusable | active | Buildchain Universal Bootstrap |
 | [public-ops-dev-auto-merge.yml](../.github/workflows/public-ops-dev-auto-merge.yml) | ops | reusable | active | Dev PR Auto Merge |
 | [public-ops-dev-qualification-patrol.yml](../.github/workflows/public-ops-dev-qualification-patrol.yml) | ops | reusable | active | Buildchain Dev Qualification Patrol |

@@ -2,11 +2,6 @@ name: Buildchain Auditable Demo
 on:
   workflow_call:
     inputs:
-      buildchain-repository:
-        description: Repository that owns this reusable workflow
-        default: kungfu-systems/buildchain
-        type: string
-        required: false
       source-ref:
         description: Optional immutable consumer source ref; defaults to the caller event SHA
         default: ""
@@ -21,11 +16,13 @@ on:
         type: string
         required: true
       adapter-path:
-        description: Executable project-relative adapter; receives --artifact-root, --output, and --source-coordinate
+        description: Executable project-relative adapter; receives --artifact-root, --output, and
+          --source-coordinate
         type: string
         required: true
       adapter-arguments-json:
-        description: Optional bounded JSON argv suffix passed literally to the checked-in adapter; coordinate flags are reserved
+        description: Optional bounded JSON argv suffix passed literally to the checked-in adapter;
+          coordinate flags are reserved
         default: "[]"
         type: string
         required: false
@@ -39,9 +36,8 @@ on:
         type: boolean
         required: false
       media-profile:
-        description:
-          "Buildchain-owned qualification profile: archive-v1, web-delivery-v1, responsive-web-delivery-v1, or
-          site-hero-v1"
+        description: "Buildchain-owned qualification profile: archive-v1, web-delivery-v1,
+          responsive-web-delivery-v1, or site-hero-v1"
         default: archive-v1
         type: string
         required: false
@@ -53,6 +49,21 @@ on:
         default: true
         type: boolean
         required: false
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
     outputs:
       source-sha:
         description: Exact consumer source SHA evaluated by the Gate
@@ -97,9 +108,27 @@ permissions:
   actions: read
   contents: read
 concurrency:
-  group: auditable-demo-${{ github.repository }}-${{ github.workflow }}-${{ github.ref }}-${{ inputs.source-artifact-digest }}
+  group: auditable-demo-${{ github.repository }}-${{ github.workflow }}-${{ github.ref }}-${{
+    inputs.source-artifact-digest }}
   cancel-in-progress: false
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   gate:
     name: Auditable demo / required Gate
     runs-on: ubuntu-24.04
@@ -112,23 +141,25 @@ jobs:
       gate-artifact-url: ${{ steps.node.outputs.gate-artifact-url }}
       gate-root: ${{ steps.node.outputs.gate-root }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Auditable demo / required Gate
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/demo/adapter-gate
+        uses: ./.buildchain/runtime/actions/build/demo/adapter-gate
         with:
           request-json: ${{ toJSON(inputs) }}
           workflow-sha: ${{ job.workflow_sha }}
+    needs:
+      - execution-runtime
   render:
     name: Auditable demo / selective render
     if: ${{ (inputs.render-media) }}
-    needs: gate
+    needs:
+      - gate
+      - execution-runtime
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     outputs:
@@ -140,16 +171,14 @@ jobs:
       media-profile: ${{ steps.node.outputs.media-profile }}
       media-qualification-root: ${{ steps.node.outputs.media-qualification-root }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Auditable demo / selective render
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/demo/adapter-render
+        uses: ./.buildchain/runtime/actions/build/demo/adapter-render
         with:
           request-json: ${{ toJSON(inputs) }}
           workflow-sha: ${{ job.workflow_sha }}

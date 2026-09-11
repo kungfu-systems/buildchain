@@ -44,6 +44,7 @@ test("paper release has one public API with read-only candidate, independent aut
     fs.readFileSync(".github/workflows/public-release-paper.yml", "utf8"),
   );
   assert.deepEqual(Object.keys(workflow.jobs), [
+    "execution-runtime",
     "publication-candidate",
     "publication-authority",
     "publish",

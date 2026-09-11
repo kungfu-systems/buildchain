@@ -13,20 +13,14 @@ export function createRecoveredPublicationCandidate({
   allFiles,
   repository,
   passport,
-  candidateRuntimeSha,
 }) {
-  if (passport.buildchain?.sha !== candidateRuntimeSha) {
-    throw new Error(
-      `recovered publication candidate runtime mismatch: passport=${passport.buildchain?.sha || "<empty>"} expected=${candidateRuntimeSha || "<empty>"}`,
-    );
-  }
   const payload = {
     schemaVersion: 1,
     contract: PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
     repository,
     sourceSha: passport.source.headSha,
     sourceTreeSha: passport.source.treeHash,
-    runtimeSha: candidateRuntimeSha,
+    runtimeSha: passport.buildchain?.sha,
     releaseCandidateRoot: `sha256:${passport.candidateHash}`,
     files: allFiles.map(({ path: filePath, size, sha256 }) => ({
       path: filePath,
@@ -45,7 +39,6 @@ export function createRecoveredPublication({
   bundleRoot,
   repository,
   passport,
-  candidateRuntimeSha,
   publishArtifactKind,
   publishPackageMain,
   releasePatterns,
@@ -78,8 +71,7 @@ export function createRecoveredPublication({
       allFiles,
       repository,
       passport,
-      candidateRuntimeSha,
-    });
+        });
     const sealed = resolveOciCandidate({ payloadRoot: bundleRoot, passport });
     return {
       manifest: sealed.manifest,
@@ -97,8 +89,7 @@ export function createRecoveredPublication({
       allFiles,
       repository,
       passport,
-      candidateRuntimeSha,
-    });
+        });
     const version = String(passport.target?.version || "").trim();
     if (!version)
       throw new Error(
@@ -163,8 +154,7 @@ export function createRecoveredPublication({
     allFiles,
     repository,
     passport,
-    candidateRuntimeSha,
-  });
+    });
   const manifest = createPublicationSealedBundle({
     candidate,
     packageName: main.metadata.name,

@@ -10,9 +10,6 @@ inputs:
   controller-plan-outcome:
     description: Exact preceding publication node result.
     required: true
-  runtime-checkout-outcome:
-    description: Exact preceding publication node result.
-    required: true
   controller-identities-outcome:
     description: Exact preceding publication node result.
     required: true
@@ -36,7 +33,7 @@ runs:
   steps:
     - name: Require successful predecessor nodes
       if: ${{ inputs.predecessors-ok != 'true' }}
-      uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
+      uses: ./.buildchain/runtime/actions/workflow/admission/reject
       with:
         reason: Require successful predecessor nodes failed
     - name: Upload publication artifact
@@ -57,7 +54,8 @@ runs:
       uses: ./.buildchain/runtime/actions/publication/candidate/record-evidence
       with:
         request-json: ${{ inputs.request-json }}
-        runtime-outcomes-json: '["${{ inputs.runtime-outcome }}","${{ inputs.runtime-checkout-outcome }}","${{ inputs.controller-identities-outcome }}"]'
+        runtime-outcomes-json: '["${{ inputs.runtime-outcome }}","${{
+          inputs.controller-identities-outcome }}"]'
         outcomes-json: ${{ inputs.outcomes-json }}
         upload-outcome: ${{ steps.artifact-upload.outcome }}
         manifest-path: ${{ inputs.manifest-path }}
@@ -71,10 +69,13 @@ runs:
         path: .buildchain/controller/receipt.json
         if-no-files-found: error
     - name: Enforce qualifying publication-artifact controller receipt
-      if: ${{ always() && inputs.controller-plan-outcome == 'success' && steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
-      uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
+      if: ${{ always() && inputs.controller-plan-outcome == 'success' &&
+        steps.controller-receipt.outputs.controller-receipt-qualifying != 'true'
+        }}
+      uses: ./.buildchain/runtime/actions/workflow/admission/reject
       with:
-        reason: "Publication controller receipt is not qualifying: ${{ steps.controller-receipt.outputs.controller-receipt-status }}"
+        reason: "Publication controller receipt is not qualifying: ${{
+          steps.controller-receipt.outputs.controller-receipt-status }}"
 outputs:
   publication-artifact-name:
     description: publication-artifact-name node result.

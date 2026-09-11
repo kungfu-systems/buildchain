@@ -1,3 +1,4 @@
+import { sealCandidateFixture } from "./helpers/promote-buildchain-ref-fixtures.mjs";
 // prettier-ignore
 const { GENERATED_COMMIT_SIGN_OFF, OTHER_SHA, PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT, SHA, alignMajorBootstrapReleaseImpact, alphaDistTagForPromotion, alreadyExists, assert, assertAllowedLocalChanges, assertChannelPromotionPr, assertExpectedPublicationVersion, assertPromotableRepository, assertPromotableTargetRef, assertProtectedChannel, assertProviderEnforcedChannelTransaction, collectGitHubReleaseEvidenceAssets, createGitMock, createPublicationSealedBundle, createTreeEquivalentReleaseImpact, crypto, discoverVersionStateFiles, ensureManagedChannelBranchProtection, execFileSync, expectedHeadRefForTarget, explainReleaseLineDryRun, formatReleaseLineDryRun, fs, generateReleaseEvidenceInputs, isAllowedReleaseLineRecoveryPath, latestAlphaForPatch, loadBuildchainConfig, makeTempWorkspace, notFound, os, ownsMajorAlphaChannel, parseReleaseLineRef, parseTags, path, persistDurableReleaseTransaction, plannedPublicationExactTag, productionImpactJson, promoteBuildchainRefs, protectedChannel, publicationArtifactCandidateDigest, publishGitHubReleaseEvidence, releasePassportArtifactFiles, resolveExistingVersionState, resolveProtectedStatusCheckContext, resolveReleaseImpactInput, resolveTagsForTarget, restoreDurableReleaseTransaction, root, run, runPublishTransaction, runVersionVerification, selectAlphaTag, selectReleaseTag, sha256Json, signedGeneratedCommitMessage, test, transitionReleaseTransaction, transientGitHubError, updateVersionStateContents, validatePromotionReleaseCandidate, validateRequiredPublishSourceLock, versionStateBranchName, versionVerificationAllowedPathsForPromotion } = await import("./promote-buildchain-ref-recovery-harness.mjs");
 test("promoteBuildchainRefs rejects stale target SHA", async () => {
@@ -449,10 +450,9 @@ test("promote-only RC passport accepts channel merge commit with matching source
 });
 
 test("promote-only recovery binds publication version through the immutable recovery receipt", () => {
-  const candidateHash = "a".repeat(64);
   const passportPath = ".buildchain/artifacts/release-candidate-passport.json";
   const receiptPath = ".buildchain/artifacts/recovery-receipt.json";
-  const passport = {
+  const passport = sealCandidateFixture({
     schemaVersion: 1,
     contract: "kungfu-buildchain-release-candidate-passport",
     repository: "kungfu-systems/buildchain",
@@ -460,8 +460,8 @@ test("promote-only recovery binds publication version through the immutable reco
     source: { headSha: OTHER_SHA, mergeRefSha: OTHER_SHA, treeHash: `tree-${SHA}` },
     platformMatrix: [{ platformId: "linux-x64", artifactName: "buildchain-linux-x64" }],
     diagnostics: {},
-    candidateHash,
-  };
+  });
+  const { candidateHash } = passport;
   const receipt = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-release-candidate-recovery/v1",

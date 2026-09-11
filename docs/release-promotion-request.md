@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-09
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-6
   product: Codex
@@ -43,22 +43,15 @@ Serialize dynamic values with `toJSON` so quotes, newlines, numbers and booleans
 retain their original meaning. Permissions remain an explicit caller responsibility;
 an input cannot grant a job credentials or provider authority.
 
-The public workflow resolves identities, admits the consumer and calls the current
-publisher component. The admission node creates one complete internal
+The public workflow selects one runtime through the central runtime entry, admits
+the consumer source and constructs the internal
 [`promotion-invocation-v1.schema.json`](../contracts/promotion-invocation-v1.schema.json)
-document containing the exact router, publisher, runtime, contract lock and any
-independently authorized transient runtime selection. The component verifies that
-document before loading the selected runtime, then runs QUALIFY, APPLY and SETTLE
-with their separate job permissions.
+document. QUALIFY, APPLY and SETTLE prepare that selected runtime and retain their
+separate job permissions. Later nodes validate source, artifact and publication
+evidence without comparing Buildchain SHAs.
 
-Consumer repositories adopt this API when the selected distribution channel
-contains it. Development self-calls use the source-owned public entry so that
-the definition and request contract come from the same reviewed commit. This
-development arrangement does not move a floating tag or publish an alpha package.
-
-The source-owned promotion API uses the caller's exact defining commit. Its
-consumer lock roots describe published external dependencies; they do not claim
-that the new local API is compatible with a previously published workflow. The
-source-owned path authenticates Git content instead of granting a historical
-compatibility exception. External floating calls still require selected-lock
-compatibility with the resolved public workflow.
+Buildchain dogfood and external consumers use the same `@v4` or `@v4-alpha`
+public entry. The entry commit owns the API shell; the selected runtime owns
+business actions, modules and resources. A transient `runtime-ref` can select a
+repaired train while preserving the original publication source and evidence.
+See [Runtime entry](runtime-entry.md) for selection precedence and recovery.

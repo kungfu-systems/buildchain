@@ -25,6 +25,7 @@ export async function runBuildStage({
   stage,
   sourceRoot,
   environment,
+  recovery,
 }) {
   const file = path.join(
     sourceRoot,
@@ -57,6 +58,7 @@ export async function runBuildStage({
     ),
   });
   try {
+    const restored = stage === "build" && recovery ? await recovery.restore() : null;
     if (stage === "install" && plan.anchored_material) {
       const evidence = await session.phase((env) =>
         createAnchoredVersionMaterialEvidence({
@@ -78,22 +80,23 @@ export async function runBuildStage({
     const usesCache =
       cache.provider !== "none" &&
       JSON.parse(cache.platforms_json).includes(platform.id);
-    if (stage === "build" && usesCache)
+    if (stage === "build" && usesCache && !restored)
       await session.phase((env) =>
         prepareCompilerCacheEvidence({ cwd: sourceRoot, env }),
       );
-    await session.phase((env) =>
+    if (!restored) await session.phase((env) =>
       runLifecycle({
         ...lifecycleOptions(plan, platform, stage, sourceRoot),
         env,
       }),
     );
     if (stage === "build") {
-      if (usesCache)
+      if (usesCache && !restored)
         await session.phase((env) =>
           verifyCompilerCacheActivity({ cwd: sourceRoot, env }),
         );
       await sealSigning(plan, platform, sourceRoot);
+      if (recovery) await recovery.retain();
     }
     if (
       stage === "verify" &&

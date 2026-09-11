@@ -21,8 +21,8 @@ export function selectAdopter({ request, repository, sourceSha, runtimeSha }) {
   if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(request.consumer || ""))
     throw new Error("Adopter identity must be stable lowercase");
   const sha = String(request["consumer-ref"] || sourceSha).toLowerCase();
-  if (!/^[0-9a-f]{40}$/.test(sha) || !/^[0-9a-f]{40}$/.test(runtimeSha || ""))
-    throw new Error("Adopter requires exact consumer and runtime commits");
+  if (!/^[0-9a-f]{40}$/.test(sha))
+    throw new Error("Adopter requires an exact consumer commit");
   return { repository: request["consumer-repository"] || repository, sha };
 }
 export function verifyAdopterCheckouts(
@@ -30,7 +30,6 @@ export function verifyAdopterCheckouts(
   execute = command,
 ) {
   for (const [directory, sha] of [
-    [runtimeRoot, runtimeSha],
     [consumerRoot, consumerSha],
   ]) {
     if (

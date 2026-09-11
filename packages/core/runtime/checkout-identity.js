@@ -12,16 +12,3 @@ export function verifyCheckoutIdentity(
     throw new Error(`${label} does not match the checked-out commit`);
   return actual;
 }
-export function verifySourceRuntimeCheckouts(
-  { sourceDirectory, sourceSha, runtimeDirectory, runtimeSha },
-  execute = command,
-) {
-  verifyCheckoutIdentity(
-    { directory: runtimeDirectory, sha: runtimeSha, label: "Runtime" },
-    execute,
-  );
-  verifyCheckoutIdentity(
-    { directory: sourceDirectory, sha: sourceSha, label: "Source" },
-    execute,
-  );
-}

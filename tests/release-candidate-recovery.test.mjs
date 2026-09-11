@@ -21,8 +21,7 @@ import { candidateArtifactNames, normalizePlatformManifests } from "../packages/
 import { createRecoveredPublication, createRecoveredPublicationCandidate } from "../packages/core/release/recovery/publication.js";
 import { resolveAnchorRecoveryRequest } from "../packages/core/release/recovery/provenance.js";
 import { resolveRecoveredCandidateVersion, resolveRecoveredPublicationVersion } from "../packages/core/publication/candidate/kind.js";
-import { resolveRuntimeResumePublicRuntimeSha, validateRuntimeResumePublicReadback } from "../packages/core/release/recovery/readback.js";
-import { trackedRuntimePersistenceScan } from "../packages/core/release/recovery/runtime.js";
+import { validateRuntimeResumePublicReadback } from "../packages/core/release/recovery/readback.js";
 import { verifyReleaseCandidateStageCapsules } from "../packages/core/release/recovery/capsules.js";
 import { createReleaseCandidateStageCapsules } from "../packages/core/publication/candidate/stage-capsules.js";
 
@@ -84,7 +83,6 @@ function fixture(overrides = {}) {
     targetTree: TREE,
     expectedSourceTree: TREE,
     expectedCandidateRoot: `sha256:${passport.candidateHash}`,
-    expectedRuntimeSha: RUNTIME_SHA,
     run: {
       id: "100",
       repository: "kungfu-systems/buildchain",
@@ -299,38 +297,12 @@ test("cross-runtime recovery reuses only provider-bound original Stage Capsules"
   }
 });
 
-test("runtime persistence scan is rooted at the checked-out recovery runtime", () => {
-  const workspace = fs.mkdtempSync(
-    path.join(os.tmpdir(), "buildchain-runtime-persistence-scan-"),
-  );
-  try {
-    const workflowPath = path.join(workspace, ".github/workflows/recovery.yml");
-    fs.mkdirSync(path.dirname(workflowPath), { recursive: true });
-    fs.writeFileSync(workflowPath, "name: Recovery\n");
-    for (const args of [
-      ["init", "--quiet"],
-      ["add", ".github/workflows/recovery.yml"],
-    ]) {
-      execFileSync("git", args, { cwd: workspace });
-    }
-
-    const scan = trackedRuntimePersistenceScan({ runtimeRoot: workspace });
-    assert.equal(scan.status, "passed");
-    assert.deepEqual(
-      scan.files.map((file) => file.path),
-      [".github/workflows/recovery.yml"],
-    );
-  } finally {
-    fs.rmSync(workspace, { recursive: true, force: true });
-  }
-});
-
 test("resume public readback preserves exact history while the protected alpha channel advances", () => {
   const version = "4.0.1-alpha.6";
   const targetRef = "alpha/v4/v4.0";
   const exactTagSha = "6".repeat(40);
   const targetSha = "9".repeat(40);
-  const alphaSha = "7".repeat(40);
+  const floatingSha = "7".repeat(40);
   const runtimeSha = "8".repeat(40);
   const digest = "sha512-public";
   const transaction = {
@@ -346,7 +318,7 @@ test("resume public readback preserves exact history while the protected alpha c
       "4.0.1-alpha.8": { dist: { integrity: "sha512-current" } },
     },
   };
-  const valid = { targetRef, targetSha, targetVersion: "4.0.1-alpha.8", alphaSha, exactTagSha,
+  const valid = { targetRef, targetSha, targetVersion: "4.0.1-alpha.8", floatingSha, exactTagSha,
     tagLineage: { status: "ahead" }, runtimeLineage: { status: "ahead" }, floatingTargetLineage: { status: "ahead" }, runtimeSha, version, transaction, main, npm };
   assert.doesNotThrow(() => validateRuntimeResumePublicReadback(valid));
   assert.throws(
@@ -359,19 +331,6 @@ test("resume public readback preserves exact history while the protected alpha c
   assert.throws(
     () => validateRuntimeResumePublicReadback({ ...valid, targetVersion: "4.0.1-alpha.5", npm: regressed }),
     /does not match durable publication/,
-  );
-});
-
-test("resume public readback follows runtime A while runtime B remains transient", () => {
-  const buildRuntimeSha = "8".repeat(40);
-  const recoveryRuntimeSha = "9".repeat(40);
-  assert.equal(
-    resolveRuntimeResumePublicRuntimeSha({
-      runtimeSha: recoveryRuntimeSha,
-      buildAttempt: { runtimeSha: buildRuntimeSha },
-      floatingRefBefore: { ref: "v4-alpha", sha: buildRuntimeSha },
-    }),
-    buildRuntimeSha,
   );
 });
 
@@ -569,15 +528,7 @@ test("recovered sealed publication identity stays bound to the original candidat
   );
   assert.deepEqual(second, first);
   assert.equal(first.runtimeSha, RUNTIME_SHA);
-  assert.throws(
-    () => createRecoveredPublicationCandidate({
-      allFiles,
-      repository: firstInput.candidateRepository,
-      passport: firstInput.passport,
-      candidateRuntimeSha: "9".repeat(40),
-    }),
-    /recovered publication candidate runtime mismatch/,
-  );
+  assert.deepEqual(createRecoveredPublicationCandidate({ allFiles, repository: firstInput.candidateRepository, passport: firstInput.passport }), first);
 });
 
 test("recovery seals only original publication payload artifacts", () => {
@@ -878,7 +829,7 @@ test("anchor request parser rejects unbound workflow-dispatch candidates", () =>
     },
   };
   assert.deepEqual(resolveAnchorRecoveryRequest({ passport: input.passport, buildSummary, transactionId: "transaction-1" }), request);
-  request.runtime.sha = TARGET_SHA;
+  request.source.sha = TARGET_SHA;
   assert.throws(() => resolveAnchorRecoveryRequest({
     passport: input.passport,
     buildSummary: {
@@ -956,8 +907,6 @@ test("workflow recovery resumes through the same canonical publisher transaction
     "resume-expected-workflow-file",
     "resume-expected-source-tree",
     "resume-expected-candidate-root",
-    "resume-expected-candidate-runtime-sha",
-    "resume-buildchain-runtime-sha",
     "resume-transaction-id",
   ]) {
     assert.ok(requestSchema.properties[input], input);
@@ -968,7 +917,7 @@ test("workflow recovery resumes through the same canonical publisher transaction
   assert.match(recovery, /^  resume:/m);
   assert.match(
     recovery,
-    /uses: \.\/\.github\/workflows\/public-release-promote\.yml/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-release-promote\.yml@v4/,
   );
   assert.doesNotMatch(recovery, /^  (?:alpha|stable|install|publish):/m);
   assert.match(advanced, /actions\/release\/promotion\/qualify/);
@@ -986,7 +935,7 @@ test("workflow recovery resumes through the same canonical publisher transaction
   assert.match(applyNode, /Resume the same transaction journal/);
   assert.match(
     refPromotion,
-    /^  promote:[\s\S]*uses: \.\/\.github\/workflows\/public-release-promote\.yml/m,
+    /^  promote:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-release-promote\.yml@v4/m,
   );
   assert.doesNotMatch(refPromotion, /^  promote-stable:/m);
   assert.doesNotMatch(advanced, /gh run rerun/);

@@ -8,7 +8,7 @@ import {
 const sha = (value) => value.repeat(40);
 const root = (value) => `sha256:${value.repeat(64)}`;
 const policy = {
-  schema: "kungfu-buildchain-v4-universal-workflow-admission-policy/v1",
+  schema: "buildchain.universal-workflow-admission-policy/v2",
   sourceRepository: "kungfu-systems/buildchain",
   consumerAdmission: "verified-caller",
   allowedCapabilities: [
@@ -35,8 +35,8 @@ test("Exact-candidate requests exercise conformance plus alpha and stable routes
       channel,
       policy,
     });
-    assert.equal(request.mode, "exact");
-    assert.equal(request.candidate.expectedSha, sha("1"));
+    assert.equal(request.mode, undefined);
+    assert.equal(request.candidate, undefined);
     assert.equal(request.consumer.sourceSha, sha("2"));
     assert.equal(
       request.capability.id,

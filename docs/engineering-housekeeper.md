@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: reviewed
-last_reviewed: 2026-08-10
+last_reviewed: 2026-09-11
 ---
 
 # Engineering Housekeeper
@@ -127,8 +127,8 @@ continue.
 | `stale-pull-request-label`  | string  | empty                       | Empty keeps pull requests report-only; non-empty permits labeling, never closure. |
 | `max-actions`               | number  | `20`                        | Positive global apply limit.                                                      |
 | `artifact-retention-days`   | number  | `30`                        | Retention for plan, report, and receipts.                                         |
-| `buildchain-repository`     | string  | `kungfu-systems/buildchain` | Runtime source repository.                                                        |
-| `buildchain-ref`            | string  | `v4`                        | Runtime ref; trusted qualification may pass a train or exact SHA.                 |
+| `runtime-ref` | string | empty | Transient runtime selected by the central entry; otherwise use the lock or entry default. |
+| `contract-lock` | string | empty | Optional consumer-relative contract lock path. |
 
 Stable outputs are `plan-root`, `report-receipt-root`, optional
 `branch-receipt-root` and `pull-request-receipt-root`, `action-count`,

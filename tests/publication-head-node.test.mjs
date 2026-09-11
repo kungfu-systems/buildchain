@@ -139,7 +139,7 @@ test("all rejection nodes retain their workflow-owned conditions and scoped perm
     assert.deepEqual(job.permissions, {});
     assert.equal(
       job.steps.at(-1).uses,
-      "./.buildchain/workflow-shell/actions/workflow/admission/reject",
+      "./.buildchain/runtime/actions/workflow/admission/reject",
     );
   }
   const workflow = YAML.parse(
@@ -158,7 +158,7 @@ test("all rejection nodes retain their workflow-owned conditions and scoped perm
     assert.deepEqual(job.permissions, { contents: "read" });
     assert.equal(
       job.steps.at(-1).uses,
-      "./.buildchain/workflow-shell/actions/workflow/admission/reject",
+      "./.buildchain/runtime/actions/workflow/admission/reject",
     );
   }
 });

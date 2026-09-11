@@ -25,9 +25,6 @@ test("binary selection requires exact runtime at the workflow source and derives
     { runId: "0" },
     { runId: "latest" },
     { tag: "v4-alpha" },
-    { runtime: "" },
-    { runtime: "v4" },
-    { runtime: source },
   ])
     assert.throws(() => validateBinaryPublicationSelection({ ...input(), ...change }));
 });
@@ -39,7 +36,7 @@ test("binary coordinates require stable tag readback and an existing Release bef
   } } };
   const result = await resolveBinaryPublicationCoordinates({ ...input(), github });
   assert.equal(result["source-sha"], source);
-  assert.equal(result["buildchain-ref"], runtime);
+  assert.equal(Object.hasOwn(result,"buildchain-ref"), false);
   assert.equal(result["evidence-run-id"], "123");
   assert.equal(calls.length, 3);
   assert.deepEqual(calls[2], { owner: "example", repo: "consumer", tag: "v4.1.0-alpha.0" });

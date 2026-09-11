@@ -1,6 +1,5 @@
 import path from "node:path";
 import { command } from "../../../runtime/action-process.mjs";
-import { installationRoot } from "../../../runtime/installation-root.js";
 import { rehearseStageCheckpoint } from "./run.js";
 import { rehearseStageResume } from "./resume.js";
 import { rehearseTailResealMacos } from "./macos-tail.js";
@@ -38,9 +37,9 @@ export function verifyStageCapsuleCheckpoints({
   return { checkpoint, resume, tail };
 }
 export function verifyStageCapsuleCheckpointsAction(core, env) {
-  const runtimeRoot = installationRoot(import.meta.url);
+  const sourceRoot = path.resolve(env.GITHUB_WORKSPACE);
   if (
-    command("git", ["-C", runtimeRoot, "rev-parse", "HEAD"], {
+    command("git", ["-C", sourceRoot, "rev-parse", "HEAD"], {
       stdio: "pipe",
     }).trim() !== env.GITHUB_SHA
   )
@@ -48,7 +47,7 @@ export function verifyStageCapsuleCheckpointsAction(core, env) {
       "Checkpoint verification must execute exact candidate source",
     );
   return verifyStageCapsuleCheckpoints({
-    runtimeRoot,
+    runtimeRoot: sourceRoot,
     workspace: path.resolve(env.GITHUB_WORKSPACE),
     platform: core.getInput("platform", { required: true }),
     environment: env,

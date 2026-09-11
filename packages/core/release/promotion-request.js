@@ -55,7 +55,6 @@ export function normalizePromotionRequest(value, kind = "request") {
 export function bindPromotionInvocation(
   requestValue,
   selection,
-  authorization = {},
 ) {
   const request = normalizePromotionRequest(requestValue);
   const projected = Object.fromEntries(
@@ -64,8 +63,6 @@ export function bindPromotionInvocation(
     ),
   );
   const routing = {
-    "buildchain-ref": "runtime-sha",
-    "buildchain-contract-lock-path": "contract-lock-path",
     "buildchain-expected-channel": "channel",
     channel: "publication-channel",
     "target-ref": "target-ref",
@@ -85,33 +82,11 @@ export function bindPromotionInvocation(
       throw new Error(`Promotion selection requires ${source}`);
     projected[key] = selection[source];
   }
-  for (const key of ["runtime-sha", "shell-sha", "router-sha"])
-    if (!/^[0-9a-f]{40}$/.test(selection[key]))
-      throw new Error(`Promotion selection ${key} must be exact`);
-  if (
-    selection["router-sha"] !== selection["shell-sha"] ||
-    selection["shell-call-ref"] !== selection["shell-sha"]
-  )
-    throw new Error("Publisher must use the exact defining workflow");
   if (!/^sha256:[0-9a-f]{64}$/.test(selection["contract-lock-digest"]))
     throw new Error("Promotion contract lock must be rooted");
   if (!["true", "false"].includes(selection["override-used"]))
     throw new Error("Promotion override decision is missing");
   projected["promotion-override-used"] = selection["override-used"] === "true";
-  projected["promotion-runtime-authorization-json"] =
-    authorization["runtime-authorization-json"] || "";
-  projected["promotion-runtime-authorization-root"] =
-    authorization["runtime-authorization-root"] || "";
-  if (
-    projected["promotion-override-used"] &&
-    (!projected["promotion-runtime-authorization-json"] ||
-      !/^sha256:[0-9a-f]{64}$/.test(
-        projected["promotion-runtime-authorization-root"],
-      ))
-  )
-    throw new Error(
-      "Promotion override requires rooted consumer authorization",
-    );
   projected["buildchain-expected-major"] = "4";
   projected["publication-authority-workflow-path"] =
     ".github/workflows/.release-promote.yml";
@@ -119,25 +94,11 @@ export function bindPromotionInvocation(
   return normalizePromotionRequest(projected, "invocation");
 }
 
-export function verifyPromotionInvocation(value, workflowSha) {
+export function verifyPromotionInvocation(value) {
   if (typeof value === "string") value = JSON.parse(value);
   const normalized = normalizePromotionRequest(value, "invocation");
   if (Object.keys(value).length !== Object.keys(normalized).length)
     throw new Error("Promotion invocation must include all normalized fields");
-  if (
-    !/^[0-9a-f]{40}$/.test(workflowSha || "") ||
-    normalized["promotion-shell-sha"] !== workflowSha ||
-    normalized["promotion-router-sha"] !== workflowSha ||
-    normalized["promotion-shell-ref"] !== workflowSha
-  )
-    throw new Error(
-      "Promotion invocation is not bound to this defining workflow",
-    );
-  if (
-    !/^[0-9a-f]{40}$/.test(normalized["promotion-runtime-sha"]) ||
-    normalized["buildchain-ref"] !== normalized["promotion-runtime-sha"]
-  )
-    throw new Error("Promotion runtime must bind one exact admitted commit");
   if (
     !/^sha256:[0-9a-f]{64}$/.test(normalized["promotion-contract-lock-digest"])
   )

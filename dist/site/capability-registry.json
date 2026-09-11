@@ -159,7 +159,7 @@
         "cliCommandCount": 2,
         "nodeApiCount": 2,
         "workflowCount": 0,
-        "actionCount": 24
+        "actionCount": 23
       },
       "manuals": [
         "docs/release-propagation.md",
@@ -298,8 +298,8 @@
         "pageCount": 13,
         "cliCommandCount": 0,
         "nodeApiCount": 2,
-        "workflowCount": 56,
-        "actionCount": 34
+        "workflowCount": 55,
+        "actionCount": 26
       },
       "manuals": [
         "docs/cli.md",

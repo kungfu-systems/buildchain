@@ -1,5 +1,6 @@
 name: artifact-attestation-attest
-description: Execute the artifact-attestation attest capability within its caller job boundary.
+description: Execute the artifact-attestation attest capability within its
+  caller job boundary.
 inputs:
   runtime-ref:
     description: Exact runtime ref; defaults to this workflow SHA.
@@ -30,17 +31,10 @@ runs:
       with:
         node-version: "24"
     - name: Validate immutable signer identity
-      uses: ./.buildchain/workflow-shell/actions/build/artifact/admit-attestation
+      uses: ./.buildchain/runtime/actions/build/artifact/admit-attestation
       with:
         request-json: ${{ inputs.request-json }}
         definition-sha: ${{ inputs.definition-sha }}
-    - name: Load exact Buildchain attester runtime
-      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      with:
-        repository: kungfu-systems/buildchain
-        ref: ${{ inputs.runtime-ref }}
-        path: .buildchain/attester-runtime
-        persist-credentials: false
     - name: Download exact release subject
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
       with:
@@ -67,17 +61,16 @@ runs:
         path: .buildchain/attestation-input/release-passport
     - name: Verify sealed inputs and write predicate
       id: prepare
-      uses: ./.buildchain/attester-runtime/actions/build/artifact/prepare-attestation
+      uses: ./.buildchain/runtime/actions/build/artifact/prepare-attestation
       with:
-        subject-path: .buildchain/attestation-input/subject/${{ fromJSON(inputs.request-json).subject-relative-path }}
-        platform-manifest-path:
-          .buildchain/attestation-input/platform-manifest/${{ fromJSON(inputs.request-json).platform-manifest-relative-path
-          }}
-        release-passport-path:
-          .buildchain/attestation-input/release-passport/${{ fromJSON(inputs.request-json).release-passport-relative-path
-          }}
+        subject-path: .buildchain/attestation-input/subject/${{
+          fromJSON(inputs.request-json).subject-relative-path }}
+        platform-manifest-path: .buildchain/attestation-input/platform-manifest/${{
+          fromJSON(inputs.request-json).platform-manifest-relative-path }}
+        release-passport-path: .buildchain/attestation-input/release-passport/${{
+          fromJSON(inputs.request-json).release-passport-relative-path }}
         policy-json: ${{ fromJSON(inputs.request-json).policy-json }}
-        runtime-sha: ${{ fromJSON(inputs.request-json).buildchain-ref }}
+        runtime-sha: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
     - name: Create GitHub/Sigstore attestation
       id: attest
       uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6
@@ -88,13 +81,13 @@ runs:
         predicate-path: ${{ steps.prepare.outputs.predicate-path }}
     - name: Seal retained attestation evidence
       id: finalize
-      uses: ./.buildchain/attester-runtime/actions/build/artifact/seal-attestation
+      uses: ./.buildchain/runtime/actions/build/artifact/seal-attestation
       with:
         preparation-json: ${{ steps.prepare.outputs.preparation-json }}
         attestation-id: ${{ steps.attest.outputs.attestation-id }}
         attestation-url: ${{ steps.attest.outputs.attestation-url }}
         bundle-path: ${{ steps.attest.outputs.bundle-path }}
-        runtime-sha: ${{ fromJSON(inputs.request-json).buildchain-ref }}
+        runtime-sha: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
         token: ${{ github.token }}
     - name: Publish offline-verifiable evidence
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a

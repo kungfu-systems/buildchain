@@ -1039,7 +1039,7 @@
       ],
       "source": {
         "path": "packages/core/adoption/cross-platform-adopter-qualification.js",
-        "line": 133
+        "line": 132
       },
       "example": "import { createCrossPlatformAdopterReport } from \"@kungfu-tech/buildchain/cross-platform-adopter-qualification\";",
       "maturity": "stable",
@@ -1164,7 +1164,7 @@
       ],
       "source": {
         "path": "packages/core/adoption/cross-platform-adopter-qualification.js",
-        "line": 144
+        "line": 143
       },
       "example": "import { qualifyCrossPlatformAdopters } from \"@kungfu-tech/buildchain/cross-platform-adopter-qualification\";",
       "maturity": "stable",
@@ -1193,7 +1193,7 @@
       ],
       "source": {
         "path": "packages/core/adoption/cross-platform-adopter-qualification.js",
-        "line": 98
+        "line": 97
       },
       "example": "import { validateCrossPlatformAdopterReport } from \"@kungfu-tech/buildchain/cross-platform-adopter-qualification\";",
       "maturity": "stable",
@@ -4324,7 +4324,7 @@
       ],
       "source": {
         "path": "packages/core/build/artifact-signing.js",
-        "line": 435
+        "line": 432
       },
       "example": "import { validateArtifactSigningReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6563,7 +6563,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/floating-consumer-evidence.js",
-        "line": 205
+        "line": 187
       },
       "example": "import { certifyFloatingConsumerPolicyReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6587,7 +6587,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/floating-consumer-evidence.js",
-        "line": 8
+        "line": 7
       },
       "example": "import { FLOATING_CONSUMER_CERTIFICATION } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6611,7 +6611,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/floating-consumer-evidence.js",
-        "line": 4
+        "line": 3
       },
       "example": "import { FLOATING_CONSUMER_POLICY } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6635,7 +6635,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/floating-consumer-evidence.js",
-        "line": 6
+        "line": 5
       },
       "example": "import { FLOATING_CONSUMER_RECEIPT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6664,7 +6664,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/floating-consumer-evidence.js",
-        "line": 141
+        "line": 123
       },
       "example": "import { floatingConsumerDocumentRoot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6693,7 +6693,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/floating-consumer-evidence.js",
-        "line": 290
+        "line": 272
       },
       "example": "import { verifyFloatingConsumerPolicyCertification } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6722,7 +6722,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/floating-consumer-evidence.js",
-        "line": 145
+        "line": 127
       },
       "example": "import { verifyFloatingConsumerPolicyReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6751,7 +6751,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/floating-consumer-policy.js",
-        "line": 79
+        "line": 72
       },
       "example": "import { consumerPolicyScannerRoot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6780,7 +6780,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/floating-consumer-policy.js",
-        "line": 90
+        "line": 83
       },
       "example": "import { resolveFloatingConsumerPolicyAuthority } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6809,250 +6809,9 @@
       ],
       "source": {
         "path": "packages/core/consumer/floating-consumer-policy.js",
-        "line": 432
+        "line": 368
       },
       "example": "import { scanFloatingConsumerPolicy } from \"@kungfu-tech/buildchain\";",
-      "maturity": "stable",
-      "audience": [
-        "developer",
-        "agent"
-      ]
-    },
-    {
-      "id": "packages/core/consumer/runtime-ref-resume-authority.js#authorizeRuntimeSelection",
-      "name": "authorizeRuntimeSelection",
-      "kind": "function",
-      "signature": "function authorizeRuntimeSelection({ repository, eventName, mode = \"dispatch\", actor, actorPermission, reason, authorizedAt, sourceSha, sourceTreeSha, requestedRef, resolvedRuntimeSha, approvedRefReadbacks, stableContractLockRoot, alphaContractLockRoot, consumerPolicyReceiptRoot, persistenceScan, } = {})",
-      "parameters": [
-        {
-          "name": "parameter1",
-          "signature": "{ repository, eventName, mode = \"dispatch\", actor, actorPermission, reason, authorizedAt, sourceSha, sourceTreeSha, requestedRef, resolvedRuntimeSha, approvedRefReadbacks, stableContractLockRoot, alphaContractLockRoot, consumerPolicyReceiptRoot, persistenceScan, } = {}"
-        }
-      ],
-      "returns": "unknown",
-      "errors": [
-        "May throw an Error on rejected input or failed operations; follow the linked source contract."
-      ],
-      "sideEffects": [
-        "none-detected-by-static-source-scan"
-      ],
-      "source": {
-        "path": "packages/core/consumer/runtime-ref-resume-authority.js",
-        "line": 170
-      },
-      "example": "import { authorizeRuntimeSelection } from \"@kungfu-tech/buildchain\";",
-      "maturity": "stable",
-      "audience": [
-        "developer",
-        "agent"
-      ]
-    },
-    {
-      "id": "packages/core/consumer/runtime-ref-resume-authority.js#createRuntimeResumeLineage",
-      "name": "createRuntimeResumeLineage",
-      "kind": "function",
-      "signature": "function createRuntimeResumeLineage({ authorization, authorizationRoot, buildAttempt, resumeAttempt, source, consumerPolicyReceiptRoot, requiredPlatforms, stageCapsules, resumePlanRoot, finalPublicReadbackRoot, floatingRefBefore, floatingRefAfter, } = {})",
-      "parameters": [
-        {
-          "name": "parameter1",
-          "signature": "{ authorization, authorizationRoot, buildAttempt, resumeAttempt, source, consumerPolicyReceiptRoot, requiredPlatforms, stageCapsules, resumePlanRoot, finalPublicReadbackRoot, floatingRefBefore, floatingRefAfter, } = {}"
-        }
-      ],
-      "returns": "unknown",
-      "errors": [
-        "May throw an Error on rejected input or failed operations; follow the linked source contract."
-      ],
-      "sideEffects": [
-        "none-detected-by-static-source-scan"
-      ],
-      "source": {
-        "path": "packages/core/consumer/runtime-ref-resume-authority.js",
-        "line": 321
-      },
-      "example": "import { createRuntimeResumeLineage } from \"@kungfu-tech/buildchain\";",
-      "maturity": "stable",
-      "audience": [
-        "developer",
-        "agent"
-      ]
-    },
-    {
-      "id": "packages/core/consumer/runtime-ref-resume-authority.js#RUNTIME_AUTHORIZATION_CONTRACT",
-      "name": "RUNTIME_AUTHORIZATION_CONTRACT",
-      "kind": "constant",
-      "signature": "const RUNTIME_AUTHORIZATION_CONTRACT",
-      "parameters": [],
-      "returns": "value",
-      "errors": [
-        "Import does not declare a throw contract."
-      ],
-      "sideEffects": [
-        "none-on-import"
-      ],
-      "source": {
-        "path": "packages/core/consumer/runtime-ref-resume-authority.js",
-        "line": 9
-      },
-      "example": "import { RUNTIME_AUTHORIZATION_CONTRACT } from \"@kungfu-tech/buildchain\";",
-      "maturity": "stable",
-      "audience": [
-        "developer",
-        "agent"
-      ]
-    },
-    {
-      "id": "packages/core/consumer/runtime-ref-resume-authority.js#RUNTIME_PERSISTENCE_SCAN_CONTRACT",
-      "name": "RUNTIME_PERSISTENCE_SCAN_CONTRACT",
-      "kind": "value",
-      "signature": "RUNTIME_PERSISTENCE_SCAN_CONTRACT",
-      "parameters": [],
-      "returns": "unknown",
-      "errors": [
-        "No narrower error contract was mechanically discoverable."
-      ],
-      "sideEffects": [
-        "unknown"
-      ],
-      "source": {
-        "path": "packages/core/consumer/runtime-ref-resume-authority.js",
-        "line": 1
-      },
-      "example": "import { RUNTIME_PERSISTENCE_SCAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
-      "maturity": "stable",
-      "audience": [
-        "developer",
-        "agent"
-      ]
-    },
-    {
-      "id": "packages/core/consumer/runtime-ref-resume-authority.js#RUNTIME_RESUME_LINEAGE_CONTRACT",
-      "name": "RUNTIME_RESUME_LINEAGE_CONTRACT",
-      "kind": "constant",
-      "signature": "const RUNTIME_RESUME_LINEAGE_CONTRACT",
-      "parameters": [],
-      "returns": "value",
-      "errors": [
-        "Import does not declare a throw contract."
-      ],
-      "sideEffects": [
-        "none-on-import"
-      ],
-      "source": {
-        "path": "packages/core/consumer/runtime-ref-resume-authority.js",
-        "line": 11
-      },
-      "example": "import { RUNTIME_RESUME_LINEAGE_CONTRACT } from \"@kungfu-tech/buildchain\";",
-      "maturity": "stable",
-      "audience": [
-        "developer",
-        "agent"
-      ]
-    },
-    {
-      "id": "packages/core/consumer/runtime-ref-resume-authority.js#runtimeResumeDocumentRoot",
-      "name": "runtimeResumeDocumentRoot",
-      "kind": "function",
-      "signature": "function runtimeResumeDocumentRoot(value)",
-      "parameters": [
-        {
-          "name": "value",
-          "signature": "value"
-        }
-      ],
-      "returns": "unknown",
-      "errors": [
-        "May throw an Error on rejected input or failed operations; follow the linked source contract."
-      ],
-      "sideEffects": [
-        "may-write-or-invoke-external-actions"
-      ],
-      "source": {
-        "path": "packages/core/consumer/runtime-ref-resume-authority.js",
-        "line": 31
-      },
-      "example": "import { runtimeResumeDocumentRoot } from \"@kungfu-tech/buildchain\";",
-      "maturity": "stable",
-      "audience": [
-        "developer",
-        "agent"
-      ]
-    },
-    {
-      "id": "packages/core/consumer/runtime-ref-resume-authority.js#scanRuntimeSelectorPersistence",
-      "name": "scanRuntimeSelectorPersistence",
-      "kind": "value",
-      "signature": "scanRuntimeSelectorPersistence",
-      "parameters": [],
-      "returns": "unknown",
-      "errors": [
-        "No narrower error contract was mechanically discoverable."
-      ],
-      "sideEffects": [
-        "unknown"
-      ],
-      "source": {
-        "path": "packages/core/consumer/runtime-ref-resume-authority.js",
-        "line": 1
-      },
-      "example": "import { scanRuntimeSelectorPersistence } from \"@kungfu-tech/buildchain\";",
-      "maturity": "stable",
-      "audience": [
-        "developer",
-        "agent"
-      ]
-    },
-    {
-      "id": "packages/core/consumer/runtime-ref-resume-authority.js#verifyRuntimeAuthorizationReceipt",
-      "name": "verifyRuntimeAuthorizationReceipt",
-      "kind": "function",
-      "signature": "function verifyRuntimeAuthorizationReceipt({ receipt, receiptRoot, repository = \"\", sourceSha = \"\", runtimeSha = \"\", consumerPolicyReceiptRoot = \"\", } = {})",
-      "parameters": [
-        {
-          "name": "parameter1",
-          "signature": "{ receipt, receiptRoot, repository = \"\", sourceSha = \"\", runtimeSha = \"\", consumerPolicyReceiptRoot = \"\", } = {}"
-        }
-      ],
-      "returns": "unknown",
-      "errors": [
-        "Errors from called operations may propagate; no narrower throw contract is declared in source."
-      ],
-      "sideEffects": [
-        "none-detected-by-static-source-scan"
-      ],
-      "source": {
-        "path": "packages/core/consumer/runtime-ref-resume-authority.js",
-        "line": 268
-      },
-      "example": "import { verifyRuntimeAuthorizationReceipt } from \"@kungfu-tech/buildchain\";",
-      "maturity": "stable",
-      "audience": [
-        "developer",
-        "agent"
-      ]
-    },
-    {
-      "id": "packages/core/consumer/runtime-ref-resume-authority.js#verifyRuntimeResumeLineage",
-      "name": "verifyRuntimeResumeLineage",
-      "kind": "function",
-      "signature": "function verifyRuntimeResumeLineage({ lineage, lineageRoot, repository = \"\", sourceSha = \"\", buildRuntimeSha = \"\", resumeRuntimeSha = \"\", consumerPolicyReceiptRoot = \"\", } = {})",
-      "parameters": [
-        {
-          "name": "parameter1",
-          "signature": "{ lineage, lineageRoot, repository = \"\", sourceSha = \"\", buildRuntimeSha = \"\", resumeRuntimeSha = \"\", consumerPolicyReceiptRoot = \"\", } = {}"
-        }
-      ],
-      "returns": "unknown",
-      "errors": [
-        "Errors from called operations may propagate; no narrower throw contract is declared in source."
-      ],
-      "sideEffects": [
-        "none-detected-by-static-source-scan"
-      ],
-      "source": {
-        "path": "packages/core/consumer/runtime-ref-resume-authority.js",
-        "line": 547
-      },
-      "example": "import { verifyRuntimeResumeLineage } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -7098,7 +6857,7 @@
       ],
       "source": {
         "path": "packages/core/contracts/buildchain-contract.js",
-        "line": 54
+        "line": 55
       },
       "example": "import { BUILDCHAIN_CONTRACT_LOCK } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7122,7 +6881,7 @@
       ],
       "source": {
         "path": "packages/core/contracts/buildchain-contract.js",
-        "line": 53
+        "line": 54
       },
       "example": "import { BUILDCHAIN_RUNTIME_CONTRACT_WORLD } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7159,7 +6918,7 @@
       ],
       "source": {
         "path": "packages/core/contracts/buildchain-contract.js",
-        "line": 971
+        "line": 837
       },
       "example": "import { contractSummary } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7188,7 +6947,7 @@
       ],
       "source": {
         "path": "packages/core/contracts/buildchain-contract.js",
-        "line": 900
+        "line": 766
       },
       "example": "import { createBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7217,7 +6976,7 @@
       ],
       "source": {
         "path": "packages/core/contracts/buildchain-contract.js",
-        "line": 193
+        "line": 189
       },
       "example": "import { createBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7270,7 +7029,7 @@
       ],
       "source": {
         "path": "packages/core/contracts/buildchain-contract.js",
-        "line": 967
+        "line": 833
       },
       "example": "import { evaluateBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7299,7 +7058,7 @@
       ],
       "source": {
         "path": "packages/core/contracts/buildchain-contract.js",
-        "line": 841
+        "line": 707
       },
       "example": "import { finalizeBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7376,7 +7135,7 @@
       ],
       "source": {
         "path": "packages/core/contracts/buildchain-contract.js",
-        "line": 956
+        "line": 822
       },
       "example": "import { readBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7405,7 +7164,7 @@
       ],
       "source": {
         "path": "packages/core/contracts/buildchain-contract.js",
-        "line": 936
+        "line": 802
       },
       "example": "import { readBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7434,7 +7193,7 @@
       ],
       "source": {
         "path": "packages/core/contracts/buildchain-contract.js",
-        "line": 986
+        "line": 852
       },
       "example": "import { renderBuildchainContractDriftIssueBody } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7463,7 +7222,7 @@
       ],
       "source": {
         "path": "packages/core/contracts/buildchain-contract.js",
-        "line": 82
+        "line": 83
       },
       "example": "import { sha256BuildchainContractJson } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7492,7 +7251,7 @@
       ],
       "source": {
         "path": "packages/core/contracts/buildchain-contract.js",
-        "line": 86
+        "line": 87
       },
       "example": "import { sha256File } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
@@ -7521,7 +7280,7 @@
       ],
       "source": {
         "path": "packages/core/contracts/buildchain-contract.js",
-        "line": 82
+        "line": 83
       },
       "example": "import { sha256Json } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
@@ -12425,7 +12184,7 @@
       ],
       "source": {
         "path": "packages/core/governance/buildchain-publication-authority.js",
-        "line": 66
+        "line": 65
       },
       "example": "import { buildchainPublicationAuthorityDescriptors } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12454,7 +12213,7 @@
       ],
       "source": {
         "path": "packages/core/governance/buildchain-publication-authority.js",
-        "line": 105
+        "line": 104
       },
       "example": "import { createBuildchainPublicationAuthorityRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14531,7 +14290,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 447
+        "line": 446
       },
       "example": "import { aggregateControllerReceipts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14743,7 +14502,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 489
+        "line": 488
       },
       "example": "import { createControllerReceiptReference } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14785,11 +14544,11 @@
       "id": "packages/core/observability/controller-evidence.js#normalizeControllerReceiptReferences",
       "name": "normalizeControllerReceiptReferences",
       "kind": "function",
-      "signature": "function normalizeControllerReceiptReferences({ receipts = [], references = [], expectedSourceSha = \"\", acceptedSourceShas = [], expectedRuntimeSha = \"\", requirePassed = false, } = {})",
+      "signature": "function normalizeControllerReceiptReferences({ receipts = [], references = [], expectedSourceSha = \"\", acceptedSourceShas = [], requirePassed = false, } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ receipts = [], references = [], expectedSourceSha = \"\", acceptedSourceShas = [], expectedRuntimeSha = \"\", requirePassed = false, } = {}"
+          "signature": "{ receipts = [], references = [], expectedSourceSha = \"\", acceptedSourceShas = [], requirePassed = false, } = {}"
         }
       ],
       "returns": "unknown",
@@ -14801,7 +14560,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 530
+        "line": 527
       },
       "example": "import { normalizeControllerReceiptReferences } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14843,7 +14602,7 @@
       "id": "packages/core/observability/controller-evidence.js#validateControllerReceipt",
       "name": "validateControllerReceipt",
       "kind": "function",
-      "signature": "function validateControllerReceipt(receipt, { plan = undefined, expectedSourceSha = \"\", expectedRuntimeSha = \"\", expectedPlanDigest = \"\", } = {})",
+      "signature": "function validateControllerReceipt(receipt, { plan = undefined, expectedSourceSha = \"\", expectedPlanDigest = \"\", } = {})",
       "parameters": [
         {
           "name": "receipt",
@@ -14851,7 +14610,7 @@
         },
         {
           "name": "parameter2",
-          "signature": "{ plan = undefined, expectedSourceSha = \"\", expectedRuntimeSha = \"\", expectedPlanDigest = \"\", } = {}"
+          "signature": "{ plan = undefined, expectedSourceSha = \"\", expectedPlanDigest = \"\", } = {}"
         }
       ],
       "returns": "unknown",
@@ -14876,7 +14635,7 @@
       "id": "packages/core/observability/controller-evidence.js#validateControllerReceiptReference",
       "name": "validateControllerReceiptReference",
       "kind": "function",
-      "signature": "function validateControllerReceiptReference(reference, { expectedSourceSha = \"\", acceptedSourceShas = [], expectedRuntimeSha = \"\", requirePassed = false, } = {})",
+      "signature": "function validateControllerReceiptReference(reference, { expectedSourceSha = \"\", acceptedSourceShas = [], requirePassed = false, } = {})",
       "parameters": [
         {
           "name": "reference",
@@ -14884,7 +14643,7 @@
         },
         {
           "name": "parameter2",
-          "signature": "{ expectedSourceSha = \"\", acceptedSourceShas = [], expectedRuntimeSha = \"\", requirePassed = false, } = {}"
+          "signature": "{ expectedSourceSha = \"\", acceptedSourceShas = [], requirePassed = false, } = {}"
         }
       ],
       "returns": "unknown",
@@ -14896,7 +14655,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 503
+        "line": 502
       },
       "example": "import { validateControllerReceiptReference } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16935,9 +16694,38 @@
       ],
       "source": {
         "path": "packages/core/paper/paper.js",
-        "line": 46
+        "line": 55
       },
       "example": "import { collectPaperPreflight } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/paper/paper.js#collectPaperSourcePolicy",
+      "name": "collectPaperSourcePolicy",
+      "kind": "function",
+      "signature": "function collectPaperSourcePolicy({ cwd = process.cwd() } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ cwd = process.cwd() } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/paper/paper.js",
+        "line": 46
+      },
+      "example": "import { collectPaperSourcePolicy } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -21251,6 +21039,117 @@
       ]
     },
     {
+      "id": "packages/core/release/recovery/lineage.js#createRuntimeResumeLineage",
+      "name": "createRuntimeResumeLineage",
+      "kind": "function",
+      "signature": "function createRuntimeResumeLineage({ repository, buildAttempt, resumeAttempt, source, consumerPolicyReceiptRoot, requiredPlatforms, stageCapsules, resumePlanRoot, finalPublicReadbackRoot, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ repository, buildAttempt, resumeAttempt, source, consumerPolicyReceiptRoot, requiredPlatforms, stageCapsules, resumePlanRoot, finalPublicReadbackRoot, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release/recovery/lineage.js",
+        "line": 89
+      },
+      "example": "import { createRuntimeResumeLineage } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release/recovery/lineage.js#RUNTIME_RESUME_LINEAGE_CONTRACT",
+      "name": "RUNTIME_RESUME_LINEAGE_CONTRACT",
+      "kind": "constant",
+      "signature": "const RUNTIME_RESUME_LINEAGE_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/release/recovery/lineage.js",
+        "line": 2
+      },
+      "example": "import { RUNTIME_RESUME_LINEAGE_CONTRACT } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release/recovery/lineage.js#runtimeResumeDocumentRoot",
+      "name": "runtimeResumeDocumentRoot",
+      "kind": "function",
+      "signature": "function runtimeResumeDocumentRoot(value)",
+      "parameters": [
+        {
+          "name": "value",
+          "signature": "value"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/release/recovery/lineage.js",
+        "line": 18
+      },
+      "example": "import { runtimeResumeDocumentRoot } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release/recovery/lineage.js#verifyRuntimeResumeLineage",
+      "name": "verifyRuntimeResumeLineage",
+      "kind": "function",
+      "signature": "function verifyRuntimeResumeLineage({ lineage, lineageRoot, repository = \"\", sourceSha = \"\", consumerPolicyReceiptRoot = \"\", } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ lineage, lineageRoot, repository = \"\", sourceSha = \"\", consumerPolicyReceiptRoot = \"\", } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release/recovery/lineage.js",
+        "line": 251
+      },
+      "example": "import { verifyRuntimeResumeLineage } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/release/release-activation-transaction.js#abortReleaseActivationTransaction",
       "name": "abortReleaseActivationTransaction",
       "kind": "function",
@@ -21684,7 +21583,7 @@
       ],
       "source": {
         "path": "packages/core/release/release-candidate-recovery.js",
-        "line": 585
+        "line": 581
       },
       "example": "import { recoveryFailure } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21803,11 +21702,11 @@
       "id": "packages/core/release/release-candidate-recovery.js#verifyReleaseCandidateRecovery",
       "name": "verifyReleaseCandidateRecovery",
       "kind": "function",
-      "signature": "function verifyReleaseCandidateRecovery({ candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile, expectedWorkflowName, channel, targetRef, targetSha, targetRefSha = targetSha, targetTree, expectedSourceTree = \"\", expectedCandidateRoot = \"\", expectedRuntimeSha, expectedTransactionId = \"\", existingTransaction = undefined, run, workflow, pullRequest, ancestry, anchorProvenance = undefined, passport, buildSummary, controllerReceipts = [], platformManifests = [], platformManifestEvidence = [], productPayloadManifests = [], artifacts = [], publicationVersion = \"\", currentToolingSha, recoveryRunId = \"\", createdAt = new Date().toISOString(), } = {})",
+      "signature": "function verifyReleaseCandidateRecovery({ candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile, expectedWorkflowName, channel, targetRef, targetSha, targetRefSha = targetSha, targetTree, expectedSourceTree = \"\", expectedCandidateRoot = \"\", expectedTransactionId = \"\", existingTransaction = undefined, run, workflow, pullRequest, ancestry, anchorProvenance = undefined, passport, buildSummary, controllerReceipts = [], platformManifests = [], platformManifestEvidence = [], productPayloadManifests = [], artifacts = [], publicationVersion = \"\", currentToolingSha, recoveryRunId = \"\", createdAt = new Date().toISOString(), } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile, expectedWorkflowName, channel, targetRef, targetSha, targetRefSha = targetSha, targetTree, expectedSourceTree = \"\", expectedCandidateRoot = \"\", expectedRuntimeSha, expectedTransactionId = \"\", existingTransaction = undefined, run, workflow, pullRequest, ancestry, anchorProvenance = undefined, passport, buildSummary, controllerReceipts = [], platformManifests = [], platformManifestEvidence = [], productPayloadManifests = [], artifacts = [], publicationVersion = \"\", currentToolingSha, recoveryRunId = \"\", createdAt = new Date().toISOString(), } = {}"
+          "signature": "{ candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile, expectedWorkflowName, channel, targetRef, targetSha, targetRefSha = targetSha, targetTree, expectedSourceTree = \"\", expectedCandidateRoot = \"\", expectedTransactionId = \"\", existingTransaction = undefined, run, workflow, pullRequest, ancestry, anchorProvenance = undefined, passport, buildSummary, controllerReceipts = [], platformManifests = [], platformManifestEvidence = [], productPayloadManifests = [], artifacts = [], publicationVersion = \"\", currentToolingSha, recoveryRunId = \"\", createdAt = new Date().toISOString(), } = {}"
         }
       ],
       "returns": "unknown",
@@ -21819,7 +21718,7 @@
       ],
       "source": {
         "path": "packages/core/release/release-candidate-recovery.js",
-        "line": 444
+        "line": 442
       },
       "example": "import { verifyReleaseCandidateRecovery } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21848,7 +21747,7 @@
       ],
       "source": {
         "path": "packages/core/release/release-candidate.js",
-        "line": 369
+        "line": 368
       },
       "example": "import { createReleaseCandidatePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21954,7 +21853,7 @@
       ],
       "source": {
         "path": "packages/core/release/release-candidate.js",
-        "line": 475
+        "line": 474
       },
       "example": "import { validateReleaseCandidatePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -25534,7 +25433,7 @@
       ],
       "source": {
         "path": "packages/core/release/tail-reseal-receipt.js",
-        "line": 203
+        "line": 202
       },
       "example": "import { verifyTailResealReceipt } from \"@kungfu-tech/buildchain/tail-reseal-receipt\";",
       "maturity": "stable",
@@ -25563,7 +25462,7 @@
       ],
       "source": {
         "path": "packages/core/release/tail-reseal.js",
-        "line": 460
+        "line": 447
       },
       "example": "import { normalizeTailResealRequest } from \"@kungfu-tech/buildchain/tail-reseal\";",
       "maturity": "stable",
@@ -25592,7 +25491,7 @@
       ],
       "source": {
         "path": "packages/core/release/tail-reseal.js",
-        "line": 519
+        "line": 501
       },
       "example": "import { planTailReseal } from \"@kungfu-tech/buildchain/tail-reseal\";",
       "maturity": "stable",
@@ -26229,14 +26128,14 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:fc7a588d7909767eb52edf6aac0c70916ea80c2e068cfb7ed65137454e3ccb5c",
+      "digest": "sha256:304d6545e99984fb68daf13f1c710fa580f5c99903a4cf78446a7fc48aeec326",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 630,
+      "symbolCount": 625,
       "symbolIds": [
         "packages/core/release/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release/passport/identity.js#AGENT_INDEX_CONTRACT",
@@ -26264,7 +26163,6 @@
         "packages/core/build/package-manager.js#assertPackageManager",
         "packages/core/contracts/public-surface-audit.js#assertPublicSurfaceReverseAudit",
         "packages/core/adoption/kfd3-surface-register.js#auditKfd3Surfaces",
-        "packages/core/consumer/runtime-ref-resume-authority.js#authorizeRuntimeSelection",
         "packages/core/web/readme-badges.js#BADGE_BUNDLE_DEFAULT_CLAIMS",
         "packages/core/web/readme-badges.js#BADGE_BUNDLE_FACTS_CONTRACT",
         "packages/core/build/build-facts.js#BUILD_FACTS_GIT_CONTRACT",
@@ -26461,7 +26359,7 @@
         "packages/core/release/release-tail-provider-plane.js#createReleaseTailTransaction",
         "packages/core/release/publish-transaction.js#createReleaseTransaction",
         "packages/core/publication/publication-authority.js#createRunnerProvenance",
-        "packages/core/consumer/runtime-ref-resume-authority.js#createRuntimeResumeLineage",
+        "packages/core/release/recovery/lineage.js#createRuntimeResumeLineage",
         "packages/core/release/release-tail-provider-adapters.js#createSignedStaticChannelAdapter",
         "packages/core/release/release-tail-provider-adapters.js#createSiteReleaseActivationAdapter",
         "packages/core/release/stable-candidate-ledger.js#createStableCandidateLedger",
@@ -26770,12 +26668,9 @@
         "packages/core/consumer/buildchain-config.js#runLifecycleStage",
         "packages/core/publication/publication-authority.js#RUNNER_PROVENANCE_CLASSES",
         "packages/core/publication/publication-authority.js#RUNNER_PROVENANCE_CONTRACT",
-        "packages/core/consumer/runtime-ref-resume-authority.js#RUNTIME_AUTHORIZATION_CONTRACT",
-        "packages/core/consumer/runtime-ref-resume-authority.js#RUNTIME_PERSISTENCE_SCAN_CONTRACT",
-        "packages/core/consumer/runtime-ref-resume-authority.js#RUNTIME_RESUME_LINEAGE_CONTRACT",
-        "packages/core/consumer/runtime-ref-resume-authority.js#runtimeResumeDocumentRoot",
+        "packages/core/release/recovery/lineage.js#RUNTIME_RESUME_LINEAGE_CONTRACT",
+        "packages/core/release/recovery/lineage.js#runtimeResumeDocumentRoot",
         "packages/core/consumer/floating-consumer-policy.js#scanFloatingConsumerPolicy",
-        "packages/core/consumer/runtime-ref-resume-authority.js#scanRuntimeSelectorPersistence",
         "packages/core/adoption/kfd.js#schemas",
         "packages/core/build/artifact-verification-envelope.js#sealArtifactVerificationReport",
         "packages/core/release/stable-candidate-ledger.js#selectStableCandidate",
@@ -26850,8 +26745,7 @@
         "packages/core/release/release-candidate-recovery.js#verifyReleaseCandidateRecovery",
         "packages/core/release/release-passport.js#verifyReleasePassport",
         "packages/core/release/release-propagation-work.js#verifyReleasePropagationWork",
-        "packages/core/consumer/runtime-ref-resume-authority.js#verifyRuntimeAuthorizationReceipt",
-        "packages/core/consumer/runtime-ref-resume-authority.js#verifyRuntimeResumeLineage",
+        "packages/core/release/recovery/lineage.js#verifyRuntimeResumeLineage",
         "packages/core/web/web-surface-publication-candidate.js#WEB_SURFACE_PRODUCTION_DECISION_CONTRACT",
         "packages/core/web/web-surface-publication-candidate.js#WEB_SURFACE_PUBLICATION_CANDIDATE_CONTRACT",
         "packages/core/web/web-surface-publication-candidate.js#webSurfacePublicationDigest",
@@ -26954,14 +26848,14 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:fc7a588d7909767eb52edf6aac0c70916ea80c2e068cfb7ed65137454e3ccb5c",
+      "digest": "sha256:304d6545e99984fb68daf13f1c710fa580f5c99903a4cf78446a7fc48aeec326",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 630,
+      "symbolCount": 625,
       "symbolIds": [
         "packages/core/release/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release/passport/identity.js#AGENT_INDEX_CONTRACT",
@@ -26989,7 +26883,6 @@
         "packages/core/build/package-manager.js#assertPackageManager",
         "packages/core/contracts/public-surface-audit.js#assertPublicSurfaceReverseAudit",
         "packages/core/adoption/kfd3-surface-register.js#auditKfd3Surfaces",
-        "packages/core/consumer/runtime-ref-resume-authority.js#authorizeRuntimeSelection",
         "packages/core/web/readme-badges.js#BADGE_BUNDLE_DEFAULT_CLAIMS",
         "packages/core/web/readme-badges.js#BADGE_BUNDLE_FACTS_CONTRACT",
         "packages/core/build/build-facts.js#BUILD_FACTS_GIT_CONTRACT",
@@ -27186,7 +27079,7 @@
         "packages/core/release/release-tail-provider-plane.js#createReleaseTailTransaction",
         "packages/core/release/publish-transaction.js#createReleaseTransaction",
         "packages/core/publication/publication-authority.js#createRunnerProvenance",
-        "packages/core/consumer/runtime-ref-resume-authority.js#createRuntimeResumeLineage",
+        "packages/core/release/recovery/lineage.js#createRuntimeResumeLineage",
         "packages/core/release/release-tail-provider-adapters.js#createSignedStaticChannelAdapter",
         "packages/core/release/release-tail-provider-adapters.js#createSiteReleaseActivationAdapter",
         "packages/core/release/stable-candidate-ledger.js#createStableCandidateLedger",
@@ -27495,12 +27388,9 @@
         "packages/core/consumer/buildchain-config.js#runLifecycleStage",
         "packages/core/publication/publication-authority.js#RUNNER_PROVENANCE_CLASSES",
         "packages/core/publication/publication-authority.js#RUNNER_PROVENANCE_CONTRACT",
-        "packages/core/consumer/runtime-ref-resume-authority.js#RUNTIME_AUTHORIZATION_CONTRACT",
-        "packages/core/consumer/runtime-ref-resume-authority.js#RUNTIME_PERSISTENCE_SCAN_CONTRACT",
-        "packages/core/consumer/runtime-ref-resume-authority.js#RUNTIME_RESUME_LINEAGE_CONTRACT",
-        "packages/core/consumer/runtime-ref-resume-authority.js#runtimeResumeDocumentRoot",
+        "packages/core/release/recovery/lineage.js#RUNTIME_RESUME_LINEAGE_CONTRACT",
+        "packages/core/release/recovery/lineage.js#runtimeResumeDocumentRoot",
         "packages/core/consumer/floating-consumer-policy.js#scanFloatingConsumerPolicy",
-        "packages/core/consumer/runtime-ref-resume-authority.js#scanRuntimeSelectorPersistence",
         "packages/core/adoption/kfd.js#schemas",
         "packages/core/build/artifact-verification-envelope.js#sealArtifactVerificationReport",
         "packages/core/release/stable-candidate-ledger.js#selectStableCandidate",
@@ -27575,8 +27465,7 @@
         "packages/core/release/release-candidate-recovery.js#verifyReleaseCandidateRecovery",
         "packages/core/release/release-passport.js#verifyReleasePassport",
         "packages/core/release/release-propagation-work.js#verifyReleasePropagationWork",
-        "packages/core/consumer/runtime-ref-resume-authority.js#verifyRuntimeAuthorizationReceipt",
-        "packages/core/consumer/runtime-ref-resume-authority.js#verifyRuntimeResumeLineage",
+        "packages/core/release/recovery/lineage.js#verifyRuntimeResumeLineage",
         "packages/core/web/web-surface-publication-candidate.js#WEB_SURFACE_PRODUCTION_DECISION_CONTRACT",
         "packages/core/web/web-surface-publication-candidate.js#WEB_SURFACE_PUBLICATION_CANDIDATE_CONTRACT",
         "packages/core/web/web-surface-publication-candidate.js#webSurfacePublicationDigest",
@@ -27709,7 +27598,7 @@
       "specifier": "@kungfu-tech/buildchain/artifact-signing",
       "export": "./artifact-signing",
       "target": "./packages/core/build/artifact-signing.js",
-      "digest": "sha256:4b6f1675af2aff8205329421a4e158a0ce5e6d2c07945d2208832fb68ca5b8ad",
+      "digest": "sha256:bf79ee5e7190c4bcc132b32b63eaf97647440502390fbf91569a12f45cddbe6e",
       "summary": "Credential-free artifact signing declarations, source-bound requests, authority receipts, profile resolution, and fail-closed validation APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -27817,7 +27706,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/contracts/buildchain-contract.js",
-      "digest": "sha256:1feb15dd03e3475d5507b6b90e8bf4a65d3676c4effc502fd0ff00b5b32c1ba7",
+      "digest": "sha256:0fa2e1680a07f5d2aaed0f74291d4a05d80934517cc0a97f05d210cbd3a58ff3",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -28025,7 +27914,7 @@
       "specifier": "@kungfu-tech/buildchain/controller-evidence",
       "export": "./controller-evidence",
       "target": "./packages/core/observability/controller-evidence.js",
-      "digest": "sha256:1fa797a2e3efd445572115fff029a14877e2d8b4659c31f457b791d834ae8cdd",
+      "digest": "sha256:81d609cbb09d542498235b08e8d0a09ed677d365a928b5b6399c8d00893ff5cf",
       "summary": "Project-independent controller descriptors, source/runtime-bound plans, receipts, aggregates, and validation APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -29083,16 +28972,17 @@
       "specifier": "@kungfu-tech/buildchain/paper",
       "export": "./paper",
       "target": "./packages/core/paper/paper.js",
-      "digest": "sha256:9dea3ba418f01a31016ad9405e3ab8e21556da0d01e0a7faec07a56c533cebd1",
+      "digest": "sha256:a7cef3157e1c92678eb17d84ea5b2765df0a4cd5e1d09e93c2c57d8b7ba47c44",
       "summary": "Unified Paper work, fleet, scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 1,
+      "symbolCount": 2,
       "symbolIds": [
-        "packages/core/paper/paper.js#collectPaperPreflight"
+        "packages/core/paper/paper.js#collectPaperPreflight",
+        "packages/core/paper/paper.js#collectPaperSourcePolicy"
       ],
       "owner": "buildchain-core",
       "maturity": "stable",
@@ -29106,7 +28996,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-authority",
       "export": "./publication-authority",
       "target": "./packages/core/publication/publication-authority.js",
-      "digest": "sha256:971b42173f73b294881f33fa1b9a878faadedf4d1ef47237bc066d1ed94ffdf6",
+      "digest": "sha256:9012681b3d755d72b55e1b1d26e8031a741d76f40fbab59f526e0ecd11a3b518",
       "summary": "Sealed publication authority registry, runner provenance, control-plane audit, admission, and independent verification APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -29179,7 +29069,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/governance/buildchain-publication-authority.js",
-      "digest": "sha256:ce1f324d4a584374790094b49de27c50188afc2620aa7aa66db9316059924261",
+      "digest": "sha256:e1ebc4de808346fbb24358e7910508d5b2452f348b672ed32eff3d2195fb9d2f",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -29349,7 +29239,7 @@
       "specifier": "@kungfu-tech/buildchain/release-candidate",
       "export": "./release-candidate",
       "target": "./packages/core/release/release-candidate.js",
-      "digest": "sha256:35efe1c3cb268c64e8d2d508f695f4fbcc39365074acf2367f6d2bef82887558",
+      "digest": "sha256:c7acc6d45224a2e697e27271f53426dd300e073bb20701278f667f7497e6d0fc",
       "summary": "PR-stage release-candidate artifact, passport, and promote-only resolver APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -29376,7 +29266,7 @@
       "specifier": "@kungfu-tech/buildchain/release-candidate-recovery",
       "export": "./release-candidate-recovery",
       "target": "./packages/core/release/release-candidate-recovery.js",
-      "digest": "sha256:c30f6ac415f68159cc4d8f89fc2797f48df3306be946d55a97005f3099355341",
+      "digest": "sha256:646c7e3b966cce194bfe3f2226295a5f8b5e51c7fb2fba33d8c90268cbd28387",
       "summary": "Fail-closed verification and immutable receipts for reusing a successful sealed candidate run without rebuilding product payloads.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -29890,7 +29780,7 @@
       "specifier": "@kungfu-tech/buildchain/floating-consumer-policy",
       "export": "./floating-consumer-policy",
       "target": "./packages/core/consumer/floating-consumer-policy.js",
-      "digest": "sha256:54ded9063be50a7e0cb95959594b46dbbb39ed2c4319e9c04c41356ad3b746aa",
+      "digest": "sha256:8deb409f9bfb9031a67a53e84d48353d0928a18cce7e1d52dd093b6feb097179",
       "summary": "Semantic floating-selector admission, dual-lock receipt, and independent v4 consumer certification APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -29919,27 +29809,22 @@
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
-      "specifier": "@kungfu-tech/buildchain/runtime-ref-resume-authority",
-      "export": "./runtime-ref-resume-authority",
-      "target": "./packages/core/consumer/runtime-ref-resume-authority.js",
-      "digest": "sha256:8a47ed334d974b6671cad05ff3e2ae30626bbccae818ef3d24252fd4d3aff3e7",
+      "specifier": "@kungfu-tech/buildchain/runtime-resume-lineage",
+      "export": "./runtime-resume-lineage",
+      "target": "./packages/core/release/recovery/lineage.js",
+      "digest": "sha256:fa3f8c36f30454abff6e4e9780d8a1e9af0883712ce00df5d1186de207524277",
       "summary": "Transient exact-runtime authorization, persisted-selector rejection, fresh-attempt Stage Capsule reuse, and A+B Passport lineage APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 9,
+      "symbolCount": 4,
       "symbolIds": [
-        "packages/core/consumer/runtime-ref-resume-authority.js#authorizeRuntimeSelection",
-        "packages/core/consumer/runtime-ref-resume-authority.js#createRuntimeResumeLineage",
-        "packages/core/consumer/runtime-ref-resume-authority.js#RUNTIME_AUTHORIZATION_CONTRACT",
-        "packages/core/consumer/runtime-ref-resume-authority.js#RUNTIME_PERSISTENCE_SCAN_CONTRACT",
-        "packages/core/consumer/runtime-ref-resume-authority.js#RUNTIME_RESUME_LINEAGE_CONTRACT",
-        "packages/core/consumer/runtime-ref-resume-authority.js#runtimeResumeDocumentRoot",
-        "packages/core/consumer/runtime-ref-resume-authority.js#scanRuntimeSelectorPersistence",
-        "packages/core/consumer/runtime-ref-resume-authority.js#verifyRuntimeAuthorizationReceipt",
-        "packages/core/consumer/runtime-ref-resume-authority.js#verifyRuntimeResumeLineage"
+        "packages/core/release/recovery/lineage.js#createRuntimeResumeLineage",
+        "packages/core/release/recovery/lineage.js#RUNTIME_RESUME_LINEAGE_CONTRACT",
+        "packages/core/release/recovery/lineage.js#runtimeResumeDocumentRoot",
+        "packages/core/release/recovery/lineage.js#verifyRuntimeResumeLineage"
       ],
       "owner": "buildchain-core",
       "maturity": "stable",
@@ -29953,7 +29838,7 @@
       "specifier": "@kungfu-tech/buildchain/tail-reseal",
       "export": "./tail-reseal",
       "target": "./packages/core/release/tail-reseal.js",
-      "digest": "sha256:ed28d3328de31149cf012c9a0027522fe027416aaedbb2f193d2205c369efd92",
+      "digest": "sha256:9e41d23414f060cae689a42c970b887fac582b5431e59d9d78c9353b5e148f3c",
       "summary": "Effect-pure retained Stage Capsule validation and explicit Warrant-, credential-, and release-tail-fenced macOS reseal planning APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -29982,7 +29867,7 @@
       "specifier": "@kungfu-tech/buildchain/tail-reseal-receipt",
       "export": "./tail-reseal-receipt",
       "target": "./packages/core/release/tail-reseal-receipt.js",
-      "digest": "sha256:49d4af53355d66cbc544f711b7f066f48e0054339c71212acb1d4fe58d901c06",
+      "digest": "sha256:6385ffa6fbf0be6c7863bc8e025a46082bbb1f92d69c0cdcde8cb42a322f300c",
       "summary": "Four-platform byte readback, standard candidate Passport binding, and terminal v4 tail-reseal receipt APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -30100,7 +29985,7 @@
       "specifier": "@kungfu-tech/buildchain/cross-platform-adopter-qualification",
       "export": "./cross-platform-adopter-qualification",
       "target": "./packages/core/adoption/cross-platform-adopter-qualification.js",
-      "digest": "sha256:143ff2369720188d0189679c53552390d1ff1fddbd695dc7eb1dd3582d762096",
+      "digest": "sha256:f4c23b60c1f34a90ec20fa96dfdefe33e4095014f59dd29fd963f70662159f77",
       "summary": "Exact-source v3 capability matrix reports, executed failure and recovery evidence, and cross-platform public adopter qualification APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -30135,7 +30020,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:adfdaa78016bd1156fc8e08560879daf786af462f20334cb1a837ca50c62e759"
+      "digest": "sha256:0117b071ca3d991400d93c41e2e1e37cf44e268ef635350694bb5cbd8e6e124a"
     },
     {
       "id": "build-facts",

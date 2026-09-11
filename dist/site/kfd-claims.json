@@ -14,18 +14,18 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:5cfe9b904da70a3a7194868aaef1f1b11957d8e0158ebb77a524f2ea7005083b",
+    "compatibilityDigest": "sha256:72fba06daca690e446f18c2a6314e13a5a19294e49f11f0a236caf3bbdbb76ab",
     "majorLine": "v4"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "d9eea80c1bedd3234ababfe8f35efb90c7a7e88ff6550bfb9dc3c546594e1428",
+    "sha256": "f439cc5f33c64486e8a2c9de6e782d1dd62f8cb49106ce5c20c4ecc593f79a66",
     "summary": {
       "cliCommandCount": 117,
-      "workflowCount": 68,
-      "actionCount": 274,
+      "workflowCount": 67,
+      "actionCount": 265,
       "sitePageCount": 93,
       "docCommandRefCount": 1036,
       "failureCount": 0
@@ -246,11 +246,11 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "d9eea80c1bedd3234ababfe8f35efb90c7a7e88ff6550bfb9dc3c546594e1428",
+      "sha256": "f439cc5f33c64486e8a2c9de6e782d1dd62f8cb49106ce5c20c4ecc593f79a66",
       "summary": {
         "cliCommandCount": 117,
-        "workflowCount": 68,
-        "actionCount": 274,
+        "workflowCount": 67,
+        "actionCount": 265,
         "sitePageCount": 93,
         "docCommandRefCount": 1036,
         "failureCount": 0
@@ -2025,16 +2025,16 @@
           "packageExport": "./floating-consumer-policy"
         },
         {
-          "id": "export:./runtime-ref-resume-authority",
-          "name": "@kungfu-tech/buildchain/runtime-ref-resume-authority",
+          "id": "export:./runtime-resume-lineage",
+          "name": "@kungfu-tech/buildchain/runtime-resume-lineage",
           "kind": "package-export",
-          "sourcePath": "packages/core/consumer/runtime-ref-resume-authority.js",
-          "evidencePath": "packages/core/consumer/runtime-ref-resume-authority.js",
+          "sourcePath": "packages/core/release/recovery/lineage.js",
+          "evidencePath": "packages/core/release/recovery/lineage.js",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "packageExport": "./runtime-ref-resume-authority"
+          "packageExport": "./runtime-resume-lineage"
         },
         {
           "id": "export:./tail-reseal",
@@ -3746,16 +3746,18 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 11,
+          "inputCount": 13,
           "inputs": [
             "adapter-arguments-json",
             "adapter-path",
             "artifact-retention-days",
-            "buildchain-repository",
+            "contract-lock",
             "media-profile",
             "render-media",
             "renderer-image",
             "require-trusted-event",
+            "runtime-ref",
+            "runtime-selection",
             "source-artifact-digest",
             "source-artifact-name",
             "source-ref"
@@ -3772,12 +3774,10 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 30,
+          "inputCount": 31,
           "inputs": [
             "artifact-name",
             "artifact-retention-days",
-            "buildchain-ref",
-            "buildchain-repository",
             "cargo-registry-index",
             "checkout-cache-fallback",
             "checkout-cache-fetch-attempts",
@@ -3786,6 +3786,7 @@
             "checkout-cache-mode",
             "checkout-cache-reference-repository-template",
             "checkout-cache-timeout-seconds",
+            "contract-lock",
             "gate-command-json",
             "gate-environment-json",
             "gate-plan-command-json",
@@ -3796,6 +3797,8 @@
             "platforms-json",
             "require-trusted-event",
             "runner-preset",
+            "runtime-ref",
+            "runtime-selection",
             "rust-toolchain",
             "rustup-dist-server",
             "rustup-update-root",
@@ -3817,9 +3820,13 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 1,
+          "inputCount": 5,
           "inputs": [
-            "config-path"
+            "config-path",
+            "contract-lock",
+            "resume-run-id",
+            "runtime-ref",
+            "runtime-selection"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -3833,12 +3840,15 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 4,
+          "inputCount": 7,
           "inputs": [
+            "contract-lock",
             "force",
             "remote-host",
             "remote-path",
-            "remote-repo"
+            "remote-repo",
+            "runtime-ref",
+            "runtime-selection"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -3852,15 +3862,13 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 37,
+          "inputCount": 38,
           "inputs": [
             "admission-json",
             "authority-workflow-path",
             "auto-admission",
             "auto-admission-kind",
             "auto-no-gate",
-            "buildchain-ref",
-            "buildchain-repository",
             "consumer-gate-command",
             "consumer-gate-controller-sha",
             "consumer-gate-evidence-source-sha",
@@ -3868,6 +3876,7 @@
             "consumer-predicate-digest",
             "consumer-predicate-id",
             "consumer-qualification-required",
+            "contract-lock",
             "control-plane-audit-json",
             "dry-run",
             "evidence-controller-artifact",
@@ -3888,6 +3897,8 @@
             "publisher-workflow-path",
             "required-status-check",
             "runner-provenance-json",
+            "runtime-ref",
+            "runtime-selection",
             "source-sha",
             "target-ref",
             "used-nonces-json"
@@ -3904,11 +3915,10 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 15,
+          "inputCount": 16,
           "inputs": [
             "auto-admission",
-            "buildchain-ref",
-            "buildchain-repository",
+            "contract-lock",
             "evidence-run-id",
             "github-governance-receipt-json",
             "publication-admission-json",
@@ -3919,6 +3929,8 @@
             "publication-used-nonces-json",
             "publication-version",
             "release-tag",
+            "runtime-ref",
+            "runtime-selection",
             "source-sha",
             "target-ref"
           ],
@@ -3934,9 +3946,12 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 1,
+          "inputCount": 4,
           "inputs": [
-            "request-json"
+            "contract-lock",
+            "request-json",
+            "runtime-ref",
+            "runtime-selection"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -3950,9 +3965,13 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 1,
+          "inputCount": 5,
           "inputs": [
-            "config-path"
+            "config-path",
+            "contract-lock",
+            "resume-run-id",
+            "runtime-ref",
+            "runtime-selection"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -3966,13 +3985,16 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 5,
+          "inputCount": 8,
           "inputs": [
             "consumer",
             "consumer-ref",
             "consumer-repository",
+            "contract-lock",
             "input-path",
-            "invocation-source-path"
+            "invocation-source-path",
+            "runtime-ref",
+            "runtime-selection"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -3986,13 +4008,14 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 12,
+          "inputCount": 13,
           "inputs": [
-            "buildchain-ref",
-            "buildchain-repository",
+            "contract-lock",
             "mode",
             "node-version",
             "require-version-state",
+            "runtime-ref",
+            "runtime-selection",
             "source-proof-closure-paths-json",
             "source-proof-dependency-paths-json",
             "source-proof-policy-paths-json",
@@ -4013,18 +4036,20 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 12,
+          "inputCount": 14,
           "inputs": [
             "artifact-retention-days",
             "binary-artifact-digest",
             "binary-artifact-name",
-            "buildchain-repository",
+            "contract-lock",
             "materialize",
             "materialize-base-ref",
             "media-profile",
             "render-failure-advisory",
             "render-media",
             "renderer-image",
+            "runtime-ref",
+            "runtime-selection",
             "scenario-path",
             "source-ref"
           ],
@@ -4040,23 +4065,21 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 23,
+          "inputCount": 21,
           "inputs": [
             "artifact-name",
             "artifact-paths",
             "artifact-retention-days",
             "build-command",
             "buildchain-alpha-contract-lock-path",
-            "buildchain-contract-compatibility-policy",
-            "buildchain-contract-drift-issue-mode",
-            "buildchain-contract-lock-path",
-            "buildchain-ref",
-            "buildchain-repository",
             "buildchain-stable-contract-lock-path",
+            "contract-lock",
             "node-version",
             "package-name",
             "prepare-paper-package",
             "publish-dist-tag",
+            "runtime-ref",
+            "runtime-selection",
             "setup-node",
             "target-ref",
             "toolchain-command",
@@ -4078,13 +4101,16 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 6,
+          "inputCount": 9,
           "inputs": [
             "build-artifact-path",
             "consumer",
+            "contract-lock",
             "go-version",
             "install-artifact-path",
             "node-version",
+            "runtime-ref",
+            "runtime-selection",
             "verify-artifact-path"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -4099,12 +4125,11 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 14,
+          "inputCount": 15,
           "inputs": [
             "alpha-workflow-path",
             "auto-merge",
-            "buildchain-ref",
-            "buildchain-repository",
+            "contract-lock",
             "dev-workflow-path",
             "dry-run",
             "max-age-seconds",
@@ -4112,25 +4137,11 @@
             "pull-request-body-prefix",
             "pull-request-body-prefix-renderer",
             "reactivation-authorized",
+            "runtime-ref",
+            "runtime-selection",
             "settlement-authorized",
             "source-branch",
             "target-branch"
-          ],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:public-ops-bootstrap-recovery",
-          "name": "workflow:public-ops-bootstrap-recovery",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/public-ops-bootstrap-recovery.yml",
-          "evidencePath": ".github/workflows/public-ops-bootstrap-recovery.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 1,
-          "inputs": [
-            "request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -4144,9 +4155,12 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 1,
+          "inputCount": 4,
           "inputs": [
-            "request-json"
+            "contract-lock",
+            "request-json",
+            "runtime-ref",
+            "runtime-selection"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -4160,15 +4174,14 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 41,
+          "inputCount": 42,
           "inputs": [
             "active-lease-context",
             "affected-paths-json",
             "allowed-head-prefixes",
             "block-labels",
-            "buildchain-ref",
-            "buildchain-repository",
             "closure-root",
+            "contract-lock",
             "defer-landing",
             "delivery-class",
             "delivery-priority",
@@ -4194,6 +4207,8 @@
             "release-blocker-priority-json",
             "require-approval",
             "required-status-checks",
+            "runtime-ref",
+            "runtime-selection",
             "same-repository-only",
             "shard-evidence-roots-json",
             "source-identity-root",
@@ -4216,10 +4231,9 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 10,
+          "inputCount": 11,
           "inputs": [
-            "buildchain-ref",
-            "buildchain-repository",
+            "contract-lock",
             "dev-workflow-path",
             "dispatch-inputs-json",
             "dry-run",
@@ -4227,6 +4241,8 @@
             "mutation-authorized",
             "preflight-workflow-path",
             "priority-workflows-json",
+            "runtime-ref",
+            "runtime-selection",
             "source-branch"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -4241,18 +4257,19 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 14,
+          "inputCount": 15,
           "inputs": [
             "apply-enabled",
             "artifact-prefix",
             "artifact-retention-days",
-            "buildchain-ref",
-            "buildchain-repository",
+            "contract-lock",
             "max-actions",
             "mode",
             "protected-patterns",
             "repository",
             "retained-patterns",
+            "runtime-ref",
+            "runtime-selection",
             "stale-days",
             "stale-pull-request-label",
             "target-branch",
@@ -4270,12 +4287,12 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 12,
+          "inputCount": 14,
           "inputs": [
             "artifact-path",
             "build-command",
-            "buildchain-ref",
             "cloudfront-distribution",
+            "contract-lock",
             "evidence-source-path",
             "evidence-source-ref",
             "evidence-source-repository",
@@ -4283,6 +4300,8 @@
             "production-aws-role-arn",
             "production-bucket",
             "production-environment",
+            "runtime-ref",
+            "runtime-selection",
             "verify-command"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -4297,12 +4316,11 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 13,
+          "inputCount": 14,
           "inputs": [
             "allowed-head-prefixes",
             "block-labels",
-            "buildchain-ref",
-            "buildchain-repository",
+            "contract-lock",
             "dry-run",
             "landing-mode",
             "max-actions",
@@ -4310,6 +4328,8 @@
             "ready-label",
             "require-approval",
             "required-status-checks",
+            "runtime-ref",
+            "runtime-selection",
             "same-repository-only",
             "target-branch"
           ],
@@ -4325,11 +4345,12 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 4,
+          "inputCount": 5,
           "inputs": [
-            "buildchain-ref",
-            "buildchain-repository",
+            "contract-lock",
             "dry-run",
+            "runtime-ref",
+            "runtime-selection",
             "target-branch"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -4344,11 +4365,12 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 4,
+          "inputCount": 5,
           "inputs": [
-            "buildchain-ref",
-            "buildchain-repository",
+            "contract-lock",
             "dry-run",
+            "runtime-ref",
+            "runtime-selection",
             "target-branch"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -4363,14 +4385,13 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 16,
+          "inputCount": 17,
           "inputs": [
             "allowed-head-prefixes",
             "block-labels",
-            "buildchain-ref",
-            "buildchain-repository",
             "cadence",
             "capabilities",
+            "contract-lock",
             "dry-run",
             "landing-mode",
             "max-actions",
@@ -4379,6 +4400,8 @@
             "ready-label",
             "require-approval",
             "required-status-checks",
+            "runtime-ref",
+            "runtime-selection",
             "same-repository-only",
             "target-branch"
           ],
@@ -4394,12 +4417,14 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 4,
+          "inputCount": 6,
           "inputs": [
             "apply",
             "branch",
-            "buildchain-ref",
-            "candidate-sha"
+            "candidate-sha",
+            "contract-lock",
+            "runtime-ref",
+            "runtime-selection"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -4413,13 +4438,12 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 16,
+          "inputCount": 17,
           "inputs": [
             "auto-approve",
             "auto-merge",
             "auto-promote",
-            "buildchain-ref",
-            "buildchain-repository",
+            "contract-lock",
             "dry-run",
             "hold",
             "hold-reason",
@@ -4430,6 +4454,8 @@
             "required-checks",
             "revoke-reason",
             "revoked-versions",
+            "runtime-ref",
+            "runtime-selection",
             "target-branch"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -4444,12 +4470,15 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 4,
+          "inputCount": 7,
           "inputs": [
             "artifact-retention-days",
             "consumer-policy-receipt-json",
+            "contract-lock",
             "macos-finalization-command",
-            "request-json"
+            "request-json",
+            "runtime-ref",
+            "runtime-selection"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -4463,10 +4492,9 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 12,
+          "inputCount": 13,
           "inputs": [
-            "buildchain-ref",
-            "buildchain-repository",
+            "contract-lock",
             "event-action",
             "expected-candidate-id",
             "expected-old-state-root",
@@ -4475,6 +4503,8 @@
             "observed-source-head-sha",
             "outcome",
             "reason",
+            "runtime-ref",
+            "runtime-selection",
             "target-branch",
             "terminal-evidence-root"
           ],
@@ -4490,10 +4520,9 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 13,
+          "inputCount": 14,
           "inputs": [
-            "buildchain-ref",
-            "buildchain-repository",
+            "contract-lock",
             "current-base-sha",
             "expected-head-sha",
             "expected-pr-number",
@@ -4503,6 +4532,8 @@
             "reason",
             "replay-tree-sha",
             "required-context-roots-json",
+            "runtime-ref",
+            "runtime-selection",
             "target-branch",
             "terminal-evidence-root"
           ],
@@ -4518,9 +4549,9 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 13,
+          "inputCount": 15,
           "inputs": [
-            "buildchain-ref",
+            "contract-lock",
             "environment",
             "evidence-artifact-name",
             "evidence-run-id",
@@ -4530,6 +4561,8 @@
             "release-passport-artifact-name",
             "release-passport-relative-path",
             "retention-days",
+            "runtime-ref",
+            "runtime-selection",
             "source-sha",
             "subject-artifact-name",
             "subject-relative-path"
@@ -4546,8 +4579,12 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 0,
-          "inputs": [],
+          "inputCount": 3,
+          "inputs": [
+            "contract-lock",
+            "runtime-ref",
+            "runtime-selection"
+          ],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -4566,9 +4603,7 @@
             "artifact-paths",
             "artifact-retention-days",
             "branch-protection-bypass-apps",
-            "buildchain-contract-lock-path",
-            "buildchain-ref",
-            "buildchain-repository",
+            "contract-lock",
             "dry-run",
             "github-governance-receipt-json",
             "github-release",
@@ -4579,6 +4614,8 @@
             "release-passport-output-dir",
             "release-passport-product-name",
             "required-status-check",
+            "runtime-ref",
+            "runtime-selection",
             "target-ref",
             "target-sha",
             "toolchain-type",
@@ -4597,9 +4634,12 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 1,
+          "inputCount": 4,
           "inputs": [
-            "request-json"
+            "contract-lock",
+            "request-json",
+            "runtime-ref",
+            "runtime-selection"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -4613,12 +4653,11 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 19,
+          "inputCount": 20,
           "inputs": [
             "agent-work-context-json",
             "agent-work-mode",
-            "buildchain-ref",
-            "buildchain-repository",
+            "contract-lock",
             "downstream-base-ref",
             "downstream-branch",
             "downstream-prepare-command",
@@ -4632,6 +4671,8 @@
             "pr-body",
             "pr-title",
             "refresh-managed-readme-badges",
+            "runtime-ref",
+            "runtime-selection",
             "source-node",
             "upstream-release-json"
           ],
@@ -4661,10 +4702,10 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 10,
+          "inputCount": 12,
           "inputs": [
-            "buildchain-ref",
             "candidate-root",
+            "contract-lock",
             "declaration-path",
             "execute",
             "provider-bindings-path",
@@ -4672,6 +4713,8 @@
             "rehearsal-capsule-path",
             "rehearsal-evidence-path",
             "rehearsal-mode",
+            "runtime-ref",
+            "runtime-selection",
             "state-path"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -4686,18 +4729,12 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 41,
+          "inputCount": 37,
           "inputs": [
             "artifact-path",
             "aws-region",
             "build-command",
-            "buildchain-contract-compatibility-policy",
-            "buildchain-contract-drift-issue-mode",
-            "buildchain-contract-expected-channel",
-            "buildchain-contract-expected-major",
-            "buildchain-contract-lock-path",
-            "buildchain-ref",
-            "buildchain-repository",
+            "contract-lock",
             "fail-on-release-pr-error",
             "github-governance-receipt-json",
             "node-version",
@@ -4724,6 +4761,8 @@
             "publication-runner-provenance-json",
             "publication-used-nonces-json",
             "release-feedback-actor-privacy",
+            "runtime-ref",
+            "runtime-selection",
             "staging-apply",
             "staging-aws-role-arn",
             "staging-environment",
@@ -6519,10 +6558,8 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 4,
+          "inputCount": 2,
           "inputs": [
-            "runtime-directory",
-            "runtime-sha",
             "source-directory",
             "source-sha"
           ],
@@ -8313,7 +8350,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 10,
+          "inputCount": 9,
           "inputs": [
             "controller-identities-outcome",
             "controller-plan-outcome",
@@ -8322,7 +8359,6 @@
             "passport-path",
             "predecessors-ok",
             "request-json",
-            "runtime-checkout-outcome",
             "runtime-outcome",
             "source-sha"
           ],
@@ -9132,13 +9168,12 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 6,
+          "inputCount": 5,
           "inputs": [
             "controller-plan-digest",
             "predecessors-ok",
             "propagation-key",
             "request-json",
-            "runtime-ready",
             "token"
           ],
           "reverseAuditSource": "actions/*/action.yml"
@@ -9498,62 +9533,6 @@
           "reverseAuditSource": "actions/*/action.yml"
         },
         {
-          "id": "action:runtime/closure/activate-provider",
-          "name": "action:runtime/closure/activate-provider",
-          "kind": "action",
-          "sourcePath": "actions/runtime/closure/activate-provider/action.yml",
-          "evidencePath": "actions/runtime/closure/activate-provider/action.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 2,
-          "inputs": [
-            "sha",
-            "tree"
-          ],
-          "reverseAuditSource": "actions/*/action.yml"
-        },
-        {
-          "id": "action:runtime/closure/prepare-provider",
-          "name": "action:runtime/closure/prepare-provider",
-          "kind": "action",
-          "sourcePath": "actions/runtime/closure/prepare-provider/action.yml",
-          "evidencePath": "actions/runtime/closure/prepare-provider/action.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 3,
-          "inputs": [
-            "repository",
-            "sha",
-            "tree"
-          ],
-          "reverseAuditSource": "actions/*/action.yml"
-        },
-        {
-          "id": "action:runtime/contract/check",
-          "name": "action:runtime/contract/check",
-          "kind": "action",
-          "sourcePath": "actions/runtime/contract/check/action.yml",
-          "evidencePath": "actions/runtime/contract/check/action.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 6,
-          "inputs": [
-            "request-json",
-            "runtime-class",
-            "runtime-override",
-            "runtime-ref",
-            "runtime-sha",
-            "workflow-ref"
-          ],
-          "reverseAuditSource": "actions/*/action.yml"
-        },
-        {
           "id": "action:runtime/dependencies/install",
           "name": "action:runtime/dependencies/install",
           "kind": "action",
@@ -9572,6 +9551,22 @@
           "reverseAuditSource": "actions/*/action.yml"
         },
         {
+          "id": "action:runtime/environment/activate",
+          "name": "action:runtime/environment/activate",
+          "kind": "action",
+          "sourcePath": "actions/runtime/environment/activate/action.yml",
+          "evidencePath": "actions/runtime/environment/activate/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 1,
+          "inputs": [
+            "selection"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
           "id": "action:runtime/environment/prepare",
           "name": "action:runtime/environment/prepare",
           "kind": "action",
@@ -9581,45 +9576,33 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 1,
+          "inputCount": 2,
           "inputs": [
-            "directory"
+            "selection",
+            "token"
           ],
           "reverseAuditSource": "actions/*/action.yml"
         },
         {
-          "id": "action:runtime/selection/admit",
-          "name": "action:runtime/selection/admit",
+          "id": "action:runtime/selection/resolve",
+          "name": "action:runtime/selection/resolve",
           "kind": "action",
-          "sourcePath": "actions/runtime/selection/admit/action.yml",
-          "evidencePath": "actions/runtime/selection/admit/action.yml",
+          "sourcePath": "actions/runtime/selection/resolve/action.yml",
+          "evidencePath": "actions/runtime/selection/resolve/action.yml",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 6,
+          "inputCount": 9,
           "inputs": [
-            "purpose",
-            "ref",
-            "repository",
+            "contract-lock",
+            "resume-run-id",
+            "runtime-ref",
+            "selection",
+            "source-repository",
+            "source-sha",
             "token",
             "workflow-ref",
-            "workflow-sha"
-          ],
-          "reverseAuditSource": "actions/*/action.yml"
-        },
-        {
-          "id": "action:runtime/selection/workflow",
-          "name": "action:runtime/selection/workflow",
-          "kind": "action",
-          "sourcePath": "actions/runtime/selection/workflow/action.yml",
-          "evidencePath": "actions/runtime/selection/workflow/action.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 1,
-          "inputs": [
             "workflow-sha"
           ],
           "reverseAuditSource": "actions/*/action.yml"
@@ -10064,25 +10047,6 @@
           "reverseAuditSource": "actions/*/action.yml"
         },
         {
-          "id": "action:web/runtime/verify-contract",
-          "name": "action:web/runtime/verify-contract",
-          "kind": "action",
-          "sourcePath": "actions/web/runtime/verify-contract/action.yml",
-          "evidencePath": "actions/web/runtime/verify-contract/action.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 4,
-          "inputs": [
-            "request-json",
-            "runtime-json",
-            "source-sha",
-            "workflow-ref"
-          ],
-          "reverseAuditSource": "actions/*/action.yml"
-        },
-        {
           "id": "action:web/staging/deploy",
           "name": "action:web/staging/deploy",
           "kind": "action",
@@ -10111,10 +10075,9 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 2,
+          "inputCount": 1,
           "inputs": [
-            "request-json",
-            "review-json"
+            "request-json"
           ],
           "reverseAuditSource": "actions/*/action.yml"
         },
@@ -10128,9 +10091,8 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 2,
+          "inputCount": 1,
           "inputs": [
-            "recovery",
             "request-json"
           ],
           "reverseAuditSource": "actions/*/action.yml"
@@ -10148,23 +10110,6 @@
           "inputCount": 1,
           "inputs": [
             "reason"
-          ],
-          "reverseAuditSource": "actions/*/action.yml"
-        },
-        {
-          "id": "action:workflow/admission/review",
-          "name": "action:workflow/admission/review",
-          "kind": "action",
-          "sourcePath": "actions/workflow/admission/review/action.yml",
-          "evidencePath": "actions/workflow/admission/review/action.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 2,
-          "inputs": [
-            "request-json",
-            "token"
           ],
           "reverseAuditSource": "actions/*/action.yml"
         },
@@ -10342,78 +10287,6 @@
             "head-repository",
             "require-trusted",
             "untrusted-policy"
-          ],
-          "reverseAuditSource": "actions/*/action.yml"
-        },
-        {
-          "id": "action:workflow/recovery/admit",
-          "name": "action:workflow/recovery/admit",
-          "kind": "action",
-          "sourcePath": "actions/workflow/recovery/admit/action.yml",
-          "evidencePath": "actions/workflow/recovery/admit/action.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 1,
-          "inputs": [
-            "request-json"
-          ],
-          "reverseAuditSource": "actions/*/action.yml"
-        },
-        {
-          "id": "action:workflow/recovery/execute",
-          "name": "action:workflow/recovery/execute",
-          "kind": "action",
-          "sourcePath": "actions/workflow/recovery/execute/action.yml",
-          "evidencePath": "actions/workflow/recovery/execute/action.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 4,
-          "inputs": [
-            "needs-recovery-admit-outputs-admission-json",
-            "needs-recovery-admit-outputs-runtime-sha",
-            "request-json",
-            "source-checkout-outcome"
-          ],
-          "reverseAuditSource": "actions/*/action.yml"
-        },
-        {
-          "id": "action:workflow/recovery/settle",
-          "name": "action:workflow/recovery/settle",
-          "kind": "action",
-          "sourcePath": "actions/workflow/recovery/settle/action.yml",
-          "evidencePath": "actions/workflow/recovery/settle/action.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 4,
-          "inputs": [
-            "needs-recovery-admit-outputs-admission-json",
-            "needs-recovery-admit-outputs-runtime-sha",
-            "needs-recovery-execute-outputs-result-json",
-            "request-json"
-          ],
-          "reverseAuditSource": "actions/*/action.yml"
-        },
-        {
-          "id": "action:workflow/settlement/backflow",
-          "name": "action:workflow/settlement/backflow",
-          "kind": "action",
-          "sourcePath": "actions/workflow/settlement/backflow/action.yml",
-          "evidencePath": "actions/workflow/settlement/backflow/action.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 3,
-          "inputs": [
-            "receipt-json",
-            "request-json",
-            "token"
           ],
           "reverseAuditSource": "actions/*/action.yml"
         },
@@ -11287,6 +11160,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:runtime-entry",
+          "name": "site-page:manual:runtime-entry",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:runtime-train-validation",
           "name": "site-page:manual:runtime-train-validation",
           "kind": "site-page",
@@ -11433,18 +11318,6 @@
         {
           "id": "site-page:manual:v4-publication-rehearsal",
           "name": "site-page:manual:v4-publication-rehearsal",
-          "kind": "site-page",
-          "sourcePath": "dist/site/page-registry.json",
-          "evidencePath": "dist/site/page-registry.json",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "reverseAuditSource": "dist/site/page-registry.json"
-        },
-        {
-          "id": "site-page:manual:v4-runtime-ref-resume-authority",
-          "name": "site-page:manual:v4-runtime-ref-resume-authority",
           "kind": "site-page",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
@@ -11721,6 +11594,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 738
+    "publicSurfaceCount": 728
   }
 }

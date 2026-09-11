@@ -1,16 +1,14 @@
 import path from "node:path";
-import { verifySourceRuntimeCheckouts } from "../../runtime/checkout-identity.js";
-import { installationRoot } from "../../runtime/installation-root.js";
+import { verifyCheckoutIdentity } from "../../runtime/checkout-identity.js";
 import { releaseAssetClient } from "../../providers/github/release-assets.js";
 import { publishBinaryAssets } from "./transaction.js";
 export async function publishBinaryAssetsAction(core, env) {
   const workspace = path.resolve(env.GITHUB_WORKSPACE),
     sourceSha = core.getInput("source-sha", { required: true });
-  verifySourceRuntimeCheckouts({
-    sourceDirectory: workspace,
-    sourceSha,
-    runtimeDirectory: installationRoot(import.meta.url),
-    runtimeSha: core.getInput("runtime-sha", { required: true }),
+  verifyCheckoutIdentity({
+    directory: workspace,
+    sha: sourceSha,
+    label: "Publication source",
   });
   const client = releaseAssetClient(env.GITHUB_REPOSITORY, {
     token: core.getInput("token", { required: true }),

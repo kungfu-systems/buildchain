@@ -955,39 +955,33 @@ test("every implemented parity disposition has an executable behavioral proof", 
   };
   const publicAuthority =
     await import("@kungfu-tech/buildchain/dev-delivery-authority");
-  prove(
-    "DA-15",
-    validate(landing.state) === true &&
-      parsed.command === "observe" &&
-      publicAuthority.admitDevDeliveryMergeGroup ===
-        admitDevDeliveryMergeGroup &&
-      !("createDevDeliveryLandingTerminalReadback" in publicAuthority) &&
-      typeof publicAuthority.settleDevDeliveryAuthorityCandidateWithGitHubProvider ===
-        "function" &&
-      schema.$defs.landingTerminalReadback.properties.verifier.const ===
-        "buildchain-github-provider-live-readback" &&
-      schema.$defs.nativeFailureEvidence.properties.schema.const ===
-        "kungfu.buildchain.two-phase-delivery-failure/v1" &&
-      schema.$defs.providerFailureSettlement.properties.schema.const ===
-        "kungfu.buildchain.provider-failure-settlement/v1" &&
-      packageManifest.exports["./dev-delivery-authority"] ===
-        "./packages/core/dev-delivery/dev-delivery-authority-landing.js" &&
-      template.uses.endsWith("/public-ops-dev-auto-merge.yml@v4-alpha") &&
-      executeWorkflowMapping(template, dispatchContext, ["buildchain-ref"])[
-        "buildchain-ref"
-      ] === "v4-alpha" &&
-      authorityInputs.every(
+  assert.ok(validate(landing.state) === true, "DA-15: validate(landing.state) === true");
+assert.ok(parsed.command === "observe", "DA-15: parsed.command === \"observe\"");
+assert.ok(publicAuthority.admitDevDeliveryMergeGroup ===
+        admitDevDeliveryMergeGroup, "DA-15: publicAuthority.admitDevDeliveryMergeGroup ===\n        admitDevDeliveryMergeGroup");
+assert.ok(!("createDevDeliveryLandingTerminalReadback" in publicAuthority), "DA-15: !(\"createDevDeliveryLandingTerminalReadback\" in publicAuthority)");
+assert.ok(typeof publicAuthority.settleDevDeliveryAuthorityCandidateWithGitHubProvider ===
+        "function", "DA-15: typeof publicAuthority.settleDevDeliveryAuthorityCandidateWithGitHubProvider ===\n        \"function\"");
+assert.ok(schema.$defs.landingTerminalReadback.properties.verifier.const ===
+        "buildchain-github-provider-live-readback", "DA-15: schema.$defs.landingTerminalReadback.properties.verifier.const ===\n        \"buildchain-github-provider-live-readback\"");
+assert.ok(schema.$defs.nativeFailureEvidence.properties.schema.const ===
+        "kungfu.buildchain.two-phase-delivery-failure/v1", "DA-15: schema.$defs.nativeFailureEvidence.properties.schema.const ===\n        \"kungfu.buildchain.two-phase-delivery-failure/v1\"");
+assert.ok(schema.$defs.providerFailureSettlement.properties.schema.const ===
+        "kungfu.buildchain.provider-failure-settlement/v1", "DA-15: schema.$defs.providerFailureSettlement.properties.schema.const ===\n        \"kungfu.buildchain.provider-failure-settlement/v1\"");
+assert.ok(packageManifest.exports["./dev-delivery-authority"] ===
+        "./packages/core/dev-delivery/dev-delivery-authority-landing.js", "DA-15: packageManifest.exports[\"./dev-delivery-authority\"] ===\n        \"./packages/core/dev-delivery/dev-delivery-authority-landing.js\"");
+assert.ok(template.uses.endsWith("/public-ops-dev-auto-merge.yml@v4-alpha"), "DA-15: template.uses.endsWith(\"/public-ops-dev-auto-merge.yml@v4-alpha\")");
+assert.ok(executeWorkflowMapping(template, dispatchContext, ["runtime-ref"])[
+        "runtime-ref"
+      ] === "", "DA-15: executeWorkflowMapping(template, dispatchContext, [\"runtime-ref\"])[\n        \"runtime-ref\"\n      ] === \"\"");
+assert.ok(authorityInputs.every(
         (input) => input in caller.with && input in template.with,
-      ) &&
-      /activeLeaseContext: String\([\s\S]*options.activeLeaseContext[\s\S]*VALID_WARRANT_MODES[\s\S]*"required"[\s\S]*"Queue family lease\/exact"/.test(autoMergeRuntime) &&
-      JSON.stringify(
-        executeWorkflowMapping(caller, dispatchContext, mappingNames),
-      ) === JSON.stringify(expectedMapping) &&
-      JSON.stringify(
-        executeWorkflowMapping(template, dispatchContext, mappingNames),
-      ) === JSON.stringify(expectedMapping) &&
-      JSON.stringify(generatedSchema) === JSON.stringify(schema),
-  );
+      ), "DA-15: authorityInputs.every(\n        (input) => input in caller.with && input in template.with,\n      )");
+assert.ok(/activeLeaseContext: String\([\s\S]*options.activeLeaseContext[\s\S]*VALID_WARRANT_MODES[\s\S]*"required"[\s\S]*"Queue family lease\/exact"/.test(autoMergeRuntime), "DA-15: /activeLeaseContext: String\\([\\s\\S]*options.activeLeaseContext[\\s\\S]*VALID_WARRANT_MODES[\\s\\S]*\"required\"[\\s\\S]*\"Queue family leas");
+assert.deepEqual(executeWorkflowMapping(caller, dispatchContext, mappingNames), expectedMapping);
+assert.deepEqual(executeWorkflowMapping(template, dispatchContext, mappingNames), expectedMapping);
+assert.ok(JSON.stringify(generatedSchema) === JSON.stringify(schema), "DA-15: JSON.stringify(generatedSchema) === JSON.stringify(schema)");
+prove("DA-15", true);
 
   assert.deepEqual(
     [...proved].sort(),

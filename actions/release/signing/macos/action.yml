@@ -35,18 +35,19 @@ runs:
     - name: Admit source checkout
       id: source-boundary
       if: ${{ always() }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      uses: ./.buildchain/runtime/actions/build/source/admit
       with:
         source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
-    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+    - uses: ./.buildchain/runtime/actions/runtime/dependencies/install
       with:
         directory: .
+        production: "false"
     - uses: actions/download-artifact@v7.0.0
       with:
         name: authority-intake-${{ fromJSON(inputs.request-json).correlation-id }}
         path: .buildchain/authority-intake
     - name: Sign and qualify native macos payload
-      uses: ./actions/build/signing/sign-macos
+      uses: ./.buildchain/runtime/actions/build/signing/sign-macos
       with:
         request-json: ${{ inputs.request-json }}
         item-json: ${{ inputs.item-json }}
@@ -61,15 +62,16 @@ runs:
     - name: Developer ID sign, notarize, and staple Apple application
       if: ${{ fromJSON(inputs.item-json).kind == 'app-bundle' }}
       id: app-signing
-      uses: ./actions/build/credential/macos-island
+      uses: ./.buildchain/runtime/actions/build/credential/macos-island
       with:
         input-root: .buildchain/authority-intake
-        output-root: .buildchain/native-work/${{ fromJSON(inputs.item-json).slug }}/credential-artifact
+        output-root: .buildchain/native-work/${{ fromJSON(inputs.item-json).slug
+          }}/credential-artifact
         source-repository: ${{ fromJSON(inputs.request-json).source-repository }}
         source-sha: ${{ fromJSON(inputs.item-json).sourceSha }}
         source-tree-sha: ${{ fromJSON(inputs.item-json).sourceTreeSha }}
         source-ref: ${{ fromJSON(inputs.item-json).sourceSha }}
-        buildchain-runtime-sha: ${{ fromJSON(inputs.request-json).expected-runtime-sha }}
+        buildchain-runtime-sha: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
         artifact-name: native-${{ fromJSON(inputs.item-json).slug }}-credential
         platform-id: ${{ fromJSON(inputs.item-json).platformId }}-credential
         artifact-id: ${{ fromJSON(inputs.item-json).id }}
@@ -83,7 +85,7 @@ runs:
         notary-api-issuer: ${{ inputs.notary-issuer }}
     - name: Seal native signed result
       if: ${{ fromJSON(inputs.item-json).kind == 'app-bundle' }}
-      uses: ./actions/build/signing/seal-native
+      uses: ./.buildchain/runtime/actions/build/signing/seal-native
       with:
         request-json: ${{ inputs.request-json }}
         item-json: ${{ inputs.item-json }}
@@ -92,7 +94,8 @@ runs:
         credential-artifact-root: ${{ steps.app-signing.outputs.artifact-root }}
     - uses: actions/upload-artifact@v7.0.1
       with:
-        name: authority-result-macos-${{ fromJSON(inputs.item-json).slug }}-${{ fromJSON(inputs.request-json).correlation-id }}
+        name: authority-result-macos-${{ fromJSON(inputs.item-json).slug }}-${{
+          fromJSON(inputs.request-json).correlation-id }}
         path: .buildchain/provider-results/${{ fromJSON(inputs.item-json).slug }}
         if-no-files-found: error
         retention-days: 14

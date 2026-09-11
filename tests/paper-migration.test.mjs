@@ -163,7 +163,7 @@ function fixture() {
     planPaperScaffold({
       cwd,
       buildchainRoot: root,
-      buildchainVersion: "3.0.4-alpha.13",
+      buildchainVersion: version,
       name: "paper-example",
       title: "Existing paper",
       packageName: "@example/paper-example",
@@ -205,7 +205,7 @@ test("generated v4 Verify grants the public callee read permissions without writ
     permissions(
       fs.readFileSync(path.join(cwd, ".github/workflows/verify.yml"), "utf8"),
     ),
-    { contents: "read" },
+    { actions: "read", contents: "read", "pull-requests": "read" },
   );
   assert.equal(writePaperMigration(planPaperMigration(options)).ok, true);
   const caller = permissions(
@@ -304,11 +304,7 @@ test("v4 paper migration preserves content and binds floating callers to distinc
     "pass",
     JSON.stringify(preflight),
   );
-  assert.equal(
-    preflight.checks.find((check) => check.id === "agent-entry.runtime-source")
-      .status,
-    "pass",
-  );
+  assert.equal(preflight.checks.some(check => check.id === "agent-entry.runtime-source"), false);
   commit(cwd);
   assert.equal(
     planPaperMigration(options).changes.every(
@@ -344,7 +340,7 @@ test("v4 paper migration rejects a dirty or wrong-channel explicit root", () => 
   assert.throws(() => planPaperMigration(options), /does not belong to v4/);
 });
 
-test("v4 paper CI accepts only the two bound runtime sources", () => {
+test("Paper CI checks source policy independently of selected runtime", () => {
   const { cwd, stableRoot, alphaRoot, options } = fixture();
   writePaperMigration(planPaperMigration(options));
   const env = {
@@ -370,11 +366,11 @@ test("v4 paper CI accepts only the two bound runtime sources", () => {
       env,
       buildchainSha: "a".repeat(40),
     }).ok,
-    false,
+    true,
   );
 });
 
-test("v4 paper preflight admits compatible floating SHA drift only in CI", () => {
+test("Paper source admission never rechecks runtime SHA; provisioning remains rooted", () => {
   const { cwd, alphaRuntime, options } = fixture();
   writePaperMigration(planPaperMigration(options));
   for (const agentEntryMode of ["ci", "local"]) {
@@ -386,9 +382,8 @@ test("v4 paper preflight admits compatible floating SHA drift only in CI", () =>
       agentEntryMode,
     });
     assert.equal(
-      result.checks.find(({ id }) => id === "agent-entry.runtime-source")
-        .status,
-      agentEntryMode === "ci" ? "pass" : "fail",
+      result.checks.some(({ id }) => id === "agent-entry.runtime-source"),
+      false,
       JSON.stringify(result),
     );
   }
@@ -404,7 +399,7 @@ test("v4 paper preflight admits compatible floating SHA drift only in CI", () =>
     agentEntryMode: "ci",
   });
   assert.equal(
-    rejected.checks.find(({ id }) => id === "agent-entry.runtime-source")
+    rejected.checks.find(({ id }) => id === "provisioning.authority")
       .status,
     "fail",
   );

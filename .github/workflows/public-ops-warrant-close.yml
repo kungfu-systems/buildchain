@@ -2,16 +2,6 @@ name: Dev Delivery Warrant Close
 on:
   workflow_call:
     inputs:
-      buildchain-repository:
-        description: Buildchain runtime repository
-        default: kungfu-systems/buildchain
-        type: string
-        required: false
-      buildchain-ref:
-        description: Buildchain runtime ref
-        default: ""
-        type: string
-        required: false
       target-branch:
         description: Protected dev branch
         type: string
@@ -63,6 +53,21 @@ on:
         default: ""
         type: string
         required: false
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
     secrets:
       github-token:
         description: Token permitted to advance the Buildchain Warrant state ref
@@ -79,6 +84,23 @@ on:
 permissions:
   contents: write
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   close:
     name: Close exact fenced delivery attempt
     runs-on: ubuntu-24.04
@@ -88,17 +110,17 @@ jobs:
       final-state-root: ${{ steps.settle.outputs.close-final-state-root }}
       successor-wake-json: ${{ steps.settle.outputs.close-successor-wake-json }}
     steps:
-      - name: Checkout exact workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Settle terminal delivery
         id: settle
-        uses: ./.buildchain/workflow-shell/actions/dev-delivery/warrant/settle
+        uses: ./.buildchain/runtime/actions/dev-delivery/warrant/settle
         with:
           request-json: ${{ toJSON(inputs) }}
-          runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
+          runtime-ref: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
           github-token: ${{ secrets.github-token || github.token }}
+    needs:
+      - execution-runtime

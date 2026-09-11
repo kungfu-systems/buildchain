@@ -40,39 +40,29 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Checkout trusted Buildchain finalizer runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
-        ref: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-sha }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Download immutable admission state
       if: fromJSON(inputs.request-json).delivery-warrant-mode == 'required' &&
         fromJSON(inputs.needs-json).admission.outputs.handoff-required != 'true'
       uses: actions/download-artifact@v7.0.0
       with:
-        name:
-          buildchain-dev-delivery-control-${{ github.run_id }}-${{ github.run_attempt }}-${{
+        name: buildchain-dev-delivery-control-${{ github.run_id }}-${{
+          github.run_attempt }}-${{
           fromJSON(inputs.request-json).expected-pr-number }}
         path: .buildchain/dev-delivery
     - name: Download native execution transfer
       if: fromJSON(inputs.needs-json).admission.outputs.run-native == 'true'
       uses: actions/download-artifact@v7.0.0
       with:
-        name:
-          buildchain-dev-delivery-native-sealed-${{ github.run_id }}-${{ github.run_attempt }}-${{
+        name: buildchain-dev-delivery-native-sealed-${{ github.run_id }}-${{
+          github.run_attempt }}-${{
           fromJSON(inputs.request-json).expected-pr-number }}
         path: .buildchain/native-transfer
     - name: Download independent provider heartbeat receipt
       if: fromJSON(inputs.needs-json).admission.outputs.run-native == 'true'
       uses: actions/download-artifact@v7.0.0
       with:
-        name:
-          buildchain-dev-delivery-heartbeat-${{ github.run_id }}-${{ github.run_attempt }}-${{
+        name: buildchain-dev-delivery-heartbeat-${{ github.run_id }}-${{
+          github.run_attempt }}-${{
           fromJSON(inputs.request-json).expected-pr-number }}
         path: .buildchain
     - name: Prove fresh provider finalizer job and runner boundary
@@ -81,7 +71,9 @@ runs:
       uses: ./.buildchain/runtime/actions/dev-delivery/native/admit-finalizer
       with:
         runtime-sha: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-sha }}
-        runtime-selection-root: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-selection-root }}
+        runtime-selection-root: ${{
+          fromJSON(inputs.needs-json).admission.outputs.runtime-selection-root
+          }}
         branch: ${{ fromJSON(inputs.needs-json).admission.outputs.target-branch }}
         runner-environment: ${{ runner.environment }}
         pull-request: ${{ fromJSON(inputs.request-json).expected-pr-number }}
@@ -89,8 +81,8 @@ runs:
         token: ${{ inputs.github-token || github.token }}
     - name: Verify and qualify transferred native proof
       id: native-final
-      if:
-        fromJSON(inputs.needs-json).admission.outputs.run-native == 'true' && steps.boundary.outcome == 'success' &&
+      if: fromJSON(inputs.needs-json).admission.outputs.run-native == 'true' &&
+        steps.boundary.outcome == 'success' &&
         steps.boundary.outputs.native-outcome == 'success'
       continue-on-error: true
       uses: ./.buildchain/runtime/actions/dev-delivery/native/qualify-proof

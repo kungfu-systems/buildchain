@@ -1,6 +1,5 @@
 import path from "node:path";
 import { installationRoot } from "../../runtime/installation-root.js";
-import { verifyCheckoutIdentity } from "../../runtime/checkout-identity.js";
 import { qualifyPublicationCandidate } from "./qualification.js";
 export async function qualifyPublicationCandidateAction(core, env) {
   const input = JSON.parse(core.getInput("request-json", { required: true }));
@@ -10,11 +9,7 @@ export async function qualifyPublicationCandidateAction(core, env) {
     throw new Error(
       "Publication working directory escapes its admitted source",
     );
-  verifyCheckoutIdentity({
-    directory: installationRoot(import.meta.url),
-    sha: core.getInput("runtime-sha", { required: true }),
-    label: "Publication runtime",
-  });
+
   const request = {
     cwd,
     env,

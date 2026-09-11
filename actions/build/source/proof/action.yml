@@ -50,7 +50,7 @@ runs:
         fromJSON(inputs.request-json).source-proof-reuse && github.event_name ==
         'merge_group' }}
       continue-on-error: true
-      uses: ./.buildchain/workflow-shell/actions/build/source/locate-proof
+      uses: ./.buildchain/runtime/actions/build/source/locate-proof
       with:
         token: ${{ github.token }}
     - name: Download exact accepted pull-request source proof

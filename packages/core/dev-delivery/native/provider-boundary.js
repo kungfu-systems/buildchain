@@ -7,7 +7,6 @@ import {
 import { readJson, writeJson } from "./files.js";
 export function verifyNativeProviderBoundary({
   directory: directoryInput,
-  runtimeSha,
   runtimeSelectionRoot,
   pullRequestNumber,
   sourceHead,
@@ -35,7 +34,6 @@ export function verifyNativeProviderBoundary({
         "producer.workflowRunId": run.id,
         "producer.workflowRunAttempt": run.attempt,
         "producer.job": nativeJob,
-        "runtime.resolvedSha": runtimeSha,
         "runtime.selectionRoot": runtimeSelectionRoot,
         "warrant.pullRequestNumber": pullRequestNumber,
         "warrant.sourceHead": sourceHead,

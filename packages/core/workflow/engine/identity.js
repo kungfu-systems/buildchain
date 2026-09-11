@@ -1,12 +1,7 @@
 import crypto from "node:crypto";
 export function exactRuntime(admission) {
   const runtime = admission?.runtime;
-  if (
-    admission?.status !== "admitted" ||
-    runtime?.repository !== "kungfu-systems/buildchain" ||
-    !/^[0-9a-f]{40}$/u.test(runtime?.sha || "")
-  )
-    fail("an exact admitted Buildchain runtime is required");
+  if (admission?.status !== "admitted") fail("Capability execution requires an admitted request");
   return runtime;
 }
 export function contentRoot(domain, value) {

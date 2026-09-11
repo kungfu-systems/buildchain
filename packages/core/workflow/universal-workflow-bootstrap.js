@@ -1,13 +1,13 @@
 import crypto from "node:crypto";
 
 export const UNIVERSAL_WORKFLOW_REQUEST =
-  "kungfu-buildchain-v4-universal-workflow-request/v1";
+  "buildchain.universal-workflow-request/v2";
 export const UNIVERSAL_WORKFLOW_ADMISSION_POLICY =
-  "kungfu-buildchain-v4-universal-workflow-admission-policy/v1";
+  "buildchain.universal-workflow-admission-policy/v2";
 export const UNIVERSAL_WORKFLOW_ADMISSION =
-  "kungfu-buildchain-v4-universal-workflow-admission/v1";
+  "buildchain.universal-workflow-admission/v2";
 export const UNIVERSAL_WORKFLOW_TERMINAL_RECEIPT =
-  "kungfu-buildchain-v4-universal-workflow-terminal-receipt/v1";
+  "buildchain.universal-workflow-terminal-receipt/v2";
 const EXACT_SHA = /^[0-9a-f]{40}$/u;
 const ROOT = /^sha256:[0-9a-f]{64}$/u;
 const REPOSITORY = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/u;
@@ -169,45 +169,11 @@ function timestamp(value, label) {
 export function validateUniversalWorkflowRequest(value) {
   exactKeys(
     value,
-    ["schema", "mode", "candidate", "consumer", "capability", "payload"],
+    ["schema", "consumer", "capability", "payload"],
     "request",
   );
   if (value.schema !== UNIVERSAL_WORKFLOW_REQUEST)
     fail("unsupported-request-schema", "request schema is unsupported");
-  if (!MODES.has(value.mode))
-    fail("unsupported-mode", "request mode is unsupported");
-  exactKeys(
-    value.candidate,
-    [
-      "repository",
-      "discoveryRef",
-      "expectedSha",
-      "admissionRoot",
-      "reviewPullRequest",
-    ],
-    "request.candidate",
-  );
-  const candidateRepository = repository(
-    value.candidate.repository,
-    "request.candidate.repository",
-  );
-  if (candidateRepository !== "kungfu-systems/buildchain")
-    fail(
-      "untrusted-candidate-repository",
-      "candidate repository must be kungfu-systems/buildchain",
-    );
-  const discoveryRef = nonEmpty(
-    value.candidate.discoveryRef,
-    "request.candidate.discoveryRef",
-  ).replace(/^refs\/(?:heads|tags)\//u, "");
-  if (value.mode === "train" && !TRAIN.test(discoveryRef))
-    fail("invalid-train-ref", "train mode requires a governed v4 Train ref");
-  if (value.mode === "exact" && !EXACT_SHA.test(discoveryRef.toLowerCase()))
-    fail("invalid-exact-ref", "exact mode requires an exact Git SHA selector");
-  if (value.mode === "alpha" && discoveryRef !== "v4-alpha")
-    fail("invalid-alpha-ref", "alpha mode requires v4-alpha discovery");
-  if (value.mode === "stable" && discoveryRef !== "v4")
-    fail("invalid-stable-ref", "stable mode requires v4 discovery");
   exactKeys(
     value.consumer,
     ["repository", "workflow", "sourceSha"],
@@ -224,23 +190,6 @@ export function validateUniversalWorkflowRequest(value) {
   canonical(value.payload);
   return {
     schema: value.schema,
-    mode: value.mode,
-    candidate: {
-      repository: candidateRepository,
-      discoveryRef,
-      expectedSha: exactSha(
-        value.candidate.expectedSha,
-        "request.candidate.expectedSha",
-      ),
-      admissionRoot: root(
-        value.candidate.admissionRoot,
-        "request.candidate.admissionRoot",
-      ),
-      reviewPullRequest: positiveInteger(
-        value.candidate.reviewPullRequest,
-        "request.candidate.reviewPullRequest",
-      ),
-    },
     consumer: {
       repository: repository(
         value.consumer.repository,
@@ -290,10 +239,6 @@ function validatePolicy(value) {
       "allowedCapabilities",
       "permissionCeiling",
       "contractRoots",
-      "targetRef",
-      "allowedReviewers",
-      "minimumApprovals",
-      "requiredChecks",
       "validFrom",
       "expiresAt",
     ],
@@ -323,75 +268,12 @@ function validatePolicy(value) {
       "policy.permissionCeiling",
     ),
     contractRoots: sortedRoots(value.contractRoots, "policy.contractRoots"),
-    targetRef: nonEmpty(value.targetRef, "policy.targetRef"),
-    allowedReviewers: sortedTokens(
-      value.allowedReviewers,
-      "policy.allowedReviewers",
-    ),
-    minimumApprovals: positiveInteger(
-      value.minimumApprovals,
-      "policy.minimumApprovals",
-    ),
-    requiredChecks: sortedStrings(
-      value.requiredChecks,
-      "policy.requiredChecks",
-    ),
     validFrom: timestamp(value.validFrom, "policy.validFrom"),
     expiresAt: timestamp(value.expiresAt, "policy.expiresAt"),
   };
   if (Date.parse(policy.validFrom) >= Date.parse(policy.expiresAt))
     fail("invalid-policy-window", "policy validity window is empty");
   return policy;
-}
-
-function validateReviewEvidence(value) {
-  const hasBinding = Object.hasOwn(value || {}, "runtimeBinding");
-  exactKeys(value, ["repository", "pullRequest", "headSha", "baseRef", "approvals", "checks", "observedAt", ...(hasBinding ? ["runtimeBinding"] : [])], "reviewEvidence");
-  const approvals = value.approvals.map((approval, index) => {
-    exactKeys(approval, ["reviewer", "commitSha", "submittedAt"], `reviewEvidence.approvals[${index}]`);
-    return {
-      reviewer: nonEmpty(approval.reviewer, `reviewEvidence.approvals[${index}].reviewer`),
-      commitSha: exactSha(approval.commitSha, `reviewEvidence.approvals[${index}].commitSha`),
-      submittedAt: timestamp(approval.submittedAt, `reviewEvidence.approvals[${index}].submittedAt`),
-    };
-  });
-  const checks = value.checks.map((check, index) => {
-    const hasCommit = Object.hasOwn(check || {}, "commitSha");
-    exactKeys(check, ["name", "status", "conclusion", ...(hasCommit ? ["commitSha"] : [])], `reviewEvidence.checks[${index}]`);
-    return {
-      name: nonEmpty(check.name, `reviewEvidence.checks[${index}].name`),
-      status: nonEmpty(check.status, `reviewEvidence.checks[${index}].status`),
-      conclusion: nonEmpty(check.conclusion, `reviewEvidence.checks[${index}].conclusion`),
-      ...(hasCommit ? { commitSha: exactSha(check.commitSha, `reviewEvidence.checks[${index}].commitSha`) } : {}),
-    };
-  });
-  let runtimeBinding;
-  if (hasBinding) {
-    exactKeys(value.runtimeBinding, ["kind", "runtimeSha", "parentShas", "mergedAt"], "reviewEvidence.runtimeBinding");
-    const kind = nonEmpty(value.runtimeBinding.kind, "reviewEvidence.runtimeBinding.kind");
-    if (!new Set(["reviewed-head", "protected-alpha-merge"]).has(kind)) fail("invalid-runtime-binding", "review evidence runtime binding kind is unsupported");
-    const parentShas = value.runtimeBinding.parentShas.map((parent, index) => exactSha(parent, `reviewEvidence.runtimeBinding.parentShas[${index}]`));
-    if (new Set(parentShas).size !== parentShas.length) fail("invalid-runtime-binding", "review evidence runtime parents must be duplicate-free");
-    runtimeBinding = { kind, runtimeSha: exactSha(value.runtimeBinding.runtimeSha, "reviewEvidence.runtimeBinding.runtimeSha"), parentShas, mergedAt: value.runtimeBinding.mergedAt === null ? null : timestamp(value.runtimeBinding.mergedAt, "reviewEvidence.runtimeBinding.mergedAt") };
-  }
-  return {
-    repository: repository(value.repository, "reviewEvidence.repository"),
-    pullRequest: positiveInteger(value.pullRequest, "reviewEvidence.pullRequest"),
-    headSha: exactSha(value.headSha, "reviewEvidence.headSha"),
-    baseRef: nonEmpty(value.baseRef, "reviewEvidence.baseRef"),
-    approvals, checks,
-    observedAt: timestamp(value.observedAt, "reviewEvidence.observedAt"),
-    ...(runtimeBinding ? { runtimeBinding } : {}),
-  };
-}
-
-function reviewedRuntimeSha(request, policy, evidence, runtimeSha) {
-  const binding = evidence.runtimeBinding || { kind: "reviewed-head", runtimeSha: evidence.headSha, parentShas: [], mergedAt: null };
-  if (binding.runtimeSha !== runtimeSha) fail("review-runtime-mismatch", "review evidence runtime binding does not match the candidate");
-  const direct = binding.kind === "reviewed-head" && evidence.headSha === runtimeSha && evidence.baseRef === policy.targetRef && binding.mergedAt === null;
-  const alphaMerge = binding.kind === "protected-alpha-merge" && request.mode === "alpha" && evidence.baseRef === policy.targetRef.replace(/^dev\//u, "alpha/") && binding.parentShas.length === 2 && binding.parentShas.includes(evidence.headSha) && binding.mergedAt !== null && Date.parse(binding.mergedAt) <= Date.parse(evidence.observedAt);
-  if (!direct && !alphaMerge) fail("review-identity-mismatch", "review evidence does not bind the candidate runtime");
-  return evidence.headSha;
 }
 
 export function universalWorkflowAdmissionRoot(value) {
@@ -409,128 +291,25 @@ function assertPermissionCeiling(requested, ceiling) {
   }
 }
 
-export function admitUniversalWorkflow({
-  request: requestValue,
-  policy: policyValue,
-  observedRefSha,
-  observedConsumerRepository,
-  observedConsumerSha,
-  observedConsumerWorkflowRef,
-  reviewEvidence: reviewEvidenceValue,
-  now,
-} = {}) {
+export function admitUniversalWorkflow({ request: requestValue, policy: policyValue, runtime, observedConsumerRepository, observedConsumerSha, observedConsumerWorkflowRef, now } = {}) {
   const request = validateUniversalWorkflowRequest(requestValue);
   const policy = validatePolicy(policyValue);
-  const admissionRoot = universalWorkflowAdmissionRoot(policy);
-  if (request.candidate.admissionRoot !== admissionRoot)
-    fail("stale-admission", "request is not bound to the current admission");
-  if (policy.sourceRepository !== request.candidate.repository)
-    fail("source-repository-mismatch", "admission source repository mismatch");
   const workflowRef = nonEmpty(observedConsumerWorkflowRef, "workflow ref");
-  const expectedWorkflowPrefix = `${request.consumer.repository}/${request.consumer.workflow}@`;
-  if (
-    request.consumer.repository !== observedConsumerRepository ||
-    request.consumer.sourceSha !==
-      exactSha(observedConsumerSha, "observedConsumerSha") ||
-    !workflowRef.startsWith(expectedWorkflowPrefix) ||
-    workflowRef.length === expectedWorkflowPrefix.length
-  )
+  const prefix = `${request.consumer.repository}/${request.consumer.workflow}@`;
+  if (request.consumer.repository !== observedConsumerRepository || request.consumer.sourceSha !== exactSha(observedConsumerSha, "observedConsumerSha") || !workflowRef.startsWith(prefix) || workflowRef.length === prefix.length)
     fail("consumer-identity-mismatch", "caller identity mismatch");
-  if (!policy.allowedCapabilities.includes(request.capability.id))
-    fail("capability-not-admitted", "capability is not admitted");
-  if (
-    request.capability.contractRoots.length !== policy.contractRoots.length ||
-    request.capability.contractRoots.some(
-      (value, index) => value !== policy.contractRoots[index],
-    )
-  )
-    fail("contract-root-mismatch", "candidate contract roots are not admitted");
-  assertPermissionCeiling(
-    request.capability.permissions,
-    policy.permissionCeiling,
-  );
+  if (!policy.allowedCapabilities.includes(request.capability.id)) fail("capability-not-admitted", "capability is not admitted");
+  assertPermissionCeiling(request.capability.permissions, policy.permissionCeiling);
   const observedAt = timestamp(now, "now");
-  if (
-    Date.parse(observedAt) < Date.parse(policy.validFrom) ||
-    Date.parse(observedAt) >= Date.parse(policy.expiresAt)
-  )
-    fail("stale-admission", "admission is outside its validity window");
-  const runtimeSha = exactSha(observedRefSha, "observedRefSha");
-  if (runtimeSha !== request.candidate.expectedSha)
-    fail(
-      "candidate-ref-moved",
-      "candidate ref readback does not match expected SHA",
-    );
-  const reviewEvidence = validateReviewEvidence(reviewEvidenceValue);
-  if (
-    reviewEvidence.repository !== request.candidate.repository ||
-    reviewEvidence.pullRequest !== request.candidate.reviewPullRequest
-  )
-    fail(
-      "review-identity-mismatch",
-      "review evidence does not bind the candidate",
-    );
-  const reviewedSha = reviewedRuntimeSha(request, policy, reviewEvidence, runtimeSha);
-  const approvedReviewers = new Set(
-    reviewEvidence.approvals
-      .filter((approval) => approval.commitSha === reviewedSha)
-      .map((approval) => approval.reviewer),
-  );
-  const admittedApprovalCount = policy.allowedReviewers.filter((reviewer) =>
-    approvedReviewers.has(reviewer),
-  ).length;
-  if (admittedApprovalCount < policy.minimumApprovals)
-    fail(
-      "independent-review-missing",
-      "candidate lacks exact-head independent review",
-    );
-  const checksByName = new Map();
-  for (const check of reviewEvidence.checks) {
-    const entries = checksByName.get(check.name) || [];
-    entries.push(check);
-    checksByName.set(check.name, entries);
-  }
-  if (
-    policy.requiredChecks.some((name) => {
-      const checks = checksByName.get(name) || [];
-      return (
-        checks.length === 0 ||
-        checks.some(
-          (check) =>
-            check.status !== "completed" || check.conclusion !== "success" ||
-            (check.commitSha !== undefined && check.commitSha !== runtimeSha),
-        )
-      );
-    })
-  )
-    fail(
-      "exact-head-checks-incomplete",
-      "candidate exact-head checks are not successful",
-    );
-  const requestRoot = universalWorkflowRequestRoot(request);
-  const discovery = {
-    repository: request.candidate.repository,
-    ref: request.candidate.discoveryRef,
-    expectedSha: request.candidate.expectedSha,
-    observedSha: runtimeSha,
-    observedAt,
-  };
+  if (Date.parse(observedAt) < Date.parse(policy.validFrom) || Date.parse(observedAt) >= Date.parse(policy.expiresAt)) fail("stale-admission", "capability policy is outside its validity window");
   return {
     schema: UNIVERSAL_WORKFLOW_ADMISSION,
     status: "admitted",
-    requestRoot,
-    admissionRoot,
-    discoveryRoot: documentRoot("universal-workflow-discovery", discovery),
-    reviewRoot: documentRoot("universal-workflow-review", reviewEvidence),
+    requestRoot: universalWorkflowRequestRoot(request),
+    admissionRoot: universalWorkflowAdmissionRoot(policy),
     consumerRoot: documentRoot("universal-workflow-consumer", request.consumer),
-    capabilityRoot: documentRoot(
-      "universal-workflow-capability",
-      request.capability,
-    ),
-    runtime: {
-      repository: request.candidate.repository,
-      sha: runtimeSha,
-    },
+    capabilityRoot: documentRoot("universal-workflow-capability", request.capability),
+    runtime,
     permissions: request.capability.permissions,
     contractRoots: request.capability.contractRoots,
   };
@@ -544,8 +323,6 @@ export function completeUniversalWorkflow({ admission, resultRoot, status }) {
       "status",
       "requestRoot",
       "admissionRoot",
-      "discoveryRoot",
-      "reviewRoot",
       "consumerRoot",
       "capabilityRoot",
       "runtime",
@@ -566,8 +343,6 @@ export function completeUniversalWorkflow({ admission, resultRoot, status }) {
     status,
     requestRoot: root(admission.requestRoot, "admission.requestRoot"),
     admissionRoot: root(admission.admissionRoot, "admission.admissionRoot"),
-    discoveryRoot: root(admission.discoveryRoot, "admission.discoveryRoot"),
-    reviewRoot: root(admission.reviewRoot, "admission.reviewRoot"),
     consumerRoot: root(admission.consumerRoot, "admission.consumerRoot"),
     capabilityRoot: root(admission.capabilityRoot, "admission.capabilityRoot"),
     runtime: {
@@ -575,7 +350,7 @@ export function completeUniversalWorkflow({ admission, resultRoot, status }) {
         admission.runtime?.repository,
         "admission.runtime.repository",
       ),
-      sha: exactSha(admission.runtime?.sha, "admission.runtime.sha"),
+      sha: admission.runtime?.sha,
     },
     resultRoot: root(resultRoot, "resultRoot"),
   };

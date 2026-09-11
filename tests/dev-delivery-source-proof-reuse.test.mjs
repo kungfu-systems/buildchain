@@ -317,7 +317,7 @@ test("source proof reuse fails closed for base, source, toolchain, policy, depen
         { sourceHead: value.base },
         "producer-controller-receipt-not-qualifying",
       ],
-      [{ runtimeRef: "v3-other" }, "toolchainRoot-changed-or-unknown"],
+      [{ nodeVersion: "26" }, "planRoot-changed-or-unknown"],
       [
         { policyPaths: '[".github/workflows/required.yml","check.mjs"]' },
         "planRoot-changed-or-unknown",

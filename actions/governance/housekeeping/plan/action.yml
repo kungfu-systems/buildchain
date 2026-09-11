@@ -40,19 +40,22 @@ outputs:
     value: ${{ steps.housekeeper.outputs.outcome }}
   plan-artifact:
     description: plan-artifact node result.
-    value: ${{ fromJSON(inputs.request-json).artifact-prefix }}-plan-${{ github.run_id }}
+    value: ${{ fromJSON(inputs.request-json).artifact-prefix }}-plan-${{
+      github.run_id }}
   report-artifact:
     description: report-artifact node result.
-    value: ${{ fromJSON(inputs.request-json).artifact-prefix }}-report-${{ github.run_id }}
+    value: ${{ fromJSON(inputs.request-json).artifact-prefix }}-report-${{
+      github.run_id }}
   receipt-artifact:
     description: receipt-artifact node result.
-    value: ${{ fromJSON(inputs.request-json).artifact-prefix }}-receipt-${{ github.run_id }}
+    value: ${{ fromJSON(inputs.request-json).artifact-prefix }}-receipt-${{
+      github.run_id }}
 runs:
   using: composite
   steps:
     - name: Acquire exact housekeeping credential
       id: credential
-      uses: ./.buildchain/workflow-shell/actions/providers/github/token
+      uses: ./.buildchain/runtime/actions/providers/github/token
       with:
         repository: ${{ fromJSON(inputs.request-json).repository }}
         app-id: ${{ inputs.secrets-housekeeper-app-id }}
@@ -60,16 +63,6 @@ runs:
         failure-policy: strict
         fallback-token: ${{ inputs.secrets-housekeeper-token }}
         workflow-token: ${{ github.token }}
-    - name: Checkout Buildchain runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ inputs.runtime-repository }}
-        ref: ${{ inputs.runtime-ref }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Reconcile exact housekeeping scope
       id: housekeeper
       uses: ./.buildchain/runtime/actions/governance/housekeeping/reconcile
@@ -81,21 +74,24 @@ runs:
     - name: Upload exact plan
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: ${{ fromJSON(inputs.request-json).artifact-prefix }}-plan-${{ github.run_id }}
+        name: ${{ fromJSON(inputs.request-json).artifact-prefix }}-plan-${{
+          github.run_id }}
         path: ${{ steps.housekeeper.outputs.plan-path }}
         retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
         if-no-files-found: error
     - name: Upload decision report
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: ${{ fromJSON(inputs.request-json).artifact-prefix }}-report-${{ github.run_id }}
+        name: ${{ fromJSON(inputs.request-json).artifact-prefix }}-report-${{
+          github.run_id }}
         path: ${{ steps.housekeeper.outputs.report-path }}
         retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
         if-no-files-found: error
     - name: Upload report receipt
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: ${{ fromJSON(inputs.request-json).artifact-prefix }}-receipt-${{ github.run_id }}
+        name: ${{ fromJSON(inputs.request-json).artifact-prefix }}-receipt-${{
+          github.run_id }}
         path: ${{ steps.housekeeper.outputs.report-receipt-path }}
         retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
         if-no-files-found: error

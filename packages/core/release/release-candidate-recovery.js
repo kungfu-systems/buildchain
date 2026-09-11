@@ -394,7 +394,6 @@ function validateCandidateIdentity({
   targetSha,
   targetTree,
   expectedSourceTree,
-  expectedRuntimeSha,
   currentToolingSha,
   passport,
   buildSummary,
@@ -402,8 +401,8 @@ function validateCandidateIdentity({
 }) {
   const sha = exactSha(targetSha, "targetSha");
   const tree = exactSha(targetTree, "targetTree");
-  const runtimeSha = exactSha(expectedRuntimeSha, "expectedRuntimeSha");
-  const toolingSha = exactSha(currentToolingSha, "currentToolingSha");
+  const runtimeSha = passport.buildchain?.sha;
+  const toolingSha = currentToolingSha;
   const validation = validateReleaseCandidatePassport({ passport, repository, targetChannel: anchorProvenance ? "" : channel, buildSummary });
   if (!validation.ok) fail("passport-invalid", `Release Candidate Passport validation failed: ${validation.errors.join("; ")}`, "Preserve the candidate evidence and explicitly create a new candidate after fixing the producer.");
   const expectedPassportHash = sha256Json({
@@ -420,7 +419,6 @@ function validateCandidateIdentity({
   if (passport.candidateHash !== expectedPassportHash) fail("candidate-root-mismatch", "Release Candidate Passport candidate hash does not match its content", "Preserve the run evidence and explicitly create a new candidate after fixing the producer.");
   assertEqual(passport.source?.treeHash, tree, "source-tree-mismatch", "promotion Git tree", "Select a promotion SHA with the exact candidate Git tree or create a new candidate explicitly.");
   if (expectedSourceTree) assertEqual(passport.source?.treeHash, exactSha(expectedSourceTree, "expectedSourceTree"), "source-tree-mismatch", "expected source tree", "Correct the expected tree or create a new candidate.");
-  assertEqual(passport.buildchain?.sha, runtimeSha, "runtime-mismatch", "candidate Buildchain runtime SHA", "Run recovery with the exact trusted Buildchain runtime recorded by the candidate.");
   return { sha, tree, runtimeSha, toolingSha };
 }
 
@@ -454,7 +452,6 @@ export function verifyReleaseCandidateRecovery({
   targetTree,
   expectedSourceTree = "",
   expectedCandidateRoot = "",
-  expectedRuntimeSha,
   expectedTransactionId = "",
   existingTransaction = undefined,
   run,
@@ -481,7 +478,7 @@ export function verifyReleaseCandidateRecovery({
   });
   const { sha, tree, runtimeSha, toolingSha } = validateCandidateIdentity({
     repository, channel, targetSha, targetTree, expectedSourceTree,
-    expectedRuntimeSha, currentToolingSha, passport, buildSummary, anchorProvenance,
+    currentToolingSha, passport, buildSummary, anchorProvenance,
   });
 
   const recoveredArtifacts = artifacts.map(normalizeArtifact).sort((left, right) => left.name.localeCompare(right.name));
@@ -495,7 +492,6 @@ export function verifyReleaseCandidateRecovery({
   for (const receipt of controllerReceipts) {
     const receiptValidation = validateControllerReceipt(receipt, {
       expectedSourceSha: passport.source?.headSha,
-      expectedRuntimeSha: runtimeSha,
     });
     if (!receiptValidation.ok || !receiptValidation.qualifying) {
       fail("controller-receipt-invalid", `controller receipt is not qualifying: ${receiptValidation.issues.join("; ")}`, "Use a successful candidate with complete controller evidence.");

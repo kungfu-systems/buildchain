@@ -122,8 +122,7 @@ function validateSigningAuthority(normalized, signingRun, signingArtifacts) {
   if (
     Number(signingRun?.id) !== normalized.signing.authorityRunId ||
     signingRun?.status !== "completed" ||
-    signingRun?.conclusion !== "success" ||
-    signingRun?.head_sha !== normalized.signing.runtimeSha
+    signingRun?.conclusion !== "success"
   )
     fault(
       "tail-reseal-signer-authority-mismatch",

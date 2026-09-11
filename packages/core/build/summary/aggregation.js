@@ -76,12 +76,12 @@ export async function aggregate(context, plan, jobs, executions) {
     },
     runtime: {
       workflowShellRef: plan.identity.ref,
-      requestedRef: plan.identity.ref,
-      ref: plan.identity.ref,
+      requestedRef: plan.runtime?.ref || plan.identity.ref,
+      ref: plan.runtime?.ref || plan.identity.ref,
       sha: plan.identity.sha,
-      class: plan.identity.channel,
-      override: false,
-      trustDecision: "workflow-identity",
+      class: plan.runtime?.class || plan.identity.channel,
+      override: plan.runtime?.origin === "runtime-parameter",
+      trustDecision: "entry-selection",
       rollbackRef: plan.identity.ref,
     },
   });

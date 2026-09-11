@@ -1,5 +1,6 @@
 name: stage-capsule-canary-consumer-admission
-description: Execute the stage-capsule-canary consumer-admission capability within its caller job boundary.
+description: Execute the stage-capsule-canary consumer-admission capability
+  within its caller job boundary.
 inputs:
   request-json:
     description: Typed public workflow request.
@@ -22,31 +23,17 @@ runs:
       with:
         path: .buildchain/consumer
         persist-credentials: false
-    - name: Resolve exact called-workflow runtime
-      id: runtime
-      uses: ./.buildchain/workflow-shell/actions/runtime/selection/workflow
-      with:
-        workflow-sha: ${{ inputs.workflow-sha }}
-    - name: Checkout exact Buildchain policy runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: kungfu-systems/buildchain
-        ref: ${{ steps.runtime.outputs.sha }}
-        path: .buildchain/policy-runtime
-        persist-credentials: false
-    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/policy-runtime
     - name: Enforce v4 floating consumer policy
       id: policy
-      uses: ./.buildchain/policy-runtime/actions/consumer/policy/admit
+      uses: ./.buildchain/runtime/actions/consumer/policy/admit
       with:
         directory: .buildchain/consumer
         workflow: .github/workflows/public-build-stage-capsule-canary.yml
-        workflow-sha: ${{ steps.runtime.outputs.sha }}
+        workflow-sha: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
     - name: Upload rooted consumer admission receipt
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: v4-consumer-policy-${{ fromJSON(inputs.request-json).consumer }}-${{ github.sha }}
+        name: v4-consumer-policy-${{ fromJSON(inputs.request-json).consumer }}-${{
+          github.sha }}
         path: .buildchain/consumer/.buildchain/evidence/consumer-policy-receipt.json
         if-no-files-found: error

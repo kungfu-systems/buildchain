@@ -23,7 +23,7 @@ test("Evidence qualification preserves shell failure semantics and publishes onl
   const published=publishQualifiedEvidence(input,{publish:options=>{assert.equal(options.dryRun,false);return {status:"published"};}});
   assert.equal(JSON.parse(fs.readFileSync(published.receiptPath,"utf8")).status,"published");
 });
-test("observed evidence admits the default branch before source checkout and rejects pull requests", (t) => {
+test("observed evidence admits the default branch before publication and rejects pull requests", (t) => {
   const workflow = YAML.parse(
     fs.readFileSync(
       path.join(root, ".github/workflows/public-ops-observed-evidence.yml"),
@@ -32,12 +32,12 @@ test("observed evidence admits the default branch before source checkout and rej
   );
   const steps = workflow.jobs.publish.steps;
   assert.equal(
-    steps[1].uses,
-    "./.buildchain/workflow-shell/actions/observability/evidence/admit-publisher",
+    steps[2].uses,
+    "./.buildchain/runtime/actions/observability/evidence/admit-publisher",
   );
-  assert.equal(steps[2].with.ref, "${{ github.sha }}");
+  assert.equal(steps[0].with.ref, "${{ github.sha }}");
   assert.equal(
-    steps[4].with["source-checkout-outcome"],
+    steps[3].with["source-checkout-outcome"],
     "${{ steps.source-checkout.outcome }}",
   );
   const cwd=fs.mkdtempSync(path.join(os.tmpdir(),"observed-admit-"));t.after(()=>fs.rmSync(cwd,{recursive:true,force:true}));

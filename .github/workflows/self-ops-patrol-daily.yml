@@ -1,34 +1,32 @@
 name: Buildchain Dogfood Patrol Daily
-
 on:
   schedule:
-    - cron: "17 2 * * *"
+    - cron: 17 2 * * *
   workflow_dispatch:
     inputs:
-      buildchain-ref:
-        description: "Temporary Buildchain runtime ref for trusted manual validation"
-        required: false
-        default: ""
       dry-run:
-        description: "Plan only; do not mutate repository state"
+        description: Plan only; do not mutate repository state
         required: false
         type: boolean
         default: false
-
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
 permissions:
   contents: write
   pull-requests: write
   checks: read
   statuses: read
-
 jobs:
   patrol:
-    uses: ./.github/workflows/public-ops-patrol-daily.yml
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-patrol-daily.yml@v4
     with:
-      buildchain-ref: ${{ inputs.buildchain-ref || github.sha }}
       required-status-checks: check
       landing-mode: queue
       dry-run: ${{ inputs.dry-run || false }}
       max-actions: 1
+      runtime-ref: ${{ inputs.runtime-ref }}
     secrets:
       github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}

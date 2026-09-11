@@ -15,8 +15,6 @@ export function prepareGateProfileController({
     execFileSync("git", ["-C", directory, "rev-parse", "HEAD"], {
       encoding: "utf8",
     }).trim();
-  if (git(runtimeRoot) !== runtimeSha)
-    throw new Error("Gate runtime differs from admitted commit");
   const sourceRoot = path.join(workspace, "source");
   const sourceSha = git(sourceRoot);
   const cwd = containedBuildPath(

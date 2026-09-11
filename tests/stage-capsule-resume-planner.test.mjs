@@ -108,11 +108,6 @@ test("identity and retention drift produce exact causal invalidations", () => {
       (node) => (node.expectedIdentity.toolchainRoots[0].root = changedRoot),
     ],
     [
-      "runtime-root",
-      "runtime-changed",
-      (node) => (node.expectedIdentity.runtimeRoot = changedRoot),
-    ],
-    [
       "policy-root",
       "policy-changed",
       (node) => (node.expectedIdentity.policyRoot = changedRoot),
@@ -251,4 +246,12 @@ test("real-platform rehearsal projects the same deterministic core", () => {
     assert.equal(evidence.planRoot, planStageCapsuleResume(request).planRoot);
     assert.equal(evidence.productionAuthority, "v4-native");
   }
+});
+
+test("runtime repair alone preserves a valid capsule and resumes the remaining stage", () => {
+  const changed = clone(request);
+  changed.nodes[0].expectedIdentity.runtimeRoot = "sha256:" + "f".repeat(64);
+  const plan = planStageCapsuleResume(changed);
+  assert.deepEqual(plan.requiredRestores, ["build"]);
+  assert.deepEqual(plan.requiredStages, ["verify"]);
 });

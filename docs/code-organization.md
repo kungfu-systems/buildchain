@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-10
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-6
   product: Codex
@@ -97,8 +97,9 @@ The development delivery API has six semantic nodes: source admission,
 reservation, native execution, qualification, settlement, and landing. Its
 actions are grouped under `dev-delivery/candidate`, `dev-delivery/native`,
 `dev-delivery/warrant`, and `dev-delivery/queue`.
-Buildchain invokes this public delivery workflow from the same source commit, so
-its workflow, action paths and runtime modules share one implementation identity.
+Buildchain consumes the same public floating entry as other repositories. The
+entry selects one runtime through the shared runtime entry; every business
+action and module comes from that selection, independently of the entry SHA.
 The native node runs in separate hosted jobs where the trust boundary requires
 process and credential isolation.
 Dispatch carries exact source-run coordinates and content roots. When the path

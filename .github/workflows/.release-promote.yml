@@ -3,9 +3,25 @@ on:
   workflow_call:
     inputs:
       request-json:
-        description: Complete normalized buildchain.promotion-invocation/v1 produced by the public promotion API.
+        description: Complete normalized buildchain.promotion-invocation/v1 produced by the public promotion
+          API.
         type: string
         required: true
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
     secrets:
       BUILDCHAIN_PROMOTION_TOKEN:
         description: Optional bypass-capable token used only for generated protected ref updates
@@ -14,7 +30,8 @@ on:
         description: Optional consumer-owned credential exposed only to the final publication commit command
         required: false
       BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY:
-        description: Optional consumer-owned private signing material exposed only to the final publication commit command
+        description: Optional consumer-owned private signing material exposed only to the final publication
+          commit command
         required: false
       KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:
         description: Private key for the dedicated read-only GitHub governance auditor App
@@ -135,6 +152,23 @@ concurrency:
   group: buildchain-release-promotion-${{ github.repository }}
   cancel-in-progress: false
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   qualify:
     name: QUALIFY canonical v4 release invocation inputs
     runs-on: ubuntu-24.04
@@ -169,24 +203,26 @@ jobs:
       required-artifacts-path: ${{ steps.node.outputs.required-artifacts-path }}
       release-artifact-paths: ${{ steps.node.outputs.release-artifact-paths }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: QUALIFY canonical v4 release invocation inputs
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/promotion/qualify
+        uses: ./.buildchain/runtime/actions/release/promotion/qualify
         with:
           runtime-ref: ${{ fromJSON(inputs.request-json).promotion-runtime-sha }}
-          runtime-repository: ${{ fromJSON(inputs.request-json).buildchain-repository || job.workflow_repository }}
+          runtime-repository: kungfu-systems/buildchain
           request-json: ${{ inputs.request-json }}
           job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
+    needs:
+      - execution-runtime
   apply:
     name: APPLY one rooted provider transaction
-    needs: qualify
+    needs:
+      - qualify
+      - execution-runtime
     if: ${{ (needs.qualify.outputs.action == 'promote' && !fromJSON(inputs.request-json).dry-run) }}
     runs-on: ubuntu-24.04
     outputs:
@@ -213,17 +249,15 @@ jobs:
           clean: true
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: APPLY one rooted provider transaction
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/promotion/apply
+        uses: ./.buildchain/runtime/actions/release/promotion/apply
         with:
           needs-qualify-outputs-runtime-sha: ${{ toJSON(needs.qualify.outputs.runtime-sha) }}
           needs-qualify-outputs-runtime-tree: ${{ toJSON(needs.qualify.outputs.runtime-tree) }}
@@ -254,6 +288,7 @@ jobs:
     needs:
       - qualify
       - apply
+      - execution-runtime
     if: ${{ (always() && needs.qualify.result == 'success') }}
     runs-on: ubuntu-24.04
     permissions:
@@ -265,16 +300,14 @@ jobs:
       controller-receipt-digest: ${{ steps.node.outputs.controller-receipt-digest }}
       controller-receipt-status: ${{ steps.node.outputs.controller-receipt-status }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: SETTLE terminal ReleaseReceipt projection
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/promotion/settle
+        uses: ./.buildchain/runtime/actions/release/promotion/settle
         with:
           needs-qualify-outputs-action: ${{ toJSON(needs.qualify.outputs.action) }}
           request-json: ${{ inputs.request-json }}

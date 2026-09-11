@@ -8,8 +8,7 @@ on:
         type: string
         default: ""
       target-branch:
-        description:
-          Optional primary ancestry target. Empty discovers the default and all protected
+        description: Optional primary ancestry target. Empty discovers the default and all protected
           mainline families repository-wide.
         required: false
         type: string
@@ -64,15 +63,20 @@ on:
         required: false
         type: string
         default: engineering-housekeeper
-      buildchain-repository:
-        description: Buildchain runtime repository.
-        required: false
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
         type: string
-        default: kungfu-systems/buildchain
-      buildchain-ref:
-        description: Optional explicit runtime ref. Empty binds the defining workflow SHA.
         required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
         type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
         default: ""
     secrets:
       housekeeper_token:
@@ -114,11 +118,27 @@ on:
         value: ${{ jobs.plan.outputs.receipt-artifact }}
 permissions: {}
 concurrency:
-  group:
-    engineering-housekeeper-${{ inputs.repository || github.repository }}-${{
+  group: engineering-housekeeper-${{ inputs.repository || github.repository }}-${{
     inputs.target-branch || 'all-mainlines' }}
   cancel-in-progress: false
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   plan:
     name: Inventory and plan
     runs-on: ubuntu-24.04
@@ -136,46 +156,45 @@ jobs:
       report-artifact: ${{ steps.node.outputs.report-artifact }}
       receipt-artifact: ${{ steps.node.outputs.receipt-artifact }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Inventory and plan
         id: node
-        uses: ./.buildchain/workflow-shell/actions/governance/housekeeping/plan
+        uses: ./.buildchain/runtime/actions/governance/housekeeping/plan
         with:
-          runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
-          runtime-repository: ${{ inputs.buildchain-repository || job.workflow_repository }}
+          runtime-ref: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
+          runtime-repository: kungfu-systems/buildchain
           request-json: ${{ toJSON(inputs) }}
           secrets-housekeeper-app-id: ${{ secrets.housekeeper_app_id }}
           secrets-housekeeper-app-private-key: ${{ secrets.housekeeper_app_private_key }}
           secrets-housekeeper-token: ${{ secrets.housekeeper_token }}
+    needs:
+      - execution-runtime
   delete-branches:
     name: Apply exact branch deletions
-    if:
-      ${{ (inputs.mode == 'apply' && inputs.apply-enabled && needs.plan.outputs.branch-action-count !=
+    if: ${{ (inputs.mode == 'apply' && inputs.apply-enabled && needs.plan.outputs.branch-action-count !=
       '0') }}
-    needs: plan
+    needs:
+      - plan
+      - execution-runtime
     runs-on: ubuntu-24.04
     outputs:
       receipt-root: ${{ steps.node.outputs.receipt-root }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Apply exact branch deletions
         id: node
-        uses: ./.buildchain/workflow-shell/actions/governance/housekeeping/delete-branches
+        uses: ./.buildchain/runtime/actions/governance/housekeeping/delete-branches
         with:
-          runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
-          runtime-repository: ${{ inputs.buildchain-repository || job.workflow_repository }}
+          runtime-ref: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
+          runtime-repository: kungfu-systems/buildchain
           request-json: ${{ toJSON(inputs) }}
           secrets-housekeeper-app-id: ${{ secrets.housekeeper_app_id }}
           secrets-housekeeper-app-private-key: ${{ secrets.housekeeper_app_private_key }}
@@ -183,27 +202,26 @@ jobs:
           secrets-housekeeper-token: ${{ secrets.housekeeper_token }}
   label-pull-requests:
     name: Apply stale pull-request labels
-    if:
-      ${{ (inputs.mode == 'apply' && inputs.apply-enabled && inputs.stale-pull-request-label != '' &&
+    if: ${{ (inputs.mode == 'apply' && inputs.apply-enabled && inputs.stale-pull-request-label != '' &&
       needs.plan.outputs.pull-request-action-count != '0') }}
-    needs: plan
+    needs:
+      - plan
+      - execution-runtime
     runs-on: ubuntu-24.04
     outputs:
       receipt-root: ${{ steps.node.outputs.receipt-root }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Apply stale pull-request labels
         id: node
-        uses: ./.buildchain/workflow-shell/actions/governance/housekeeping/label-pull-requests
+        uses: ./.buildchain/runtime/actions/governance/housekeeping/label-pull-requests
         with:
-          runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
-          runtime-repository: ${{ inputs.buildchain-repository || job.workflow_repository }}
+          runtime-ref: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
+          runtime-repository: kungfu-systems/buildchain
           request-json: ${{ toJSON(inputs) }}
           secrets-housekeeper-app-id: ${{ secrets.housekeeper_app_id }}
           secrets-housekeeper-app-private-key: ${{ secrets.housekeeper_app_private_key }}

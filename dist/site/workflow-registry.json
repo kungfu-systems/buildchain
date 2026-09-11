@@ -11,16 +11,18 @@
         "adapter-arguments-json",
         "adapter-path",
         "artifact-retention-days",
-        "buildchain-repository",
+        "contract-lock",
         "media-profile",
         "render-media",
         "renderer-image",
         "require-trusted-event",
+        "runtime-ref",
+        "runtime-selection",
         "source-artifact-digest",
         "source-artifact-name",
         "source-ref"
       ],
-      "inputCount": 11,
+      "inputCount": 13,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
@@ -66,8 +68,6 @@
       "inputs": [
         "artifact-name",
         "artifact-retention-days",
-        "buildchain-ref",
-        "buildchain-repository",
         "cargo-registry-index",
         "checkout-cache-fallback",
         "checkout-cache-fetch-attempts",
@@ -76,6 +76,7 @@
         "checkout-cache-mode",
         "checkout-cache-reference-repository-template",
         "checkout-cache-timeout-seconds",
+        "contract-lock",
         "gate-command-json",
         "gate-environment-json",
         "gate-plan-command-json",
@@ -86,6 +87,8 @@
         "platforms-json",
         "require-trusted-event",
         "runner-preset",
+        "runtime-ref",
+        "runtime-selection",
         "rust-toolchain",
         "rustup-dist-server",
         "rustup-update-root",
@@ -95,7 +98,7 @@
         "untrusted-policy",
         "working-directory"
       ],
-      "inputCount": 30,
+      "inputCount": 31,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
@@ -140,9 +143,13 @@
       "path": ".github/workflows/.build.yml",
       "reusable": true,
       "inputs": [
-        "config-path"
+        "config-path",
+        "contract-lock",
+        "resume-run-id",
+        "runtime-ref",
+        "runtime-selection"
       ],
-      "inputCount": 1,
+      "inputCount": 5,
       "secrets": [
         "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64",
         "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
@@ -181,12 +188,15 @@
       "path": ".github/workflows/.ops-git-sync.yml",
       "reusable": true,
       "inputs": [
+        "contract-lock",
         "force",
         "remote-host",
         "remote-path",
-        "remote-repo"
+        "remote-repo",
+        "runtime-ref",
+        "runtime-selection"
       ],
-      "inputCount": 4,
+      "inputCount": 7,
       "secrets": [
         "REMOTE_CREDENTIAL",
         "REMOTE_USER"
@@ -224,8 +234,6 @@
         "auto-admission",
         "auto-admission-kind",
         "auto-no-gate",
-        "buildchain-ref",
-        "buildchain-repository",
         "consumer-gate-command",
         "consumer-gate-controller-sha",
         "consumer-gate-evidence-source-sha",
@@ -233,6 +241,7 @@
         "consumer-predicate-digest",
         "consumer-predicate-id",
         "consumer-qualification-required",
+        "contract-lock",
         "control-plane-audit-json",
         "dry-run",
         "evidence-controller-artifact",
@@ -253,11 +262,13 @@
         "publisher-workflow-path",
         "required-status-check",
         "runner-provenance-json",
+        "runtime-ref",
+        "runtime-selection",
         "source-sha",
         "target-ref",
         "used-nonces-json"
       ],
-      "inputCount": 37,
+      "inputCount": 38,
       "secrets": [
         "BUILDCHAIN_GOVERNANCE_READ_TOKEN",
         "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
@@ -297,8 +308,7 @@
       "reusable": true,
       "inputs": [
         "auto-admission",
-        "buildchain-ref",
-        "buildchain-repository",
+        "contract-lock",
         "evidence-run-id",
         "github-governance-receipt-json",
         "publication-admission-json",
@@ -309,10 +319,12 @@
         "publication-used-nonces-json",
         "publication-version",
         "release-tag",
+        "runtime-ref",
+        "runtime-selection",
         "source-sha",
         "target-ref"
       ],
-      "inputCount": 15,
+      "inputCount": 16,
       "secrets": [],
       "secretCount": 0,
       "outputs": [],
@@ -342,9 +354,12 @@
       "path": ".github/workflows/.release-promote.yml",
       "reusable": true,
       "inputs": [
-        "request-json"
+        "contract-lock",
+        "request-json",
+        "runtime-ref",
+        "runtime-selection"
       ],
-      "inputCount": 1,
+      "inputCount": 4,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -417,9 +432,13 @@
       "path": ".github/workflows/build.yml",
       "reusable": true,
       "inputs": [
-        "config-path"
+        "config-path",
+        "contract-lock",
+        "resume-run-id",
+        "runtime-ref",
+        "runtime-selection"
       ],
-      "inputCount": 1,
+      "inputCount": 5,
       "secrets": [
         "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64",
         "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
@@ -463,10 +482,13 @@
         "consumer",
         "consumer-ref",
         "consumer-repository",
+        "contract-lock",
         "input-path",
-        "invocation-source-path"
+        "invocation-source-path",
+        "runtime-ref",
+        "runtime-selection"
       ],
-      "inputCount": 5,
+      "inputCount": 8,
       "secrets": [],
       "secretCount": 0,
       "outputs": [],
@@ -496,11 +518,12 @@
       "path": ".github/workflows/public-build-check.yml",
       "reusable": true,
       "inputs": [
-        "buildchain-ref",
-        "buildchain-repository",
+        "contract-lock",
         "mode",
         "node-version",
         "require-version-state",
+        "runtime-ref",
+        "runtime-selection",
         "source-proof-closure-paths-json",
         "source-proof-dependency-paths-json",
         "source-proof-policy-paths-json",
@@ -509,7 +532,7 @@
         "upload-artifacts",
         "working-directory"
       ],
-      "inputCount": 12,
+      "inputCount": 13,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
@@ -555,17 +578,19 @@
         "artifact-retention-days",
         "binary-artifact-digest",
         "binary-artifact-name",
-        "buildchain-repository",
+        "contract-lock",
         "materialize",
         "materialize-base-ref",
         "media-profile",
         "render-failure-advisory",
         "render-media",
         "renderer-image",
+        "runtime-ref",
+        "runtime-selection",
         "scenario-path",
         "source-ref"
       ],
-      "inputCount": 12,
+      "inputCount": 14,
       "secrets": [
         "DEMO_UPDATE_TOKEN"
       ],
@@ -610,16 +635,14 @@
         "artifact-retention-days",
         "build-command",
         "buildchain-alpha-contract-lock-path",
-        "buildchain-contract-compatibility-policy",
-        "buildchain-contract-drift-issue-mode",
-        "buildchain-contract-lock-path",
-        "buildchain-ref",
-        "buildchain-repository",
         "buildchain-stable-contract-lock-path",
+        "contract-lock",
         "node-version",
         "package-name",
         "prepare-paper-package",
         "publish-dist-tag",
+        "runtime-ref",
+        "runtime-selection",
         "setup-node",
         "target-ref",
         "toolchain-command",
@@ -629,7 +652,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 23,
+      "inputCount": 21,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
@@ -678,12 +701,15 @@
       "inputs": [
         "build-artifact-path",
         "consumer",
+        "contract-lock",
         "go-version",
         "install-artifact-path",
         "node-version",
+        "runtime-ref",
+        "runtime-selection",
         "verify-artifact-path"
       ],
-      "inputCount": 6,
+      "inputCount": 9,
       "secrets": [],
       "secretCount": 0,
       "outputs": [],
@@ -715,8 +741,7 @@
       "inputs": [
         "alpha-workflow-path",
         "auto-merge",
-        "buildchain-ref",
-        "buildchain-repository",
+        "contract-lock",
         "dev-workflow-path",
         "dry-run",
         "max-age-seconds",
@@ -724,11 +749,13 @@
         "pull-request-body-prefix",
         "pull-request-body-prefix-renderer",
         "reactivation-authorized",
+        "runtime-ref",
+        "runtime-selection",
         "settlement-authorized",
         "source-branch",
         "target-branch"
       ],
-      "inputCount": 14,
+      "inputCount": 15,
       "secrets": [
         "promotion-token"
       ],
@@ -774,56 +801,20 @@
       "nonDuplicationRationale": "Canonical workflow owns one declared API or orchestration responsibility."
     },
     {
-      "id": "public-ops-bootstrap-recovery",
-      "path": ".github/workflows/public-ops-bootstrap-recovery.yml",
-      "reusable": true,
-      "inputs": [
-        "request-json"
-      ],
-      "inputCount": 1,
-      "secrets": [],
-      "secretCount": 0,
-      "outputs": [
-        "backflow-root",
-        "result-json",
-        "runtime-sha",
-        "terminal-receipt-json",
-        "terminal-receipt-root"
-      ],
-      "outputCount": 5,
-      "taxonomy": {
-        "id": "universal-bootstrap-recovery",
-        "role": "public",
-        "category": "ops",
-        "purpose": "bootstrap-recovery",
-        "status": "active",
-        "canonicalPath": ".github/workflows/public-ops-bootstrap-recovery.yml",
-        "compatibilityAlias": false
-      },
-      "surface": "repository-workflow",
-      "capabilityGroup": "api-cli-reference",
-      "status": "active",
-      "owner": "buildchain-workflows",
-      "maturity": "active",
-      "introducedVersion": "4.1.0-alpha.0",
-      "compatibilityPromise": "current-contract-only",
-      "deprecationReplacement": "",
-      "sunsetCondition": "explicit-contract-change-review",
-      "nonDuplicationRationale": "Canonical workflow owns one declared API or orchestration responsibility."
-    },
-    {
       "id": "public-ops-bootstrap",
       "path": ".github/workflows/public-ops-bootstrap.yml",
       "reusable": true,
       "inputs": [
-        "request-json"
+        "contract-lock",
+        "request-json",
+        "runtime-ref",
+        "runtime-selection"
       ],
-      "inputCount": 1,
+      "inputCount": 4,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
         "admission-root",
-        "backflow-root",
         "request-root",
         "result-json",
         "result-root",
@@ -831,7 +822,7 @@
         "terminal-receipt-json",
         "terminal-receipt-root"
       ],
-      "outputCount": 8,
+      "outputCount": 7,
       "taxonomy": {
         "id": "bootstrap",
         "role": "public",
@@ -861,9 +852,8 @@
         "affected-paths-json",
         "allowed-head-prefixes",
         "block-labels",
-        "buildchain-ref",
-        "buildchain-repository",
         "closure-root",
+        "contract-lock",
         "defer-landing",
         "delivery-class",
         "delivery-priority",
@@ -889,6 +879,8 @@
         "release-blocker-priority-json",
         "require-approval",
         "required-status-checks",
+        "runtime-ref",
+        "runtime-selection",
         "same-repository-only",
         "shard-evidence-roots-json",
         "source-identity-root",
@@ -899,7 +891,7 @@
         "toolchain-root",
         "warrant-lease-seconds"
       ],
-      "inputCount": 41,
+      "inputCount": 42,
       "secrets": [
         "github-token"
       ],
@@ -951,8 +943,7 @@
       "path": ".github/workflows/public-ops-dev-qualification-patrol.yml",
       "reusable": true,
       "inputs": [
-        "buildchain-ref",
-        "buildchain-repository",
+        "contract-lock",
         "dev-workflow-path",
         "dispatch-inputs-json",
         "dry-run",
@@ -960,9 +951,11 @@
         "mutation-authorized",
         "preflight-workflow-path",
         "priority-workflows-json",
+        "runtime-ref",
+        "runtime-selection",
         "source-branch"
       ],
-      "inputCount": 10,
+      "inputCount": 11,
       "secrets": [
         "qualification-token"
       ],
@@ -1005,19 +998,20 @@
         "apply-enabled",
         "artifact-prefix",
         "artifact-retention-days",
-        "buildchain-ref",
-        "buildchain-repository",
+        "contract-lock",
         "max-actions",
         "mode",
         "protected-patterns",
         "repository",
         "retained-patterns",
+        "runtime-ref",
+        "runtime-selection",
         "stale-days",
         "stale-pull-request-label",
         "target-branch",
         "temporary-branch-patterns"
       ],
-      "inputCount": 14,
+      "inputCount": 15,
       "secrets": [
         "housekeeper_app_id",
         "housekeeper_app_private_key",
@@ -1063,8 +1057,8 @@
       "inputs": [
         "artifact-path",
         "build-command",
-        "buildchain-ref",
         "cloudfront-distribution",
+        "contract-lock",
         "evidence-source-path",
         "evidence-source-ref",
         "evidence-source-repository",
@@ -1072,9 +1066,11 @@
         "production-aws-role-arn",
         "production-bucket",
         "production-environment",
+        "runtime-ref",
+        "runtime-selection",
         "verify-command"
       ],
-      "inputCount": 12,
+      "inputCount": 14,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
@@ -1108,8 +1104,7 @@
       "inputs": [
         "allowed-head-prefixes",
         "block-labels",
-        "buildchain-ref",
-        "buildchain-repository",
+        "contract-lock",
         "dry-run",
         "landing-mode",
         "max-actions",
@@ -1117,10 +1112,12 @@
         "ready-label",
         "require-approval",
         "required-status-checks",
+        "runtime-ref",
+        "runtime-selection",
         "same-repository-only",
         "target-branch"
       ],
-      "inputCount": 13,
+      "inputCount": 14,
       "secrets": [
         "github-token"
       ],
@@ -1158,12 +1155,13 @@
       "path": ".github/workflows/public-ops-patrol-monthly.yml",
       "reusable": true,
       "inputs": [
-        "buildchain-ref",
-        "buildchain-repository",
+        "contract-lock",
         "dry-run",
+        "runtime-ref",
+        "runtime-selection",
         "target-branch"
       ],
-      "inputCount": 4,
+      "inputCount": 5,
       "secrets": [
         "github-token"
       ],
@@ -1201,12 +1199,13 @@
       "path": ".github/workflows/public-ops-patrol-weekly.yml",
       "reusable": true,
       "inputs": [
-        "buildchain-ref",
-        "buildchain-repository",
+        "contract-lock",
         "dry-run",
+        "runtime-ref",
+        "runtime-selection",
         "target-branch"
       ],
-      "inputCount": 4,
+      "inputCount": 5,
       "secrets": [
         "github-token"
       ],
@@ -1246,10 +1245,9 @@
       "inputs": [
         "allowed-head-prefixes",
         "block-labels",
-        "buildchain-ref",
-        "buildchain-repository",
         "cadence",
         "capabilities",
+        "contract-lock",
         "dry-run",
         "landing-mode",
         "max-actions",
@@ -1258,10 +1256,12 @@
         "ready-label",
         "require-approval",
         "required-status-checks",
+        "runtime-ref",
+        "runtime-selection",
         "same-repository-only",
         "target-branch"
       ],
-      "inputCount": 16,
+      "inputCount": 17,
       "secrets": [
         "github-token"
       ],
@@ -1301,10 +1301,12 @@
       "inputs": [
         "apply",
         "branch",
-        "buildchain-ref",
-        "candidate-sha"
+        "candidate-sha",
+        "contract-lock",
+        "runtime-ref",
+        "runtime-selection"
       ],
-      "inputCount": 4,
+      "inputCount": 6,
       "secrets": [
         "BUILDCHAIN_PROMOTION_TOKEN",
         "governance-token"
@@ -1340,8 +1342,7 @@
         "auto-approve",
         "auto-merge",
         "auto-promote",
-        "buildchain-ref",
-        "buildchain-repository",
+        "contract-lock",
         "dry-run",
         "hold",
         "hold-reason",
@@ -1352,9 +1353,11 @@
         "required-checks",
         "revoke-reason",
         "revoked-versions",
+        "runtime-ref",
+        "runtime-selection",
         "target-branch"
       ],
-      "inputCount": 16,
+      "inputCount": 17,
       "secrets": [
         "approval-token",
         "promotion-token"
@@ -1396,10 +1399,13 @@
       "inputs": [
         "artifact-retention-days",
         "consumer-policy-receipt-json",
+        "contract-lock",
         "macos-finalization-command",
-        "request-json"
+        "request-json",
+        "runtime-ref",
+        "runtime-selection"
       ],
-      "inputCount": 4,
+      "inputCount": 7,
       "secrets": [
         "BUILDCHAIN_EVIDENCE_READ_TOKEN",
         "BUILDCHAIN_SIGNING_TOKEN"
@@ -1435,8 +1441,7 @@
       "path": ".github/workflows/public-ops-warrant-cancel.yml",
       "reusable": true,
       "inputs": [
-        "buildchain-ref",
-        "buildchain-repository",
+        "contract-lock",
         "event-action",
         "expected-candidate-id",
         "expected-old-state-root",
@@ -1445,10 +1450,12 @@
         "observed-source-head-sha",
         "outcome",
         "reason",
+        "runtime-ref",
+        "runtime-selection",
         "target-branch",
         "terminal-evidence-root"
       ],
-      "inputCount": 12,
+      "inputCount": 13,
       "secrets": [
         "github-token"
       ],
@@ -1484,8 +1491,7 @@
       "path": ".github/workflows/public-ops-warrant-close.yml",
       "reusable": true,
       "inputs": [
-        "buildchain-ref",
-        "buildchain-repository",
+        "contract-lock",
         "current-base-sha",
         "expected-head-sha",
         "expected-pr-number",
@@ -1495,10 +1501,12 @@
         "reason",
         "replay-tree-sha",
         "required-context-roots-json",
+        "runtime-ref",
+        "runtime-selection",
         "target-branch",
         "terminal-evidence-root"
       ],
-      "inputCount": 13,
+      "inputCount": 14,
       "secrets": [
         "github-token"
       ],
@@ -1535,7 +1543,7 @@
       "path": ".github/workflows/public-release-artifact-attestation.yml",
       "reusable": true,
       "inputs": [
-        "buildchain-ref",
+        "contract-lock",
         "environment",
         "evidence-artifact-name",
         "evidence-run-id",
@@ -1545,11 +1553,13 @@
         "release-passport-artifact-name",
         "release-passport-relative-path",
         "retention-days",
+        "runtime-ref",
+        "runtime-selection",
         "source-sha",
         "subject-artifact-name",
         "subject-relative-path"
       ],
-      "inputCount": 13,
+      "inputCount": 15,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
@@ -1584,8 +1594,12 @@
       "id": "public-release-oci-compose-preview",
       "path": ".github/workflows/public-release-oci-compose-preview.yml",
       "reusable": true,
-      "inputs": [],
-      "inputCount": 0,
+      "inputs": [
+        "contract-lock",
+        "runtime-ref",
+        "runtime-selection"
+      ],
+      "inputCount": 3,
       "secrets": [
         "BUILDCHAIN_PROMOTION_TOKEN"
       ],
@@ -1621,9 +1635,7 @@
         "artifact-paths",
         "artifact-retention-days",
         "branch-protection-bypass-apps",
-        "buildchain-contract-lock-path",
-        "buildchain-ref",
-        "buildchain-repository",
+        "contract-lock",
         "dry-run",
         "github-governance-receipt-json",
         "github-release",
@@ -1634,6 +1646,8 @@
         "release-passport-output-dir",
         "release-passport-product-name",
         "required-status-check",
+        "runtime-ref",
+        "runtime-selection",
         "target-ref",
         "target-sha",
         "toolchain-type",
@@ -1690,9 +1704,12 @@
       "path": ".github/workflows/public-release-promote.yml",
       "reusable": true,
       "inputs": [
-        "request-json"
+        "contract-lock",
+        "request-json",
+        "runtime-ref",
+        "runtime-selection"
       ],
-      "inputCount": 1,
+      "inputCount": 4,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1779,8 +1796,7 @@
       "inputs": [
         "agent-work-context-json",
         "agent-work-mode",
-        "buildchain-ref",
-        "buildchain-repository",
+        "contract-lock",
         "downstream-base-ref",
         "downstream-branch",
         "downstream-prepare-command",
@@ -1794,10 +1810,12 @@
         "pr-body",
         "pr-title",
         "refresh-managed-readme-badges",
+        "runtime-ref",
+        "runtime-selection",
         "source-node",
         "upstream-release-json"
       ],
-      "inputCount": 19,
+      "inputCount": 20,
       "secrets": [
         "propagation-token"
       ],
@@ -1873,8 +1891,8 @@
       "path": ".github/workflows/public-release-tail.yml",
       "reusable": true,
       "inputs": [
-        "buildchain-ref",
         "candidate-root",
+        "contract-lock",
         "declaration-path",
         "execute",
         "provider-bindings-path",
@@ -1882,9 +1900,11 @@
         "rehearsal-capsule-path",
         "rehearsal-evidence-path",
         "rehearsal-mode",
+        "runtime-ref",
+        "runtime-selection",
         "state-path"
       ],
-      "inputCount": 10,
+      "inputCount": 12,
       "secrets": [
         "http-token"
       ],
@@ -1924,13 +1944,7 @@
         "artifact-path",
         "aws-region",
         "build-command",
-        "buildchain-contract-compatibility-policy",
-        "buildchain-contract-drift-issue-mode",
-        "buildchain-contract-expected-channel",
-        "buildchain-contract-expected-major",
-        "buildchain-contract-lock-path",
-        "buildchain-ref",
-        "buildchain-repository",
+        "contract-lock",
         "fail-on-release-pr-error",
         "github-governance-receipt-json",
         "node-version",
@@ -1957,13 +1971,15 @@
         "publication-runner-provenance-json",
         "publication-used-nonces-json",
         "release-feedback-actor-privacy",
+        "runtime-ref",
+        "runtime-selection",
         "staging-apply",
         "staging-aws-role-arn",
         "staging-environment",
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 41,
+      "inputCount": 37,
       "secrets": [
         "production-release-app-private-key",
         "production-release-pr-token"
@@ -4438,12 +4454,10 @@
       "id": "build/source/verify-checkouts",
       "path": "actions/build/source/verify-checkouts/action.yml",
       "inputs": [
-        "runtime-directory",
-        "runtime-sha",
         "source-directory",
         "source-sha"
       ],
-      "inputCount": 4,
+      "inputCount": 2,
       "capabilityGroup": "reusable-build",
       "status": "active",
       "owner": "buildchain-actions",
@@ -6425,11 +6439,10 @@
         "passport-path",
         "predecessors-ok",
         "request-json",
-        "runtime-checkout-outcome",
         "runtime-outcome",
         "source-sha"
       ],
-      "inputCount": 10,
+      "inputCount": 9,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",
@@ -7319,10 +7332,9 @@
         "predecessors-ok",
         "propagation-key",
         "request-json",
-        "runtime-ready",
         "token"
       ],
-      "inputCount": 6,
+      "inputCount": 5,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",
@@ -7725,68 +7737,6 @@
     },
     {
       "apiRole": "implementation",
-      "id": "runtime/closure/activate-provider",
-      "path": "actions/runtime/closure/activate-provider/action.yml",
-      "inputs": [
-        "sha",
-        "tree"
-      ],
-      "inputCount": 2,
-      "capabilityGroup": "api-cli-reference",
-      "status": "active",
-      "owner": "buildchain-actions",
-      "maturity": "stable",
-      "introducedVersion": "4.1.0-alpha.0",
-      "compatibilityPromise": "current-contract-only",
-      "deprecationReplacement": "",
-      "sunsetCondition": "explicit-contract-change-review",
-      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
-    },
-    {
-      "apiRole": "implementation",
-      "id": "runtime/closure/prepare-provider",
-      "path": "actions/runtime/closure/prepare-provider/action.yml",
-      "inputs": [
-        "repository",
-        "sha",
-        "tree"
-      ],
-      "inputCount": 3,
-      "capabilityGroup": "api-cli-reference",
-      "status": "active",
-      "owner": "buildchain-actions",
-      "maturity": "stable",
-      "introducedVersion": "4.1.0-alpha.0",
-      "compatibilityPromise": "current-contract-only",
-      "deprecationReplacement": "",
-      "sunsetCondition": "explicit-contract-change-review",
-      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
-    },
-    {
-      "apiRole": "implementation",
-      "id": "runtime/contract/check",
-      "path": "actions/runtime/contract/check/action.yml",
-      "inputs": [
-        "request-json",
-        "runtime-class",
-        "runtime-override",
-        "runtime-ref",
-        "runtime-sha",
-        "workflow-ref"
-      ],
-      "inputCount": 6,
-      "capabilityGroup": "api-cli-reference",
-      "status": "active",
-      "owner": "buildchain-actions",
-      "maturity": "stable",
-      "introducedVersion": "4.1.0-alpha.0",
-      "compatibilityPromise": "current-contract-only",
-      "deprecationReplacement": "",
-      "sunsetCondition": "explicit-contract-change-review",
-      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
-    },
-    {
-      "apiRole": "implementation",
       "id": "runtime/dependencies/install",
       "path": "actions/runtime/dependencies/install/action.yml",
       "inputs": [
@@ -7807,10 +7757,10 @@
     },
     {
       "apiRole": "implementation",
-      "id": "runtime/environment/prepare",
-      "path": "actions/runtime/environment/prepare/action.yml",
+      "id": "runtime/environment/activate",
+      "path": "actions/runtime/environment/activate/action.yml",
       "inputs": [
-        "directory"
+        "selection"
       ],
       "inputCount": 1,
       "capabilityGroup": "api-cli-reference",
@@ -7825,35 +7775,39 @@
     },
     {
       "apiRole": "implementation",
-      "id": "runtime/selection/admit",
-      "path": "actions/runtime/selection/admit/action.yml",
+      "id": "runtime/environment/prepare",
+      "path": "actions/runtime/environment/prepare/action.yml",
       "inputs": [
-        "purpose",
-        "ref",
-        "repository",
+        "selection",
+        "token"
+      ],
+      "inputCount": 2,
+      "capabilityGroup": "api-cli-reference",
+      "status": "active",
+      "owner": "buildchain-actions",
+      "maturity": "stable",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
+    },
+    {
+      "apiRole": "implementation",
+      "id": "runtime/selection/resolve",
+      "path": "actions/runtime/selection/resolve/action.yml",
+      "inputs": [
+        "contract-lock",
+        "resume-run-id",
+        "runtime-ref",
+        "selection",
+        "source-repository",
+        "source-sha",
         "token",
         "workflow-ref",
         "workflow-sha"
       ],
-      "inputCount": 6,
-      "capabilityGroup": "api-cli-reference",
-      "status": "active",
-      "owner": "buildchain-actions",
-      "maturity": "stable",
-      "introducedVersion": "4.1.0-alpha.0",
-      "compatibilityPromise": "current-contract-only",
-      "deprecationReplacement": "",
-      "sunsetCondition": "explicit-contract-change-review",
-      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
-    },
-    {
-      "apiRole": "implementation",
-      "id": "runtime/selection/workflow",
-      "path": "actions/runtime/selection/workflow/action.yml",
-      "inputs": [
-        "workflow-sha"
-      ],
-      "inputCount": 1,
+      "inputCount": 9,
       "capabilityGroup": "api-cli-reference",
       "status": "active",
       "owner": "buildchain-actions",
@@ -8353,27 +8307,6 @@
     },
     {
       "apiRole": "implementation",
-      "id": "web/runtime/verify-contract",
-      "path": "actions/web/runtime/verify-contract/action.yml",
-      "inputs": [
-        "request-json",
-        "runtime-json",
-        "source-sha",
-        "workflow-ref"
-      ],
-      "inputCount": 4,
-      "capabilityGroup": "site-and-propagation",
-      "status": "active",
-      "owner": "buildchain-actions",
-      "maturity": "stable",
-      "introducedVersion": "4.1.0-alpha.0",
-      "compatibilityPromise": "current-contract-only",
-      "deprecationReplacement": "",
-      "sunsetCondition": "explicit-contract-change-review",
-      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
-    },
-    {
-      "apiRole": "implementation",
       "id": "web/staging/deploy",
       "path": "actions/web/staging/deploy/action.yml",
       "inputs": [
@@ -8398,10 +8331,9 @@
       "id": "workflow/admission/admit",
       "path": "actions/workflow/admission/admit/action.yml",
       "inputs": [
-        "request-json",
-        "review-json"
+        "request-json"
       ],
-      "inputCount": 2,
+      "inputCount": 1,
       "capabilityGroup": "api-cli-reference",
       "status": "active",
       "owner": "buildchain-actions",
@@ -8417,10 +8349,9 @@
       "id": "workflow/admission/inspect",
       "path": "actions/workflow/admission/inspect/action.yml",
       "inputs": [
-        "recovery",
         "request-json"
       ],
-      "inputCount": 2,
+      "inputCount": 1,
       "capabilityGroup": "api-cli-reference",
       "status": "active",
       "owner": "buildchain-actions",
@@ -8439,25 +8370,6 @@
         "reason"
       ],
       "inputCount": 1,
-      "capabilityGroup": "api-cli-reference",
-      "status": "active",
-      "owner": "buildchain-actions",
-      "maturity": "stable",
-      "introducedVersion": "4.1.0-alpha.0",
-      "compatibilityPromise": "current-contract-only",
-      "deprecationReplacement": "",
-      "sunsetCondition": "explicit-contract-change-review",
-      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
-    },
-    {
-      "apiRole": "implementation",
-      "id": "workflow/admission/review",
-      "path": "actions/workflow/admission/review/action.yml",
-      "inputs": [
-        "request-json",
-        "token"
-      ],
-      "inputCount": 2,
       "capabilityGroup": "api-cli-reference",
       "status": "active",
       "owner": "buildchain-actions",
@@ -8653,86 +8565,6 @@
         "head-repository",
         "require-trusted",
         "untrusted-policy"
-      ],
-      "inputCount": 3,
-      "capabilityGroup": "api-cli-reference",
-      "status": "active",
-      "owner": "buildchain-actions",
-      "maturity": "stable",
-      "introducedVersion": "4.1.0-alpha.0",
-      "compatibilityPromise": "current-contract-only",
-      "deprecationReplacement": "",
-      "sunsetCondition": "explicit-contract-change-review",
-      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
-    },
-    {
-      "apiRole": "implementation",
-      "id": "workflow/recovery/admit",
-      "path": "actions/workflow/recovery/admit/action.yml",
-      "inputs": [
-        "request-json"
-      ],
-      "inputCount": 1,
-      "capabilityGroup": "api-cli-reference",
-      "status": "active",
-      "owner": "buildchain-actions",
-      "maturity": "stable",
-      "introducedVersion": "4.1.0-alpha.0",
-      "compatibilityPromise": "current-contract-only",
-      "deprecationReplacement": "",
-      "sunsetCondition": "explicit-contract-change-review",
-      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
-    },
-    {
-      "apiRole": "implementation",
-      "id": "workflow/recovery/execute",
-      "path": "actions/workflow/recovery/execute/action.yml",
-      "inputs": [
-        "needs-recovery-admit-outputs-admission-json",
-        "needs-recovery-admit-outputs-runtime-sha",
-        "request-json",
-        "source-checkout-outcome"
-      ],
-      "inputCount": 4,
-      "capabilityGroup": "api-cli-reference",
-      "status": "active",
-      "owner": "buildchain-actions",
-      "maturity": "stable",
-      "introducedVersion": "4.1.0-alpha.0",
-      "compatibilityPromise": "current-contract-only",
-      "deprecationReplacement": "",
-      "sunsetCondition": "explicit-contract-change-review",
-      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
-    },
-    {
-      "apiRole": "implementation",
-      "id": "workflow/recovery/settle",
-      "path": "actions/workflow/recovery/settle/action.yml",
-      "inputs": [
-        "needs-recovery-admit-outputs-admission-json",
-        "needs-recovery-admit-outputs-runtime-sha",
-        "needs-recovery-execute-outputs-result-json",
-        "request-json"
-      ],
-      "inputCount": 4,
-      "capabilityGroup": "api-cli-reference",
-      "status": "active",
-      "owner": "buildchain-actions",
-      "maturity": "stable",
-      "introducedVersion": "4.1.0-alpha.0",
-      "compatibilityPromise": "current-contract-only",
-      "deprecationReplacement": "",
-      "sunsetCondition": "explicit-contract-change-review",
-      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
-    },
-    {
-      "apiRole": "implementation",
-      "id": "workflow/settlement/backflow",
-      "path": "actions/workflow/settlement/backflow/action.yml",
-      "inputs": [
-        "receipt-json",
-        "request-json",
-        "token"
       ],
       "inputCount": 3,
       "capabilityGroup": "api-cli-reference",

@@ -374,7 +374,7 @@ test("the topology ledger exactly freezes all current release jobs and authority
   const topology = checkReleaseTopology();
   assert.deepEqual(topology.metrics, {
     workflowCount: 34,
-    jobCount: 73,
+    jobCount: 95,
     reusableEdgeCount: 20,
     mutationRelevantNodeCount: 61,
     contentsWriteJobCount: 22,
@@ -453,7 +453,7 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
   );
   assert.match(
     recovery,
-    /uses: \.\/\.github\/workflows\/public-release-promote\.yml/u,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-release-promote\.yml@v4/u,
   );
 });
 

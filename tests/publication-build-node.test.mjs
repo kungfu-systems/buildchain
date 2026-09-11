@@ -4,7 +4,6 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import YAML from "yaml";
-import { resolvePublicationRuntime } from "./helpers/runtime-selection.mjs";
 import { provePublicationReproducibility } from "../packages/core/publication/candidate/reproducibility.js";
 import { readQualifiedManifest } from "../packages/core/publication/candidate/manifest.js";
 import { bindQualifiedPackage } from "../packages/core/publication/candidate/paper-package.js";
@@ -34,58 +33,6 @@ async function workspace(fn) {
     fs.rmSync(root, { recursive: true, force: true });
   }
 }
-test("publication runtime defaults to its definition and admits only current authorized overrides", async () => {
-  const values = {},
-    core = { setOutput: (key, value) => (values[key] = value) };
-  await resolvePublicationRuntime({ env, context, core, github: {} });
-  assert.equal(values["runtime-sha"], sha);
-  assert.equal(values["runtime-class"], "alpha");
-  assert.equal(values["runtime-override"], "false");
-  await resolvePublicationRuntime({
-    env: { ...env, BUILDCHAIN_REQUESTED_REF: sha },
-    context,
-    core,
-    github: {},
-  });
-  assert.equal(values["runtime-trust-decision"], "workflow-definition");
-  for (const ref of ["v3", "dev/v4/v4.1", "train/v4/v4.1/topic"])
-    await assert.rejects(
-      resolvePublicationRuntime({
-        env: { ...env, BUILDCHAIN_REQUESTED_REF: ref },
-        context,
-        core,
-        github: {},
-      }),
-      /current v4 train|trusted workflow_dispatch/,
-    );
-  await assert.rejects(
-    resolvePublicationRuntime({
-      env: { ...env, BUILDCHAIN_REPOSITORY: "other/repo" },
-      context,
-      core,
-      github: {},
-    }),
-    /defining workflow repository/,
-  );
-  const github = {
-    rest: {
-      repos: {
-        getCollaboratorPermissionLevel: async () => ({
-          data: { permission: "read" },
-        }),
-      },
-    },
-  };
-  await assert.rejects(
-    resolvePublicationRuntime({
-      env: { ...env, BUILDCHAIN_REQUESTED_REF: "b".repeat(40) },
-      context: { ...context, eventName: "workflow_dispatch" },
-      core,
-      github,
-    }),
-    /write permission/,
-  );
-});
 test("publication build records failed evidence and denies an unqualified package result", async () =>
   workspace(() => {
     const seen = [];
@@ -172,20 +119,17 @@ test("qualified package binding rejects provider errors, duplicate packs and int
     );
     assert.ok(!fs.existsSync(path.join(root, "output")));
   }));
-test("publication workflow preserves runtime admission before source checkout and always collects failure receipts", () => {
+test("publication workflow preserves central runtime preparation before business execution and always collects failure receipts", () => {
   const w = YAML.parse(
     fs.readFileSync(".github/workflows/public-build-publication.yml", "utf8"),
   );
   const steps = w.jobs.publication.steps;
-  assert.equal(steps.length, 7);
-  assert.equal(steps[1].id, "runtime");
-  assert.equal(steps[2].id, "source");
-  assert.equal(steps[2].with.ref, "${{ github.sha }}");
-  assert.equal(steps[3].if, "${{ always() }}");
-  assert.equal(
-    steps[4].with["source-checkout-outcome"],
-    "${{ steps.source.outcome }}",
-  );
+  assert.equal(steps.length, 5);
+  assert.equal(steps[0].id, "source");
+  assert.equal(steps[0].with.ref, "${{ github.sha }}");
+  assert.equal(steps[1].uses, "$/actions/runtime/environment/prepare");
+  assert.equal(steps[2].if, "${{ always() }}");
+  assert.equal(steps[2].with["source-checkout-outcome"], "${{ steps.source.outcome }}");
   assert.equal(steps.at(-1).if, "${{ always() }}");
   const build = YAML.parse(
     fs.readFileSync("actions/publication/candidate/build/action.yml", "utf8"),

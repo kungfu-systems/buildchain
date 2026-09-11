@@ -1,3 +1,4 @@
+import { sha256Json } from "../../packages/core/release/release-candidate.js";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
@@ -176,6 +177,13 @@ export function createGitMock({ refs = new Map(), orderFile = "" } = {}) {
   return { octokit, refs, blobs, trees, commits, commitLog };
 }
 
+export function sealCandidateFixture(content) {
+  if (content?.contract !== "kungfu-buildchain-release-candidate-passport" || content.candidateHash !== undefined) return content;
+  const fields = ["repository", "target", "source", "platformMatrix", "buildchain", "gateProfileEvidence", "familyEvidence", "consumerPolicy", "controllerReceipts"];
+  const body = Object.fromEntries(fields.filter((key, index) => index < 5 || content[key] !== undefined).map((key) => [key, content[key]]));
+  return { ...content, candidateHash: sha256Json(body) };
+}
+
 export function makeTempWorkspace(files) {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-promote-"));
   for (const [relativePath, content] of Object.entries(files)) {
@@ -185,7 +193,7 @@ export function makeTempWorkspace(files) {
       filePath,
       typeof content === "string"
         ? content
-        : JSON.stringify(content, null, 2) + "\n",
+        : JSON.stringify(sealCandidateFixture(content), null, 2) + "\n",
     );
   }
   return cwd;

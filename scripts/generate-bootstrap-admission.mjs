@@ -13,7 +13,7 @@ const contract = JSON.parse(
 );
 const target = path.join(
   root,
-  "architecture/universal-workflow-train-admission.json",
+  "architecture/universal-workflow-capability-policy.json",
 );
 const policy = JSON.parse(fs.readFileSync(target, "utf8"));
 policy.contractRoots = contract.bootstrap.admissionPolicySources

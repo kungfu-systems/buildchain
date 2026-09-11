@@ -2,16 +2,6 @@ name: Buildchain Stable Candidate Patrol
 on:
   workflow_call:
     inputs:
-      buildchain-repository:
-        description: Buildchain runtime repository
-        default: kungfu-systems/buildchain
-        type: string
-        required: false
-      buildchain-ref:
-        description: Optional explicit runtime ref. Empty binds the defining workflow SHA.
-        default: ""
-        type: string
-        required: false
       target-branch:
         description: Stable release branch. Empty maps the caller dev/vN/vN.M branch to release/vN/vN.M.
         default: ""
@@ -28,8 +18,7 @@ on:
         type: number
         required: false
       required-checks:
-        description:
-          Comma/newline separated commit status contexts or check-run names; alpha-release is the
+        description: Comma/newline separated commit status contexts or check-run names; alpha-release is the
           prerelease publication fact
         default: ""
         type: string
@@ -55,8 +44,7 @@ on:
         type: string
         required: false
       release-now:
-        description:
-          Exact alpha version selected by explicit human authority; bypasses schedule/soak but
+        description: Exact alpha version selected by explicit human authority; bypasses schedule/soak but
           not revocation or source identity
         default: ""
         type: string
@@ -77,8 +65,7 @@ on:
         type: string
         required: false
       auto-approve:
-        description:
-          Approve the generated PR with an independent approval token, or the caller github.token
+        description: Approve the generated PR with an independent approval token, or the caller github.token
           when repository policy permits
         default: false
         type: boolean
@@ -88,6 +75,21 @@ on:
         default: true
         type: boolean
         required: false
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
     secrets:
       promotion-token:
         description: Repository-owned token used for durable ledger, source-lock branch and PR writes
@@ -115,11 +117,27 @@ permissions:
   checks: read
   statuses: read
 concurrency:
-  group:
-    buildchain-stable-candidate-patrol-${{ github.repository }}-${{ inputs.target-branch ||
+  group: buildchain-stable-candidate-patrol-${{ github.repository }}-${{ inputs.target-branch ||
     github.ref_name }}
   cancel-in-progress: false
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   patrol:
     runs-on: ubuntu-24.04
     outputs:
@@ -130,20 +148,20 @@ jobs:
       stable-version: ${{ steps.node.outputs.stable-version }}
       promotion-pr: ${{ steps.node.outputs.promotion-pr }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Execute stable-candidate-patrol
         id: node
-        uses: ./.buildchain/workflow-shell/actions/governance/stable-candidate/patrol
+        uses: ./.buildchain/runtime/actions/governance/stable-candidate/patrol
         with:
-          runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
-          runtime-repository: ${{ inputs.buildchain-repository || job.workflow_repository }}
+          runtime-ref: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
+          runtime-repository: kungfu-systems/buildchain
           request-json: ${{ toJSON(inputs) }}
           secrets-promotion-token: ${{ secrets.promotion-token }}
           secrets-approval-token: ${{ secrets.approval-token }}
           policy-json: ${{ toJSON(vars) }}
+    needs:
+      - execution-runtime

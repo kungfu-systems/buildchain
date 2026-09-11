@@ -15,7 +15,7 @@ runs:
   steps:
     - name: Verify sealed admission or retain a non-authorizing dry-run result
       id: result
-      uses: ./.buildchain/authority-runtime/actions/publication/authority/qualify-admission
+      uses: ./.buildchain/runtime/actions/publication/authority/qualify-admission
       with:
         request-json: ${{ inputs.request-json }}
         admission-bundle-json: ${{ inputs.admission-bundle-json }}
@@ -24,7 +24,8 @@ runs:
     - name: Upload publication capability receipt
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: buildchain-publication-capability-${{ github.run_id }}-${{ github.run_attempt }}
+        name: buildchain-publication-capability-${{ github.run_id }}-${{
+          github.run_attempt }}
         path: |
           .buildchain/publication-authority/capability.json
           .buildchain/publication-authority/gate-aggregate.json
@@ -32,10 +33,12 @@ runs:
           .buildchain/publication-authority/github-governance-receipt.json
         if-no-files-found: error
     - name: Upload assembled self-publication evidence
-      if: ${{ !fromJSON(inputs.request-json).dry-run && fromJSON(inputs.request-json).auto-admission }}
+      if: ${{ !fromJSON(inputs.request-json).dry-run &&
+        fromJSON(inputs.request-json).auto-admission }}
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: buildchain-self-publication-admission-${{ github.run_id }}-${{ github.run_attempt }}
+        name: buildchain-self-publication-admission-${{ github.run_id }}-${{
+          github.run_attempt }}
         path: .buildchain/publication-authority/auto/*.json
         if-no-files-found: error
 outputs:
@@ -47,7 +50,8 @@ outputs:
     value: ${{ steps.result.outputs.capability-digest }}
   capability-artifact:
     description: capability-artifact node result.
-    value: buildchain-publication-capability-${{ github.run_id }}-${{ github.run_attempt }}
+    value: buildchain-publication-capability-${{ github.run_id }}-${{
+      github.run_attempt }}
   gate-aggregate-json:
     description: gate-aggregate-json node result.
     value: ${{ steps.result.outputs.gate-aggregate-json }}

@@ -7,10 +7,6 @@ import YAML from "yaml";
 import { qualifyPromotionSource } from "../packages/core/release/promotion/source-intent.js";
 import { recoverProductPublicationVersion } from "../packages/core/release/promotion/product-state.js";
 import { productPublicationReader } from "../packages/core/providers/github/product-publication.js";
-import {
-  verify,
-  activateProviderClosure,
-} from "../packages/core/runtime/provider-closure.js";
 const root = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const sha = "a".repeat(40),
   next = "b".repeat(40),
@@ -161,66 +157,6 @@ test("recovery preserves explicit transaction identity and never treats a denied
   });
   assert.deepEqual(absent.outputs, {});
 });
-test("provider closure rejects mutable identities and tree drift before exposing dependencies", () => {
-  const env = { RUNTIME_SHA: sha, RUNTIME_TREE: tree },
-    calls = [];
-  verify(env, (command, args) => {
-    calls.push([command, args]);
-    return args.at(-1) === "HEAD" ? sha : tree;
-  });
-  assert.equal(calls.length, 2);
-  assert.equal(calls[1][1].at(-1), "HEAD^{tree}");
-  assert.throws(
-    () =>
-      verify({ ...env, RUNTIME_SHA: "v4-alpha" }, () => {
-        throw Error("must not query");
-      }),
-    /40-hex/,
-  );
-  assert.throws(
-    () =>
-      verify(env, (_command, args) => (args.at(-1) === "HEAD" ? sha : next)),
-    /does not match/,
-  );
-  const action = read("actions/runtime/closure/prepare-provider/action.yml");
-  assert.ok(
-    action.runs.steps
-      .at(-1)
-      .uses.endsWith("/actions/runtime/closure/activate-provider"),
-  );
-  for (const failure of ["verify", "install", null]) {
-    const calls = [];
-    const ports = Object.fromEntries(
-      ["verify", "install", "expose"].map((name) => [
-        name,
-        (value) => {
-          calls.push(name);
-          if (name === failure) throw new Error(name);
-          if (name === "install")
-            assert.deepEqual(value, {
-              directory: ".buildchain/runtime",
-              production: false,
-              ignoreScripts: true,
-            });
-        },
-      ]),
-    );
-    if (failure)
-      assert.throws(
-        () => activateProviderClosure({ sha, tree }, ports),
-        new RegExp(failure),
-      );
-    else activateProviderClosure({ sha, tree }, ports);
-    assert.deepEqual(
-      calls,
-      failure === "verify"
-        ? ["verify"]
-        : failure === "install"
-          ? ["verify", "install"]
-          : ["verify", "install", "expose"],
-    );
-  }
-});
 test("promotion jobs retain authority separation, runtime selector precedence, and always-run evidence tails", () => {
   const workflow = read(".github/workflows/.release-promote.yml");
   assert.match(
@@ -251,11 +187,9 @@ test("promotion jobs retain authority separation, runtime selector precedence, a
     /always\(\)/,
   );
   const qualify = read("actions/release/promotion/qualify/action.yml");
-  const prepare = qualify.runs.steps.findIndex((s) =>
-    s.uses?.endsWith("/actions/runtime/environment/prepare"),
-  );
-  assert.ok(
-    prepare < qualify.runs.steps.findIndex((s) => s.id === "qualification"),
-  );
-  assert.equal(qualify.runs.steps[prepare].if, undefined);
+  const prepare = read(".github/workflows/.release-promote.yml").jobs.qualify.steps[0];
+  assert.equal(prepare.uses, "$/actions/runtime/environment/prepare");
+  assert.equal(prepare.if, undefined);
+  assert.ok(qualify.runs.steps.some(s => s.id === "qualification"));
+
 });

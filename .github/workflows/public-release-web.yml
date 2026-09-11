@@ -3,40 +3,35 @@ permissions:
   actions: read
   contents: read
 jobs:
-  runtime:
-    name: Resolve Buildchain runtime
+  execution-runtime:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     outputs:
-      runtime-ref: ${{ steps.node.outputs.runtime-ref }}
-      runtime-full-ref: ${{ steps.node.outputs.runtime-full-ref }}
-      runtime-sha: ${{ steps.node.outputs.runtime-sha }}
-      runtime-class: ${{ steps.node.outputs.runtime-class }}
-      runtime-override: ${{ steps.node.outputs.runtime-override }}
-      runtime-trust-decision: ${{ steps.node.outputs.runtime-trust-decision }}
-      workflow-shell-ref: ${{ steps.node.outputs.workflow-shell-ref }}
-      rollback-ref: ${{ steps.node.outputs.rollback-ref }}
+      selection: ${{ steps.select.outputs.selection }}
+      runtime-sha: ${{ steps.select.outputs.sha }}
+      runtime-ref: ${{ steps.select.outputs.ref }}
+      runtime-full-ref: ${{ steps.select.outputs.ref }}
+      runtime-class: ${{ steps.select.outputs.class }}
+      runtime-override: ${{ steps.select.outputs.override }}
+      runtime-trust-decision: ${{ steps.select.outputs.origin }}
+      workflow-shell-ref: ${{ steps.select.outputs.sha }}
+      rollback-ref: ${{ steps.select.outputs.ref }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - id: select
+        uses: $/actions/runtime/selection/resolve
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
-      - name: Resolve Buildchain runtime
-        id: node
-        uses: ./.buildchain/workflow-shell/actions/runtime/selection/admit
-        with:
-          purpose: web
-          repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
-          workflow-sha: ${{ job.workflow_sha }}
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
           workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
           token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   controller-plan:
     name: Plan web-surface controller
     needs:
-      - runtime
+      - execution-runtime
       - release-intent
     runs-on: ubuntu-24.04
     outputs:
@@ -44,19 +39,17 @@ jobs:
       controller-plan-json: ${{ steps.node.outputs.controller-plan-json }}
       controller-plan-digest: ${{ steps.node.outputs.controller-plan-digest }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Plan web-surface controller
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/controller/plan
+        uses: ./.buildchain/runtime/actions/web/controller/plan
         with:
           request-json: ${{ toJSON(inputs) }}
-          runtime-json: ${{ toJSON(needs.runtime.outputs) }}
+          runtime-json: ${{ toJSON(needs.execution-runtime.outputs) }}
           intent-json: ${{ toJSON(needs.release-intent.outputs) }}
   release-intent:
     name: Resolve production release PR intent
@@ -70,24 +63,24 @@ jobs:
       production-release-reason: ${{ steps.node.outputs.production-release-reason }}
       production-source-sha: ${{ steps.node.outputs.production-source-sha }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Resolve production release PR intent
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/planning/resolve-intent
+        uses: ./.buildchain/runtime/actions/web/planning/resolve-intent
         with:
           request-json: ${{ toJSON(inputs) }}
           token: ${{ github.token }}
+    needs:
+      - execution-runtime
   publication-decision:
     name: Resolve trusted production decision
     runs-on: ubuntu-24.04
     needs:
-      - runtime
+      - execution-runtime
       - release-intent
     permissions:
       contents: read
@@ -95,41 +88,37 @@ jobs:
       approved: ${{ steps.node.outputs.approved }}
       decision-json: ${{ steps.node.outputs.decision-json }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Resolve trusted production decision
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/publication/decide
+        uses: ./.buildchain/runtime/actions/web/publication/decide
         with:
           request-json: ${{ toJSON(inputs) }}
-          runtime-json: ${{ toJSON(needs.runtime.outputs) }}
+          runtime-json: ${{ toJSON(needs.execution-runtime.outputs) }}
           intent-json: ${{ toJSON(needs.release-intent.outputs) }}
   apply-input-gate:
     name: Validate web-surface apply inputs
     runs-on: ubuntu-24.04
     needs:
-      - runtime
+      - execution-runtime
       - release-intent
       - publication-decision
     outputs:
       web-surface-channel: ${{ steps.node.outputs.web-surface-channel }}
       web-surface-alias: ${{ steps.node.outputs.web-surface-alias }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Validate web-surface apply inputs
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/planning/admit-inputs
+        uses: ./.buildchain/runtime/actions/web/planning/admit-inputs
         with:
           request-json: ${{ toJSON(inputs) }}
           decision-approved: ${{ needs.publication-decision.outputs.approved }}
@@ -137,7 +126,7 @@ jobs:
     name: Plan web-surface channel
     runs-on: ubuntu-24.04
     needs:
-      - runtime
+      - execution-runtime
       - release-intent
       - apply-input-gate
       - controller-plan
@@ -162,20 +151,18 @@ jobs:
           ref: ${{ needs.release-intent.outputs.production-source-sha }}
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Plan web-surface channel
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/planning/plan
+        uses: ./.buildchain/runtime/actions/web/planning/plan
         with:
           request-json: ${{ toJSON(inputs) }}
-          runtime-json: ${{ toJSON(needs.runtime.outputs) }}
+          runtime-json: ${{ toJSON(needs.execution-runtime.outputs) }}
           intent-json: ${{ toJSON(needs.release-intent.outputs) }}
           selection-json: ${{ toJSON(needs.apply-input-gate.outputs) }}
           workflow-ref: ${{ job.workflow_ref }}
@@ -183,13 +170,12 @@ jobs:
         if: ${{ always() }}
   preview-apply:
     name: Apply pull request preview
-    if:
-      ${{ (github.event_name == 'pull_request' && github.event.action != 'closed' &&
+    if: ${{ (github.event_name == 'pull_request' && github.event.action != 'closed' &&
       inputs.preview-apply) }}
     runs-on: ubuntu-24.04
     needs:
       - plan
-      - runtime
+      - execution-runtime
     environment: ${{ inputs.preview-environment }}
     outputs:
       preview-apply-result-json: ${{ steps.node.outputs.preview-apply-result-json }}
@@ -203,32 +189,29 @@ jobs:
         with:
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Apply pull request preview
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/preview/deploy
+        uses: ./.buildchain/runtime/actions/web/preview/deploy
         with:
           request-json: ${{ toJSON(inputs) }}
-          needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.runtime.outputs.runtime-sha) }}
+          needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.execution-runtime.outputs.runtime-sha) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
         if: ${{ always() }}
   preview-cleanup:
     name: Apply pull request preview cleanup
-    if:
-      ${{ (github.event_name == 'pull_request' && github.event.action == 'closed' &&
+    if: ${{ (github.event_name == 'pull_request' && github.event.action == 'closed' &&
       inputs.preview-cleanup-apply && needs.release-intent.outputs.production-release-approved !=
       'true') }}
     runs-on: ubuntu-24.04
     needs:
       - plan
-      - runtime
+      - execution-runtime
       - release-intent
     environment: ${{ inputs.preview-environment }}
     outputs:
@@ -243,31 +226,28 @@ jobs:
         with:
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Apply pull request preview cleanup
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/preview/cleanup
+        uses: ./.buildchain/runtime/actions/web/preview/cleanup
         with:
           request-json: ${{ toJSON(inputs) }}
-          needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.runtime.outputs.runtime-sha) }}
+          needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.execution-runtime.outputs.runtime-sha) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
         if: ${{ always() }}
   staging-apply:
     name: Apply staging deploy
-    if:
-      ${{ (github.event_name == 'push' && github.ref_name == 'main' && inputs.staging-apply &&
+    if: ${{ (github.event_name == 'push' && github.ref_name == 'main' && inputs.staging-apply &&
       needs.plan.outputs.web-surface-channel == 'staging') }}
     runs-on: ubuntu-24.04
     needs:
       - plan
-      - runtime
+      - execution-runtime
     environment: ${{ inputs.staging-environment }}
     outputs:
       staging-apply-result-json: ${{ steps.node.outputs.staging-apply-result-json }}
@@ -281,21 +261,19 @@ jobs:
         with:
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Apply staging deploy
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/staging/deploy
+        uses: ./.buildchain/runtime/actions/web/staging/deploy
         with:
           request-json: ${{ toJSON(inputs) }}
-          needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.runtime.outputs.runtime-sha) }}
-          needs-runtime-outputs-rollback-ref: ${{ toJSON(needs.runtime.outputs.rollback-ref) }}
+          needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.execution-runtime.outputs.runtime-sha) }}
+          needs-runtime-outputs-rollback-ref: ${{ toJSON(needs.execution-runtime.outputs.rollback-ref) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
         if: ${{ always() }}
   open-production-release-pr:
@@ -313,7 +291,7 @@ jobs:
       }}
     runs-on: ubuntu-24.04
     needs:
-      - runtime
+      - execution-runtime
       - release-intent
       - staging-apply
     outputs:
@@ -327,26 +305,24 @@ jobs:
       pull-requests: write
       issues: write
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Open production release PR
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/production/open-release-pr
+        uses: ./.buildchain/runtime/actions/web/production/open-release-pr
         with:
           request-json: ${{ toJSON(inputs) }}
-          needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.runtime.outputs.runtime-sha) }}
+          needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.execution-runtime.outputs.runtime-sha) }}
           secrets-production-release-app-private-key: ${{ secrets.production-release-app-private-key }}
           secrets-production-release-pr-token: ${{ secrets.production-release-pr-token }}
   external-publication-authority:
     name: Verify external web production publication capability
     needs:
       - plan
-      - runtime
+      - execution-runtime
       - publication-decision
     if: >-
       ${{
@@ -363,8 +339,6 @@ jobs:
       pull-requests: read
     uses: ./.github/workflows/.release-authority.yml
     with:
-      buildchain-repository: ${{ inputs.buildchain-repository }}
-      buildchain-ref: ${{ needs.runtime.outputs.runtime-sha }}
       admission-json: ${{ inputs.publication-admission-json }}
       runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
       control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
@@ -374,12 +348,13 @@ jobs:
       used-nonces-json: ${{ inputs.publication-used-nonces-json }}
       target-ref: ${{ github.ref_name }}
       evidence-repository: ${{ github.repository }}
+      runtime-selection: ${{ needs.execution-runtime.outputs.selection }}
   publication-authority:
     name: Seal managed web production publication capability
     runs-on: ubuntu-24.04
     needs:
       - plan
-      - runtime
+      - execution-runtime
       - controller-plan
       - publication-decision
       - release-intent
@@ -399,16 +374,14 @@ jobs:
       capability-digest: ${{ steps.node.outputs.capability-digest }}
       candidate-json: ${{ steps.node.outputs.candidate-json }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Seal managed web production publication capability
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/publication/admit
+        uses: ./.buildchain/runtime/actions/web/publication/admit
         with:
           request-json: ${{ toJSON(inputs) }}
           observations-json: ${{ toJSON(needs) }}
@@ -426,7 +399,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - plan
-      - runtime
+      - execution-runtime
       - release-intent
       - publication-decision
       - publication-authority
@@ -445,25 +418,23 @@ jobs:
           ref: ${{ needs.release-intent.outputs.production-source-sha }}
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Apply production deploy
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/production/deploy
+        uses: ./.buildchain/runtime/actions/web/production/deploy
         with:
           request-json: ${{ toJSON(inputs) }}
-          needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.runtime.outputs.runtime-sha) }}
+          needs-runtime-outputs-runtime-sha: ${{ toJSON(needs.execution-runtime.outputs.runtime-sha) }}
           needs-publication-authority-outputs-capability-json: ${{ toJSON(needs.publication-authority.outputs.capability-json) }}
           needs-external-publication-authority-outputs-capability-json: ${{ toJSON(needs.external-publication-authority.outputs.capability-json) }}
           needs-publication-authority-outputs-candidate-json: ${{ toJSON(needs.publication-authority.outputs.candidate-json) }}
           needs-release-intent-outputs-production-source-sha: ${{ toJSON(needs.release-intent.outputs.production-source-sha) }}
-          needs-runtime-outputs-rollback-ref: ${{ toJSON(needs.runtime.outputs.rollback-ref) }}
+          needs-runtime-outputs-rollback-ref: ${{ toJSON(needs.execution-runtime.outputs.rollback-ref) }}
           needs-release-intent-outputs-production-release-pr: ${{ toJSON(needs.release-intent.outputs.production-release-pr) }}
           needs-release-intent-outputs-production-release-source: ${{ toJSON(needs.release-intent.outputs.production-release-source) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
@@ -471,7 +442,7 @@ jobs:
   controller-receipt:
     name: Record web-surface controller receipt
     needs:
-      - runtime
+      - execution-runtime
       - controller-plan
       - plan
       - preview-apply
@@ -489,58 +460,20 @@ jobs:
       controller-receipt-digest: ${{ steps.node.outputs.controller-receipt-digest }}
       controller-receipt-status: ${{ steps.node.outputs.controller-receipt-status }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Record web-surface controller receipt
         id: node
-        uses: ./.buildchain/workflow-shell/actions/web/controller/receipt
+        uses: ./.buildchain/runtime/actions/web/controller/receipt
         with:
           request-json: ${{ toJSON(inputs) }}
           observations-json: ${{ toJSON(needs) }}
 on:
   workflow_call:
     inputs:
-      buildchain-repository:
-        default: kungfu-systems/buildchain
-        type: string
-        required: false
-      buildchain-ref:
-        description: Optional explicit runtime ref. Empty binds the defining workflow SHA.
-        default: ""
-        type: string
-        required: false
-      buildchain-contract-expected-channel:
-        description: Compatibility expected channel for the exact Buildchain contract lock
-        default: ""
-        type: string
-        required: false
-      buildchain-contract-expected-major:
-        description: Compatibility expected major for the exact Buildchain contract lock
-        default: ""
-        type: string
-        required: false
-      buildchain-contract-lock-path:
-        description: Path to the consumer-accepted Buildchain runtime contract lock. Empty disables lock lookup.
-        default: buildchain.contract-lock.json
-        type: string
-        required: false
-      buildchain-contract-compatibility-policy:
-        description: "Contract compatibility policy: major-compatible, allow-additive, or exact."
-        default: major-compatible
-        type: string
-        required: false
-      buildchain-contract-drift-issue-mode:
-        description:
-          "Consumer issue behavior for Buildchain floating-ref contract drift: off,
-          breaking-only, or compatible-and-breaking."
-        default: compatible-and-breaking
-        type: string
-        required: false
       working-directory:
         default: .
         type: string
@@ -598,8 +531,7 @@ on:
         type: string
         required: false
       production-apply:
-        description:
-          Enable production deployment capability; each production apply still requires a trusted
+        description: Enable production deployment capability; each production apply still requires a trusted
           event decision.
         default: false
         type: boolean
@@ -609,8 +541,7 @@ on:
         type: boolean
         required: false
       production-source-sha:
-        description:
-          Optional exact reviewed consumer source SHA for a trusted workflow_dispatch production
+        description: Optional exact reviewed consumer source SHA for a trusted workflow_dispatch production
           activation.
         default: ""
         type: string
@@ -641,8 +572,7 @@ on:
         type: string
         required: false
       production-release-app-client-id:
-        description:
-          Optional GitHub App client id used to create production release PRs. Requires
+        description: Optional GitHub App client id used to create production release PRs. Requires
           production-release-app-private-key.
         default: ""
         type: string
@@ -686,8 +616,7 @@ on:
         type: string
         required: false
       publication-expected-json:
-        description:
-          Consumer-owned exact production source, runtime, Gate, artifact, target, and channel
+        description: Consumer-owned exact production source, runtime, Gate, artifact, target, and channel
           bindings.
         default: ""
         type: string
@@ -698,16 +627,29 @@ on:
         type: string
         required: false
       release-feedback-actor-privacy:
-        description:
-          "Actor identity mode for web-surface release feedback passports: public, redacted, or
+        description: "Actor identity mode for web-surface release feedback passports: public, redacted, or
           private-ref."
         default: public
         type: string
         required: false
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
     secrets:
       production-release-app-private-key:
-        description:
-          Private key for production-release-app-client-id. When set, Buildchain creates
+        description: Private key for production-release-app-client-id. When set, Buildchain creates
           production release PRs with that GitHub App installation token.
         required: false
       production-release-pr-token:
@@ -748,22 +690,21 @@ on:
         description: Production release PR URL opened after staging apply
         value: ${{ jobs.open-production-release-pr.outputs.production-release-pr-url }}
       release-pr-status:
-        description:
-          "Production release PR handoff status: created, updated, permission-denied,
+        description: "Production release PR handoff status: created, updated, permission-denied,
           summary-only, disabled, or failed"
         value: ${{ jobs.open-production-release-pr.outputs.release-pr-status }}
       buildchain-runtime-ref:
         description: Resolved Buildchain runtime ref
-        value: ${{ jobs.runtime.outputs.runtime-ref }}
+        value: ${{ jobs.execution-runtime.outputs.runtime-ref }}
       buildchain-runtime-sha:
         description: Resolved immutable Buildchain runtime SHA
-        value: ${{ jobs.runtime.outputs.runtime-sha }}
+        value: ${{ jobs.execution-runtime.outputs.runtime-sha }}
       buildchain-runtime-class:
         description: "Runtime stability class: stable, alpha, train, exact-sha, or development"
-        value: ${{ jobs.runtime.outputs.runtime-class }}
+        value: ${{ jobs.execution-runtime.outputs.runtime-class }}
       buildchain-runtime-override:
         description: Whether a train or exact-SHA buildchain-ref override was used
-        value: ${{ jobs.runtime.outputs.runtime-override }}
+        value: ${{ jobs.execution-runtime.outputs.runtime-override }}
       controller-plan-artifact:
         description: Controller plan artifact name
         value: ${{ jobs.controller-plan.outputs.controller-plan-artifact }}

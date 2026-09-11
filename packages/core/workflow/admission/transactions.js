@@ -1,44 +1,29 @@
 import fs from "node:fs";
 import path from "node:path";
-import { command } from "../../runtime/action-process.mjs";
 import {
   validateUniversalWorkflowRequest,
   universalWorkflowRequestRoot,
   admitUniversalWorkflow,
 } from "../universal-workflow-bootstrap.js";
-import { recoveryCoordinates } from "./recovery.js";
-export function inspectUniversalRequest(request, recovery = false) {
-  if (recovery) recoveryCoordinates(request);
+export function inspectUniversalRequest(request) {
   const value = validateUniversalWorkflowRequest(request);
   return {
-    mode: value.mode,
-    repository: value.candidate.repository,
-    "discovery-ref": value.candidate.discoveryRef,
-    "expected-sha": value.candidate.expectedSha,
-    "review-pr": value.candidate.reviewPullRequest,
     "capability-id": value.capability.id,
     "request-root": universalWorkflowRequestRoot(value),
   };
 }
-export function admitReviewedWorkflow({
+export function admitConsumerCapability({
   request,
-  reviewEvidence,
   workspace,
-  candidateRoot,
+  runtimeRoot,
   consumer,
+  runtime,
 }) {
-  const observedSha = command(
-    "git",
-    ["-C", candidateRoot, "rev-parse", "HEAD"],
-    { stdio: "pipe" },
-  )
-    .trim()
-    .toLowerCase();
   const policy = JSON.parse(
     fs.readFileSync(
       path.join(
-        candidateRoot,
-        "architecture/universal-workflow-train-admission.json",
+        runtimeRoot,
+        "architecture/universal-workflow-capability-policy.json",
       ),
       "utf8",
     ),
@@ -46,12 +31,11 @@ export function admitReviewedWorkflow({
   const admitted = admitUniversalWorkflow({
     request,
     policy,
-    observedRefSha: observedSha,
+    runtime,
     observedConsumerRepository: consumer.repository,
     observedConsumerSha: consumer.sha,
     observedConsumerWorkflowRef: consumer.workflowRef,
-    reviewEvidence,
-    now: new Date().toISOString(),
+      now: new Date().toISOString(),
   });
   const file = path.join(workspace, ".buildchain/admission.json");
   fs.mkdirSync(path.dirname(file), { recursive: true });

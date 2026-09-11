@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { parseReusableWorkflowInterface } from "./workflow-yaml-contract.js";
 import fs from "node:fs";
 import path from "node:path";
 import {
@@ -100,6 +101,10 @@ function maybeFileDigest(root, relPath) {
 }
 
 function surface(root, value) {
+  if (value.kind === "workflow" && fs.existsSync(path.join(root, value.path))) {
+    const contract = parseReusableWorkflowInterface(fs.readFileSync(path.join(root, value.path), "utf8"));
+    value = { ...value, requiredInputs: contract.inputs.filter(x => x.required).map(x => x.name), optionalInputs: contract.inputs.filter(x => !x.required).map(x => x.name), requiredOutputs: contract.outputs.map(x => typeof x === "string" ? x : x.name) };
+  }
   const breakingModel = {
     id: value.id,
     kind: value.kind,
@@ -131,11 +136,6 @@ function declarativeAuditableDemoSurface(root, pkg, majorLine) {
     kind: "workflow",
     path: ".github/workflows/public-build-demo.yml",
     publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/public-build-demo.yml@${majorLine}`,
-    requiredInputs: ["binary-artifact-name", "binary-artifact-digest", "renderer-image"],
-    requiredOutputs: [
-      "source-sha", "capture-artifact-name", "capture-artifact-digest",
-      "evidence-artifact-name", "evidence-artifact-digest", "publication-pr-url",
-    ],
     breakingDefaults: {
       scenarioPathDefault: ".buildchain/auditable-demo.json",
       renderMediaDefault: false,
@@ -144,10 +144,6 @@ function declarativeAuditableDemoSurface(root, pkg, majorLine) {
       artifactRetentionDaysDefault: 14,
       executionBoundary: "exact-binary-network-none-secret-free-60-seconds",
     },
-    optionalInputs: [
-      "buildchain-repository", "source-ref", "scenario-path", "render-media",
-      "media-profile", "materialize", "materialize-base-ref", "artifact-retention-days",
-    ],
     guarantees: [
       "one versioned declaration can contain multiple demos with multiple ordered literal argv steps",
       "every demo uses the exact same-run standalone binary admitted by producer-owned artifact name and digest",
@@ -222,19 +218,11 @@ export function createBuildchainContractWorld({
       kind: "workflow",
       path: ".github/workflows/.build.yml",
       publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/.build.yml@${majorLine}`,
-      requiredInputs: [],
-      requiredOutputs: [
-        "buildchain-runtime-sha",
-        "publish-source-sha",
-        "build-summary-artifact",
-        "release-candidate-artifact",
-      ],
       breakingDefaults: {
         configurationAuthority: "buildchain.toml",
-        runtimeIdentity: "exact-called-workflow",
+        runtimeIdentity: "entry-selected-complete-runtime",
         projectDiscovery: "unambiguous-root-or-config-path",
       },
-      optionalInputs: ["config-path"],
       guarantees: [
         "runtime floating refs are resolved to immutable SHAs before matrix jobs",
         "publish source locks are verified before heavy build jobs",
@@ -248,18 +236,15 @@ export function createBuildchainContractWorld({
       kind: "workflow",
       path: ".github/workflows/build.yml",
       publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/build.yml@${majorLine}`,
-      requiredInputs: [],
-      requiredOutputs: ["buildchain-channel", "buildchain-runtime-sha", "build-summary-artifact"],
       breakingDefaults: {
         configurationAuthority: "buildchain.toml",
-        runtimeIdentity: "exact-called-workflow",
+        runtimeIdentity: "entry-selected-complete-runtime",
         projectDiscovery: "unambiguous-root-or-config-path",
       },
-      optionalInputs: ["config-path"],
       guarantees: [
         "single-project consumers require no workflow inputs",
         "project settings have one TOML authority and environment profiles own infrastructure",
-        "the called floating ref determines channel and exact runtime SHA",
+        "the floating entry selects runtime parameters before contract locks and its default",
         "stable and alpha select their matching repository contract locks",
         "source, runtime and configuration roots are bound before the build matrix",
       ],
@@ -270,48 +255,12 @@ export function createBuildchainContractWorld({
       kind: "workflow",
       path: ".github/workflows/public-release-promote.yml",
       publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/public-release-promote.yml@${majorLine}`,
-      requiredInputs: ["channel"],
-      requiredOutputs: ["promoted-sha", "built-source-sha", "release-candidate-artifact", "release-candidate-action"],
       breakingDefaults: {
         channelDefault: "auto",
-        alphaShellDefault: `${majorLine}-alpha`,
-        stableShellDefault: majorLine,
+        runtimeSelectionOwner: "actions/runtime/selection/resolve",
         promoteOnlyReleaseCandidate: true,
         requiredStatusCheck: "check / check",
       },
-      optionalInputs: [
-        "buildchain-channel",
-        "buildchain-ref",
-        "buildchain-alpha-contract-lock-path",
-        "buildchain-stable-contract-lock-path",
-        "release-candidate-workflow-file",
-        "release-candidate-workflow-name",
-        "resume-candidate-repository",
-        "resume-candidate-run-id",
-        "resume-expected-workflow-file",
-        "resume-expected-workflow-name",
-        "resume-expected-source-tree",
-        "resume-expected-candidate-root",
-        "resume-expected-candidate-runtime-sha",
-        "resume-buildchain-runtime-sha",
-        "resume-transaction-id",
-        "publish-required-artifacts-json",
-        "release-passport-kfd-1-witness-jsons",
-        "release-passport-kfd-2-claim-jsons",
-        "release-passport-kfd-3-prebuild-witness-jsons",
-        "release-passport-kfd-3-artifact-witness-jsons",
-        "release-passport-kfd-3-artifact-verify-command",
-        "release-passport-invariant-passport-jsons",
-        "release-passport-invariant-passport-command",
-        "release-passport-evidence-jsons",
-        "release-passport-attachment-command",
-        "github-artifact-attestation-policy-json",
-        "github-artifact-attestation-environment",
-        "github-artifact-attestation-retention-days",
-        "buildchain-contract-lock-path",
-        "buildchain-contract-drift-issue-mode",
-        "github-release",
-      ],
       publishArtifactSchema: {
         requirementDigest: "optional-before-publish-required-after-publish",
         exactRefResolution: "missing requirement refs resolve to the promoted exact version",
@@ -343,54 +292,20 @@ export function createBuildchainContractWorld({
         "publish-gate source locks are created by the wrapper and enforced by promote-buildchain-ref before publish side effects",
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes",
       ],
-      compatibleBreakingDigests: [
-        "sha256:acd401cfc46450115a3763fd4b679d85f185e8757ebd52510d6262e1533df4cf",
-      ],
     }),
     surface(root, {
       id: "advanced-release-candidate-promote",
       kind: "workflow",
       path: ".github/workflows/.release-promote.yml",
       publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/.release-promote.yml@${majorLine}`,
-      requiredInputs: ["channel"],
-      requiredOutputs: ["promoted-sha", "built-source-sha", "release-candidate-artifact", "release-candidate-action"],
       breakingDefaults: {
         promoteOnlyReleaseCandidate: true,
         requiredStatusCheck: "check / check",
       },
-      optionalInputs: [
-        "buildchain-ref",
-        "buildchain-expected-channel",
-        "buildchain-expected-major",
-        "buildchain-contract-lock-path",
-        "promotion-router-ref",
-        "promotion-router-sha",
-        "promotion-shell-ref",
-        "promotion-shell-sha",
-        "promotion-runtime-ref",
-        "promotion-runtime-sha",
-        "promotion-contract-lock-path",
-        "promotion-contract-lock-digest",
-        "promotion-publication-channel",
-        "promotion-target-ref",
-        "promotion-override-used",
-        "resume-candidate-repository",
-        "resume-candidate-run-id",
-        "resume-expected-workflow-file",
-        "resume-expected-workflow-name",
-        "resume-expected-source-tree",
-        "resume-expected-candidate-root",
-        "resume-expected-candidate-runtime-sha",
-        "resume-buildchain-runtime-sha",
-        "resume-transaction-id",
-      ],
       guarantees: [
-        "advanced promotion verifies routed shell, runtime, lock, publication channel, and target bindings before candidate resolution",
+        "advanced promotion verifies publication intent and source evidence using the prepared runtime",
         "promotion reuses PR-stage release-candidate artifacts and does not run the heavy native build matrix",
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph",
-      ],
-      compatibleBreakingDigests: [
-        "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0",
       ],
     }),
     surface(root, {
@@ -398,31 +313,11 @@ export function createBuildchainContractWorld({
       kind: "workflow",
       path: ".github/workflows/public-release-web.yml",
       publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/public-release-web.yml@${majorLine}`,
-      requiredInputs: [],
-      requiredOutputs: [
-        "buildchain-runtime-sha",
-        "web-surface-channel",
-        "web-surface-url",
-        "web-surface-manifest-json",
-      ],
       breakingDefaults: {
-        buildchainRefDefault: "workflow-shell-ref-or-v4",
+        runtimeSelectionOwner: "actions/runtime/selection/resolve",
         contractCompatibilityPolicy: "major-compatible",
         breakingDriftPolicy: "fail-closed-before-build",
       },
-      optionalInputs: [
-        "buildchain-ref",
-        "buildchain-contract-lock-path",
-        "buildchain-contract-compatibility-policy",
-        "buildchain-contract-drift-issue-mode",
-        "build-command",
-        "verify-command",
-        "artifact-path",
-        "preview-apply",
-        "staging-apply",
-        "production-apply",
-        "production-release-on-main",
-      ],
       guarantees: [
         "runtime floating refs are resolved to immutable SHAs before caller build and deploy work",
         "contract drift is checked before caller build, web-surface render, deploy planning, and apply side effects",
@@ -437,27 +332,6 @@ export function createBuildchainContractWorld({
       kind: "workflow",
       path: ".github/workflows/.build-demo-adapter.yml",
       publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/.build-demo-adapter.yml@${majorLine}`,
-      requiredInputs: [
-        "source-artifact-name",
-        "source-artifact-digest",
-        "adapter-path",
-        "renderer-image",
-      ],
-      requiredOutputs: [
-        "source-sha",
-        "gate-artifact-name",
-        "gate-artifact-id",
-        "gate-artifact-digest",
-        "gate-artifact-url",
-        "gate-root",
-        "media-artifact-name",
-        "media-artifact-id",
-        "media-artifact-digest",
-        "media-artifact-url",
-        "media-root",
-        "media-profile",
-        "media-qualification-root",
-      ],
       breakingDefaults: {
         trustedEventRequired: true,
         renderMediaDefault: false,
@@ -465,14 +339,6 @@ export function createBuildchainContractWorld({
         artifactRetentionDaysDefault: 14,
         gatePolicy: "required-before-selective-render",
       },
-      optionalInputs: [
-        "buildchain-repository",
-        "source-ref",
-        "render-media",
-        "media-profile",
-        "artifact-retention-days",
-        "require-trusted-event",
-      ],
       guarantees: [
         "the source GitHub Artifact is admitted by exact same-run name and archive digest",
         "the checked-in consumer adapter runs from the exact consumer source with a disposable home and reduced environment",
@@ -1033,6 +899,6 @@ export function renderBuildchainContractDriftIssueBody({
     "",
     evaluation.compatible
       ? "Review the Buildchain release notes, then update the consumer contract lock to the current SHA and contract digest."
-      : "Failing before heavy build is intentional. Review the Buildchain contract change, update the consumer workflow/configuration, or pin the previous Buildchain SHA.",
+      : "Failing before heavy build is intentional. Review the Buildchain contract change, update the consumer workflow/configuration, or refresh the runtime contract lock.",
   ].join("\n");
 }

@@ -58,7 +58,7 @@ export function webControllerStages(observations, prepublication = false) {
     "production-apply",
   ].map(result);
   return [
-    { id: "resolve-runtime", status: result("runtime") },
+    { id: "resolve-runtime", status: result("execution-runtime") },
     { id: "plan", status: result("plan") },
     { id: "build", status: plan["build-outcome"] || result("plan") },
     { id: "verify", status: plan["verify-outcome"] || result("plan") },

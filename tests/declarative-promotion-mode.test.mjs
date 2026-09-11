@@ -27,13 +27,13 @@ test("public admission and recovery enter one source-owned publisher", () => {
   assert.equal(api.jobs.invoke.uses, "./.github/workflows/.release-promote.yml");
   assert.equal(api.jobs.invoke.with["request-json"], "${{ needs.consumer-admission.outputs.invocation-json }}");
   const recover = parseWorkflow(".github/workflows/self-ops-promotion-recovery.yml");
-  assert.equal(recover.jobs.resume.uses, "./.github/workflows/public-release-promote.yml");
+  assert.equal(recover.jobs.resume.uses, "kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4");
 });
 
 test("Buildchain self-promotion uses one public publisher at the defining commit", () => {
   assert.match(
     selfPromotion,
-    /^  promote:[\s\S]*uses: \.\/\.github\/workflows\/public-release-promote\.yml/m,
+    /^  promote:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-release-promote\.yml@v4/m,
   );
   assert.doesNotMatch(selfPromotion, /^  promote-(?:alpha|stable):/m);
   assert.doesNotMatch(

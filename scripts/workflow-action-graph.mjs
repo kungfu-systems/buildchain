@@ -8,7 +8,7 @@ export const repositoryRoot = path.resolve(import.meta.dirname, "..");
 export function localActionDirectory(uses) {
   if (typeof uses !== "string") return null;
   const match =
-    /^\.\/(?:\.buildchain\/[a-z0-9][a-z0-9-]*\/)?(actions\/[a-z0-9-]+\/[a-z0-9-]+\/[a-z0-9-]+)$/u.exec(
+    /^(?:\$\/|\.\/(?:\.buildchain\/[a-z0-9][a-z0-9-]*\/)?)((?:actions)\/[a-z0-9-]+\/[a-z0-9-]+\/[a-z0-9-]+)$/u.exec(
       uses,
     );
   return match?.[1] || null;

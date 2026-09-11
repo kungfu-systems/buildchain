@@ -5,11 +5,9 @@ import { readJson, exactSha, required } from "./io.js";
 export function sealSourceQualificationProof(input = {}) {
   const receipt = readJson(input.controllerReceiptPath, "controller receipt");
   const expectedSourceSha = exactSha(input.sourceHead, "sourceHead");
-  const expectedRuntimeSha = exactSha(input.runtimeSha, "runtimeSha");
   const expectedRepository = required(input.repository, "repository");
   const validation = validateControllerReceipt(receipt, {
     expectedSourceSha,
-    expectedRuntimeSha,
   });
   if (
     !validation.ok ||

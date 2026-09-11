@@ -15,7 +15,7 @@ function publicBuild() {
     html_url: "https://github.com/kungfu-systems/buildchain/actions/runs/42" };
   const buildSummary = { contract: "kungfu-buildchain-build-summary", artifactName: "buildchain",
     git: { repository: repositoryName, sha: sourceRun.head_sha, runId: "42", runAttempt: "1" },
-    runtime: { ref: "v4-alpha", workflowShellRef: "v4-alpha", sha: SHA, class: "alpha", override: false, trustDecision: "workflow-identity" },
+    runtime: { ref: "v4-alpha", workflowShellRef: "v4-alpha", sha: SHA, class: "alpha", override: false, trustDecision: "entry-selection" },
     platformCount: 3, platforms: ["linux-x64", "macos", "windows-x64"].map((id) => ({ platform: { id },
       expectedArtifacts: { ok: true }, summary: { digest: "c".repeat(64) },
       observability: { lifecycle: { stages: Object.fromEntries(["install", "build", "verify"].map((stage) => [stage, { eventCount: 1 }])) } } })) };

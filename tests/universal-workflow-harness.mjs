@@ -13,10 +13,6 @@ export function policy(overrides = {}) {
       packages: "write",
     },
     contractRoots: [root("a"), root("b")],
-    targetRef: "dev/v4/v4.0",
-    allowedReviewers: ["kungfu-origin"],
-    minimumApprovals: 1,
-    requiredChecks: ["Verify"],
     validFrom: "2026-08-30T00:00:00.000Z",
     expiresAt: "2026-08-31T00:00:00.000Z",
     ...overrides,
@@ -25,14 +21,6 @@ export function policy(overrides = {}) {
 export function request(policyValue = policy(), overrides = {}) {
   return {
     schema: UNIVERSAL_WORKFLOW_REQUEST,
-    mode: "train",
-    candidate: {
-      repository: "kungfu-systems/buildchain",
-      discoveryRef: "train/v4/v4.0/universal-reusable-workflow-bootstrap",
-      expectedSha: sha("1"),
-      admissionRoot: universalWorkflowAdmissionRoot(policyValue),
-      reviewPullRequest: 42,
-    },
     consumer: {
       repository: "kungfu-systems/taolu",
       workflow: ".github/workflows/release.yml",
@@ -51,25 +39,9 @@ export function request(policyValue = policy(), overrides = {}) {
     ...overrides,
   };
 }
-export function reviewEvidence(overrides = {}) {
-  return {
-    repository: "kungfu-systems/buildchain",
-    pullRequest: 42,
-    headSha: sha("1"),
-    baseRef: "dev/v4/v4.0",
-    approvals: [
-      {
-        reviewer: "kungfu-origin",
-        commitSha: sha("1"),
-        submittedAt: "2026-08-30T11:00:00.000Z",
-      },
-    ],
-    checks: [{ name: "Verify", status: "completed", conclusion: "success" }],
-    observedAt: "2026-08-30T12:00:00.000Z",
-    ...overrides,
-  };
-}
+export const runtime = () => ({ repository: "kungfu-systems/buildchain", sha: sha("1") });
 export const consumerObservation = () => ({
+  runtime: runtime(),
   observedConsumerRepository: "kungfu-systems/taolu",
   observedConsumerSha: sha("2"),
   observedConsumerWorkflowRef:

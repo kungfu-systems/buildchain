@@ -25,7 +25,8 @@ inputs:
     required: false
     default: ""
   predecessors-ok:
-    description: Whether prior job steps succeeded; reservation reporting still runs on failure.
+    description: Whether prior job steps succeeded; reservation reporting still runs
+      on failure.
     required: true
   runtime-sha:
     description: Exact source-admitted runtime commit.
@@ -78,19 +79,20 @@ runs:
         predecessors-ok: ${{ inputs.predecessors-ok }}
         token: ${{ inputs.github-token || github.token }}
     - name: Upload immutable admission state for native execution
-      if:
-        ${{ fromJSON(inputs.request-json).delivery-warrant-mode == 'required' && steps.warrant.outcome == 'success' &&
+      if: ${{ fromJSON(inputs.request-json).delivery-warrant-mode == 'required' &&
+        steps.warrant.outcome == 'success' &&
         steps.warrant.outputs.handoff-required != 'true' }}
       uses: actions/upload-artifact@v7.0.1
       with:
-        name:
-          buildchain-dev-delivery-control-${{ github.run_id }}-${{ github.run_attempt }}-${{
+        name: buildchain-dev-delivery-control-${{ github.run_id }}-${{
+          github.run_attempt }}-${{
           fromJSON(inputs.request-json).expected-pr-number }}
         path: .buildchain/dev-delivery/
         if-no-files-found: error
         retention-days: 1
     - name: Enforce scheduling outcome
       if: ${{ always() && steps.warrant.outcome != 'success' }}
-      uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
+      uses: ./.buildchain/runtime/actions/workflow/admission/reject
       with:
-        reason: Exact delivery candidate scheduling failed; inspect retained admission evidence
+        reason: Exact delivery candidate scheduling failed; inspect retained admission
+          evidence

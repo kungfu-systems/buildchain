@@ -7,7 +7,7 @@ export function commonEnv(plan, platform) {
     BUILDCHAIN_SOURCE_REF: plan.source.ref,
     BUILDCHAIN_RUNTIME_REPOSITORY: plan.identity.repository,
     BUILDCHAIN_RUNTIME_SHA: plan.identity.sha,
-    BUILDCHAIN_RUNTIME_REF: plan.identity.ref,
+    BUILDCHAIN_RUNTIME_REF: plan.runtime?.ref || plan.identity.ref,
     BUILDCHAIN_PLATFORM_ID: platform?.id || "",
     BUILDCHAIN_PLATFORM_NAME: platform?.name || "",
     BUILDCHAIN_ARTIFACT_NAME: plan.artifacts.name,

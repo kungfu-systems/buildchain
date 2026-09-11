@@ -93,7 +93,7 @@ test("binary workflow has one current settlement path and preserves the dispatch
     workflow.on.workflow_dispatch.inputs["upload-release"],
     undefined,
   );
-  assert.equal(workflow.jobs.binary.needs, "preflight");
+  assert.deepEqual(workflow.jobs.binary.needs, ["preflight", "execution-runtime"]);
   assert.deepEqual(workflow.jobs.passport.permissions, { contents: "read" });
   assert.equal(
     workflow.jobs["dispatch-publication"].permissions.actions,
@@ -106,7 +106,7 @@ test("binary workflow has one current settlement path and preserves the dispatch
     ),
   );
   const evidence = passport.runs.steps.find(
-    (s) => s.uses === "./actions/build/binary/qualify",
+    (s) => s.uses === "./.buildchain/runtime/actions/build/binary/qualify",
   );
   assert.ok(evidence);
   assert.equal(evidence.if, undefined);

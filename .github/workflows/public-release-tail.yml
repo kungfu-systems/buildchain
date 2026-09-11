@@ -1,73 +1,101 @@
 name: Declarative Release Tail
-
 on:
   workflow_call:
     inputs:
-      buildchain-ref:
-        description: "Exact Buildchain SHA or qualified train ref"
-        type: string
-        required: true
       declaration-path:
-        description: "Versioned release-tail declaration in the caller checkout"
+        description: Versioned release-tail declaration in the caller checkout
         type: string
         required: false
       provider-bindings-path:
-        description: "Release-tail provider bindings, or an optional exact canonical match for capsule-bound rehearsal bindings"
+        description: Release-tail provider bindings, or an optional exact canonical match for capsule-bound
+          rehearsal bindings
         type: string
         required: false
       rehearsal-capsule-path:
-        description: "Optional v4 Publication Rehearsal Capsule in the caller checkout"
+        description: Optional v4 Publication Rehearsal Capsule in the caller checkout
         type: string
         default: ""
         required: false
       candidate-root:
-        description: "Caller-relative Publication Rehearsal candidate root"
+        description: Caller-relative Publication Rehearsal candidate root
         type: string
-        default: ".buildchain/publication-rehearsal/candidate"
+        default: .buildchain/publication-rehearsal/candidate
         required: false
       rehearsal-mode:
         description: "Publication rehearsal mode: simulate, replay, or provider"
         type: string
-        default: "simulate"
+        default: simulate
         required: false
       rehearsal-authority-path:
-        description: "Caller-relative exact rehearsal-only authority for provider mode"
+        description: Caller-relative exact rehearsal-only authority for provider mode
         type: string
         default: ""
         required: false
       rehearsal-evidence-path:
-        description: "Rooted Publication Rehearsal evidence path"
+        description: Rooted Publication Rehearsal evidence path
         type: string
-        default: ".buildchain/publication-rehearsal/evidence.json"
+        default: .buildchain/publication-rehearsal/evidence.json
         required: false
       state-path:
-        description: "Durable release-tail transaction path"
+        description: Durable release-tail transaction path
         type: string
-        default: ".buildchain/release-tail/state.json"
+        default: .buildchain/release-tail/state.json
         required: false
       execute:
-        description: "Execute provider effects; false only seals the plan"
+        description: Execute provider effects; false only seals the plan
         type: boolean
         default: true
         required: false
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
     secrets:
       http-token:
-        description: "Optional bearer token for built-in HTTPS mutation adapters"
+        description: Optional bearer token for built-in HTTPS mutation adapters
         required: false
     outputs:
       transaction-state:
-        description: "Final transaction state"
+        description: Final transaction state
         value: ${{ jobs.release-tail.outputs.transaction-state }}
       transaction-root:
-        description: "Stable declared transaction root"
+        description: Stable declared transaction root
         value: ${{ jobs.release-tail.outputs.transaction-root }}
       state-root:
-        description: "Root of the final durable state"
+        description: Root of the final durable state
         value: ${{ jobs.release-tail.outputs.state-root }}
       rehearsal-evidence-root:
-        description: "Root of non-authoritative Publication Rehearsal evidence"
+        description: Root of non-authoritative Publication Rehearsal evidence
         value: ${{ jobs.release-tail.outputs.rehearsal-evidence-root }}
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   release-tail:
     name: Execute Buildchain release tail
     runs-on: ubuntu-24.04
@@ -79,18 +107,14 @@ jobs:
     steps:
       - name: Check out caller source
         uses: actions/checkout@v7.0.0
-
-      - name: Check out exact Buildchain runtime
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: kungfu-systems/buildchain
-          ref: ${{ inputs.buildchain-ref }}
-          path: .buildchain/release-tail-runtime
-          persist-credentials: false
-
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Execute the declarative provider plane
         id: release-tail
-        uses: ./.buildchain/release-tail-runtime/actions/release/tail/settle
+        uses: ./.buildchain/runtime/actions/release/tail/settle
         with:
           declaration: ${{ inputs.declaration-path }}
           provider-bindings: ${{ inputs.provider-bindings-path }}
@@ -103,7 +127,6 @@ jobs:
           github-token: ${{ github.token }}
           http-token: ${{ secrets.http-token }}
           execute: ${{ inputs.execute }}
-
       - name: Retain the rooted transaction and receipts
         uses: actions/upload-artifact@v7.0.1
         with:
@@ -113,3 +136,5 @@ jobs:
           path: |
             ${{ inputs.state-path }}
             ${{ inputs.rehearsal-evidence-path }}
+    needs:
+      - execution-runtime

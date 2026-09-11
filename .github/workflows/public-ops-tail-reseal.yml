@@ -19,6 +19,21 @@ on:
         required: false
         default: 7
         type: number
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
     secrets:
       BUILDCHAIN_EVIDENCE_READ_TOKEN:
         description: Read-only token for cross-repository run and artifact evidence
@@ -37,6 +52,23 @@ permissions:
   actions: read
   contents: read
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   plan:
     name: Admit exact retained candidate
     runs-on: ubuntu-24.04
@@ -59,23 +91,25 @@ jobs:
       plan-root: ${{ steps.node.outputs.plan-root }}
       admission-root: ${{ steps.node.outputs.admission-root }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Admit exact retained candidate
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/reseal/plan
+        uses: ./.buildchain/runtime/actions/release/reseal/plan
         with:
           request-json: ${{ toJSON(inputs) }}
           workflow-sha: ${{ job.workflow_sha }}
           evidence-read-token: ${{ secrets.BUILDCHAIN_EVIDENCE_READ_TOKEN }}
+    needs:
+      - execution-runtime
   platforms:
     name: Retain or reseal ${{ matrix.platform.name }}
-    needs: plan
+    needs:
+      - plan
+      - execution-runtime
     strategy:
       fail-fast: false
       matrix:
@@ -91,17 +125,15 @@ jobs:
           ref: ${{ needs.plan.outputs.source-sha }}
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Retain or reseal ${{ matrix.platform.name }}
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/reseal/platforms
+        uses: ./.buildchain/runtime/actions/release/reseal/platforms
         with:
           matrix-json: ${{ toJSON(matrix) }}
           request-json: ${{ toJSON(inputs) }}
@@ -120,21 +152,20 @@ jobs:
     needs:
       - plan
       - platforms
+      - execution-runtime
     runs-on: ubuntu-24.04
     outputs:
       release-candidate-passport-json: ${{ steps.node.outputs.release-candidate-passport-json }}
       tail-reseal-receipt-root: ${{ steps.node.outputs.tail-reseal-receipt-root }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Seal standard candidate Passport
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/reseal/seal
+        uses: ./.buildchain/runtime/actions/release/reseal/seal
         with:
           request-json: ${{ toJSON(inputs) }}
           runtime-sha: ${{ needs.plan.outputs.runtime-sha }}

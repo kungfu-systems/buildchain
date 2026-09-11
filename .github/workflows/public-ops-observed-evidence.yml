@@ -2,11 +2,6 @@ name: Patrol Observed Evidence
 on:
   workflow_call:
     inputs:
-      buildchain-ref:
-        type: string
-        default: ""
-        required: false
-        description: Optional explicit runtime ref. Empty binds the defining workflow SHA.
       build-command:
         type: string
         required: true
@@ -45,6 +40,21 @@ on:
         type: string
         required: false
         default: production
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
     outputs:
       receipt-path:
         value: ${{ jobs.publish.outputs.receipt-path }}
@@ -52,6 +62,23 @@ permissions:
   contents: read
   id-token: write
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   publish:
     runs-on: ubuntu-24.04
     environment: ${{ inputs.production-environment }}
@@ -61,34 +88,26 @@ jobs:
     outputs:
       receipt-path: ${{ steps.node.outputs.receipt-path }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
-      - name: Admit evidence publisher
-        uses: ./.buildchain/workflow-shell/actions/observability/evidence/admit-publisher
       - name: Checkout caller default branch
         uses: actions/checkout@v7.0.0
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
-        if: ${{ always() }}
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Admit evidence publisher
+        uses: ./.buildchain/runtime/actions/observability/evidence/admit-publisher
       - name: Execute observed-evidence-publish
         id: node
-        uses: ./.buildchain/workflow-shell/actions/observability/evidence/publish
+        uses: ./.buildchain/runtime/actions/observability/evidence/publish
         with:
-          runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
+          runtime-ref: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
           request-json: ${{ toJSON(inputs) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
         if: ${{ always() }}
+    needs:
+      - execution-runtime

@@ -65,26 +65,11 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Resolve exact called-workflow runtime
-      id: runtime
-      uses: ./.buildchain/workflow-shell/actions/runtime/selection/workflow
-      with:
-        workflow-sha: ${{ inputs.workflow-sha }}
-    - name: Checkout exact Buildchain tail runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: kungfu-systems/buildchain
-        ref: ${{ steps.runtime.outputs.sha }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Admit source policy and retained provider evidence
       id: plan
       uses: ./.buildchain/runtime/actions/release/reseal/admit
       with:
-        runtime-sha: ${{ steps.runtime.outputs.sha }}
+        runtime-sha: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
         request-json: ${{ inputs.request-json }}
         token: ${{ inputs.evidence-read-token }}
     - name: Upload exact request, policy, admission, and plan

@@ -2,15 +2,6 @@ name: Buildchain Shifu Gate Profile
 on:
   workflow_call:
     inputs:
-      buildchain-repository:
-        default: kungfu-systems/buildchain
-        type: string
-        required: false
-      buildchain-ref:
-        description: Optional explicit runtime ref. Empty binds the defining workflow SHA.
-        default: ""
-        type: string
-        required: false
       source-ref:
         description: Optional immutable consumer source ref; defaults to the caller event SHA
         default: ""
@@ -64,9 +55,8 @@ on:
         type: string
         required: false
       platforms-json:
-        description:
-          "Optional runner objects: id, name, platform, runner JSON string, capabilities, non-sensitive scalar
-          environment, and optional required=false"
+        description: "Optional runner objects: id, name, platform, runner JSON string, capabilities,
+          non-sensitive scalar environment, and optional required=false"
         default: ""
         type: string
         required: false
@@ -84,14 +74,14 @@ on:
         type: string
         required: false
       checkout-cache-mirror-url-template:
-        description: Trusted local/LAN Git mirror URL template. Supports {owner}, {repo}, {repository}, {repositorySlug}, and {sha}.
+        description: Trusted local/LAN Git mirror URL template. Supports {owner}, {repo}, {repository},
+          {repositorySlug}, and {sha}.
         default: ""
         type: string
         required: false
       checkout-cache-reference-repository-template:
-        description:
-          Trusted runner-local bare reference repository template. Supports {owner}, {repo}, {repository},
-          {repositorySlug}, and {sha}.
+        description: Trusted runner-local bare reference repository template. Supports {owner}, {repo},
+          {repository}, {repositorySlug}, and {sha}.
         default: ""
         type: string
         required: false
@@ -148,6 +138,21 @@ on:
         default: fail
         type: string
         required: false
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
     outputs:
       source-sha:
         description: Immutable consumer source SHA bound into every Shifu receipt
@@ -194,6 +199,23 @@ on:
 permissions:
   contents: read
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   plan:
     name: Gate profile / plan
     runs-on: ubuntu-24.04
@@ -209,22 +231,24 @@ jobs:
       controller-plan-json: ${{ steps.node.outputs.controller-plan-json }}
       controller-plan-digest: ${{ steps.node.outputs.controller-plan-digest }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Gate profile / plan
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/gate/plan
+        uses: ./.buildchain/runtime/actions/build/gate/plan
         with:
           request-json: ${{ toJSON(inputs) }}
           workflow-sha: ${{ job.workflow_sha }}
+    needs:
+      - execution-runtime
   run-gates:
     name: Gate profile / ${{ matrix.gate.name }}
-    needs: plan
+    needs:
+      - plan
+      - execution-runtime
     if: ${{ (needs.plan.outputs.trusted == 'true') }}
     strategy:
       fail-fast: false
@@ -235,16 +259,14 @@ jobs:
     env:
       CARGO_REGISTRIES_CRATES_IO_INDEX: ${{ inputs.cargo-registry-index }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Gate profile / ${{ matrix.gate.name }}
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/gate/execute
+        uses: ./.buildchain/runtime/actions/build/gate/execute
         with:
           request-json: ${{ toJSON(inputs) }}
           matrix-json: ${{ toJSON(matrix) }}
@@ -259,6 +281,7 @@ jobs:
     needs:
       - plan
       - run-gates
+      - execution-runtime
     if: ${{ (always() && needs.plan.outputs.trusted == 'true') }}
     runs-on: ubuntu-24.04
     outputs:
@@ -271,16 +294,14 @@ jobs:
       controller-receipt-digest: ${{ steps.node.outputs.controller-receipt-digest }}
       controller-receipt-status: ${{ steps.node.outputs.controller-receipt-status }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Gate profile / aggregate
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/gate/aggregate
+        uses: ./.buildchain/runtime/actions/build/gate/aggregate
         with:
           request-json: ${{ toJSON(inputs) }}
           runtime-sha: ${{ needs.plan.outputs.buildchain-runtime-sha }}

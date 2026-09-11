@@ -20,45 +20,24 @@ outputs:
   terminal-receipt-root:
     description: terminal-receipt-root node result.
     value: ${{ steps.settle.outputs.terminal-receipt-root }}
-  backflow-root:
-    description: backflow-root node result.
-    value: ${{ steps.backflow.outputs.backflow-root }}
 runs:
   using: composite
   steps:
     - uses: actions/setup-node@v6.4.0
       with:
         node-version: "24"
-    - name: Checkout immutable Bootstrap shell
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: kungfu-systems/buildchain
-        ref: ${{ fromJSON(inputs.job-workflow-sha) }}
-        path: .buildchain/bootstrap
-        persist-credentials: false
-    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/bootstrap
     - name: Seal terminal receipt
       id: settle
-      uses: ./.buildchain/bootstrap/actions/workflow/settlement/seal
+      uses: ./.buildchain/runtime/actions/workflow/settlement/seal
       with:
         admission-json: ${{ fromJSON(inputs.needs-admit-outputs-admission-json) }}
         result-json: ${{ fromJSON(inputs.needs-execute-outputs-result-json) }}
-    - name: Bind successful delivery to protected backflow
-      id: backflow
-      uses: ./.buildchain/bootstrap/actions/workflow/settlement/backflow
-      with:
-        request-json: ${{ fromJSON(inputs.request-json).request-json }}
-        receipt-json: ${{ steps.settle.outputs.terminal-receipt-json }}
-        token: ${{ github.token }}
     - name: Retain rooted terminal evidence
       uses: actions/upload-artifact@v7.0.1
       with:
         name: buildchain-universal-terminal-${{ github.run_id }}
-        path: |
+        path: |-
           .buildchain/terminal-receipt.json
-          .buildchain/backflow.json
         if-no-files-found: error
         include-hidden-files: true
         retention-days: 30

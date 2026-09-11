@@ -1,8 +1,4 @@
 import { installationRoot } from "../runtime/installation-root.js";
-import {
-  SOURCE_OWNED_PROMOTION,
-  verifyWorkflowDefinition,
-} from "./workflow-definition-authority.js";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -33,15 +29,12 @@ const BUILDCHAIN_REPOSITORY = "kungfu-systems/buildchain";
 const CHANNELS = Object.freeze({ v4: "stable", "v4-alpha": "alpha" });
 const DEFAULT_STABLE_LOCK_PATH = ".buildchain/contract-lock.json";
 const DEFAULT_ALPHA_LOCK_PATH = ".buildchain/alpha-contract-lock.json";
-const TRANSIENT_ACTION =
-  /^\.\/\.buildchain\/(?:runtime|workflow-shell|attester-runtime|release-tail-runtime)\//u;
+const TRANSIENT_ACTION = /^\.\/\.buildchain\/runtime\//u;
 const SCANNER_PATHS = Object.freeze([
   "architecture/floating-consumer-policy.json",
   "contracts/v4-floating-consumer-policy-receipt-v1.schema.json",
   "packages/core/contracts/buildchain-contract.js",
   "packages/core/consumer/floating-consumer-policy.js",
-  "packages/core/consumer/workflow-definition-authority.js",
-  "packages/core/consumer/invocation-selector.js",
   "packages/core/consumer/floating-consumer-evidence.js",
   "packages/core/contracts/workflow-yaml-contract.js",
   "packages/core/consumer/commands/consumer-policy.mjs",
@@ -259,11 +252,7 @@ function validateScanIdentity(
   { repository, sourceSha, runtimeSha, workflowSha },
   failures,
 ) {
-  for (const [value, code] of [
-    [sourceSha, "caller-source-sha-invalid"],
-    [runtimeSha, "resolved-runtime-sha-invalid"],
-    [workflowSha, "resolved-workflow-sha-invalid"],
-  ])
+  for (const [value, code] of [[sourceSha, "caller-source-sha-invalid"]])
     if (!EXACT_SHA.test(value))
       failures.push({ code, message: `${code} must bind an exact commit` });
   if (!repository || !/^[^/]+\/[^/]+$/u.test(repository))
@@ -290,20 +279,6 @@ function classifyBuildchainUses(
 ) {
   const uses = [];
   for (const record of records) {
-    if (
-      record.uses === `./${SOURCE_OWNED_PROMOTION.workflow}` &&
-      repository === BUILDCHAIN_REPOSITORY
-    ) {
-      uses.push({
-        ...record,
-        repository,
-        path: SOURCE_OWNED_PROMOTION.workflow,
-        selector: record.uses,
-        channel,
-        selectorClass: "repository-local",
-      });
-      continue;
-    }
     const parsed = coordinate(record.uses);
     if (!parsed || parsed.repository !== BUILDCHAIN_REPOSITORY) continue;
     const selectedChannel = CHANNELS[parsed.selector] || "";
@@ -390,45 +365,6 @@ function sourceScanRoot({
   return sha256(stableJson(material));
 }
 
-function verifySelectedLock({
-  selected,
-  stable,
-  alpha,
-  workflowSha,
-  failures,
-}) {
-  // Repository-local composition is qualified by exact definition identity, not
-  // compatibility with a previously published floating-channel API. Both consumer
-  // lock roots remain required evidence for the product's external dependencies.
-  if (selected?.selectorClass === "repository-local") return;
-  const selectedLock = selected?.channel === "alpha" ? alpha : stable;
-  if (!selected?.channel || !selectedLock) return;
-  const authorityRef = selected.selector;
-  try {
-    const compatibility = evaluateBuildchainContractLock({
-      lock: selectedLock,
-      current: createBuildchainContractWorld({ root: defaultRuntimeRoot() }),
-      runtimeRef: authorityRef,
-      runtimeSha: workflowSha,
-      runtimeClass: selected.channel,
-      workflowShellRef: authorityRef,
-      expectedChannel: selected.channel,
-      expectedMajor: "v4",
-    });
-    if (!compatibility.ok) {
-      failures.push({
-        code: "selected-lock-runtime-incompatible",
-        message: `${selected.channel} contract lock rejects resolved workflow shell ${workflowSha}: ${compatibility.reasons?.join("; ") || compatibility.status}`,
-      });
-    }
-  } catch (error) {
-    failures.push({
-      code: "selected-lock-contract-world-invalid",
-      message: `cannot evaluate ${selected.channel} contract lock against the resolved workflow shell: ${error.message}`,
-    });
-  }
-}
-
 export function scanFloatingConsumerPolicy({
   root = process.cwd(),
   invocationRoot = root,
@@ -510,32 +446,6 @@ export function scanFloatingConsumerPolicy({
     sourcePath,
     expectedInvocationChannel,
   );
-  let definition;
-  if (selected?.selectorClass === "repository-local") {
-    try {
-      definition = verifyWorkflowDefinition({
-        root: resolvedInvocationRoot,
-        repository,
-        definitionRepository,
-        definitionSha,
-        workflowSha: normalizedWorkflowSha,
-        files: invocationScan.files,
-      });
-    } catch (error) {
-      failures.push({
-        code: "invocation-definition-invalid",
-        message: error.message,
-      });
-    }
-  }
-  verifySelectedLock({
-    selected,
-    stable,
-    alpha,
-    workflowSha: normalizedWorkflowSha,
-    failures,
-  });
-
   const policyRoot = sha256(stableJson(policy));
   const resolvedScannerRoot = scannerRoot || policyRoot;
   if (!SHA256_ROOT.test(resolvedScannerRoot)) {
@@ -569,7 +479,6 @@ export function scanFloatingConsumerPolicy({
       channel: selected?.channel || "",
       resolvedWorkflowSha: normalizedWorkflowSha,
       resolvedRuntimeSha: normalizedRuntimeSha,
-      ...(definition ? { definition } : {}),
     },
     contractLocks: {
       stable: { path: stableLockPath, root: contractLockRoots.stable },

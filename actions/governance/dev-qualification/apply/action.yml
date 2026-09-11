@@ -1,5 +1,6 @@
 name: dev-qualification-patrol-mutate
-description: Execute the dev-qualification-patrol mutate capability within its caller job boundary.
+description: Execute the dev-qualification-patrol mutate capability within its
+  caller job boundary.
 inputs:
   runtime-ref:
     description: Exact runtime ref; defaults to this workflow SHA.
@@ -41,16 +42,6 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Checkout Buildchain runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ inputs.runtime-repository }}
-        ref: ${{ inputs.runtime-ref }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Reconcile and mutate latest Dev qualification
       id: mutate
       uses: ./.buildchain/runtime/actions/governance/dev-qualification/reconcile
@@ -62,7 +53,8 @@ runs:
     - name: Upload protected mutation decision
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: buildchain-dev-qualification-mutation-${{ steps.mutate.outputs.source-sha }}
+        name: buildchain-dev-qualification-mutation-${{ steps.mutate.outputs.source-sha
+          }}
         path: ${{ steps.mutate.outputs.result-path }}
         if-no-files-found: error
         retention-days: 30

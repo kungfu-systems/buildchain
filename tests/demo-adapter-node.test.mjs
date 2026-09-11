@@ -131,14 +131,14 @@ test("demo public component retains gate-before-render and diagnostic failure co
   const workflow = YAML.parse(
     fs.readFileSync(".github/workflows/.build-demo-adapter.yml", "utf8"),
   );
-  assert.equal(workflow.jobs.render.needs, "gate");
+  assert.deepEqual(workflow.jobs.render.needs, ["gate", "execution-runtime"]);
   for (const phase of ["gate", "render"]) {
     const action = YAML.parse(
       fs.readFileSync(`actions/build/demo/adapter-${phase}/action.yml`, "utf8"),
     );
     assert.equal(
       workflow.jobs[phase].steps.at(-1).uses,
-      `./.buildchain/workflow-shell/actions/build/demo/adapter-${phase}`,
+      `./.buildchain/runtime/actions/build/demo/adapter-${phase}`,
     );
     assert.match(action.runs.steps.at(-1).if, /always/);
   }

@@ -1,6 +1,6 @@
 import { nextDevelopmentWorkflowHeader } from "../../release/next-development-projection.js";
 export function scaffoldBuildWorkflow(
-  buildchainSha,
+  entryRef,
   { artifactName = "paper-publication" } = {},
 ) {
   return `${nextDevelopmentWorkflowHeader()}name: Build
@@ -20,16 +20,15 @@ permissions:
 
 jobs:
   publication:
-    uses: kungfu-systems/buildchain/.github/workflows/public-build-publication.yml@${buildchainSha}
+    uses: kungfu-systems/buildchain/.github/workflows/public-build-publication.yml@${entryRef}
     with:
-      buildchain-ref: ${buildchainSha}
-      buildchain-contract-lock-path: .buildchain/contract-lock.json
+      contract-lock: .buildchain/contract-lock.json
       toolchain-type: config
       verify-command: make check
       artifact-name: ${JSON.stringify(artifactName)}
 `;
 }
-export function scaffoldVerifyWorkflow(buildchainSha, buildchainVersion = "") {
+export function scaffoldVerifyWorkflow(entryRef) {
   return `${nextDevelopmentWorkflowHeader()}name: Verify
 
 on:
@@ -42,19 +41,20 @@ on:
   workflow_dispatch:
 
 permissions:
-${buildchainVersion.startsWith("4.") ? "  actions: read\n  contents: read\n  pull-requests: read" : "  contents: read"}
+  actions: read
+  contents: read
+  pull-requests: read
 
 jobs:
   check:
-    uses: kungfu-systems/buildchain/.github/workflows/public-build-check.yml@${buildchainSha}
+    uses: kungfu-systems/buildchain/.github/workflows/public-build-check.yml@${entryRef}
     with:
-      buildchain-ref: ${buildchainSha}
       require-version-state: true
       upload-artifacts: true
 `;
 }
 export function scaffoldReleaseWorkflow(
-  buildchainSha,
+  entryRef,
   { artifactPaths = "_build/main.pdf", releasePassportProductName = "" } = {},
 ) {
   const passportInput = releasePassportProductName
@@ -74,7 +74,7 @@ permissions:
 
 jobs:
   paper-release:
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-paper.yml@${buildchainSha}
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-paper.yml@${entryRef}
     permissions:
       actions: read
       checks: write
@@ -83,8 +83,7 @@ jobs:
       issues: write
       pull-requests: write
     with:
-      buildchain-ref: ${buildchainSha}
-      buildchain-contract-lock-path: .buildchain/contract-lock.json
+      contract-lock: .buildchain/contract-lock.json
       publisher-workflow-path: .github/workflows/public-release-paper.yml
       toolchain-type: config
       verify-command: make check

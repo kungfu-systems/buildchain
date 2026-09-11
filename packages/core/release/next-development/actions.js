@@ -17,10 +17,7 @@ function coordinates(env) {
   )
     throw new Error("exact repository and verification run required");
   const workspace = path.resolve(env.GITHUB_WORKSPACE);
-  if (fs.realpathSync(workspace) !== installationRoot(import.meta.url))
-    throw new Error(
-      "Next-development review must execute the protected source checkout",
-    );
+
   return {
     repository: env.GITHUB_REPOSITORY,
     runId: env.VERIFY_RUN_ID,
@@ -47,7 +44,7 @@ export async function qualifyNextDevelopmentAction(core, env) {
     }).trim();
   if (git("rev-parse", "HEAD") !== env.GITHUB_SHA)
     throw new Error(
-      "Review runtime differs from the exact protected workflow source",
+      "Review source differs from the protected verification source",
     );
   const plan = await verifyNextDevelopmentReview({
     client,

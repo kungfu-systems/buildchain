@@ -34,9 +34,8 @@ export function verifyAdmittedRuntimeSelection(
   const bytes = fs.readFileSync(file);
   const selection = JSON.parse(bytes);
   if (
-    selection.resolvedSha !== runtimeSha ||
     `sha256:${crypto.createHash("sha256").update(bytes).digest("hex")}` !==
-      runtimeSelectionRoot
+    runtimeSelectionRoot
   )
     throw new Error("Rooted runtime selection differs from admission");
   return selection;

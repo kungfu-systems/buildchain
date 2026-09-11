@@ -43,6 +43,15 @@ import {
   paperPreflightPublicationChecks,
   paperPreflightNextActions,
 } from "./operations/preflight-checks.js";
+export function collectPaperSourcePolicy({ cwd = process.cwd() } = {}) {
+  const agentEntry = collectPaperAgentEntry({ cwd, mode: "ci" });
+  const provisioning = validatePaperProvisioningAuthority(cwd);
+  const checks = [...agentEntry.checks, { id: "provisioning.authority", status: provisioning.valid ? "pass" : "fail", message: provisioning.errors.join("; ") }];
+  try { validateBuildchainConfig(cwd, { requireLifecycleStages: ["verify"] }); }
+  catch (error) { checks.push({ id: "config.publication", status: "fail", message: error.message }); }
+  return { ok: checks.every(check => check.status === "pass" || check.status === "skip"), checks };
+}
+
 export function collectPaperPreflight({
   cwd = process.cwd(),
   buildchainRoot = process.cwd(),
@@ -110,11 +119,6 @@ export function collectPaperPreflight({
     cwd: resolvedCwd,
     buildchainSha: runtime.resolvedSha,
     mode: agentEntryMode,
-    runtimeAdmission: {
-      compatible: lockEvaluation.compatible,
-      sha: runtime.resolvedSha,
-      ref: runtime.ref,
-    },
   });
   const source = {
     repositoryRoot: gitValue(resolvedCwd, ["rev-parse", "--show-toplevel"]),

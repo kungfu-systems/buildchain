@@ -6,7 +6,7 @@ runs:
     - name: Admit source checkout
       id: source-boundary
       if: ${{ always() }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      uses: ./.buildchain/runtime/actions/build/source/admit
       with:
         source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
     - name: Setup pnpm
@@ -17,13 +17,13 @@ runs:
         node-version: "24"
         cache: pnpm
     - name: Install dependencies
-      uses: ./.buildchain/workflow-shell/actions/runtime/dependencies/install
+      uses: ./.buildchain/runtime/actions/runtime/dependencies/install
       with:
         directory: .
         production: "false"
         ignore-scripts: "false"
     - name: Reconcile declared governance policy
-      uses: ./actions/dev-delivery/queue/apply-policy
+      uses: ./.buildchain/runtime/actions/dev-delivery/queue/apply-policy
       with:
         branch: ${{ inputs.branch }}
         apply: ${{ inputs.apply }}

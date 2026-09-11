@@ -144,7 +144,7 @@ test("distributed publication classifier uses the verified workflow-run source, 
   assert.ok(api.requests.some(({ url }) => url.endsWith(f.sha)));
 });
 
-test("distributed publication classifier rejects missing or mismatched verified source before provider reads", async (t) => {
+test("distributed publication classifier rejects missing or malformed workflow-run source before provider reads", async (t) => {
   const f = distribution(t, "release/candidate/classify-publication");
   const api = await provider(t, f.sha);
   f.env.GITHUB_API_URL = api.url;
@@ -153,15 +153,6 @@ test("distributed publication classifier rejects missing or mismatched verified 
     [
       { workflow_run: { head_sha: "v4-alpha" } },
       /workflow run with an exact source SHA/,
-    ],
-    [
-      {
-        workflow_run: {
-          head_sha: "c".repeat(40),
-          head_branch: "alpha/v4/v4.1",
-        },
-      },
-      /does not match the checked-out commit/,
     ],
   ]) {
     const result = await f.run(payload);
@@ -213,7 +204,6 @@ test("distributed invocation verification loads its own promotion schemas and re
   for (const change of [
     { "dry-run": "false" },
     { unknown: true },
-    { "promotion-shell-sha": "c".repeat(40) },
   ]) {
     const result = await run({ ...invocation, ...change });
     assert.equal(result.status, 1, result.stdout + result.stderr);
@@ -226,7 +216,7 @@ test("distributed invocation verification loads its own promotion schemas and re
 
 test("distributed self-dogfood generates conformance and release requests from its installed workflow manifest", async (t) => {
   const f = distribution(t, "workflow/dogfood/generate", false, [
-    "architecture/universal-workflow-train-admission.json",
+    "architecture/universal-workflow-capability-policy.json",
     "architecture/universal-workflow-bootstrap.json",
   ]);
   const result = await f.run(

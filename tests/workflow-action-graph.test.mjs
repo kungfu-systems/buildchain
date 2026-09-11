@@ -6,6 +6,8 @@ import test from "node:test";
 import { inspectWorkflowJob, localActionDirectory } from "../scripts/workflow-action-graph.mjs";
 
 test("source closure follows capability-specific checkout names without admitting escaping paths", () => {
+  assert.equal(localActionDirectory("$/actions/runtime/environment/prepare"), "actions/runtime/environment/prepare");
+  assert.equal(localActionDirectory("$/actions/runtime/../prepare"), null);
   for (const root of ["workflow-shell", "attester-runtime", "release-tail-runtime"])
     assert.equal(localActionDirectory(`./.buildchain/${root}/actions/release/tail/settle`), "actions/release/tail/settle");
   for (const uses of ["./.buildchain/../actions/release/tail/settle", "./other/actions/release/tail/settle", "./actions/release/../settle"])

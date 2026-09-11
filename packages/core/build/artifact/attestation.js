@@ -98,7 +98,6 @@ export function createBuildAttestationService({
     );
     if (
       prepared.predicate?.plan_root !== plan.root ||
-      prepared.predicate?.runtime?.sha !== plan.identity.sha ||
       prepared.platform?.id !== plan.build.attestation.platform
     )
       throw new Error("Attestation preparation belongs to another build");

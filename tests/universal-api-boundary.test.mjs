@@ -14,7 +14,6 @@ test("bootstrap and direct capability APIs partition all reusable workflows", ()
   const declared = [
     ...contract.directCapabilityWorkflows,
     ...contract.bootstrapGovernedWorkflows,
-    contract.bootstrap.consumerRecoveryWorkflow,
   ];
   assert.equal(new Set(declared).size, declared.length);
   assert.deepEqual(declared.sort(), contract.inventoryWorkflows);

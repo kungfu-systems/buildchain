@@ -296,13 +296,12 @@ test("source, runtime, and plan mismatches invalidate receipts", () => {
   const validation = validateControllerReceipt(receipt, {
     plan: expectedPlan,
     expectedSourceSha: "e".repeat(40),
-    expectedRuntimeSha: "f".repeat(40),
     expectedPlanDigest: `sha256:${"0".repeat(64)}`,
   });
 
   assert.equal(validation.ok, false);
   assert.match(validation.issues.join("\n"), /source SHA mismatch/);
-  assert.match(validation.issues.join("\n"), /runtime SHA mismatch/);
+  assert.doesNotMatch(validation.issues.join("\n"), /runtime SHA mismatch/);
   assert.match(validation.issues.join("\n"), /plan digest mismatch/);
 });
 
@@ -358,7 +357,6 @@ test("release passports can carry compact controller receipt references", () => 
   assert.equal(reference.receiptDigest, receipt.digest);
   assert.equal(validateControllerReceiptReference(reference, {
     expectedSourceSha: SOURCE_SHA,
-    expectedRuntimeSha: RUNTIME_SHA,
   }).ok, true);
   assert.deepEqual(normalizeControllerReceiptReferences({ receipts: [receipt] }), [reference]);
 });

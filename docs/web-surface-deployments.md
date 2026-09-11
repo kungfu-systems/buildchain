@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-09
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-6
   product: Codex
@@ -185,11 +185,9 @@ floating ref, such as:
 ```yaml
 jobs:
   web:
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v4
     with:
-      buildchain-contract-lock-path: .buildchain/contract-lock.json
-      buildchain-contract-compatibility-policy: major-compatible
-      buildchain-contract-drift-issue-mode: compatible-and-breaking
+      contract-lock: .buildchain/contract-lock.json
       build-command: pnpm build
       artifact-path: dist
 ```
@@ -747,7 +745,7 @@ the standard PR review and promotion flow without copying bespoke glue:
 ```yaml
 jobs:
   web-surface:
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v4
     with:
       build-command: npm run build
       verify-command: npm run check
@@ -760,40 +758,38 @@ The reusable workflow maps GitHub events to Buildchain web-surface semantics:
 | --- | --- |
 | `pull_request` opened / synchronized / reopened | validate, build, verify, and plan `preview` for `pr-N` |
 | `pull_request` closed | plan apply-mode cleanup for the `pr-N` preview alias and manifest |
-| `pull_request` closed for a matching release PR | verify the release intent and exact workflow-shell runtime, then wait for the protected `main` push; do not plan or apply production from `refs/pull/*/merge` |
+| `pull_request` closed for a matching release PR | verify the release intent, then wait for the protected `main` push; do not plan or apply production from `refs/pull/*/merge` |
 | `push` to `main` | validate, build, verify, plan and apply `staging` from the merged `main` SHA, then optionally open a production release PR |
 | `push` to `main` from a matching release PR merge | validate the associated release PR, plan `production`, and enter the configured GitHub Environment gate from the protected mainline ref |
 | `workflow_dispatch` with `production-approved = true` | plan `production` and enter the configured GitHub Environment gate |
 
-The optional `buildchain-ref` input is empty by default. Empty keeps the
-web-surface run on the stable Buildchain runtime selected by the reusable
-workflow ref, normally `@v3`. A trusted maintainer can expose a
-`workflow_dispatch` input and pass it through for one-off train validation.
-See [`runtime-train-validation.md`](runtime-train-validation.md) for the shared
-train protocol and notification template:
+The optional `runtime-ref` parameter selects a transient execution runtime.
+An empty value uses the selected consumer contract lock or entry default.
+All preparation goes through the shared [Runtime entry](runtime-entry.md).
+A maintainer can expose a manual input for train validation or repair:
 
 ```yaml
 on:
   workflow_dispatch:
     inputs:
-      buildchain-ref:
+      runtime-ref:
         description: "Temporary Buildchain runtime ref for trusted manual validation"
         required: false
         default: ""
 
 jobs:
   web-surface:
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v4
     with:
-      buildchain-ref: ${{ inputs.buildchain-ref || '' }}
+      runtime-ref: ${{ inputs.runtime-ref || '' }}
       build-command: pnpm run build
       verify-command: pnpm run check
       artifact-path: dist
 ```
 
-Only trusted `workflow_dispatch` runs by repository actors with write,
+Only repository actors with write,
 maintain, or admin permission may use a non-empty runtime override. Train refs
-such as `train/v3/v3.0/site-source-of-truth` are temporary validation refs, not
+such as `train/v4/v4.1/site-source-of-truth` are temporary validation refs, not
 stable production dependencies or pending merge targets. They may remain for a
 retention window after release as a fast-use and rollback channel, with old
 trains handled by periodic Buildchain cleanup. The web-surface deployment
@@ -811,7 +807,7 @@ permissions:
 
 jobs:
   web-surface:
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v4
     with:
       build-command: pnpm run build
       verify-command: pnpm run check
@@ -905,7 +901,7 @@ For release-PR publishing, callers opt in explicitly:
 ```yaml
 jobs:
   web-surface:
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v4
     with:
       build-command: npm run build
       verify-command: npm run check

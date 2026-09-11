@@ -37,7 +37,7 @@ export function executeBootstrapConformance(
     fs.readFileSync(
       path.join(
         runtimeRoot,
-        "architecture/universal-workflow-train-admission.json",
+        "architecture/universal-workflow-capability-policy.json",
       ),
     ),
   );
