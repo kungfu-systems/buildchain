@@ -149,6 +149,47 @@ test("release-now automatically projects exact human authority", async () => {
   assert.match(fake.variables.get("BUILDCHAIN_STABLE_RELEASE_REASON"), /human release-now/);
 });
 
+test("completed human promotion stays read-only in dry-run and clears authority on execution", async () => {
+  const fake = client();
+  const options = {
+    repository: "kungfu-systems/example",
+    targetBranch: "release/v2/v2.12",
+    requiredChecks: "consumer-canary",
+    now: "2026-07-11T03:00:00Z",
+  };
+  await runStableCandidatePatrol({
+    ...options, releaseNow: "2.12.0-alpha.5", dryRun: false, autoPromote: true,
+  }, fake);
+  const stored = structuredClone(fake.writes[0].ledger);
+  const original = structuredClone(stored);
+  fake.readLedger = async () => ({ ledger: stored, sha: SHA4 });
+  fake.listReleases = clientWithPublishedStable().listReleases;
+  const variables = [...fake.variables];
+  const deleted = [];
+  fake.deleteVariable = async (name) => {
+    deleted.push(name);
+    fake.variables.delete(name);
+  };
+  const reconciliation = { ...options, now: "2026-07-11T04:00:00Z" };
+  const planned = await runStableCandidatePatrol({ ...reconciliation, dryRun: true }, fake);
+  assert.equal(planned.ledger.candidates.find((entry) => entry.version === "2.12.0-alpha.5").state, "promoted");
+  assert.deepEqual(deleted, []);
+  assert.deepEqual([...fake.variables], variables);
+  assert.deepEqual(stored, original);
+  assert.equal(fake.writes.length, 1);
+  assert.equal(fake.branches.length, 1);
+  assert.equal(fake.pullRequests.length, 1);
+
+  const executed = await runStableCandidatePatrol({ ...reconciliation, dryRun: false }, fake);
+  assert.deepEqual(executed.ledger, planned.ledger);
+  assert.deepEqual(deleted, ["BUILDCHAIN_STABLE_RELEASE_NOW", "BUILDCHAIN_STABLE_RELEASE_REASON"]);
+  assert.equal(fake.variables.size, 0);
+  assert.equal(fake.writes.length, 2);
+  assert.deepEqual(fake.writes[1].ledger, executed.ledger);
+  assert.equal(fake.branches.length, 1);
+  assert.equal(fake.pullRequests.length, 1);
+});
+
 test("first ledger run reconstructs an already consumed stable version", async () => {
   const fake = clientWithPublishedStable();
   const result = await runStableCandidatePatrol({

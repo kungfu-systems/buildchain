@@ -269,7 +269,7 @@ export async function runStableCandidatePatrol(optionsInput = {}, clientInput) {
       stableSha: await client.resolveTagSha(stable.tag_name),
       now: stable.published_at || options.now,
     });
-    if (candidate.promotionRequest?.authority === "human") {
+    if (!options.dryRun && candidate.promotionRequest?.authority === "human") {
       await client.deleteVariable?.("BUILDCHAIN_STABLE_RELEASE_NOW");
       await client.deleteVariable?.("BUILDCHAIN_STABLE_RELEASE_REASON");
     }
