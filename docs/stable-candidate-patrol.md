@@ -7,13 +7,13 @@ source_level: local-files
 confidence: high
 sensitivity: public
 evidence_grade: A
-review_state: self-reviewed
-last_reviewed: 2026-08-03
+review_state: unreviewed
+last_reviewed: 2026-09-12
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-07-11
-  visible_context: Buildchain candidate passport, stable gate, Patrol, publish transaction, exact source-lock PR contracts, tests, and user consensus.
+  generated_at: 2026-09-12
+  visible_context: Repository stable policy, public build qualification producer, artifact reader and regression tests.
   invisible_context_boundary: No credentials, private logs, or unpublished consumer content were used.
 ---
 
@@ -44,29 +44,30 @@ version has been consumed; their later product changes continue through the
 next patch alpha prepared by the normal release transaction.
 
 For Buildchain's own release line, successful Alpha Self-Dogfood starts an
-idempotent qualification producer for the exact alpha SHA. It dispatches the
-existing `Build Surface Fixture` at the immutable exact tag, runs the existing
-`site-libkungfu-dev` no-apply canary with the exact SHA, and writes the declared
-commit-status attestation only after that authoritative canary succeeds. The
-producer creates evidence only: Patrol still owns qualification and selection,
-and the normal source-lock PR, stable gate, transaction, and branch protections
-remain mandatory.
+idempotent qualification producer for the exact published alpha runtime. The
+producer validates the public `build.yml@v4-alpha` run and its build summary:
+consumer source and run attempt must match, all three platforms must complete
+the install/build/verify lifecycle, and a transient runtime override is rejected.
+It writes `buildchain-canary/buildchain-zero-input` on the qualified runtime SHA
+as `github-actions[bot]`. The consumer source SHA may differ from that runtime.
 
-Cross-repository dispatch and repository-local attestation use separate tokens.
-The promotion token can start the no-apply consumer workflow, while the
-repository-scoped Actions token writes the status as `github-actions[bot]` only
-after the producer has observed the successful authoritative workflow run. The
-stable gate still verifies the workflow identity, exact runtime SHA, target URL,
-and allowed attestor before accepting that status.
+The repository Patrol policy requires the alpha Release and this qualification
+status. It retains the one-hour soak. The publication transaction still requires
+its sealed release candidate and protected branch checks. Qualification produces
+evidence; it does not publish or merge a candidate.
 
-When a candidate changes the outer reusable-workflow YAML itself, the stable
-shell cannot exercise that change through a runtime override. A maintainer may
-manually qualify it with `canary-ref` set to a dispatchable consumer branch or
-tag and `canary-sha` set to the exact 40-character commit that ref must resolve
-to. That consumer workflow pins the candidate's exact Buildchain SHA. The
-qualification producer verifies the ref binding before dispatch, accepts only a
-run whose source SHA matches, and writes the normal candidate-bound status only
-after success. The automatic path continues to use the consumer default branch.
+The standalone stable gate declares this canary as `public-build`. It reads the
+status target's exact repository-owned workflow run, verifies the provider digest
+of its uniquely named summary artifact, and applies the same summary validator
+as the producer. It then enforces the allowed attestor and soak policy. A green
+status with a foreign run, another candidate, an override or incomplete platform
+evidence cannot qualify a release. The gate also retains its release-candidate
+check and stable publication interval.
+
+After publishing a new alpha, refresh the consumer alpha contract lock and run
+the unchanged zero-input Alpha Self-Dogfood entry. Entry changes are qualified by
+the newly published `@v4-alpha`; train validation remains a separate transient
+runtime path and does not qualify this release canary.
 
 ## Repository policy
 
