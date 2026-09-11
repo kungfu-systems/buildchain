@@ -3,8 +3,8 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 46,
-  "fencingCounter": 15,
+  "generation": 47,
+  "fencingCounter": 16,
   "policy": {
     "agingSeconds": 900,
     "maxPriority": 2,
@@ -12,7 +12,39 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": null,
+  "activeWarrant": {
+    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
+    "phase": "ready",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v4/v4.1",
+    "candidateId": "sha256:4a64dba7873a9f4897c25ac2934b38eb9154323165d6beda3728bff9b0c8dcf5",
+    "pullRequestNumber": 3711,
+    "sourceHead": "6c0cd4eb35688669f77fc37998ced6c0a752333e",
+    "sourceRoot": "sha256:287673d1878b429832569de91444ff3ce4455084bbc54b9e44381ce33e5fe0ea",
+    "sourceIdentityRoot": "sha256:71aa18351d8bc04fbfe81f5cf7e8ede7a70ab95912169339e43e8f6243cfac16",
+    "sourcePatchRoot": "sha256:4d82d6777c9855dc3f67cd1d3752e5c5042d34e38257bd3438f49f77b419e60a",
+    "sourceProofRoot": "sha256:ac21194d7e0ab5e764ad7f5663c5630afa3281b112b257f894d003132e3f7b4f",
+    "planRoot": "sha256:bda8bb8e826b2e847dcc390425e374cbbd6bb3e80628737c0745e3f1742d33fa",
+    "closureRoot": "sha256:7e834d7aee1aefcf46b91efaff4743e352ccc19c2881a5b832ad6ee6326ee311",
+    "dependencyRoot": "sha256:1d4a062ddab6488ca8985ee8bf0415aede5ad2c46b5b84616bf181c753e550d2",
+    "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
+    "affectedPaths": [
+      "actions/build/verification/qualify-backbone/dist/index.js",
+      "packages/core/build/verification/actions.js",
+      "packages/core/dev-delivery/commands/dev-delivery-request.sh",
+      "tests/dev-delivery-minimal-request.test.mjs"
+    ],
+    "shardEvidenceRoots": [],
+    "sourceWorkflowRunId": 34602473298,
+    "deliveryClass": "non-native-fast",
+    "priority": "ordinary",
+    "generation": 16,
+    "expectedOldStateRoot": "sha256:bd2b34601959013b510621626bdeef15a50c175e4805cfe1e6dae20590d414ab",
+    "issuedAt": "2026-09-11T13:18:30.291Z",
+    "expiresAt": "2026-09-11T14:18:30.291Z",
+    "fencingToken": "sha256:52c7983952dc6cffd25a46b00c650334ba8a8c615765528eda4583d9872ccd98",
+    "nextAction": "Replay on the exact current dev base, prove required checks, then enqueue the unchanged PR head."
+  },
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -5494,10 +5526,10 @@
       "sourceWorkflowRunId": 34602473298,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-11T13:18:26.757Z",
-      "updatedAt": "2026-09-11T13:18:26.757Z",
+      "updatedAt": "2026-09-11T13:18:30.291Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
+      "status": "selected",
       "terminal": null,
       "affectedPaths": [
         "actions/build/verification/qualify-backbone/dist/index.js",
@@ -5508,6 +5540,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-11T13:18:26.757Z",
-  "stateRoot": "sha256:bd2b34601959013b510621626bdeef15a50c175e4805cfe1e6dae20590d414ab"
+  "updatedAt": "2026-09-11T13:18:30.291Z",
+  "stateRoot": "sha256:f48051bff5f42d19cf9d311062bdb2479283ee1c71087b11e03c5348645d9d33"
 }
