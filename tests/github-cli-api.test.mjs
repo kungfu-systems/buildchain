@@ -115,3 +115,58 @@ test("GitHub CLI success preserves structured input and paginated results", () =
   );
   assert.ok(!calls[0].args.includes("synthetic-token"));
 });
+
+test("GitHub CLI internal response preserves safe GraphQL details for exact queue readback", async () => {
+  let mutations = 0,
+    observations = 0;
+  const headSha = "a".repeat(40);
+  const client = createGitHubCliApi((_program, _args, options) => {
+    const request = JSON.parse(options.input);
+    if (request.query.startsWith("query")) {
+      observations++;
+      return JSON.stringify({
+        data: {
+          node: {
+            id: "PR_exact",
+            headRefOid: headSha,
+            state: "OPEN",
+            merged: false,
+            mergeQueueEntry: { id: "entry" },
+          },
+        },
+      });
+    }
+    mutations++;
+    return failedResponse({
+      errors: [
+        {
+          type: "INTERNAL",
+          message: "GitHub internal error",
+          privateDetail: "not part of the error contract",
+        },
+      ],
+    });
+  });
+  await enqueueNextDevelopmentPullRequest({
+    pull: { node_id: "PR_exact" },
+    headSha,
+    mutationOctokit: {
+      graphql: (query, variables) =>
+        client.post("graphql", { query, variables }).data,
+    },
+    wait: async () =>
+      assert.fail("accepted queue state must not need another mutation"),
+  });
+  assert.equal(mutations, 1);
+  assert.equal(observations, 1);
+  assert.throws(
+    () => client.post("graphql", { query: "mutation" }),
+    (error) => {
+      assert.deepEqual(error.errors, [
+        { message: "GitHub internal error", type: "INTERNAL" },
+      ]);
+      assert.ok(!error.message.includes("private"));
+      return true;
+    },
+  );
+});
