@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 36,
+  "generation": 37,
   "fencingCounter": 12,
   "policy": {
     "agingSeconds": 900,
@@ -5342,8 +5342,57 @@
         "tests/runtime-entry-provider.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.1",
+      "pullRequestNumber": 3705,
+      "sourceRoot": "sha256:7254e51b19edb29be450d6315e2c343bdf4e227e619c9b00e5a072d6feb03aba",
+      "sourceIdentityRoot": "sha256:f4e7fce5db955ed1ac527b44657fa046e9de91c85b4c95710d31f6be9ea4d6f7",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:9af9610f1af424eb4aca6ed8d90bbfa43c633809e850a806fd87a95e0d73ccda",
+      "sourceHead": "655691adf9c5a4aca5d816175fad5160405a4e43",
+      "sourcePatchRoot": "sha256:16b76f7f10a0019dd87435aac5d77475f68b8b01384edbc3396e401faddcfdb8",
+      "sourceProofRoot": "sha256:396006d9a3aa8b1cae577819bbd18c328ac2a9c6adf3de702643df0a7b2c4403",
+      "planRoot": "sha256:0ea387fd1351c895093a90d06857458bc864bc49b8e33e0ca926a289a52c9e9c",
+      "closureRoot": "sha256:34bec8b7f8dab927cbfca00f2df9f382a70be78c0b59d62909d2bb567fb21f28",
+      "dependencyRoot": "sha256:a1afe1d34d65937d0ff5d6d21f8992625d95f7e583941f86990375faa8d41ea7",
+      "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
+      "sourceWorkflowRunId": 34591088969,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-11T11:00:31.739Z",
+      "updatedAt": "2026-09-11T11:00:31.739Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".buildchain/alpha-contract-lock.json",
+        ".buildchain/contract-lock.json",
+        "actions/publication/authority/assemble/dist/index.js",
+        "actions/publication/authority/inspect-request/dist/index.js",
+        "actions/publication/authority/qualify-admission/dist/index.js",
+        "actions/publication/authority/qualify-consumer-gate/dist/index.js",
+        "actions/publication/authority/verify-governance/dist/index.js",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/page-registry.json",
+        "dist/site/public-surface-audit.json",
+        "docs/runtime-entry.md",
+        "packages/core/publication/authority/actions.js",
+        "packages/core/publication/authority/admission.js",
+        "packages/core/publication/authority/assembly.js",
+        "packages/core/publication/authority/control-plane.js",
+        "packages/core/publication/authority/request.js",
+        "packages/core/publication/authority/verification.js",
+        "tests/build-surface.test.mjs",
+        "tests/dev-delivery-minimal-request.test.mjs",
+        "tests/publication-authority-node.test.mjs",
+        "tests/publication-runtime-provenance.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-11T10:44:35.687Z",
-  "stateRoot": "sha256:8403135fb22913d7a671b1beb4353fadc0d22b0e09c01e5151f04393cbefa65d"
+  "updatedAt": "2026-09-11T11:00:31.739Z",
+  "stateRoot": "sha256:10e5a416293cd8f3275f53e714736b2043acb23e21d2c2a312cee0ab74cac59f"
 }
