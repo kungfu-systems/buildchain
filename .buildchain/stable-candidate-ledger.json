@@ -6,7 +6,7 @@
   "hold": {
     "enabled": false,
     "reason": "",
-    "updatedAt": "2026-09-11T15:48:06.165Z"
+    "updatedAt": "2026-09-11T17:09:34.428Z"
   },
   "candidates": [
     {
@@ -15,10 +15,10 @@
       "sha": "e4d4a9529989a4d97e780267fc0a5271a3a68ac6",
       "tag": "v4.1.0-alpha.0",
       "publishedAt": "2026-09-10T16:02:23.000Z",
-      "state": "soaking",
+      "state": "revoked",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-09-11T15:48:06.165Z",
+        "observedAt": "2026-09-11T17:09:34.428Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -44,9 +44,9 @@
         ]
       },
       "decision": {
-        "reason": "checks-incomplete",
-        "updatedAt": "2026-09-11T15:48:06.165Z",
-        "actor": "buildchain-patrol"
+        "reason": "npm 4.1.0 and its immutable exact tag were published but stable finalization Verify 34619656435 failed. Preserve those bytes; recover through the next patch alpha and stable. Failed transaction 34619228437.",
+        "actor": "repository-policy",
+        "updatedAt": "2026-09-11T17:09:34.428Z"
       }
     },
     {
@@ -55,10 +55,10 @@
       "sha": "fe6f1fb7cba56c4a71fecee03a621453bbb9bee7",
       "tag": "v4.1.0-alpha.1",
       "publishedAt": "2026-09-11T09:35:33.000Z",
-      "state": "soaking",
+      "state": "revoked",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-09-11T15:48:06.165Z",
+        "observedAt": "2026-09-11T17:09:34.428Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -84,9 +84,9 @@
         ]
       },
       "decision": {
-        "reason": "checks-incomplete",
-        "updatedAt": "2026-09-11T15:48:06.165Z",
-        "actor": "buildchain-patrol"
+        "reason": "npm 4.1.0 and its immutable exact tag were published but stable finalization Verify 34619656435 failed. Preserve those bytes; recover through the next patch alpha and stable. Failed transaction 34619228437.",
+        "actor": "repository-policy",
+        "updatedAt": "2026-09-11T17:09:34.428Z"
       }
     },
     {
@@ -95,10 +95,10 @@
       "sha": "55aef13d1cec8ef5d6b76b45b2157150159d861b",
       "tag": "v4.1.0-alpha.2",
       "publishedAt": "2026-09-11T11:32:07.000Z",
-      "state": "soaking",
+      "state": "revoked",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-09-11T15:48:06.165Z",
+        "observedAt": "2026-09-11T17:09:34.428Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -124,9 +124,9 @@
         ]
       },
       "decision": {
-        "reason": "checks-incomplete",
-        "updatedAt": "2026-09-11T15:48:06.165Z",
-        "actor": "buildchain-patrol"
+        "reason": "npm 4.1.0 and its immutable exact tag were published but stable finalization Verify 34619656435 failed. Preserve those bytes; recover through the next patch alpha and stable. Failed transaction 34619228437.",
+        "actor": "repository-policy",
+        "updatedAt": "2026-09-11T17:09:34.428Z"
       }
     },
     {
@@ -135,10 +135,10 @@
       "sha": "6ea50bad8e330fd980ebb418daa730f550da3029",
       "tag": "v4.1.0-alpha.3",
       "publishedAt": "2026-09-11T13:54:05.000Z",
-      "state": "soaking",
+      "state": "revoked",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-09-11T15:48:06.165Z",
+        "observedAt": "2026-09-11T17:09:34.428Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -151,9 +151,9 @@
           },
           {
             "id": "workflow:Build Surface Fixture",
-            "status": "fail",
-            "completedAt": "",
-            "evidenceUrl": ""
+            "status": "pass",
+            "completedAt": "2026-09-11T15:52:21.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/34618298986"
           },
           {
             "id": "status:buildchain-canary/site-libkungfu-dev",
@@ -164,9 +164,9 @@
         ]
       },
       "decision": {
-        "reason": "human-release-now",
-        "actor": "human",
-        "updatedAt": "2026-09-11T15:48:06.165Z"
+        "reason": "npm 4.1.0 and its immutable exact tag were published but stable finalization Verify 34619656435 failed. Preserve those bytes; recover through the next patch alpha and stable. Failed transaction 34619228437.",
+        "actor": "repository-policy",
+        "updatedAt": "2026-09-11T17:09:34.428Z"
       },
       "promotionRequest": {
         "stableTag": "v4.1.0",
@@ -178,7 +178,7 @@
       }
     }
   ],
-  "updatedAt": "2026-09-11T15:48:06.165Z",
+  "updatedAt": "2026-09-11T17:09:34.428Z",
   "stableReleases": [
     {
       "version": "4.0.9",
