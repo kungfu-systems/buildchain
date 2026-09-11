@@ -3,7 +3,6 @@ import { getOctokit } from "@actions/github";
 import { runtimeEntryProvider } from "./github.js";
 import {
   preparedRuntimeSelection,
-  runtimeSelector,
   selectExecutionRuntime,
 } from "./selection.js";
 
@@ -73,31 +72,6 @@ export async function selectExecutionRuntimeAction(
     selection = transport;
     if (selection.origin === "runtime-parameter")
       await provider.authorize({ origin: "runtime-parameter" });
-    else {
-      const retainedProvider = selection.source?.runId
-        ? providerFactory(github, {
-            sourceRepository: source.repository,
-            sourceSha: selection.source.sha,
-            actor: env.GITHUB_ACTOR,
-          })
-        : provider;
-      const lock = await retainedProvider.readLock(lockPath);
-      const expected = runtimeSelector({ workflowSha, lock });
-      if (
-        selection.origin !== expected.origin ||
-        selection.sha !== expected.ref
-      )
-        throw new Error(
-          "Runtime transport was not selected by this consumer entry",
-        );
-      if (lock)
-        selection = {
-          ...selection,
-          ref: lock.buildchain.ref,
-          class: lock.buildchain.ref === "v4-alpha" ? "alpha" : "stable",
-          contract: { path: lockPath, digest: lock.buildchain.contractDigest },
-        };
-    }
     if (selection.source?.runId) {
       await provider.authorize({ origin: "runtime-parameter" });
       source = await resolveRecoverySource(

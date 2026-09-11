@@ -96,3 +96,9 @@ A failed-job rerun cannot supply new inputs; recovery therefore starts a new run
 `runtime-selection` is an internal reusable-workflow transport for an already
 selected runtime. Components forward it unchanged instead of resolving another
 reference. Consumers normally supply `runtime-ref` or a lock, not this transport.
+
+Nested components preserve the selected runtime and contract metadata without
+re-reading the lock or comparing the runtime SHA. The internal transport carries
+a trusted entry output; consumer source binding and override authorization remain
+entry concerns. Recovery selectors request `actions: read` to read the original
+run in private repositories as well as public repositories.

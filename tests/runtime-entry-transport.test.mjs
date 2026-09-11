@@ -20,15 +20,16 @@ test("nested workflows transport one resolved train without resolving it again",
  assert.equal(first.sha,sha("c"));assert.equal(nested.sha,first.sha);
  assert.equal(h.calls.filter(([kind])=>kind==="resolve").length,1);
 });
-test("nested workflow preserves the outer lock choice and restores lock metadata from its source",async()=>{
- const h=harness();const first=await h.run({"contract-lock":".buildchain/alpha-contract-lock.json"});const transport={...first.selection,ref:"forged",class:"forged",contract:{path:first.selection.contract.path}};
- const nested=await h.run({selection:JSON.stringify(transport)});
- assert.equal(nested.selection.contract.digest,digest);assert.equal(nested.selection.class,"alpha");
- assert.ok(h.calls.filter(([kind])=>kind==="lock").every(([,source,file])=>source===env.GITHUB_SHA&&file===".buildchain/alpha-contract-lock.json"));
+test("nested workflows preserve locked selection without reading the lock again",async()=>{
+ const h=harness();const first=await h.run({"contract-lock":".buildchain/alpha-contract-lock.json"});
+ const before=h.calls.length;const nested=await h.run({selection:JSON.stringify(first.selection)});
+ assert.deepEqual(nested.selection,first.selection);
+ assert.deepEqual(h.calls.slice(before),[]);
+ assert.equal(h.calls.filter(([kind])=>kind==="lock").length,1);
 });
-test("untrusted transport cannot replace the lock-selected execution code",async()=>{
+test("runtime transport preserves source binding and override authorization",async()=>{
  const h=harness({allowed:false});const first=await h.run({});
- await assert.rejects(h.run({selection:JSON.stringify({...first.selection,sha:sha("f")})}),/not selected/);
+ await assert.rejects(h.run({selection:JSON.stringify({...first.selection,source:{...first.selection.source,sha:sha("f")}})}),/changed the admitted consumer source/);
  await assert.rejects(h.run({selection:JSON.stringify({...first.selection,origin:"runtime-parameter"})}),/not authorized/);
 });
 test("a repaired runtime carries the original failed source into nested jobs",async()=>{

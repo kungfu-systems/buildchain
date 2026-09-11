@@ -44,7 +44,7 @@
         "result"
       ],
       "breakingDigest": "sha256:cda31fcfd64bd8a895216d9537910a9676736e70aef0fde8a1697b2c88222ed5",
-      "auditDigest": "sha256:630ebaa6256e48622a5c36aee7bb07bfd5903da3c8444dc2f7c4ba4ee2c4d7d1"
+      "auditDigest": "sha256:d6c7d523fa1d08350ca53483a7315111cf96eeb6623f3069f6c53a8487adeb74"
     },
     {
       "contractVersion": 1,
@@ -1241,7 +1241,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:6adb4adc805a741ec7e54a769c4bb89ef66805bb63ac99dfab06ba11f36d9381",
-      "auditDigest": "sha256:630ebaa6256e48622a5c36aee7bb07bfd5903da3c8444dc2f7c4ba4ee2c4d7d1"
+      "auditDigest": "sha256:d6c7d523fa1d08350ca53483a7315111cf96eeb6623f3069f6c53a8487adeb74"
     },
     {
       "contractVersion": 1,
@@ -2404,5 +2404,5 @@
   "compatibilityFactCutRoot": "sha256:58f33e498596505a26b6fc3c7ae5acef847ff699eee6c7e17a7b318a40bdf0d6",
   "compatibilityProofRegistryRoot": "sha256:2f6477405c7891b754b33ad6515d55618bd320e7cdc59330d7cc645e17201e72",
   "compatibilityDigest": "sha256:b1088f1c224329b16cd23c285bc69334aa1ee102e5b44d5c09aaf156d76821b6",
-  "contractDigest": "sha256:ffc9c3f30d0a570afa91433429b7bcabaf1ef8055e0ed1af82f0dda2d950aeff"
+  "contractDigest": "sha256:97e6726c5da7dfa71ab81aff2ba94f02e5e37d67e3a76a87a98e3c5955609243"
 }
