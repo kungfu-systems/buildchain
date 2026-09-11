@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 60,
+  "generation": 61,
   "fencingCounter": 20,
   "policy": {
     "agingSeconds": 900,
@@ -5691,8 +5691,50 @@
         "package.json"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.1",
+      "pullRequestNumber": 3725,
+      "sourceRoot": "sha256:c7a15ebccc119218d1e3cb2008fd04bc56b48e8796815db9867190ab0f323bf5",
+      "sourceIdentityRoot": "sha256:ec9f846dd04ff9744c4fa72934be87ec2163bb9d09ae5eb14fda6954d00208cf",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:e3cb8e722b6cef501a559c16bfed2a614f7790bef58030d0001c803c83148df2",
+      "sourceHead": "23ccc18959947dcafc2a6abfa5087c5960bee2d7",
+      "sourcePatchRoot": "sha256:2fab306dc8d2224291f0a35ec164039027c725e0b3251fd5be37b0d2f49b9760",
+      "sourceProofRoot": "sha256:53e6d536af4ade87949d26cccf8904e5f93f78b4d3cbf6acf05ba62c63c6bd7d",
+      "planRoot": "sha256:7432a48f5d68a93174e52c24854cffe2acf406b7cb75097bf4fd5fc4988ce9b7",
+      "closureRoot": "sha256:2f3428dc42153eebdb19ce7118cf67a201f496e192e8bef516f9fedd9928f9d2",
+      "dependencyRoot": "sha256:165ee3b58eacedee9f95e182a7ed63a05380442f00ff2de971b75d122b0977e4",
+      "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
+      "sourceWorkflowRunId": 34633736653,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-11T18:43:46.583Z",
+      "updatedAt": "2026-09-11T18:43:46.583Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "actions/release/line/bootstrap/dist/index.js",
+        "actions/release/next-development/complete-review/dist/index.js",
+        "actions/release/next-development/qualify/dist/index.js",
+        "actions/release/promotion/candidate/dist/index.js",
+        "actions/workflow/engine/execute/dist/index.js",
+        "actions/workflow/settlement/seal/dist/index.js",
+        "architecture/release-topology.json",
+        "packages/core/providers/github-cli-api.js",
+        "packages/core/providers/github/graphql-errors.js",
+        "packages/core/release/next-development/enqueue.js",
+        "packages/core/release/promote-candidate/next-development-queue-observation.js",
+        "packages/core/release/promote-candidate/next-development-queue.js",
+        "tests/github-cli-api.test.mjs",
+        "tests/next-development-queue-internal.test.mjs",
+        "tests/next-development-queue.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-11T17:51:07.600Z",
-  "stateRoot": "sha256:b42c74e269053503fb1aabef943fe337daabd41cf775d5f5e6f81187f6076ea2"
+  "updatedAt": "2026-09-11T18:43:46.583Z",
+  "stateRoot": "sha256:4b4aa5289f48c0def4afd0c3463284578b9e037b9dbbcbe042438eed66c4fcbc"
 }
