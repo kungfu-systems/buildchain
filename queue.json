@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 54,
+  "generation": 55,
   "fencingCounter": 18,
   "policy": {
     "agingSeconds": 900,
@@ -5593,8 +5593,53 @@
         "tests/paper.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.1",
+      "pullRequestNumber": 3720,
+      "sourceRoot": "sha256:b56160b3248543f7b2cbc9e383e43b13e2314e8e14666eb37d3b8d1a9a46bd8e",
+      "sourceIdentityRoot": "sha256:1f7c9af4ad6a2f0d3a145df6330c2231d293a1e16f8b8479339366d4b0318385",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:7ece636b11b913b38e84a65a76887f96e3067c652800121c109f8530f7a29250",
+      "sourceHead": "d04789ec18c76997d02344e396d2db9797a0efce",
+      "sourcePatchRoot": "sha256:116d6734f4bd099acde3161d81a540e431b0a82c3f1cfe661e3234d67ec29a5e",
+      "sourceProofRoot": "sha256:8c7b038f1c0e03fe1ab7667825bb22a251b96cc77345dde9116a8b18969af93a",
+      "planRoot": "sha256:affbd501976f06955882df0b12d6a8dd3d3505ca7e07f75b32f009b4ccfcd568",
+      "closureRoot": "sha256:16f4d412539a1d95dfb40d1285f383660a436ee2d420282a843d3a2101f6c605",
+      "dependencyRoot": "sha256:f64aeb63cdbe8acc5a4ffca3163a1b1ab352903f2f094ab94df83f1f7efa423b",
+      "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
+      "sourceWorkflowRunId": 34624920320,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-11T17:08:55.187Z",
+      "updatedAt": "2026-09-11T17:08:55.187Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".buildchain/buildchain.toml",
+        ".buildchain/stable-release-policy.json",
+        "architecture/maintainability-debt.json",
+        "dist/site/buildchain-contract.json",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/manual-registry.json",
+        "dist/site/page-registry.json",
+        "dist/site/public-surface-audit.json",
+        "dist/site/site-manifest.json",
+        "docs/release-governance.md",
+        "docs/stable-candidate-patrol.md",
+        "packages/core/providers/github/qualification-artifacts.js",
+        "packages/core/release/commands/stable-release-gate.mjs",
+        "packages/core/release/qualification/canary-evidence.js",
+        "packages/core/release/stable-release-gate.js",
+        "tests/stable-public-build-canary.test.mjs",
+        "tests/stable-self-qualification-policy.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-11T16:49:27.869Z",
-  "stateRoot": "sha256:f86fc304cfd383b9bbb8daf674582cfe7c9d24a28af12662c17828fa36347a4c"
+  "updatedAt": "2026-09-11T17:08:55.187Z",
+  "stateRoot": "sha256:2039cf031edc15cef735a82e794c2ba70aac3eee0d6172bf6b199973fe42d92d"
 }
