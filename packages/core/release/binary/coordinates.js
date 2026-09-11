@@ -2,10 +2,7 @@ import { requireValue } from "../../runtime/action-process.mjs";
 export function validateBinaryPublicationSelection({
   runId,
   tag,
-  runtime,
-  workflowSha,
 }) {
-  runtime = (runtime || "").toLowerCase();
   requireValue(
     /^[1-9][0-9]*$/u.test(runId),
     "Binary release publication requires an exact evidence run id",
@@ -15,19 +12,10 @@ export function validateBinaryPublicationSelection({
     match,
     "Binary release publication requires an exact semver tag",
   );
-  requireValue(
-    /^[0-9a-f]{40}$/u.test(runtime),
-    "buildchain-ref must be an exact commit SHA",
-  );
-  requireValue(
-    runtime === (workflowSha || "").toLowerCase(),
-    "buildchain-ref must equal the exact workflow source SHA",
-  );
   return {
     runId,
     tag,
-    runtime,
-    targetRef: `${match[3] ? "alpha" : "release"}/v${match[1]}/v${match[1]}.${match[2]}`,
+      targetRef: `${match[3] ? "alpha" : "release"}/v${match[1]}/v${match[1]}.${match[2]}`,
   };
 }
 
@@ -35,16 +23,12 @@ export async function resolveBinaryPublicationCoordinates({
   repository,
   runId,
   tag,
-  runtime,
-  workflowSha,
   github,
 }) {
   const selected = validateBinaryPublicationSelection({
     runId,
     tag,
-    runtime,
-    workflowSha,
-  });
+    });
   const [owner, repo] = repository.split("/");
   const first = await github.rest.repos.getCommit({
     owner,
@@ -66,7 +50,6 @@ export async function resolveBinaryPublicationCoordinates({
   );
   await github.rest.repos.getReleaseByTag({ owner, repo, tag: selected.tag });
   return {
-    "buildchain-ref": selected.runtime,
     "evidence-run-id": selected.runId,
     "release-tag": selected.tag,
     "source-sha": first.data.sha,

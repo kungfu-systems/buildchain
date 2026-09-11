@@ -14,7 +14,7 @@ runs:
     - name: Admit source checkout
       id: source-boundary
       if: ${{ always() }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      uses: ./.buildchain/runtime/actions/build/source/admit
       with:
         source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
         expected-sha: ${{ github.sha }}
@@ -22,7 +22,7 @@ runs:
       with:
         node-version: "24"
     - name: Install dependencies
-      uses: ./.buildchain/workflow-shell/actions/runtime/dependencies/install
+      uses: ./.buildchain/runtime/actions/runtime/dependencies/install
       with:
         directory: .
         production: "false"
@@ -34,7 +34,7 @@ runs:
         path: dist/binary
         merge-multiple: true
     - name: Qualify immutable binary release evidence
-      uses: ./actions/build/binary/qualify
+      uses: ./.buildchain/runtime/actions/build/binary/qualify
       with:
         tag: ${{ env.RELEASE_TAG }}
         token: ${{ github.token }}

@@ -1,5 +1,6 @@
 name: package-candidate
-description: Execute the fixture buildchain-package-candidate capability within its caller job boundary.
+description: Execute the fixture buildchain-package-candidate capability within
+  its caller job boundary.
 inputs:
   source-checkout-outcome:
     description: Actual preceding source checkout outcome.
@@ -13,7 +14,7 @@ runs:
     - name: Admit source checkout
       id: source-boundary
       if: ${{ always() }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      uses: ./.buildchain/runtime/actions/build/source/admit
       with:
         source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
     - uses: actions/setup-node@v6.4.0
@@ -25,12 +26,9 @@ runs:
       with:
         name: ${{ inputs.passport-artifact }}
         path: .buildchain/buildchain-package-candidate/passport
-    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/workflow-shell
     - name: Pack Buildchain product bytes once and bind them to the candidate
       id: package
-      uses: ./.buildchain/workflow-shell/actions/publication/candidate/package
+      uses: ./.buildchain/runtime/actions/publication/candidate/package
     - name: Upload sealed Buildchain product payload
       uses: actions/upload-artifact@v7.0.1
       with:

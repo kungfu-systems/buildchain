@@ -23,20 +23,9 @@ runs:
     - name: Admit source checkout
       id: source-boundary
       if: ${{ always() }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      uses: ./.buildchain/runtime/actions/build/source/admit
       with:
         source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
-    - name: Checkout Buildchain runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
-        ref: ${{ fromJSON(inputs.needs-runtime-outputs-runtime-sha) }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - name: Prepare exact Buildchain Node runtime
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Download web-surface plan
       uses: actions/download-artifact@v7.0.0
       with:
@@ -49,7 +38,7 @@ runs:
         path: ${{ fromJSON(inputs.request-json).working-directory }}/${{
           fromJSON(inputs.request-json).artifact-path }}
     - name: Configure staging AWS credentials
-      uses: ./.buildchain/workflow-shell/actions/providers/aws/configure
+      uses: ./.buildchain/runtime/actions/providers/aws/configure
       with:
         role: ${{ fromJSON(inputs.request-json).staging-aws-role-arn }}
         region: ${{ fromJSON(inputs.request-json).aws-region }}
@@ -83,7 +72,8 @@ runs:
       with:
         request-json: ${{ inputs.request-json }}
         channel: staging
-        job-status: ${{ job.status == 'cancelled' && 'cancelled' || github.action_status == 'failure' && 'failure' || 'success' }}
+        job-status: ${{ job.status == 'cancelled' && 'cancelled' || github.action_status
+          == 'failure' && 'failure' || 'success' }}
         runtime-sha: ${{ fromJSON(inputs.needs-runtime-outputs-runtime-sha) }}
         rollback-pointer: ${{ fromJSON(inputs.needs-runtime-outputs-rollback-ref) }}
         token: ${{ github.token }}

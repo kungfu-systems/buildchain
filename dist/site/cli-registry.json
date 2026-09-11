@@ -2987,18 +2987,18 @@
     {
       "id": "paper-resume",
       "source": "bin/buildchain.mjs",
-      "usage": "buildchain paper resume [--cwd <dir>] [--buildchain-ref <ref>] [--execute] [--json]",
+      "usage": "buildchain paper resume [--cwd <dir>] [--runtime-ref <ref>] [--execute] [--json]",
       "paths": [
         "paper resume"
       ],
       "syntaxes": [
-        "buildchain paper resume [--cwd <dir>] [--buildchain-ref <ref>] [--execute] [--json]"
+        "buildchain paper resume [--cwd <dir>] [--runtime-ref <ref>] [--execute] [--json]"
       ],
       "options": [
-        "--buildchain-ref",
         "--cwd",
         "--execute",
-        "--json"
+        "--json",
+        "--runtime-ref"
       ],
       "aliases": [],
       "helpCommands": [

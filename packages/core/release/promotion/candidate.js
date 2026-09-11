@@ -46,16 +46,14 @@ export async function qualifyPromotionCandidate(
       targetSha: intent["requested-sha"],
       expectedSourceTree: request["resume-expected-source-tree"],
       expectedCandidateRoot: request["resume-expected-candidate-root"],
-      candidateRuntimeSha: request["resume-expected-candidate-runtime-sha"],
-      runtimeSha: request["resume-buildchain-runtime-sha"],
       transactionId: request["resume-transaction-id"],
       rematerializeOnResume: request["publish-rematerialize-on-resume"],
       releasePatterns: request["github-release-payload-patterns"],
       runtimeRoot,
       recoveryRunId,
       recoveryRunAttempt,
-      authorizationJson: request["promotion-runtime-authorization-json"],
-      authorizationRoot: request["promotion-runtime-authorization-root"],
+
+
     });
   return fresh({
     ...shared,

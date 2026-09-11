@@ -9,10 +9,6 @@ export function dispatchBinaryPublication(
     "Binary publication requires an exact repository",
   );
   requireValue(
-    /^[0-9a-f]{40}$/u.test(sha || ""),
-    "Binary publication requires an exact runtime SHA",
-  );
-  requireValue(
     /^\d+$/u.test(runId || ""),
     "Binary publication requires an exact evidence run",
   );
@@ -29,7 +25,7 @@ export function dispatchBinaryPublication(
     "--ref",
     tag,
     "-f",
-    `buildchain-ref=${sha}`,
+    `runtime-ref=${sha}`,
     "-f",
     `evidence-run-id=${runId}`,
     "-f",
@@ -43,7 +39,7 @@ export function binaryPublicationDispatchAction(_core, env) {
   dispatchBinaryPublication({
     repository: env.GITHUB_REPOSITORY,
     tag: env.RELEASE_TAG,
-    sha: env.GITHUB_SHA,
+    sha: env.BUILDCHAIN_RUNTIME_SHA,
     runId: env.GITHUB_RUN_ID,
   });
 }

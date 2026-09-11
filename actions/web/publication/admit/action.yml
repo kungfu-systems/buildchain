@@ -1,5 +1,6 @@
 name: web-publication-authority
-description: Execute the web publication-authority capability within its caller job boundary.
+description: Execute the web publication-authority capability within its caller
+  job boundary.
 inputs:
   request-json:
     description: Typed Web workflow request.
@@ -20,18 +21,6 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Checkout Buildchain runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
-        ref: ${{ fromJSON(inputs.observations-json).runtime.outputs.runtime-sha }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - name: Prepare exact Buildchain Node runtime
-      id: core-runtime
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Verify exact GitHub governance authority
       uses: ./.buildchain/runtime/actions/governance/repository/verify
       with:
@@ -40,7 +29,9 @@ runs:
     - name: Download web-surface controller plan
       uses: actions/download-artifact@v7.0.0
       with:
-        name: ${{ fromJSON(inputs.observations-json).controller-plan.outputs.controller-plan-artifact }}
+        name: ${{
+          fromJSON(inputs.observations-json).controller-plan.outputs.controller-plan-artifact
+          }}
         path: .buildchain/controller
     - name: Download web-surface production plan
       uses: actions/download-artifact@v7.0.0
@@ -57,6 +48,7 @@ runs:
     - name: Upload managed web publication authority evidence
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: buildchain-web-publication-authority-${{ github.run_id }}-${{ github.run_attempt }}
+        name: buildchain-web-publication-authority-${{ github.run_id }}-${{
+          github.run_attempt }}
         path: .buildchain/web-publication-authority/*.json
         if-no-files-found: error

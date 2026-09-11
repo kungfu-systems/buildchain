@@ -2,7 +2,6 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { getOctokit } from "@actions/github";
-import { command } from "../runtime/action-process.mjs";
 import { installationRoot } from "../runtime/installation-root.js";
 import { finalizeWebController } from "./controller.js";
 import { assembleWebPublicationAdmission } from "./publication-admission.js";
@@ -15,13 +14,7 @@ export async function sealWebPublicationAction(core, env) {
   const sourceSha =
     observations["release-intent"].outputs["production-source-sha"];
   const runtimeRoot = installationRoot(import.meta.url);
-  const runtimeSha = command("git", ["-C", runtimeRoot, "rev-parse", "HEAD"], {
-    stdio: "pipe",
-  })
-    .trim()
-    .toLowerCase();
-  if (runtimeSha !== observations.runtime.outputs["runtime-sha"])
-    throw new Error("Web publication runtime changed after admission");
+  const runtimeSha = env.BUILDCHAIN_RUNTIME_SHA;
   const { receipt } = finalizeWebController({
     workspace: env.GITHUB_WORKSPACE,
     observations,

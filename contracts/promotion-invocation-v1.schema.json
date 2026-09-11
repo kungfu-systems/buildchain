@@ -12,15 +12,6 @@
       "const": "buildchain.promotion-invocation/v1",
       "type": "string"
     },
-    "buildchain-repository": {
-      "type": "string",
-      "default": "kungfu-systems/buildchain"
-    },
-    "buildchain-ref": {
-      "type": "string",
-      "description": "Optional explicit runtime ref. Empty binds the defining workflow SHA.",
-      "default": ""
-    },
     "buildchain-expected-channel": {
       "type": "string",
       "description": "Explicit stable or alpha lane expected when a bootstrap workflow shell ref is opaque",
@@ -85,31 +76,6 @@
       "type": "boolean",
       "description": "Whether a trusted train or exact-SHA runtime override was selected",
       "default": false
-    },
-    "promotion-runtime-authorization-json": {
-      "type": "string",
-      "description": "Rooted transient runtime authorization receipt supplied by the public router",
-      "default": ""
-    },
-    "promotion-runtime-authorization-root": {
-      "type": "string",
-      "description": "sha256 root of the transient runtime authorization receipt",
-      "default": ""
-    },
-    "buildchain-contract-lock-path": {
-      "type": "string",
-      "description": "Consumer-owned Buildchain contract lock path",
-      "default": ".buildchain/contract-lock.json"
-    },
-    "buildchain-alpha-contract-lock-path": {
-      "type": "string",
-      "description": "Consumer-owned alpha contract lock path",
-      "default": ".buildchain/alpha-contract-lock.json"
-    },
-    "buildchain-stable-contract-lock-path": {
-      "type": "string",
-      "description": "Consumer-owned stable contract lock path",
-      "default": ".buildchain/contract-lock.json"
     },
     "buildchain-contract-compatibility-policy": {
       "type": "string",
@@ -194,16 +160,6 @@
     "resume-expected-candidate-root": {
       "type": "string",
       "description": "Optional exact sha256 Release Candidate root; required when expected source tree is empty",
-      "default": ""
-    },
-    "resume-expected-candidate-runtime-sha": {
-      "type": "string",
-      "description": "Exact Buildchain runtime SHA recorded by the original candidate",
-      "default": ""
-    },
-    "resume-buildchain-runtime-sha": {
-      "type": "string",
-      "description": "Exact current Buildchain tooling SHA authorized to perform recovery",
       "default": ""
     },
     "resume-transaction-id": {

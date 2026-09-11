@@ -304,7 +304,7 @@ export function createControllerPlan({ descriptor, source = {}, runtime = {}, in
     },
     runtime: {
       ref: nonEmptyString(runtime.ref, "runtime.ref"),
-      sha: exactSha(runtime.sha, "runtime.sha"),
+      sha: runtime.sha,
       contractDigest: sha256Digest(runtime.contractDigest, "runtime.contractDigest"),
     },
     inputs: normalizedInputs.normalized,
@@ -326,7 +326,7 @@ export function validateControllerPlan(plan) {
   if (plan.contract !== BUILDCHAIN_CONTROLLER_EVIDENCE_CONTRACT) issues.push(`plan contract must be ${BUILDCHAIN_CONTROLLER_EVIDENCE_CONTRACT}`);
   if (plan.kind !== "plan") issues.push("plan kind must be plan");
   if (!GIT_SHA_PATTERN.test(String(plan.source?.sha || ""))) issues.push("plan source SHA must be exact");
-  if (!GIT_SHA_PATTERN.test(String(plan.runtime?.sha || ""))) issues.push("plan runtime SHA must be exact");
+
   if (!SHA256_PATTERN.test(String(plan.runtime?.contractDigest || ""))) issues.push("plan runtime contract digest is invalid");
   if (plan.digest !== digestDocument(plan)) issues.push("plan digest mismatch");
   for (const [name, input] of Object.entries(plan.inputs || {})) {
@@ -421,7 +421,6 @@ export function createControllerReceipt({ plan, stages = [], evidence = [], reas
 export function validateControllerReceipt(receipt, {
   plan = undefined,
   expectedSourceSha = "",
-  expectedRuntimeSha = "",
   expectedPlanDigest = "",
 } = {}) {
   const issues = [];
@@ -431,14 +430,14 @@ export function validateControllerReceipt(receipt, {
   if (receipt.digest !== digestDocument(receipt)) issues.push("receipt digest mismatch");
   if (receipt.status === "passed" && receipt.reason) issues.push("passed controller receipt must not declare a failure reason");
   issues.push(...(receipt.issues || []));
+
   if (plan) {
     if (receipt.planDigest !== plan.digest) issues.push("receipt plan digest mismatch");
     if (receipt.controller?.id !== plan.controller?.id) issues.push("receipt controller mismatch");
     if (receipt.source?.sha !== plan.source?.sha) issues.push("receipt source SHA mismatch");
-    if (receipt.runtime?.sha !== plan.runtime?.sha) issues.push("receipt runtime SHA mismatch");
   }
   if (expectedSourceSha && receipt.source?.sha !== expectedSourceSha) issues.push("receipt source SHA mismatch");
-  if (expectedRuntimeSha && receipt.runtime?.sha !== expectedRuntimeSha) issues.push("receipt runtime SHA mismatch");
+
   if (expectedPlanDigest && receipt.planDigest !== expectedPlanDigest) issues.push("receipt plan digest mismatch");
   const qualifying = issues.length === 0 && receipt.qualifying === true && receipt.status === "passed";
   return { ok: issues.length === 0, qualifying, issues };
@@ -503,7 +502,6 @@ export function createControllerReceiptReference(receipt) {
 export function validateControllerReceiptReference(reference, {
   expectedSourceSha = "",
   acceptedSourceShas = [],
-  expectedRuntimeSha = "",
   requirePassed = false,
 } = {}) {
   const issues = [];
@@ -514,7 +512,6 @@ export function validateControllerReceiptReference(reference, {
   if (!SHA256_PATTERN.test(String(reference.planDigest || ""))) issues.push("controller receipt reference plan digest is invalid");
   if (!SHA256_PATTERN.test(String(reference.receiptDigest || ""))) issues.push("controller receipt reference receipt digest is invalid");
   if (!GIT_SHA_PATTERN.test(String(reference.sourceSha || ""))) issues.push("controller receipt reference source SHA is invalid");
-  if (!GIT_SHA_PATTERN.test(String(reference.runtimeSha || ""))) issues.push("controller receipt reference runtime SHA is invalid");
   if (!["passed", "failed", "skipped", "partial"].includes(String(reference.status || ""))) {
     issues.push("controller receipt reference status is invalid");
   }
@@ -523,7 +520,7 @@ export function validateControllerReceiptReference(reference, {
   if (allowedSourceShas.size > 0 && !allowedSourceShas.has(reference.sourceSha)) {
     issues.push("controller receipt reference source SHA mismatch");
   }
-  if (expectedRuntimeSha && reference.runtimeSha !== expectedRuntimeSha) issues.push("controller receipt reference runtime SHA mismatch");
+
   return { ok: issues.length === 0, issues };
 }
 
@@ -532,7 +529,6 @@ export function normalizeControllerReceiptReferences({
   references = [],
   expectedSourceSha = "",
   acceptedSourceShas = [],
-  expectedRuntimeSha = "",
   requirePassed = false,
 } = {}) {
   const normalized = [
@@ -544,7 +540,6 @@ export function normalizeControllerReceiptReferences({
     const validation = validateControllerReceiptReference(reference, {
       expectedSourceSha,
       acceptedSourceShas,
-      expectedRuntimeSha,
       requirePassed,
     });
     if (!validation.ok) throw new Error(`controller receipt reference is invalid: ${validation.issues.join("; ")}`);

@@ -2,14 +2,6 @@ name: Buildchain Binary Release Assets
 on:
   workflow_call:
     inputs:
-      buildchain-repository:
-        default: kungfu-systems/buildchain
-        type: string
-        required: false
-      buildchain-ref:
-        description: Exact Buildchain runtime SHA that owns the verifier.
-        type: string
-        required: true
       evidence-run-id:
         description: Successful Binary Distribution run containing the exact evidence bundle.
         type: string
@@ -63,9 +55,41 @@ on:
         default: "[]"
         type: string
         required: false
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
 permissions:
   contents: read
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   publication-authority:
     name: Seal binary release asset capability
     permissions:
@@ -76,8 +100,6 @@ jobs:
     uses: ./.github/workflows/.release-authority.yml
     secrets: inherit
     with:
-      buildchain-repository: ${{ inputs.buildchain-repository }}
-      buildchain-ref: ${{ inputs.buildchain-ref }}
       admission-json: ${{ inputs.publication-admission-json }}
       runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
       control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
@@ -94,15 +116,20 @@ jobs:
       publisher-workflow-path: .github/workflows/.release-binary-assets.yml
       authority-workflow-path: .github/workflows/.release-binary-assets.yml
       product: Buildchain standalone binary
-      publication-target: github-release:${{ inputs.buildchain-repository }}@${{ inputs.release-tag }}
+      publication-target: github-release:${{ github.repository }}@${{ inputs.release-tag }}
       publication-version: ${{ inputs.publication-version }}
-      evidence-repository: ${{ inputs.buildchain-repository }}
+      evidence-repository: ${{ github.repository }}
       evidence-run-id: ${{ inputs.evidence-run-id }}
       evidence-passport-artifact: buildchain-release-passport
       evidence-controller-artifact: buildchain-controller-binary-distribution
+      runtime-selection: ${{ needs.execution-runtime.outputs.selection }}
+    needs:
+      - execution-runtime
   publish:
     name: Publish sealed binary release assets
-    needs: publication-authority
+    needs:
+      - publication-authority
+      - execution-runtime
     runs-on: ubuntu-24.04
     environment: buildchain-release-assets
     permissions:
@@ -115,17 +142,15 @@ jobs:
           ref: ${{ inputs.release-tag }}
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Publish sealed binary release assets
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/binary/publish
+        uses: ./.buildchain/runtime/actions/release/binary/publish
         with:
           request-json: ${{ toJSON(inputs) }}
           capability-json: ${{ needs.publication-authority.outputs.capability-json }}

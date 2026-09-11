@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-import { SOURCE_OWNED_PROMOTION } from "./invocation-selector.js";
 
 export const FLOATING_CONSUMER_POLICY =
   "kungfu-buildchain-v4-floating-consumer-policy/v1";
@@ -61,13 +60,6 @@ function verifyIdentity(value, expected, check, label) {
       "invoked-workflow-mismatch",
       `${label} workflow mismatch`,
     );
-  if (expected.resolvedRuntimeSha)
-    check(
-      value?.invocation?.resolvedRuntimeSha ===
-        expected.resolvedRuntimeSha.toLowerCase(),
-      "runtime-sha-mismatch",
-      `${label} runtime SHA mismatch`,
-    );
 }
 
 function verifyAuthorityFields(value, expected, check, label) {
@@ -111,28 +103,18 @@ function verifyAuthorityFields(value, expected, check, label) {
 
 function verifyFloatingSelector(value, check, label) {
   const invocation = value?.invocation;
-  const local =
-    value?.caller?.repository === SOURCE_OWNED_PROMOTION.repository &&
-    invocation?.workflow === SOURCE_OWNED_PROMOTION.workflow &&
-    invocation?.visibleSelector === `./${SOURCE_OWNED_PROMOTION.workflow}` &&
-    invocation?.selectorClass === "repository-local" &&
-    invocation?.definition?.repository === value.caller.repository &&
-    /^[0-9a-f]{40}$/.test(invocation?.definition?.commitSha || "") &&
-    invocation.definition.commitSha === invocation.resolvedWorkflowSha &&
-    SHA256_ROOT.test(invocation?.definition?.filesRoot || "") &&
-    ["stable", "alpha"].includes(invocation?.channel);
   const floating =
     invocation?.selectorClass === "floating" &&
     { v4: "stable", "v4-alpha": "alpha" }[invocation?.visibleSelector] ===
       invocation?.channel &&
     invocation?.definition === undefined;
   check(
-    floating || local,
+    floating,
     "selector-class-invalid",
-    `${label} must bind a floating channel or an authenticated source-owned public invocation`,
+    `${label} must bind a floating channel`,
   );
   check(
-    ["v4", "v4-alpha"].includes(invocation?.visibleSelector) || local,
+    ["v4", "v4-alpha"].includes(invocation?.visibleSelector),
     "selector-invalid",
     `${label} selector is outside the current invocation contract`,
   );

@@ -12,35 +12,6 @@
       "const": "buildchain.promotion-request/v1",
       "type": "string"
     },
-    "buildchain-channel": {
-      "type": "string",
-      "description": "Promotion workflow-shell/runtime channel: auto, alpha, or stable",
-      "default": "auto"
-    },
-    "buildchain-alpha-contract-lock-path": {
-      "type": "string",
-      "description": "Consumer-owned contract lock selected for alpha promotion",
-      "default": ".buildchain/alpha-contract-lock.json"
-    },
-    "buildchain-stable-contract-lock-path": {
-      "type": "string",
-      "description": "Consumer-owned contract lock selected for stable promotion",
-      "default": ".buildchain/contract-lock.json"
-    },
-    "buildchain-repository": {
-      "type": "string",
-      "default": "kungfu-systems/buildchain"
-    },
-    "buildchain-ref": {
-      "type": "string",
-      "description": "Optional explicit runtime ref. Empty binds the defining workflow SHA.",
-      "default": ""
-    },
-    "buildchain-contract-lock-path": {
-      "type": "string",
-      "description": "Consumer-owned Buildchain contract lock path",
-      "default": ".buildchain/contract-lock.json"
-    },
     "buildchain-contract-compatibility-policy": {
       "type": "string",
       "description": "Contract compatibility policy: major-compatible, allow-additive, or exact",
@@ -124,16 +95,6 @@
     "resume-expected-candidate-root": {
       "type": "string",
       "description": "Optional exact sha256 Release Candidate root; required when expected source tree is empty",
-      "default": ""
-    },
-    "resume-expected-candidate-runtime-sha": {
-      "type": "string",
-      "description": "Exact Buildchain runtime SHA recorded by the original candidate",
-      "default": ""
-    },
-    "resume-buildchain-runtime-sha": {
-      "type": "string",
-      "description": "Exact current Buildchain tooling SHA authorized to perform recovery",
       "default": ""
     },
     "resume-transaction-id": {

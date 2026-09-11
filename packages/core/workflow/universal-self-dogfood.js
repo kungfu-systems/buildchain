@@ -33,7 +33,7 @@ function contentRoot(domain, value) {
   return `sha256:${hash.digest("hex")}`;
 }
 
-function defaultPolicy() { return JSON.parse(fs.readFileSync(path.join(installationRoot(import.meta.url), "architecture/universal-workflow-train-admission.json"), "utf8")); }
+function defaultPolicy() { return JSON.parse(fs.readFileSync(path.join(installationRoot(import.meta.url), "architecture/universal-workflow-capability-policy.json"), "utf8")); }
 
 function exactSha(value, label) {
   const normalized = String(value || "").toLowerCase();
@@ -42,16 +42,11 @@ function exactSha(value, label) {
 }
 
 export function createUniversalSelfDogfoodRequest({
-  candidateSha,
   consumerSha,
-  pullRequest,
   channel,
   policy = defaultPolicy(),
 }) {
-  const expectedSha = exactSha(candidateSha, "candidateSha");
   const sourceSha = exactSha(consumerSha, "consumerSha");
-  if (!Number.isSafeInteger(pullRequest) || pullRequest < 1)
-    fail("pullRequest must be a positive integer");
   if (!["alpha", "stable", "conformance"].includes(channel))
     fail("channel must be alpha, stable, or conformance");
   const capability =
@@ -85,14 +80,6 @@ export function createUniversalSelfDogfoodRequest({
         };
   return validateUniversalWorkflowRequest({
     schema: UNIVERSAL_WORKFLOW_REQUEST,
-    mode: "exact",
-    candidate: {
-      repository: "kungfu-systems/buildchain",
-      discoveryRef: expectedSha,
-      expectedSha,
-      admissionRoot: universalWorkflowAdmissionRoot(policy),
-      reviewPullRequest: pullRequest,
-    },
     consumer: {
       repository: "kungfu-systems/buildchain",
       workflow: ".github/workflows/self-ops-bootstrap-dogfood.yml",
@@ -111,8 +98,7 @@ function exactResult(value, label, expectedSha, expectedChannel) {
   if (
     value?.schema !== "kungfu-buildchain-v4-universal-workflow-result/v1" ||
     value.status !== "succeeded" ||
-    value.runtime?.repository !== "kungfu-systems/buildchain" ||
-    value.runtime?.sha !== expectedSha
+    value.runtime?.repository !== "kungfu-systems/buildchain"
   )
     fail(`${label} is not a successful exact-candidate result`);
   if (expectedChannel === "conformance") {

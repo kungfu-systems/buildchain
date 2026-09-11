@@ -348,7 +348,7 @@ test("release candidate passport binds controller receipts to source and runtime
   passport.controllerReceipts[0].runtimeSha = "5".repeat(40);
   assert.match(
     validateReleaseCandidatePassport({ passport, buildSummary }).errors.join("; "),
-    /runtime SHA mismatch/,
+    /candidate hash mismatch/,
   );
 });
 
@@ -398,11 +398,11 @@ test("release candidate passport derives channel from PR base when publish chann
     buildSummary,
   });
   assert.equal(passport.target.channel, "alpha");
-  const legacyNone = {
+  const tamperedTarget = {
     ...passport,
     target: { ...passport.target, channel: "none" },
   };
-  assert.equal(validateReleaseCandidatePassport({ passport: legacyNone, targetChannel: "alpha" }).ok, true);
+  assert.equal(validateReleaseCandidatePassport({ passport: tamperedTarget, targetChannel: "alpha" }).ok, false);
 });
 
 test("release candidate validation rejects stale source and summary evidence", () => {
@@ -1297,7 +1297,7 @@ test("generateReleaseCandidatePassportCli writes GitHub outputs for workflow reu
       `${JSON.stringify(sampleBuildSummary(), null, 2)}\n`,
     );
     process.env = {
-      ...previousEnv,
+      ...Object.fromEntries(Object.entries(previousEnv).filter(([key]) => !key.startsWith("BUILDCHAIN_") && !key.startsWith("GITHUB_"))),
       GITHUB_REPOSITORY: "kungfu-systems/libnode",
       GITHUB_OUTPUT: path.join(cwd, "outputs.txt"),
     };

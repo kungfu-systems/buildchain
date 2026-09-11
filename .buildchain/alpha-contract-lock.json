@@ -3,70 +3,70 @@
   "contract": "kungfu-buildchain-contract-lock",
   "buildchain": {
     "ref": "v4-alpha",
-    "resolvedSha": "e4d4a9529989a4d97e780267fc0a5271a3a68ac6",
+    "resolvedSha": "e1c4605aed8b717dab76d8eb0ecbb7779de323d5",
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "contractDigest": "sha256:c39174b294496d49bfdef4d18286b859574a110c81bd72d2c755653f095b183c",
-    "compatibilityDigest": "sha256:5cfe9b904da70a3a7194868aaef1f1b11957d8e0158ebb77a524f2ea7005083b",
+    "contractDigest": "sha256:ffc9c3f30d0a570afa91433429b7bcabaf1ef8055e0ed1af82f0dda2d950aeff",
+    "compatibilityDigest": "sha256:b1088f1c224329b16cd23c285bc69334aa1ee102e5b44d5c09aaf156d76821b6",
     "compatibilityFactRegistryRoot": "sha256:ea8f656c9fd74aa2d2fb9b7807e7daa39a708f6a7cd37ab7d154eac7be5605a6",
     "compatibilityFactCutRoot": "sha256:58f33e498596505a26b6fc3c7ae5acef847ff699eee6c7e17a7b318a40bdf0d6",
     "compatibilityProofRegistryRoot": "sha256:2f6477405c7891b754b33ad6515d55618bd320e7cdc59330d7cc645e17201e72",
     "majorLine": "v4",
     "compatibilityPolicy": "major-compatible",
-    "acceptedAt": "2026-09-10T16:30:58.010Z",
+    "acceptedAt": "2026-09-11T15:46:24+08:00",
     "surfaces": [
       {
         "id": "reusable-build",
         "kind": "workflow",
-        "breakingDigest": "sha256:eee8d601f94fae3b9d440e467792ca5cb9e7fd0a42cd3ad13a72f3f7087de5e9",
+        "breakingDigest": "sha256:cda31fcfd64bd8a895216d9537910a9676736e70aef0fde8a1697b2c88222ed5",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       },
       {
         "id": "channel-build-router",
         "kind": "workflow",
-        "breakingDigest": "sha256:f49f1c3e437f82b60852aa232054799abe821987ae81b990ed5f85f604bca572",
+        "breakingDigest": "sha256:7574ae8fc694534860bd633efcc3caaffd121a5d7d778a1f96c560f1999434b3",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       },
       {
         "id": "dev-pr-auto-merge",
         "kind": "workflow",
-        "breakingDigest": "sha256:21b65d0746d2e8b3e8a7df4c6fab295a85c8fd42cc405ec3bc5df5cdab0421f0",
+        "breakingDigest": "sha256:1bd7d62abdf4f14c84010093aa044ff99eeabc92705d965e13043908cfec87ac",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       },
       {
         "id": "release-candidate-promote",
         "kind": "workflow",
-        "breakingDigest": "sha256:5f10c81d3f80cb417960be682921884639c40b6d875f1a3b1ffae7e652c3f468",
+        "breakingDigest": "sha256:a32cbccc2a4b6e1a16f9feba892a1e8d4b8db0098ff63ea2e9719e985da64a7c",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       },
       {
         "id": "advanced-release-candidate-promote",
         "kind": "workflow",
-        "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
+        "breakingDigest": "sha256:3130cd971f83ef8fb44cbe3ea0e25c95b65693aaab15b6cc4e5a1e3657f2b6ee",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       },
       {
         "id": "web-surface",
         "kind": "workflow",
-        "breakingDigest": "sha256:3bb62548a4e1476d3b5df9deb7bacf6c2e5bb333132a456108ab1572d571b9a8",
+        "breakingDigest": "sha256:8d4c5471402f9cb3c0b8db5d2e75fcc6ea826aee0649066c9bbbb41a4a939a61",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       },
       {
         "id": "auditable-demo",
         "kind": "workflow",
-        "breakingDigest": "sha256:425f8d3d1ba205dd6fe35a20f1dc6dad7d7c563872283e3af79fea4d5c475692",
+        "breakingDigest": "sha256:782074f938bedd8bf1cfe0e5428e1103c9471af93d4822c0cb7a677c659ff1a2",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       },
       {
         "id": "declarative-auditable-demo",
         "kind": "workflow",
-        "breakingDigest": "sha256:0bcba689ab5060e12230db4118895242ecb48677ff581ea0360b1833bdac558c",
+        "breakingDigest": "sha256:20412f25271537165e25d8a7d65e716701745570a419c482777a088466c5dd6f",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       },

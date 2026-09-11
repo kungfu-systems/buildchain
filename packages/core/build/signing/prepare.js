@@ -27,7 +27,7 @@ export async function sealSigning(plan, platform, sourceRoot) {
     sourceSha: plan.source.sha,
     sourceTreeSha: plan.source.tree_sha,
     runtimeRepository: plan.identity.repository,
-    runtimeRef: plan.identity.ref,
+    runtimeRef: plan.runtime?.ref || plan.identity.ref,
     runtimeSha: plan.identity.sha,
     platformId: platform.id,
     platformName: platform.name,

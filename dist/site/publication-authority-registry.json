@@ -179,21 +179,6 @@
       "notes": ""
     },
     {
-      "workflowPath": ".github/workflows/public-ops-bootstrap-recovery.yml",
-      "authorityClass": "product-publication",
-      "publicationCapable": true,
-      "capabilityIds": [
-        "universal-candidate-execution"
-      ],
-      "credentialMode": "caller-secrets",
-      "publisherWorkflowMode": "caller-bound",
-      "publisherWorkflowPath": ".github/workflows/public-ops-bootstrap-recovery.yml",
-      "environment": "none",
-      "environmentMode": "fixed",
-      "runnerPolicy": "qualified-measured",
-      "notes": ""
-    },
-    {
       "workflowPath": ".github/workflows/public-ops-bootstrap.yml",
       "authorityClass": "product-publication",
       "publicationCapable": true,
@@ -870,14 +855,6 @@
       "classified": true
     },
     {
-      "path": ".github/workflows/public-ops-bootstrap-recovery.yml",
-      "signals": [
-        "write-permission",
-        "oidc"
-      ],
-      "classified": true
-    },
-    {
       "path": ".github/workflows/public-ops-bootstrap.yml",
       "signals": [],
       "classified": true
@@ -1230,5 +1207,5 @@
       "classified": true
     }
   ],
-  "registryDigest": "f016e1d445c6b9f560d91c5329df87c379b555c5f396bc8587f8fd49b2640d81"
+  "registryDigest": "536dca8dab8dd8e28018a6fd9ac023d0d116e0fdb612ecda870a0a2225a3f77b"
 }

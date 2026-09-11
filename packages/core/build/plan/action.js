@@ -1,5 +1,4 @@
 import path from "node:path";
-import { execFileSync } from "node:child_process";
 import { getOctokit } from "@actions/github";
 import { installationRoot } from "../../runtime/installation-root.js";
 import { reportBuildchainIssue } from "../../governance/issue-reporting.js";
@@ -10,12 +9,7 @@ export async function resolveBuildPlanAction(core, env) {
   const workspace = path.resolve(env.GITHUB_WORKSPACE || process.cwd());
   const runtimeRoot = installationRoot(import.meta.url);
   const workflowSha = core.getInput("workflow-sha", { required: true });
-  if (
-    execFileSync("git", ["-C", runtimeRoot, "rev-parse", "HEAD"], {
-      encoding: "utf8",
-    }).trim() !== workflowSha
-  )
-    throw new Error("Executing runtime differs from called workflow");
+  const selectedSource = JSON.parse(env.BUILDCHAIN_EXECUTION_SOURCE || "{}");
   const token = core.getInput("token", { required: true });
   const github = getOctokit(token);
   const coordinates = (repository) => {
@@ -27,6 +21,7 @@ export async function resolveBuildPlanAction(core, env) {
       workspace,
       sourceRoot: path.join(workspace, "source"),
       runtimeRoot,
+      runtime: JSON.parse(env.BUILDCHAIN_RUNTIME_SELECTION),
       configPath: core.getInput("config-path"),
       workflow: {
         ref: core.getInput("workflow-ref", { required: true }),
@@ -35,11 +30,12 @@ export async function resolveBuildPlanAction(core, env) {
         name: env.GITHUB_WORKFLOW,
         runUrl: `${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}`,
       },
+      recovery: selectedSource.runId ? selectedSource : undefined,
       source: {
-        sha: env.GITHUB_SHA,
-        ref: env.GITHUB_REF,
-        refName: env.GITHUB_REF_NAME,
-        baseRef: env.GITHUB_BASE_REF,
+        sha: selectedSource.sha || env.GITHUB_SHA,
+        ref: selectedSource.ref || env.GITHUB_REF,
+        refName: selectedSource.ref?.replace(/^refs\/(?:heads|tags)\//u, "") || env.GITHUB_REF_NAME,
+        baseRef: selectedSource.runId ? "" : env.GITHUB_BASE_REF,
       },
       event: {
         name: env.GITHUB_EVENT_NAME,

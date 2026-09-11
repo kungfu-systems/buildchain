@@ -3,85 +3,31 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import YAML from "yaml";
-import { fileURLToPath } from "node:url";
-
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const campaign = JSON.parse(
-  fs.readFileSync(
-    path.join(root, "architecture/universal-workflow-fault-campaign.json"),
-    "utf8",
-  ),
-);
-const read = (relative) => fs.readFileSync(path.join(root, relative), "utf8");
-
-test("the universal fault campaign freezes all ten independent defect classes", () => {
-  assert.equal(campaign.independentFaultsOnly, true);
-  assert.equal(campaign.simultaneousPrimaryAndRecoveryFailureClaimed, false);
-  assert.deepEqual(
-    campaign.faults.map(({ id }) => id),
-    [
-      "primary-facade",
-      "typed-input-adapter",
-      "route-selector",
-      "ordinary-candidate-loader",
-      "router",
-      "action",
-      "cli-runtime",
-      "recovery-logic",
-      "result-projection",
-      "self-dogfood-caller",
-    ],
-  );
-  assert.equal(campaign.externalBoundary.recovered, false);
-  assert.equal(
-    campaign.externalBoundary.classification,
-    "irreducible-external-availability",
-  );
+const root=path.resolve(import.meta.dirname,"..");
+const read=p=>fs.readFileSync(path.join(root,p),"utf8");
+const campaign=JSON.parse(read("architecture/universal-workflow-fault-campaign.json"));
+test("entry and runtime faults have the two declared recovery routes",()=>{
+ assert.equal(campaign.independentFaultsOnly,true);
+ assert.equal(campaign.externalBoundary.recovered,false);
+ for(const fault of campaign.faults){
+  assert.ok(read(fault.injectionTarget));assert.ok(read(fault.recoveryTarget));
+  const runtime=fault.injectionTarget.startsWith("packages/")||fault.injectionTarget.startsWith("actions/");
+  assert.equal(fault.recoveryRoute,runtime?"same-entry-transient-runtime":"upgrade-entry-and-full-rerun",fault.id);
+ }
 });
-
-test("every injected target has a distinct pre-positioned or exact-Train route", () => {
-  for (const fault of campaign.faults) {
-    assert.ok(read(fault.injectionTarget).length > 0, fault.id);
-    assert.ok(read(fault.recoveryTarget).length > 0, fault.id);
-    assert.match(
-      fault.recoveryRoute,
-      /^(?:pre-positioned-recovery-shell|exact-train-candidate|primary-bootstrap-shell|consumer-equivalent-recovery-shell)$/u,
-      fault.id,
-    );
-    if (fault.recoveryRoute !== "exact-train-candidate")
-      assert.notEqual(fault.injectionTarget, fault.recoveryTarget, fault.id);
-  }
+test("consumer recovery uses the same public entry without a copied distribution",()=>{
+ const template=YAML.parse(read("templates/universal-buildchain-bootstrap.yml"));
+ assert.equal(template.jobs.bootstrap.uses,"kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4");
+ assert.equal(template.jobs.bootstrap.with["runtime-ref"],"${{ inputs.runtime-ref }}");
+ for(const file of ["templates/bootstrap-recovery","templates/universal-buildchain-bootstrap-recovery.yml",".github/workflows/public-ops-bootstrap-recovery.yml"])
+  assert.equal(fs.existsSync(path.join(root,file)),false,file);
 });
-
-test("primary and recovery shells are non-circular and retain opposite fault routes", () => {
-  const primary = read("templates/universal-buildchain-bootstrap.yml");
-  const recovery = read(
-    "templates/universal-buildchain-bootstrap-recovery.yml",
-  );
-  assert.match(primary, /\.github\/workflows\/public-ops-bootstrap\.yml@/u);
-  assert.doesNotMatch(
-    recovery,
-    /uses:\s+kungfu-systems\/buildchain\/\.github\/workflows\//u,
-  );
-  const workflow = YAML.parse(recovery);
-  assert.deepEqual(Object.keys(workflow.jobs), ["recovery-admit", "recovery-execute", "recovery-settle"]);
-  for (const job of Object.values(workflow.jobs)) {
-    assert.ok(job.steps.some((step) => step.uses?.includes(".buildchain/bootstrap-recovery/actions/workflow/")));
-    assert.ok(job.steps.every((step) => !Object.hasOwn(step, "run")));
-  }
-  const settle = read("actions/workflow/recovery/settle/action.yml");
-  assert.match(settle, /Seal receipt outside candidate authority/);
-  assert.doesNotMatch(settle, /candidate.*universal-workflow-engine.*terminal/);
-});
-
-test("candidate-owned faults execute only after exact admission", () => {
-  const action = YAML.parse(read("actions/workflow/recovery/admit/action.yml"));
-  const review = action.runs.steps.findIndex((step) => /independent review/.test(step.name || ""));
-  const install = action.runs.steps.findIndex((step) => step.uses?.endsWith("actions/runtime/environment/prepare"));
-  const admit = action.runs.steps.findIndex((step) => step.id === "admit");
-  assert.ok(review >= 0 && review < install && install < admit);
-  const execute = YAML.parse(read("actions/workflow/recovery/execute/action.yml"));
-  const candidate = execute.runs.steps.find((step) => step.name === "Checkout exact admitted candidate");
-  assert.equal(candidate.with.ref, "${{ fromJSON(inputs.needs-recovery-admit-outputs-runtime-sha) }}");
-  assert.ok(execute.runs.steps.every((step) => !/train\/v4|v4-alpha/.test(JSON.stringify(step))));
+test("dogfood exercises primary and repaired runtimes through the identical API",()=>{
+ const workflow=YAML.parse(read(".github/workflows/self-ops-bootstrap-dogfood.yml"));
+ for(const channel of ["alpha","stable","conformance"]){
+  const primary=workflow.jobs[`primary-${channel}`],recovery=workflow.jobs[`recovery-${channel}`];
+  assert.equal(primary.uses,recovery.uses);
+  assert.equal(primary.with["runtime-ref"],"${{ inputs.runtime-ref }}");
+  assert.equal(recovery.with["runtime-ref"],"${{ inputs.recovery-runtime-ref }}");
+ }
 });

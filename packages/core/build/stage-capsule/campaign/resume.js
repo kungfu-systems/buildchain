@@ -60,13 +60,19 @@ function resumeRequest(state, store) {
   };
 }
 
+function checkpointResult(entry) {
+  const { runtimeRoot: _runtimeProvenance, ...identity } =
+    entry.capsule.identity;
+  return domainCanonicalBytes({
+    identity,
+    manifestRoot: entry.manifest.manifestRoot,
+  }).toString("utf8");
+}
+
 function emitMissing(context, state, store, stageId) {
   const emitted = emitStageCapsuleCampaignCheckpoint(context, stageId, store);
   const expected = state.reference.find(({ stage }) => stage === stageId);
-  if (
-    emitted.capsule.capsuleRoot !== expected.capsule.capsuleRoot ||
-    emitted.manifest.manifestRoot !== expected.manifest.manifestRoot
-  )
+  if (checkpointResult(emitted) !== checkpointResult(expected))
     throw new Error(`resumed ${stageId} differs from the fresh build`);
   return {
     stage: stageId,
@@ -81,7 +87,6 @@ export function resumeStageCapsuleCampaign(context) {
   for (const [name, code] of [
     ["consumer", "stage-capsule-campaign-consumer-drift"],
     ["platform", "stage-capsule-campaign-platform-drift"],
-    ["runtimeRef", "stage-capsule-campaign-runtime-ref-drift"],
     ["consumerSourceRevision", "stage-capsule-campaign-source-revision-drift"],
   ])
     if (state[name] !== context[name])

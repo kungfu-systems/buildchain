@@ -5,8 +5,8 @@ export function assertBinaryInventory(root) {
   const file = ".github/workflows/self-build-binary-distribution.yml";
   const workflow = readWorkflow(file, root);
   assert.equal(workflow.name, "Binary Distribution");
-  assert.deepEqual(Object.keys(workflow.jobs), ["preflight", "binary", "passport", "dispatch-publication"]);
-  const graphs = Object.keys(workflow.jobs).map(id => inspectWorkflowJob(file, id, root));
+  assert.deepEqual(Object.keys(workflow.jobs).filter(id => id !== "execution-runtime"), ["preflight", "binary", "passport", "dispatch-publication"]);
+  const graphs = Object.keys(workflow.jobs).filter(id => id !== "execution-runtime").map(id => inspectWorkflowJob(file, id, root));
   for (const graph of graphs) {
     assert.equal(graph.job.permissions.contents, "read");
     assert.notEqual(graph.job.permissions["id-token"], "write");
@@ -23,7 +23,7 @@ export function assertBinaryInventory(root) {
   assert.ok(passport.actions.has("actions/build/binary/qualify"));
   const publish = inspectWorkflowJob(".github/workflows/.release-binary-assets.yml", "publish", root);
   assert.equal(publish.workflow.jobs["publication-authority"].uses, "./.github/workflows/.release-authority.yml");
-  assert.equal(publish.job.needs, "publication-authority");
+  assert.ok(publish.job.needs.includes("publication-authority"));
   assert.equal(publish.job.environment, "buildchain-release-assets");
   assert.equal(publish.job.permissions.contents, "write");
   assert.ok(publish.actions.has("actions/release/binary/publish"));
@@ -32,5 +32,5 @@ export function assertBinaryInventory(root) {
   assert.equal(effect["continue-on-error"], undefined);
   const transaction = publish.modules.get("packages/core/publication/binary/transaction.js");
   assert.match(transaction, /validateBinaryCapability\([\s\S]*await client.publish\(/, "Binary effects must follow capability admission");
-  assert.match(publish.modules.get("packages/core/publication/binary/action.js"), /verifySourceRuntimeCheckouts\([\s\S]*await publishBinaryAssets\(/);
+  assert.match(publish.modules.get("packages/core/publication/binary/action.js"), /verifyCheckoutIdentity\([\s\S]*await publishBinaryAssets\(/);
 }

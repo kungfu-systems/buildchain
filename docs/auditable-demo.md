@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-08-05
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -122,7 +122,7 @@ authority.
 jobs:
   demo:
     needs: exact-binary
-    uses: kungfu-systems/buildchain/.github/workflows/public-build-demo.yml@BUILDCHAIN_EXACT_SHA
+    uses: kungfu-systems/buildchain/.github/workflows/public-build-demo.yml@v4
     with:
       source-ref: ${{ github.sha }}
       binary-artifact-name: ${{ needs.exact-binary.outputs.artifact-name }}
@@ -215,7 +215,7 @@ non-symlink, executable file inside the exact checked-out consumer source.
 
 The Gate:
 
-- checks out the exact consumer source and exact called-workflow SHA;
+- prepares the selected execution runtime and checks out the exact consumer source;
 - resolves and downloads one exact same-run GitHub Artifact;
 - invokes the checked-in adapter by argv, never as an evaluated shell string;
 - rejects undeclared adapter outputs, symlinks, invalid UTF-8, invalid scene or
@@ -353,7 +353,7 @@ jobs:
     permissions:
       actions: read
       contents: read
-    uses: kungfu-systems/buildchain/.github/workflows/.build-demo-adapter.yml@BUILDCHAIN_EXACT_SHA
+    uses: kungfu-systems/buildchain/.github/workflows/.build-demo-adapter.yml@v4
     with:
       source-ref: ${{ github.sha }}
       source-artifact-name: ${{ needs.build.outputs.artifact-name }}

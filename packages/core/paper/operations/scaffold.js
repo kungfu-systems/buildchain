@@ -77,17 +77,14 @@ export function scaffoldFiles({
     acceptedAt,
   });
   const contractLockText = jsonText(contractLock);
-  const buildWorkflow = scaffoldBuildWorkflow(buildchainSha, {
+  const buildWorkflow = scaffoldBuildWorkflow("v4-alpha", {
     artifactName: name,
   });
-  const releaseWorkflow = scaffoldReleaseWorkflow(buildchainSha, {
+  const releaseWorkflow = scaffoldReleaseWorkflow("v4-alpha", {
     artifactPaths: "_build/main.pdf",
     releasePassportProductName: title,
   });
-  const verifyWorkflow = scaffoldVerifyWorkflow(
-    buildchainSha,
-    buildchainVersion,
-  );
+  const verifyWorkflow = scaffoldVerifyWorkflow("v4-alpha");
   const agentEntry = paperAgentEntryFiles({
     cwd,
     buildchainVersion,
@@ -109,7 +106,7 @@ export function scaffoldFiles({
     agentInstructions: agentEntry.get(PAPER_PATHS.agentInstructions),
   });
   const licenseText = runtimeLicenseText(buildchainRoot);
-  return new Map([
+  const files = new Map([
     [
       PAPER_PATHS.config,
       scaffoldConfig({
@@ -155,6 +152,15 @@ export function scaffoldFiles({
       "node_modules/\n_build/\n.buildchain/publication/\n.buildchain/release-state/\n.buildchain/release-evidence/\n.buildchain/paper/npm-bootstrap.json\n.buildchain/paper/npm-trust.json\n",
     ],
   ]);
+  return finalizePaperEntryFiles({
+    files,
+    cwd,
+    buildchainRoot,
+    buildchainVersion,
+    buildchainSha,
+    contractLock,
+    provisioningAuthority,
+  });
 }
 export function migrationFiles({
   cwd,
@@ -207,17 +213,14 @@ export function migrationFiles({
     runtimeSha,
   });
   const contractLockText = jsonText(contractLock);
-  const buildWorkflow = scaffoldBuildWorkflow(runtimeSha, {
+  const buildWorkflow = scaffoldBuildWorkflow("v4-alpha", {
     artifactName: config.project.name,
   });
-  const releaseWorkflow = scaffoldReleaseWorkflow(runtimeSha, {
+  const releaseWorkflow = scaffoldReleaseWorkflow("v4-alpha", {
     artifactPaths: config.publication.artifactPaths.join(","),
     releasePassportProductName: config.publication.title,
   });
-  const verifyWorkflow = scaffoldVerifyWorkflow(
-    runtimeSha,
-    runtimeIdentity.version,
-  );
+  const verifyWorkflow = scaffoldVerifyWorkflow("v4-alpha");
   const agentEntry = paperAgentEntryFiles({
     cwd,
     buildchainVersion: runtimeIdentity.version,
@@ -275,62 +278,17 @@ export function migrationFiles({
       ),
     ],
   ]);
-  if (runtimeIdentity.version.startsWith("4.")) {
-    const channelPlan = paperChannels({
-      cwd,
-      buildchainRoot,
-      buildchainVersion: runtimeIdentity.version,
-      buildchainSha: runtimeSha,
-      contractWorld: runtimeContractWorld(buildchainRoot),
-      acceptedAt: contractLock.buildchain.acceptedAt,
-      stableBuildchainRoot,
-      alphaBuildchainRoot,
-    });
-    for (const channel of Object.values(channelPlan.channels))
-      files.set(channel.lockPath, channel.content);
-    for (const workflowPath of [
-      PAPER_PATHS.buildWorkflow,
-      PAPER_PATHS.verifyWorkflow,
-    ]) {
-      files.set(
-        workflowPath,
-        files
-          .get(workflowPath)
-          .replaceAll(runtimeSha, "v4-alpha")
-          .replaceAll(
-            ".buildchain/contract-lock.json",
-            ".buildchain/alpha-contract-lock.json",
-          ),
-      );
-    }
-    const releaseStart = releaseWorkflow.indexOf("  paper-release:\n");
-    const releaseJob = releaseWorkflow.slice(releaseStart);
-    const alphaJob = releaseJob
-      .replace(
-        "  paper-release:\n",
-        "  paper-release-alpha:\n    if: ${{ startsWith(github.ref_name, 'alpha/') }}\n",
-      )
-      .replaceAll(runtimeSha, "v4-alpha")
-      .replaceAll(
-        ".buildchain/contract-lock.json",
-        ".buildchain/alpha-contract-lock.json",
-      );
-    const stableJob = releaseJob
-      .replace(
-        "  paper-release:\n",
-        "  paper-release:\n    if: ${{ startsWith(github.ref_name, 'release/') }}\n",
-      )
-      .replaceAll(runtimeSha, "v4");
-    files.set(
-      PAPER_PATHS.releaseWorkflow,
-      `${releaseWorkflow.slice(0, releaseStart)}${alphaJob}\n${stableJob}`,
-    );
-    files.set(
-      PAPER_PATHS.provisioningAuthority,
-      jsonText(bindPaperAuthority(provisioningAuthority, channelPlan, files)),
-    );
-  }
-  return files;
+  return finalizePaperEntryFiles({
+    files,
+    cwd,
+    buildchainRoot,
+    buildchainVersion: runtimeIdentity.version,
+    buildchainSha: runtimeSha,
+    contractLock,
+    provisioningAuthority,
+    stableBuildchainRoot,
+    alphaBuildchainRoot,
+  });
 }
 export const {
   planPaperMigration,
@@ -367,4 +325,74 @@ function migrationContractLock({
             runtimeIdentity.version,
           ),
   });
+}
+
+function finalizePaperEntryFiles({
+  files,
+  cwd,
+  buildchainRoot,
+  buildchainVersion,
+  buildchainSha,
+  contractLock,
+  provisioningAuthority,
+  stableBuildchainRoot,
+  alphaBuildchainRoot,
+}) {
+  if (!buildchainVersion.startsWith("4."))
+    throw new Error("Paper provisioning requires a Buildchain v4 runtime");
+  const channelPlan = paperChannels({
+    cwd,
+    buildchainRoot,
+    buildchainVersion: buildchainVersion,
+    buildchainSha: buildchainSha,
+    contractWorld: runtimeContractWorld(buildchainRoot),
+    acceptedAt: contractLock.buildchain.acceptedAt,
+    stableBuildchainRoot,
+    alphaBuildchainRoot,
+  });
+  for (const channel of Object.values(channelPlan.channels))
+    files.set(channel.lockPath, channel.content);
+  for (const workflowPath of [
+    PAPER_PATHS.buildWorkflow,
+    PAPER_PATHS.verifyWorkflow,
+  ]) {
+    files.set(
+      workflowPath,
+      files
+        .get(workflowPath)
+
+        .replaceAll(
+          ".buildchain/contract-lock.json",
+          ".buildchain/alpha-contract-lock.json",
+        ),
+    );
+  }
+  const releaseWorkflow = files.get(PAPER_PATHS.releaseWorkflow);
+  const releaseStart = releaseWorkflow.indexOf("  paper-release:\n");
+  const releaseJob = releaseWorkflow.slice(releaseStart);
+  const alphaJob = releaseJob
+    .replace(
+      "  paper-release:\n",
+      "  paper-release-alpha:\n    if: ${{ startsWith(github.ref_name, 'alpha/') }}\n",
+    )
+
+    .replaceAll(
+      ".buildchain/contract-lock.json",
+      ".buildchain/alpha-contract-lock.json",
+    );
+  const stableJob = releaseJob
+    .replace(
+      "  paper-release:\n",
+      "  paper-release:\n    if: ${{ startsWith(github.ref_name, 'release/') }}\n",
+    )
+    .replaceAll("@v4-alpha", "@v4");
+  files.set(
+    PAPER_PATHS.releaseWorkflow,
+    `${releaseWorkflow.slice(0, releaseStart)}${alphaJob}\n${stableJob}`,
+  );
+  files.set(
+    PAPER_PATHS.provisioningAuthority,
+    jsonText(bindPaperAuthority(provisioningAuthority, channelPlan, files)),
+  );
+  return files;
 }

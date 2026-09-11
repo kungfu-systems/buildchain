@@ -2,19 +2,6 @@ name: Buildchain Paper Release
 on:
   workflow_call:
     inputs:
-      buildchain-repository:
-        default: kungfu-systems/buildchain
-        type: string
-        required: false
-      buildchain-ref:
-        description: Optional explicit runtime ref. Empty binds the defining workflow SHA.
-        default: ""
-        type: string
-        required: false
-      buildchain-contract-lock-path:
-        default: .buildchain/contract-lock.json
-        type: string
-        required: false
       working-directory:
         default: .
         type: string
@@ -53,7 +40,8 @@ on:
         type: string
         required: false
       artifact-paths:
-        description: Declared release assets in addition to Buildchain publication evidence and npm package bytes
+        description: Declared release assets in addition to Buildchain publication evidence and npm package
+          bytes
         default: _build/*.pdf
         type: string
         required: false
@@ -94,6 +82,21 @@ on:
         default: false
         type: boolean
         required: false
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
     secrets:
       KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:
         description: Private key for the dedicated read-only GitHub governance auditor App
@@ -148,6 +151,23 @@ on:
 permissions:
   contents: read
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   publication-candidate:
     name: Build read-only paper publication candidate
     permissions:
@@ -155,9 +175,6 @@ jobs:
       issues: write
     uses: ./.github/workflows/public-build-publication.yml
     with:
-      buildchain-repository: ${{ inputs.buildchain-repository }}
-      buildchain-ref: ${{ inputs.buildchain-ref }}
-      buildchain-contract-lock-path: ${{ inputs.buildchain-contract-lock-path }}
       working-directory: ${{ inputs.working-directory }}
       toolchain-type: ${{ inputs.toolchain-type }}
       verify-command: ${{ inputs.verify-command }}
@@ -168,9 +185,14 @@ jobs:
       artifact-name: ${{ inputs.artifact-name }}
       artifact-paths: ${{ inputs.artifact-paths }}
       artifact-retention-days: ${{ inputs.artifact-retention-days }}
+      runtime-selection: ${{ needs.execution-runtime.outputs.selection }}
+    needs:
+      - execution-runtime
   publication-authority:
     name: Seal exact paper publication capability
-    needs: publication-candidate
+    needs:
+      - publication-candidate
+      - execution-runtime
     permissions:
       actions: read
       checks: read
@@ -178,8 +200,6 @@ jobs:
       pull-requests: read
     uses: ./.github/workflows/.release-authority.yml
     with:
-      buildchain-repository: ${{ inputs.buildchain-repository }}
-      buildchain-ref: ${{ needs.publication-candidate.outputs.runtime-sha }}
       github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       auto-admission: true
       auto-admission-kind: publication-artifact
@@ -188,7 +208,8 @@ jobs:
       target-ref: ${{ inputs.target-ref || github.ref_name }}
       publisher-workflow-path: ${{ inputs.publisher-workflow-path }}
       required-status-check: ${{ inputs.required-status-check }}
-      product: ${{ inputs.release-passport-product-name || needs.publication-candidate.outputs.package-name }}
+      product: ${{ inputs.release-passport-product-name ||
+        needs.publication-candidate.outputs.package-name }}
       publication-target: npm:${{ needs.publication-candidate.outputs.package-name }}
       publication-version: ${{ needs.publication-candidate.outputs.package-version }}
       package-name: ${{ needs.publication-candidate.outputs.package-name }}
@@ -197,12 +218,14 @@ jobs:
       evidence-publication-artifact: ${{ needs.publication-candidate.outputs.publication-artifact-name }}
       evidence-controller-artifact: ${{ needs.publication-candidate.outputs.controller-receipt-artifact }}
       dry-run: ${{ inputs.dry-run }}
+      runtime-selection: ${{ needs.execution-runtime.outputs.selection }}
     secrets: inherit
   publish:
     name: Publish admitted paper candidate
     needs:
       - publication-candidate
       - publication-authority
+      - execution-runtime
     if: ${{ !inputs.dry-run && needs.publication-authority.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
@@ -235,17 +258,15 @@ jobs:
           clean: true
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Paper admit candidate.
         id: admit-candidate
-        uses: ./.buildchain/workflow-shell/actions/paper/candidate/admit
+        uses: ./.buildchain/runtime/actions/paper/candidate/admit
         with:
           request-json: ${{ toJSON(inputs) }}
           candidate-plan-json: ${{ toJSON(needs.publication-candidate.outputs) }}
@@ -257,14 +278,14 @@ jobs:
         if: ${{ always() }}
       - name: Paper publish candidate.
         id: publish-candidate
-        uses: ./.buildchain/workflow-shell/actions/paper/candidate/publish
+        uses: ./.buildchain/runtime/actions/paper/candidate/publish
         with:
           request-json: ${{ toJSON(inputs) }}
           candidate-json: ${{ steps.admit-candidate.outputs.candidate-json }}
           token: ${{ steps.admit-candidate.outputs.token }}
       - name: Paper settle publication.
         id: settle-publication
-        uses: ./.buildchain/workflow-shell/actions/paper/publication/settle
+        uses: ./.buildchain/runtime/actions/paper/publication/settle
         with:
           request-json: ${{ toJSON(inputs) }}
           candidate-json: ${{ steps.admit-candidate.outputs.candidate-json }}

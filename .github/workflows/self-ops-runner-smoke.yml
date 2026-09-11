@@ -1,9 +1,36 @@
 name: Self-hosted Runner Smoke
 on:
-  workflow_dispatch: null
+  workflow_dispatch:
+    inputs:
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
 permissions:
   contents: read
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+    timeout-minutes: 5
   smoke:
     runs-on:
       - self-hosted
@@ -14,17 +41,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7.0.0
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Execute runner-smoke
         id: node
-        uses: ./.buildchain/workflow-shell/actions/governance/runner/verify
+        uses: ./.buildchain/runtime/actions/governance/runner/verify
         if: ${{ always() }}
         with:
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+    needs:
+      - execution-runtime

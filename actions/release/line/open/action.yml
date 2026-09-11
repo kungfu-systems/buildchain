@@ -18,7 +18,7 @@ runs:
     - name: Admit source checkout
       id: source-boundary
       if: ${{ always() }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      uses: ./.buildchain/runtime/actions/build/source/admit
       with:
         source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
     - uses: pnpm/action-setup@v4
@@ -27,13 +27,13 @@ runs:
         node-version: "24"
         cache: pnpm
     - name: Install source dependencies
-      uses: ./.buildchain/workflow-shell/actions/runtime/dependencies/install
+      uses: ./.buildchain/runtime/actions/runtime/dependencies/install
       with:
         directory: .
         production: "false"
         ignore-scripts: "false"
     - name: Bootstrap release line
-      uses: ./.buildchain/workflow-shell/actions/release/line/bootstrap
+      uses: ./.buildchain/runtime/actions/release/line/bootstrap
       with:
         request-json: ${{ inputs.request-json }}
         token: ${{ inputs.token }}

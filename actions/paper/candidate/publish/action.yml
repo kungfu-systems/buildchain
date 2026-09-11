@@ -52,7 +52,9 @@ runs:
         publish-transaction-override: "true"
         release-passport: "true"
         release-passport-output-dir: ${{ fromJSON(inputs.request-json).release-passport-output-dir }}
-        release-passport-product-name: ${{ fromJSON(inputs.request-json).release-passport-product-name || fromJSON(inputs.candidate-json)['package-name'] }}
+        release-passport-product-name: ${{
+          fromJSON(inputs.request-json).release-passport-product-name ||
+          fromJSON(inputs.candidate-json)['package-name'] }}
         release-passport-build-summary-path: ${{ fromJSON(inputs.candidate-json)['build-summary-path'] }}
         release-passport-platform-manifest-paths: ${{ fromJSON(inputs.candidate-json)['manifest-path'] }}
         release-passport-impact-json: ${{ fromJSON(inputs.request-json).release-passport-impact-json }}

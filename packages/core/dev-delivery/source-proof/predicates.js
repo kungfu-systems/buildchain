@@ -27,9 +27,6 @@ export function sourceQualificationPredicates(input = {}) {
     .map((entry) => entry.trim())
     .filter(Boolean)
     .sort();
-  const runtimeRef = required(input.runtimeRef, "runtimeRef");
-  const runtimeSha = exactSha(input.runtimeSha, "runtimeSha");
-  const contractDigest = required(input.contractDigest, "contractDigest");
   const nodeVersion = required(input.nodeVersion, "nodeVersion");
   return {
     repository,
@@ -73,9 +70,6 @@ export function sourceQualificationPredicates(input = {}) {
     ),
     toolchainRoot: devDeliveryContentRoot({
       schema: "kungfu.buildchain.source-toolchain/v1",
-      runtimeRef,
-      runtimeSha,
-      contractDigest,
       nodeVersion,
     }),
     policyRoot: gitPathRoot(sourceHead, policyPaths, "source-policy", cwd),

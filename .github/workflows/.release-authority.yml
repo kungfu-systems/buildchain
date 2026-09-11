@@ -2,14 +2,6 @@ name: Buildchain Sealed Publication Authority
 on:
   workflow_call:
     inputs:
-      buildchain-repository:
-        default: kungfu-systems/buildchain
-        type: string
-        required: false
-      buildchain-ref:
-        description: Exact Buildchain runtime SHA that owns the authority registry and verifier
-        type: string
-        required: true
       admission-json:
         description: Fresh sealed publication admission JSON
         type: string
@@ -26,7 +18,8 @@ on:
         required: false
         default: ""
       github-governance-receipt-json:
-        description: Optional prior governance receipt for diagnostics; non-dry-run authority always recollects live GitHub state with the dedicated auditor App
+        description: Optional prior governance receipt for diagnostics; non-dry-run authority always
+          recollects live GitHub state with the dedicated auditor App
         type: string
         required: false
         default: ""
@@ -36,7 +29,8 @@ on:
         required: false
         default: ""
       consumer-gate-command:
-        description: Consumer-owned read-only command that assembles a qualifying Gate aggregate from the downloaded exact release-candidate evidence
+        description: Consumer-owned read-only command that assembles a qualifying Gate aggregate from the
+          downloaded exact release-candidate evidence
         type: string
         required: false
         default: ""
@@ -46,7 +40,8 @@ on:
         required: false
         default: ""
       consumer-gate-evidence-source-sha:
-        description: Original candidate source SHA used only to validate a reused candidate Gate; empty uses source-sha
+        description: Original candidate source SHA used only to validate a reused candidate Gate; empty uses
+          source-sha
         type: string
         required: false
         default: ""
@@ -91,7 +86,8 @@ on:
         required: false
         default: release-candidate
       auto-no-gate:
-        description: Explicit caller decision that a managed release-candidate publication has no Shifu Gate registry
+        description: Explicit caller decision that a managed release-candidate publication has no Shifu Gate
+          registry
         type: boolean
         required: false
         default: false
@@ -181,6 +177,21 @@ on:
         type: boolean
         required: false
         default: false
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
     outputs:
       capability-json:
         description: Compact publication capability receipt JSON; dry-run is not a publication capability
@@ -207,6 +218,23 @@ on:
 permissions:
   contents: read
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   verify:
     name: Independently verify publication admission
     runs-on: ubuntu-24.04
@@ -222,44 +250,45 @@ jobs:
       gate-aggregate-json: ${{ steps.authority-verify.outputs.gate-aggregate-json }}
       gate-aggregate-digest: ${{ steps.authority-verify.outputs.gate-aggregate-digest }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: "Publication authority: admit."
         id: authority-admit
-        uses: ./.buildchain/workflow-shell/actions/publication/authority/admit
+        uses: ./.buildchain/runtime/actions/publication/authority/admit
         with:
-          runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
-          runtime-repository: ${{ inputs.buildchain-repository || job.workflow_repository }}
+          runtime-ref: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
+          runtime-repository: kungfu-systems/buildchain
           request-json: ${{ toJSON(inputs) }}
           auditor-private-key: ${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
           auditor-app-id: ${{ vars.KUNGFU_GOVERNANCE_AUDITOR_APP_ID }}
           governance-read-token: ${{ secrets.BUILDCHAIN_GOVERNANCE_READ_TOKEN }}
       - name: "Publication authority: candidate evidence."
         id: authority-candidate-evidence
-        uses: ./.buildchain/workflow-shell/actions/publication/authority/candidate-evidence
+        uses: ./.buildchain/runtime/actions/publication/authority/candidate-evidence
         with:
           request-json: ${{ toJSON(inputs) }}
       - name: "Publication authority: artifact evidence."
-        uses: ./.buildchain/workflow-shell/actions/publication/authority/artifact-evidence
+        uses: ./.buildchain/runtime/actions/publication/authority/artifact-evidence
         with:
           request-json: ${{ toJSON(inputs) }}
       - name: "Publication authority: assemble."
         id: authority-assemble
-        uses: ./.buildchain/workflow-shell/actions/publication/authority/assemble
+        uses: ./.buildchain/runtime/actions/publication/authority/assemble
         with:
           request-json: ${{ toJSON(inputs) }}
-          governance-token: ${{ steps.authority-admit.outputs.governance-auditor-token || secrets.BUILDCHAIN_GOVERNANCE_READ_TOKEN || github.token }}
+          governance-token: ${{ steps.authority-admit.outputs.governance-auditor-token ||
+            secrets.BUILDCHAIN_GOVERNANCE_READ_TOKEN || github.token }}
           token: ${{ github.token }}
           consumer-gate-json: ${{ steps.authority-candidate-evidence.outputs.consumer-gate-json }}
       - name: "Publication authority: verify."
         id: authority-verify
-        uses: ./.buildchain/workflow-shell/actions/publication/authority/verify
+        uses: ./.buildchain/runtime/actions/publication/authority/verify
         with:
           request-json: ${{ toJSON(inputs) }}
           admission-bundle-json: ${{ steps.authority-assemble.outputs.admission-bundle-json }}
           consumer-gate-json: ${{ steps.authority-candidate-evidence.outputs.consumer-gate-json }}
+    needs:
+      - execution-runtime

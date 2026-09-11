@@ -14,44 +14,12 @@ function repository(value, label) {
   return normalized;
 }
 
-const DEFAULT_ARTIFACT_SIGNING_AUTHORITY_REF =
-  "authority/v4/v4.1/artifact-signing";
 const AUTHORITY_WORKFLOW = "public-release-signing-authority.yml";
 
-export function resolveAuthorityDispatchRef(value) {
-  const ref = required(value, "authority ref");
-  if (/^[0-9a-f]{40}$/u.test(ref) || /^v4(?:-alpha)?$/u.test(ref))
-    return DEFAULT_ARTIFACT_SIGNING_AUTHORITY_REF;
-  if (ref !== DEFAULT_ARTIFACT_SIGNING_AUTHORITY_REF)
-    throw new Error(
-      "Artifact signing requires the current protected authority",
-    );
-  return ref;
-}
-
-export async function resolveArtifactSigningAuthorityRuntime({
-  authorityRepository,
-  authorityRef,
-  token,
-  requestImpl = githubRequest,
-}) {
-  const authorityRepo = repository(authorityRepository, "authority repository");
-  const ref = resolveAuthorityDispatchRef(authorityRef);
-  const encodedRef = ref.split("/").map(encodeURIComponent).join("/");
-  const response = await requestImpl(
-    `/repos/${authorityRepo}/git/ref/heads/${encodedRef}`,
-    { token: required(token, "Buildchain authority dispatch token") },
-  );
-  if (response?.object?.type !== "commit") {
-    throw new Error(
-      "Buildchain signing authority ref does not resolve to a commit",
-    );
-  }
-  const sha = String(response.object.sha || "");
-  if (!/^[0-9a-f]{40}$/u.test(sha)) {
-    throw new Error("Buildchain signing authority runtime SHA must be exact");
-  }
-  return { ref, sha };
+export function resolveAuthorityDispatchRef(value = "v4") {
+  if (!["v4", "v4-alpha"].includes(value))
+    throw new Error("Signing entry must use a public floating channel");
+  return value;
 }
 
 function authorityError(message, outputs = {}) {
@@ -62,7 +30,7 @@ function authorityError(message, outputs = {}) {
 
 export function validateArtifactSigningAuthorityRun(
   run,
-  { authorityRepository, authorityRuntimeSha, expectedTitle },
+  { authorityRepository, expectedTitle },
 ) {
   if (!run || typeof run !== "object") {
     throw new Error("Buildchain signing authority run is missing");
@@ -72,9 +40,6 @@ export function validateArtifactSigningAuthorityRun(
   }
   if (String(run.event || "") !== "workflow_dispatch") {
     throw new Error("Buildchain signing authority event mismatch");
-  }
-  if (String(run.head_sha || "") !== authorityRuntimeSha) {
-    throw new Error("Buildchain signing authority runtime SHA mismatch");
   }
   if (
     run.repository?.full_name &&
@@ -92,7 +57,6 @@ export function validateArtifactSigningAuthorityRun(
 async function pollArtifactSigningAuthorityRun({
   authorityRepository,
   token,
-  authorityRuntimeSha,
   expectedTitle,
   startedAtMs,
   deadline,
@@ -122,8 +86,7 @@ async function pollArtifactSigningAuthorityRun({
       try {
         run = validateArtifactSigningAuthorityRun(matches[0], {
           authorityRepository,
-          authorityRuntimeSha,
-          expectedTitle,
+                  expectedTitle,
         });
       } catch (error) {
         throw authorityError(error.message, {
@@ -194,7 +157,7 @@ function successfulAuthorityResult({
 export async function dispatchArtifactSigningAuthority({
   token,
   authorityRepository = "kungfu-systems/buildchain",
-  authorityRef,
+  authorityRef = "v4",
   sourceRepository,
   sourceRunId,
   sourceRunAttempt = "1",
@@ -213,8 +176,6 @@ export async function dispatchArtifactSigningAuthority({
   const sourceRepo = repository(sourceRepository, "source repository");
   const ref = resolveAuthorityDispatchRef(authorityRef);
   const runtime = required(runtimeSha, "Buildchain runtime SHA");
-  if (!/^[0-9a-f]{40}$/u.test(runtime))
-    throw new Error("Buildchain runtime SHA must be exact");
   const runId = required(sourceRunId, "source run ID");
   const runAttempt = required(sourceRunAttempt, "source run attempt");
   if (!/^[1-9][0-9]*$/u.test(runAttempt)) {
@@ -243,20 +204,14 @@ export async function dispatchArtifactSigningAuthority({
     "controller-started-at": controllerStartedAt,
   };
   try {
-    const authorityRuntime = await resolveArtifactSigningAuthorityRuntime({
-      authorityRepository: authorityRepo,
-      authorityRef: ref,
-      token: authToken,
-      requestImpl,
-    });
-    baseOutputs["authority-runtime-sha"] = authorityRuntime.sha;
+    baseOutputs["authority-runtime-sha"] = runtime;
     await requestImpl(
       `/repos/${authorityRepo}/actions/workflows/${AUTHORITY_WORKFLOW}/dispatches`,
       {
         token: authToken,
         method: "POST",
         body: {
-          ref: authorityRuntime.ref,
+          ref,
           inputs: {
             "source-repository": sourceRepo,
             "source-run-id": runId,
@@ -265,7 +220,7 @@ export async function dispatchArtifactSigningAuthority({
             "expected-request-root": requestRootDigest,
             "result-artifact-name": resultName,
             "correlation-id": correlation,
-            "expected-runtime-sha": runtime,
+            "runtime-ref": runtime,
           },
         },
       },
@@ -274,7 +229,6 @@ export async function dispatchArtifactSigningAuthority({
     const run = await pollArtifactSigningAuthorityRun({
       authorityRepository: authorityRepo,
       token: authToken,
-      authorityRuntimeSha: authorityRuntime.sha,
       expectedTitle,
       startedAtMs: controllerStartedAtMs,
       deadline: controllerStartedAtMs + timeout * 1000,

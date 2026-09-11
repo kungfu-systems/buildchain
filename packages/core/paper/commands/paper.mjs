@@ -42,7 +42,7 @@ function usage() {
   buildchain paper alpha [--cwd <dir>] [--source-ref <ref>] [--target-ref <ref>]
                           [--execute] [--json]
   buildchain paper status [--cwd <dir>] [--json]
-  buildchain paper resume [--cwd <dir>] [--buildchain-ref <ref>]
+  buildchain paper resume [--cwd <dir>] [--runtime-ref <ref>]
                            [--execute] [--json]
 
 Safety:
@@ -389,7 +389,7 @@ function executeAlphaPlan(plan) {
   };
 }
 
-function executeResumePlan(plan, buildchainRef) {
+function executeResumePlan(plan, runtimeRef) {
   if (!plan.resumable || !plan.transaction?.targetRef) {
     return {
       ...plan,
@@ -404,8 +404,8 @@ function executeResumePlan(plan, buildchainRef) {
     "--ref",
     plan.transaction.targetRef,
   ];
-  if (buildchainRef) {
-    args.push("-f", `buildchain-ref=${buildchainRef}`);
+  if (runtimeRef) {
+    args.push("-f", `runtime-ref=${runtimeRef}`);
   }
   const dispatched = commandResult("gh", args, { cwd: plan.cwd });
   if (!dispatched.ok) {
@@ -569,10 +569,10 @@ export async function runPaperCli(
         ? executeAlphaPlan(plan)
         : plan;
     } else if (command === "resume") {
-      const runtimeRef = readFlag(effectiveArgs, "buildchain-ref", "");
+      const runtimeRef = readFlag(effectiveArgs, "runtime-ref", "");
       const plan = createPaperResumePlan({
         cwd,
-        buildchainRef: runtimeRef,
+        runtimeRef,
       });
       result = hasFlag(effectiveArgs, "execute")
         ? executeResumePlan(plan, runtimeRef)

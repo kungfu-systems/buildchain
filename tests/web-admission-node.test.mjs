@@ -1,6 +1,5 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { resolveWebRuntime } from "./helpers/runtime-selection.mjs";
 import { resolveReleaseIntent } from "../packages/core/web/production-intent.js";
 const sha = "a".repeat(40);
 const env = {
@@ -32,109 +31,6 @@ function recorder() {
     core: { setOutput: (key, value) => (values[key] = value), summary },
   };
 }
-test("Web runtime defaults to exact workflow bytes while retaining channel classification", async () => {
-  const { values, core } = recorder();
-  await resolveWebRuntime({ env, context, core, github: {} });
-  assert.equal(values["runtime-ref"], sha);
-  assert.equal(values["runtime-sha"], sha);
-  assert.equal(values["runtime-class"], "stable");
-  assert.equal(values["rollback-ref"], sha);
-  assert.equal(values["runtime-override"], "false");
-  await assert.rejects(
-    resolveWebRuntime({
-      env: { ...env, BUILDCHAIN_WORKFLOW_SHA: "" },
-      context,
-      core,
-    }),
-    /exact defining/,
-  );
-  await assert.rejects(
-    resolveWebRuntime({
-      env: {
-        ...env,
-        BUILDCHAIN_WORKFLOW_REF: "other/repo/.github/workflows/web.yml@v4",
-      },
-      context,
-      core,
-    }),
-    /defining workflow repository/,
-  );
-});
-test("Web overrides reject historical channels and unauthorized dispatches", async () => {
-  const { core } = recorder();
-  await assert.rejects(
-    resolveWebRuntime({
-      env: { ...env, BUILDCHAIN_REQUESTED_REF: "v3" },
-      context,
-      core,
-    }),
-    /current v4/,
-  );
-  await assert.rejects(
-    resolveWebRuntime({
-      env: { ...env, BUILDCHAIN_REQUESTED_REF: "c".repeat(40) },
-      context,
-      core,
-    }),
-    /workflow_dispatch/,
-  );
-  const github = {
-    rest: {
-      repos: {
-        getCollaboratorPermissionLevel: async () => ({
-          data: { permission: "read" },
-        }),
-      },
-    },
-  };
-  await assert.rejects(
-    resolveWebRuntime({
-      env: { ...env, BUILDCHAIN_REQUESTED_REF: "train/v4/v4.1/web" },
-      context: { ...context, eventName: "workflow_dispatch" },
-      core,
-      github,
-    }),
-    /write permission/,
-  );
-  const { values, core: closedCore } = recorder();
-  await resolveWebRuntime({
-    env: { ...env, BUILDCHAIN_REQUESTED_REF: sha },
-    context: { ...context, payload: { action: "closed" } },
-    core: closedCore,
-  });
-  assert.equal(
-    values["runtime-trust-decision"],
-    "closed-release-pr-shell-runtime",
-  );
-});
-test("Web current channel resolves a commit and preserves provider authorization errors", async () => {
-  const { values, core } = recorder();
-  const github = {
-    rest: {
-      repos: { getCommit: async () => ({ data: { sha: "c".repeat(40) } }) },
-    },
-  };
-  await resolveWebRuntime({
-    env: { ...env, BUILDCHAIN_REQUESTED_REF: "v4-alpha" },
-    context,
-    core,
-    github,
-  });
-  assert.equal(values["runtime-class"], "alpha");
-  assert.equal(values["runtime-sha"], "c".repeat(40));
-  github.rest.repos.getCommit = async () => {
-    throw Object.assign(new Error("denied"), { status: 403 });
-  };
-  await assert.rejects(
-    resolveWebRuntime({
-      env: { ...env, BUILDCHAIN_REQUESTED_REF: "v4-alpha" },
-      context,
-      core,
-      github,
-    }),
-    (e) => e.status === 403,
-  );
-});
 test("Web production intent requires explicit dispatch approval for an exact requested source", async () => {
   const request = {
     "production-source-sha": sha,

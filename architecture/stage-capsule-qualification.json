@@ -26,9 +26,9 @@
   "publicConsumerDogfood": {
     "callerWorkflow": ".github/workflows/self-build-public-consumer-dogfood.yml",
     "reusableWorkflow": "kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml",
-    "validationRef": "v4-alpha",
+    "validationRef": "v4",
     "invocation": "workflow_call",
-    "runtimeBinding": "job.workflow_sha",
+    "runtimeBinding": "entry-selected-runtime",
     "consumerSourceBinding": "github.sha",
     "configPath": ".buildchain/buildchain.toml",
     "executableStages": ["install", "build", "verify"],

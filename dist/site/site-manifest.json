@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:b2ab8f50515e3259bf8217bb1686c839b8bed6ce1e8612b1b5e7cec870e31166"
+      "digest": "sha256:3912044182ad1a87be183a8b8e2bb277502593fb58d6d087fe321ad9b7296204"
     },
     {
       "id": "getting-started",
@@ -69,7 +69,7 @@
       "path": "docs/auditable-demo.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:1f1feaaec30af2f04dc211886d70df9a06933f2d62cc3781443170bc651bb56b"
+      "digest": "sha256:17b0756d1cc1009144219748b31497a12ebd19e79218a7451b2632be19bc9ba8"
     },
     {
       "id": "install",
@@ -93,7 +93,7 @@
       "path": "docs/github-artifact-attestation.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:1d3bff2f7e5d49a7c0d5e430ec24d62c84f643d2ea6f97f591f925f6f5acea3a"
+      "digest": "sha256:9274b03fa34152fc4cbe2f34437a570e550fec28274cdf995b4c5c3de40116bf"
     },
     {
       "id": "controller-evidence",
@@ -101,7 +101,7 @@
       "path": "docs/controller-evidence.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:442e1b72e3977af56a8ae5e081ffd89c2f3ebcd9cfd50f07af730344bdf9fb0e"
+      "digest": "sha256:29c6ed804dffa2db6c674e0084138c8c7b3390cc861b37d8fb915d35bdb8275c"
     },
     {
       "id": "publication-authority",
@@ -109,7 +109,7 @@
       "path": "docs/publication-authority.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:8c7c9fc8f69895b382a8b525fa568f18a09d123ce37f198047aa095fd5dcf77b"
+      "digest": "sha256:ce7d7efaef90e2c50fc45dfa7c6682edc39e20455da68da0c65c529cf33107c9"
     },
     {
       "id": "github-governance-authority",
@@ -117,7 +117,7 @@
       "path": "docs/github-governance-authority.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:197ae7a949817f60f46b67b060731df14d0343d9daecd7d6eacfae9a526b6a12"
+      "digest": "sha256:2c820ba98c44dfe4a1fcbf20c7b18a4257dff68bbab90b033523e2f3af78c8d1"
     },
     {
       "id": "release-candidate",
@@ -125,7 +125,7 @@
       "path": "docs/release-candidate.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:2a129a426b364e4ea93ed269b7c5aa725268526e2eaa799dae24a48086f11ea1"
+      "digest": "sha256:1390cc5e17b0352dcb3ac56c3650ccf7c61429da5feb6b7043cf6160b4576e72"
     },
     {
       "id": "release-train",
@@ -149,7 +149,7 @@
       "path": "docs/release-propagation.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:f6f81657badb54c40ea94dba5656f28dde777db3b9fb8ebc7423a18cf54d2494"
+      "digest": "sha256:d3eb1d67cf2025b9f380af3b5a4c5156a9f5ff820d3fac29d206b022346fd3d8"
     },
     {
       "id": "readme-badges",
@@ -245,7 +245,7 @@
       "path": "docs/cli-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:4892274502e77e273a544e72e2c280464f45f4c66bf7d22802311281f858c51b"
+      "digest": "sha256:f9bdeffb0751225c13bf249305c4bfb20d8ab52ca502d0e3d35370b3d2b1e47a"
     },
     {
       "id": "node-api-reference",
@@ -253,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:adfdaa78016bd1156fc8e08560879daf786af462f20334cb1a837ca50c62e759"
+      "digest": "sha256:ba1b9db61750646d507f086f0f267965a94b6c1276ab6d9f958ca4645b2a5073"
     },
     {
       "id": "build-facts",
@@ -293,7 +293,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:0b3f7bb478712e1748758ec4b3107f2c5905c9ba5cf47b9aae28678099dd7594"
+      "digest": "sha256:756f5b9c979b7fb1e379b6427eea1abe177c4d0cf5159e944d4f7e3d9aef4ffb"
     },
     {
       "id": "v4-adopter-delivery",
@@ -325,7 +325,7 @@
       "path": "docs/release-tail-provider-plane.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:1f6dba3988dec2a406cb93cb2e0259e07c5bc54c361bdfc73d67471a06a67814"
+      "digest": "sha256:ee07fcad90540a4ba47531c8e6dd5be6e632676d81957ecb16f9a5891741b1eb"
     },
     {
       "id": "release-governance",
@@ -333,7 +333,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:f42b63f0632dfda36fb209c50458f9d21b4717b321f0ad6741db9c343fab986e"
+      "digest": "sha256:667e120366136e4a9c76dc2cc872f79e7d7e99b5997b7cfbb121b4dc60ef9c1e"
     },
     {
       "id": "v4-compatibility-facts",
@@ -357,7 +357,7 @@
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:6f362a7ad276acfe34b2faa74b3e1212c5cdc451f137b65002975e642540fa5b"
+      "digest": "sha256:82680cf3fb71e32639f186d3e3f92f3e57bea3755065937487af794cfdb711fc"
     },
     {
       "id": "versioning",
@@ -373,7 +373,7 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:54242bc7bada366137e4e75dfcc80b0ad659aa80cb0ffca2d52e42c768897074"
+      "digest": "sha256:6409f312df40a989dcbdb6ae41aab5bf419420d3b937b74c85a0ac878e71519c"
     }
   ],
   "facts": [

@@ -150,11 +150,7 @@ export function discoverReleaseAuthorityClosure() {
     [".js", ".mjs", ".cjs"],
     /(?:release-tail-provider-(?:adapters|plane)|create(?:GitHubReleaseAssets|SignedStaticChannel|SiteReleaseActivation|ReleasedEvidence)Adapter)/u,
   );
-  const runtimeSelectors = matchingProductionFiles(
-    [".github/workflows", "scripts", "packages/core"],
-    [".yml", ".yaml", ".js", ".mjs", ".cjs"],
-    /(?:promotion-runtime-sha|resume-buildchain-runtime-sha|BUILDCHAIN_(?:CURRENT_RUNTIME_SHA|RUNTIME_REF|RESUME_CANDIDATE_RUN_ID)|authorizeRuntimeSelection|scanRuntimeSelectorPersistence|release-candidate-adapter)/u,
-  );
+  const runtimeSelectors = productionFiles("packages/core/runtime/entry", [".js"]).sort();
   const terminalProjections = matchingProductionFiles(
     [".github/workflows", "actions", "packages/core", "scripts"],
     [".yml", ".yaml", ".js", ".mjs", ".cjs"],
@@ -560,7 +556,7 @@ export function checkReleaseTopology() {
     );
     assert.deepEqual(
       publisher.jobs.map((job) => job.split("|", 1)[0]),
-      ["apply", "qualify", "settle"],
+      ["apply", "execution-runtime", "qualify", "settle"],
     );
   }
   return actual;

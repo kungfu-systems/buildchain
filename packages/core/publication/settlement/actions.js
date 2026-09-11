@@ -1,7 +1,6 @@
 import path from "node:path";
 import fs from "node:fs";
 import { installationRoot } from "../../runtime/installation-root.js";
-import { verifyCheckoutIdentity } from "../../runtime/checkout-identity.js";
 import { releaseAssetClient } from "../../providers/github/release-assets.js";
 import {
   settlePublication,
@@ -11,16 +10,8 @@ import {
 function input(core, env) {
   const runtimeRoot = installationRoot(import.meta.url),
     workspace = path.resolve(env.GITHUB_WORKSPACE);
-  if (
-    fs.realpathSync(runtimeRoot) !==
-    fs.realpathSync(path.join(workspace, ".buildchain/runtime"))
-  )
-    throw new Error("Settlement must execute the admitted runtime");
-  verifyCheckoutIdentity({
-    directory: runtimeRoot,
-    sha: core.getInput("runtime-sha", { required: true }),
-    label: "Publication settlement runtime",
-  });
+
+
   return {
     repository: env.GITHUB_REPOSITORY,
     candidateSha: core.getInput("candidate-sha", { required: true }),

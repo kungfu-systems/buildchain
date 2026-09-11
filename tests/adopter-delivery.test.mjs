@@ -115,7 +115,7 @@ test("CLI and public self-dogfood workflow expose the same public boundary", () 
   );
   assert.match(
     caller,
-    /kungfu-systems\/buildchain\/\.github\/workflows\/public-build-adopter-qualification\.yml@v4-alpha/,
+    /kungfu-systems\/buildchain\/\.github\/workflows\/public-build-adopter-qualification\.yml@v4/,
   );
   assert.doesNotMatch(caller, /(?:uses:\s*\.\/|runs-on:|steps:|BUILDCHAIN_)/);
 });
@@ -146,6 +146,6 @@ test("candidate dispatch binds an external adopter through the admitted source o
   );
   assert.equal(
     workflow.jobs["consumer-admission"].steps[1].uses,
-    "./.buildchain/workflow-shell/actions/adoption/adopter/admit",
+    "./.buildchain/runtime/actions/adoption/adopter/admit",
   );
 });

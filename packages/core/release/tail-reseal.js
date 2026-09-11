@@ -177,19 +177,7 @@ function validateRuntime(value) {
     ["repository", "ref", "sha", "contractRoot", "consumerPolicyReceiptRoot"],
     "$/runtime",
   );
-  if (value.repository !== "kungfu-systems/buildchain")
-    fault(
-      "tail-reseal-runtime-mismatch",
-      "$/runtime/repository",
-      "official Buildchain runtime required",
-    );
-  if (!DOMAIN_RUNTIME_REF.test(value.ref))
-    fault(
-      "tail-reseal-runtime-mismatch",
-      "$/runtime/ref",
-      "v4-alpha or a transient v4 train is required",
-    );
-  sha(value.sha, "$/runtime/sha");
+
   root(value.contractRoot, "$/runtime/contractRoot");
   root(value.consumerPolicyReceiptRoot, "$/runtime/consumerPolicyReceiptRoot");
 }
@@ -342,7 +330,6 @@ function validateSigning(value, evaluatedAt) {
   );
   text(value.authorityRepository, "$/signing/authorityRepository");
   positiveInteger(value.authorityRunId, "$/signing/authorityRunId");
-  sha(value.runtimeSha, "$/signing/runtimeSha");
   for (const field of [
     "requestRoot",
     "delegationRoot",
@@ -495,12 +482,7 @@ export function normalizeTailResealRequest(request) {
   validateSigning(request.signing, request.evaluatedAt);
   validateReleaseTail(request.releaseTail);
   validatePlatforms(request.platforms);
-  if (request.signing.runtimeSha !== request.runtime.sha)
-    fault(
-      "tail-reseal-signing-runtime-mismatch",
-      "$/signing/runtimeSha",
-      "signing authority runtime differs from candidate runtime",
-    );
+
   const capsuleRoots = new Map(
     request.platforms.map((platform) => [platform.id, platform.capsuleRoot]),
   );

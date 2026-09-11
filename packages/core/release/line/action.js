@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import { installationRoot } from "../../runtime/installation-root.js";
-import { verifyCheckoutIdentity } from "../../runtime/checkout-identity.js";
 import { createGitHubCliApi } from "../../providers/github-cli-api.js";
 import { pullRequestProvider } from "../../providers/github/pull-requests.js";
 import { normalizeLineBootstrapRequest } from "./request.js";
@@ -13,18 +12,8 @@ export async function lineBootstrapAction(core, env) {
     ),
     sourceRoot = path.resolve(env.GITHUB_WORKSPACE),
     runtimeRoot = installationRoot(import.meta.url);
-  if (
-    fs.realpathSync(runtimeRoot) !==
-    fs.realpathSync(path.join(sourceRoot, ".buildchain/workflow-shell"))
-  )
-    throw new Error(
-      "Release line action requires its defining workflow implementation",
-    );
-  verifyCheckoutIdentity({
-    directory: runtimeRoot,
-    sha: core.getInput("workflow-sha", { required: true }),
-    label: "Release line workflow",
-  });
+
+
   const token = core.getInput("token", { required: request.apply }),
     repository = env.GITHUB_REPOSITORY;
   const providers = request.apply

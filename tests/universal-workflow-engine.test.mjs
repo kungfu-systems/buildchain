@@ -5,7 +5,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { candidateResultOutputs } from "../packages/core/workflow/engine/action.js";
 import { admitUniversalWorkflow } from "../packages/core/workflow/universal-workflow-bootstrap.js";
-import { sha, root, policy, request, reviewEvidence, consumerObservation } from "./universal-workflow-harness.mjs";
+import { sha, root, policy, request, runtime, consumerObservation } from "./universal-workflow-harness.mjs";
 
 test("the fixed CLI executes only the exact admitted candidate", () => {
   const policyValue = policy({
@@ -34,18 +34,18 @@ test("the fixed CLI executes only the exact admitted candidate", () => {
   const admission = run("admit", {
     BUILDCHAIN_UNIVERSAL_REQUEST_JSON: JSON.stringify(requestValue),
     BUILDCHAIN_UNIVERSAL_ADMISSION_POLICY_JSON: JSON.stringify(policyValue),
-    BUILDCHAIN_UNIVERSAL_OBSERVED_SHA: sha("1"),
+    BUILDCHAIN_RUNTIME_SELECTION: JSON.stringify(runtime()),
     BUILDCHAIN_UNIVERSAL_CONSUMER_REPOSITORY: "kungfu-systems/taolu",
     BUILDCHAIN_UNIVERSAL_CONSUMER_SHA: sha("2"),
     BUILDCHAIN_UNIVERSAL_CONSUMER_WORKFLOW_REF:
       "kungfu-systems/taolu/.github/workflows/release.yml@refs/heads/main",
     BUILDCHAIN_UNIVERSAL_OBSERVED_AT: "2026-08-30T12:00:00.000Z",
-    BUILDCHAIN_UNIVERSAL_REVIEW_EVIDENCE_JSON: JSON.stringify(reviewEvidence()),
+
   });
   const result = run("execute", {
     BUILDCHAIN_UNIVERSAL_REQUEST_JSON: JSON.stringify(requestValue),
     BUILDCHAIN_UNIVERSAL_ADMISSION_JSON: JSON.stringify(admission),
-    BUILDCHAIN_UNIVERSAL_ENGINE_SHA: sha("1"),
+
   });
   assert.equal(result.status, "succeeded", JSON.stringify(result));
   assert.equal(result.output.status, "candidate-engine-executed");
@@ -58,15 +58,6 @@ test("the fixed CLI executes only the exact admitted candidate", () => {
   });
   assert.equal(receipt.status, "succeeded");
 
-  assert.throws(
-    () =>
-      run("execute", {
-        BUILDCHAIN_UNIVERSAL_REQUEST_JSON: JSON.stringify(requestValue),
-        BUILDCHAIN_UNIVERSAL_ADMISSION_JSON: JSON.stringify(admission),
-        BUILDCHAIN_UNIVERSAL_ENGINE_SHA: sha("9"),
-      }),
-    /candidate engine checkout does not match/u,
-  );
   const tamperedRequest = structuredClone(requestValue);
   tamperedRequest.payload = { tampered: true };
   assert.throws(
@@ -74,7 +65,7 @@ test("the fixed CLI executes only the exact admitted candidate", () => {
       run("execute", {
         BUILDCHAIN_UNIVERSAL_REQUEST_JSON: JSON.stringify(tamperedRequest),
         BUILDCHAIN_UNIVERSAL_ADMISSION_JSON: JSON.stringify(admission),
-        BUILDCHAIN_UNIVERSAL_ENGINE_SHA: sha("1"),
+
       }),
     /does not match the admitted request root/u,
   );
@@ -109,18 +100,18 @@ test("the shared candidate engine owns canonical ReleaseInvocation projection", 
   const admission = run("admit", {
     BUILDCHAIN_UNIVERSAL_REQUEST_JSON: JSON.stringify(requestValue),
     BUILDCHAIN_UNIVERSAL_ADMISSION_POLICY_JSON: JSON.stringify(policyValue),
-    BUILDCHAIN_UNIVERSAL_OBSERVED_SHA: sha("1"),
+    BUILDCHAIN_RUNTIME_SELECTION: JSON.stringify(runtime()),
     BUILDCHAIN_UNIVERSAL_CONSUMER_REPOSITORY: "kungfu-systems/taolu",
     BUILDCHAIN_UNIVERSAL_CONSUMER_SHA: sha("2"),
     BUILDCHAIN_UNIVERSAL_CONSUMER_WORKFLOW_REF:
       "kungfu-systems/taolu/.github/workflows/release.yml@refs/heads/main",
     BUILDCHAIN_UNIVERSAL_OBSERVED_AT: "2026-08-30T12:00:00.000Z",
-    BUILDCHAIN_UNIVERSAL_REVIEW_EVIDENCE_JSON: JSON.stringify(reviewEvidence()),
+
   });
   const result = run("execute", {
     BUILDCHAIN_UNIVERSAL_REQUEST_JSON: JSON.stringify(requestValue),
     BUILDCHAIN_UNIVERSAL_ADMISSION_JSON: JSON.stringify(admission),
-    BUILDCHAIN_UNIVERSAL_ENGINE_SHA: sha("1"),
+
   });
   assert.equal(result.status, "succeeded", JSON.stringify(result));
   assert.match(
@@ -159,8 +150,8 @@ for (const [label, mutation, expectedStatus] of [
     ...consumerObservation(),
     request: requestValue,
     policy: policyValue,
-    observedRefSha: sha("1"),
-    reviewEvidence: reviewEvidence(),
+
+
     now: "2026-08-30T12:00:00.000Z",
   });
   const engine = fileURLToPath(
@@ -176,7 +167,7 @@ for (const [label, mutation, expectedStatus] of [
         ...process.env,
         BUILDCHAIN_UNIVERSAL_REQUEST_JSON: JSON.stringify(requestValue),
         BUILDCHAIN_UNIVERSAL_ADMISSION_JSON: JSON.stringify(admission),
-        BUILDCHAIN_UNIVERSAL_ENGINE_SHA: sha("1"),
+
       },
     }),
   );
@@ -216,8 +207,8 @@ test("candidate capability failures still produce one rooted terminal receipt", 
     ...consumerObservation(),
     request: requestValue,
     policy: policyValue,
-    observedRefSha: sha("1"),
-    reviewEvidence: reviewEvidence(),
+
+
     now: "2026-08-30T12:00:00.000Z",
   });
   const engine = fileURLToPath(
@@ -233,7 +224,7 @@ test("candidate capability failures still produce one rooted terminal receipt", 
         ...process.env,
         BUILDCHAIN_UNIVERSAL_REQUEST_JSON: JSON.stringify(requestValue),
         BUILDCHAIN_UNIVERSAL_ADMISSION_JSON: JSON.stringify(admission),
-        BUILDCHAIN_UNIVERSAL_ENGINE_SHA: sha("1"),
+
       },
     }),
   );

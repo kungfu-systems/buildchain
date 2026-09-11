@@ -19,15 +19,11 @@ permissions:
   pull-requests: write
 jobs:
   publish:
-    uses: ./.github/workflows/public-release-promote.yml
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4
     with:
       request-json: |-
         {
           "schema": "buildchain.promotion-request/v1",
-          "buildchain-repository": "kungfu-systems/buildchain",
-          "buildchain-contract-lock-path": ".buildchain/contract-lock.json",
-          "buildchain-stable-contract-lock-path": ".buildchain/contract-lock.json",
-          "buildchain-alpha-contract-lock-path": ".buildchain/alpha-contract-lock.json",
           "allow-repository": "kungfu-systems/buildchain",
           "channel": "alpha",
           "target-ref": "alpha/v4/v4.1",

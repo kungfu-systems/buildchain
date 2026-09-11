@@ -1,3 +1,4 @@
+import { sealBuildCheckpoint } from "../packages/core/build/recovery/checkpoint.js";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -89,4 +90,27 @@ for (const nested of [false, true]) test(`real ordered lifecycle and digest vali
   fs.appendFileSync(path.join(directory, "dist/install.txt"), "tampered");
   assert.throws(() => verifyManifest(manifest, source, plan, platform), /digest mismatch/);
   assert.notEqual(run("verify").status, 0, "Repeated verify must not overwrite evidence");
+});
+
+
+test("runtime Y restores X build outputs in a fresh execution and runs remaining verification", t => {
+  const { workspace, source, directory, plan, platform } = fixture(t);
+  plan.runtime = { sha: "a".repeat(40) };
+  const buildScript = path.join(directory,"scripts/build.mjs");
+  fs.appendFileSync(buildScript, '\nif (process.env.BUILDCHAIN_TEST_RETAINED) throw Error("Build must not repeat");\n');
+  const verifyScript = path.join(directory,"scripts/verify.mjs");
+  fs.appendFileSync(verifyScript, '\nif (!process.env.BUILDCHAIN_TEST_RETAINED) throw Error("Injected runtime X verification fault");\nfs.writeFileSync("verified-by-y.txt","verified");\n');
+  const run = (stage, retained = "") => spawnSync(process.execPath, [path.join(repo,"tests/helpers/build-stage-process.mjs")], {cwd:workspace,encoding:"utf8",env:{...process.env,GITHUB_WORKSPACE:workspace,GITHUB_REPOSITORY:plan.run.repository,GITHUB_RUN_ID:plan.run.id,GITHUB_RUN_ATTEMPT:plan.run.attempt,GITHUB_OUTPUT:path.join(workspace,"outputs"),BUILDCHAIN_PLAN:JSON.stringify(plan),BUILDCHAIN_PLATFORM:JSON.stringify(platform),BUILDCHAIN_STAGE:stage,BUILDCHAIN_TEST_RETAINED:retained}});
+  for(const stage of ["install","build"]){const r=run(stage);assert.equal(r.status,0,r.stderr);}
+  const sealed=sealBuildCheckpoint({plan,platform,sourceRoot:source});assert.ok(sealed);
+  const failed=run("verify");assert.notEqual(failed.status,0);assert.match(failed.stderr,/Injected runtime X/);
+  const retained=path.join(workspace,"retained");
+  for(const relative of sealed.paths){const to=path.join(retained,relative);fs.mkdirSync(path.dirname(to),{recursive:true});fs.copyFileSync(path.join(source,relative),to);}
+  fs.rmSync(path.join(source,"dist"),{recursive:true});
+  fs.rmSync(path.join(source,".buildchain"),{recursive:true});
+  plan.recovery={runId:plan.run.id};plan.run={...plan.run,id:"456"};plan.runtime={sha:"b".repeat(40)};delete plan.root;plan.root=rootOf(plan);
+  for(const stage of ["install","build","verify"]){const r=run(stage,retained);assert.equal(r.status,0,`${stage}\n${r.stdout}\n${r.stderr}`);}
+  assert.equal(fs.readFileSync(path.join(source,"verified-by-y.txt"),"utf8"),"verified");
+  const record=JSON.parse(fs.readFileSync(path.join(source,`.buildchain/execution/${platform.id}.json`)));
+  assert.equal(verifyExecution(record,plan,platform).stages.verify,"success");
 });

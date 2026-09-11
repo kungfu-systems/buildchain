@@ -9,8 +9,6 @@ export function bindPromotionSelection(
   run = command,
 ) {
   for (const [directory, expected] of [
-    ["workflow-shell", selection["shell-sha"]],
-    ["runtime", selection["runtime-sha"]],
     ["source", sourceSha],
   ]) {
     verifyCheckoutIdentity(
@@ -23,13 +21,7 @@ export function bindPromotionSelection(
     );
   }
   const source = path.join(workspace, ".buildchain/source");
-  const relative =
-    request["buildchain-contract-lock-path"] ||
-    request[
-      selection.channel === "alpha"
-        ? "buildchain-alpha-contract-lock-path"
-        : "buildchain-stable-contract-lock-path"
-    ];
+  const relative = selection["contract-lock-path"];
   if (
     !relative ||
     path.isAbsolute(relative) ||

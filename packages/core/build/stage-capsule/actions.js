@@ -1,24 +1,15 @@
 import path from "node:path";
 import { command } from "../../runtime/action-process.mjs";
 import { installationRoot } from "../../runtime/installation-root.js";
-import { exactWorkflowRuntime } from "../../runtime/workflow-runtime.js";
 import { qualifyStageCapsuleConsumer } from "./canary.js";
 import { aggregateStageCapsuleCampaign } from "./campaign/aggregate.js";
-function runtime(core) {
+function runtime(env) {
   const runtimeRoot = installationRoot(import.meta.url);
-  const runtimeSha = exactWorkflowRuntime(
-    core.getInput("workflow-sha", { required: true }),
-  );
-  if (
-    command("git", ["-C", runtimeRoot, "rev-parse", "HEAD"], {
-      stdio: "pipe",
-    }).trim() !== runtimeSha
-  )
-    throw new Error("Stage Capsule runtime differs from called workflow");
+  const runtimeSha = env.BUILDCHAIN_RUNTIME_SHA;
   return { runtimeRoot, runtimeSha };
 }
 export async function qualifyStageCapsuleConsumerAction(core, env) {
-  const binding = runtime(core);
+  const binding = runtime(env);
   const workspace = path.resolve(env.GITHUB_WORKSPACE);
   if (
     command("git", ["-C", workspace, "rev-parse", "HEAD"], {
@@ -38,7 +29,6 @@ export async function qualifyStageCapsuleConsumerAction(core, env) {
   });
 }
 export function aggregateStageCapsuleConsumerAction(core, env) {
-  runtime(core);
   return aggregateStageCapsuleCampaign({
     directory: path.join(
       env.GITHUB_WORKSPACE,

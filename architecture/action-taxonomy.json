@@ -427,25 +427,17 @@
     },
     "runtime": {
       "groups": {
-        "closure": {
-          "responsibility": "Verify and activate admitted provider execution closures.",
-          "operations": ["activate-provider", "prepare-provider"]
-        },
-        "contract": {
-          "responsibility": "Inspect selected runtime contracts against consumer acceptance and emit drift evidence.",
-          "operations": ["check"]
-        },
         "dependencies": {
           "responsibility": "Install exact lockfile dependencies under declared script and production policies.",
           "operations": ["install"]
         },
         "environment": {
           "responsibility": "Compose the selected Node environment and locked dependency preparation.",
-          "operations": ["prepare"]
+          "operations": ["activate", "prepare"]
         },
         "selection": {
-          "responsibility": "Admit immutable runtime selections while preserving purpose-specific authority contracts.",
-          "operations": ["admit", "workflow"]
+          "responsibility": "Select the execution runtime once at the public entry; authorize transient recovery before preparation.",
+          "operations": ["resolve"]
         },
         "toolchain": {
           "responsibility": "Expose and validate declared runner-local toolchains for subsequent actions.",
@@ -489,10 +481,6 @@
             "verify-capability"
           ]
         },
-        "runtime": {
-          "responsibility": "Prepare and verify the web runtime contract.",
-          "operations": ["verify-contract"]
-        },
         "staging": {
           "responsibility": "Deploy staging and return release feedback.",
           "operations": ["deploy"]
@@ -503,7 +491,7 @@
       "groups": {
         "admission": {
           "responsibility": "Reject requests that fail workflow admission.",
-          "operations": ["admit", "inspect", "reject", "review"]
+          "operations": ["admit", "inspect", "reject"]
         },
         "bootstrap": {
           "responsibility": "Admit, execute and settle workflow bootstrap.",
@@ -521,13 +509,9 @@
           "responsibility": "Admit supported caller events before source-controlled work begins.",
           "operations": ["admit"]
         },
-        "recovery": {
-          "responsibility": "Admit, execute and settle workflow recovery.",
-          "operations": ["admit", "execute", "settle"]
-        },
         "settlement": {
           "responsibility": "Seal candidate terminal evidence and reconcile successful protected backflow.",
-          "operations": ["backflow", "seal"]
+          "operations": ["seal"]
         }
       }
     },

@@ -1,5 +1,5 @@
 name: verify-checkouts
-description: Verify source and runtime byte identity.
+description: Verify the consumer source checkout before publication.
 inputs:
   source-directory:
     default: .
@@ -7,12 +7,6 @@ inputs:
   source-sha:
     required: true
     description: Explicit source-sha for the admitted operation.
-  runtime-directory:
-    default: .buildchain/runtime
-    description: Explicit runtime-directory for the admitted operation.
-  runtime-sha:
-    required: true
-    description: Explicit runtime-sha for the admitted operation.
 runs:
   using: node24
   main: dist/index.js

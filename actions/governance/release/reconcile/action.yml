@@ -1,5 +1,6 @@
 name: Reconcile required build aggregate
-description: Execute the release-governance reconcile capability within its caller job boundary.
+description: Execute the release-governance reconcile capability within its
+  caller job boundary.
 inputs:
   runtime-ref:
     description: Exact runtime ref; defaults to this workflow SHA.
@@ -13,16 +14,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Checkout Buildchain runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: kungfu-systems/buildchain
-        ref: ${{ inputs.runtime-ref }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Align governed release checks
       uses: ./.buildchain/runtime/actions/governance/release/align-checks
       with:
@@ -31,6 +22,7 @@ runs:
     - name: Upload reconciliation evidence
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: buildchain-release-governance-${{ fromJSON(inputs.request-json).candidate-sha }}
+        name: buildchain-release-governance-${{
+          fromJSON(inputs.request-json).candidate-sha }}
         path: .buildchain-release-governance-reconciliation.json
         if-no-files-found: error

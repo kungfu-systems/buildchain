@@ -2,16 +2,6 @@ name: Dev PR Auto Merge
 on:
   workflow_call:
     inputs:
-      buildchain-repository:
-        description: Buildchain runtime repository
-        default: kungfu-systems/buildchain
-        type: string
-        required: false
-      buildchain-ref:
-        description: Explicit Buildchain v4 runtime ref; empty and v3 selectors are rejected.
-        default: v4
-        type: string
-        required: false
       target-branch:
         description: Protected dev branch to merge ready PRs into
         default: ""
@@ -58,9 +48,8 @@ on:
         type: string
         required: false
       project-cut-proof-json:
-        description:
-          Optional exact rooted Project Cut replay proof required when GitHub reports the PR behind the current
-          protected base
+        description: Optional exact rooted Project Cut replay proof required when GitHub reports the PR
+          behind the current protected base
         default: ""
         type: string
         required: false
@@ -85,12 +74,14 @@ on:
         type: string
         required: false
       environment-root:
-        description: Exact native execution environment contract root; required for required native qualification
+        description: Exact native execution environment contract root; required for required native
+          qualification
         default: ""
         type: string
         required: false
       affected-paths-json:
-        description: JSON array of covered paths; an empty array reconstructs paths from the exact successful source workflow run
+        description: JSON array of covered paths; an empty array reconstructs paths from the exact
+          successful source workflow run
         default: "[]"
         type: string
         required: false
@@ -105,12 +96,14 @@ on:
         type: string
         required: false
       native-command:
-        description: Native qualification command run after provisional Warrant selection when proof reuse is unavailable
+        description: Native qualification command run after provisional Warrant selection when proof reuse
+          is unavailable
         default: ""
         type: string
         required: false
       native-command-root:
-        description: Optional exact root of native-command; when supplied it must match before admission or spawn
+        description: Optional exact root of native-command; when supplied it must match before admission or
+          spawn
         default: ""
         type: string
         required: false
@@ -145,12 +138,14 @@ on:
         type: string
         required: false
       queue-admission-context:
-        description: Exact-head status written and read back before native queue admission; required in Warrant mode
+        description: Exact-head status written and read back before native queue admission; required in
+          Warrant mode
         default: ""
         type: string
         required: false
       active-lease-context:
-        description: Exact-head lease status written and read back as pending before enqueue; required in Warrant mode
+        description: Exact-head lease status written and read back as pending before enqueue; required in
+          Warrant mode
         default: ""
         type: string
         required: false
@@ -209,6 +204,21 @@ on:
         type: string
         default: ""
         required: false
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
     secrets:
       github-token:
         description: Optional token for reading and merging PRs. Defaults to github.token.
@@ -266,7 +276,8 @@ on:
         description: Content root of the cross-job native proof and state transfer
         value: ${{ jobs.merge-dev-prs.outputs.native-execution-transfer-root }}
       provider-finalizer-boundary-root:
-        description: Live provider readback root proving pairwise-distinct hosted native, seal, and finalizer domains
+        description: Live provider readback root proving pairwise-distinct hosted native, seal, and
+          finalizer domains
         value: ${{ jobs.merge-dev-prs.outputs.provider-finalizer-boundary-root }}
       provider-heartbeat-receipt-root:
         description: Rooted independent durable heartbeat continuity receipt
@@ -278,11 +289,27 @@ permissions:
   checks: read
   statuses: write
 concurrency:
-  group:
-    buildchain-dev-pr-admission-${{ github.repository }}-${{ inputs.target-branch || github.ref_name }}-${{
-    inputs.expected-pr-number || github.run_id }}
+  group: buildchain-dev-pr-admission-${{ github.repository }}-${{ inputs.target-branch ||
+    github.ref_name }}-${{ inputs.expected-pr-number || github.run_id }}
   cancel-in-progress: false
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   admission:
     name: Reserve exact delivery candidate
     runs-on: ubuntu-24.04
@@ -302,28 +329,25 @@ jobs:
       handoff-required: ${{ steps.reserve.outputs.warrant-handoff-required }}
       handoff-dispatched: ${{ steps.reserve.outputs.warrant-handoff-dispatched }}
       already-qualified: ${{ steps.reserve.outputs.warrant-already-qualified }}
-      run-native:
-        ${{ inputs.delivery-warrant-mode == 'required' && steps.reserve.outputs.warrant-outcome == 'success' &&
-        steps.reserve.outputs.warrant-handoff-required != 'true' && steps.reserve.outputs.warrant-already-qualified !=
-        'true' }}
+      run-native: ${{ inputs.delivery-warrant-mode == 'required' && steps.reserve.outputs.warrant-outcome
+        == 'success' && steps.reserve.outputs.warrant-handoff-required != 'true' &&
+        steps.reserve.outputs.warrant-already-qualified != 'true' }}
     steps:
-      - name: Checkout exact workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Admit exact source
         id: source
-        uses: ./.buildchain/workflow-shell/actions/dev-delivery/candidate/admit
+        uses: ./.buildchain/runtime/actions/dev-delivery/candidate/admit
         with:
           request-json: ${{ toJSON(inputs) }}
           github-token: ${{ secrets.github-token || github.token }}
       - name: Reserve delivery turn
         id: reserve
         if: always()
-        uses: ./.buildchain/workflow-shell/actions/dev-delivery/candidate/reserve
+        uses: ./.buildchain/runtime/actions/dev-delivery/candidate/reserve
         with:
           request-json: ${{ toJSON(inputs) }}
           github-token: ${{ secrets.github-token || github.token }}
@@ -333,24 +357,26 @@ jobs:
           proof-source-proof-root: ${{ steps.source.outputs.proof-source-proof-root }}
           qualify-outcome: ${{ steps.source.outputs.qualify-outcome }}
           runtime-sha: ${{ steps.source.outputs.runtime-sha }}
+    needs:
+      - execution-runtime
   native-execution:
     name: Credentialless native execution
-    needs: admission
+    needs:
+      - admission
+      - execution-runtime
     if: ${{ (needs.admission.outputs.run-native == 'true') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
-      - name: Checkout exact workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Verify native execution
         id: native
-        uses: ./.buildchain/workflow-shell/actions/dev-delivery/native/execute
+        uses: ./.buildchain/runtime/actions/dev-delivery/native/execute
         with:
           request-json: ${{ toJSON(inputs) }}
           needs-json: ${{ toJSON(needs) }}
@@ -359,7 +385,9 @@ jobs:
     needs:
       - admission
       - native-execution
-    if: ${{ (always() && needs.admission.result == 'success' && needs.admission.outputs.run-native == 'true') }}
+      - execution-runtime
+    if: ${{ (always() && needs.admission.result == 'success' && needs.admission.outputs.run-native ==
+      'true') }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
@@ -368,22 +396,22 @@ jobs:
       transfer-root: ${{ steps.native.outputs.transfer-root }}
       native-outcome: ${{ steps.native.outputs.transfer-native-outcome }}
     steps:
-      - name: Checkout exact workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Verify native execution
         id: native
-        uses: ./.buildchain/workflow-shell/actions/dev-delivery/native/seal
+        uses: ./.buildchain/runtime/actions/dev-delivery/native/seal
         with:
           request-json: ${{ toJSON(inputs) }}
           needs-json: ${{ toJSON(needs) }}
   delivery-heartbeat:
     name: Credentialed independent Warrant heartbeat
-    needs: admission
+    needs:
+      - admission
+      - execution-runtime
     if: ${{ (needs.admission.outputs.run-native == 'true') }}
     runs-on: macos-15
     permissions:
@@ -392,16 +420,14 @@ jobs:
     outputs:
       receipt-root: ${{ steps.native.outputs.heartbeat-receipt-root }}
     steps:
-      - name: Checkout exact workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Verify native execution
         id: native
-        uses: ./.buildchain/workflow-shell/actions/dev-delivery/native/heartbeat
+        uses: ./.buildchain/runtime/actions/dev-delivery/native/heartbeat
         with:
           request-json: ${{ toJSON(inputs) }}
           needs-json: ${{ toJSON(needs) }}
@@ -413,7 +439,9 @@ jobs:
       - native-execution
       - seal-native-execution
       - delivery-heartbeat
-    if: ${{ (always() && needs.admission.result == 'success' && needs.admission.outputs.handoff-required != 'true') }}
+      - execution-runtime
+    if: ${{ (always() && needs.admission.result == 'success' && needs.admission.outputs.handoff-required
+      != 'true') }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
@@ -435,25 +463,24 @@ jobs:
       warrant-state-root: ${{ needs.admission.outputs.warrant-state-root }}
       warrant-state-commit: ${{ needs.admission.outputs.warrant-state-commit }}
       project-cut-proof-root: ${{ needs.admission.outputs.project-cut-proof-root }}
-      native-proof-root: ${{ steps.qualify.outputs.native-final-native-proof-root || needs.admission.outputs.native-proof-root }}
-      native-reuse-decision-root: ${{ steps.qualify.outputs.native-final-decision-root || needs.admission.outputs.native-reuse-decision-root }}
-      qualified-warrant-receipt-root:
-        ${{ steps.qualify.outputs.native-final-qualification-receipt-root ||
+      native-proof-root: ${{ steps.qualify.outputs.native-final-native-proof-root ||
+        needs.admission.outputs.native-proof-root }}
+      native-reuse-decision-root: ${{ steps.qualify.outputs.native-final-decision-root ||
+        needs.admission.outputs.native-reuse-decision-root }}
+      qualified-warrant-receipt-root: ${{ steps.qualify.outputs.native-final-qualification-receipt-root ||
         needs.admission.outputs.qualified-warrant-receipt-root }}
       native-execution-transfer-root: ${{ steps.qualify.outputs.boundary-transfer-root }}
       provider-finalizer-boundary-root: ${{ steps.qualify.outputs.boundary-root }}
       provider-heartbeat-receipt-root: ${{ needs.delivery-heartbeat.outputs.receipt-root }}
     steps:
-      - name: Checkout exact workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Qualify delivery evidence
         id: qualify
-        uses: ./.buildchain/workflow-shell/actions/dev-delivery/candidate/qualify
+        uses: ./.buildchain/runtime/actions/dev-delivery/candidate/qualify
         with:
           request-json: ${{ toJSON(inputs) }}
           needs-json: ${{ toJSON(needs) }}
@@ -465,13 +492,13 @@ jobs:
           runtime-sha: ${{ needs.admission.outputs.runtime-sha }}
           branch: ${{ needs.admission.outputs.target-branch }}
           token: ${{ secrets.github-token || github.token }}
-        if:
-          ${{ success() && needs.admission.outputs.run-native == 'true' && steps.qualify.outputs.boundary-outcome == 'success'
-          && steps.qualify.outputs.boundary-native-outcome == 'failure' }}
+        if: ${{ success() && needs.admission.outputs.run-native == 'true' &&
+          steps.qualify.outputs.boundary-outcome == 'success' &&
+          steps.qualify.outputs.boundary-native-outcome == 'failure' }}
       - name: Land protected dev PR
         id: land
         if: always()
-        uses: ./.buildchain/workflow-shell/actions/dev-delivery/queue/land
+        uses: ./.buildchain/runtime/actions/dev-delivery/queue/land
         with:
           request-json: ${{ toJSON(inputs) }}
           needs-json: ${{ toJSON(needs) }}

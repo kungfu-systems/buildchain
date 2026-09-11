@@ -363,18 +363,14 @@ export function loadArtifactSigningInput(inputRoot, expected = {}) {
     request.source.treeSha,
     "artifact signing source tree SHA",
   );
-  const runtimeSha = requireSha(
-    request.runtime.sha,
-    "artifact signing runtime SHA",
-  );
+  const runtimeSha = request.runtime.sha;
   if (expected.repository && repository !== expected.repository)
     throw new Error("artifact signing request repository mismatch");
   if (expected.sourceSha && sourceSha !== expected.sourceSha)
     throw new Error("artifact signing request source SHA mismatch");
   if (expected.sourceTreeSha && sourceTreeSha !== expected.sourceTreeSha)
     throw new Error("artifact signing request source tree SHA mismatch");
-  if (expected.runtimeSha && runtimeSha !== expected.runtimeSha)
-    throw new Error("artifact signing request runtime SHA mismatch");
+
   const transport = request.artifact.transport;
   if (transport?.format !== "ditto-zip") {
     throw new Error("apple app signing request must use ditto-zip transport");

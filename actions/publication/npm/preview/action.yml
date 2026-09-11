@@ -13,7 +13,7 @@ runs:
     - name: Admit source checkout
       id: source-boundary
       if: ${{ always() }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      uses: ./.buildchain/runtime/actions/build/source/admit
       with:
         source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
     - name: Setup Node
@@ -22,12 +22,12 @@ runs:
         node-version: "24"
         registry-url: https://registry.npmjs.org/
     - name: Install dependencies
-      uses: ./.buildchain/workflow-shell/actions/runtime/dependencies/install
+      uses: ./.buildchain/runtime/actions/runtime/dependencies/install
       with:
         directory: .
         production: "false"
         ignore-scripts: "false"
     - name: Qualify package publication preview
-      uses: ./actions/publication/npm/qualify-preview
+      uses: ./.buildchain/runtime/actions/publication/npm/qualify-preview
       with:
         run-check: ${{ fromJSON(inputs.request-json).run-check }}

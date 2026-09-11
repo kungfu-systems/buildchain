@@ -10,7 +10,6 @@ import {
 import { createGovernanceReader } from "./github-reader.js";
 import {
   normalizeMembership,
-  resolveVerifierSourceRevision,
   addMinutes,
   repositoryVisibility,
   selectGithubGovernanceRepositories,
@@ -119,7 +118,6 @@ export function collectGithubGovernanceAudit({
   observedAt = new Date().toISOString(),
   ttlMinutes = 15,
   verifierSourceRevision = "",
-  root,
   token,
   api,
 } = {}) {
@@ -157,7 +155,7 @@ export function collectGithubGovernanceAudit({
   if (targetRef && selected.length !== 1) {
     throw new Error("--target-ref requires exactly one selected repository");
   }
-  const revision = resolveVerifierSourceRevision(root, verifierSourceRevision);
+  const revision = verifierSourceRevision;
   const verifier = {
     runtime: `node-${process.version}`,
     sourceRevision: revision,

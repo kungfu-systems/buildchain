@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-09
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-6
   product: Codex
@@ -520,10 +520,9 @@ branch or a concurrent incompatible update fails; the workflow does not replace
 its history. The controller retains the exact branch reconciliation and PR
 coordinates.
 
-The workflow checks out the Buildchain runtime selected by
-`buildchain-repository` and `buildchain-ref` into `.buildchain/runtime`, invokes
-that runtime for the propagation plan and lock write, then checks out the
-downstream repository and writes the exact lock. If
+The central entry prepares `.buildchain/runtime` once for each execution job.
+The selected runtime owns the propagation plan and lock write; the downstream
+repository checkout is the consumer source. If
 `downstream-update-command` is set, Buildchain runs that consumer-owned command
 after writing the lock and exposes the exact lock path, lock SHA-256,
 propagation key, branch, and upstream release JSON as
@@ -550,7 +549,7 @@ publication, deployment, and readback entrypoints. A byte-identical rerun is an
 explicit successful no-op, never a synthetic completion.
 
 For unreleased runtime validation, keep the caller's reusable workflow reference
-on `@v3` and pass a temporary train ref through `buildchain-ref`.
+on `@v4` and pass a temporary train through `runtime-ref`.
 
 ## kfd to site-libkungfu-dev
 

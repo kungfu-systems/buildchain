@@ -11,9 +11,35 @@ on:
         required: true
         default: true
         type: boolean
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
 permissions:
   contents: read
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+    timeout-minutes: 5
   dry-run:
     name: Dry-run npm publish
     runs-on: ubuntu-24.04
@@ -25,18 +51,18 @@ jobs:
           ref: ${{ inputs.ref || github.ref }}
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Dry-run npm publish
         id: node
-        uses: ./.buildchain/workflow-shell/actions/publication/npm/preview
+        uses: ./.buildchain/runtime/actions/publication/npm/preview
         with:
           request-json: ${{ toJSON(inputs) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
         if: ${{ always() }}
+    needs:
+      - execution-runtime

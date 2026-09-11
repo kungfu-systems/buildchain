@@ -50,12 +50,6 @@ import {
 } from "../packages/core/release/release-candidate.js";
 import { validatePromotionReleaseCandidate } from "../packages/core/release/promote-ref/internal/candidate-admission.js";
 import { resolveReleaseCandidateArtifacts } from "../packages/core/release/candidate/resolve.js";
-import {
-  classifyBuildchainRuntimeRef,
-  normalizeRequestedRuntimeRef,
-  resolveRuntimeSelection,
-  validateRuntimeOverrideTrust,
-} from "../packages/core/runtime/commands/runtime-ref-core.mjs";
 import { resolvePublishSourceCli } from "../packages/core/release/commands/resolve-publish-source.mjs";
 import { evaluateBuildchainContractLock } from "../packages/core/contracts/buildchain-contract.js";
 import {
@@ -140,19 +134,19 @@ test("canonical publisher keeps governance declarations outside provider executi
 });
 test("qualification verifies the invocation before checkout and admits the contract before candidate resolution", () => {
   const graph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "qualify");
-  const names = ["Validate the complete invocation before runtime checkout", "Checkout the selected runtime for read-only qualification", "Prepare locked runtime dependencies", "Qualify the sealed candidate and exact publication intent"];
+  const names = ["Prepare selected execution runtime", "Validate the complete invocation before runtime checkout", "Qualify the sealed candidate and exact publication intent"];
   const positions = names.map(name => graph.steps.findIndex(step => step.name === name));
   assert.ok(positions.every((position, index) => position >= 0 && (!index || positions[index - 1] < position)), JSON.stringify({ names, positions }));
 });
 test("self promotion enters the public API at the same source commit", () => {
   const workflow = readWorkflow(".github/workflows/self-release-promote.yml");
-  assert.equal(workflow.jobs.promote.uses, "./.github/workflows/public-release-promote.yml");
+  assert.equal(workflow.jobs.promote.uses, "kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4");
   assert.equal(workflow.jobs["promote-stable"], undefined);
-  assert.deepEqual(Object.keys(workflow.jobs.promote.with), ["request-json"]);
+  assert.deepEqual(Object.keys(workflow.jobs.promote.with), ["request-json", "runtime-selection"]);
 });
 test("SETTLE consumes APPLY evidence and emits the sole terminal receipt projection", () => {
   const graph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "settle");
-  assert.deepEqual(graph.job.needs, ["qualify", "apply"]);
+  assert.deepEqual(graph.job.needs, ["qualify", "apply", "execution-runtime"]);
   assert.equal(graph.job.permissions.contents, "read");
   assert.notEqual(graph.job.permissions["id-token"], "write");
   const restore = graph.steps.findIndex(step => step.name === "Restore canonical APPLY evidence");
@@ -216,8 +210,9 @@ test("build fixture keeps project settings in TOML and seals exact candidate byt
   assert.doesNotMatch(workflow, /artifact-transfer-mode:|buildchain-ref:|publish-source-ref:|publish-anchor-request-json:/u);
   assert.match(config, /environment = "github-hosted-container"/u);
   assert.match(config, /release_candidate = true/u);
-  assert.match(workflow, /uses: kungfu-systems\/buildchain\/.github\/workflows\/build.yml@v4-alpha/u);
-  assert.match(workflow, /ref: \$\{\{ github\.sha \}\}/u);
+  assert.match(workflow, /uses: kungfu-systems\/buildchain\/.github\/workflows\/build.yml@v4/u);
+  assert.match(workflow, /ref: \$\{\{ fromJSON\(needs\.execution-runtime\.outputs\.selection\)\.source\.sha \}\}/u);
+  assert.match(workflow, /resume-run-id: \$\{\{ inputs\.resume-run-id \}\}/u);
   const graph = inspectWorkflowJob(".github/workflows/self-build-fixture.yml", "buildchain-package-candidate");
   assert.match(graph.job.steps.find(step => step.id === "node").with["passport-artifact"], /needs\.libnode-shaped\.outputs\.release-candidate-artifact/u);
   const download = graph.steps.findIndex(step => step.name === "Download exact Release Candidate Passport");
@@ -310,7 +305,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
 
 test("buildchain ref promotion delegates alpha evidence to the canonical publisher", () => {
   const workflow = readWorkflow(".github/workflows/self-release-promote.yml");
-  assert.equal(workflow.jobs.promote.uses, "./.github/workflows/public-release-promote.yml");
+  assert.equal(workflow.jobs.promote.uses, "kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4");
   const request = workflow.jobs.promote.with["request-json"];
   assert.match(request, /"release-candidate-workflow-file": "self-build-fixture\.yml"/);
   assert.match(request, /"resume-candidate-run-id":/);
@@ -322,8 +317,7 @@ test("QUALIFY receives the rooted transient runtime authorization and publicatio
   const candidate = graph.steps.find(step => step.uses?.endsWith("/release/promotion/qualify-candidate"));
   assert.equal(candidate.with["request-json"], "${{ inputs.request-json }}");
   const implementation = graph.modules.get("packages/core/release/promotion/candidate.js");
-  assert.match(implementation, /authorizationJson: request\["promotion-runtime-authorization-json"\]/u);
-  assert.match(implementation, /authorizationRoot: request\["promotion-runtime-authorization-root"\]/u);
+  assert.doesNotMatch(implementation, /authorizationJson|authorizationRoot/u);
   assert.match(implementation, /channel: request\["promotion-publication-channel"\] \|\| intent.channel/u);
 });
 test("promote-buildchain-ref owns semver GitHub Release publication", () => {
@@ -1263,7 +1257,7 @@ test("generated release model publishes the generic major alpha channel contract
 test("Buildchain independently dogfoods zero-input alpha and one-input stable TOML builds", () => {
   for (const channel of ["alpha", "stable"]) {
     const workflow = fs.readFileSync(path.join(root, `.github/workflows/self-build-${channel}-dogfood.yml`), "utf8");
-    assert.match(workflow, /workflows: \["Buildchain Ref Promotion"\]/u);
+    assert.match(workflow, /workflows:\s*- Buildchain Ref Promotion/u);
     assert.ok(workflow.includes(`build.yml@${channel === "alpha" ? "v4-alpha" : "v4"}`));
     assert.doesNotMatch(workflow, /steps:|buildchain-channel:|working-directory:|runner-preset:/u);
     if (channel === "alpha") assert.doesNotMatch(workflow, /with:|config-path:/u);

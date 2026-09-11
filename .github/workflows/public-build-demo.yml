@@ -2,10 +2,6 @@ name: Buildchain Declarative Binary Auditable Demo
 on:
   workflow_call:
     inputs:
-      buildchain-repository:
-        default: kungfu-systems/buildchain
-        type: string
-        required: false
       source-ref:
         default: ""
         type: string
@@ -28,7 +24,8 @@ on:
         type: boolean
         required: false
       render-failure-advisory:
-        description: Preserve a required Gate while reporting full-media render failure without failing the caller
+        description: Preserve a required Gate while reporting full-media render failure without failing the
+          caller
         default: false
         type: boolean
         required: false
@@ -48,6 +45,21 @@ on:
         default: 14
         type: number
         required: false
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
     secrets:
       DEMO_UPDATE_TOKEN:
         required: false
@@ -70,9 +82,27 @@ permissions:
   actions: read
   contents: read
 concurrency:
-  group: declarative-auditable-demo-${{ github.repository }}-${{ github.ref }}-${{ inputs.binary-artifact-digest }}
+  group: declarative-auditable-demo-${{ github.repository }}-${{ github.ref }}-${{
+    inputs.binary-artifact-digest }}
   cancel-in-progress: false
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   capture:
     name: Capture every declared demo
     runs-on: ubuntu-24.04
@@ -82,22 +112,24 @@ jobs:
       capture-artifact-name: ${{ steps.node.outputs.capture-artifact-name }}
       capture-artifact-digest: ${{ steps.node.outputs.capture-artifact-digest }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Capture every declared demo
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/demo/capture
+        uses: ./.buildchain/runtime/actions/build/demo/capture
         with:
           request-json: ${{ toJSON(inputs) }}
           workflow-sha: ${{ job.workflow_sha }}
+    needs:
+      - execution-runtime
   qualify:
     name: Gate and render every declared demo
-    needs: capture
+    needs:
+      - capture
+      - execution-runtime
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     outputs:
@@ -105,16 +137,14 @@ jobs:
       evidence-artifact-digest: ${{ steps.node.outputs.evidence-artifact-digest }}
       render-result: ${{ steps.node.outputs.render-result }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Gate and render every declared demo
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/demo/qualify
+        uses: ./.buildchain/runtime/actions/build/demo/qualify
         with:
           request-json: ${{ toJSON(inputs) }}
           workflow-sha: ${{ job.workflow_sha }}
@@ -123,10 +153,12 @@ jobs:
           capture-artifact-digest: ${{ needs.capture.outputs.capture-artifact-digest }}
   publish:
     name: Open protected materialization pull request
-    if: ${{ (inputs.materialize && inputs.render-media && needs.qualify.outputs.render-result == 'success') }}
+    if: ${{ (inputs.materialize && inputs.render-media && needs.qualify.outputs.render-result ==
+      'success') }}
     needs:
       - capture
       - qualify
+      - execution-runtime
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -136,16 +168,14 @@ jobs:
     outputs:
       pr-url: ${{ steps.node.outputs.pr-url }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Open protected materialization pull request
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/demo/publish
+        uses: ./.buildchain/runtime/actions/build/demo/publish
         with:
           request-json: ${{ toJSON(inputs) }}
           workflow-sha: ${{ job.workflow_sha }}

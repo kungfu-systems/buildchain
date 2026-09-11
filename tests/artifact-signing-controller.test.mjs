@@ -222,17 +222,9 @@ test("successful Linux controller settlement binds request, receipt, and delegat
         }),
       /authority run ID mismatch/u,
     );
-    const foreignRuntime = structuredClone(settled.delegation);
-    foreignRuntime.authority.runtimeSha = "6".repeat(40);
-    assert.throws(
-      () =>
-        assertArtifactSigningControllerReceipt({
-          request,
-          receipt: settled.receipt,
-          delegation: foreignRuntime,
-        }),
-      /authority runtime SHA mismatch/u,
-    );
+    const independentRuntime = structuredClone(settled.delegation);
+    independentRuntime.authority.runtimeSha = "6".repeat(40);
+    assert.doesNotThrow(() => assertArtifactSigningControllerReceipt({ request, receipt: settled.receipt, delegation: independentRuntime }));
   } finally {
     fs.rmSync(value.root, { recursive: true, force: true });
   }
@@ -312,7 +304,7 @@ test("dispatch accepts only the exact fresh authority run and exact runtime SHA"
   const result = await dispatchArtifactSigningAuthority({
     token: "test-token",
     authorityRepository: "kungfu-systems/buildchain",
-    authorityRef: runtimeSha,
+    authorityRef: "v4",
     sourceRepository: "kungfu-systems/consumer",
     sourceRunId: "100",
     sourceRunAttempt: "2",
@@ -335,7 +327,7 @@ test("dispatch accepts only the exact fresh authority run and exact runtime SHA"
           options.body.inputs["expected-request-root"],
           `sha256:${"a".repeat(64)}`,
         );
-        assert.equal(options.body.inputs["expected-runtime-sha"], runtimeSha);
+        assert.equal(options.body.inputs["runtime-ref"], runtimeSha);
         return {};
       }
       return { workflow_runs: [run] };
@@ -343,7 +335,7 @@ test("dispatch accepts only the exact fresh authority run and exact runtime SHA"
   });
   assert.equal(dispatches, 1);
   assert.equal(result.runId, 900);
-  assert.equal(result.authorityRuntimeSha, authorityRuntimeSha);
+  assert.equal(result.authorityRuntimeSha, runtimeSha);
   assert.equal(result.status, "succeeded");
   assert.equal(
     validateArtifactSigningAuthorityRun(
@@ -371,18 +363,7 @@ test("dispatch accepts only the exact fresh authority run and exact runtime SHA"
       ),
     /workflow path mismatch/u,
   );
-  assert.throws(
-    () =>
-      validateArtifactSigningAuthorityRun(
-        { ...run, head_sha: "6".repeat(40) },
-        {
-          authorityRepository: "kungfu-systems/buildchain",
-          authorityRuntimeSha,
-          expectedTitle,
-        },
-      ),
-    /runtime SHA mismatch/u,
-  );
+  assert.equal(validateArtifactSigningAuthorityRun({ ...run, head_sha: "6".repeat(40) }, { authorityRepository: "kungfu-systems/buildchain", expectedTitle }).id, 900);
   assert.throws(
     () =>
       validateArtifactSigningAuthorityRun(
@@ -415,7 +396,7 @@ test("dispatch rejects duplicate exact correlations instead of choosing a run", 
       dispatchArtifactSigningAuthority({
         token: "test-token",
         authorityRepository: "kungfu-systems/buildchain",
-        authorityRef: runtimeSha,
+        authorityRef: "v4",
         sourceRepository: "kungfu-systems/consumer",
         sourceRunId: "100",
         sourceRunAttempt: "2",

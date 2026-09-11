@@ -32,15 +32,6 @@ export function verifyAdmittedCandidate({
   })
     .trim()
     .toLowerCase();
-  const actualRuntimeSha = execFileSync(
-    "git",
-    ["-C", runtimeRoot, "rev-parse", "HEAD"],
-    { encoding: "utf8" },
-  )
-    .trim()
-    .toLowerCase();
-  if (actualRuntimeSha !== runtimeSha)
-    throw new Error("admitted paper runtime checkout mismatch");
   const bundle = buildPublicationArtifactCandidate({
     artifactRoot: root,
     controllerRoot: path.join(workspace, ".buildchain/admitted/controller"),

@@ -712,57 +712,6 @@
       }
     },
     {
-      "laneId": ".github/workflows/public-ops-bootstrap-recovery.yml#recovery-admit",
-      "authorityClass": "evidence",
-      "triggerClass": "reusable",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 10,
-      "cancellationBehavior": "finish-started",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "consumer-owned exact-candidate admission latency",
-        "expectedContributionSeconds": 0,
-        "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
-      }
-    },
-    {
-      "laneId": ".github/workflows/public-ops-bootstrap-recovery.yml#recovery-execute",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "reusable",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 60,
-      "cancellationBehavior": "finish-started",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "consumer-owned exact-candidate execution latency",
-        "expectedContributionSeconds": 0,
-        "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
-      }
-    },
-    {
-      "laneId": ".github/workflows/public-ops-bootstrap-recovery.yml#recovery-settle",
-      "authorityClass": "evidence",
-      "triggerClass": "reusable",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 10,
-      "cancellationBehavior": "finish-started",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "consumer-owned terminal settlement latency",
-        "expectedContributionSeconds": 0,
-        "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
-      }
-    },
-    {
       "laneId": ".github/workflows/public-ops-bootstrap.yml#admit",
       "authorityClass": "evidence",
       "triggerClass": "reusable",
@@ -1631,23 +1580,6 @@
     },
     {
       "laneId": ".github/workflows/public-release-web.yml#release-intent",
-      "authorityClass": "release",
-      "triggerClass": "reusable",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/public-release-web.yml#runtime",
       "authorityClass": "release",
       "triggerClass": "reusable",
       "concurrencyPolicy": {
@@ -2633,5 +2565,183 @@
       }
     }
   ],
-  "declarationFamilies": []
+  "declarationFamilies": [
+    {
+      "laneIds": [
+        ".github/workflows/.build-demo-adapter.yml#execution-runtime",
+        ".github/workflows/.release-promote.yml#execution-runtime",
+        ".github/workflows/public-build-demo.yml#execution-runtime",
+        ".github/workflows/public-ops-alpha-candidate-patrol.yml#execution-runtime",
+        ".github/workflows/public-ops-dev-auto-merge.yml#execution-runtime",
+        ".github/workflows/public-ops-dev-qualification-patrol.yml#execution-runtime",
+        ".github/workflows/public-ops-housekeeping.yml#execution-runtime",
+        ".github/workflows/public-ops-patrol.yml#execution-runtime",
+        ".github/workflows/public-ops-stable-candidate-patrol.yml#execution-runtime",
+        ".github/workflows/public-release-oci-compose-preview.yml#execution-runtime"
+      ],
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "runtime entry preparation",
+        "expectedContributionSeconds": 300,
+        "rationale": "Five-minute upper bound for central entry selection; no business execution or provider mutation."
+      }
+    },
+    {
+      "laneIds": [
+        ".github/workflows/.build-gate-profile.yml#execution-runtime",
+        ".github/workflows/.build.yml#execution-runtime",
+        ".github/workflows/.ops-git-sync.yml#execution-runtime",
+        ".github/workflows/.release-authority.yml#execution-runtime",
+        ".github/workflows/.release-binary-assets.yml#execution-runtime",
+        ".github/workflows/public-build-check.yml#execution-runtime",
+        ".github/workflows/public-build-publication.yml#execution-runtime",
+        ".github/workflows/public-build-stage-capsule-canary.yml#execution-runtime",
+        ".github/workflows/public-ops-bootstrap.yml#execution-runtime",
+        ".github/workflows/public-ops-observed-evidence.yml#execution-runtime",
+        ".github/workflows/public-ops-tail-reseal.yml#execution-runtime",
+        ".github/workflows/public-ops-warrant-cancel.yml#execution-runtime",
+        ".github/workflows/public-ops-warrant-close.yml#execution-runtime",
+        ".github/workflows/public-release-artifact-attestation.yml#execution-runtime",
+        ".github/workflows/public-release-paper.yml#execution-runtime",
+        ".github/workflows/public-release-promote.yml#execution-runtime",
+        ".github/workflows/public-release-propagation.yml#execution-runtime",
+        ".github/workflows/public-release-tail.yml#execution-runtime",
+        ".github/workflows/public-release-web.yml#execution-runtime"
+      ],
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "runtime entry preparation",
+        "expectedContributionSeconds": 300,
+        "rationale": "Five-minute upper bound for central entry selection; no business execution or provider mutation."
+      }
+    },
+    {
+      "laneIds": [
+        ".github/workflows/public-build-adopter-qualification.yml#execution-runtime",
+        ".github/workflows/public-ops-release-governance.yml#execution-runtime",
+        ".github/workflows/self-build-binary-distribution.yml#execution-runtime",
+        ".github/workflows/self-build-demo-media-qualification.yml#execution-runtime",
+        ".github/workflows/self-build-fixture.yml#execution-runtime",
+        ".github/workflows/self-build-verify.yml#execution-runtime",
+        ".github/workflows/self-ops-bootstrap-dogfood.yml#execution-runtime",
+        ".github/workflows/self-ops-housekeeping-daily.yml#execution-runtime",
+        ".github/workflows/self-ops-housekeeping-monthly.yml#execution-runtime",
+        ".github/workflows/self-ops-housekeeping-weekly.yml#execution-runtime",
+        ".github/workflows/self-ops-merge-queue.yml#execution-runtime",
+        ".github/workflows/self-release-promote.yml#execution-runtime"
+      ],
+      "authorityClass": "governed-delegation",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "runtime entry preparation",
+        "expectedContributionSeconds": 300,
+        "rationale": "Five-minute upper bound for central entry selection; no business execution or provider mutation."
+      }
+    },
+    {
+      "laneIds": [
+        ".github/workflows/public-release-signing-authority.yml#execution-runtime"
+      ],
+      "authorityClass": "governed-delegation",
+      "triggerClass": "manual",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "runtime entry preparation",
+        "expectedContributionSeconds": 300,
+        "rationale": "Five-minute upper bound for central entry selection; no business execution or provider mutation."
+      }
+    },
+    {
+      "laneIds": [
+        ".github/workflows/self-build-channel-verify.yml#execution-runtime"
+      ],
+      "authorityClass": "governed-delegation",
+      "triggerClass": "pull-request",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "runtime entry preparation",
+        "expectedContributionSeconds": 300,
+        "rationale": "Five-minute upper bound for central entry selection; no business execution or provider mutation."
+      }
+    },
+    {
+      "laneIds": [
+        ".github/workflows/self-build-demo-dogfood.yml#execution-runtime",
+        ".github/workflows/self-build-stable-candidate-qualification.yml#execution-runtime",
+        ".github/workflows/self-ops-governance-audit.yml#execution-runtime",
+        ".github/workflows/self-release-next-development.yml#execution-runtime"
+      ],
+      "authorityClass": "governed-delegation",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "runtime entry preparation",
+        "expectedContributionSeconds": 300,
+        "rationale": "Five-minute upper bound for central entry selection; no business execution or provider mutation."
+      }
+    },
+    {
+      "laneIds": [
+        ".github/workflows/self-ops-runner-smoke.yml#execution-runtime",
+        ".github/workflows/self-release-binary-assets.yml#execution-runtime",
+        ".github/workflows/self-release-line-open.yml#execution-runtime",
+        ".github/workflows/self-release-npm-dry-run.yml#execution-runtime"
+      ],
+      "authorityClass": "governed-delegation",
+      "triggerClass": "manual",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "runtime entry preparation",
+        "expectedContributionSeconds": 300,
+        "rationale": "Five-minute upper bound for central entry selection; no business execution or provider mutation."
+      }
+    }
+  ]
 }

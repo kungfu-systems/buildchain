@@ -1818,11 +1818,11 @@ buildchain paper preflight [--cwd <dir>] [--offline] [--json]
 
 - Help: `buildchain paper resume --help`
 - Canonical id: `paper-resume`
-- Options: `--buildchain-ref`, `--cwd`, `--execute`, `--json`
+- Options: `--cwd`, `--execute`, `--json`, `--runtime-ref`
 - Syntax:
 
 ```text
-buildchain paper resume [--cwd <dir>] [--buildchain-ref <ref>] [--execute] [--json]
+buildchain paper resume [--cwd <dir>] [--runtime-ref <ref>] [--execute] [--json]
 ```
 
 ### `buildchain paper scaffold`

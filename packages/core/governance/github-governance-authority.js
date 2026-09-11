@@ -888,7 +888,6 @@ export function verifyGithubGovernanceReceipt(receipt, {
   expectedRepositoryIdentityRoot,
   expectedTargetRef,
   expectedPolicyRoot,
-  expectedVerifierSourceRevision,
   now = new Date().toISOString(),
 } = {}) {
   if (receipt?.contract !== GITHUB_GOVERNANCE_RECEIPT_CONTRACT) {
@@ -916,10 +915,6 @@ export function verifyGithubGovernanceReceipt(receipt, {
   }
   if (expectedPolicyRoot && receipt.policyRoot !== expectedPolicyRoot) {
     throw new Error("GitHub governance receipt policy root mismatch");
-  }
-  if (expectedVerifierSourceRevision &&
-      receipt.verifier?.sourceRevision !== expectedVerifierSourceRevision) {
-    throw new Error("GitHub governance receipt verifier source revision mismatch");
   }
   const observed = Date.parse(receipt.observedAt);
   const expires = Date.parse(receipt.expiresAt);

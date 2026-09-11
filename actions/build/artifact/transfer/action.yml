@@ -1,5 +1,6 @@
 name: transfer-build-artifact
-description: Transfer declared artifacts through the governed provider and publish exact references.
+description: Transfer declared artifacts through the governed provider and
+  publish exact references.
 inputs:
   plan:
     description: Rooted build plan

@@ -44,7 +44,6 @@ export function verifyExecutionIdentity(result, plan, platform) {
     root !== rootOf(body) ||
     result.plan_root !== plan.root ||
     result.source_sha !== plan.source.sha ||
-    result.runtime_sha !== plan.identity.sha ||
     result.platform !== platform.id ||
     JSON.stringify(result.run) !== JSON.stringify(plan.run)
   )
@@ -72,7 +71,6 @@ export function verifyManifest(file, root, plan, platform) {
     manifest.platform?.id !== platform.id ||
     manifest.git?.sha !== plan.source.sha ||
     manifest.git?.treeSha !== plan.source.tree_sha ||
-    manifest.git?.runtimeSha !== plan.identity.sha ||
     manifest.git?.repository !== plan.run.repository
   ) {
     throw new Error(`Artifact manifest identity mismatch: ${platform.id}`);
@@ -142,8 +140,7 @@ export function verifyCredential(manifestFile, payloadRoot, plan, platform) {
     evidence[0].status !== "accepted" ||
     evidence[0].source?.repository !== plan.run.repository ||
     evidence[0].source?.sha !== plan.source.sha ||
-    evidence[0].source?.treeSha !== plan.source.tree_sha ||
-    evidence[0].buildchain?.runtimeSha !== plan.identity.sha
+    evidence[0].source?.treeSha !== plan.source.tree_sha
   )
     throw new Error("Credential evidence identity mismatch");
   return manifest;

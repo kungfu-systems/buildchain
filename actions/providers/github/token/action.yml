@@ -1,5 +1,6 @@
 name: Acquire scoped GitHub credential
-description: Create and revoke an App installation token, with explicit fallback selection and diagnostics.
+description: Create and revoke an App installation token, with explicit fallback
+  selection and diagnostics.
 inputs:
   client-id:
     description: App client ID.
@@ -20,10 +21,12 @@ inputs:
     description: Numeric GitHub App ID; use only when no client ID is supplied.
     default: ""
   failure-policy:
-    description: strict rejects incomplete or failed App creation; fallback returns diagnostics.
+    description: strict rejects incomplete or failed App creation; fallback returns
+      diagnostics.
     default: fallback
   organization:
-    description: Explicit organization installation scope; mutually exclusive with repository.
+    description: Explicit organization installation scope; mutually exclusive with
+      repository.
     default: ""
   require-token:
     description: Reject an empty credential selection.
@@ -52,7 +55,7 @@ runs:
   steps:
     - name: Admit exact GitHub access scope
       id: scope
-      uses: ./.buildchain/workflow-shell/actions/providers/github/admit-access
+      uses: ./.buildchain/runtime/actions/providers/github/admit-access
       with:
         repository: ${{ inputs.repository }}
         client-configured: ${{ inputs.client-id != '' }}
@@ -76,7 +79,7 @@ runs:
         permission-pull-requests: ${{ inputs.permission-pull-requests }}
     - name: Select scoped credential
       id: select
-      uses: ./.buildchain/workflow-shell/actions/providers/github/select-token
+      uses: ./.buildchain/runtime/actions/providers/github/select-token
       with:
         client-configured: ${{ inputs.client-id != '' || inputs.app-id != '' }}
         private-key-configured: ${{ inputs.private-key != '' }}

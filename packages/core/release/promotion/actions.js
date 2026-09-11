@@ -2,7 +2,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { getOctokit } from "@actions/github";
 import { installationRoot } from "../../runtime/installation-root.js";
-import { verifyCheckoutIdentity } from "../../runtime/checkout-identity.js";
 import { routePromotion } from "./routing.js";
 import { bindPromotionSelection } from "./selection.js";
 import { admitPromotionInvocation } from "./admission.js";
@@ -24,34 +23,16 @@ function context(env) {
     payload: JSON.parse(fs.readFileSync(env.GITHUB_EVENT_PATH, "utf8")),
   };
 }
-function requireRuntime(workspace, relative, sha) {
-  const runtimeRoot = installationRoot(import.meta.url);
-  if (
-    fs.realpathSync(runtimeRoot) !==
-    fs.realpathSync(path.join(workspace, relative))
-  )
-    throw new Error(
-      "Promotion action is outside its admitted runtime checkout",
-    );
-  verifyCheckoutIdentity({
-    directory: runtimeRoot,
-    sha,
-    label: "Promotion action runtime",
-  });
-  return runtimeRoot;
-}
+
 export async function routePromotionAction(core, env) {
   const workflowSha = get(core, "workflow-sha"),
     workspace = path.resolve(env.GITHUB_WORKSPACE);
-  const runtimeRoot = requireRuntime(
-    workspace,
-    ".buildchain/workflow-shell",
-    workflowSha,
-  );
+  const runtimeRoot = installationRoot(import.meta.url);
   emit(
     core,
     await routePromotion({
       request: get(core, "request-json"),
+      runtime: JSON.parse(env.BUILDCHAIN_RUNTIME_SELECTION),
       workflowRepository: get(core, "workflow-repository"),
       workflowSha,
       workflowRef: get(core, "workflow-ref"),
@@ -67,11 +48,7 @@ export function bindPromotionSelectionAction(core, env) {
   const selection = JSON.parse(get(core, "selection-json")),
     request = JSON.parse(get(core, "request-json")),
     workspace = path.resolve(env.GITHUB_WORKSPACE);
-  requireRuntime(
-    workspace,
-    ".buildchain/workflow-shell",
-    selection["shell-sha"],
-  );
+
   emit(
     core,
     bindPromotionSelection({
@@ -85,11 +62,7 @@ export function bindPromotionSelectionAction(core, env) {
 export async function admitPromotionInvocationAction(core, env) {
   const selection = JSON.parse(get(core, "selection-json")),
     workspace = path.resolve(env.GITHUB_WORKSPACE);
-  requireRuntime(
-    workspace,
-    ".buildchain/policy-runtime",
-    selection["router-sha"],
-  );
+
   emit(
     core,
     await admitPromotionInvocation({
@@ -104,11 +77,7 @@ export async function admitPromotionInvocationAction(core, env) {
 }
 export function inspectPromotionInvocationAction(core, env) {
   const workflowSha = get(core, "workflow-sha");
-  requireRuntime(
-    path.resolve(env.GITHUB_WORKSPACE),
-    ".buildchain/workflow-shell",
-    workflowSha,
-  );
+
   verifyPromotionInvocation(get(core, "request-json"), workflowSha);
 }
 export async function classifyPublicationHeadAction(core, env) {
@@ -117,7 +86,7 @@ export async function classifyPublicationHeadAction(core, env) {
     throw new Error(
       "Publication classification requires a workflow run with an exact source SHA",
     );
-  requireRuntime(path.resolve(env.GITHUB_WORKSPACE), ".", event.head_sha);
+
   const result = await classifyProductPublication(
     { requestedSha: event.head_sha, targetRef: event.head_branch },
     productPublicationReader(

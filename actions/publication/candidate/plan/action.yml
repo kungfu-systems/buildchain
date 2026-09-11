@@ -31,22 +31,9 @@ runs:
     - name: Admit source checkout
       id: source-boundary
       if: ${{ always() }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      uses: ./.buildchain/runtime/actions/build/source/admit
       with:
         source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
-    - name: Checkout Buildchain runtime
-      id: runtime-checkout
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
-        ref: ${{ inputs.runtime-sha }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - name: Prepare exact publication runtime
-      id: core-node
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Enforce v4 floating consumer policy
       id: v4-policy
       uses: ./.buildchain/runtime/actions/consumer/policy/admit
@@ -55,12 +42,15 @@ runs:
         workflow: .github/workflows/public-build-publication.yml
         workflow-sha: ${{ inputs.workflow-sha }}
         runtime-sha: ${{ inputs.runtime-sha }}
-        stable-lock-path: ${{ fromJSON(inputs.request-json).buildchain-stable-contract-lock-path }}
-        alpha-lock-path: ${{ fromJSON(inputs.request-json).buildchain-alpha-contract-lock-path }}
+        stable-lock-path: ${{
+          fromJSON(inputs.request-json).buildchain-stable-contract-lock-path }}
+        alpha-lock-path: ${{
+          fromJSON(inputs.request-json).buildchain-alpha-contract-lock-path }}
     - name: Upload rooted v4 consumer policy receipt
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: ${{ fromJSON(inputs.request-json).artifact-name }}-v4-consumer-policy-${{ github.sha }}
+        name: ${{ fromJSON(inputs.request-json).artifact-name }}-v4-consumer-policy-${{
+          github.sha }}
         path: .buildchain/evidence/consumer-policy-receipt.json
         if-no-files-found: error
         retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
@@ -83,50 +73,14 @@ runs:
     - name: Upload publication-artifact controller plan
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: buildchain-publication-controller-plan-${{ steps.controller-identities.outputs.source-sha }}
+        name: buildchain-publication-controller-plan-${{
+          steps.controller-identities.outputs.source-sha }}
         path: .buildchain/controller/plan.json
         if-no-files-found: error
-    - name: Check Buildchain contract lock
-      id: contract-lock
-      uses: ./.buildchain/runtime/actions/runtime/contract/check
-      with:
-        request-json: ${{ inputs.request-json }}
-        runtime-ref: ${{ inputs.runtime-ref }}
-        runtime-sha: ${{ inputs.runtime-sha }}
-        runtime-class: ${{ inputs.runtime-class }}
-        workflow-ref: ${{ inputs.workflow-ref }}
-        runtime-override: ${{ inputs.runtime-override }}
-    - name: Report consumer Buildchain contract drift
-      if: ${{ always() && steps.contract-lock.outputs.contract-lock-issue-needed == 'true' }}
-      uses: ./.buildchain/runtime/actions/governance/incident/report
-      with:
-        token: ${{ github.token }}
-        target-repository: ${{ github.repository }}
-        title:
-          "[Buildchain contract] ${{ github.repository }} publication artifact drift on ${{
-          inputs.runtime-ref }}"
-        failure-code: buildchain-contract-${{ steps.contract-lock.outputs.contract-lock-status }}
-        buildchain-ref: ${{ inputs.runtime-ref }}
-        buildchain-version: ${{ steps.contract-lock.outputs.contract-digest }}
-        consumer-repository: ${{ github.repository }}
-        consumer-ref: ${{ github.ref }}
-        consumer-sha: ${{ github.sha }}
-        workflow: ${{ github.workflow }}
-        run-id: ${{ github.run_id }}
-        run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        summary: "Buildchain floating runtime contract drift: ${{
-          steps.contract-lock.outputs.contract-lock-status }}"
-        body-file: ${{ steps.contract-lock.outputs.contract-lock-issue-body-file }}
-        labels: buildchain-contract-drift
-        comment-cooldown-hours: "24"
-        fail-on-error: "false"
 outputs:
   controller-plan-outcome:
     description: Exact publication step result.
     value: ${{ steps.controller-plan.outcome }}
-  runtime-checkout-outcome:
-    description: Exact publication step result.
-    value: ${{ steps.runtime-checkout.outcome }}
   controller-identities-outcome:
     description: Exact publication step result.
     value: ${{ steps.controller-identities.outcome }}
@@ -135,7 +89,8 @@ outputs:
     value: ${{ steps.controller-identities.outputs.source-sha }}
   controller-plan-artifact:
     description: controller-plan-artifact node result.
-    value: buildchain-publication-controller-plan-${{ steps.controller-identities.outputs.source-sha }}
+    value: buildchain-publication-controller-plan-${{
+      steps.controller-identities.outputs.source-sha }}
   controller-plan-json:
     description: controller-plan-json node result.
     value: ${{ steps.controller-plan.outputs.controller-plan-json }}
@@ -144,7 +99,8 @@ outputs:
     value: ${{ steps.controller-plan.outputs.controller-plan-digest }}
   controller-receipt-artifact:
     description: controller-receipt-artifact node result.
-    value: buildchain-publication-controller-receipt-${{ steps.controller-identities.outputs.source-sha }}
+    value: buildchain-publication-controller-receipt-${{
+      steps.controller-identities.outputs.source-sha }}
   runtime-sha:
     description: runtime-sha node result.
     value: ${{ steps.controller-identities.outputs.runtime-sha }}

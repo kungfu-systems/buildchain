@@ -9,7 +9,7 @@ const implementations = contract.nodes.flatMap(node => node.implementations.map(
 function nodeCalls(job, jobId) {
   return job.steps.map(step => {
     const action = localActionDirectory(step.uses);
-    if (!action) return null;
+    if (!action || action.startsWith("actions/runtime/")) return null;
     const implementation = implementations.find(item => item.action === `${action}/action.yml` && item.domains.includes(jobId));
     assert.ok(implementation, `Undeclared delivery node ${action} in ${jobId}`);
     return { ...step, implementation };
@@ -33,6 +33,7 @@ test("native execution, sealing and heartbeat retain distinct credential boundar
     if (operation !== "heartbeat") {
       assert.deepEqual(graph.job.permissions, operation === "seal" ? { actions: "read", contents: "read" } : { contents: "read" });
       for (const step of graph.steps) {
+        if (step.uses?.includes("/runtime/environment/prepare") || step.uses?.startsWith("actions/checkout@")) continue;
         assert.equal(step.with?.["github-token"], undefined); assert.equal(step.with?.token, undefined);
         for (const name of Object.keys(step.env || {})) assert.ok(!["GH_TOKEN", "GITHUB_TOKEN"].includes(name));
       }
@@ -42,15 +43,17 @@ test("native execution, sealing and heartbeat retain distinct credential boundar
   assert.equal(finalizer.job.permissions.contents, "write");
   assert.ok(finalizer.modules.has("packages/core/dev-delivery/native/transactions.js"));
 });
-test("orchestration exposes declared nodes after exact workflow implementation checkout", () => {
+test("orchestration prepares the central selection before declared business nodes", () => {
   for (const file of [contract.workflow, contract.terminalWorkflow]) {
     assert.ok(read(file).split("\n").length <= contract.maxOrchestrationLines);
     for (const [jobId, job] of Object.entries(readWorkflow(file).jobs)) {
-      const checkout = job.steps[0];
-      assert.equal(checkout.uses, "actions/checkout@v7.0.0");
-      assert.equal(checkout.with.repository, "${{ job.workflow_repository }}");
-      assert.equal(checkout.with.ref, "${{ job.workflow_sha }}");
-      assert.equal(checkout.with["persist-credentials"], false);
+      if (jobId === "execution-runtime") {
+        assert.equal(job.steps[0].uses, "$/actions/runtime/selection/resolve");
+        continue;
+      }
+      const prepare = job.steps[0];
+      assert.equal(prepare.uses, "$/actions/runtime/environment/prepare");
+      assert.equal(prepare.with["selection"], "${{ needs.execution-runtime.outputs.selection }}");
       const calls = nodeCalls(job, jobId);
       assert.deepEqual(calls.map(call => call.implementation.node), contract.jobs[jobId].nodes);
       assert.equal(job.steps.length, calls.length + 1);

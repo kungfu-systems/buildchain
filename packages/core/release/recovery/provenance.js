@@ -36,8 +36,7 @@ export function resolveAnchorRecoveryRequest({
     !/^[0-9a-f]{40}$/u.test(String(request.supersededCandidate?.sha || "")) ||
     !/^sha256:[0-9a-f]{64}$/u.test(
       String(request.supersededCandidate?.root || ""),
-    ) ||
-    request.runtime?.sha !== passport.buildchain?.sha
+    )
   ) {
     throw new Error(
       "anchored candidate request does not bind the sealed recovery identity",

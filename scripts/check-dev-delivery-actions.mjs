@@ -5,6 +5,7 @@ import path from "node:path";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import YAML from "yaml";
+import { lowerSelfReferencesForLint } from "./workflow-self-reference.mjs";
 const root = process.cwd();
 const contract = JSON.parse(fs.readFileSync(path.join(root, "architecture/dev-delivery-orchestration.json"), "utf8"));
 const temp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-delivery-actionlint-")));
@@ -32,6 +33,7 @@ try {
   }
   const aliases = new Set(files.flatMap(file => [...fs.readFileSync(file, "utf8").matchAll(/\.\/\.buildchain\/([a-z0-9][a-z0-9-]*)\/actions\//gu)].map(match => match[1])));
   for (const alias of aliases) fs.symlinkSync(root, path.join(temp, ".buildchain", alias), "junction");
+  for (const file of files) fs.writeFileSync(file, lowerSelfReferencesForLint(fs.readFileSync(file, "utf8")));
   const version = "1.7.12", probe = spawnSync("actionlint", ["-version"], { encoding: "utf8" });
   const command = probe.status === 0 && probe.stdout.trim().split(/\s/u)[0].replace(/^v/u, "") === version ? "actionlint" : "go";
   const prefix = command === "go" ? ["run", `github.com/rhysd/actionlint/cmd/actionlint@v${version}`] : [];

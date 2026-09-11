@@ -31,7 +31,7 @@ runs:
   steps:
     - name: Admit consumer event trust
       id: trust
-      uses: ./.buildchain/workflow-shell/actions/workflow/event/admit
+      uses: ./.buildchain/runtime/actions/workflow/event/admit
       with:
         head-repository: ${{ github.event.pull_request.head.repo.full_name }}
         require-trusted: ${{ fromJSON(inputs.request-json).require-trusted-event }}
@@ -44,21 +44,9 @@ runs:
         clean: true
         persist-credentials: false
       id: source
-    - name: Checkout exact Buildchain workflow runtime
-      uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
-      with:
-        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
-        ref: ${{ inputs.workflow-sha }}
-        path: .buildchain/runtime
-        clean: true
-        persist-credentials: false
-    - name: Prepare exact workflow runtime
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Resolve exact source artifact coordinate
       id: source-artifact
-      uses: ./.buildchain/workflow-shell/actions/build/artifact/resolve
+      uses: ./.buildchain/runtime/actions/build/artifact/resolve
       with:
         name: ${{ fromJSON(inputs.request-json).source-artifact-name }}
         digest: ${{ fromJSON(inputs.request-json).source-artifact-digest }}
@@ -94,7 +82,8 @@ runs:
       if: ${{ always() }}
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
       with:
-        name: auditable-demo-gate-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+        name: auditable-demo-gate-diagnostics-${{ github.run_id }}-${{
+          github.run_attempt }}
         path: |
           gate-diagnostics
           gate-work/source-artifact.json

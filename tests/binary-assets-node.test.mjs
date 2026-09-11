@@ -5,7 +5,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import test from "node:test";
 import YAML from "yaml";
-import { verifySourceRuntimeCheckouts } from "../packages/core/runtime/checkout-identity.js";
+import { verifyCheckoutIdentity } from "../packages/core/runtime/checkout-identity.js";
 import { validateBinaryCapability } from "../packages/core/publication/binary/capability.js";
 import { writeChecksums } from "../packages/core/build/binary/checksums.js";
 const sha = "d".repeat(40),
@@ -60,32 +60,12 @@ test("binary authority binds exact source, bundle, publisher, environment and ex
   changed.manifest.release.tag = "v4.1.0";
   assert.throws(() => validateBinaryCapability(changed), /bundle tag mismatch/);
 });
-test("binary runtime and source checkout must both match admitted immutable identities", () => {
-  const calls = [];
-  verifySourceRuntimeCheckouts({ sourceDirectory: ".", runtimeDirectory: ".buildchain/runtime", runtimeSha: runtime, sourceSha: sha }, (_cmd, args) => {
-    calls.push(args);
-    return args[1] === "." ? sha : runtime;
-  });
-  assert.deepEqual(
-    calls.map((args) => args[1]),
-    [".buildchain/runtime", "."],
-  );
-  assert.throws(
-    () =>
-      verifySourceRuntimeCheckouts(
-        { sourceDirectory: ".", runtimeDirectory: ".buildchain/runtime", runtimeSha: "v4-alpha", sourceSha: sha },
-        () => runtime,
-      ),
-    /exact commit/,
-  );
-  assert.throws(
-    () =>
-      verifySourceRuntimeCheckouts(
-        { sourceDirectory: ".", runtimeDirectory: ".buildchain/runtime", runtimeSha: runtime, sourceSha: sha },
-        () => runtime,
-      ),
-    /Source does not match/,
-  );
+test("binary source checkout remains exact after the entry prepares an independent runtime", () => {
+ const calls=[];
+ verifyCheckoutIdentity({directory:".",sha,label:"Source"},(_cmd,args)=>{calls.push(args);return sha;});
+ assert.deepEqual(calls.map(args=>args[1]),["."]);
+ assert.throws(()=>verifyCheckoutIdentity({directory:".",sha:"v4-alpha",label:"Source"},()=>sha),/exact commit/);
+ assert.throws(()=>verifyCheckoutIdentity({directory:".",sha,label:"Source"},()=>runtime),/Source does not match/);
 });
 test("binary checksums cover sorted files once and replace the prior manifest atomically", async (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "binary-node-"));
@@ -125,7 +105,7 @@ test("binary publication retains protected environment and only immutable asset 
     YAML.parse(fs.readFileSync(new URL(`../${file}`, import.meta.url), "utf8"));
   const workflow = load(".github/workflows/.release-binary-assets.yml");
   assert.equal(workflow.jobs.publish.environment, "buildchain-release-assets");
-  assert.equal(workflow.jobs.publish.needs, "publication-authority");
+  assert.ok(workflow.jobs.publish.needs.includes("publication-authority"));
   assert.deepEqual(workflow.jobs.publish.permissions, {
     actions: "read",
     contents: "write",
@@ -142,10 +122,6 @@ test("binary publication retains protected environment and only immutable asset 
   assert.ok(action.runs.steps.every(step => step.uses && !step.run && !step.shell));
   const source = JSON.stringify(action);
   assert.doesNotMatch(source, /--clobber|startsWith\(/);
-  assert.ok(
-    action.runs.steps.findIndex(
-      (s) => s.name === "Verify source and runtime coordinates",
-    ) <
-      action.runs.steps.findIndex((s) => s.uses?.endsWith("/runtime/environment/prepare")),
-  );
+  assert.ok(workflow.jobs.publish.steps.some(s => s.uses === "$/actions/runtime/environment/prepare"));
+  assert.ok(action.runs.steps.every(s => !s.uses?.endsWith("/runtime/environment/prepare")));
 });

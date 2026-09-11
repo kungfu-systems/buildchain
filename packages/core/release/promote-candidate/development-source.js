@@ -23,14 +23,13 @@ export function prepareDevelopmentSource({ cwd, sourceSha }) {
     // Shallow local clones omit commits reachable only through FETCH_HEAD.
     execFileSync("git", ["fetch", "--no-tags", path.resolve(cwd), sourceSha], { cwd: source, stdio: "pipe" });
     execFileSync("git", ["-c", "core.autocrlf=false", "-c", "core.eol=lf", "checkout", "--detach", sourceSha], { cwd: source, stdio: "pipe" });
-    const runtime = path.join(source, ".buildchain/runtime");
-    fs.mkdirSync(runtime, { recursive: true });
-    fs.symlinkSync(
-      path.resolve(cwd, "node_modules"),
-      path.join(runtime, "node_modules"),
-      "junction",
-    );
-    fs.symlinkSync(path.join(runtime, "node_modules"), path.join(source, "node_modules"), "junction");
+    const dependencies = path.resolve(cwd, "node_modules");
+    if (fs.existsSync(dependencies)) {
+      fs.cpSync(dependencies, path.join(source, "node_modules"), {
+        recursive: true,
+        verbatimSymlinks: true,
+      });
+    }
     return { cwd: source, dispose };
   } catch (error) {
     dispose();

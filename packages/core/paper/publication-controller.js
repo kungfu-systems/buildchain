@@ -9,14 +9,12 @@ import { requireValue } from "../runtime/action-process.mjs";
 function requireCandidate(receipt, source, runtime) {
   const result = validateControllerReceipt(receipt, {
     expectedSourceSha: source.sha,
-    expectedRuntimeSha: runtime.sha,
   });
   requireValue(
     result.qualifying &&
       receipt.controller.id === "publication-artifact" &&
-      receipt.source.repository === source.repository &&
-      receipt.runtime.contractDigest === runtime.contractDigest,
-    "Paper candidate controller must qualify for the exact source and runtime",
+      receipt.source.repository === source.repository,
+    "Paper candidate controller must qualify for the exact source",
   );
 }
 

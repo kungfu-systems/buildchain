@@ -1,47 +1,68 @@
 name: Engineering Housekeeper Weekly
-
 on:
   schedule:
-    - cron: "47 3 * * 1"
+    - cron: 47 3 * * 1
   workflow_dispatch:
     inputs:
       mode:
-        description: "Report by default; apply also requires apply-enabled."
+        description: Report by default; apply also requires apply-enabled.
         type: choice
-        options: [report, apply]
+        options:
+          - report
+          - apply
         default: report
       apply-enabled:
-        description: "Explicit positive mutation gate."
+        description: Explicit positive mutation gate.
         type: boolean
         default: false
-      buildchain-ref:
-        description: "Temporary runtime ref for trusted qualification."
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
         type: string
+        required: false
         default: ""
-
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
 permissions: {}
-
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+    timeout-minutes: 5
   invalid-apply-gate:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'apply' && !inputs.apply-enabled }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'apply' && !inputs.apply-enabled
+      }}
     runs-on: ubuntu-24.04
     permissions: {}
     steps:
-      - name: Load request admission node
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Reject invalid apply request
-        uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
+        uses: ./.buildchain/runtime/actions/workflow/admission/reject
         with:
           reason: apply mode requires apply-enabled=true
-
+    needs:
+      - execution-runtime
   report:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode != 'apply' }}
-    uses: ./.github/workflows/public-ops-housekeeping.yml
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-housekeeping.yml@v4
     permissions:
       contents: read
       pull-requests: read
@@ -49,11 +70,13 @@ jobs:
       mode: report
       stale-days: 45
       max-actions: 20
-      buildchain-ref: ${{ inputs.buildchain-ref || github.sha }}
-
+      runtime-selection: ${{ needs.execution-runtime.outputs.selection }}
+    needs:
+      - execution-runtime
   apply:
-    if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'apply' && inputs.apply-enabled) }}
-    uses: ./.github/workflows/public-ops-housekeeping.yml
+    if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.mode
+      == 'apply' && inputs.apply-enabled) }}
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-housekeeping.yml@v4
     permissions:
       contents: write
       pull-requests: write
@@ -63,4 +86,6 @@ jobs:
       stale-pull-request-label: engineering-housekeeper:stale
       stale-days: 45
       max-actions: 20
-      buildchain-ref: ${{ inputs.buildchain-ref || github.sha }}
+      runtime-selection: ${{ needs.execution-runtime.outputs.selection }}
+    needs:
+      - execution-runtime

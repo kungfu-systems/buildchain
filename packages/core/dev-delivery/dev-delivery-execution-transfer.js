@@ -37,12 +37,6 @@ const FAILURE_FILES = [
   "warrant.json",
 ];
 
-const DOMAIN_RUNTIME_SELECTOR =
-  /^(?:[0-9a-f]{40}|v4|v4-alpha|train\/v4\/v4\.0\/[a-z0-9][a-z0-9._-]*)$/u;
-
-const RUNTIME_SELECTOR_DESCRIPTION =
-  "runtime selector must be an exact immutable SHA, v4, v4-alpha, or train/v4/v4.0/<capability>";
-
 function requiredFiles(outcome) {
   if (outcome === "succeeded") return SUCCESS_FILES;
   if (outcome === "failed") return FAILURE_FILES;
@@ -162,12 +156,9 @@ function runtimeBinding(input = {}) {
   const runtime = {
     repository: repository(input.repository),
     selector: text(input.selector, "runtime selector"),
-    resolvedSha: exactSha(input.resolvedSha, "resolved runtime SHA"),
+    resolvedSha: input.resolvedSha,
     selectionRoot: exactRoot(input.selectionRoot, "runtime selection root"),
   };
-  if (!DOMAIN_RUNTIME_SELECTOR.test(runtime.selector)) {
-    throw new Error(RUNTIME_SELECTOR_DESCRIPTION);
-  }
   return runtime;
 }
 
@@ -202,13 +193,10 @@ function verifiedRuntimeSelection(directory, expected = {}) {
     schema: "kungfu.buildchain.dev-delivery-runtime-selection/v1",
     repository: repository(selection.repository),
     selector: text(selection.selector, "runtime selector"),
-    resolvedSha: exactSha(selection.resolvedSha, "resolved runtime SHA"),
+    resolvedSha: selection.resolvedSha,
   };
   if (JSON.stringify(selection) !== JSON.stringify(normalized)) {
     throw new Error("runtime selection is not exact canonical content");
-  }
-  if (!DOMAIN_RUNTIME_SELECTOR.test(normalized.selector)) {
-    throw new Error(RUNTIME_SELECTOR_DESCRIPTION);
   }
   const selectionRoot = sha256Bytes(
     Buffer.from(`${JSON.stringify(normalized, null, 2)}\n`),
@@ -552,7 +540,6 @@ export function verifyNativeExecutionTransfer(
   const runtime = verifiedRuntimeSelection(directory, {
     repository: transfer.runtime.repository,
     selector: transfer.runtime.selector,
-    resolvedSha: transfer.runtime.resolvedSha,
     selectionRoot: transfer.runtime.selectionRoot,
   });
   const warrant = warrantEvidence(directory, transfer);

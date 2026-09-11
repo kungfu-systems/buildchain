@@ -45,8 +45,7 @@ import { evaluatePaperGithubGovernance } from "../packages/core/paper/commands/p
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
-// Preserve the legacy v3 scaffold and migration compatibility cases.
-const packageVersion = "3.0.4-alpha.13";
+const packageVersion = JSON.parse(fs.readFileSync(path.join(root, "package.json"))).version;
 
 function tempDir(name) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `buildchain-paper-${name}-`));
@@ -165,11 +164,11 @@ test("paper scaffold is idempotent, validates locally, and never overwrites a co
   const cwd = tempDir("scaffold");
   const firstPlan = planPaperScaffold(scaffoldOptions(cwd));
   assert.equal(firstPlan.ok, true);
-  assert.equal(firstPlan.summary.create, 18);
+  assert.equal(firstPlan.summary.create, 19);
   assert.equal(JSON.stringify(firstPlan).includes("_plannedFiles"), false);
   const firstWrite = writePaperScaffold(firstPlan);
   assert.equal(firstWrite.ok, true);
-  assert.equal(firstWrite.written.length, 18);
+  assert.equal(firstWrite.written.length, 19);
   assert.equal(
     fs.readFileSync(path.join(cwd, "pnpm-workspace.yaml"), "utf8"),
     `minimumReleaseAgeExclude:\n  - '@kungfu-tech/buildchain@${packageVersion}'\n`,
@@ -181,7 +180,7 @@ test("paper scaffold is idempotent, validates locally, and never overwrites a co
     ),
   );
   assert.equal(provisioning.contract, PAPER_PROVISIONING_CONTRACT);
-  assert.equal(provisioning.runtime.ref, provisioning.runtime.resolvedSha);
+  assert.equal(provisioning.runtime.ref, "v4-alpha");
   assert.equal(
     provisioning.admission.acceptedSha,
     provisioning.runtime.resolvedSha,
@@ -203,13 +202,11 @@ test("paper scaffold is idempotent, validates locally, and never overwrites a co
   );
   assert.match(
     releaseWorkflow,
-    new RegExp(
-      `public-release-paper\\.yml@${provisioning.runtime.resolvedSha}`,
-    ),
+    /public-release-paper\.yml@v4\n/,
   );
   assert.match(
     releaseWorkflow,
-    new RegExp(`buildchain-ref: ${provisioning.runtime.resolvedSha}`),
+    /public-release-paper\.yml@v4-alpha/,
   );
   assert.match(
     releaseWorkflow,
@@ -373,14 +370,14 @@ test("paper migration converges existing repositories without rewriting content 
       path.join(cwd, ".github", "workflows", "verify.yml"),
       "utf8",
     ),
-    new RegExp(`check\\.yml@${runtimeSha}`),
+    /check\.yml@v4-alpha/,
   );
   assert.match(
     fs.readFileSync(
       path.join(cwd, ".github", "workflows", "verify.yml"),
       "utf8",
     ),
-    new RegExp(`buildchain-ref: ${runtimeSha}`),
+    /public-build-check\.yml@v4-alpha/,
   );
   const migratedLock = JSON.parse(
     fs.readFileSync(

@@ -2,11 +2,11 @@ on:
   workflow_call:
     inputs:
       remote-host:
-        default: "git-codecommit.cn-northwest-1.amazonaws.com.cn"
+        default: git-codecommit.cn-northwest-1.amazonaws.com.cn
         type: string
         required: false
       remote-path:
-        default: "v1/repos"
+        default: v1/repos
         type: string
         required: false
       remote-repo:
@@ -16,14 +16,44 @@ on:
         default: false
         type: boolean
         required: false
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
     secrets:
       REMOTE_USER:
         required: false
       REMOTE_CREDENTIAL:
-        # HTTPS credential URL, used only by the bounded transfer process.
         required: false
-
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   sync:
     runs-on: ubuntu-24.04
     steps:
@@ -32,15 +62,13 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Synchronize requested ref
-        uses: ./.buildchain/workflow-shell/actions/providers/git/sync
+        uses: ./.buildchain/runtime/actions/providers/git/sync
         with:
           remote-host: ${{ inputs.remote-host }}
           remote-path: ${{ inputs.remote-path }}
@@ -49,3 +77,5 @@ jobs:
           force: ${{ inputs.force }}
           remote-user: ${{ secrets.REMOTE_USER }}
           remote-credential: ${{ secrets.REMOTE_CREDENTIAL }}
+    needs:
+      - execution-runtime

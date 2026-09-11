@@ -92,10 +92,11 @@ export function createBuildArtifactStore({
       ...findOptions(repository, runId, token),
     });
     const matches = artifacts.filter((item) => item.name === name);
-    if (matches.length !== 1)
-      throw new Error(
-        `Expected one same-run artifact ${name}; found ${matches.length}`,
-      );
+    if (matches.length !== 1) {
+      const error = new Error(`Expected one artifact ${name}; found ${matches.length}`);
+      error.code = matches.length === 0 ? "artifact-not-found" : "artifact-ambiguous";
+      throw error;
+    }
     const found = matches[0];
     if (!found.digest)
       throw new Error(`Artifact provider omitted digest: ${name}`);

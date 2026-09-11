@@ -43,11 +43,7 @@ export function locateAuthorityControllerAction(core, env) {
 }
 export async function qualifyAuthorityConsumerGateAction(core, env) {
   const { request, workspace, runtimeRoot } = context(core, env);
-  verifyCheckoutIdentity({
-    directory: runtimeRoot,
-    sha: request.buildchainRef,
-    label: "Consumer Gate authority",
-  });
+
   const subjectRoot = path.join(
       workspace,
       ".buildchain/publication-consumer-source",

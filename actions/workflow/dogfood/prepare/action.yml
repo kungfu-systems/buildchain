@@ -24,31 +24,15 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Prepare workflow implementation
-      id: core-node
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
     - name: Admit exact self-dogfood coordinates and readiness
       id: readiness
-      uses: ./.buildchain/workflow-shell/actions/workflow/dogfood/admit
+      uses: ./.buildchain/runtime/actions/workflow/dogfood/admit
       with:
         request-json: ${{ inputs.request-json }}
         token: ${{ github.token }}
-    - name: Checkout exact candidate request generator
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: kungfu-systems/buildchain
-        ref: ${{ steps.readiness.outputs.candidate-sha }}
-        path: .buildchain/candidate
-        persist-credentials: false
-      if: ${{ steps.readiness.outputs.ready == 'true' }}
-    - name: Prepare independently reviewed candidate
-      if: ${{ steps.readiness.outputs.ready == 'true' }}
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/candidate
     - name: Generate closed requests after exact review readiness
       id: requests
       if: ${{ steps.readiness.outputs.ready == 'true' }}
-      uses: ./.buildchain/candidate/actions/workflow/dogfood/generate
+      uses: ./.buildchain/runtime/actions/workflow/dogfood/generate
       with:
         coordinates-json: ${{ toJSON(steps.readiness.outputs) }}

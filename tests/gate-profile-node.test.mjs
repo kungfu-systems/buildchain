@@ -4,7 +4,6 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import YAML from "yaml";
-import { resolveGateRuntime } from "./helpers/runtime-selection.mjs";
 import { resetSourceWorktree } from "../packages/core/providers/source-checkout/workspace.js";
 import { prepareWindowsRust } from "../packages/core/runtime/toolchain/windows-rust.js";
 const sha = "a".repeat(40);
@@ -17,84 +16,6 @@ const context = {
   repo: { owner: "consumer", repo: "project" },
   actor: "maintainer",
 };
-test("Gate defaults to the defining commit without a legacy or mutable fallback", async () => {
-  const outputs = {};
-  await resolveGateRuntime({
-    env,
-    context,
-    github: {},
-    core: { setOutput: (k, v) => (outputs[k] = v) },
-  });
-  assert.deepEqual(outputs, { "runtime-ref": sha, "runtime-sha": sha });
-  await assert.rejects(
-    resolveGateRuntime({
-      env: { ...env, BUILDCHAIN_WORKFLOW_SHA: "" },
-      context,
-    }),
-    /exact defining/,
-  );
-  await assert.rejects(
-    resolveGateRuntime({
-      env: { ...env, BUILDCHAIN_REQUESTED_REF: "v3" },
-      context,
-    }),
-    /current channel/,
-  );
-});
-test("Gate overrides require trusted dispatch permissions and resolve to commit objects", async () => {
-  const requested = "train/v4/v4.1/gate";
-  await assert.rejects(
-    resolveGateRuntime({
-      env: { ...env, BUILDCHAIN_REQUESTED_REF: requested },
-      context,
-    }),
-    /workflow_dispatch/,
-  );
-  const dispatch = { ...context, eventName: "workflow_dispatch" };
-  const api = {
-    rest: {
-      repos: {
-        getCollaboratorPermissionLevel: async () => ({
-          data: { permission: "read" },
-        }),
-      },
-    },
-  };
-  await assert.rejects(
-    resolveGateRuntime({
-      env: { ...env, BUILDCHAIN_REQUESTED_REF: requested },
-      context: dispatch,
-      github: api,
-    }),
-    /write permission/,
-  );
-  api.rest.repos.getCollaboratorPermissionLevel = async () => ({
-    data: { permission: "write" },
-  });
-  api.rest.repos.getCommit = async ({ ref }) => {
-    assert.equal(ref, requested);
-    return { data: { sha: "b".repeat(40) } };
-  };
-  const outputs = {};
-  await resolveGateRuntime({
-    env: { ...env, BUILDCHAIN_REQUESTED_REF: requested },
-    context: dispatch,
-    github: api,
-    core: { setOutput: (k, v) => (outputs[k] = v) },
-  });
-  assert.equal(outputs["runtime-sha"], "b".repeat(40));
-  api.rest.repos.getCommit = async () => {
-    throw Object.assign(new Error("denied"), { status: 403 });
-  };
-  await assert.rejects(
-    resolveGateRuntime({
-      env: { ...env, BUILDCHAIN_REQUESTED_REF: "v4-alpha" },
-      context,
-      github: api,
-    }),
-    (e) => e.status === 403,
-  );
-});
 test("Gate source reset preserves only Git metadata and refuses junction escapes", (t) => {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "gate-reset-"));
   t.after(() => fs.rmSync(cwd, { recursive: true, force: true }));

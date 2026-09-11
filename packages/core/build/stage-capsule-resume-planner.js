@@ -237,7 +237,6 @@ function changedDecision(node, candidate, availabilityRoot) {
       "toolchain-changed",
       false,
     ],
-    ["runtimeRoot", "runtime-root", "rebuild", "runtime-changed", true],
     ["policyRoot", "policy-root", "rebuild", "policy-changed", true],
     ["declaredInputs", "declared-inputs", "rebuild", "input-changed", false],
     [

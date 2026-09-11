@@ -49,7 +49,7 @@ async function finalizeBuild(context, jobs) {
         sourceTreeHash: plan.source.tree_sha,
         buildSummary: aggregated.summary,
         buildchain: {
-          ref: plan.identity.ref,
+          ref: plan.runtime?.ref || plan.identity.ref,
           sha: plan.identity.sha,
           workflowShellRef: plan.identity.ref,
         },

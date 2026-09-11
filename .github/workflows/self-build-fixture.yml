@@ -9,7 +9,23 @@ on:
       - dev/v*/v*
       - alpha/v*/v*
       - release/v*/v*
-  workflow_dispatch: null
+  workflow_dispatch:
+    inputs:
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      resume-run-id:
+        description: Original failed fixture build; preserve its source and valid checkpoints.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
 permissions:
   actions: read
   contents: read
@@ -17,20 +33,41 @@ permissions:
   id-token: write
   attestations: write
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          resume-run-id: ${{ inputs.resume-run-id }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+    timeout-minutes: 5
   libnode-shaped:
     if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork }}
-    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4
     secrets: inherit
     with:
       config-path: fixtures/libnode-shaped/buildchain.toml
+      runtime-selection: ${{ needs.execution-runtime.outputs.selection }}
+    needs:
+      - execution-runtime
   buildchain-package-candidate:
     name: Seal Buildchain npm product payload
     needs:
       - libnode-shaped
-    if:
-      ${{ needs.libnode-shaped.result == 'success' && ((github.event_name == 'pull_request' &&
-      (startsWith(github.base_ref, 'alpha/') || startsWith(github.base_ref, 'release/'))) || github.event_name ==
-      'workflow_dispatch') }}
+      - execution-runtime
+    if: ${{ needs.libnode-shaped.result == 'success' && ((github.event_name == 'pull_request' &&
+      (startsWith(github.base_ref, 'alpha/') || startsWith(github.base_ref, 'release/'))) ||
+      github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
@@ -39,20 +76,18 @@ jobs:
       - name: Checkout exact candidate source
         uses: actions/checkout@v7.0.0
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ fromJSON(needs.execution-runtime.outputs.selection).source.sha }}
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Seal Buildchain npm product payload
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/artifact/package
+        uses: ./.buildchain/runtime/actions/build/artifact/package
         with:
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
           passport-artifact: ${{ needs.libnode-shaped.outputs.release-candidate-artifact }}

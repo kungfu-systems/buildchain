@@ -63,7 +63,7 @@ for (const kind of ["paper", ""]) {
   test(`Paper policy remains required for ${kind || "default kind"}`, (t) => {
     const result = run(fixture(t, kind));
     assert.equal(result.status, 1, result.stderr);
-    assert.match(result.stdout + result.stderr, /provisioning-authority/);
+    assert.match(result.stdout + result.stderr, /provisioning\.authority/);
     assert.doesNotMatch(result.stdout, /"applicable":false/);
   });
 }
@@ -76,7 +76,7 @@ test("npm Paper package cannot skip governance by changing publication kind", (t
     ),
   );
   assert.equal(result.status, 1);
-  assert.match(result.stdout + result.stderr, /provisioning-authority/);
+  assert.match(result.stdout + result.stderr, /provisioning\.authority/);
 });
 test("existing Paper directory keeps policy active after config removal", (t) => {
   const cwd = fixture(t);

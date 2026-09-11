@@ -62,8 +62,8 @@ test("Web output selection rejects stale competing plans", (t) => {
   assert.throws(() => selectWebOutputs(), /Multiple Web/);
 
 });
-test("Governance rejects stale checkout before admitting the receipt", () => {
-  assert.throws(() => admitGithubGovernanceReceipt({receipt:{}, runtimeSha:"a".repeat(40)}, () => "b".repeat(40)), /does not match/);
+test("Governance rejects malformed or missing publication authority receipts", () => {
+  assert.throws(() => admitGithubGovernanceReceipt({receipt:{}, runtimeSha:"a".repeat(40)}, () => "b".repeat(40)), /receipt contract mismatch/);
   assert.throws(() => admitGithubGovernanceReceipt({}, () => assert.fail("must reject missing receipt first")), /fresh GitHub governance receipt/);
 });
 test("Credential selection keeps failed or partial App creation explicit and never stores credentials in metadata", () => {

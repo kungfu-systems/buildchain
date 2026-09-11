@@ -14,6 +14,6 @@ runs:
       with:
         node-version: "24"
     - name: Verify exact release lineage
-      uses: ./.buildchain/workflow-shell/actions/release/line/inspect
+      uses: ./.buildchain/runtime/actions/release/line/inspect
       with:
         directory: .buildchain/channel-source

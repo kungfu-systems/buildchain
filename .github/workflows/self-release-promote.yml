@@ -24,7 +24,8 @@ on:
         required: true
         default: "true"
       recover-durable-transaction:
-        description: Recover an existing durable transaction from its exact original source SHA using fresh GitHub-hosted admission
+        description: Recover an existing durable transaction from its exact original source SHA using fresh
+          GitHub-hosted admission
         required: true
         default: false
         type: boolean
@@ -72,79 +73,103 @@ on:
         description: Optional exact sha256 Release Candidate root
         required: false
         default: ""
-      resume-expected-candidate-runtime-sha:
-        description: Exact Buildchain runtime SHA recorded in the candidate Passport
-        required: false
-        default: ""
-      resume-buildchain-runtime-sha:
-        description: Exact current Buildchain tooling SHA used by this recovery run
-        required: false
-        default: ""
-      resume-buildchain-runtime-ref:
-        description: Approved v4 train or authority ref resolving to the recovery runtime SHA
-        required: false
-        default: ""
       resume-transaction-id:
         description: Optional existing durable transaction identity
+        required: false
+        default: ""
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
         required: false
         default: ""
 permissions:
   contents: read
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+    timeout-minutes: 5
   reject-manual-apply:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] != 'true' && inputs['recover-durable-transaction'] != true && inputs['resume-candidate-run-id'] == '' && inputs['publication-admission-json'] == '' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] != 'true' &&
+      inputs['recover-durable-transaction'] != true && inputs['resume-candidate-run-id'] == '' &&
+      inputs['publication-admission-json'] == '' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
-      - name: Load request admission node
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Reject manual apply
-        uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
+        uses: ./.buildchain/runtime/actions/workflow/admission/reject
         with:
-          reason: Manual apply requires a fresh sealed publication admission. Provide admission, runner, control-plane audit, expected bindings, and used nonces JSON.
+          reason: Manual apply requires a fresh sealed publication admission. Provide admission, runner,
+            control-plane audit, expected bindings, and used nonces JSON.
+    needs:
+      - execution-runtime
   reject-invalid-durable-recovery:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs['recover-durable-transaction'] == true && inputs.sha == '' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['recover-durable-transaction'] == true &&
+      inputs.sha == '' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
-      - name: Load request admission node
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Require exact recovery SHA
-        uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
+        uses: ./.buildchain/runtime/actions/workflow/admission/reject
         with:
           reason: Durable transaction recovery requires the exact original transaction source SHA.
+    needs:
+      - execution-runtime
   reject-invalid-candidate-recovery:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs['resume-candidate-run-id'] != '' && ((!startsWith(inputs['target-ref'], 'alpha/') && !startsWith(inputs['target-ref'], 'release/')) || inputs.sha == '' || inputs['resume-candidate-repository'] == '' || inputs['resume-buildchain-runtime-ref'] == '' || inputs['resume-buildchain-runtime-sha'] == '' || inputs['resume-expected-candidate-runtime-sha'] == '' || inputs['resume-expected-source-tree'] == '') }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['resume-candidate-run-id'] != '' &&
+      ((!startsWith(inputs['target-ref'], 'alpha/') && !startsWith(inputs['target-ref'],
+      'release/')) || inputs.sha == '' || inputs['resume-candidate-repository'] == '' ||
+      inputs['resume-expected-source-tree'] == '') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
-      - name: Load request admission node
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Require exact candidate recovery identity
-        uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
+        uses: ./.buildchain/runtime/actions/workflow/admission/reject
         with:
           reason: Candidate recovery requires an exact channel, source, candidate, tree, and runtime identity.
+    needs:
+      - execution-runtime
   classify-workflow-run:
     name: Classify exact publication head
-    if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && (startsWith(github.event.workflow_run.head_branch, 'alpha/') || startsWith(github.event.workflow_run.head_branch, 'release/')) }}
+    if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      (startsWith(github.event.workflow_run.head_branch, 'alpha/') ||
+      startsWith(github.event.workflow_run.head_branch, 'release/')) }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -158,23 +183,25 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Classify exact publication head
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/promotion/classify
+        uses: ./.buildchain/runtime/actions/release/promotion/classify
         if: ${{ always() }}
         with:
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+    needs:
+      - execution-runtime
   promote:
-    needs: classify-workflow-run
-    if: |-
+    needs:
+      - classify-workflow-run
+      - execution-runtime
+    if: >-
       ${{
         always() &&
         (
@@ -194,7 +221,7 @@ jobs:
           )
         )
       }}
-    uses: ./.github/workflows/public-release-promote.yml
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4
     permissions:
       actions: write
       artifact-metadata: write
@@ -206,14 +233,9 @@ jobs:
       pull-requests: write
     secrets: inherit
     with:
-      request-json: |-
+      request-json: >-
         {
           "schema": "buildchain.promotion-request/v1",
-          "buildchain-repository": "kungfu-systems/buildchain",
-          "buildchain-ref": ${{ toJSON(inputs['resume-candidate-run-id'] != '' && inputs['resume-buildchain-runtime-ref'] || inputs['recover-durable-transaction'] == true && github.sha || '') }},
-          "buildchain-contract-lock-path": ".buildchain/alpha-contract-lock.json",
-          "buildchain-alpha-contract-lock-path": ".buildchain/alpha-contract-lock.json",
-          "buildchain-stable-contract-lock-path": ".buildchain/contract-lock.json",
           "target-ref": ${{ toJSON(github.event.workflow_run.head_branch || inputs['target-ref']) }},
           "target-sha": ${{ toJSON(github.event.workflow_run.head_sha || inputs.sha || github.sha) }},
           "package-manager": "pnpm",
@@ -226,8 +248,6 @@ jobs:
           "resume-expected-workflow-name": "Build Surface Fixture",
           "resume-expected-source-tree": ${{ toJSON(inputs['resume-expected-source-tree'] || '') }},
           "resume-expected-candidate-root": ${{ toJSON(inputs['resume-expected-candidate-root'] || '') }},
-          "resume-expected-candidate-runtime-sha": ${{ toJSON(inputs['resume-expected-candidate-runtime-sha'] || '') }},
-          "resume-buildchain-runtime-sha": ${{ toJSON(inputs['resume-buildchain-runtime-sha'] || '') }},
           "resume-transaction-id": ${{ toJSON(inputs['resume-transaction-id'] || '') }},
           "artifact-patterns": "buildchain-package-*",
           "publish-rematerialize-on-resume": true,
@@ -253,3 +273,4 @@ jobs:
           "publication-package-name": "@kungfu-tech/buildchain",
           "dry-run": ${{ toJSON(inputs['dry-run'] == 'true') }}
         }
+      runtime-selection: ${{ needs.execution-runtime.outputs.selection }}

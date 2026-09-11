@@ -181,7 +181,7 @@ function planPaperScaffold(
     cwd = process.cwd(),
     buildchainRoot = process.cwd(),
     buildchainVersion = "",
-    buildchainRef = "v3",
+    buildchainRef = "v4",
     buildchainSha = "",
     name = path.basename(path.resolve(cwd)),
     title = "",

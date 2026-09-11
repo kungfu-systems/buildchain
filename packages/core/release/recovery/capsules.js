@@ -1,6 +1,6 @@
 import { domainContentRoot } from "../../contracts/canonical-contracts.js";
 import { validateStageCapsule } from "../../build/stage-capsule.js";
-import { runtimeResumeDocumentRoot } from "../../consumer/runtime-ref-resume-authority.js";
+import { runtimeResumeDocumentRoot } from "./lineage.js";
 export function verifyReleaseCandidateStageCapsules({
   sidecar,
   passport,
@@ -25,7 +25,6 @@ export function verifyReleaseCandidateStageCapsules({
     sidecar.source?.sha !== passport.source.headSha ||
     sidecar.source?.treeSha !== passport.source.treeHash ||
     sidecar.buildAttempt?.id !== expectedAttempt ||
-    sidecar.buildAttempt?.runtimeSha !== passport.buildchain.sha ||
     sidecar.consumerPolicyReceiptRoot !== passport.consumerPolicy?.receiptRoot
   ) {
     throw new Error(
@@ -66,11 +65,7 @@ export function verifyReleaseCandidateStageCapsules({
         new Date(download.artifact.expires_at).toISOString() ||
       entry.capsule.identity.policyRoot !== sidecar.consumerPolicyReceiptRoot ||
       entry.capsule.identity.sourceRoot !==
-        domainContentRoot("candidate-identity", passport.source) ||
-      entry.capsule.identity.runtimeRoot !==
-        domainContentRoot("candidate-identity", {
-          sha: passport.buildchain.sha,
-        })
+        domainContentRoot("candidate-identity", passport.source)
     ) {
       throw new Error(
         `Stage Capsule ${entry.platform} does not bind the verified provider artifact`,
@@ -91,12 +86,9 @@ export function verifyReleaseCandidateStageCapsules({
 }
 
 export function resolveRecoveredStageCapsules({
-  candidateRuntimeSha,
-  runtimeSha,
   sidecar,
   passport,
   downloads,
 }) {
-  if (candidateRuntimeSha === runtimeSha) return [];
   return verifyReleaseCandidateStageCapsules({ sidecar, passport, downloads });
 }

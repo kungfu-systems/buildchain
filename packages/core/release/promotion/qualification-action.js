@@ -3,7 +3,6 @@ import path from "node:path";
 import { getOctokit } from "@actions/github";
 import { command } from "../../runtime/action-process.mjs";
 import { installationRoot } from "../../runtime/installation-root.js";
-import { verifyCheckoutIdentity } from "../../runtime/checkout-identity.js";
 import { verifyPromotionInvocation } from "../promotion-request.js";
 import { recoveryFailure } from "../release-candidate-recovery.js";
 import { productPublicationReader } from "../../providers/github/product-publication.js";
@@ -17,18 +16,8 @@ export async function qualifyPromotionAction(core, env) {
   const runtimeRoot = installationRoot(import.meta.url),
     workspace = path.resolve(env.GITHUB_WORKSPACE),
     runtimeSha = request["promotion-runtime-sha"];
-  if (
-    fs.realpathSync(runtimeRoot) !==
-    fs.realpathSync(path.join(workspace, ".buildchain/runtime"))
-  )
-    throw new Error(
-      "Promotion qualification requires the selected runtime implementation",
-    );
-  verifyCheckoutIdentity({
-    directory: runtimeRoot,
-    sha: runtimeSha,
-    label: "Promotion qualification runtime",
-  });
+
+
   const tree = command("git", ["-C", runtimeRoot, "rev-parse", "HEAD^{tree}"], {
     stdio: "pipe",
   }).trim();

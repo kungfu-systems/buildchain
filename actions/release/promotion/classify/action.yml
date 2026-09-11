@@ -1,5 +1,6 @@
 name: promote-classify-workflow-run
-description: Execute the promote classify-workflow-run capability within its caller job boundary.
+description: Execute the promote classify-workflow-run capability within its
+  caller job boundary.
 outputs:
   action:
     description: action node result.
@@ -13,15 +14,16 @@ runs:
     - name: Admit source checkout
       id: source-boundary
       if: ${{ always() }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      uses: ./.buildchain/runtime/actions/build/source/admit
       with:
         source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
-    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+    - uses: ./.buildchain/runtime/actions/runtime/dependencies/install
       with:
         directory: .
+        production: "false"
     - name: Recognize generated publication finalization
       id: classify
-      uses: ./actions/release/candidate/classify-publication
+      uses: ./.buildchain/runtime/actions/release/candidate/classify-publication
       with:
         token: ${{ github.token }}
 inputs:

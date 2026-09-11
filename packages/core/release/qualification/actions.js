@@ -1,17 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import { installationRoot } from "../../runtime/installation-root.js";
 import { createGitHubQualificationClient } from "../../providers/github/qualification.js";
 import { qualifyPublicBuild } from "./public-build.js";
 function inputs(core, env) {
   const workspace = path.resolve(env.GITHUB_WORKSPACE);
-  if (
-    fs.realpathSync(installationRoot(import.meta.url)) !==
-    fs.realpathSync(workspace)
-  )
-    throw new Error(
-      "Stable candidate qualification requires the checked-out source implementation",
-    );
   return {
     workspace,
     repositoryName: env.GITHUB_REPOSITORY,

@@ -1,24 +1,22 @@
 name: Buildchain Stable Self-Dogfood
-
 on:
   workflow_run:
-    workflows: ["Buildchain Ref Promotion"]
-    types: [completed]
+    workflows:
+      - Buildchain Ref Promotion
+    types:
+      - completed
   schedule:
-    - cron: "47 3 * * *"
-  workflow_dispatch:
-
+    - cron: 47 3 * * *
+  workflow_dispatch: null
 permissions:
   actions: read
   contents: read
   issues: write
   id-token: write
   attestations: write
-
 concurrency:
   group: buildchain-stable-self-dogfood-${{ github.repository }}-${{ github.ref }}
   cancel-in-progress: false
-
 jobs:
   stable-consumer:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}

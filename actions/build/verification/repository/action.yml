@@ -6,16 +6,9 @@ runs:
     - name: Admit source checkout
       id: source-boundary
       if: ${{ always() }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      uses: ./.buildchain/runtime/actions/build/source/admit
       with:
         source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
-    - name: Checkout Buildchain runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ github.repository }}
-        ref: ${{ github.sha }}
-        path: .buildchain/runtime
-        persist-credentials: false
     - uses: actions/setup-node@v6.4.0
       with:
         node-version: "24"
@@ -27,13 +20,9 @@ runs:
       with:
         toolchain: 1.96.0
         targets: wasm32-unknown-unknown
-    - name: Install locked runtime dependencies
-      uses: ./.buildchain/workflow-shell/actions/runtime/dependencies/install
-      with:
-        directory: .buildchain/runtime
     - name: Qualify exact repository source
       id: source-verification
-      uses: ./actions/build/verification/qualify-source
+      uses: ./.buildchain/runtime/actions/build/verification/qualify-source
       with:
         token: ${{ github.token }}
     - name: Upload immutable source verification proof

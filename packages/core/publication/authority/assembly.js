@@ -7,16 +7,11 @@ import { sealManagedPublicationAdmission } from "./seal.js";
 import { readGitHubSourceTree } from "../../providers/github/commits.js";
 import { auditPublicationControlPlane } from "../../governance/publication/audit.js";
 import { publicationControlPlaneRequest } from "./control-plane.js";
-import { verifyCheckoutIdentity } from "../../runtime/checkout-identity.js";
 export async function assemblePublicationAdmission(
   { request, workspace, runtimeRoot, runner, token, governanceToken, apiUrl },
   { audit = auditPublicationControlPlane, tree = readGitHubSourceTree } = {},
 ) {
-  verifyCheckoutIdentity({
-    directory: runtimeRoot,
-    sha: request.buildchainRef,
-    label: "Publication authority",
-  });
+
   const outputRoot = path.join(
       workspace,
       ".buildchain/publication-authority/auto",

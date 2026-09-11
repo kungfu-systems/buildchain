@@ -1007,7 +1007,7 @@ test("release propagation reusable workflow exposes authorized Work phases", () 
   assert.equal(workflow.jobs.propagate.concurrency["cancel-in-progress"], false);
   const readNode = name => YAML.parse(fs.readFileSync(path.join(root, "actions", "release", "propagation", name, "action.yml"), "utf8"));
   const plan = readNode("plan"), materialize = readNode("materialize"), deliver = readNode("deliver");
-  assert.ok(plan.runs.steps.some(step => step.uses === "./.buildchain/workflow-shell/actions/runtime/environment/prepare"));
+  assert.equal(workflow.jobs.propagate.steps[0].uses, "$/actions/runtime/environment/prepare");
   assert.equal(plan.runs.steps.find(step => step.id === "capture").if, undefined);
   assert.equal(materialize.runs.using, "node24");
   assert.equal(workflow.jobs.propagate.steps[2].uses, "./.buildchain/runtime/actions/release/propagation/materialize");

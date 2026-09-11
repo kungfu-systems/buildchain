@@ -1,5 +1,5 @@
-name: Authorize and bind admitted promotion invocation
-description: Authorize and bind admitted promotion invocation.
+name: Bind admitted promotion invocation
+description: Bind the consumer publication request to source evidence and the prepared runtime.
 inputs:
   request-json:
     description: Complete typed promotion request.
@@ -14,10 +14,6 @@ inputs:
     description: Rooted successful consumer policy receipt.
     required: true
 outputs:
-  runtime-authorization-json:
-    description: runtime authorization json
-  runtime-authorization-root:
-    description: runtime authorization root
   invocation-json:
     description: invocation json
 runs:

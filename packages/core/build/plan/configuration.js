@@ -32,7 +32,7 @@ export function resolveBuildConfiguration({
     ),
   ),
 }) {
-  for (const [label, value] of Object.entries({ workflowSha, sourceSha })) {
+  for (const [label, value] of Object.entries({ sourceSha })) {
     if (!/^[a-f0-9]{40}$/u.test(value || ""))
       throw new Error(`${label} must be an exact SHA`);
   }

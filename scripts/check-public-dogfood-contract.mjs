@@ -11,7 +11,7 @@ const DEFAULT_ROOT = path.resolve(
 );
 const CALLER_PATH = ".github/workflows/self-build-public-consumer-dogfood.yml";
 const REUSABLE_PATH = ".github/workflows/public-build-stage-capsule-canary.yml";
-export const PUBLIC_DOGFOOD_ALPHA_REF = "v4-alpha";
+export const PUBLIC_DOGFOOD_ENTRY_REF = "v4";
 const PRIVATE_CONSUMER = ["buildchain", "self", "dogfood"].join("-");
 const PRIVATE_SHADOW = ["kungfu", "shadow"].join("-");
 
@@ -21,6 +21,11 @@ export function expectedPublicDogfoodWorkflow(validationRef) {
 on:
   pull_request:
   workflow_dispatch:
+    inputs:
+      runtime-ref:
+        description: Transient runtime selected by the public entry.
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -29,6 +34,7 @@ jobs:
   dogfood:
     uses: kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml@${validationRef}
     with:
+      runtime-ref: \${{ inputs.runtime-ref }}
       consumer: buildchain
       node-version: "24"
       go-version: "1.25.x"
@@ -83,7 +89,7 @@ function assertReusableWorkflow(root) {
     const nodePath = `actions/build/stage-capsule/${CANARY_NODES[phase]}`;
     const call = workflow.jobs?.[phase]?.steps?.at(-1);
     if (
-      call?.uses !== `./.buildchain/workflow-shell/${nodePath}` ||
+      call?.uses !== `./.buildchain/runtime/${nodePath}` ||
       call.with?.["workflow-sha"] !== "${{ job.workflow_sha }}" ||
       call.with?.["request-json"] !== "${{ toJSON(inputs) }}"
     )
@@ -94,18 +100,19 @@ function assertReusableWorkflow(root) {
   });
   const qualification = YAML.parse(nodes[1]);
   const steps = qualification.runs.steps;
-  const prepare = steps.findIndex((step) => step.id === "buildchain-runtime");
   const consumerNode = steps.findIndex((step) =>
     step.uses?.startsWith("actions/setup-node@"),
   );
-  if (
-    prepare < 0 ||
-    prepare >= consumerNode ||
-    steps[prepare].uses !==
-      "./.buildchain/workflow-shell/actions/runtime/environment/prepare"
-  )
+  const jobSteps = workflow.jobs.qualify.steps;
+  const prepare = jobSteps.findIndex(
+    (step) => step.uses === "$/actions/runtime/environment/prepare",
+  );
+  const node = jobSteps.findIndex((step) =>
+    step.uses?.endsWith("/stage-capsule/qualify"),
+  );
+  if (prepare < 0 || prepare >= node || consumerNode < 0)
     fail(
-      "Canary must bind the Buildchain runtime before selecting the consumer Node version",
+      "Canary must prepare its selected runtime before the consumer toolchain",
     );
   if (
     steps[consumerNode].with?.["node-version"] !==
@@ -118,7 +125,7 @@ function assertReusableWorkflow(root) {
       "./.buildchain/runtime/actions/build/stage-capsule/qualify-consumer",
   );
   if (
-    campaign?.with?.["workflow-sha"] !== "${{ steps.runtime.outputs.sha }}" ||
+    campaign?.with?.["workflow-sha"] !== "${{ env.BUILDCHAIN_RUNTIME_SHA }}" ||
     campaign?.with?.["request-json"] !== "${{ inputs.request-json }}" ||
     campaign?.with?.platform !== "${{ fromJSON(inputs.matrix-json).platform }}"
   )
@@ -235,9 +242,9 @@ function assertProtectedVerify(root) {
   const parsed = YAML.parse(verify);
   const nodePath = "actions/build/verification/repository/action.yml";
   if (
-    parsed.jobs.check.needs !== "stage-capsule-checkpoints" ||
+    ![parsed.jobs.check.needs].flat().includes("stage-capsule-checkpoints") ||
     parsed.jobs.check.steps.at(-1).uses !==
-      `./.buildchain/workflow-shell/${nodePath.replace(/\/action.yml$/, "")}`
+      `./.buildchain/runtime/${nodePath.replace(/\/action.yml$/, "")}`
   )
     fail(
       "Verify must bind the protected check node after Stage Capsule checkpoints",
@@ -245,7 +252,10 @@ function assertProtectedVerify(root) {
   const implementation = read(root, nodePath);
   const steps = YAML.parse(implementation).runs.steps;
   const qualify = steps.find((step) => step.id === "source-verification");
-  if (qualify?.uses !== "./actions/build/verification/qualify-source")
+  if (
+    qualify?.uses !==
+    "./.buildchain/runtime/actions/build/verification/qualify-source"
+  )
     fail("Verify is missing its owned source qualification action");
   const transaction = read(root, "packages/core/build/verification/source.js");
   for (const required of [
@@ -271,10 +281,13 @@ function assertArchitecture(root) {
   );
   const dogfood = architecture.publicConsumerDogfood;
   const validationRef = dogfood?.validationRef;
-  if (validationRef !== PUBLIC_DOGFOOD_ALPHA_REF)
-    fail("architecture validationRef must use the floating v4-alpha channel");
+  if (validationRef !== PUBLIC_DOGFOOD_ENTRY_REF)
+    fail("architecture validationRef must use the public v4 entry");
   const caller = read(root, CALLER_PATH);
-  if (caller !== expectedPublicDogfoodWorkflow(validationRef))
+  if (
+    JSON.stringify(YAML.parse(caller)) !==
+    JSON.stringify(YAML.parse(expectedPublicDogfoodWorkflow(validationRef)))
+  )
     fail(`${CALLER_PATH} must remain the exact thin public consumer caller`);
   if (JSON.stringify(architecture.campaign?.consumers) !== '["buildchain"]')
     fail(
@@ -285,7 +298,7 @@ function assertArchitecture(root) {
     dogfood.callerWorkflow !== CALLER_PATH ||
     dogfood.reusableWorkflow !==
       "kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml" ||
-    dogfood.runtimeBinding !== "job.workflow_sha" ||
+    dogfood.runtimeBinding !== "entry-selected-runtime" ||
     dogfood.consumerSourceBinding !== "github.sha" ||
     JSON.stringify(dogfood.executableStages) !==
       '["install","build","verify"]' ||
@@ -351,9 +364,9 @@ function assertPolicySources(root) {
   const agents = read(root, "AGENTS.md");
   for (const invariant of [
     "same public reusable-workflow contract as every other consumer",
-    "No agent may add or restore a relative/self reusable-workflow call",
-    "never solve recursion with an internal exception",
-    "scripts/check-public-dogfood-contract.mjs",
+    "No repository-specific runtime selection or recovery exception",
+    "Normal self workflows",
+    "central entry resolves it once",
     "source-persisted exact commit SHA",
     "v4-alpha",
   ])

@@ -6,6 +6,21 @@ on:
         description: Versioned exact-candidate request envelope
         required: true
         type: string
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
     outputs:
       runtime-sha:
         description: Exact admitted Buildchain runtime SHA
@@ -28,10 +43,24 @@ on:
       terminal-receipt-root:
         description: Terminal receipt root
         value: ${{ jobs.settle.outputs.terminal-receipt-root }}
-      backflow-root:
-        description: Protected Train-to-dev backflow binding root
-        value: ${{ jobs.settle.outputs.backflow-root }}
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   admit:
     name: Admit exact reviewed candidate
     runs-on: ubuntu-24.04
@@ -42,22 +71,24 @@ jobs:
       admission-root: ${{ steps.node.outputs.admission-root }}
       admission-json: ${{ steps.node.outputs.admission-json }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Admit exact reviewed candidate
         id: node
-        uses: ./.buildchain/workflow-shell/actions/workflow/bootstrap/admit
+        uses: ./.buildchain/runtime/actions/workflow/bootstrap/admit
         with:
           job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
           request-json: ${{ toJSON(inputs) }}
+    needs:
+      - execution-runtime
   execute:
     name: Execute exact admitted candidate
-    needs: admit
+    needs:
+      - admit
+      - execution-runtime
     runs-on: ubuntu-24.04
     outputs:
       result-json: ${{ steps.node.outputs.result-json }}
@@ -69,17 +100,15 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Execute exact admitted candidate
         id: node
-        uses: ./.buildchain/workflow-shell/actions/workflow/bootstrap/execute
+        uses: ./.buildchain/runtime/actions/workflow/bootstrap/execute
         with:
           needs-admit-outputs-runtime-sha: ${{ toJSON(needs.admit.outputs.runtime-sha) }}
           needs-admit-outputs-capability-id: ${{ toJSON(needs.admit.outputs.capability-id) }}
@@ -93,22 +122,20 @@ jobs:
     needs:
       - admit
       - execute
+      - execution-runtime
     runs-on: ubuntu-24.04
     outputs:
       terminal-receipt-json: ${{ steps.node.outputs.terminal-receipt-json }}
       terminal-receipt-root: ${{ steps.node.outputs.terminal-receipt-root }}
-      backflow-root: ${{ steps.node.outputs.backflow-root }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Seal terminal receipt outside candidate authority
         id: node
-        uses: ./.buildchain/workflow-shell/actions/workflow/bootstrap/settle
+        uses: ./.buildchain/runtime/actions/workflow/bootstrap/settle
         with:
           job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
           needs-admit-outputs-admission-json: ${{ toJSON(needs.admit.outputs.admission-json) }}

@@ -1,14 +1,12 @@
 name: Release propagation delivery
-description: Reconcile release delivery and always publish observed Work and controller evidence.
+description: Reconcile release delivery and always publish observed Work and
+  controller evidence.
 inputs:
   request-json:
     description: Typed public propagation request.
     required: true
   token:
     description: Scoped downstream GitHub credential.
-    required: true
-  runtime-ready:
-    description: Selected runtime preparation succeeded.
     required: true
   controller-plan-digest:
     description: Emitted controller plan digest.
@@ -24,12 +22,12 @@ runs:
   steps:
     - name: Require successful predecessor nodes
       if: ${{ inputs.predecessors-ok != 'true' }}
-      uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
+      uses: ./.buildchain/runtime/actions/workflow/admission/reject
       with:
         reason: Release propagation predecessors did not succeed
     - name: Reconcile downstream delivery
       id: reconcile
-      if: ${{ always() && inputs.runtime-ready == 'true' }}
+      if: ${{ always() }}
       uses: ./.buildchain/runtime/actions/release/propagation/reconcile
       with:
         request-json: ${{ inputs.request-json }}
@@ -40,7 +38,8 @@ runs:
       if: ${{ always() && steps.reconcile.outputs.work-root != '' }}
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: ${{ format('buildchain-release-propagation-work-{0}', inputs.propagation-key) }}
+        name: ${{ format('buildchain-release-propagation-work-{0}',
+          inputs.propagation-key) }}
         path: |-
           .buildchain/release-propagation/work.json
           .buildchain/release-propagation/work-status.json
@@ -68,7 +67,8 @@ runs:
       if: ${{ always() && steps.report.outputs.controller-receipt-digest != '' }}
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: ${{ format('buildchain-release-propagation-controller-receipt-{0}', github.sha) }}
+        name: ${{ format('buildchain-release-propagation-controller-receipt-{0}',
+          github.sha) }}
         path: .buildchain/controller/receipt.json
         if-no-files-found: error
 outputs:
@@ -98,7 +98,9 @@ outputs:
     value: ${{ steps.reconcile.outputs.next-action }}
   controller-plan-artifact:
     description: Controller plan artifact.
-    value: ${{ format('buildchain-release-propagation-controller-plan-{0}', github.sha) }}
+    value: ${{ format('buildchain-release-propagation-controller-plan-{0}',
+      github.sha) }}
   controller-receipt-artifact:
     description: Controller receipt artifact.
-    value: ${{ format('buildchain-release-propagation-controller-receipt-{0}', github.sha) }}
+    value: ${{ format('buildchain-release-propagation-controller-receipt-{0}',
+      github.sha) }}

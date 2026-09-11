@@ -54,9 +54,9 @@ function materializeRecoveryEvidence({
   runtimeRoot,
   recoveryRunId,
   recoveryRunAttempt,
-  authorizationPath,
-  authorizationJson,
-  authorizationRoot,
+
+
+
   runId,
   run,
   selected,
@@ -104,9 +104,9 @@ function materializeRecoveryEvidence({
         runtimeRoot,
         recoveryRunId,
         recoveryRunAttempt,
-        authorizationPath,
-        authorizationJson,
-        authorizationRoot,
+
+
+
       })
     : "";
   const tarballs = publication.npmArtifacts.map((entry) =>
@@ -219,7 +219,6 @@ async function qualifyRecoveredCandidate({
   publicationNames,
   bundleRoot,
   repoInfo,
-  candidateRuntimeSha,
   publishArtifactKind,
   publishPackageMain,
   releasePatterns,
@@ -262,8 +261,7 @@ async function qualifyRecoveredCandidate({
     bundleRoot,
     repository: repoInfo.fullName,
     passport,
-    candidateRuntimeSha,
-    publishArtifactKind,
+      publishArtifactKind,
     publishPackageMain,
     releasePatterns,
     platformManifests: platformManifestEvidence.manifests,
@@ -273,8 +271,7 @@ async function qualifyRecoveredCandidate({
     rematerializeOnResume,
   });
   const stageCapsules = resolveRecoveredStageCapsules({
-    candidateRuntimeSha,
-    runtimeSha,
+      runtimeSha,
     sidecar: stageCapsuleSidecar,
     passport,
     downloads,
@@ -318,7 +315,6 @@ async function qualifyRecoveredCandidate({
     targetTree: targetCommit.tree?.sha,
     expectedSourceTree,
     expectedCandidateRoot,
-    expectedRuntimeSha: candidateRuntimeSha,
     expectedTransactionId: transactionId,
     existingTransaction,
     run: normalizeCandidateRun(run, repoInfo.fullName),
@@ -371,7 +367,6 @@ export async function resumeFromCandidateRun({
   targetSha,
   expectedSourceTree = "",
   expectedCandidateRoot = "",
-  candidateRuntimeSha,
   runtimeSha,
   transactionId = "",
   artifactName = "",
@@ -387,9 +382,9 @@ export async function resumeFromCandidateRun({
   recoveryRunId,
   recoveryRunAttempt = "1",
   runtimeRoot = installationRoot(import.meta.url),
-  authorizationPath,
-  authorizationJson,
-  authorizationRoot,
+
+
+
   fetchImpl = globalThis.fetch,
 } = {}) {
   const repoInfo = splitRepository(repository);
@@ -466,8 +461,7 @@ export async function resumeFromCandidateRun({
         publicationNames,
         bundleRoot,
         repoInfo,
-        candidateRuntimeSha,
-        publishArtifactKind,
+              publishArtifactKind,
         publishPackageMain,
         releasePatterns,
         channel,
@@ -510,9 +504,9 @@ export async function resumeFromCandidateRun({
       runtimeRoot,
       recoveryRunId,
       recoveryRunAttempt,
-      authorizationPath,
-      authorizationJson,
-      authorizationRoot,
+
+
+
       runId,
       run,
       selected,

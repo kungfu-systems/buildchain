@@ -1,0 +1,14 @@
+name: Activate the selected execution runtime
+description: Verify acquired execution bytes and install their locked dependencies at the preparation boundary.
+inputs:
+  selection:
+    description: Runtime identity selected by the entry.
+    required: true
+outputs:
+  directory:
+    description: Prepared execution directory.
+  node-path:
+    description: Node executable for runtime business operations.
+runs:
+  using: node24
+  main: dist/index.js

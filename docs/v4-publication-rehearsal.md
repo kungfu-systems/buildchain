@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-08-16
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -107,13 +107,13 @@ effect_default = "disabled"
 The public reusable
 [`public-release-tail.yml`](../.github/workflows/public-release-tail.yml) accepts the same
 capsule, candidate root, mode, state and evidence paths. Before publication,
-Buildchain dogfoods that public surface through a thin same-commit local reusable
-call with the exact PR-head or dispatch SHA as its runtime. The reusable is
+Buildchain dogfoods that public surface through the same floating `@v4` entry
+as external consumers. The shared entry selects the runtime from the transient
+parameter, consumer lock, or entry default, and prepares it in each job. The reusable is
 permission-neutral and the self-dogfood caller stays `contents: read`, passes
 `execute: false`, and therefore cannot inherit or synthesize production write
 authority. Effectful production callers must explicitly declare their own
-provider permission. Durable external consumers remain on the floating
-`@v4-alpha` contract. Provider mode additionally requires the exact authority
+provider permission. Durable external consumers use `@v4` or `@v4-alpha`. Provider mode additionally requires the exact authority
 path. Provider bindings come from the capsule; an optional external bindings
 input is accepted only when its canonical exact root and payload equal the
 capsule binding. Ordinary calls default to `simulate`.

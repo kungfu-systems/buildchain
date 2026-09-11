@@ -21,27 +21,13 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Prepare workflow implementation
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
     - name: Admit immutable authority request and evidence requirements
-      uses: ./.buildchain/workflow-shell/actions/publication/authority/inspect-request
+      uses: ./.buildchain/runtime/actions/publication/authority/inspect-request
       with:
         request-json: ${{ inputs.request-json }}
-    - name: Checkout exact Buildchain authority runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ inputs.runtime-repository }}
-        ref: ${{ inputs.runtime-ref }}
-        path: .buildchain/authority-runtime
-        persist-credentials: false
-    - name: Prepare exact authority runtime
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/authority-runtime
     - name: Mint bounded governance auditor token
-      if:
-        ${{ !fromJSON(inputs.request-json).dry-run && inputs.auditor-app-id != '' && inputs.auditor-private-key
-        != '' }}
+      if: ${{ !fromJSON(inputs.request-json).dry-run && inputs.auditor-app-id != '' &&
+        inputs.auditor-private-key != '' }}
       id: governance-auditor
       continue-on-error: true
       uses: actions/create-github-app-token@v3
@@ -51,10 +37,11 @@ runs:
         owner: ${{ github.repository_owner }}
     - name: Collect and verify exact live GitHub governance authority
       if: ${{ !fromJSON(inputs.request-json).dry-run }}
-      uses: ./.buildchain/authority-runtime/actions/publication/authority/verify-governance
+      uses: ./.buildchain/runtime/actions/publication/authority/verify-governance
       with:
         request-json: ${{ inputs.request-json }}
-        token: ${{ steps.governance-auditor.outputs.token || inputs.governance-read-token || github.token }}
+        token: ${{ steps.governance-auditor.outputs.token ||
+          inputs.governance-read-token || github.token }}
 outputs:
   governance-auditor-token:
     description: Exact authority step result.

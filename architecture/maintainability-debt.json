@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 39596,
-    "current": 31535
+    "measuredExcess": 38852,
+    "current": 30791
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -310,7 +310,7 @@
           "lines": 816
         },
         "current": {
-          "lines": 816
+          "lines": 812
         },
         "target": {
           "lines": 600
@@ -327,31 +327,23 @@
           "lines": 600
         }
       },
-      "packages/core/consumer/runtime-ref-resume-authority.js": {
-        "baseline": {
-          "lines": 625
-        },
-        "current": {
-          "lines": 621
-        },
-        "target": {
-          "lines": 600
-        }
-      },
       "packages/core/contracts/buildchain-contract.js": {
         "baseline": {
           "lines": 1078,
           "functions": {
             "createBuildchainContractWorld@193": {
               "lines": 681
+            },
+            "createBuildchainContractWorld@189": {
+              "lines": 681
             }
           }
         },
         "current": {
-          "lines": 1038,
+          "lines": 904,
           "functions": {
-            "createBuildchainContractWorld@193": {
-              "lines": 647
+            "createBuildchainContractWorld@189": {
+              "lines": 517
             }
           }
         },
@@ -359,6 +351,9 @@
           "lines": 600,
           "functions": {
             "createBuildchainContractWorld@193": {
+              "lines": 180
+            },
+            "createBuildchainContractWorld@189": {
               "lines": 180
             }
           }
@@ -415,12 +410,15 @@
           "functions": {
             "verifyNativeExecutionTransfer@468": {
               "complexity": 36
+            },
+            "verifyNativeExecutionTransfer@456": {
+              "complexity": 36
             }
           }
         },
         "current": {
           "functions": {
-            "verifyNativeExecutionTransfer@468": {
+            "verifyNativeExecutionTransfer@456": {
               "complexity": 36
             }
           }
@@ -428,6 +426,9 @@
         "target": {
           "functions": {
             "verifyNativeExecutionTransfer@468": {
+              "complexity": 25
+            },
+            "verifyNativeExecutionTransfer@456": {
               "complexity": 25
             }
           }
@@ -491,17 +492,20 @@
             },
             "createGithubRulesetGovernanceRolloutPlan@1190": {
               "complexity": 36
+            },
+            "createGithubRulesetGovernanceRolloutPlan@1185": {
+              "complexity": 36
             }
           }
         },
         "current": {
-          "lines": 1367,
+          "lines": 1362,
           "functions": {
             "evaluateGithubGovernanceSnapshot@695": {
               "lines": 189,
               "complexity": 41
             },
-            "createGithubRulesetGovernanceRolloutPlan@1190": {
+            "createGithubRulesetGovernanceRolloutPlan@1185": {
               "complexity": 36
             }
           }
@@ -514,6 +518,9 @@
               "complexity": 25
             },
             "createGithubRulesetGovernanceRolloutPlan@1190": {
+              "complexity": 25
+            },
+            "createGithubRulesetGovernanceRolloutPlan@1185": {
               "complexity": 25
             }
           }
@@ -751,7 +758,7 @@
           "functions": {
             "validatePublicationEvidence@468": {
               "lines": 262,
-              "complexity": 52
+              "complexity": 51
             },
             "verifyPublicationAdmission@791": {
               "complexity": 35
@@ -986,19 +993,37 @@
             },
             "validateReleaseCandidatePassport@475": {
               "complexity": 38
+            },
+            "normalizeFamilyReleaseEvidence@232": {
+              "complexity": 26
+            },
+            "createReleaseCandidatePassport@368": {
+              "complexity": 37
+            },
+            "validateReleaseCandidatePassport@474": {
+              "complexity": 38
+            },
+            "normalizeFamilyReleaseEvidence@231": {
+              "complexity": 26
+            },
+            "createReleaseCandidatePassport@367": {
+              "complexity": 37
+            },
+            "validateReleaseCandidatePassport@472": {
+              "complexity": 38
             }
           }
         },
         "current": {
           "functions": {
-            "normalizeFamilyReleaseEvidence@233": {
+            "normalizeFamilyReleaseEvidence@231": {
               "complexity": 26
             },
-            "createReleaseCandidatePassport@369": {
-              "complexity": 37
+            "createReleaseCandidatePassport@367": {
+              "complexity": 36
             },
-            "validateReleaseCandidatePassport@475": {
-              "complexity": 38
+            "validateReleaseCandidatePassport@472": {
+              "complexity": 37
             }
           }
         },
@@ -1011,6 +1036,24 @@
               "complexity": 25
             },
             "validateReleaseCandidatePassport@475": {
+              "complexity": 25
+            },
+            "normalizeFamilyReleaseEvidence@232": {
+              "complexity": 25
+            },
+            "createReleaseCandidatePassport@368": {
+              "complexity": 25
+            },
+            "validateReleaseCandidatePassport@474": {
+              "complexity": 25
+            },
+            "normalizeFamilyReleaseEvidence@231": {
+              "complexity": 25
+            },
+            "createReleaseCandidatePassport@367": {
+              "complexity": 25
+            },
+            "validateReleaseCandidatePassport@472": {
               "complexity": 25
             }
           }
@@ -1160,7 +1203,7 @@
           "lines": 1515
         },
         "current": {
-          "lines": 1331
+          "lines": 1322
         },
         "target": {
           "lines": 600
@@ -1553,13 +1596,19 @@
           "functions": {
             "<anonymous@1408>@1408": {
               "lines": 206
+            },
+            "<anonymous@1401>@1401": {
+              "lines": 206
+            },
+            "<anonymous@1402>@1402": {
+              "lines": 206
             }
           }
         },
         "current": {
-          "lines": 2567,
+          "lines": 2561,
           "functions": {
-            "<anonymous@1408>@1408": {
+            "<anonymous@1402>@1402": {
               "lines": 206
             }
           }
@@ -1568,6 +1617,12 @@
           "lines": 600,
           "functions": {
             "<anonymous@1408>@1408": {
+              "lines": 180
+            },
+            "<anonymous@1401>@1401": {
+              "lines": 180
+            },
+            "<anonymous@1402>@1402": {
               "lines": 180
             }
           }
@@ -1583,12 +1638,7 @@
           }
         },
         "current": {
-          "lines": 1765,
-          "functions": {
-            "<anonymous@1511>@1511": {
-              "lines": 188
-            }
-          }
+          "lines": 1514
         },
         "target": {
           "lines": 600,
@@ -1647,11 +1697,10 @@
           }
         },
         "current": {
-          "lines": 1008,
+          "lines": 1002,
           "functions": {
             "<anonymous@426>@426": {
-              "lines": 583,
-              "complexity": 40
+              "lines": 577
             }
           }
         },
@@ -1670,7 +1719,7 @@
           "lines": 1422
         },
         "current": {
-          "lines": 1382
+          "lines": 1384
         },
         "target": {
           "lines": 600
@@ -1716,7 +1765,7 @@
           "lines": 806
         },
         "current": {
-          "lines": 805
+          "lines": 786
         },
         "target": {
           "lines": 600
@@ -1761,13 +1810,16 @@
           "functions": {
             "<anonymous@818>@818": {
               "lines": 205
+            },
+            "<anonymous@814>@814": {
+              "lines": 205
             }
           }
         },
         "current": {
-          "lines": 1136,
+          "lines": 1133,
           "functions": {
-            "<anonymous@818>@818": {
+            "<anonymous@814>@814": {
               "lines": 205
             }
           }
@@ -1776,6 +1828,9 @@
           "lines": 600,
           "functions": {
             "<anonymous@818>@818": {
+              "lines": 180
+            },
+            "<anonymous@814>@814": {
               "lines": 180
             }
           }
@@ -1809,13 +1864,19 @@
           "functions": {
             "<anonymous@233>@233": {
               "lines": 229
+            },
+            "<anonymous@223>@223": {
+              "lines": 229
+            },
+            "<anonymous@221>@221": {
+              "lines": 229
             }
           }
         },
         "current": {
-          "lines": 713,
+          "lines": 702,
           "functions": {
-            "<anonymous@233>@233": {
+            "<anonymous@221>@221": {
               "lines": 229
             }
           }
@@ -1824,6 +1885,12 @@
           "lines": 600,
           "functions": {
             "<anonymous@233>@233": {
+              "lines": 180
+            },
+            "<anonymous@223>@223": {
+              "lines": 180
+            },
+            "<anonymous@221>@221": {
               "lines": 180
             }
           }
@@ -1834,7 +1901,7 @@
           "lines": 1202
         },
         "current": {
-          "lines": 1182
+          "lines": 1179
         },
         "target": {
           "lines": 600
@@ -1953,12 +2020,15 @@
           "functions": {
             "<anonymous@3>@3": {
               "lines": 262
+            },
+            "<anonymous@4>@4": {
+              "lines": 262
             }
           }
         },
         "current": {
           "functions": {
-            "<anonymous@3>@3": {
+            "<anonymous@4>@4": {
               "lines": 262
             }
           }
@@ -1966,6 +2036,9 @@
         "target": {
           "functions": {
             "<anonymous@3>@3": {
+              "lines": 180
+            },
+            "<anonymous@4>@4": {
               "lines": 180
             }
           }
@@ -2048,7 +2121,7 @@
           "lines": 773
         },
         "current": {
-          "lines": 773
+          "lines": 770
         },
         "target": {
           "lines": 600
@@ -2070,7 +2143,7 @@
           "lines": 1217
         },
         "current": {
-          "lines": 1039
+          "lines": 988
         },
         "target": {
           "lines": 600
@@ -2128,11 +2201,22 @@
           "jobs": 14
         },
         "current": {
-          "lines": 787,
+          "lines": 728,
           "jobs": 14
         },
         "target": {
           "lines": 600,
+          "jobs": 8
+        }
+      },
+      ".github/workflows/self-ops-bootstrap-dogfood.yml": {
+        "baseline": {
+          "jobs": 9
+        },
+        "current": {
+          "jobs": 9
+        },
+        "target": {
           "jobs": 8
         }
       }
@@ -2158,7 +2242,9 @@
     ".github/workflows/public-build-adopter-qualification.yml",
     ".github/workflows/public-build-stage-capsule-canary.yml",
     ".github/workflows/public-release-oci-compose-preview.yml",
-    ".github/workflows/public-release-promote.yml"
+    ".github/workflows/public-release-promote.yml",
+    ".github/workflows/self-build-verify.yml",
+    ".github/workflows/self-release-promote.yml"
   ],
   "burnDownSlices": [
     {
@@ -2166,7 +2252,7 @@
       "path": "tests/build-surface.test.mjs",
       "metric": "lines",
       "baseline": 4639,
-      "current": 1765
+      "current": 1514
     }
   ]
 }

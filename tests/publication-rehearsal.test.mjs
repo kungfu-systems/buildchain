@@ -663,11 +663,8 @@ test("repo-local prepublication dogfood resolves the current reusable and exact 
   assert.deepEqual(caller.triggers, ["pull_request", "workflow_dispatch"]);
   assert.equal(caller.callJobs.length, 1);
   const [call] = caller.callJobs;
-  assert.equal(call.uses, "./.github/workflows/public-release-tail.yml");
-  assert.deepEqual(call.with["buildchain-ref"], {
-    kind: "expression",
-    value: "${{ github.event.pull_request.head.sha || github.sha }}",
-  });
+  assert.equal(call.uses, "kungfu-systems/buildchain/.github/workflows/public-release-tail.yml@v4");
+  assert.equal(call.with["buildchain-ref"], undefined);
   assert.equal(call.with["rehearsal-mode"].value, "simulate");
   assert.deepEqual(call.with.execute, { kind: "boolean", value: false });
   assert.equal(call.permissions.contents, "read");
@@ -694,7 +691,7 @@ test("repo-local prepublication dogfood resolves the current reusable and exact 
   const workflowUses = parseYamlUses(workflow).map((entry) => entry.value);
   assert.ok(
     workflowUses.includes(
-      "./.buildchain/release-tail-runtime/actions/release/tail/settle",
+      "./.buildchain/runtime/actions/release/tail/settle",
     ),
   );
   const durableExternalCaller = fs.readFileSync(
@@ -707,10 +704,10 @@ test("repo-local prepublication dogfood resolves the current reusable and exact 
   assert.ok(
     parseYamlUses(durableExternalCaller).some((entry) =>
       entry.value.endsWith(
-        "/.github/workflows/public-build-stage-capsule-canary.yml@v4-alpha",
+        "/.github/workflows/public-build-stage-capsule-canary.yml@v4",
       ),
     ),
-    "external public consumers retain the floating v4-alpha selector",
+    "external public consumers retain the floating v4 selector",
   );
 
   const providerPlaneDoc = fs.readFileSync(
@@ -728,7 +725,7 @@ test("repo-local prepublication dogfood resolves the current reusable and exact 
   assert.equal(productionCall.with.execute.value, true);
   assert.match(
     productionCall.uses,
-    /^kungfu-systems\/buildchain\/\.github\/workflows\/public-release-tail\.yml@<exact-buildchain-sha>$/u,
+    /^kungfu-systems\/buildchain\/\.github\/workflows\/public-release-tail\.yml@v4$/u,
   );
 });
 

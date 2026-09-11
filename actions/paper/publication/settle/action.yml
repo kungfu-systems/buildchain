@@ -30,7 +30,8 @@ runs:
   steps:
     - name: Read back publication and capture downstream work
       id: observe
-      if: ${{ !fromJSON(inputs.request-json).dry-run && inputs.promote-outcome == 'success' }}
+      if: ${{ !fromJSON(inputs.request-json).dry-run && inputs.promote-outcome ==
+        'success' }}
       uses: ./.buildchain/runtime/actions/paper/publication/observe
       with:
         candidate-json: ${{ inputs.candidate-json }}
@@ -41,7 +42,8 @@ runs:
       if: ${{ always() && steps.observe.outputs.readback-outcome == 'success' }}
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: paper-upstream-release-${{ fromJSON(inputs.candidate-json).package-version }}-${{ fromJSON(inputs.target-json).sha }}
+        name: paper-upstream-release-${{ fromJSON(inputs.candidate-json).package-version
+          }}-${{ fromJSON(inputs.target-json).sha }}
         path: .buildchain/upstream-release.json
         if-no-files-found: error
     - name: Retain configured propagation work
@@ -64,7 +66,9 @@ runs:
         publication-json: ${{ inputs.publication-json || '{}' }}
         observations-json: ${{ toJSON(steps) }}
         publish-outcome: ${{ inputs.publish-outcome }}
-        aggregate-outcome: ${{ job.status == 'cancelled' && 'cancelled' || (github.action_status || 'success') == 'success' && 'success' || 'failure' }}
+        aggregate-outcome: ${{ job.status == 'cancelled' && 'cancelled' ||
+          (github.action_status || 'success') == 'success' && 'success' ||
+          'failure' }}
     - name: Retain terminal publication receipt
       if: ${{ always() && steps.receipt.outputs.controller-receipt-digest != '' }}
       uses: actions/upload-artifact@v7.0.1
