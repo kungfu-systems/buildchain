@@ -138,6 +138,7 @@
         "packages/core/governance/buildchain-compatibility-proof.js",
         "packages/core/observability/controller-evidence.js",
         "packages/core/providers/github-cli-api.js",
+        "packages/core/providers/github/graphql-errors.js",
         "packages/core/providers/github/release-assets.js",
         "packages/core/publication/binary/action.js",
         "packages/core/publication/binary/capability.js",
@@ -196,6 +197,7 @@
         "packages/core/release/promote-candidate/evidence-inputs.js",
         "packages/core/release/promote-candidate/files.js",
         "packages/core/release/promote-candidate/next-development-provider.js",
+        "packages/core/release/promote-candidate/next-development-queue-observation.js",
         "packages/core/release/promote-candidate/next-development-queue.js",
         "packages/core/release/promote-candidate/oci-provider.js",
         "packages/core/release/promote-candidate/oci-registry-client.js",
@@ -231,7 +233,7 @@
         "packages/core/runtime/spawn-command.js",
         "packages/core/web/web-surface-publication-candidate.js"
       ],
-      "root": "sha256:5e4bc19b8e377bde5257297f15ac8376fbe8a7fc23ce8f5f897cf25130b4ae2d"
+      "root": "sha256:a701181b0e2081033458262c1c2355c4716b416c25a11f4e330aa83c59e265a0"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/runtime/domain-wasm.js",

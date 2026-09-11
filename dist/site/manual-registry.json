@@ -505,7 +505,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:667e120366136e4a9c76dc2cc872f79e7d7e99b5997b7cfbb121b4dc60ef9c1e",
+      "digest": "sha256:2714f40f9f5980dd5d0693bd4cfa7cc2a30f0fc3a0457d9c16844d6359fd97ee",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",

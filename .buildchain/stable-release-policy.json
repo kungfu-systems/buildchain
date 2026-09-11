@@ -20,13 +20,12 @@
       "allowedAttestors": []
     },
     {
-      "id": "site-libkungfu-dev",
-      "source": "commit-status",
-      "repository": "kungfu-systems/site-libkungfu-dev",
-      "workflow": "Buildchain Stable Canary",
-      "context": "buildchain-canary/site-libkungfu-dev",
+      "id": "buildchain-zero-input",
+      "source": "public-build",
+      "repository": "kungfu-systems/buildchain",
+      "workflow": "Buildchain Alpha Self-Dogfood",
+      "context": "buildchain-canary/buildchain-zero-input",
       "allowedAttestors": [
-        "kungfu-origin",
         "github-actions[bot]"
       ]
     }

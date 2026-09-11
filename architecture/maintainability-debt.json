@@ -792,21 +792,21 @@
       "packages/core/release/commands/stable-release-gate.mjs": {
         "baseline": {
           "functions": {
-            "resolveCanaryEvidence@130": {
+            "resolveCanaryEvidence@132": {
               "complexity": 56
             }
           }
         },
         "current": {
           "functions": {
-            "resolveCanaryEvidence@130": {
+            "resolveCanaryEvidence@132": {
               "complexity": 56
             }
           }
         },
         "target": {
           "functions": {
-            "resolveCanaryEvidence@130": {
+            "resolveCanaryEvidence@132": {
               "complexity": 25
             }
           }

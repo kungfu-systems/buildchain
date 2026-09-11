@@ -21,5 +21,3 @@ jobs:
   stable-consumer:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4
-    with:
-      config-path: fixtures/libnode-shaped/buildchain.toml

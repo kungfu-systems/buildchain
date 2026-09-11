@@ -1,26 +1,60 @@
-import { command } from "../runtime/action-process.mjs";
+import { execFileSync } from "node:child_process";
+import { createGitHubGraphqlError } from "./github/graphql-errors.js";
 
-export function createGitHubCliApi(execute = command, env = process.env) {
+function apiFailure(cause) {
+  let response;
+  try {
+    response = JSON.parse(String(cause.stdout || ""));
+  } catch {
+    // Process diagnostics are not a provider response and may contain secrets.
+  }
+  const messages = Array.isArray(response?.errors)
+    ? response.errors
+        .map((error) => error.message)
+        .filter((message) => typeof message === "string")
+    : [];
+  const message =
+    messages.join("; ") ||
+    (typeof response?.message === "string" ? response.message : "") ||
+    `GitHub API command failed with exit code ${cause.status ?? 1}`;
+  const error = messages.length
+    ? createGitHubGraphqlError(response.errors)
+    : new Error(message);
+  error.exitCode = cause.status ?? 1;
+  const status = Number(response?.status);
+  if (Number.isInteger(status) && status >= 100 && status <= 599)
+    error.status = status;
+  if (cause.code) error.code = cause.code;
+  return error;
+}
+
+export function createGitHubCliApi(execute = execFileSync, env = process.env) {
   function invoke(method, endpoint, body, flags = []) {
-    const output = execute(
-      "gh",
-      [
-        "api",
-        "--method",
-        method,
-        endpoint,
-        "-H",
-        "Accept: application/vnd.github+json",
-        ...flags,
-        ...(body === undefined ? [] : ["--input", "-"]),
-      ],
-      {
-        env,
-        input: body === undefined ? undefined : JSON.stringify(body),
-        maxBuffer: 8 * 1024 * 1024,
-        stdio: ["pipe", "pipe", "pipe"],
-      },
-    );
+    let output;
+    try {
+      output = execute(
+        "gh",
+        [
+          "api",
+          "--method",
+          method,
+          endpoint,
+          "-H",
+          "Accept: application/vnd.github+json",
+          ...flags,
+          ...(body === undefined ? [] : ["--input", "-"]),
+        ],
+        {
+          env,
+          encoding: "utf8",
+          input: body === undefined ? undefined : JSON.stringify(body),
+          maxBuffer: 8 * 1024 * 1024,
+          stdio: ["pipe", "pipe", "pipe"],
+        },
+      );
+    } catch (error) {
+      throw apiFailure(error);
+    }
     return output?.trim() ? JSON.parse(output) : {};
   }
   return {

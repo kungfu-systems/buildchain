@@ -8,12 +8,13 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-12
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-08
-  invisible_context: not asserted
+  generated_at: 2026-09-12
+  visible_context: Stable canary policy, symmetric zero-input self-build callers, artifact validation and regression tests.
+  invisible_context_boundary: No external consumer changes or completed stable publication is claimed.
 ---
 
 # Release Governance
@@ -248,8 +249,8 @@ while exact tags and SHAs remain the reproducible audit choice.
 Two independent thin workflows continuously qualify the published channels.
 `self-build-alpha-dogfood.yml` calls `build.yml@v4-alpha` with zero inputs and
 runs the root project's real install, build, and verify lifecycle.
-`self-build-stable-dogfood.yml` calls `build.yml@v4` with only the nested fixture's
-`config-path`, including native and Linux container builds. Project settings
+`self-build-stable-dogfood.yml` calls `build.yml@v4` with zero inputs and runs
+the same root lifecycle on Linux, macOS, and Windows. Project settings
 live in TOML; the selected runtime records its execution SHA and configuration
 root into the build receipts. Separate workflow validation allows each channel
 to advance independently during a breaking producer-first release.
@@ -385,12 +386,13 @@ candidate is allowed only when all of these facts are true:
 - the version-bound impact record has a non-empty summary and at least one
   surface impact;
 - the `Build Surface Fixture` release-candidate run succeeded;
-- `site-libkungfu-dev` completed its no-apply `Buildchain Stable Canary` and an allowed
-  maintainer attested that successful run on the exact alpha SHA through the
-  `buildchain-canary/site-libkungfu-dev` commit-status context;
-- the canary runtime input is exactly the candidate alpha tag or the 40-character
-  commit SHA resolved from that tag; a successful status pointing at another
-  workflow, repository, tag, floating ref, or SHA is rejected as mismatched;
+- Buildchain's zero-input `Buildchain Alpha Self-Dogfood` completed on all three
+  platforms, and `github-actions[bot]` attested the exact published alpha runtime
+  through `buildchain-canary/buildchain-zero-input`;
+- the status target is the repository-owned alpha dogfood workflow, its summary
+  archive matches the provider digest, and the summary binds the source run,
+  attempt, exact candidate runtime and all install/build/verify stages; overrides,
+  another candidate and incomplete artifacts are rejected;
 - at least one hour has elapsed after the last required canary completed.
 
 The machine report is written to
@@ -399,12 +401,11 @@ uploaded with the stable release passport. A blocked run writes the same report
 before failing, so the missing or stale condition is inspectable without
 opening a publication transaction.
 
-GitHub's Actions run REST object does not expose `workflow_dispatch` inputs.
-Buildchain therefore verifies the run's `workflow_id` against the authoritative
-workflow metadata, then reads the exact runtime from the workflow-owned
-`<workflow name> / <runtime ref>` run-name when no input field is available.
-An explicit API input, when present, remains authoritative and cannot be
-overridden by the display name.
+The `public-build` canary uses the build summary as runtime evidence. It does
+not infer the runtime from the consumer source commit or a run display name.
+Generic `commit-status` consumer canaries remain supported for repositories that
+explicitly declare them; their runtime input or workflow-owned run-name binding
+continues to apply.
 
 The cooldown is a minimum interval, not an instruction to release every day.
 Compatible work should still be batched until a stable release has a concrete
