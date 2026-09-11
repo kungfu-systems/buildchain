@@ -81,7 +81,12 @@ Ordinary executions use `.buildchain/contract-lock.json`; the alpha entry defaul
 to `.buildchain/alpha-contract-lock.json`. `contract-lock` selects another relative
 lock path. A missing default lock falls back to the entry commit; an invalid lock
 or an unreadable source fails preparation. A supplied runtime parameter overrides
-the lock and requires a caller repository actor with write, maintain or admin access.
+the lock and requires caller repository write authority. For `workflow_dispatch`,
+GitHub enforces repository Actions write permission before creating the run,
+including calls using installation tokens. The entry uses that authorization;
+an installation bot does not need to be a human repository collaborator.
+Other event types retain the entry's write, maintain or admin collaborator check.
+See GitHub's [workflow dispatch authorization](https://docs.github.com/en/rest/actions/workflows#create-a-workflow-dispatch-event).
 Branches and tags are resolved to an immutable commit during selection.
 
 For a Buildchain runtime fault, dispatch the same consumer workflow with
@@ -109,3 +114,9 @@ binary packaging read consumer source from the workspace while executing selecte
 runtime code. Directory equality is not an admission rule; source SHA and artifact
 containment checks still apply. The architecture gate parses business JavaScript
 and rejects direct or aliased runtime/source directory equality comparisons.
+
+Publication authority adapters take runtime repository and revision provenance
+from the prepared entry selection. Consumer requests provide source, artifact
+and effect authority; they do not supply or readmit a Buildchain SHA. Governance
+and sealed publication evidence retain the selected runtime as provenance while
+validating their own source, policy and provider bindings.

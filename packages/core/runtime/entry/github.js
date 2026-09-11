@@ -39,6 +39,9 @@ export function runtimeEntryProvider(
       readJson(repository, sha, "architecture/runtime-entry.json"),
     authorize: async ({ origin }) => {
       if (origin !== "runtime-parameter") return;
+      // GitHub already authorizes workflow_dispatch using repository Actions
+      // write permission, including installation tokens without a collaborator.
+      if (eventName === "workflow_dispatch") return;
       const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
         ...parts(sourceRepository),
         username: actor,

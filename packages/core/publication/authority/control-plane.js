@@ -11,10 +11,10 @@ export function publicationControlPlaneRequest(request) {
     candidate = kind === "release-candidate";
   return {
     repository: request.evidenceRepository,
-    workflowRepository: request.buildchainRepository,
+    workflowRepository: request.runtimeRepository,
     branch: request.targetRef,
     sourceSha: request.sourceSha,
-    workflowRef: request.buildchainRef,
+    workflowRef: request.runtimeSha,
     publisherWorkflowPath: request.publisherWorkflowPath,
     requiredStatusCheck: request.requiredStatusCheck || "",
     workflowPath: request.authorityWorkflowPath || defaults[kind],

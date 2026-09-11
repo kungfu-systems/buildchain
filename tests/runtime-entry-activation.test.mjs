@@ -59,7 +59,7 @@ test("preparation activates selected bytes and rejects an incorrect acquisition 
 
 });
 
-test("entry reads the consumer lock at the source commit and authorizes a train on the consumer repository", async () => {
+test("entry reads the consumer lock at the source commit and accepts GitHub-authorized dispatch", async () => {
   const observations = [];
   const provider = runtimeEntryProvider(
     {
@@ -100,7 +100,6 @@ test("entry reads the consumer lock at the source commit and authorizes a train 
       ref: "c".repeat(40),
       path: ".buildchain/contract-lock.json",
     },
-    { owner: "consumer", repo: "project", username: "maintainer" },
   ]);
 });
 

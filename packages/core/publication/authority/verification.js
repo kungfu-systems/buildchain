@@ -29,7 +29,7 @@ export async function verifySealedAdmission(
     kind: request.autoAdmissionKind,
     evidenceRoot: path.join(workspace, ".buildchain/publication-evidence"),
     sourceTreeSha,
-    runtimeSha: request.buildchainRef,
+    runtimeSha: request.runtimeSha,
     admission,
     gateAggregate,
   });
