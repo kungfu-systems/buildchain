@@ -1,11 +1,5 @@
 import { requireValue } from "../../runtime/action-process.mjs";
 
-export function requireImmutableAuthority(request) {
-  requireValue(
-    /^[0-9a-f]{40}$/i.test(request.buildchainRef || ""),
-    "Publication authority requires an exact 40-character GitHub commit SHA",
-  );
-}
 export function requireSealedInputs(request) {
   const names = [
     "admissionJson",
@@ -21,10 +15,6 @@ export function requireSealedInputs(request) {
   );
 }
 export function requireManagedInputs(request) {
-  requireValue(
-    request.buildchainRepository === "kungfu-systems/buildchain",
-    "Automatic publication admission requires the canonical Buildchain authority repository",
-  );
   requireValue(
     /^[0-9a-f]{40}$/i.test(request.sourceSha),
     "Automatic publication admission requires an exact source SHA",
@@ -107,7 +97,6 @@ export function requireManagedInputs(request) {
 
 export function admitPublicationAuthorityRequest(request) {
   if (request.dryRun) return;
-  requireImmutableAuthority(request);
   if (request.autoAdmission) requireManagedInputs(request);
   else requireSealedInputs(request);
 }

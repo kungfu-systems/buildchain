@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import YAML from "yaml";
 import {
-  requireImmutableAuthority,
+  admitPublicationAuthorityRequest,
   requireSealedInputs,
   requireManagedInputs,
 } from "../packages/core/publication/authority/admission.js";
@@ -34,7 +34,7 @@ async function workspace(fn) {
 function managed(extra = {}) {
   return {
     callerRepository: "acme/project",
-    buildchainRepository: "kungfu-systems/buildchain",
+    runtimeRepository: "kungfu-systems/buildchain",
     sourceSha: sha,
     targetRef: "alpha/v4/v4.1",
     publicationVersion: "4.1.0-alpha.0",
@@ -48,13 +48,8 @@ function managed(extra = {}) {
     ...extra,
   };
 }
-test("authority admission rejects mutable runtimes, incomplete evidence, obsolete channels and conflicting gate sources", () => {
-  requireImmutableAuthority({ buildchainRef: sha });
-  for (const ref of ["v4-alpha", "a".repeat(64), ""])
-    assert.throws(
-      () => requireImmutableAuthority({ buildchainRef: ref }),
-      /exact/,
-    );
+test("authority admission consumes the prepared runtime and retains source and effect gates", () => {
+  admitPublicationAuthorityRequest({ ...managed(), autoAdmission: true });
   assert.throws(() => requireSealedInputs({}), /before artifact download/);
   requireManagedInputs(managed());
   requireManagedInputs(
@@ -95,7 +90,7 @@ test("binary and artifact authority use distinct exact publisher and gate contra
   );
 });
 test("publication audits preserve literal inputs and provider-specific boundaries", () => {
- const input = { evidenceRepository: "acme/repo", buildchainRepository: "kungfu-systems/buildchain", targetRef: "alpha/v4/v4.1", sourceSha: sha, buildchainRef: sha,
+ const input = { evidenceRepository: "acme/repo", runtimeRepository: "kungfu-systems/buildchain", targetRef: "alpha/v4/v4.1", sourceSha: sha, runtimeSha: sha,
   publisherWorkflowPath: ".github/workflows/publish.yml", requiredStatusCheck: "check", publicationVersion: "4.1.0-alpha.0", packageName: "$(touch /tmp/never)", publicationTarget: "npm:pkg" };
  const npm = publicationControlPlaneRequest({ ...input, autoAdmissionKind: "release-candidate" });
  assert.equal(npm.packageName, input.packageName);
@@ -216,7 +211,7 @@ test("capability binding requires explicit qualification and exact version/predi
 test("authority verifies source evidence independently of selected runtime", async () => {
   let requests = 0;
   await assert.rejects(
-    verifySealedAdmission({request: {buildchainRef: "b".repeat(40)}, runtimeRoot: "fixture", admission: {repository: "acme/project", sourceSha: sha}}, {
+    verifySealedAdmission({request: {runtimeSha: "b".repeat(40)}, runtimeRoot: "fixture", admission: {repository: "acme/project", sourceSha: sha}}, {
       tree: async ({sourceSha}) => {requests++; assert.equal(sourceSha, sha); throw new Error("source unavailable");},
     }), /source unavailable/);
   assert.equal(requests, 1);

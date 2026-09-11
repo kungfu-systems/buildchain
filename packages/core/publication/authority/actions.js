@@ -12,6 +12,7 @@ const parse = (value) => (value ? JSON.parse(value) : undefined);
 function context(core, env) {
   const request = publicationAuthorityRequest(
     JSON.parse(core.getInput("request-json", { required: true })),
+    JSON.parse(env.BUILDCHAIN_RUNTIME_SELECTION),
   );
   return {
     request: { ...request, callerRepository: env.GITHUB_REPOSITORY },
@@ -22,12 +23,16 @@ function context(core, env) {
 export function inspectPublicationAuthorityAction(core, env) {
   admitPublicationAuthorityRequest(context(core, env).request);
 }
-export function verifyPublicationGovernanceAction(core, env) {
+export function verifyPublicationGovernanceAction(
+  core,
+  env,
+  { verify = verifyLivePublicationGovernance } = {},
+) {
   const { request, workspace, runtimeRoot } = context(core, env);
-  return verifyLivePublicationGovernance({
+  return verify({
     repository: request.evidenceRepository || env.GITHUB_REPOSITORY,
     targetRef: request.targetRef,
-    runtimeSha: request.buildchainRef,
+    runtimeSha: request.runtimeSha,
     runtimeRoot,
     outputRoot: path.join(workspace, ".buildchain/publication-authority"),
     token: core.getInput("token", { required: true }),
