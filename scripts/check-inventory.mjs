@@ -281,7 +281,7 @@ for (const [channel, ref] of [["alpha", `v${selfDogfoodMajor}-alpha`], ["stable"
   const workflow = fs.readFileSync(path.join(root, `.github/workflows/self-build-${channel}-dogfood.yml`), "utf8");
   if (!workflow.includes(`/.github/workflows/build.yml@${ref}`) || /steps:|buildchain-channel:|runner-preset:|working-directory:/u.test(workflow)) throw new Error(`${channel} self-dogfood must remain a thin public TOML build caller`);
   if (!workflow.includes(`group: buildchain-${channel}-self-dogfood-`) || !workflow.includes("cancel-in-progress: false")) throw new Error(`${channel} self-dogfood must serialize its own runs`);
-  const expectedInputs = channel === "alpha" ? [] : ["config-path"];
+  const expectedInputs = [];
   const call = parseWorkflowCallJobs(workflow).find((job) => job.id === `${channel}-consumer`);
   if (JSON.stringify(Object.keys(call.with || {})) !== JSON.stringify(expectedInputs)) throw new Error(`${channel} self-dogfood input contract drift`);
 }

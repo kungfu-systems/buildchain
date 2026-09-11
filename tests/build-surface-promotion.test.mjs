@@ -1254,14 +1254,14 @@ test("generated release model publishes the generic major alpha channel contract
   assert.match(releaseModel.floatingTags, /highest minor in major X with a published alpha/);
 });
 
-test("Buildchain independently dogfoods zero-input alpha and one-input stable TOML builds", () => {
+test("Buildchain independently dogfoods zero-input alpha and stable TOML builds", () => {
   for (const channel of ["alpha", "stable"]) {
     const workflow = fs.readFileSync(path.join(root, `.github/workflows/self-build-${channel}-dogfood.yml`), "utf8");
     assert.match(workflow, /workflows:\s*- Buildchain Ref Promotion/u);
     assert.ok(workflow.includes(`build.yml@${channel === "alpha" ? "v4-alpha" : "v4"}`));
     assert.doesNotMatch(workflow, /steps:|buildchain-channel:|working-directory:|runner-preset:/u);
-    if (channel === "alpha") assert.doesNotMatch(workflow, /with:|config-path:/u);
-    else assert.match(workflow, /config-path: fixtures\/libnode-shaped\/buildchain.toml/u);
+    assert.doesNotMatch(workflow, /with:|config-path:/u);
+    assert.deepEqual(Object.keys(readWorkflow(`.github/workflows/self-build-${channel}-dogfood.yml`).jobs), [`${channel}-consumer`]);
   }
 });
 test("self-dogfood never bridges an adjacent major or bypasses contract compatibility", () => {
