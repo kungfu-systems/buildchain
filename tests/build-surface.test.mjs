@@ -652,7 +652,7 @@ test("declared merge queue governance reconciles automatically on dev changes", 
     workflow,
     /BUILDCHAIN_GOVERNANCE_TOKEN \|\| secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token/,
   );
-  assert.match(inspectWorkflowJob(".github/workflows/self-ops-merge-queue.yml", "reconcile").modules.get("packages/core/dev-delivery/queue/reconciliation-action.js"), /reconcileConfiguredDevMergeQueue\(/);
+  assert.match(inspectWorkflowJob(".github/workflows/self-ops-merge-queue.yml", "reconcile").modules.get("packages/core/dev-delivery/queue/reconciliation-action.js"), /reconcile = reconcileConfiguredDevMergeQueue/);
   assert.match(workflow, /github\.event_name == 'push' \|\| inputs\.apply/);
 });
 

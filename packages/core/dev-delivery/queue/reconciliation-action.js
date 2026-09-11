@@ -1,24 +1,20 @@
 import fs from "node:fs";
 import path from "node:path";
-import { installationRoot } from "../../runtime/installation-root.js";
 import { GitHubTwoPhaseClient } from "../../providers/dev-delivery/candidate.js";
 import { reconcileConfiguredDevMergeQueue } from "../merge-queue-policy.js";
-export async function reconcileMergeQueueAction(core, env) {
+export async function reconcileMergeQueueAction(
+  core,
+  env,
+  { reconcile = reconcileConfiguredDevMergeQueue } = {},
+) {
   const workspace = path.resolve(env.GITHUB_WORKSPACE);
-  if (
-    fs.realpathSync(installationRoot(import.meta.url)) !==
-    fs.realpathSync(workspace)
-  )
-    throw new Error(
-      "Merge queue policy must use the checked-out governed source implementation",
-    );
   const branch = core.getInput("branch", { required: true });
   const provider = new GitHubTwoPhaseClient({
     repository: env.GITHUB_REPOSITORY,
     token: core.getInput("token", { required: true }),
     apiUrl: env.GITHUB_API_URL || "https://api.github.com",
   });
-  const facts = await reconcileConfiguredDevMergeQueue({
+  const facts = await reconcile({
     api: {
       request: (method, endpoint, body) =>
         provider.request(`/${endpoint}`, { method, body }),
