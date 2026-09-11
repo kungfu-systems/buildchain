@@ -73,7 +73,7 @@ for (const [largeProof, mismatchedRuntime, crlfPaths] of [[false, false, false],
   fs.writeFileSync(gh, `#!/bin/bash\ncase "$1 $2" in\n  "repo view") echo 'kungfu-systems/buildchain' ;;\n  "pr view") echo '{"number":7,"state":"OPEN","isDraft":false,"baseRefName":"dev/v4/v4.0","headRefName":"feature/candidate","headRefOid":"${head}","headRepository":{"nameWithOwner":"kungfu-systems/buildchain"},"statusCheckRollup":[{"workflowName":"Verify","conclusion":"SUCCESS","detailsUrl":"https://github.com/kungfu-systems/buildchain/actions/runs/123/job/1","name":"check"}]}' ;;\n  "api repos/kungfu-systems/buildchain/actions/runs/123") echo '{"conclusion":"success","event":"pull_request","head_sha":"${head}","path":".github/workflows/self-build-verify.yml@refs/pull/7/merge","pull_requests":[{"number":7,"base":{"sha":"${base}"}}]}' ;;\n  "api repos/kungfu-systems/buildchain/contents/.github/workflows/${availableWorkflow}?ref=dev/v4/v4.0") echo '{}' ;;\n  *) exit 1 ;;\nesac\n`);
   fs.writeFileSync(gh, fs.readFileSync(gh, "utf8").replace("  *) exit 1 ;;", `  "api --method") cat > "${payloadPath}" ;;\n  *) exit 1 ;;`));
   fs.chmodSync(gh, 0o755);
-  const result = spawnSync("bash", [path.join(repositoryRoot, "packages/core/dev-delivery/commands/dev-delivery-request.sh"), "7", "--execute", "--json"], {
+  const result = spawnSync("bash", ["-x", path.join(repositoryRoot, "packages/core/dev-delivery/commands/dev-delivery-request.sh"), "7", "--execute", "--json"], {
     cwd,
     encoding: "utf8",
     env: { ...process.env, GH_TOKEN: "", GITHUB_TOKEN: "", PATH: `${directory}:${process.env.PATH}`, BUILDCHAIN_WORK_SOURCE_ROOT: sourceRoot, BUILDCHAIN_RUNTIME_REF: mismatchedRuntime ? "train/v4/v4.1/repair" : "" },
@@ -119,7 +119,7 @@ esac
 `);
   fs.chmodSync(node, 0o755);
   fs.chmodSync(gh, 0o755);
-  const result = spawnSync("bash", [path.join(repositoryRoot, "packages/core/dev-delivery/commands/dev-delivery-request.sh"), "7", "--execute", "--json"], {
+  const result = spawnSync("bash", ["-x", path.join(repositoryRoot, "packages/core/dev-delivery/commands/dev-delivery-request.sh"), "7", "--execute", "--json"], {
     cwd,
     encoding: "utf8",
     env: { ...process.env, GH_TOKEN: "", GITHUB_TOKEN: "test-token", PATH: `${directory}:${process.env.PATH}`, BUILDCHAIN_WORK_SOURCE_ROOT: sourceRoot },
@@ -172,7 +172,7 @@ esac
 `);
   fs.chmodSync(node, 0o755);
   fs.chmodSync(gh, 0o755);
-  const result = spawnSync("bash", [path.join(repositoryRoot, "packages/core/dev-delivery/commands/dev-delivery-request.sh"), "7", "--execute", "--json"], {
+  const result = spawnSync("bash", ["-x", path.join(repositoryRoot, "packages/core/dev-delivery/commands/dev-delivery-request.sh"), "7", "--execute", "--json"], {
     cwd,
     encoding: "utf8",
     env: { ...process.env, GH_TOKEN: "", GITHUB_TOKEN: "test-token", PATH: `${directory}:${process.env.PATH}`, BUILDCHAIN_WORK_SOURCE_ROOT: sourceRoot },
