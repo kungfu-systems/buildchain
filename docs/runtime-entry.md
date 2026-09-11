@@ -81,7 +81,12 @@ Ordinary executions use `.buildchain/contract-lock.json`; the alpha entry defaul
 to `.buildchain/alpha-contract-lock.json`. `contract-lock` selects another relative
 lock path. A missing default lock falls back to the entry commit; an invalid lock
 or an unreadable source fails preparation. A supplied runtime parameter overrides
-the lock and requires a caller repository actor with write, maintain or admin access.
+the lock and requires caller repository write authority. For `workflow_dispatch`,
+GitHub enforces repository Actions write permission before creating the run,
+including calls using installation tokens. The entry uses that authorization;
+an installation bot does not need to be a human repository collaborator.
+Other event types retain the entry's write, maintain or admin collaborator check.
+See GitHub's [workflow dispatch authorization](https://docs.github.com/en/rest/actions/workflows#create-a-workflow-dispatch-event).
 Branches and tags are resolved to an immutable commit during selection.
 
 For a Buildchain runtime fault, dispatch the same consumer workflow with
