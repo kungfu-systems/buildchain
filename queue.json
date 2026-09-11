@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 45,
+  "generation": 46,
   "fencingCounter": 15,
   "policy": {
     "agingSeconds": 900,
@@ -5473,8 +5473,41 @@
         "tests/dev-delivery-minimal-request.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.1",
+      "pullRequestNumber": 3711,
+      "sourceRoot": "sha256:287673d1878b429832569de91444ff3ce4455084bbc54b9e44381ce33e5fe0ea",
+      "sourceIdentityRoot": "sha256:71aa18351d8bc04fbfe81f5cf7e8ede7a70ab95912169339e43e8f6243cfac16",
+      "deliveryClass": "non-native-fast",
+      "identitySemantics": "chained-attempt-v2",
+      "predecessorCandidateId": "sha256:cedb84b09bb08daa010c8c6976bbcc4b2316c2727334453e1d29587b415e098b",
+      "candidateId": "sha256:4a64dba7873a9f4897c25ac2934b38eb9154323165d6beda3728bff9b0c8dcf5",
+      "sourceHead": "6c0cd4eb35688669f77fc37998ced6c0a752333e",
+      "sourcePatchRoot": "sha256:4d82d6777c9855dc3f67cd1d3752e5c5042d34e38257bd3438f49f77b419e60a",
+      "sourceProofRoot": "sha256:ac21194d7e0ab5e764ad7f5663c5630afa3281b112b257f894d003132e3f7b4f",
+      "planRoot": "sha256:bda8bb8e826b2e847dcc390425e374cbbd6bb3e80628737c0745e3f1742d33fa",
+      "closureRoot": "sha256:7e834d7aee1aefcf46b91efaff4743e352ccc19c2881a5b832ad6ee6326ee311",
+      "dependencyRoot": "sha256:1d4a062ddab6488ca8985ee8bf0415aede5ad2c46b5b84616bf181c753e550d2",
+      "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
+      "sourceWorkflowRunId": 34602473298,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-11T13:18:26.757Z",
+      "updatedAt": "2026-09-11T13:18:26.757Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "actions/build/verification/qualify-backbone/dist/index.js",
+        "packages/core/build/verification/actions.js",
+        "packages/core/dev-delivery/commands/dev-delivery-request.sh",
+        "tests/dev-delivery-minimal-request.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-11T13:17:31.934Z",
-  "stateRoot": "sha256:63b6a58165e4e257acd693bd763018ca432d6d24791fad957f04d55e8db8ed7e"
+  "updatedAt": "2026-09-11T13:18:26.757Z",
+  "stateRoot": "sha256:bd2b34601959013b510621626bdeef15a50c175e4805cfe1e6dae20590d414ab"
 }
