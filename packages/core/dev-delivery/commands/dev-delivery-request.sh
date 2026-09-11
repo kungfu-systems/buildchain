@@ -70,6 +70,7 @@ affected_paths="$(git diff --name-only --no-renames "$qualified_base...$source_h
 
 paths_at_head() {
   while IFS= read -r item; do
+    item="${item%$'\r'}"
     if git cat-file -e "$source_head:$item" 2>/dev/null; then printf '%s\n' "$item"; fi
   done | jq -Rsc 'split("\n") | map(select(length > 0)) | sort'
 }
