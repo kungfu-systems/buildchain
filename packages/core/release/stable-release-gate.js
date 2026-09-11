@@ -74,10 +74,10 @@ export function loadStableReleasePolicy({ cwd = process.cwd(), input = "" } = {}
       if (!id) {
         throw new Error(`requiredCanaries[${index}].id is required`);
       }
-      if (!new Set(["release-candidate", "commit-status"]).has(source)) {
-        throw new Error(`requiredCanaries[${index}].source must be release-candidate or commit-status`);
+      if (!new Set(["release-candidate", "commit-status", "public-build"]).has(source)) {
+        throw new Error(`requiredCanaries[${index}].source must be release-candidate, commit-status or public-build`);
       }
-      if (source === "commit-status" && !string(canary.context)) {
+      if (source !== "release-candidate" && !string(canary.context)) {
         throw new Error(`requiredCanaries[${index}].context is required for commit-status canaries`);
       }
       return {

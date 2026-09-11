@@ -180,7 +180,7 @@ test("paper scaffold is idempotent, validates locally, and never overwrites a co
     ),
   );
   assert.equal(provisioning.contract, PAPER_PROVISIONING_CONTRACT);
-  assert.equal(provisioning.runtime.ref, "v4-alpha");
+  assert.equal(provisioning.runtime.ref, packageVersion.includes("-") ? "v4-alpha" : "v4");
   assert.equal(
     provisioning.admission.acceptedSha,
     provisioning.runtime.resolvedSha,

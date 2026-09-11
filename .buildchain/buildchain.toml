@@ -86,8 +86,7 @@ publish_at = "03:00"
 minimum_soak_seconds = 3600
 required_checks = [
   "alpha-release",
-  "workflow:Build Surface Fixture",
-  "status:buildchain-canary/site-libkungfu-dev",
+  "status:buildchain-canary/buildchain-zero-input",
 ]
 auto_promote = true
 auto_merge = true

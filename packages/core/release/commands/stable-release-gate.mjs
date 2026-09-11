@@ -2,6 +2,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { fetchQualificationArchive } from "../../providers/github/qualification-artifacts.js";
+import { resolvePublicBuildCanaryEvidence } from "../qualification/canary-evidence.js";
 import {
   assertStableReleaseGate,
   evaluateStableReleaseGate,
@@ -278,12 +280,16 @@ export async function collectStableReleaseGateReport({
   const canaries = await resolveCanaryEvidence({
     api,
     repository,
-    policy,
+    policy: { ...policy, requiredCanaries: policy.requiredCanaries.filter((entry) => entry.source !== "public-build") },
     candidateTag: candidate.tag,
     candidateSha,
     releaseCandidateRunId,
     releaseCandidateRunUrl,
   });
+  canaries.push(...await resolvePublicBuildCanaryEvidence({
+    api, policy, candidateSha, repository: repository.fullName,
+    fetchArchive: (endpoint) => fetchQualificationArchive({ apiUrl, token, endpoint, fetchImpl }),
+  }));
   return assertStableReleaseGate({
     policy,
     channel,
