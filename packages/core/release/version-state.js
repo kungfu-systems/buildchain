@@ -329,6 +329,18 @@ function runVersionVerification({
   if (!command && (!runLifecycleVerify || !lifecycleVerify) && !lifecycleVersionState) {
     return changedFiles;
   }
+  const lifecycleInstall = getLifecycleStage(loadedConfig, "install");
+  if (lifecycleVersionState && lifecycleInstall) {
+    // Source generators own their dependencies. Install against the original
+    // manifests before materializing the next version, independently of runtime X.
+    runLifecycleStage({
+      cwd,
+      loadedConfig,
+      name: "install",
+      stage: lifecycleInstall,
+      env: extraEnv,
+    });
+  }
   applyLocalVersionState(cwd, changedFiles);
   const lifecycleEnv = { BUILDCHAIN_VERSION: version, ...(extraEnv || {}) };
   if (lifecycleVersionState) {
