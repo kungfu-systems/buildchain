@@ -49,7 +49,7 @@ test("workflow event transports sourceRoot without exposing a retired CLI pair",
   fs.rmSync(directory, { recursive: true, force: true });
 });
 
-for (const [largeProof, mismatchedRuntime] of [[false, false], [true, false], [false, true]]) test(`dev delivery request ${mismatchedRuntime ? "accepts independent runtime" : "binds exact candidate source"}${largeProof ? " with a proof above command-line limits" : ""}`, () => {
+for (const [largeProof, mismatchedRuntime, crlfPaths] of [[false, false, false], [true, false, false], [false, true, false], [false, false, true]]) test(`dev delivery request ${mismatchedRuntime ? "accepts independent runtime" : "binds exact candidate source"}${largeProof ? " with a proof above command-line limits" : ""}${crlfPaths ? " with CRLF Git output" : ""}`, () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-delivery-request-"));
   const gh = path.join(directory, "gh");
   const payloadPath = path.join(directory, "payload.json");
@@ -66,6 +66,10 @@ for (const [largeProof, mismatchedRuntime] of [[false, false], [true, false], [f
     fs.chmodSync(node, 0o755);
   }
   const { cwd, head, base } = sourceFixture(directory);
+  if (crlfPaths) {
+    const gitExecutable = execFileSync("bash", ["-c", "command -v git"], { encoding: "utf8" }).trim();
+    fs.writeFileSync(path.join(directory, "git"), `#!/bin/bash\nset -o pipefail\nif [[ "$1 $2" == "diff --name-only" ]]; then\n  "${gitExecutable}" "$@" | sed 's/\\r$//;s/$/\\r/'\nelse\n  exec "${gitExecutable}" "$@"\nfi\n`, { mode: 0o755 });
+  }
   fs.writeFileSync(gh, `#!/bin/bash\ncase "$1 $2" in\n  "repo view") echo 'kungfu-systems/buildchain' ;;\n  "pr view") echo '{"number":7,"state":"OPEN","isDraft":false,"baseRefName":"dev/v4/v4.0","headRefName":"feature/candidate","headRefOid":"${head}","headRepository":{"nameWithOwner":"kungfu-systems/buildchain"},"statusCheckRollup":[{"workflowName":"Verify","conclusion":"SUCCESS","detailsUrl":"https://github.com/kungfu-systems/buildchain/actions/runs/123/job/1","name":"check"}]}' ;;\n  "api repos/kungfu-systems/buildchain/actions/runs/123") echo '{"conclusion":"success","event":"pull_request","head_sha":"${head}","path":".github/workflows/self-build-verify.yml@refs/pull/7/merge","pull_requests":[{"number":7,"base":{"sha":"${base}"}}]}' ;;\n  "api repos/kungfu-systems/buildchain/contents/.github/workflows/${availableWorkflow}?ref=dev/v4/v4.0") echo '{}' ;;\n  *) exit 1 ;;\nesac\n`);
   fs.writeFileSync(gh, fs.readFileSync(gh, "utf8").replace("  *) exit 1 ;;", `  "api --method") cat > "${payloadPath}" ;;\n  *) exit 1 ;;`));
   fs.chmodSync(gh, 0o755);
