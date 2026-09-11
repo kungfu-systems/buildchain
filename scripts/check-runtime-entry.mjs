@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import YAML from "yaml";
 import { fileURLToPath } from "node:url";
+import { auditRuntimeSourceBoundaries } from "./runtime-source-boundaries.mjs";
 
 const prepare = "actions/runtime/environment/prepare/action.yml";
 const preparation = "$/actions/runtime/environment/prepare";
@@ -66,14 +67,26 @@ function auditBusinessAcquisition(root, directory, issues) {
   for (const entry of fs.readdirSync(absolute, { withFileTypes: true })) {
     const file = `${directory}/${entry.name}`;
     if (entry.isDirectory()) {
-      if (!["node_modules", "dist"].includes(entry.name)) auditBusinessAcquisition(root, file, issues);
+      if (!["node_modules", "dist"].includes(entry.name))
+        auditBusinessAcquisition(root, file, issues);
       continue;
     }
-    if (!/\.(?:[cm]?js|sh|py|ps1)$/u.test(file) || file.startsWith("packages/core/runtime/entry/")) continue;
+    if (
+      !/\.(?:[cm]?js|sh|py|ps1)$/u.test(file) ||
+      file.startsWith("packages/core/runtime/entry/")
+    )
+      continue;
     const source = fs.readFileSync(path.join(root, file), "utf8");
-    const runtime = /\.buildchain\/(?:runtime|workflow-shell|promotion-router)|BUILDCHAIN_RUNTIME_(?:ROOT|SHA)/u.test(source);
-    const acquisition = /["'](?:clone|checkout)["']|git\s+(?:clone|checkout)/u.test(source);
-    if (runtime && acquisition) issues.push(`${file}: business code cannot acquire an execution runtime`);
+    if (/\.[cm]?js$/u.test(file))
+      issues.push(...auditRuntimeSourceBoundaries(source, file));
+    const runtime =
+      /\.buildchain\/(?:runtime|workflow-shell|promotion-router)|BUILDCHAIN_RUNTIME_(?:ROOT|SHA)/u.test(
+        source,
+      );
+    const acquisition =
+      /["'](?:clone|checkout)["']|git\s+(?:clone|checkout)/u.test(source);
+    if (runtime && acquisition)
+      issues.push(`${file}: business code cannot acquire an execution runtime`);
   }
 }
 export function auditRuntimeEntry(root) {

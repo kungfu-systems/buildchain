@@ -102,3 +102,10 @@ re-reading the lock or comparing the runtime SHA. The internal transport carries
 a trusted entry output; consumer source binding and override authorization remain
 entry concerns. Recovery selectors request `actions: read` to read the original
 run in private repositories as well as public repositories.
+
+Business adapters also keep the runtime installation directory separate from the
+consumer workspace. Queue reconciliation, npm preview, runner qualification and
+binary packaging read consumer source from the workspace while executing selected
+runtime code. Directory equality is not an admission rule; source SHA and artifact
+containment checks still apply. The architecture gate parses business JavaScript
+and rejects direct or aliased runtime/source directory equality comparisons.

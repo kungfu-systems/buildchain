@@ -1,5 +1,3 @@
-import path from "node:path";
-import { installationRoot } from "../../runtime/installation-root.js";
 import { command } from "../../runtime/action-process.mjs";
 import { releaseAssetClient } from "../../providers/github/release-assets.js";
 import {
@@ -10,14 +8,14 @@ import {
 function sourceWorkspace(env) {
   const workspace = env.GITHUB_WORKSPACE;
   if (
-    path.resolve(installationRoot(import.meta.url)) !==
-      path.resolve(workspace) ||
     command("git", ["rev-parse", "HEAD"], {
       cwd: workspace,
       stdio: "pipe",
     }).trim() !== env.GITHUB_SHA
   )
-    throw new Error("Binary distribution requires exact source-owned code");
+    throw new Error(
+      "Binary distribution requires the exact checked-out source",
+    );
   return workspace;
 }
 export function admitBinaryDistributionAction(core, env) {
@@ -31,7 +29,11 @@ export function admitBinaryDistributionAction(core, env) {
     sourceSha: env.GITHUB_SHA,
   });
 }
-export async function buildBinaryDistributionAction(core, env) {
+export async function buildBinaryDistributionAction(
+  core,
+  env,
+  { build = buildBinaryDistribution } = {},
+) {
   const workspace = sourceWorkspace(env),
     matrix = JSON.parse(core.getInput("matrix-json", { required: true }));
   const nodePath = command("node", ["-p", "process.execPath"], {
@@ -42,7 +44,7 @@ export async function buildBinaryDistributionAction(core, env) {
     cwd: workspace,
     stdio: "pipe",
   }).trim();
-  return buildBinaryDistribution({
+  return build({
     workspace,
     tag: core.getInput("tag", { required: true }),
     platform: matrix.platform,
@@ -52,9 +54,13 @@ export async function buildBinaryDistributionAction(core, env) {
     logPath: env.BUILDCHAIN_LOG_PATH,
   });
 }
-export async function qualifyBinaryDistributionAction(core, env) {
+export async function qualifyBinaryDistributionAction(
+  core,
+  env,
+  { qualify = qualifyBinaryDistribution } = {},
+) {
   const workspace = sourceWorkspace(env);
-  return qualifyBinaryDistribution({
+  return qualify({
     workspace,
     tag: core.getInput("tag", { required: true }),
     repository: env.GITHUB_REPOSITORY,
