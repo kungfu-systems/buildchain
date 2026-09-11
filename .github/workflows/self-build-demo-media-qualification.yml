@@ -1,34 +1,58 @@
 name: Auditable Demo Media Profile Qualification
-
 on:
   pull_request:
     paths:
-      - ".github/workflows/.auditable-demo.yml"
-      - ".github/workflows/self-build-demo-media-qualification.yml"
-      - "contracts/auditable-demo-media-profiles-v1.json"
-      - "contracts/evidence/auditable-demo-web-delivery-v1.json"
-      - "contracts/evidence/auditable-demo-responsive-web-delivery-v1.json"
-      - "contracts/fixtures/auditable-demo-web-delivery-v1/**"
-      - "contracts/fixtures/auditable-demo-responsive-web-delivery-v1/**"
-      - "scripts/auditable-demo.mjs"
+      - .github/workflows/.build-demo-adapter.yml
+      - .github/workflows/self-build-demo-media-qualification.yml
+      - contracts/auditable-demo-media-profiles-v1.json
+      - contracts/evidence/auditable-demo-web-delivery-v1.json
+      - contracts/evidence/auditable-demo-responsive-web-delivery-v1.json
+      - contracts/fixtures/auditable-demo-web-delivery-v1/**
+      - contracts/fixtures/auditable-demo-responsive-web-delivery-v1/**
+      - packages/core/build/commands/auditable-demo.mjs
   push:
     branches:
-      - "dev/v*/v*"
+      - dev/v*/v*
     paths:
-      - ".github/workflows/.auditable-demo.yml"
-      - ".github/workflows/self-build-demo-media-qualification.yml"
-      - "contracts/auditable-demo-media-profiles-v1.json"
-      - "contracts/evidence/auditable-demo-web-delivery-v1.json"
-      - "contracts/evidence/auditable-demo-responsive-web-delivery-v1.json"
-      - "contracts/fixtures/auditable-demo-web-delivery-v1/**"
-      - "contracts/fixtures/auditable-demo-responsive-web-delivery-v1/**"
-      - "scripts/auditable-demo.mjs"
+      - .github/workflows/.build-demo-adapter.yml
+      - .github/workflows/self-build-demo-media-qualification.yml
+      - contracts/auditable-demo-media-profiles-v1.json
+      - contracts/evidence/auditable-demo-web-delivery-v1.json
+      - contracts/evidence/auditable-demo-responsive-web-delivery-v1.json
+      - contracts/fixtures/auditable-demo-web-delivery-v1/**
+      - contracts/fixtures/auditable-demo-responsive-web-delivery-v1/**
+      - packages/core/build/commands/auditable-demo.mjs
   workflow_dispatch:
-
+    inputs:
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
 permissions:
   contents: read
-
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+    timeout-minutes: 5
   qualify:
     name: qualify-${{ matrix.profile }}
     runs-on: ubuntu-24.04
@@ -51,86 +75,24 @@ jobs:
             rendererImage: ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:b70a2f5631665f685280bc9d7434c5ed5cf48b760b728873734d0c47bff72b25
             rendererSourceRef: refs/tags/v1.3.0-alpha.20
             rendererSourceSha: b3cebc2deb5f140af74db24b1b45233ac6733ef1
-    env:
-      MEDIA_PROFILE: ${{ matrix.profile }}
-      MEDIA_FIXTURE: ${{ matrix.fixture }}
-      EVIDENCE_FILE: ${{ matrix.evidence }}
-      RENDERER_IMAGE: ${{ matrix.rendererImage }}
-      RENDERER_SOURCE_REPOSITORY: kungfu-systems/build-images
-      RENDERER_SOURCE_REF: ${{ matrix.rendererSourceRef }}
-      RENDERER_SOURCE_SHA: ${{ matrix.rendererSourceSha }}
     steps:
       - name: Checkout exact source
         uses: actions/checkout@v7.0.0
         with:
           persist-credentials: false
-
-      - name: Render the fixed qualification fixture
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p .buildchain/media-profile/render
-          chmod 0777 .buildchain/media-profile/render
-          docker run --rm --network none --read-only \
-            --tmpfs /tmp:rw,noexec,nosuid,size=512m \
-            --volume "${GITHUB_WORKSPACE}/contracts/fixtures/${MEDIA_FIXTURE}:/input:ro" \
-            --volume "${GITHUB_WORKSPACE}/.buildchain/media-profile/render:/output" \
-            "${RENDERER_IMAGE}" \
-            demo-renderer \
-            --scene /input/scene.json \
-            --transcript /input/complete-transcript.txt \
-            --projection /input/public-projection.json \
-            --output /output \
-            --renderer-image "${RENDERER_IMAGE}"
-
-      - name: Inspect rendered bytes with the fixed Buildchain command
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p .buildchain/media-profile/inspection
-          chmod 0777 .buildchain/media-profile/inspection
-          docker run --rm --network none --read-only \
-            --tmpfs /tmp:rw,noexec,nosuid,size=128m \
-            --volume "${GITHUB_WORKSPACE}:/buildchain:ro" \
-            --volume "${GITHUB_WORKSPACE}/.buildchain/media-profile/render:/media:ro" \
-            --volume "${GITHUB_WORKSPACE}/.buildchain/media-profile/inspection:/inspection" \
-            --entrypoint node \
-            "${RENDERER_IMAGE}" \
-            /buildchain/scripts/auditable-demo.mjs inspect-media \
-            --render-output /media \
-            --renderer-image "${RENDERER_IMAGE}" \
-            --output /inspection/media-inspection.json
-
-      - name: Produce content-addressed fixture evidence
-        shell: bash
-        run: |
-          set -euo pipefail
-          node scripts/auditable-demo.mjs qualify-media-fixture \
-            --render-output .buildchain/media-profile/render \
-            --media-inspection .buildchain/media-profile/inspection/media-inspection.json \
-            --media-profile "${MEDIA_PROFILE}" \
-            --renderer-image "${RENDERER_IMAGE}" \
-            --renderer-source-repository "${RENDERER_SOURCE_REPOSITORY}" \
-            --renderer-source-ref "${RENDERER_SOURCE_REF}" \
-            --renderer-source-sha "${RENDERER_SOURCE_SHA}" \
-            --output .buildchain/media-profile/evidence.json
-          jq '.qualification.renditions | map({path, role, root, bytes, maximumBytes})' \
-            .buildchain/media-profile/evidence.json
-
-      - name: Verify the checked-in measurement baseline
-        run: |
-          if [ -f "contracts/evidence/${EVIDENCE_FILE}" ]; then
-            diff -u "contracts/evidence/${EVIDENCE_FILE}" .buildchain/media-profile/evidence.json
-          fi
-
-      - name: Upload qualification evidence
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v7.0.1
+        id: source-checkout
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          name: ${{ matrix.artifactName }}-${{ github.sha }}
-          path: |
-            .buildchain/media-profile/evidence.json
-            .buildchain/media-profile/inspection/media-inspection.json
-            .buildchain/media-profile/render/manifest.json
-          if-no-files-found: error
-          retention-days: 14
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+        if: ${{ always() }}
+      - name: qualify-${{ matrix.profile }}
+        id: node
+        uses: ./.buildchain/runtime/actions/build/demo/qualify-media
+        with:
+          matrix-json: ${{ toJSON(matrix) }}
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+        if: ${{ always() }}
+    needs:
+      - execution-runtime

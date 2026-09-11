@@ -1,3 +1,4 @@
+import { actionInventory } from "../packages/core/contracts/action-inventory.js";
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -9,22 +10,20 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   DOMAIN_WASM_ABI_VERSION,
   DOMAIN_WASM_SHA256,
-} from "../packages/core/domain-wasm-artifact.js";
+} from "../packages/core/runtime/domain-wasm-artifact.js";
 import {
   DOMAIN_WASM_REQUEST_CONTRACT,
   DOMAIN_WASM_RESPONSE_CONTRACT,
   domainWasmInfo,
-} from "../packages/core/domain-wasm.js";
-import { spawnSyncCommand } from "../packages/core/spawn-command.js";
+} from "../packages/core/runtime/domain-wasm.js";
+import { spawnSyncCommand } from "../packages/core/runtime/spawn-command.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const coreDirectory = path.join(root, "packages", "core");
+const coreDirectory = path.join(root, "packages", "core", "runtime");
 const artifactPath = path.join(coreDirectory, "buildchain-domain.wasm");
-const actionArtifacts = [
-  "actions/promote-buildchain-ref/dist/buildchain-domain.wasm",
-  "actions/release-tail/dist/buildchain-domain.wasm",
-  "actions/release-candidate-promote/dist/buildchain-domain.wasm",
-];
+const actionArtifacts = actionInventory(root).flatMap((action) =>
+  action.bundles.filter((file) => file.endsWith(".wasm")),
+);
 
 function sha256(bytes) {
   return crypto.createHash("sha256").update(bytes).digest("hex");
@@ -74,7 +73,7 @@ test("a clean Node process loads the committed artifact without Rust", () => {
     [
       "--input-type=module",
       "--eval",
-      'import { domainWasmInfo } from "./packages/core/domain-wasm.js"; process.stdout.write(JSON.stringify(domainWasmInfo()));',
+      'import { domainWasmInfo } from "./packages/core/runtime/domain-wasm.js"; process.stdout.write(JSON.stringify(domainWasmInfo()));',
     ],
     { cwd: root, encoding: "utf8" },
   );

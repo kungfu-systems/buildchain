@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-07-31
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -125,9 +125,9 @@ buildchain audit github-governance \
 ```
 
 Protected merge and publication consumers verify the receipt against the exact
-repository, target base ref, policy root, freshness window, and exact
-Buildchain verifier source revision. Non-dry-run publication does not trust a
-caller-supplied JSON hash: it mints a bounded token for the dedicated read-only
+repository, target base ref, policy root and freshness window. The selected
+runtime revision is recorded as provenance, without a downstream SHA comparison.
+Non-dry-run publication does not trust a caller-supplied JSON hash: it mints a bounded token for the dedicated read-only
 governance auditor GitHub App, recollects live provider state with the exact
 Buildchain runtime, requires the resulting single-repository/single-target
 audit to qualify, and consumes that independently generated receipt. Missing

@@ -114,7 +114,7 @@ Linux qualification requires:
 - actual incremental AWS spend below USD 49;
 - no idle build and no active cloud residue.
 
-`node scripts/aws-runner-burst.mjs verify-linux --input <snapshot.json>` fails
+`node packages/core/providers/commands/aws-runner-burst.mjs verify-linux --input <snapshot.json>` fails
 closed when cost telemetry is missing/stale or any acceptance predicate is
 false.
 
@@ -275,7 +275,7 @@ All mutating modes require `--execute`, `--confirm-plan-digest`,
 `--confirm-source-sha`. Budget installation and preparation additionally
 require `--confirm-budget-name`. A future paid workload still requires a
 separate exact workflow/run authorization and uses
-`scripts/aws-windows-jit-controller.mjs`; preparation is not paid-launch
+`packages/core/providers/commands/aws-windows-jit-controller.mjs`; preparation is not paid-launch
 authority.
 
 Start by recording one reproducible plan:
@@ -305,13 +305,13 @@ tokens, JIT configuration, or signed URLs in arguments or receipts.
 
 ### Lower-level campaign and launch controllers
 
-`scripts/aws-windows-jit-campaign-core.mjs` owns the pure one-shot ledger
+`packages/core/providers/commands/aws-windows-jit-campaign-core.mjs` owns the pure one-shot ledger
 contract used by the operator and launch controller. Arming creates `CONTROL`
 and `CAMPAIGN#<id>` with `attribute_not_exists` conditions, so DynamoDB refuses
 a second campaign in the same retained state table. There is deliberately no
 clear or re-arm operation.
 
-Every `scripts/aws-windows-jit-controller.mjs --execute` call must provide the
+Every `packages/core/providers/commands/aws-windows-jit-controller.mjs --execute` call must provide the
 same `--account-id`, `--campaign-id`, `--confirm-campaign-id`, `--state-table`,
 and `--confirm-state-table`. Before GitHub JIT material is created, the
 controller verifies the exact provider Budget/dimension filter and proves the
@@ -371,7 +371,7 @@ host, including at least one full run, plus proof that:
 
 ### Phase 3 lifecycle controller
 
-`scripts/aws-macos-jit-controller.mjs` is the operator boundary for the paid
+`packages/core/providers/commands/aws-macos-jit-controller.mjs` is the operator boundary for the paid
 campaign. It has three explicit mutation modes:
 
 - `launch-campaign` binds the exact repository source, AMI, availability zone,

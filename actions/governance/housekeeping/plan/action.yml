@@ -1,0 +1,97 @@
+name: Inventory and plan
+description: Execute the housekeeping plan capability within its caller job boundary.
+inputs:
+  runtime-ref:
+    description: Exact runtime ref; defaults to this workflow SHA.
+    required: true
+  runtime-repository:
+    description: Runtime repository.
+    required: true
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  secrets-housekeeper-app-id:
+    description: Explicit scoped provider credential.
+    required: true
+  secrets-housekeeper-app-private-key:
+    description: Explicit scoped provider credential.
+    required: true
+  secrets-housekeeper-token:
+    description: Explicit scoped provider credential.
+    required: true
+outputs:
+  plan-root:
+    description: plan-root node result.
+    value: ${{ steps.housekeeper.outputs.plan-root }}
+  report-receipt-root:
+    description: report-receipt-root node result.
+    value: ${{ steps.housekeeper.outputs.report-receipt-root }}
+  action-count:
+    description: action-count node result.
+    value: ${{ steps.housekeeper.outputs.action-count }}
+  branch-action-count:
+    description: branch-action-count node result.
+    value: ${{ steps.housekeeper.outputs.branch-action-count }}
+  pull-request-action-count:
+    description: pull-request-action-count node result.
+    value: ${{ steps.housekeeper.outputs.pull-request-action-count }}
+  outcome:
+    description: outcome node result.
+    value: ${{ steps.housekeeper.outputs.outcome }}
+  plan-artifact:
+    description: plan-artifact node result.
+    value: ${{ fromJSON(inputs.request-json).artifact-prefix }}-plan-${{
+      github.run_id }}
+  report-artifact:
+    description: report-artifact node result.
+    value: ${{ fromJSON(inputs.request-json).artifact-prefix }}-report-${{
+      github.run_id }}
+  receipt-artifact:
+    description: receipt-artifact node result.
+    value: ${{ fromJSON(inputs.request-json).artifact-prefix }}-receipt-${{
+      github.run_id }}
+runs:
+  using: composite
+  steps:
+    - name: Acquire exact housekeeping credential
+      id: credential
+      uses: ./.buildchain/runtime/actions/providers/github/token
+      with:
+        repository: ${{ fromJSON(inputs.request-json).repository }}
+        app-id: ${{ inputs.secrets-housekeeper-app-id }}
+        private-key: ${{ inputs.secrets-housekeeper-app-private-key }}
+        failure-policy: strict
+        fallback-token: ${{ inputs.secrets-housekeeper-token }}
+        workflow-token: ${{ github.token }}
+    - name: Reconcile exact housekeeping scope
+      id: housekeeper
+      uses: ./.buildchain/runtime/actions/governance/housekeeping/reconcile
+      with:
+        request-json: ${{ inputs.request-json }}
+        repository: ${{ steps.credential.outputs.repository }}
+        scope: plan
+        token: ${{ steps.credential.outputs.token }}
+    - name: Upload exact plan
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ fromJSON(inputs.request-json).artifact-prefix }}-plan-${{
+          github.run_id }}
+        path: ${{ steps.housekeeper.outputs.plan-path }}
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
+        if-no-files-found: error
+    - name: Upload decision report
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ fromJSON(inputs.request-json).artifact-prefix }}-report-${{
+          github.run_id }}
+        path: ${{ steps.housekeeper.outputs.report-path }}
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
+        if-no-files-found: error
+    - name: Upload report receipt
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ fromJSON(inputs.request-json).artifact-prefix }}-receipt-${{
+          github.run_id }}
+        path: ${{ steps.housekeeper.outputs.report-receipt-path }}
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
+        if-no-files-found: error

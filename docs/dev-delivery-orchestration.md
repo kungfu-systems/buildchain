@@ -20,19 +20,19 @@ ai_provenance:
 # Dev delivery orchestration
 
 `public-ops-dev-auto-merge.yml` orchestrates six owned delivery nodes. The
-published `dev-pr-auto-merge.yml` entry remains its generated compatibility
+published `public-ops-dev-auto-merge.yml` entry remains its generated compatibility
 projection, with the same inputs, outputs, job identities, concurrency and
 permissions. Node ownership and the orchestration size budget are declared in
 [`architecture/dev-delivery-orchestration.json`](../architecture/dev-delivery-orchestration.json).
 
 | Node                | Owning composite                                              | Result and continuation                                                                                                                                                                 |
 | ------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Source admission    | [source](../.github/actions/dev-delivery/source/action.yml)   | Resolve one runtime SHA; check exact source eligibility; produce the Source Qualification Proof or an explicit failed qualification outcome.                                            |
-| Reservation         | [reserve](../.github/actions/dev-delivery/reserve/action.yml) | Submit the candidate and select or recover its exact Warrant. A different active owner receives a handoff; an already-qualified owner skips native execution.                           |
-| Native verification | [native](../.github/actions/dev-delivery/native/action.yml)   | Execute or reuse native proof, independently seal its transfer, and maintain the durable lease in three distinct hosted jobs.                                                           |
-| Qualification       | [qualify](../.github/actions/dev-delivery/qualify/action.yml) | Read back provider job boundaries and heartbeat continuity; validate proof and current source/base; atomically qualify the same Warrant.                                                |
-| Landing             | [land](../.github/actions/dev-delivery/land/action.yml)       | Recheck admission and enqueue or directly merge according to the existing policy. Publish artifacts and enforce the final result even after a predecessor fails.                        |
-| Settlement          | [settle](../.github/actions/dev-delivery/settle/action.yml)   | Settle independently verified native failure, or process a later provider terminal event through `public-ops-warrant-close.yml`. Clear only the exact authority and wake its successor. |
+| Source admission    | [source](../actions/dev-delivery/candidate/admit/action.yml)   | Resolve one runtime SHA; check exact source eligibility; produce the Source Qualification Proof or an explicit failed qualification outcome.                                            |
+| Reservation         | [reserve](../actions/dev-delivery/candidate/reserve/action.yml) | Submit the candidate and select or recover its exact Warrant. A different active owner receives a handoff; an already-qualified owner skips native execution.                           |
+| Native verification | [native](../actions/dev-delivery/native/dispatch/action.yml)   | Execute or reuse native proof, independently seal its transfer, and maintain the durable lease in three distinct hosted jobs.                                                           |
+| Qualification       | [qualify](../actions/dev-delivery/candidate/qualify/action.yml) | Read back provider job boundaries and heartbeat continuity; validate proof and current source/base; atomically qualify the same Warrant.                                                |
+| Landing             | [land](../actions/dev-delivery/queue/land/action.yml)       | Recheck admission and enqueue or directly merge according to the existing policy. Publish artifacts and enforce the final result even after a predecessor fails.                        |
+| Settlement          | [settle](../actions/dev-delivery/warrant/settle/action.yml)   | Settle independently verified native failure, or process a later provider terminal event through `public-ops-warrant-close.yml`. Clear only the exact authority and wake its successor. |
 
 The six nodes describe ownership, not six new runner allocations. Source and
 reservation share the existing admission job. Qualification, native-failure

@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
-import { expandDevDeliveryWorkflow } from "./dev-delivery-workflow-view.mjs";
+import { inspectWorkflowJob, readWorkflow } from "./workflow-action-graph.mjs";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import ts from "typescript";
-import { workflowCompatibilityIdentity } from "./workflow-taxonomy.mjs";
+
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   parseWorkflowDocument,
   parseYamlUses,
-} from "../packages/core/workflow-yaml-contract.js";
+} from "../packages/core/contracts/workflow-yaml-contract.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const ledgerPath = path.join(root, "architecture/release-topology.json");
@@ -23,11 +23,11 @@ function read(relative) {
 
 const LOCAL_MODULE_EXTENSIONS = ["", ".js", ".mjs", ".cjs"];
 const PRIVILEGED_ENTRYPOINTS = [
-  "actions/release-candidate-promote/index.js",
-  "scripts/binary-publication-evidence.mjs",
-  "scripts/next-development-review.mjs",
-  "scripts/oci-compose-preview.mjs",
-  "scripts/publication-settlement.mjs",
+  "packages/core/release/promote-candidate/action.js",
+  "packages/core/publication/binary/action.js",
+  "packages/core/release/next-development/actions.js",
+  "packages/core/publication/oci/preview-actions.js",
+  "packages/core/publication/settlement/actions.js",
 ];
 
 export function localModuleSpecifiers(source) {
@@ -150,25 +150,21 @@ export function discoverReleaseAuthorityClosure() {
     [".js", ".mjs", ".cjs"],
     /(?:release-tail-provider-(?:adapters|plane)|create(?:GitHubReleaseAssets|SignedStaticChannel|SiteReleaseActivation|ReleasedEvidence)Adapter)/u,
   );
-  const runtimeSelectors = matchingProductionFiles(
-    [".github/workflows", "scripts", "packages/core"],
-    [".yml", ".yaml", ".js", ".mjs", ".cjs"],
-    /(?:promotion-runtime-sha|resume-buildchain-runtime-sha|BUILDCHAIN_(?:CURRENT_RUNTIME_SHA|RUNTIME_REF|RESUME_CANDIDATE_RUN_ID)|authorizeRuntimeSelection|scanRuntimeSelectorPersistence|release-candidate-adapter)/u,
-  );
+  const runtimeSelectors = productionFiles("packages/core/runtime/entry", [".js"]).sort();
   const terminalProjections = matchingProductionFiles(
     [".github/workflows", "actions", "packages/core", "scripts"],
     [".yml", ".yaml", ".js", ".mjs", ".cjs"],
     /(?:createReleaseReceipt|release-receipt\.json|RELEASE_RECEIPT_CONTRACT)/u,
   );
   const privilegedModules = discoverStaticModuleClosure(PRIVILEGED_ENTRYPOINTS);
-  const rustWasmArtifact = "packages/core/buildchain-domain.wasm";
+  const rustWasmArtifact = "packages/core/runtime/buildchain-domain.wasm";
   const rustWasmDistributions = [
-    "actions/promote-buildchain-ref/dist/buildchain-domain.wasm",
-    "actions/release-tail/dist/buildchain-domain.wasm",
-    "actions/release-candidate-promote/dist/buildchain-domain.wasm",
+    "actions/release/promotion/ref/dist/buildchain-domain.wasm",
+    "actions/release/tail/settle/dist/buildchain-domain.wasm",
+    "actions/release/promotion/candidate/dist/buildchain-domain.wasm",
   ];
-  const legacyEngineModules = productionFiles(
-    "actions/promote-buildchain-ref",
+  const excludedRefPromotionModules = productionFiles(
+    "packages/core/release/promote-ref",
     [".js", ".mjs", ".cjs"],
   )
     .filter((relative) =>
@@ -181,11 +177,11 @@ export function discoverReleaseAuthorityClosure() {
     providerAdapters: [
       ...new Set([
         ...providerPlane,
-        "packages/core/release-tail-provider-plane.js",
+        "packages/core/release/release-tail-provider-plane.js",
       ]),
     ].sort(),
     runtimeSelectors,
-    runtimeEngines: ["actions/release-candidate-promote/index.js"],
+    runtimeEngines: ["packages/core/release/promote-candidate/action.js"],
     terminalProjections,
     privilegedExecutableClosure: {
       entrypoints: PRIVILEGED_ENTRYPOINTS,
@@ -193,8 +189,8 @@ export function discoverReleaseAuthorityClosure() {
       root: rootedPathSet(privilegedModules),
     },
     rustWasmAuthority: {
-      loader: "packages/core/domain-wasm.js",
-      metadata: "packages/core/domain-wasm-artifact.js",
+      loader: "packages/core/runtime/domain-wasm.js",
+      metadata: "packages/core/runtime/domain-wasm-artifact.js",
       artifact: rustWasmArtifact,
       artifactRoot: fileSha256(rustWasmArtifact),
       distributedArtifacts: rustWasmDistributions,
@@ -203,7 +199,7 @@ export function discoverReleaseAuthorityClosure() {
       ),
       fallbackWriterCount: 0,
     },
-    legacyEngineModules,
+    excludedRefPromotionModules,
   };
 }
 
@@ -228,47 +224,44 @@ function permission(block, name) {
 }
 
 function workflowSnapshot(relative) {
-  const raw = read(relative);
-  const source = raw.includes(
-    "./.buildchain/workflow-shell/.github/actions/dev-delivery/",
-  )
-    ? expandDevDeliveryWorkflow(relative, root)
-    : raw;
-  const document = parseWorkflowDocument(source);
-  const jobs = document.jobs
-    .filter((job) => job.id !== "universal-bootstrap")
-    .map((job) => {
-      const block = jobBlock(source, job.id);
-      const uses = job.uses || null;
-      // A built-in publisher still requires mutation authority when the caller supplies its envelope.
+  const workflow = readWorkflow(relative, root);
+  const source = read(relative);
+  const jobs = Object.keys(workflow.jobs)
+    .sort()
+    .map((id) => {
+      const graph = inspectWorkflowJob(relative, id, root);
+      const job = graph.job;
+      const block = JSON.stringify({ job, steps: graph.steps });
+      const permissions = job.permissions || workflow.permissions || {};
       const inheritedPublisher =
-        !/^    permissions:/mu.test(block) &&
-        /uses:.*actions\/release-candidate-promote/u.test(block);
+        typeof permissions !== "string" &&
+        !Object.keys(permissions).length &&
+        graph.steps.some((step) =>
+          /actions\/release\/promotion\/candidate$/.test(step.uses || ""),
+        );
+      const contents =
+        permissions.contents || (inheritedPublisher ? "inherited" : null);
+      const idToken =
+        permissions["id-token"] || (inheritedPublisher ? "inherited" : null);
       return {
-        id: job.id,
-        kind: uses ? "reusable-call" : "runner",
-        uses,
-        permissions: {
-          contents:
-            permission(block, "contents") ||
-            (inheritedPublisher ? "inherited" : null),
-          idToken:
-            permission(block, "id-token") ||
-            (inheritedPublisher ? "inherited" : null),
-        },
+        id,
+        kind: job.uses ? "reusable-call" : "runner",
+        uses: job.uses || null,
+        permissions: { contents, idToken },
         carriers: {
-          artifactDownload: /uses:\s+actions\/download-artifact@/u.test(block),
-          artifactUpload: /uses:\s+actions\/upload-artifact@/u.test(block),
-          jobOutput: /GITHUB_OUTPUT/u.test(block),
+          artifactDownload: graph.steps.some((step) =>
+            step.uses?.startsWith("actions/download-artifact@"),
+          ),
+          artifactUpload: graph.steps.some((step) =>
+            step.uses?.startsWith("actions/upload-artifact@"),
+          ),
+          jobOutput: Object.keys(job.outputs || {}).length > 0,
         },
         mutationSignals: [
-          (/contents:\s*write/u.test(block) || inheritedPublisher) &&
-            "contents-write",
-          (/id-token:\s*write/u.test(block) || inheritedPublisher) &&
-            "oidc-write",
-          /(?:promote-buildchain-ref|actions\/release-candidate-promote)/u.test(
-            block,
-          ) && "promotion-runtime",
+          ["write", "inherited"].includes(contents) && "contents-write",
+          ["write", "inherited"].includes(idToken) && "oidc-write",
+          /actions\/release\/promotion\/(?:candidate|ref)/u.test(block) &&
+            "promotion-runtime",
           /(?:git push|npm publish|gh release (?:create|upload))/u.test(
             block,
           ) && "direct-publication-command",
@@ -277,12 +270,10 @@ function workflowSnapshot(relative) {
     });
   return {
     path: relative,
-    triggers: document.triggers,
+    triggers: Object.keys(workflow.on || {}).sort(),
     jobs,
-    reusableEdges: parseYamlUses(source)
-      .map(({ value }) => value)
-      .filter((value) => /\.github\/workflows\//u.test(value))
-      .filter((value) => !/\/bootstrap\.yml(?:@v4)?$/u.test(value))
+    reusableEdges: Object.values(workflow.jobs)
+      .flatMap((job) => (job.uses ? [job.uses] : []))
       .sort(),
   };
 }
@@ -382,16 +373,11 @@ export function findUnknownReleaseTopology(
 ) {
   const declared = new Set(workflowPaths);
   return allWorkflowPaths
-    .filter(
-      (relative) =>
-        !declared.has(
-          workflowCompatibilityIdentity(root, relative, readWorkflow(relative)),
-        ),
-    )
+    .filter((relative) => !declared.has(relative))
     .filter((relative) => {
       const source = readWorkflow(relative);
       const usesReleaseAuthority = parseYamlUses(source).some(({ value }) =>
-        /(?:release-candidate-promote|promote-buildchain-ref|release-tail)/u.test(
+        /(?:release-candidate-promote|promote-buildchain-ref|release-tail|actions\/release\/promotion\/(?:candidate|ref)|\.github\/workflows\/(?:public-release-promote|\.release-promote))/u.test(
           value,
         ),
       );
@@ -431,7 +417,7 @@ function assertAuthorityClosure(ledger) {
     "runtimeSelectors",
     "runtimeEngines",
     "terminalProjections",
-    "legacyEngineModules",
+    "excludedRefPromotionModules",
   ]) {
     assert.ok(
       Array.isArray(closure[className]) && closure[className].length > 0,
@@ -459,45 +445,76 @@ function assertAuthorityClosure(ledger) {
     closure.privilegedExecutableClosure.root,
     /^sha256:[0-9a-f]{64}$/u,
   );
-  const reachableLegacyEngines = closure.legacyEngineModules.filter(
-    (relative) =>
+  const reachableRefPromotionEngines =
+    closure.excludedRefPromotionModules.filter((relative) =>
       closure.privilegedExecutableClosure.modules.includes(relative),
-  );
+    );
   assert.deepEqual(
-    reachableLegacyEngines,
+    reachableRefPromotionEngines,
     [],
-    `legacy release engines remain reachable from APPLY: ${reachableLegacyEngines.join(", ")}`,
+    `separate ref-promotion engines remain reachable from APPLY: ${reachableRefPromotionEngines.join(", ")}`,
   );
   assert.deepEqual(closure.runtimeEngines, [
-    "actions/release-candidate-promote/index.js",
+    "packages/core/release/promote-candidate/action.js",
   ]);
   assert.equal(
     closure.freshEntry,
-    ".github/workflows/release-candidate-promote.yml",
+    ".github/workflows/public-release-promote.yml",
   );
   assert.equal(
     closure.recoveryEntry,
     ".github/workflows/self-ops-promotion-recovery.yml",
   );
   const engineSurface = [
-    ".github/workflows/.release-candidate-promote.yml",
+    ".github/workflows/.release-promote.yml",
     ...closure.privilegedExecutableClosure.modules,
   ]
     .map(read)
     .join("\n");
-  for (const pattern of closure.forbiddenLegacyEnginePatterns)
+  for (const pattern of closure.forbiddenPublisherPatterns)
     assert.doesNotMatch(
       engineSurface,
       new RegExp(pattern, "u"),
       `legacy release engine remains reachable: ${pattern}`,
     );
-  const canonicalWorkflow = read(
-    ".github/workflows/.release-candidate-promote.yml",
+  const canonicalWorkflow = read(".github/workflows/.release-promote.yml");
+  const qualify = inspectWorkflowJob(
+    ".github/workflows/.release-promote.yml",
+    "qualify",
+    root,
   );
-  assert.match(canonicalWorkflow, /scripts\/release-candidate-adapter\.mjs/u);
+  assert.ok(
+    qualify.modules.has("packages/core/release/promotion/qualification.js"),
+  );
+  const apply = inspectWorkflowJob(
+    ".github/workflows/.release-promote.yml",
+    "apply",
+    root,
+  );
+  assert.ok(
+    apply.modules.has("packages/core/release/promote-candidate/action.js"),
+  );
   assert.match(
-    canonicalWorkflow,
-    /release-invocation\.json[\s\S]*release-transaction\.json[\s\S]*release-receipt\.json/u,
+    apply.modules.get(
+      "packages/core/release/promote-candidate/release-documents.js",
+    ),
+    /release-invocation\.json[\s\S]*release-transaction\.json/,
+  );
+  assert.match(
+    apply.modules.get(
+      "packages/core/release/promote-candidate/provider-settlement.js",
+    ),
+    /release-receipt\.json/,
+  );
+  const settle = inspectWorkflowJob(
+    ".github/workflows/.release-promote.yml",
+    "settle",
+    root,
+  );
+  assert.ok(settle.actions.has("actions/publication/settlement/verify"));
+  assert.match(
+    settle.modules.get("packages/core/publication/settlement/actions.js"),
+    /verifyPublicationSettlement/,
   );
 }
 
@@ -535,11 +552,11 @@ export function checkReleaseTopology() {
     assert.equal(actual.semanticMetrics.oidcWriteJobCount, 1);
     const publisher = actual.workflows.find(
       ({ path: workflowPath }) =>
-        workflowPath === ".github/workflows/.release-candidate-promote.yml",
+        workflowPath === ".github/workflows/.release-promote.yml",
     );
     assert.deepEqual(
       publisher.jobs.map((job) => job.split("|", 1)[0]),
-      ["apply", "qualify", "settle"],
+      ["apply", "execution-runtime", "qualify", "settle"],
     );
   }
   return actual;

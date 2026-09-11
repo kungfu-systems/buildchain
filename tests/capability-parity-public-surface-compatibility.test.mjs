@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
-import { expandDevDeliveryWorkflow } from "../scripts/dev-delivery-workflow-view.mjs";
+import { inspectWorkflowJob, readWorkflow } from "../scripts/workflow-action-graph.mjs";
 
 import {
   PUBLICATION_REHEARSAL_CAPSULE_CONTRACT,
@@ -11,15 +11,15 @@ import {
   normalizePublicationRehearsalCapsule,
   publicationRehearsalBindingRoot,
   publicationRehearsalDiagnostic,
-} from "../packages/core/publication-rehearsal-runtime.js";
+} from "../packages/core/publication/publication-rehearsal-runtime.js";
 import {
   assertPublicationRehearsalConfig,
   publicationRehearsalAgentInstructions,
   publicationRehearsalToml,
   publicationRehearsalWorkflow,
-} from "../packages/core/publication-rehearsal-projection.js";
-import { releasePassportKfdAdopterSourceSha } from "../packages/core/release-passport.js";
-import { DOMAIN_PUBLICATION_REHEARSAL_CAPSULE_CONTRACT } from "../packages/core/publication-rehearsal.js";
+} from "../packages/core/publication/publication-rehearsal-projection.js";
+import { releasePassportKfdAdopterSourceSha } from "../packages/core/adoption/adopter-delivery-passport.js";
+import { DOMAIN_PUBLICATION_REHEARSAL_CAPSULE_CONTRACT } from "../packages/core/publication/publication-rehearsal.js";
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -157,49 +157,43 @@ test("release passport source compatibility helper remains tree-equivalence boun
 test("historical CLI, Action, and workflow inputs have bounded v4 routes", () => {
   const sources = new Map(
     [
-      "scripts/buildchain-cli-help.mjs",
-      "scripts/release-tail.mjs",
-      "bin/internal/trust-release-release-handlers.mjs",
-      "actions/release-tail/action.yml",
-      "actions/release-tail/index.js",
-      "actions/promote-buildchain-ref/action.yml",
-      "actions/promote-buildchain-ref/index.js",
-      "scripts/build/plan.mjs",
-      ".github/workflows/.web-surface.yml",
-      ".github/workflows/.release-candidate-promote.yml",
-      ".github/workflows/release-candidate-promote.yml",
-      ".github/workflows/dev-pr-auto-merge.yml",
-      ".github/workflows/release-tail.yml",
+      "packages/core/workflow/commands/buildchain-cli-help.mjs",
+      "packages/core/release/commands/release-tail.mjs",
+      "packages/core/release/cli/release-handlers.mjs",
+      "actions/release/tail/settle/action.yml",
+      "packages/core/release/settle/action.js",
+      "actions/release/promotion/ref/action.yml",
+      "packages/core/release/promote-ref/action.js",
+      "packages/core/build/plan/admission.js",
+      ".github/workflows/public-release-web.yml",
+      ".github/workflows/.release-promote.yml",
+      ".github/workflows/public-release-promote.yml",
+      ".github/workflows/public-ops-dev-auto-merge.yml",
+      ".github/workflows/public-release-tail.yml",
     ].map((filePath) => [filePath, fs.readFileSync(filePath, "utf8")]),
   );
-  assert.match(sources.get("scripts/release-tail.mjs"), /capsule-root/u);
-  assert.match(sources.get("scripts/release-tail.mjs"), /environment-json/u);
+  assert.match(sources.get("packages/core/release/commands/release-tail.mjs"), /capsule-root/u);
+  assert.match(sources.get("packages/core/release/commands/release-tail.mjs"), /environment-json/u);
   assert.match(
-    sources.get("bin/internal/trust-release-release-handlers.mjs"),
+    sources.get("packages/core/release/cli/release-handlers.mjs"),
     /--adopter-delivery-json is non-authoritative in v4/u,
   );
+  for (const retired of ["plan-before-target-advance", "release-passport-adopter-delivery-json", "release-passport-kfd-adopter-manifest-gate-json"])
+    assert.equal(readWorkflow("actions/release/promotion/ref/action.yml").inputs[retired], undefined);
   assert.match(
-    sources.get("actions/promote-buildchain-ref/index.js"),
-    /plan-before-target-advance cannot bypass the v4 source lock/u,
+    sources.get("packages/core/build/plan/admission.js"),
+    /expectedInvocationChannel: plan.identity.channel/u,
   );
   assert.match(
-    sources.get("actions/promote-buildchain-ref/index.js"),
-    /v4 derives the adopter manifest gate/u,
-  );
-  assert.match(
-    sources.get("scripts/build/plan.mjs"),
-    /BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: plan.identity.channel/u,
-  );
-  assert.match(
-    expandDevDeliveryWorkflow(".github/workflows/dev-pr-auto-merge.yml"),
+    inspectWorkflowJob(".github/workflows/public-ops-dev-auto-merge.yml", "merge-dev-prs").modules.get("packages/core/dev-delivery/queue/completion.js"),
     /Exact required Warrant qualified; landing is explicitly deferred/u,
   );
   assert.match(
-    sources.get(".github/workflows/release-tail.yml"),
-    /binding-root:/u,
+    sources.get(".github/workflows/public-release-tail.yml"),
+    /transaction-root:/u,
   );
   assert.match(
-    sources.get(".github/workflows/release-tail.yml"),
+    sources.get(".github/workflows/public-release-tail.yml"),
     /evidence-root:/u,
   );
 });

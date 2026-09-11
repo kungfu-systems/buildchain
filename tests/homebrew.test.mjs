@@ -12,7 +12,7 @@ import {
   updateHomebrewTap,
 } from "@kungfu-tech/buildchain/homebrew";
 import { normalizeBuildchainConfig } from "@kungfu-tech/buildchain";
-import { collectGitHubReleasePassport } from "@kungfu-tech/buildchain/release-passport";
+import { collectGitHubReleasePassport } from "@kungfu-tech/buildchain";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");

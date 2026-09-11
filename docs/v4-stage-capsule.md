@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-08-10
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -122,7 +122,7 @@ access and produce the same ordered decisions and `planRoot`.
 
 An eligible completed dependency becomes an exact-root restore; a missing or
 invalid target becomes a rebuild, and only that target's dependency closure is
-scheduled. Source, platform, toolchain, runtime, policy, declared-input,
+scheduled. Source, platform, toolchain, policy, declared-input,
 transformation, output-manifest, and retention changes carry rooted causal
 invalidation fields. Cross-platform reuse, corrupt or partial content, root
 mismatch, and insufficient qualification reject reuse fail closed.
@@ -139,13 +139,11 @@ Buildchain-owned public reusable workflow,
 `.github/workflows/public-build-stage-capsule-canary.yml`. Buildchain's caller is the thin
 `.github/workflows/self-build-public-consumer-dogfood.yml`; it has no steps, copied
 orchestration, local action, direct qualification invocation, or private
-consumer profile. Candidate recursion is resolved only by publishing the exact
-candidate at `train/v4/v4.0/<capability>` and calling that fully qualified
-public ref. After successful qualification and protected merge, the caller can
-be pinned to the exact protected commit. An internal exception is never a
-permitted recursion mechanism.
+consumer profile. The persisted caller uses `@v4`. Candidate validation passes
+`train/v4/v4.1/<capability>` as the transient `runtime-ref` input, through the
+same central selection and preparation entry as external consumers.
 
-The called workflow checks out that same commit as its runtime, reads the consumer's
+The called workflow prepares the selected runtime and reads the consumer's
 tracked `.buildchain/buildchain.toml`, and executes only `install`, `build`,
 and `verify` on GitHub-hosted Linux x64, macOS arm64, and Windows x64 runners.
 Each stage binds its declared command, dependency edge, exact consumer source,
@@ -157,8 +155,9 @@ paths; it does not copy the campaign orchestration.
 The external seed retains `install` and `build` before an intentional late
 `verify` failure. A clean process reads the retained store, restores only the
 exact `build` root, rebuilds `verify`, and compares the result with the fresh
-three-stage aggregate. Runtime-ref, source, command/profile, manifest, summary,
-output, platform, and Capsule-root drift all stop with typed diagnostics.
+three-stage aggregate. A repaired runtime may continue the campaign. Source,
+command/profile, manifest, summary, output, platform and Capsule integrity drift
+still stop with typed diagnostics; runtime provenance does not invalidate reuse.
 
 Qualification compares the declared artifact-manifest and aggregate content
 roots from a fresh full build with the roots assembled from retained and rebuilt
@@ -182,7 +181,7 @@ authorized by this qualification.
 Focused local rehearsal:
 
 ```sh
-node scripts/stage-capsule-qualification.mjs campaign \
+node packages/core/build/commands/stage-capsule-qualification.mjs campaign \
   --work-root /tmp/buildchain-v4-stage-qualification \
   --platform linux-x64 \
   --consumer buildchain \

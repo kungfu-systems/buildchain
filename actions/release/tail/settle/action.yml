@@ -1,0 +1,59 @@
+name: "Execute a declarative Buildchain release tail"
+author: "Keren Dong"
+description: "Execute rooted release provider effects through one Buildchain-owned transaction, readback, retry, and receipt path"
+inputs:
+  declaration:
+    description: "Versioned release-tail declaration JSON or path"
+    required: false
+  provider-bindings:
+    description: "Release-tail provider bindings, or an optional exact canonical match for capsule-bound provider rehearsal bindings"
+    required: false
+  rehearsal-capsule:
+    description: "Optional v4 Publication Rehearsal Capsule JSON or path"
+    required: false
+  candidate-root:
+    description: "Explicit candidate file root for Publication Rehearsal Capsule verification"
+    required: false
+  rehearsal-mode:
+    description: "Publication rehearsal mode: simulate, replay, or provider"
+    default: "simulate"
+    required: false
+  rehearsal-authority:
+    description: "Exact rehearsal-only authority JSON or path required for provider mode"
+    required: false
+  rehearsal-evidence-path:
+    description: "Rooted Publication Rehearsal evidence output"
+    default: ".buildchain/publication-rehearsal/evidence.json"
+    required: false
+  state-path:
+    description: "Durable transaction checkpoint path"
+    default: ".buildchain/release-tail/state.json"
+  github-token:
+    description: "GitHub token used only by the built-in GitHub Release adapter"
+    required: false
+  http-token:
+    description: "Bearer token used only by built-in HTTP mutation adapters"
+    required: false
+  execute:
+    description: "Execute effects; false only creates or validates the durable plan"
+    default: "true"
+outputs:
+  transaction-state:
+    description: "Final Buildchain release-tail transaction state"
+  transaction-root:
+    description: "Stable declared transaction root"
+  state-root:
+    description: "Root of the final durable transaction state"
+  state-path:
+    description: "Durable transaction checkpoint path"
+  receipt-roots-json:
+    description: "JSON array of standardized receipt roots"
+  rehearsal-evidence-root:
+    description: "Root of effect-disabled or provider-observed rehearsal evidence"
+  rehearsal-capsule-root:
+    description: "Exact source-bound rehearsal capsule root"
+  rehearsal-evidence-path:
+    description: "Rehearsal evidence output file"
+runs:
+  using: "node24"
+  main: "dist/index.js"

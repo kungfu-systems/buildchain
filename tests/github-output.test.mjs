@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { writeGitHubOutputs } from "../scripts/build-contract-core.mjs";
+import { writeGitHubOutputs } from "../packages/core/providers/commands/github-output.mjs";
 
 test("writeGitHubOutputs preserves single-line and multiline values", () => {
   const workspace = fs.mkdtempSync(

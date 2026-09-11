@@ -66,7 +66,7 @@ internal paths. `cli-registry.json` similarly retains every governed command
 path, syntax, option, alias, and side-effect-free help command projected from
 the runtime registry and usage authority.
 `kfd-claims.json` is the Buildchain-owned KFD claim registry. It is generated
-from `packages/core/buildchain-kfd-claims.js` and enumerates the public release
+from `packages/core/adoption/buildchain-kfd-claims.js` and enumerates the public release
 claims plus the KFD-3 collaboration surfaces that Buildchain self-verifies
 during release promotion.
 `public-surface-audit.json` is the reverse enumeration report for those

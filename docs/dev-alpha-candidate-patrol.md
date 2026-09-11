@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-08-11
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -97,7 +97,7 @@ Cut authority for an already-open legacy PR.
 
 ## Reusable workflow
 
-Call `.github/workflows/dev-alpha-candidate-patrol.yml` from a thin repository
+Call `.github/workflows/public-ops-alpha-candidate-patrol.yml` from a thin repository
 workflow. Start with `dry-run: true`. The reusable workflow always runs an
 `observe` job with only Actions/content/pull-request read permissions. Once the
 repository has proven that its two workflow names and branch topology produce
@@ -128,15 +128,15 @@ the rendered bytes. Concurrent qualification progress therefore fails closed
 and is recomputed by the next patrol instead of attaching a declaration to the
 wrong candidate.
 
-The separately permissioned `settle` job checks out the exact Buildchain runtime
-commit used by `observe`, re-runs the exact observation, and compare-and-swap
+The separately permissioned `settle` job prepares the entry-selected runtime,
+re-runs the exact observation, and compare-and-swap
 checks the selected SHA, prior controller root and Release Cut root before any
 write. With no active managed candidate, it reads the candidate tree and creates
 one rooted Release Cut before it creates one branch named from
 the target branch and the first 12 characters of the full source SHA. An
 existing branch must point to the same full SHA or the run fails. With one
-active managed candidate, it validates the candidate ref, tree, Alpha base and
-runtime before returning that same SHA to every checkout/build consumer. It only
+active managed candidate, it validates the candidate ref, tree and Alpha base
+before returning that source SHA to every checkout/build consumer. It only
 updates the machine-readable state marker when a new dev observation or hold
 receipt must be persisted. Repeated events and rapid dev progress cannot create
 another candidate PR or another heavy candidate build. Foreign human-authored

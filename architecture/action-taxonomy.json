@@ -1,0 +1,527 @@
+{
+  "schema": "buildchain.action-taxonomy/v1",
+  "path": "actions/<capability>/<group>/<operation>",
+  "rules": {
+    "workflowRole": "Reusable workflows own the consumer API and job authority boundaries.",
+    "compositeRole": "Composite actions compose external and internal uses only.",
+    "javascriptRole": "JavaScript actions adapt declared inputs to named domain APIs; modules own business orchestration.",
+    "reuseBoundary": "Share actions for coherent cross-workflow capabilities; share ordinary functions through core modules.",
+    "distribution": "Every JavaScript main and post entry is bundled; contract and WASM assets remain in the verified runtime closure."
+  },
+  "domains": {
+    "adoption": {
+      "groups": {
+        "adopter": {
+          "responsibility": "Admit, qualify and reconcile downstream adopter contracts.",
+          "operations": [
+            "admit",
+            "admit-policy",
+            "aggregate",
+            "exercise-platform",
+            "qualify",
+            "reconcile",
+            "select"
+          ]
+        }
+      }
+    },
+    "build": {
+      "groups": {
+        "artifact": {
+          "responsibility": "Package, transfer, attest and finalize build artifacts.",
+          "operations": [
+            "admit-attestation",
+            "attest",
+            "finalize",
+            "package",
+            "prepare-attestation",
+            "resolve",
+            "retain",
+            "seal-attestation",
+            "sign",
+            "transfer"
+          ]
+        },
+        "attestation": {
+          "responsibility": "Prepare and verify provider-backed build attestations against exact artifact bytes.",
+          "operations": ["prepare-build", "verify-build"]
+        },
+        "binary": {
+          "responsibility": "Build standalone distributions and bind publication evidence.",
+          "operations": [
+            "build",
+            "dispatch-publication",
+            "package",
+            "passport",
+            "preflight",
+            "qualify"
+          ]
+        },
+        "credential": {
+          "responsibility": "Own temporary credentials and their cleanup lifecycle.",
+          "operations": ["admit", "macos-island", "retain"]
+        },
+        "demo": {
+          "responsibility": "Execute and qualify auditable demo adapters and media.",
+          "operations": [
+            "adapter-gate",
+            "adapter-render",
+            "capture",
+            "capture-collection",
+            "materialize-collection",
+            "measure-media",
+            "prepare-binary",
+            "publish",
+            "qualify",
+            "qualify-binary",
+            "qualify-collection",
+            "qualify-media",
+            "render-media",
+            "run-adapter"
+          ]
+        },
+        "environment": {
+          "responsibility": "Provision the declared build environment before consumer lifecycle execution.",
+          "operations": ["provision"]
+        },
+        "gate": {
+          "responsibility": "Plan, execute and aggregate declared build gates.",
+          "operations": [
+            "aggregate",
+            "execute",
+            "plan",
+            "qualify-profile",
+            "resolve",
+            "run-profile"
+          ]
+        },
+        "lifecycle": {
+          "responsibility": "Validate configuration and execute declared consumer lifecycle stages.",
+          "operations": ["plan", "prepare", "run", "stage", "validate"]
+        },
+        "plan": {
+          "responsibility": "Compile source configuration and runner policy into the immutable build plan.",
+          "operations": ["resolve"]
+        },
+        "signing": {
+          "responsibility": "Admit signing requests, execute platform signing transactions and verify complete result delivery.",
+          "operations": [
+            "admit-requests",
+            "complete",
+            "qualify-delivery",
+            "seal-native",
+            "sign-detached",
+            "sign-macos",
+            "sign-windows"
+          ]
+        },
+        "source": {
+          "responsibility": "Admit source identity and qualify source verification evidence.",
+          "operations": [
+            "admit",
+            "check-lifecycle",
+            "evaluate-proof",
+            "finalize",
+            "initialize",
+            "locate-proof",
+            "proof",
+            "qualify",
+            "run-check",
+            "verify-checkouts"
+          ]
+        },
+        "stage-capsule": {
+          "responsibility": "Qualify and reconcile portable stage checkpoint reuse.",
+          "operations": [
+            "admit-consumer",
+            "aggregate-consumer",
+            "qualify",
+            "qualify-consumer",
+            "reconcile",
+            "rehearse",
+            "verify-checkpoints"
+          ]
+        },
+        "verification": {
+          "responsibility": "Verify the repository and reusable build backbone.",
+          "operations": [
+            "backbone",
+            "qualify-backbone",
+            "qualify-runner",
+            "qualify-source",
+            "repository"
+          ]
+        }
+      }
+    },
+    "dev-delivery": {
+      "groups": {
+        "candidate": {
+          "responsibility": "Admit, reserve and qualify immutable delivery candidates.",
+          "operations": [
+            "admit",
+            "inspect-request",
+            "qualify",
+            "qualify-source",
+            "reserve",
+            "schedule"
+          ]
+        },
+        "native": {
+          "responsibility": "Dispatch, execute, heartbeat and seal native execution without merging its authority jobs.",
+          "operations": [
+            "admit-finalizer",
+            "execute",
+            "heartbeat",
+            "maintain-lease",
+            "qualify-proof",
+            "run-proof",
+            "seal",
+            "seal-transfer"
+          ]
+        },
+        "queue": {
+          "responsibility": "Land qualified deliveries and reconcile protected queue state.",
+          "operations": [
+            "admit-landing",
+            "apply-policy",
+            "complete",
+            "land",
+            "reconcile"
+          ]
+        },
+        "warrant": {
+          "responsibility": "Settle or cancel delivery warrants with terminal evidence.",
+          "operations": [
+            "cancel",
+            "cancel-queued",
+            "close-event",
+            "settle",
+            "settle-native-failure"
+          ]
+        }
+      }
+    },
+    "governance": {
+      "groups": {
+        "alpha-candidate": {
+          "responsibility": "Observe and settle alpha candidate governance without publishing.",
+          "operations": ["observe", "reconcile", "settle"]
+        },
+        "candidate": {
+          "responsibility": "Render source-owned candidate review material with isolated consumer credentials.",
+          "operations": ["render-body"]
+        },
+        "dev-qualification": {
+          "responsibility": "Observe and apply protected dev qualification decisions.",
+          "operations": ["apply", "observe", "reconcile"]
+        },
+        "housekeeping": {
+          "responsibility": "Plan repository maintenance and apply scoped labels or branch cleanup.",
+          "operations": [
+            "delete-branches",
+            "label-pull-requests",
+            "plan",
+            "reconcile"
+          ]
+        },
+        "incident": {
+          "responsibility": "Report bounded workflow incidents.",
+          "operations": ["report"]
+        },
+        "release": {
+          "responsibility": "Reconcile repository release governance.",
+          "operations": ["align-checks", "reconcile"]
+        },
+        "repository": {
+          "responsibility": "Audit and patrol repository governance.",
+          "operations": [
+            "audit",
+            "collect-audit",
+            "finalize-audit",
+            "patrol",
+            "reconcile-patrol",
+            "verify"
+          ]
+        },
+        "runner": {
+          "responsibility": "Verify runner capabilities.",
+          "operations": ["verify"]
+        },
+        "stable-candidate": {
+          "responsibility": "Patrol stable candidate governance.",
+          "operations": ["patrol", "reconcile"]
+        }
+      }
+    },
+    "observability": {
+      "groups": {
+        "controller": {
+          "responsibility": "Bind controller plans and seal observed stage/evidence receipts across workflow domains.",
+          "operations": ["identify", "plan", "receipt"]
+        },
+        "evidence": {
+          "responsibility": "Admit and publish governed observed evidence.",
+          "operations": ["admit-publisher", "advance", "publish", "qualify"]
+        }
+      }
+    },
+    "paper": {
+      "groups": {
+        "candidate": {
+          "responsibility": "Admit and publish governed paper candidates.",
+          "operations": ["admit", "publish", "verify"]
+        },
+        "publication": {
+          "responsibility": "Settle paper publication.",
+          "operations": ["finalize", "lock", "observe", "settle"]
+        }
+      }
+    },
+    "providers": {
+      "groups": {
+        "aws": {
+          "responsibility": "Acquire declared AWS role credentials within the caller OIDC permission boundary.",
+          "operations": ["configure"]
+        },
+        "git": {
+          "responsibility": "Synchronize declared Git providers.",
+          "operations": ["sync"]
+        },
+        "github": {
+          "responsibility": "Manage scoped GitHub credentials and provider integrations.",
+          "operations": ["admit-access", "select-token", "token"]
+        },
+        "source": {
+          "responsibility": "Acquire exact source bytes and preserve provider checkout evidence.",
+          "operations": ["checkout"]
+        }
+      }
+    },
+    "publication": {
+      "groups": {
+        "authority": {
+          "responsibility": "Assemble and verify publication authority from candidate and artifact evidence.",
+          "operations": [
+            "admit",
+            "artifact-evidence",
+            "assemble",
+            "candidate-evidence",
+            "inspect-request",
+            "locate-controller",
+            "qualify-admission",
+            "qualify-consumer-gate",
+            "verify",
+            "verify-governance"
+          ]
+        },
+        "binary": {
+          "responsibility": "Validate and publish immutable standalone binary assets with provider readback.",
+          "operations": ["publish"]
+        },
+        "candidate": {
+          "responsibility": "Plan, build and collect publication candidates.",
+          "operations": [
+            "build",
+            "collect",
+            "package",
+            "plan",
+            "qualify",
+            "record-evidence"
+          ]
+        },
+        "npm": {
+          "responsibility": "Rehearse npm package publication.",
+          "operations": ["preview", "qualify-preview"]
+        },
+        "oci": {
+          "responsibility": "Promote qualified OCI previews.",
+          "operations": ["admit-preview", "apply-preview", "promote-preview"]
+        },
+        "settlement": {
+          "responsibility": "Retain immutable publication completion and verify its terminal receipt independently.",
+          "operations": ["retain", "verify"]
+        }
+      }
+    },
+    "release": {
+      "groups": {
+        "binary": {
+          "responsibility": "Resolve coordinates and publish admitted binary assets.",
+          "operations": ["coordinates", "publish"]
+        },
+        "candidate": {
+          "responsibility": "Qualify stable release candidates.",
+          "operations": [
+            "classify-publication",
+            "qualify-public-build",
+            "qualify-stable",
+            "resolve-public-build"
+          ]
+        },
+        "line": {
+          "responsibility": "Open a release line and verify its lineage.",
+          "operations": ["bootstrap", "inspect", "open", "verify-lineage"]
+        },
+        "next-development": {
+          "responsibility": "Review the next development transition.",
+          "operations": ["complete-review", "qualify", "review"]
+        },
+        "promotion": {
+          "responsibility": "Resolve, qualify, apply and settle release promotion transactions.",
+          "operations": [
+            "admit",
+            "admit-invocation",
+            "apply",
+            "bind-selection",
+            "candidate",
+            "classify",
+            "inspect-invocation",
+            "qualify",
+            "qualify-candidate",
+            "ref",
+            "resolve",
+            "route",
+            "settle"
+          ]
+        },
+        "propagation": {
+          "responsibility": "Plan, materialize and deliver release propagation.",
+          "operations": [
+            "capture",
+            "deliver",
+            "materialize",
+            "plan",
+            "reconcile",
+            "report",
+            "resolve"
+          ]
+        },
+        "reseal": {
+          "responsibility": "Plan, qualify and seal release-tail restoration.",
+          "operations": [
+            "admit",
+            "close",
+            "finalize-platform",
+            "plan",
+            "platforms",
+            "seal"
+          ]
+        },
+        "signing": {
+          "responsibility": "Admit signing requests, isolate platform credentials and deliver verified signatures.",
+          "operations": [
+            "attest",
+            "deliver",
+            "detached",
+            "intake",
+            "macos",
+            "windows"
+          ]
+        },
+        "tail": {
+          "responsibility": "Settle release-tail publication and terminal evidence.",
+          "operations": ["settle"]
+        }
+      }
+    },
+    "runtime": {
+      "groups": {
+        "dependencies": {
+          "responsibility": "Install exact lockfile dependencies under declared script and production policies.",
+          "operations": ["install"]
+        },
+        "environment": {
+          "responsibility": "Compose the selected Node environment and locked dependency preparation.",
+          "operations": ["activate", "prepare"]
+        },
+        "selection": {
+          "responsibility": "Select the execution runtime once at the public entry; authorize transient recovery before preparation.",
+          "operations": ["resolve"]
+        },
+        "toolchain": {
+          "responsibility": "Expose and validate declared runner-local toolchains for subsequent actions.",
+          "operations": ["user-paths", "windows-rust"]
+        }
+      }
+    },
+    "web": {
+      "groups": {
+        "controller": {
+          "responsibility": "Plan and receipt the web controller evidence lifecycle.",
+          "operations": ["finalize", "initialize", "plan", "receipt"]
+        },
+        "deployment": {
+          "responsibility": "Execute verified channel deployment transactions and preserve their observations.",
+          "operations": ["apply", "report"]
+        },
+        "feedback": {
+          "responsibility": "Report observed deployment and release outcomes to reviewers.",
+          "operations": ["preview", "review"]
+        },
+        "planning": {
+          "responsibility": "Admit inputs, resolve release intent and plan web deployment.",
+          "operations": ["admit-inputs", "build", "plan", "resolve-intent"]
+        },
+        "preview": {
+          "responsibility": "Deploy or clean up isolated web previews.",
+          "operations": ["cleanup", "deploy"]
+        },
+        "production": {
+          "responsibility": "Open governed release PRs and deploy admitted production releases.",
+          "operations": ["deploy", "open-release-pr", "reconcile-release-pr"]
+        },
+        "publication": {
+          "responsibility": "Admit and decide production publication authority.",
+          "operations": [
+            "admit",
+            "authorize",
+            "decide",
+            "seal",
+            "verify-capability"
+          ]
+        },
+        "staging": {
+          "responsibility": "Deploy staging and return release feedback.",
+          "operations": ["deploy"]
+        }
+      }
+    },
+    "workflow": {
+      "groups": {
+        "admission": {
+          "responsibility": "Reject requests that fail workflow admission.",
+          "operations": ["admit", "inspect", "reject"]
+        },
+        "bootstrap": {
+          "responsibility": "Admit, execute and settle workflow bootstrap.",
+          "operations": ["admit", "execute", "settle"]
+        },
+        "dogfood": {
+          "responsibility": "Prepare and reconcile public-contract dogfood execution.",
+          "operations": ["admit", "compare", "generate", "prepare", "reconcile"]
+        },
+        "engine": {
+          "responsibility": "Execute independently admitted candidate capabilities and retain rooted terminal results.",
+          "operations": ["execute"]
+        },
+        "event": {
+          "responsibility": "Admit supported caller events before source-controlled work begins.",
+          "operations": ["admit"]
+        },
+        "settlement": {
+          "responsibility": "Seal candidate terminal evidence and reconcile successful protected backflow.",
+          "operations": ["seal"]
+        }
+      }
+    },
+    "consumer": {
+      "groups": {
+        "policy": {
+          "responsibility": "Admit consumer source and workflow definitions against the selected runtime contract locks.",
+          "operations": ["admit"]
+        }
+      }
+    }
+  }
+}

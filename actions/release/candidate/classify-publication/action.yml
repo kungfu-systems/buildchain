@@ -1,0 +1,14 @@
+name: Recognize generated publication finalization
+description: Recognize generated publication finalization.
+inputs:
+  token:
+    description: Explicit scoped GitHub credential.
+    required: true
+outputs:
+  action:
+    description: action
+  finalized-version:
+    description: finalized version
+runs:
+  using: node24
+  main: dist/index.js

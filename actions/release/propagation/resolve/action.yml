@@ -1,0 +1,21 @@
+name: Release propagation resolve
+description: Resolve exact controller identity and the downstream release graph before checkout.
+inputs:
+  request-json:
+    description: Typed public propagation request.
+    required: true
+  runtime-ref:
+    description: Selected exact runtime selector.
+    required: true
+outputs:
+  controller-plan-json:
+    description: controller-plan-json
+  controller-plan-digest:
+    description: controller-plan-digest
+  propagation-key:
+    description: propagation-key
+  target-json:
+    description: target-json
+runs:
+  using: node24
+  main: dist/index.js

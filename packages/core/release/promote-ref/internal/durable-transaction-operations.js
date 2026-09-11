@@ -1,0 +1,463 @@
+export function finalizationRequirements(material, rematerialize = false) { return (typeof material === "string" ? JSON.parse(material || "[]") : material?.artifacts || []).map((artifact) => !rematerialize ? artifact : artifact?.kind === "npm" ? { group: artifact.group, kind: artifact.kind, name: artifact.name, ref_template: "{version}", role: artifact.role, required: artifact.required } : artifact?.kind === "github-release" ? { ...artifact, digest: "" } : artifact); }
+
+function releasePassportOutputPath(context) {
+  return context.path.resolve(
+    context.cwd,
+    context.releasePassportOutputDir || ".buildchain/release-passport",
+  );
+}
+
+function persistBeforePassport(context, transaction, enabled) { return !enabled || !context.fs.existsSync(transaction?.evidencePath || ""); }
+
+async function convergeAlphaDev(context, sha, tag) {
+  const devRef = `dev/v${context.rule.major}/v${context.rule.major}.${context.rule.minor}`;
+  const update = await context.updateBranch(devRef, sha, "updated", {
+    title: `Converge ${tag} into development`,
+    body: `Converge the protected alpha version-state result for ${tag} into ${devRef}.`,
+    allowPendingPullRequest: true,
+    allowMergeCommitOnNonFastForward: true,
+  });
+  if (!update.pending) return undefined;
+  return context.withPublishTransaction(
+    {
+      owner: context.owner,
+      repo: context.repo,
+      sourceSha: context.sha,
+      sha,
+      targetRef: context.targetRef,
+      pendingPullRequest: update.pullRequest.html_url || update.pullRequest.url,
+      updates: context.updates,
+    },
+    { finalizationNeeded: true },
+  );
+}
+
+async function finalizeAdvancedAlpha(context, publication) {
+  if (!context.advancedPublicationTransaction) return undefined;
+  const { selectedAlpha, alpha } = publication;
+  await context.markFinalizing();
+  const transaction =
+    context.getLatestPublishTransaction()?.transaction ||
+    context.advancedPublicationTransaction;
+  const exactTagSha = transaction?.source_sha || alpha.sha;
+  await context.ensureTag(selectedAlpha.tag, exactTagSha, {
+    acceptedExistingShas: context.transactionAcceptedExactTagShas(
+      transaction,
+      exactTagSha,
+    ),
+    acceptedExistingMaterialShas: context.transactionAcceptedExactTagShas(
+      transaction,
+      "",
+    ),
+  });
+  const finalizedChannelSha = context.advancedChannelSha || alpha.sha;
+  const pending = await convergeAlphaDev(
+    context,
+    finalizedChannelSha,
+    selectedAlpha.tag,
+  );
+  if (pending) return pending;
+  await context.updateTag(context.rule.alphaTag, finalizedChannelSha);
+  await context.updateMajorAlphaFloatingTag({ sha: finalizedChannelSha });
+  await context.markComplete();
+  context.updates.push({
+    action: "finalized-advanced-publication",
+    tag: selectedAlpha.tag,
+    sourceSha: context.sha,
+    releaseSha: alpha.sha,
+    currentChannelSha: context.advancedChannelSha,
+    sha: alpha.sha,
+  });
+  return context.withPublishTransaction({
+    owner: context.owner,
+    repo: context.repo,
+    sourceSha: context.sha,
+    sha: context.advancedChannelSha || context.sha,
+    targetRef: context.targetRef,
+    updates: context.updates,
+  });
+}
+function createDurableTransactionOperations(context) {
+  const {
+    octokit,
+    owner,
+    repo,
+    sha,
+    targetRef,
+    tags,
+    dryRun,
+    allowRepository,
+    cwd,
+    versionState,
+    requireVersionState,
+    requireGovernance,
+    verificationCommand,
+    requiredStatusCheck,
+    statusCheckOctokit,
+    pullRequestOctokit,
+    refUpdateOctokit,
+    branchProtectionBypassApps,
+    reconciliationWorkspace,
+    publishTransaction,
+    publishCommand,
+    publishProvider,
+    publishEvidencePath,
+    transactionStatePath,
+    expectedTransactionId,
+    publishSealedBundleRoot,
+    publishSealedBundleManifest,
+    publishRequiredArtifactsJson,
+    releaseMaterialSha,
+    publishToolingSha,
+    publishMode,
+    publishAuth,
+    publishDistTag,
+    publishPackageSetOrder,
+    publishPackageMain,
+    publishRematerializeOnResume: rematerialize,
+    expectedPublicationVersion,
+    requirePublicationQualification,
+    publicationCapabilityJson,
+    publicationGateAggregateJson,
+    publicationQualificationReceiptJson,
+    publicationUsedQualificationNoncesJson,
+    publicationQualificationNow,
+    releasePassport,
+    releasePassportProductName,
+    releasePassportBuildSummaryPath,
+    releasePassportPlatformManifestPaths,
+    releasePassportImpactJson,
+    releasePassportPromotionRoutingJson,
+    releasePassportRuntimeResumeEvidenceJson,
+    releasePassportRuntimeResumeEvidenceCommand,
+    releasePassportKfd1WitnessJsons,
+    releasePassportKfd2ClaimJsons,
+    releasePassportKfd3PrebuildWitnessJsons,
+    releasePassportKfd3ArtifactWitnessJsons,
+    releasePassportKfd3ArtifactVerifyCommand,
+    releasePassportKfdAdopterManifestJson,
+    releasePassportKfdSupportMatrixJson,
+    releasePassportKfdProductGateJsons,
+    releasePassportInvariantPassportJsons,
+    releasePassportInvariantPassportCommand,
+    releasePassportEvidenceJsons,
+    releasePassportAttachmentCommand,
+    releasePassportBuildchainSelfKfd,
+    releasePassportGitHubArtifactAttestationPolicyJsons,
+    promoteOnlyReleaseCandidate,
+    releaseCandidatePassportPath,
+    releaseCandidateBuildSummaryPath,
+    releaseCandidateVersion,
+    actor,
+    runId,
+    publishTransactionOverride,
+    rule,
+    assertPublicationQualification,
+    requestedTags,
+    updates,
+    promotionGeneratedAt,
+    releaseCandidateValidation,
+    advancedPublicationTransaction,
+    lineRefs,
+    listLineRefs,
+    listMajorAlphaRefs,
+    ownsMajorAlphaFloatingTag,
+    ensureTag,
+    updateTag,
+    updateMajorAlphaFloatingTag,
+    readRefSha,
+    updateBranch,
+    updateDefaultBranch,
+    assertOnlyAllowedChangesBetween,
+    listChangedPathsBetweenTrees,
+    assertOnlyAllowedReleaseRecoveryChangesBetween,
+    findMatchingReleaseRecoveryPullRequest,
+    findMatchingTargetPullRequest,
+    findAlphaMaterialFromPromotionPullRequest,
+    assertPromotionPrOrVersionStateParent,
+    assertReleasePrOrVersionStateParent,
+    isSettledAlphaVersionState,
+    createVersionStateCommit,
+    shouldPromoteMajorTag,
+    assertExpectedPublicationVersion,
+    beginTransactionFinalization,
+    collectAndPersistReleasePassport,
+    completeTransactionFinalization,
+    getLifecycleStage,
+    loadBuildchainConfig,
+    path,
+    publicReleaseTagForTransaction,
+    releaseTagForPublishedVersion,
+    releaseTransactionPublicationState,
+    runPublishTransaction,
+    splitPathList,
+  } = context;
+  let latestPublishTransaction;
+  const executePublishTransaction = async ({
+    version,
+    exactTag,
+    channel,
+    line,
+    releaseSha,
+    releaseCandidateVersion = "",
+    sourceShaOverride = sha,
+    releaseMaterialShaOverride = releaseMaterialSha,
+    publishToolingShaOverride = publishToolingSha,
+    publishDistTagOverride = publishDistTag,
+    durablePublicationMaterial: material,
+    allowVersionStateFinalization = false,
+  }) => {
+    const transactionVersion = version;
+    assertExpectedPublicationVersion(
+      expectedPublicationVersion,
+      transactionVersion,
+    );
+    if (
+      dryRun &&
+      (publishTransaction ||
+        publishCommand ||
+        getLifecycleStage(loadBuildchainConfig(cwd), "publish"))
+    ) {
+      updates.push({
+        action: "dry-run-publish-transaction",
+        version: transactionVersion,
+        tag: exactTag,
+        publicTag: releaseTagForPublishedVersion(transactionVersion),
+        sha: releaseSha,
+        ...(releaseCandidateVersion ? { releaseCandidateVersion } : {}),
+      });
+      return undefined;
+    }
+    assertPublicationQualification({ version: transactionVersion, channel });
+    latestPublishTransaction = await runPublishTransaction({
+      octokit,
+      owner,
+      repo,
+      cwd,
+      loadedConfig: loadBuildchainConfig(cwd),
+      targetRef,
+      sourceSha: sourceShaOverride,
+      releaseSha,
+      version: transactionVersion,
+      exactTag,
+      channel,
+      line,
+      publishTransaction,
+      publishCommand,
+      publishProvider,
+      publishEvidencePath,
+      transactionStatePath,
+      expectedTransactionId,
+      publishSealedBundleRoot,
+      publishSealedBundleManifest: material ? "" : publishSealedBundleManifest,
+      publishRequiredArtifactsJson: material || rematerialize ? JSON.stringify(finalizationRequirements(material || publishRequiredArtifactsJson, rematerialize)) : publishRequiredArtifactsJson,
+      releaseMaterialSha: releaseMaterialShaOverride,
+      publishToolingSha: publishToolingShaOverride,
+      publishMode,
+      publishAuth,
+      publishDistTag: publishDistTagOverride,
+      publishPackageSetOrder,
+      publishPackageMain,
+      publishRematerializeOnResume: rematerialize,
+      actor,
+      runId,
+      explicitOverride: publishTransactionOverride,
+      allowVersionStateFinalization,
+      promotionGeneratedAt,
+    });
+    if (latestPublishTransaction) {
+      updates.push({
+        action: "publish-transaction",
+        version,
+        tag: exactTag,
+        sha: latestPublishTransaction.transaction.release_sha,
+        state: latestPublishTransaction.transaction.state,
+        transactionId: latestPublishTransaction.transaction.id,
+        statePath: path
+          .relative(cwd, latestPublishTransaction.statePath)
+          .split(path.sep)
+          .join("/"),
+        evidencePath: path
+          .relative(cwd, latestPublishTransaction.evidencePath)
+          .split(path.sep)
+          .join("/"),
+        stateRef: latestPublishTransaction.transaction.state_ref,
+        stateSha: latestPublishTransaction.durable?.sha,
+      });
+    }
+    return latestPublishTransaction;
+  };
+  const markFinalizing = async () => {
+    latestPublishTransaction = await beginTransactionFinalization(latestPublishTransaction, actor, runId);
+  };
+  const markComplete = async ({
+    channel,
+    line,
+    passportCwd = cwd,
+    passportBuildSummaryPath = releasePassportBuildSummaryPath,
+    passportPlatformManifestPaths = splitPathList(
+      releasePassportPlatformManifestPaths,
+    ),
+    passportPromotionRoutingJson = releasePassportPromotionRoutingJson,
+    passportV4ConsumerPolicyCertificationJson: passportDomainConsumerPolicyCertificationJson =
+      context.releasePassportConsumerPolicyCertificationJson,
+    passportKfd1WitnessJsons = splitPathList(releasePassportKfd1WitnessJsons),
+    passportKfd2ClaimJsons = splitPathList(releasePassportKfd2ClaimJsons),
+    passportKfd3PrebuildWitnessJsons = splitPathList(
+      releasePassportKfd3PrebuildWitnessJsons,
+    ),
+    passportKfd3ArtifactWitnessJsons = splitPathList(
+      releasePassportKfd3ArtifactWitnessJsons,
+    ),
+    passportKfdAdopterManifestJson = releasePassportKfdAdopterManifestJson,
+    passportKfdSupportMatrixJson = releasePassportKfdSupportMatrixJson,
+    passportKfdProductGateJsons = splitPathList(
+      releasePassportKfdProductGateJsons,
+    ),
+    passportInvariantPassportJsons = splitPathList(
+      releasePassportInvariantPassportJsons,
+    ),
+    passportReleaseEvidenceJsons = splitPathList(releasePassportEvidenceJsons),
+    passportReleaseCandidateValidation = releaseCandidateValidation,
+  } = {}) => {
+    latestPublishTransaction = await completeTransactionFinalization(
+      latestPublishTransaction,
+      actor,
+      runId, persistBeforePassport(context, latestPublishTransaction, releasePassport),
+    );
+    latestPublishTransaction = await collectAndPersistReleasePassport({
+      result: latestPublishTransaction,
+      owner,
+      repo,
+      cwd: passportCwd,
+      sourceSha: sha,
+      targetRef,
+      channel: channel || rule.channel,
+      line: line || rule.releasePrefix || "",
+      packageName: publishPackageMain,
+      outputDir: releasePassportOutputPath(context),
+      productName: releasePassportProductName,
+      buildSummaryPath: passportBuildSummaryPath,
+      platformManifestPaths: passportPlatformManifestPaths,
+      impactJson: releasePassportImpactJson,
+      promotionRoutingJson: passportPromotionRoutingJson,
+      v4ConsumerPolicyCertificationJson: passportDomainConsumerPolicyCertificationJson,
+      v4ConsumerPolicyCertificationRoot:
+        context.releasePassportConsumerPolicyCertificationRoot,
+      v4RuntimeResumeEvidenceJson: releasePassportRuntimeResumeEvidenceJson,
+      v4RuntimeResumeEvidenceCommand:
+        releasePassportRuntimeResumeEvidenceCommand,
+      v4RuntimeResumeEvidenceCommandCwd: cwd,
+      kfd1WitnessJsons: passportKfd1WitnessJsons,
+      kfd2ClaimJsons: passportKfd2ClaimJsons,
+      kfd3PrebuildWitnessJsons: passportKfd3PrebuildWitnessJsons,
+      kfd3ArtifactWitnessJsons: passportKfd3ArtifactWitnessJsons,
+      kfd3ArtifactVerifyCommand: releasePassportKfd3ArtifactVerifyCommand,
+      kfdAdopterManifestJson: passportKfdAdopterManifestJson,
+      kfdSupportMatrixJson: passportKfdSupportMatrixJson,
+      kfdProductGateJsons: passportKfdProductGateJsons,
+      invariantPassportJsons: passportInvariantPassportJsons,
+      invariantPassportCommand: releasePassportInvariantPassportCommand,
+      releaseEvidenceJsons: passportReleaseEvidenceJsons,
+      releaseEvidenceCommand: releasePassportAttachmentCommand,
+      buildchainSelfKfd: Boolean(releasePassportBuildchainSelfKfd),
+      githubArtifactAttestationPolicyJsons: splitPathList(
+        releasePassportGitHubArtifactAttestationPolicyJsons,
+      ),
+      enabled: Boolean(releasePassport),
+      releaseCandidateValidation: passportReleaseCandidateValidation,
+    });
+    if (latestPublishTransaction?.transaction) {
+      const publicReleaseTag =
+        latestPublishTransaction.publicReleaseTag ||
+        publicReleaseTagForTransaction(latestPublishTransaction.transaction);
+      if (
+        publicReleaseTag &&
+        publicReleaseTag !== latestPublishTransaction.transaction.exact_tag
+      ) {
+        await ensureTag(
+          publicReleaseTag,
+          latestPublishTransaction.transaction.source_sha,
+        );
+      }
+    }
+    return latestPublishTransaction;
+  };
+
+  const withPublishTransaction = (result, extra = {}) => {
+    if (!latestPublishTransaction) {
+      return result;
+    }
+    return {
+      ...result,
+      publishTransaction: {
+        id: latestPublishTransaction.transaction.id,
+        state: latestPublishTransaction.transaction.state,
+        publicationState: releaseTransactionPublicationState(
+          latestPublishTransaction.transaction,
+        ),
+        failure: latestPublishTransaction.transaction.failure || "",
+        exactTag: latestPublishTransaction.transaction.exact_tag,
+        publicReleaseTag:
+          latestPublishTransaction.publicReleaseTag ||
+          publicReleaseTagForTransaction(latestPublishTransaction.transaction),
+        channel: latestPublishTransaction.transaction.channel,
+        releaseSha: latestPublishTransaction.transaction.release_sha,
+        stateRef: latestPublishTransaction.transaction.state_ref,
+        stateSha: latestPublishTransaction.durable?.sha,
+        statePath: path
+          .relative(cwd, latestPublishTransaction.statePath)
+          .split(path.sep)
+          .join("/"),
+        evidencePath: path
+          .relative(cwd, latestPublishTransaction.evidencePath)
+          .split(path.sep)
+          .join("/"),
+        releasePassportPath: latestPublishTransaction.releasePassport
+          ?.passportPath
+          ? path
+              .relative(
+                cwd,
+                latestPublishTransaction.releasePassport.passportPath,
+              )
+              .split(path.sep)
+              .join("/")
+          : "",
+        releasePassportOutputDir: latestPublishTransaction.releasePassport
+          ?.outputDir
+          ? path
+              .relative(cwd, latestPublishTransaction.releasePassport.outputDir)
+              .split(path.sep)
+              .join("/")
+          : "",
+        releasePassportStateSha:
+          latestPublishTransaction.releasePassport?.stateSha || "",
+        sealedBundleRoot:
+          latestPublishTransaction.transaction.sealed_bundle?.root || "",
+        resumeCommand:
+          latestPublishTransaction.transaction.resume_command || "",
+        sealedNpmTarballPath:
+          latestPublishTransaction.sealedBundle?.npm.absolutePath || "",
+        sealedReleaseAssetPaths:
+          latestPublishTransaction.sealedBundle?.releaseAssets.map(
+            (entry) => entry.absolutePath,
+          ) || [],
+        ...extra,
+      },
+    };
+  };
+  const getLatestPublishTransaction = () => latestPublishTransaction;
+  return {
+    executePublishTransaction,
+    markFinalizing,
+    markComplete,
+    withPublishTransaction,
+    getLatestPublishTransaction,
+  };
+}
+
+export {
+  convergeAlphaDev,
+  createDurableTransactionOperations,
+  finalizeAdvancedAlpha,
+};

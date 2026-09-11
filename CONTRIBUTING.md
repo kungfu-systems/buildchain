@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-07
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-07
+  generated_at: 2026-09-11
   visible_context: Repository contribution rules and implementation naming and release transition changes.
   invisible_context_boundary: No private credentials or unpublished external release state.
 ---
@@ -47,26 +47,16 @@ repository itself is a Node/pnpm workspace.
 
 ## Repository layout
 
-- `.github/workflows` - repository checks, reusable workflows, and Buildchain
-  self-promotion.
-- `.github/retrospectives` - time-bounded engineering reviews and maintenance
-  handoff records. Start with the latest record before broad consolidation work.
-- `actions` - the active GitHub Actions surface:
-  `validate-config`, `run-lifecycle`, `promote-buildchain-ref`, and
-  `report-buildchain-issue`.
-- `bin` - the published `buildchain` command-line entrypoint.
-- `docs` - release governance, lifecycle, reusable workflow, web-surface, and
-  CLI documentation.
-- `fixtures` - safe shape fixtures used by tests and reusable workflow checks.
-- `packages/core` - shared ESM library code used by CLI and scripts.
-- `scripts` - local and workflow runtime scripts.
-- `tests` - Node test runner suites and inventory contracts.
+The [code organization contract](docs/code-organization.md) defines the layers.
+Consumer APIs and hosted job boundaries live in `.github/workflows`; semantic
+node adapters live in `actions/<capability>/<group>/<operation>`; JavaScript business logic
+lives in `packages/core/<capability>`; authoritative Rust domains and the native
+host live in `crates`. `bin` contains the CLI entry, and `scripts` contains only
+repository tooling. Schemas, ownership declarations and tests live in
+`contracts`, `architecture` and `tests`.
 
-Standalone historical `action-*` repositories are not mirrored here as active
-actions. See [`docs/migration-inventory.md`](docs/migration-inventory.md).
-
-The current consolidation handoff is
-[`2026-07-10-buildchain-consolidation.md`](.github/retrospectives/2026-07-10-buildchain-consolidation.md).
+Do not add historical aliases or compatibility forwarders. Update every owned
+caller and generated artifact when moving a contract or implementation.
 
 ## Build and verification
 
@@ -106,15 +96,14 @@ category vocabulary is enforced by `architecture/workflow-taxonomy.json`:
 Categories are only `build`, `release`, and `ops`. Register the identity, role,
 category, purpose, owner, lifecycle status, invocation, and rationale before
 adding its derived filename. The [Workflow Catalog](docs/workflow-catalog.md)
-lists every allowed path and compatibility exception. Existing public aliases
-are generated from their canonical implementations; self workflows have one
-event entry. A matching prefix alone does not admit an unregistered workflow.
+lists every canonical API and component path; self workflows have one
+event entry. Retired paths have no generated aliases. A matching prefix alone does not admit an unregistered workflow.
 
 Run `pnpm run generate:workflows`, `pnpm run check:workflows`, then the full
 `pnpm run check`. The required Verify lifecycle runs this gate on PRs, merge
 queue candidates, and pushes. Policy, enforcement, and ownership changes require
-independent `@kungfu-origin` review. Keep published floating consumers on their
-registered legacy paths until the selected channel actually ships the new path.
+independent `@kungfu-origin` review. A development merge does not publish a floating channel. Consumers adopt the
+new API only after that channel publishes it and their contract locks are refreshed.
 
 ## Generated files
 
@@ -157,16 +146,15 @@ release/vX/vX.Y -> publish-gate/major
   `docs/*`, `ci/*`, or `refactor/*` branches and open a PR into the target dev
   line.
 - Repositories may call
-  `.github/workflows/dev-pr-auto-merge.yml` from their own scheduled or manual
+  `.github/workflows/public-ops-dev-auto-merge.yml` from their own scheduled or manual
   wrapper to merge ready, conflict-free dev PRs. The wrapper is policy-gated:
   required checks, ready/block labels, same-repository heads, approvals,
   branch prefixes, max merges, and dry-run are all declared inputs.
 - Ordinary build callers use `build.yml@v4` or `build.yml@v4-alpha` with
-  project settings in `buildchain.toml`. They have no runtime override input.
-  Validate the implementation and exact contract before merging into protected
-  Dev, publish Alpha, then qualify the public Alpha build before Stable.
-  Specialized release/recovery train admission follows its own bounded
-  contract in `docs/runtime-train-validation.md`.
+  project settings in `buildchain.toml`. Every public workflow uses the central
+  runtime entry: transient `runtime-ref`, contract lock, then entry default.
+  Validate the implementation before protected Dev, publish Alpha, and qualify
+  the published consumer entry. See `docs/runtime-entry.md`.
 - Merging into `alpha/*`, `release/*`, or `publish-gate/major` expresses a
   release intent. Buildchain promotion then creates version-state commits,
   exact tags, floating tags, npm publish evidence, and next-alpha state.
@@ -190,7 +178,7 @@ Name implementation directories, scripts, functions, and runtime work directorie
 for their responsibility. Product generation prefixes such as `v4-` are rejected
 by `pnpm run check:implementation-naming`, including nested JavaScript bindings
 and Rust declarations. `architecture/implementation-naming.json` records the
-explicit relocation and public export aliases. Published schema identities, hash
+current implementation identities and prohibited generation prefixes. Published schema identities, hash
 domains, selectors, runner labels, API compatibility keys, and exact historical
 evidence keep their established identities; they do not name new implementations.
 

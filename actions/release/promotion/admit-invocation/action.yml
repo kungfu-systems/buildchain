@@ -1,0 +1,21 @@
+name: Bind admitted promotion invocation
+description: Bind the consumer publication request to source evidence and the prepared runtime.
+inputs:
+  request-json:
+    description: Complete typed promotion request.
+    required: true
+  selection-json:
+    description: Exact selected identities and contract lock.
+    required: true
+  token:
+    description: Explicit scoped GitHub credential.
+    required: true
+  consumer-policy-root:
+    description: Rooted successful consumer policy receipt.
+    required: true
+outputs:
+  invocation-json:
+    description: invocation json
+runs:
+  using: node24
+  main: dist/index.js

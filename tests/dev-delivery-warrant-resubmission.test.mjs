@@ -1,16 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { runDevDeliveryCommand } from "../scripts/dev-delivery-warrant.mjs";
+import { runDevDeliveryCommand } from "../packages/core/dev-delivery/warrant/service.js";
 import {
   createDevDeliveryQueue,
   createNativeCommandContract,
   selectDevDeliveryWarrant,
   submitDevDeliveryCandidate,
-} from "../packages/core/dev-delivery-warrant.js";
+} from "../packages/core/dev-delivery/dev-delivery-warrant.js";
 import {
   reuseExactActiveDevDeliverySourceProof,
   validateDevDeliveryCandidateChain,
-} from "../packages/core/dev-delivery-candidate-identity.js";
+} from "../packages/core/dev-delivery/dev-delivery-candidate-identity.js";
 
 const root = (digit) => `sha256:${digit.repeat(64)}`;
 const options = {
@@ -19,8 +19,7 @@ const options = {
   branch: "dev/v4/v4.0",
   pullRequestNumber: 200,
   sourceHead: "a".repeat(40),
-  assignmentRoot: root("1"),
-  initiativeRoot: root("2"),
+  sourceRoot: root("1"),
   sourceIdentityRoot: root("3"),
   sourcePatchRoot: root("4"),
   sourceProofRoot: root("9"),
@@ -94,13 +93,13 @@ test("selected duplicate reuses its active source proof without a write", async 
   const terminalStates = new Set(["merged", "dequeued"]);
   // prettier-ignore
   const legacy = [{ candidateId: root("a"), pullRequestNumber: 200, status: "dequeued", enqueuedAt: "2026-08-05T08:35:09.541Z" }, { candidateId: root("b"), pullRequestNumber: 200, status: "merged", enqueuedAt: "2026-08-05T08:57:16.429Z" }];
-  validateDevDeliveryCandidateChain(legacy, terminalStates);
+  assert.throws(() => validateDevDeliveryCandidateChain(legacy, terminalStates), /same-PR successor must chain/u);
   legacy[1].enqueuedAt = "2026-08-06T00:00:00.000Z";
   // prettier-ignore
   assert.throws(() => validateDevDeliveryCandidateChain(legacy, terminalStates), /same-PR successor must chain/u);
 });
 
-test("phase-less non-native active owner reuses its exact source proof across retry", () => {
+test("ready non-native active owner reuses its exact source proof across retry", () => {
   const attempted = {
     pullRequestNumber: 200,
     sourceRoot: root("1"),
@@ -117,7 +116,7 @@ test("phase-less non-native active owner reuses its exact source proof across re
     affectedPaths: ["package.json"],
     shardEvidenceRoots: [],
   };
-  const active = { ...attempted, sourceProofRoot: root("9") };
+  const active = { phase: "ready", ...attempted, sourceProofRoot: root("9") };
 
   assert.equal(
     reuseExactActiveDevDeliverySourceProof(active, attempted).sourceProofRoot,
@@ -132,12 +131,10 @@ test("phase-less non-native active owner reuses its exact source proof across re
   );
 });
 
-test("source-root retry normalizes empty retired root inputs", async () => {
+test("source-root retry preserves the current Work identity", async () => {
   const sourceOptions = {
     ...options,
     sourceRoot: root("1"),
-    assignmentRoot: "",
-    initiativeRoot: "",
     environmentRoot: "",
     nativeCommand: "",
     deliveryClass: "non-native-fast",
@@ -151,8 +148,6 @@ test("source-root retry normalizes empty retired root inputs", async () => {
     initial,
     {
       ...sourceOptions,
-      assignmentRoot: undefined,
-      initiativeRoot: undefined,
     },
     { now: "2026-08-04T00:01:00Z" },
   );

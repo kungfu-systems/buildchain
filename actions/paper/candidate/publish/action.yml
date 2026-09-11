@@ -1,0 +1,82 @@
+name: publish-candidate
+description: Paper publish candidate.
+inputs:
+  request-json:
+    description: request-json
+    required: true
+  candidate-json:
+    description: candidate-json
+    required: true
+  token:
+    description: token
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Lock exact publication target
+      id: target
+      uses: ./.buildchain/runtime/actions/paper/publication/lock
+      with:
+        request-json: ${{ inputs.request-json }}
+        candidate-json: ${{ inputs.candidate-json }}
+        token: ${{ inputs.token }}
+    - name: Publish admitted npm package and GitHub Release assets
+      id: promote
+      uses: ./.buildchain/runtime/actions/release/promotion/ref
+      with:
+        token: ${{ inputs.token }}
+        sha: ${{ fromJSON(steps.target.outputs.target-json).sha }}
+        target-ref: ${{ fromJSON(steps.target.outputs.target-json).ref }}
+        tags: ${{ fromJSON(inputs.candidate-json)['exact-tag'] }}
+        dry-run: ${{ fromJSON(inputs.request-json).dry-run }}
+        require-governance: "true"
+        require-version-state: "false"
+        required-status-check: ${{ fromJSON(inputs.request-json).required-status-check }}
+        generated-status-check-token: ${{ inputs.token }}
+        generated-ref-update-token: ${{ inputs.token }}
+        branch-protection-bypass-apps: ${{ fromJSON(inputs.request-json).branch-protection-bypass-apps }}
+        allow-repository: ${{ github.repository }}
+        publish-transaction: "true"
+        publish-sealed-bundle-root: ${{ fromJSON(inputs.candidate-json)['sealed-bundle-root'] }}
+        publish-sealed-bundle-manifest: ${{ fromJSON(inputs.candidate-json)['sealed-bundle-manifest'] }}
+        publish-required-artifacts-json: ${{ fromJSON(inputs.candidate-json)['required-artifacts-json'] }}
+        publish-mode: publish-final-version
+        publish-auth: trusted-publishing
+        publish-dist-tag: ${{ fromJSON(inputs.candidate-json)['dist-tag'] }}
+        publish-package-set-order: as-provided
+        publish-package-main: ${{ fromJSON(inputs.candidate-json)['package-name'] }}
+        require-publish-source-lock: "true"
+        publish-source-ref: ${{ fromJSON(steps.target.outputs.target-json).gateRef }}
+        publish-source-sha: ${{ fromJSON(steps.target.outputs.target-json).sha }}
+        publish-source-locked: ${{ fromJSON(steps.target.outputs.target-json).locked }}
+        publish-transaction-override: "true"
+        release-passport: "true"
+        release-passport-output-dir: ${{ fromJSON(inputs.request-json).release-passport-output-dir }}
+        release-passport-product-name: ${{
+          fromJSON(inputs.request-json).release-passport-product-name ||
+          fromJSON(inputs.candidate-json)['package-name'] }}
+        release-passport-build-summary-path: ${{ fromJSON(inputs.candidate-json)['build-summary-path'] }}
+        release-passport-platform-manifest-paths: ${{ fromJSON(inputs.candidate-json)['manifest-path'] }}
+        release-passport-impact-json: ${{ fromJSON(inputs.request-json).release-passport-impact-json }}
+        github-release: ${{ fromJSON(inputs.request-json).github-release }}
+        github-release-artifact-paths: ${{ fromJSON(inputs.candidate-json)['github-release-artifact-paths'] }}
+        publish-provider-json: ${{ steps.target.outputs.provider-json }}
+outputs:
+  public-release-tag:
+    description: public-release-tag
+    value: ${{ steps.promote.outputs.public-release-tag }}
+  release-passport-path:
+    description: release-passport-path
+    value: ${{ steps.promote.outputs.release-passport-path }}
+  github-release-url:
+    description: github-release-url
+    value: ${{ steps.promote.outputs.github-release-url }}
+  target-json:
+    description: target-json
+    value: ${{ steps.target.outputs.target-json }}
+  publication-json:
+    description: Observed provider publication result.
+    value: ${{ toJSON(steps.promote.outputs) }}
+  promote-outcome:
+    description: Publication transaction outcome.
+    value: ${{ steps.promote.outcome }}

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
-import { readWorkflowTaxonomy, workflowPath } from "./workflow-taxonomy.mjs";
+import YAML from "yaml";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -11,7 +11,7 @@ const DEFAULT_ROOT = path.resolve(
 );
 const CALLER_PATH = ".github/workflows/self-build-public-consumer-dogfood.yml";
 const REUSABLE_PATH = ".github/workflows/public-build-stage-capsule-canary.yml";
-export const PUBLIC_DOGFOOD_ALPHA_REF = "v4-alpha";
+export const PUBLIC_DOGFOOD_ENTRY_REF = "v4";
 const PRIVATE_CONSUMER = ["buildchain", "self", "dogfood"].join("-");
 const PRIVATE_SHADOW = ["kungfu", "shadow"].join("-");
 
@@ -21,6 +21,11 @@ export function expectedPublicDogfoodWorkflow(validationRef) {
 on:
   pull_request:
   workflow_dispatch:
+    inputs:
+      runtime-ref:
+        description: Transient runtime selected by the public entry.
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -29,11 +34,12 @@ jobs:
   dogfood:
     uses: kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml@${validationRef}
     with:
+      runtime-ref: \${{ inputs.runtime-ref }}
       consumer: buildchain
       node-version: "24"
       go-version: "1.25.x"
       install-artifact-path: node_modules/.modules.yaml
-      build-artifact-path: actions/run-lifecycle/dist/index.js
+      build-artifact-path: actions/build/lifecycle/run/dist/index.js
       verify-artifact-path: dist/site
 `;
 }
@@ -67,49 +73,158 @@ function assertNoPrivateMarkers(relative, text) {
       fail(`${relative} retains private marker ${marker}`);
 }
 
+const CANARY_PHASES = ["consumer-admission", "qualify", "reconcile"];
+const CANARY_NODES = {
+  "consumer-admission": "admit-consumer",
+  qualify: "qualify",
+  reconcile: "reconcile",
+};
+
 function assertReusableWorkflow(root) {
   const reusable = read(root, REUSABLE_PATH);
+  const workflow = YAML.parse(reusable);
+  if (!Object.hasOwn(workflow.on || {}, "workflow_call"))
+    fail("Canary must expose workflow_call");
+  const nodes = CANARY_PHASES.map((phase) => {
+    const nodePath = `actions/build/stage-capsule/${CANARY_NODES[phase]}`;
+    const call = workflow.jobs?.[phase]?.steps?.at(-1);
+    if (
+      call?.uses !== `./.buildchain/runtime/${nodePath}` ||
+      call.with?.["workflow-sha"] !== "${{ job.workflow_sha }}" ||
+      call.with?.["request-json"] !== "${{ toJSON(inputs) }}"
+    )
+      fail(
+        `${REUSABLE_PATH} must bind ${phase} to its exact public node and workflow SHA`,
+      );
+    return read(root, `${nodePath}/action.yml`);
+  });
+  const qualification = YAML.parse(nodes[1]);
+  const steps = qualification.runs.steps;
+  const consumerNode = steps.findIndex((step) =>
+    step.uses?.startsWith("actions/setup-node@"),
+  );
+  const jobSteps = workflow.jobs.qualify.steps;
+  const prepare = jobSteps.findIndex(
+    (step) => step.uses === "$/actions/runtime/environment/prepare",
+  );
+  const node = jobSteps.findIndex((step) =>
+    step.uses?.endsWith("/stage-capsule/qualify"),
+  );
+  if (prepare < 0 || prepare >= node || consumerNode < 0)
+    fail(
+      "Canary must prepare its selected runtime before the consumer toolchain",
+    );
+  if (
+    steps[consumerNode].with?.["node-version"] !==
+    "${{ fromJSON(inputs.request-json).node-version }}"
+  )
+    fail("Canary must preserve the requested consumer Node version");
+  const campaign = steps.find(
+    (step) =>
+      step.uses ===
+      "./.buildchain/runtime/actions/build/stage-capsule/qualify-consumer",
+  );
+  if (
+    campaign?.with?.["workflow-sha"] !== "${{ env.BUILDCHAIN_RUNTIME_SHA }}" ||
+    campaign?.with?.["request-json"] !== "${{ inputs.request-json }}" ||
+    campaign?.with?.platform !== "${{ fromJSON(inputs.matrix-json).platform }}"
+  )
+    fail("Canary campaign lost its exact source/runtime bindings");
+  const action = YAML.parse(
+    read(root, "actions/build/stage-capsule/qualify-consumer/action.yml"),
+  );
+  if (action.runs.using !== "node24" || action.runs.main !== "dist/index.js")
+    fail(
+      "Canary must execute its qualification with the bundled Buildchain Node runtime",
+    );
+  const adapter = read(root, "packages/core/build/stage-capsule/actions.js");
   for (const binding of [
-    "workflow_call:",
-    "BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}",
-    "CONSUMER_SOURCE_SHA: ${{ github.sha }}",
-    "- uses: actions/setup-go@v6.5.0",
-    "if: inputs.go-version != ''",
+    "runtimeRoot",
+    "runtimeSha",
+    "sourceSha: env.GITHUB_SHA",
+    "qualifyStageCapsuleConsumer",
   ])
-    if (!reusable.includes(binding))
-      fail(`${REUSABLE_PATH} is missing exact binding ${binding}`);
-  for (const stage of ["install", "build", "verify"])
-    if (!reusable.includes(`lifecycle run ${stage}`))
-      fail(`${REUSABLE_PATH} does not execute lifecycle.${stage}`);
-  for (const forbidden of [
-    "lifecycle run publish",
-    "self-hosted",
-    "secrets: inherit",
+    if (!adapter.includes(binding))
+      fail(`Canary action lost exact binding: ${binding}`);
+  const transaction = read(root, "packages/core/build/stage-capsule/canary.js");
+  for (const binding of [
+    '["install", "build", "verify"]',
+    "runLifecycle(",
+    "BUILDCHAIN_NODE: process.execPath",
+    "consumerSourceRevision: sourceSha",
+    "runtimeRef: runtimeSha",
   ])
-    if (reusable.toLowerCase().includes(forbidden))
-      fail(`${REUSABLE_PATH} contains forbidden authority ${forbidden}`);
-  if (/\baws\b/iu.test(reusable))
-    fail(`${REUSABLE_PATH} contains forbidden AWS authority`);
+    if (!transaction.includes(binding))
+      fail(`Canary lifecycle lost bound execution: ${binding}`);
+  if (steps.some((step) => step.run || step.shell))
+    fail("Canary composite must only compose actions");
+  const go = steps.find((step) => step.uses?.startsWith("actions/setup-go@"));
+  if (go?.if !== "fromJSON(inputs.request-json).go-version != ''")
+    fail("Canary must retain its optional declared Go toolchain");
+  for (const source of [reusable, ...nodes]) {
+    for (const forbidden of [
+      "lifecycle run publish",
+      "self-hosted",
+      "secrets: inherit",
+    ])
+      if (source.toLowerCase().includes(forbidden))
+        fail(`${REUSABLE_PATH} contains forbidden authority ${forbidden}`);
+    if (/\baws\b/iu.test(source))
+      fail(`${REUSABLE_PATH} contains forbidden AWS authority`);
+  }
+}
+
+function assertActionInventory(root) {
+  const allowed = new Set(
+    CANARY_PHASES.map(
+      (phase) =>
+        `actions/build/stage-capsule/${CANARY_NODES[phase]}/action.yml`,
+    ),
+  );
+  function visit(relative) {
+    for (const entry of fs.readdirSync(path.join(root, relative), {
+      withFileTypes: true,
+    })) {
+      if (entry.name === "node_modules" || entry.name === "dist") continue;
+      const child = `${relative}/${entry.name}`;
+      if (entry.isDirectory()) visit(child);
+      else if (/^action\.ya?ml$/u.test(entry.name) && !allowed.has(child)) {
+        const source = read(root, child);
+        if (
+          source.includes("actions/build/stage-capsule-canary-") ||
+          Object.values(CANARY_NODES).some((node) =>
+            source.includes(`actions/build/stage-capsule/${node}`),
+          ) ||
+          source.includes("actions/build/stage-capsule/qualify-consumer") ||
+          source.includes("actions/build/stage-capsule/aggregate-consumer") ||
+          source.includes(
+            "packages/core/build/commands/stage-capsule-qualification.mjs",
+          )
+        )
+          fail(
+            `${child} invokes private qualification outside the public Canary nodes`,
+          );
+      }
+    }
+  }
+  visit("actions");
 }
 
 function assertWorkflowInventory(root) {
   const workflowRoot = path.join(root, ".github/workflows");
-  const taxonomy = readWorkflowTaxonomy(root);
   for (const entry of fs.readdirSync(workflowRoot, { withFileTypes: true })) {
     if (!entry.isFile() || !/\.ya?ml$/u.test(entry.name)) continue;
     let relative = `.github/workflows/${entry.name}`;
     const text = read(root, relative);
-    const canonical = taxonomy?.entries.find(
-      (item) => workflowPath(item) === relative && item.compatibility,
-    );
-    if (canonical) {
-      if (read(root, canonical.compatibility.path) !== text)
-        fail(`${relative} differs from its public compatibility identity`);
-      relative = canonical.compatibility.path;
-    }
     if (
       relative !== REUSABLE_PATH &&
-      text.includes("scripts/stage-capsule-qualification.mjs")
+      (text.includes(
+        "packages/core/build/commands/stage-capsule-qualification.mjs",
+      ) ||
+        text.includes("actions/build/stage-capsule-canary-") ||
+        Object.values(CANARY_NODES).some((node) =>
+          text.includes(`actions/build/stage-capsule/${node}`),
+        ))
     )
       fail(`${relative} invokes the private qualification script directly`);
     if (
@@ -124,21 +239,38 @@ function assertWorkflowInventory(root) {
 
 function assertProtectedVerify(root) {
   const verify = read(root, ".github/workflows/self-build-verify.yml");
+  const parsed = YAML.parse(verify);
+  const nodePath = "actions/build/verification/repository/action.yml";
+  if (
+    ![parsed.jobs.check.needs].flat().includes("stage-capsule-checkpoints") ||
+    parsed.jobs.check.steps.at(-1).uses !==
+      `./.buildchain/runtime/${nodePath.replace(/\/action.yml$/, "")}`
+  )
+    fail(
+      "Verify must bind the protected check node after Stage Capsule checkpoints",
+    );
+  const implementation = read(root, nodePath);
+  const steps = YAML.parse(implementation).runs.steps;
+  const qualify = steps.find((step) => step.id === "source-verification");
+  if (
+    qualify?.uses !==
+    "./.buildchain/runtime/actions/build/verification/qualify-source"
+  )
+    fail("Verify is missing its owned source qualification action");
+  const transaction = read(root, "packages/core/build/verification/source.js");
   for (const required of [
-    "needs: stage-capsule-checkpoints",
-    "name: Run declared verify lifecycle (full source tests and generated artifact checks)",
-    "node .buildchain/runtime/bin/buildchain.mjs lifecycle run verify",
-    "run: node scripts/source-verification-evidence.mjs plan",
-    "run: node scripts/source-verification-evidence.mjs seal",
+    "selectSourceVerification",
+    "qualifySourceLifecycle",
+    "sealSourceVerification",
   ])
-    if (!verify.includes(required))
+    if (!transaction.includes(required))
       fail(`Verify is missing protected gate ${required}`);
   for (const forbidden of [
     "stage-capsule-qualification:",
     "stage-capsule-qualification-reconciliation:",
-    "scripts/stage-capsule-qualification.mjs",
+    "packages/core/build/commands/stage-capsule-qualification.mjs",
   ])
-    if (verify.includes(forbidden))
+    if ((verify + implementation).includes(forbidden))
       fail(`Verify retains private dogfood path ${forbidden}`);
 }
 
@@ -149,10 +281,13 @@ function assertArchitecture(root) {
   );
   const dogfood = architecture.publicConsumerDogfood;
   const validationRef = dogfood?.validationRef;
-  if (validationRef !== PUBLIC_DOGFOOD_ALPHA_REF)
-    fail("architecture validationRef must use the floating v4-alpha channel");
+  if (validationRef !== PUBLIC_DOGFOOD_ENTRY_REF)
+    fail("architecture validationRef must use the public v4 entry");
   const caller = read(root, CALLER_PATH);
-  if (caller !== expectedPublicDogfoodWorkflow(validationRef))
+  if (
+    JSON.stringify(YAML.parse(caller)) !==
+    JSON.stringify(YAML.parse(expectedPublicDogfoodWorkflow(validationRef)))
+  )
     fail(`${CALLER_PATH} must remain the exact thin public consumer caller`);
   if (JSON.stringify(architecture.campaign?.consumers) !== '["buildchain"]')
     fail(
@@ -163,7 +298,7 @@ function assertArchitecture(root) {
     dogfood.callerWorkflow !== CALLER_PATH ||
     dogfood.reusableWorkflow !==
       "kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml" ||
-    dogfood.runtimeBinding !== "job.workflow_sha" ||
+    dogfood.runtimeBinding !== "entry-selected-runtime" ||
     dogfood.consumerSourceBinding !== "github.sha" ||
     JSON.stringify(dogfood.executableStages) !==
       '["install","build","verify"]' ||
@@ -183,7 +318,7 @@ function assertArchitecture(root) {
       fail(`architecture retains duplicate ${key}`);
   if (
     architecture.mode !== "shadow-only" ||
-    architecture.productionAuthority !== "v3" ||
+    architecture.productionAuthority !== "v4-native" ||
     [
       "providerEffects",
       "productionWrites",
@@ -218,9 +353,9 @@ function assertConsumerLifecycle(root) {
 
 function assertPolicySources(root) {
   for (const relative of [
-    "packages/core/stage-capsule-qualification.js",
-    "packages/core/stage-capsule-qualification-campaign.js",
-    "scripts/stage-capsule-qualification.mjs",
+    "packages/core/build/stage-capsule-qualification.js",
+    "packages/core/build/stage-capsule-qualification-campaign.js",
+    "packages/core/build/commands/stage-capsule-qualification.mjs",
     "architecture/stage-capsule-qualification.json",
     "docs/v4-stage-capsule.md",
   ])
@@ -229,9 +364,9 @@ function assertPolicySources(root) {
   const agents = read(root, "AGENTS.md");
   for (const invariant of [
     "same public reusable-workflow contract as every other consumer",
-    "No agent may add or restore a relative/self reusable-workflow call",
-    "never solve recursion with an internal exception",
-    "scripts/check-public-dogfood-contract.mjs",
+    "No repository-specific runtime selection or recovery exception",
+    "Normal self workflows",
+    "central entry resolves it once",
     "source-persisted exact commit SHA",
     "v4-alpha",
   ])
@@ -250,6 +385,7 @@ function assertPolicySources(root) {
 export function checkPublicDogfoodContract(root = DEFAULT_ROOT) {
   assertReusableWorkflow(root);
   assertWorkflowInventory(root);
+  assertActionInventory(root);
   assertProtectedVerify(root);
   const validationRef = assertArchitecture(root);
   assertConsumerLifecycle(root);
@@ -261,7 +397,7 @@ export function checkPublicDogfoodContract(root = DEFAULT_ROOT) {
     caller: CALLER_PATH,
     reusable: REUSABLE_PATH,
     validationRef,
-    productionAuthority: "v3",
+    productionAuthority: "v4-native",
   };
 }
 

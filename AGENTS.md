@@ -1,3 +1,22 @@
+---
+status: active
+period: ongoing
+theme: buildchain-layered-architecture
+doc_type: implementation-guide
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: B
+review_state: unreviewed
+last_reviewed: 2026-09-11
+ai_provenance:
+  model_family: GPT-6
+  product: Codex
+  generated_at: 2026-09-11
+  visible_context: Buildchain 4.1 source, architecture registries and local validation.
+  invisible_context_boundary: No unpublished release or external consumer qualification is claimed.
+---
+
 # AGENTS.md
 
 This file orients coding agents and people working with Buildchain. It is a
@@ -26,19 +45,23 @@ consumers call the public workflow with no inputs:
 uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4
 ```
 
-Use `@v4-alpha` for the alpha runtime. The called workflow ref and SHA determine
-runtime identity and the matching contract lock. A nested project may supply
-only `config-path`; all project settings belong in TOML and infrastructure
-settings belong to a governed Buildchain environment profile. `.build.yml`
-remains the core install/build/verify backbone. Historical build inputs and
-runtime overrides are removed.
+The public workflow is the API entry. It selects the execution runtime from a
+trusted non-persistent runtime input (`runtime-ref`), the selected consumer
+contract lock, or the entry commit default. `@v4-alpha` selects the alpha entry
+and its default lock path. Entry and runtime commits may differ. See
+[`Runtime entry`](docs/runtime-entry.md) for selection and recovery.
+
+Project settings belong in TOML; `config-path` locates a nested project. All
+execution jobs prepare the selected runtime through
+`actions/runtime/environment/prepare`. Subsequent business actions use that
+runtime without Buildchain SHA comparisons or secondary runtime admission.
 
 For new repositories, prefer the CLI:
 
 ```sh
 npx @kungfu-tech/buildchain init --type package
 npx @kungfu-tech/buildchain validate --require-version-state
-npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v3/v3.0
+npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v4/v4.1
 ```
 
 For governed Paper repositories, scaffold or migrate the repository once, then
@@ -58,11 +81,15 @@ See [`docs/cli.md`](docs/cli.md), [`docs/lifecycle-protocol.md`](docs/lifecycle-
 and [`docs/reusable-build-surface.md`](docs/reusable-build-surface.md) for the
 consumer contract.
 
-Ordinary builds do not accept runtime overrides. Specialized release/recovery
-contracts retain their bounded, non-persistent validation mechanisms; see
-[`docs/runtime-train-validation.md`](docs/runtime-train-validation.md).
+All public entries share the same runtime contract. A runtime bug is recovered
+through a new execution with a repaired train and original source evidence.
+An entry bug requires an upgraded published entry and a complete new run.
 
 ## Building this repo
+
+Read [Code organization](docs/code-organization.md) before changing implementation
+layout. Keep workflows, action adapters, JavaScript modules and Rust domains in
+their declared responsibility layers. No historical compatibility entry is retained.
 
 Buildchain is a pnpm workspace running on Node 24:
 
@@ -99,34 +126,26 @@ consume `kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-
 through the same public reusable-workflow contract as every other consumer.
 The caller must remain a thin workflow with no steps or local orchestration,
 and `.buildchain/buildchain.toml` must declare the same real `install`, `build`,
-and `verify` lifecycle. The public workflow binds the exact called-workflow SHA,
+and `verify` lifecycle. The public workflow records the entry and selected runtime and binds
 consumer source SHA, platform, commands, manifests, summaries, dependencies,
 and output roots on Linux, macOS, and Windows.
 
-No agent may add or restore a relative/self reusable-workflow call, direct
-qualification job, local action, candidate-branch runtime override,
-Buildchain-only consumer identity/profile, environment-variable escape hatch,
-or any other private self-dogfood path. Generic Stage Capsule internals may be
-called only by the public reusable workflow and tests. `version-state`,
-`publish`, provider, signing, release, credential, AWS, and production-reuse
-effects remain excluded.
+Dogfood callers use the same public entry and runtime preparation as external
+consumers. No repository-specific runtime selection or recovery exception is
+allowed. Stage Capsule internals are invoked by public workflows and tests;
+provider effects remain subject to their own source, artifact and readback rules.
 
-Buildchain v4 workflow calls persisted in tracked source use only `@v4` or
-`@v4-alpha` and retain matching stable and alpha contract locks.
-A source-persisted exact commit SHA, exact default, repository-variable indirection, nested
-composite indirection, missing lock, or stale selected lock fails consumer
-admission. Exact resolved SHAs remain evidence and runtime data, never a durable
-selector.
+External Buildchain v4 workflow calls persisted in tracked source use only `@v4` or
+`@v4-alpha` and retain matching stable and alpha contract locks. A
+source-persisted exact commit SHA or train is not a durable entry selector.
+Exact resolved SHAs belong in lock data and provenance. Normal self workflows
+call `@v4`; dedicated post-publication alpha entry qualification calls `@v4-alpha`.
 
-If public workflow recursion prevents candidate validation, publish the exact
-candidate at `train/v4/v4.0/<capability>`, keep the thin caller on `@v4-alpha`,
-and pass the train only through the trusted non-persistent runtime input. Fix
-failures in the train/public contract; never solve recursion with an internal exception.
-Never use a persisted train/SHA selector. After qualification and protected
-merge, the durable caller remains on the floating channel with refreshed dual
-contract locks. `pnpm run check` and protected Verify run
-`scripts/check-public-dogfood-contract.mjs`; changing this rule, its gate, or
-the protected caller requires independent `@kungfu-origin` review.
+Train validation passes `train/v4/v4.1/<capability>` only through the trusted
+non-persistent runtime input. The central entry resolves it once, and every
+business job executes the selected runtime. Protected merge and requested alpha
+publication follow successful validation. Changes to dogfood policy or its
+gates require independent `@kungfu-origin` review.
 
 `pnpm run check` validates inventory data, generated public references and site
 bundle drift, lints root workflows, runs unit tests, and rebuilds every action
@@ -140,7 +159,7 @@ handoff in
 
 - Open pull requests against the relevant `dev/*` channel branch.
 - If a Buildchain change needs downstream validation before stable refs move,
-  publish a `train/v3/v3.0/<capability>` ref and include the validation request
+  publish a `train/v4/v4.1/<capability>` ref and include the validation request
   described in [`docs/runtime-train-validation.md`](docs/runtime-train-validation.md).
   After validation succeeds, do not leave the train as a pending merge item:
   merge the pull request into the active `dev/*` mainline and run the requested

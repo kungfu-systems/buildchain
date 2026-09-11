@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-cli-registry",
   "binary": "buildchain",
   "npmPackage": "@kungfu-tech/buildchain",
-  "commandSource": "bin/internal/command-registry.mjs plus bin/buildchain.mjs help enumeration",
+  "commandSource": "packages/core/contracts/command-registry.mjs plus bin/buildchain.mjs help enumeration",
   "commands": [
     {
       "id": "adopter-delivery",
@@ -11,15 +11,11 @@
       "usage": "buildchain adopter-delivery run --input <json-or-path> [--output <path>]",
       "paths": [
         "adopter-delivery",
-        "adopter-delivery archive",
-        "adopter-delivery bootstrap",
         "adopter-delivery run",
         "adopter-delivery verify"
       ],
       "syntaxes": [
         "buildchain adopter-delivery",
-        "buildchain adopter-delivery archive --input <json-or-path> [--output <path>]",
-        "buildchain adopter-delivery bootstrap --input <json-or-path> [--output <path>]",
         "buildchain adopter-delivery run --input <json-or-path> [--output <path>]",
         "buildchain adopter-delivery verify --input <json-or-path> --readback <json-or-path> [--output <path>]"
       ],
@@ -31,12 +27,10 @@
       "aliases": [],
       "helpCommands": [
         "buildchain adopter-delivery --help",
-        "buildchain adopter-delivery archive --help",
-        "buildchain adopter-delivery bootstrap --help",
         "buildchain adopter-delivery run --help",
         "buildchain adopter-delivery verify --help"
       ],
-      "purpose": "Run public protocol-neutral adopter delivery, exact readback, N-1 bootstrap, and published archive checks.",
+      "purpose": "Run the current public protocol-neutral adopter delivery and exact readback.",
       "capabilityGroup": "reusable-build",
       "audience": [
         "agent",
@@ -44,10 +38,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -90,10 +84,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -143,10 +137,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -172,10 +166,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -208,10 +202,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -243,10 +237,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -272,10 +266,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -297,7 +291,7 @@
         "buildchain facts compatibility query --query <json-or-path> [--registry <json-or-path>] [--cwd <dir>] [--json]",
         "buildchain facts compatibility query-template --fact-root <sha256:...> [--query-id <id>] [--registry <json-or-path>] [--cwd <dir>] [--json]",
         "buildchain facts compatibility verify [--cwd <dir>] [--registry <json-or-path>] [--json]",
-        "buildchain facts module [--cwd <dir>] [--module <id>] [--module-root <path>] [--version-source <id>] [--output <file>] [--output-path <path>]... [--legacy-kungfu-buildinfo <file>] [--json]",
+        "buildchain facts module [--cwd <dir>] [--module <id>] [--module-root <path>] [--version-source <id>] [--output <file>] [--output-path <path>]... [--json]",
         "buildchain facts verify [--cwd <dir>] --fact <file> [--json]"
       ],
       "options": [
@@ -306,7 +300,6 @@
         "--fact",
         "--fact-root",
         "--json",
-        "--legacy-kungfu-buildinfo",
         "--module",
         "--module-fact",
         "--module-root",
@@ -336,10 +329,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -372,10 +365,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -401,10 +394,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -467,10 +460,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -509,10 +502,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -630,10 +623,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -659,10 +652,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -692,10 +685,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -725,10 +718,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -754,10 +747,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -788,10 +781,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -821,10 +814,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -850,10 +843,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -890,10 +883,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -922,10 +915,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -951,10 +944,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -985,10 +978,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1019,10 +1012,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1048,10 +1041,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1084,10 +1077,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1113,10 +1106,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1146,10 +1139,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1178,10 +1171,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1207,10 +1200,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1242,10 +1235,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1274,10 +1267,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1306,10 +1299,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1340,10 +1333,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1373,10 +1366,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1415,10 +1408,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1447,10 +1440,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1480,10 +1473,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1512,10 +1505,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1544,10 +1537,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1573,10 +1566,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1607,10 +1600,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1641,10 +1634,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1676,10 +1669,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1721,10 +1714,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1758,10 +1751,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1792,10 +1785,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1824,10 +1817,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1857,10 +1850,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1891,10 +1884,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1923,10 +1916,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1956,10 +1949,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -1990,10 +1983,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2022,10 +2015,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2055,10 +2048,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2087,10 +2080,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2130,10 +2123,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2164,10 +2157,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2196,10 +2189,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2234,10 +2227,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2266,10 +2259,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2306,10 +2299,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2339,10 +2332,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2372,10 +2365,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2403,10 +2396,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2435,10 +2428,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2477,10 +2470,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2506,10 +2499,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2550,10 +2543,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2586,10 +2579,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2624,10 +2617,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2653,10 +2646,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2689,10 +2682,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2718,10 +2711,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2751,10 +2744,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2786,10 +2779,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2820,10 +2813,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2853,10 +2846,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2886,10 +2879,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2919,10 +2912,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2952,10 +2945,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -2985,27 +2978,27 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
       "id": "paper-resume",
       "source": "bin/buildchain.mjs",
-      "usage": "buildchain paper resume [--cwd <dir>] [--buildchain-ref <ref>] [--execute] [--json]",
+      "usage": "buildchain paper resume [--cwd <dir>] [--runtime-ref <ref>] [--execute] [--json]",
       "paths": [
         "paper resume"
       ],
       "syntaxes": [
-        "buildchain paper resume [--cwd <dir>] [--buildchain-ref <ref>] [--execute] [--json]"
+        "buildchain paper resume [--cwd <dir>] [--runtime-ref <ref>] [--execute] [--json]"
       ],
       "options": [
-        "--buildchain-ref",
         "--cwd",
         "--execute",
-        "--json"
+        "--json",
+        "--runtime-ref"
       ],
       "aliases": [],
       "helpCommands": [
@@ -3019,10 +3012,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3053,10 +3046,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3085,10 +3078,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3119,10 +3112,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3154,10 +3147,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3200,10 +3193,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3239,10 +3232,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3270,10 +3263,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3308,10 +3301,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3342,10 +3335,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3379,10 +3372,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3419,10 +3412,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3461,10 +3454,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3499,10 +3492,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3535,10 +3528,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3575,10 +3568,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3587,7 +3580,6 @@
       "usage": "buildchain release-tail plan --declaration <json-or-path> [--output <path>]",
       "paths": [
         "release-tail",
-        "release-tail compat",
         "release-tail init",
         "release-tail plan",
         "release-tail rehearse",
@@ -3597,7 +3589,6 @@
       "syntaxes": [
         "buildchain release-tail",
         "buildchain release-tail <status|verify> [--state <path>] [--output <path>]",
-        "buildchain release-tail compat --hooks-json <json-or-path> [--output <path>]",
         "buildchain release-tail init --declaration <json-or-path> [--state <path>]",
         "buildchain release-tail plan --declaration <json-or-path> [--output <path>]",
         "buildchain release-tail rehearse --capsule <absolute-path> --candidate-root <absolute-path> [--capsule-root <absolute-path>] [--environment-json <empty-json-or-path>] --mode <simulate|replay> --state <absolute-path> --evidence <absolute-path>"
@@ -3609,7 +3600,6 @@
         "--declaration",
         "--environment-json",
         "--evidence",
-        "--hooks-json",
         "--mode",
         "--output",
         "--state"
@@ -3617,7 +3607,6 @@
       "aliases": [],
       "helpCommands": [
         "buildchain release-tail --help",
-        "buildchain release-tail compat --help",
         "buildchain release-tail init --help",
         "buildchain release-tail plan --help",
         "buildchain release-tail rehearse --help",
@@ -3632,10 +3621,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3670,10 +3659,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3699,10 +3688,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3735,10 +3724,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3769,10 +3758,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3821,10 +3810,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3853,10 +3842,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3886,10 +3875,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3915,10 +3904,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3961,10 +3950,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -3997,10 +3986,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -4032,10 +4021,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -4063,10 +4052,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -4099,10 +4088,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -4136,10 +4125,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -4167,10 +4156,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -4199,10 +4188,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
@@ -4228,10 +4217,10 @@
       ],
       "owner": "buildchain-cli",
       "maturity": "stable",
-      "introducedVersion": "pre-3.0.2-alpha.4",
-      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
-      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     }
   ]

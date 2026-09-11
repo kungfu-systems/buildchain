@@ -1,0 +1,13 @@
+name: Verify exact runtime governance receipt
+description: Verify exact runtime governance receipt
+inputs:
+  receipt-json:
+    description: Fresh rooted GitHub governance receipt.
+    required: true
+  runtime-sha:
+    description: Exact admitted verifier commit.
+    required: true
+outputs: {}
+runs:
+  using: node24
+  main: dist/index.js

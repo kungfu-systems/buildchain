@@ -12,9 +12,8 @@ import {
   parseReleaseTailDeclaration,
   validateReleaseTailEffectPlan,
   validateReleaseTailTransaction,
-} from "../packages/core/release-tail-provider-plane.js";
-import { ReleaseTailProviderError } from "../packages/core/release-tail-provider-adapters.js";
-import { diagnoseLegacyReleaseTailHooks } from "../packages/core/release-tail-compatibility.js";
+} from "../packages/core/release/release-tail-provider-plane.js";
+import { ReleaseTailProviderError } from "../packages/core/release/release-tail-provider-adapters.js";
 
 function declaration() {
   return JSON.parse(
@@ -336,26 +335,4 @@ test("observations are rooted standardized records rather than adapter decisions
     RELEASE_TAIL_OBSERVATION_SCHEMA,
     "kungfu.buildchain.release-tail.observation/v1",
   );
-});
-
-test("v3 compatibility emits bounded deprecation diagnostics and rejects new hooks", () => {
-  const compatible = diagnoseLegacyReleaseTailHooks({
-    "publish-command": "npm publish",
-    "release-activation-command": "node activate.mjs",
-  });
-  assert.equal(compatible.compatible, true);
-  assert.equal(compatible.diagnostics.length, 2);
-  assert.equal(
-    compatible.diagnostics.every(
-      (entry) => entry.code === "release-tail-hook-deprecated",
-    ),
-    true,
-  );
-  assert.equal(compatible.migrationWindow.permanentEscapeHatch, false);
-
-  const forbidden = diagnoseLegacyReleaseTailHooks({
-    "new-provider-command": "curl https://provider.invalid",
-  });
-  assert.equal(forbidden.compatible, false);
-  assert.equal(forbidden.diagnostics[0].code, "release-tail-command-forbidden");
 });

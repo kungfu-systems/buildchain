@@ -1,0 +1,48 @@
+name: authority-admit
+description: "Publication authority: admit."
+inputs:
+  auditor-app-id:
+    description: Governance auditor application identifier.
+  runtime-ref:
+    description: Selected runtime ref with the caller precedence preserved.
+    required: true
+  runtime-repository:
+    description: Runtime repository.
+    required: true
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  auditor-private-key:
+    description: Explicit scoped provider credential.
+    required: true
+  governance-read-token:
+    description: Explicit scoped provider credential.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Admit immutable authority request and evidence requirements
+      uses: ./.buildchain/runtime/actions/publication/authority/inspect-request
+      with:
+        request-json: ${{ inputs.request-json }}
+    - name: Mint bounded governance auditor token
+      if: ${{ !fromJSON(inputs.request-json).dry-run && inputs.auditor-app-id != '' &&
+        inputs.auditor-private-key != '' }}
+      id: governance-auditor
+      continue-on-error: true
+      uses: actions/create-github-app-token@v3
+      with:
+        app-id: ${{ inputs.auditor-app-id }}
+        private-key: ${{ inputs.auditor-private-key }}
+        owner: ${{ github.repository_owner }}
+    - name: Collect and verify exact live GitHub governance authority
+      if: ${{ !fromJSON(inputs.request-json).dry-run }}
+      uses: ./.buildchain/runtime/actions/publication/authority/verify-governance
+      with:
+        request-json: ${{ inputs.request-json }}
+        token: ${{ steps.governance-auditor.outputs.token ||
+          inputs.governance-read-token || github.token }}
+outputs:
+  governance-auditor-token:
+    description: Exact authority step result.
+    value: ${{ steps.governance-auditor.outputs.token }}

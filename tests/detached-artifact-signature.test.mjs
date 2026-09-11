@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import test from "node:test";
 
-import { createArtifactSigningRequest } from "../packages/core/artifact-signing.js";
+import { createArtifactSigningRequest } from "../packages/core/build/artifact-signing.js";
 import {
   DETACHED_ARTIFACT_SIGNATURE_CONTRACT,
   signDetachedArtifactRequest,
   verifyDetachedArtifactSignature,
-} from "../packages/core/detached-artifact-signature.js";
+} from "../packages/core/build/detached-artifact-signature.js";
 
 function request() {
   return createArtifactSigningRequest({

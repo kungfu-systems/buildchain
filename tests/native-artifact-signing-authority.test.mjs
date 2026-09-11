@@ -6,31 +6,21 @@ import path from "node:path";
 import test from "node:test";
 import { spawnSync } from "node:child_process";
 
-import { createArtifactSigningRequest } from "../packages/core/artifact-signing.js";
+import { createArtifactSigningRequest } from "../packages/core/build/artifact-signing.js";
 import {
-  githubRequest,
   resolveAuthorityDispatchRef,
-} from "../scripts/dispatch-artifact-signing-authority.mjs";
-import { finalizeNativeArtifactSigningResult } from "../scripts/finalize-native-artifact-signing-result.mjs";
-import { inspectArtifactSigningRequests } from "../scripts/inspect-artifact-signing-requests.mjs";
-import { importArtifactSigningResults } from "../scripts/import-artifact-signing-results.mjs";
-import { materializeArtifactSigningRequest } from "../scripts/materialize-artifact-signing-request.mjs";
-import { verifyArtifactSigningResults } from "../scripts/verify-artifact-signing-results.mjs";
+} from "../packages/core/build/signing/dispatch.js";
+import { finalizeNativeArtifactSigningResult } from "../packages/core/build/signing/native-result.js";
+import { inspectArtifactSigningRequests } from "../packages/core/build/signing/intake.js";
+import { importArtifactSigningResults } from "../packages/core/build/signing/import-results.js";
+import { materializeArtifactSigningRequest } from "../packages/core/build/signing/materialize.js";
+import { verifyArtifactSigningResults } from "../packages/core/build/signing/verify-results.js";
 
-const FORMAL_AUTHORITY_REF = "authority/v3/v3.0/artifact-signing";
-
-test("exact runtime pins dispatch through the formal protected authority ref", () => {
-  assert.equal(
-    resolveAuthorityDispatchRef("4".repeat(40)),
-    FORMAL_AUTHORITY_REF,
-  );
-  assert.equal(
-    resolveAuthorityDispatchRef(FORMAL_AUTHORITY_REF),
-    FORMAL_AUTHORITY_REF,
-  );
-  assert.equal(resolveAuthorityDispatchRef("v4"), FORMAL_AUTHORITY_REF);
-  assert.equal(resolveAuthorityDispatchRef("v4.0"), FORMAL_AUTHORITY_REF);
-  assert.equal(resolveAuthorityDispatchRef("v4-alpha"), FORMAL_AUTHORITY_REF);
+test("signing dispatch uses a public entry and leaves runtime selection to its input", () => {
+  assert.equal(resolveAuthorityDispatchRef(), "v4");
+  for (const entry of ["v4", "v4-alpha"]) assert.equal(resolveAuthorityDispatchRef(entry), entry);
+  for (const invalid of ["v3", "4".repeat(40), "train/v4/v4.1/repair", "authority/v4/v4.1/artifact-signing"])
+    assert.throws(() => resolveAuthorityDispatchRef(invalid), /public floating channel/);
 });
 
 function digest(value) {
@@ -182,7 +172,6 @@ test("authority intake routes native profiles without accepting source substitut
     const matrices = inspectArtifactSigningRequests({
       inputRoot: value.input,
       expectedRepository: "kungfu-systems/sample-consumer",
-      expectedRuntimeSha: "3".repeat(40),
     });
     assert.equal(matrices.windows.length, 1);
     assert.equal(matrices.macos.length, 0);
@@ -217,7 +206,6 @@ test("authority intake carries sealed JIT profile intent into the macOS matrix",
     const matrices = inspectArtifactSigningRequests({
       inputRoot: value.input,
       expectedRepository: "kungfu-systems/sample-consumer",
-      expectedRuntimeSha: "3".repeat(40),
     });
     assert.equal(matrices.macos.length, 1);
     assert.equal(matrices.macos[0].entitlementsProfile, "jit-executable-v1");
@@ -462,12 +450,21 @@ test("native authority binds and projects a notarized app release payload", () =
 
 test("Buildchain authority owns native credentials and performs provider verification", () => {
   const root = path.resolve(import.meta.dirname, "..");
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/artifact-signing-authority.yml"),
+  const workflowText = fs.readFileSync(
+    path.join(root, ".github/workflows/public-release-signing-authority.yml"),
+    "utf8",
+  );
+  const workflow = workflowText.replace(/\n\s+/g, " ");
+  const macosAction = fs.readFileSync(
+    path.join(root, "actions/release/signing/macos/action.yml"),
+    "utf8",
+  );
+  const deliveryAction = fs.readFileSync(
+    path.join(root, "actions/release/signing/deliver/action.yml"),
     "utf8",
   );
   const releaseVerify = fs.readFileSync(
-    path.join(root, ".github/workflows/self-build-release-verify-compat.yml"),
+    path.join(root, ".github/workflows/self-build-channel-verify.yml"),
     "utf8",
   );
   const reusableDocs = fs.readFileSync(
@@ -475,11 +472,17 @@ test("Buildchain authority owns native credentials and performs provider verific
     "utf8",
   );
   const macos = fs.readFileSync(
-    path.join(root, "scripts/sign-macos-mach-o-request.sh"),
+    path.join(
+      root,
+      "packages/core/providers/signing/macos/sign-request.sh",
+    ),
     "utf8",
   );
   const windows = fs.readFileSync(
-    path.join(root, "scripts/sign-windows-authenticode-request.ps1"),
+    path.join(
+      root,
+      "packages/core/providers/signing/windows/sign-request.ps1",
+    ),
     "utf8",
   );
   assert.match(workflow, /environment: buildchain-artifact-signing/);
@@ -490,21 +493,22 @@ test("Buildchain authority owns native credentials and performs provider verific
     /group: artifact-signing-\$\{\{ inputs\.source-repository \}\}-\$\{\{ inputs\.source-run-id \}\}-\$\{\{ inputs\.source-run-attempt \}\}-\$\{\{ inputs\.correlation-id \}\}/,
   );
   assert.match(
-    workflow,
+    workflowText,
     /macos:[\s\S]*?strategy:\n\s+fail-fast: false[\s\S]*?matrix:\n\s+request: \$\{\{ fromJSON\(needs\.intake\.outputs\.macos-matrix\) \}\}/,
   );
   assert.match(
-    workflow,
-    /Verify complete signed result set on GitHub-hosted infrastructure/,
+    deliveryAction,
+    /uses: \.\/\.buildchain\/runtime\/actions\/build\/signing\/qualify-delivery/,
   );
-  assert.match(releaseVerify, /authority\/\*\/\*\/artifact-signing/);
+  assert.match(workflow, /runtime-ref:/);
   assert.match(
     reusableDocs,
-    new RegExp(FORMAL_AUTHORITY_REF.replaceAll("/", "\\/")),
+    /public-release-signing-authority\.yml@v4/,
   );
   assert.match(workflow, /secrets\.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64/);
   assert.match(workflow, /secrets\.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64/);
-  assert.match(workflow, /vars\.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID/);
+  assert.match(workflow, /team-id: \$\{\{ vars\.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID \}\}/);
+  assert.match(macosAction, /expected-team-id: \$\{\{ inputs\.team-id \}\}/);
   assert.doesNotMatch(workflow, /secrets\.BUILDCHAIN_APPLE_/);
   assert.match(workflow, /secrets\.BUILDCHAIN_WINDOWS_CERTIFICATE_PFX_BASE64/);
   assert.match(macos, /-T \/usr\/bin\/codesign -T \/usr\/bin\/security/);
@@ -513,23 +517,16 @@ test("Buildchain authority owns native credentials and performs provider verific
   assert.match(macos, /list-keychains -d user -s "\$\{keychain_path\}"/);
   assert.match(macos, /Buildchain macOS authority: sign exact Mach-O payload/);
   assert.match(macos, /sign compound archive Mach-O payloads/);
-  assert.match(
-    workflow,
-    /BUILDCHAIN_ARTIFACT_KIND: \$\{\{ matrix\.request\.kind \}\}/,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_ENTITLEMENTS_PROFILE: \$\{\{ matrix\.request\.entitlementsProfile \}\}/,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_ENTITLEMENTS_PATHS: \$\{\{ matrix\.request\.entitlementsPaths \}\}/,
-  );
+  const nativeProvider = fs.readFileSync(path.join(root, "packages/core/providers/signing/native.js"), "utf8");
+  assert.match(nativeProvider, /BUILDCHAIN_ARTIFACT_KIND: artifact.kind/);
+  assert.match(nativeProvider, /BUILDCHAIN_ENTITLEMENTS_PROFILE:\s*signature.entitlementsProfile/);
+  assert.match(nativeProvider, /BUILDCHAIN_ENTITLEMENTS_PATHS: \(signature.entitlementsPaths/);
+  assert.match(macosAction, /uses: \.\/\.buildchain\/runtime\/actions\/build\/signing\/sign-macos/);
   assert.match(macos, /--entitlements-profile "\$\{entitlements_profile\}"/);
   assert.match(macos, /--entitlements-paths "\$\{entitlements_paths\}"/);
   assert.match(
-    workflow,
-    /Developer ID sign, notarize, and staple Apple application[\s\S]*uses: \.\/actions\/macos-credential-island/,
+    macosAction,
+    /Developer ID sign, notarize, and staple Apple application[\s\S]*uses: \.\/\.buildchain\/runtime\/actions\/build\/credential\/macos-island/,
   );
   assert.match(macos, /codesign --verify --strict/);
   assert.match(macos, /notarytool submit/);
@@ -554,64 +551,70 @@ test("Buildchain authority owns native credentials and performs provider verific
   assert.match(windows, /SignatureStatus\]::Valid/);
 });
 
-test("compound Apple archives sign outer and wheel Mach-O bytes and rebuild RECORD", {
-  skip: process.platform === "win32",
-}, () => {
-  const root = fs.mkdtempSync(
-    path.join(os.tmpdir(), "buildchain-compound-signing-"),
-  );
-  try {
-    const source = path.join(root, "source", "product");
-    const wheelRoot = path.join(root, "wheel");
-    fs.mkdirSync(path.join(source, "runtime"), { recursive: true });
-    fs.mkdirSync(path.join(wheelRoot, "kungfu"), { recursive: true });
-    fs.mkdirSync(path.join(wheelRoot, "kungfu-1.0.dist-info"), {
-      recursive: true,
-    });
-    const magic = Buffer.from([0xfe, 0xed, 0xfa, 0xcf]);
-    const machO = (filetype, suffix) =>
-      Buffer.concat([
-        magic,
-        Buffer.alloc(8),
-        Buffer.from([0, 0, 0, filetype]),
-        Buffer.from(suffix),
-      ]);
-    fs.writeFileSync(path.join(source, "runtime", "kungfu"), machO(2, "outer"));
-    fs.chmodSync(path.join(source, "runtime", "kungfu"), 0o755);
-    fs.writeFileSync(
-      path.join(wheelRoot, "kungfu", "native.so"),
-      machO(6, "wheel"),
+test(
+  "compound Apple archives sign outer and wheel Mach-O bytes and rebuild RECORD",
+  {
+    skip: process.platform === "win32",
+  },
+  () => {
+    const root = fs.mkdtempSync(
+      path.join(os.tmpdir(), "buildchain-compound-signing-"),
     );
-    fs.writeFileSync(
-      path.join(wheelRoot, "kungfu-1.0.dist-info", "RECORD"),
-      "stale,sha256=stale,1\n",
-    );
-    const wheel = path.join(source, "runtime", "kungfu.whl");
-    const zip = spawnSync(
-      "python3",
-      [
-        "-c",
-        "import pathlib,sys,zipfile; root=pathlib.Path(sys.argv[1]); out=sys.argv[2]; z=zipfile.ZipFile(out,'w',zipfile.ZIP_DEFLATED); [z.write(p,p.relative_to(root).as_posix()) for p in sorted(root.rglob('*')) if p.is_file()]; z.close()",
-        wheelRoot,
-        wheel,
-      ],
-      { encoding: "utf8" },
-    );
-    assert.equal(zip.status, 0, zip.stderr);
-    const archive = path.join(root, "product.tar.gz");
-    const packed = spawnSync(
-      "tar",
-      ["-czf", archive, "-C", path.join(root, "source"), "product"],
-      {
-        encoding: "utf8",
-        env: { ...process.env, COPYFILE_DISABLE: "1" },
-      },
-    );
-    assert.equal(packed.status, 0, packed.stderr);
-    const fake = path.join(root, "codesign");
-    fs.writeFileSync(
-      fake,
-      `#!/bin/sh
+    try {
+      const source = path.join(root, "source", "product");
+      const wheelRoot = path.join(root, "wheel");
+      fs.mkdirSync(path.join(source, "runtime"), { recursive: true });
+      fs.mkdirSync(path.join(wheelRoot, "kungfu"), { recursive: true });
+      fs.mkdirSync(path.join(wheelRoot, "kungfu-1.0.dist-info"), {
+        recursive: true,
+      });
+      const magic = Buffer.from([0xfe, 0xed, 0xfa, 0xcf]);
+      const machO = (filetype, suffix) =>
+        Buffer.concat([
+          magic,
+          Buffer.alloc(8),
+          Buffer.from([0, 0, 0, filetype]),
+          Buffer.from(suffix),
+        ]);
+      fs.writeFileSync(
+        path.join(source, "runtime", "kungfu"),
+        machO(2, "outer"),
+      );
+      fs.chmodSync(path.join(source, "runtime", "kungfu"), 0o755);
+      fs.writeFileSync(
+        path.join(wheelRoot, "kungfu", "native.so"),
+        machO(6, "wheel"),
+      );
+      fs.writeFileSync(
+        path.join(wheelRoot, "kungfu-1.0.dist-info", "RECORD"),
+        "stale,sha256=stale,1\n",
+      );
+      const wheel = path.join(source, "runtime", "kungfu.whl");
+      const zip = spawnSync(
+        "python3",
+        [
+          "-c",
+          "import pathlib,sys,zipfile; root=pathlib.Path(sys.argv[1]); out=sys.argv[2]; z=zipfile.ZipFile(out,'w',zipfile.ZIP_DEFLATED); [z.write(p,p.relative_to(root).as_posix()) for p in sorted(root.rglob('*')) if p.is_file()]; z.close()",
+          wheelRoot,
+          wheel,
+        ],
+        { encoding: "utf8" },
+      );
+      assert.equal(zip.status, 0, zip.stderr);
+      const archive = path.join(root, "product.tar.gz");
+      const packed = spawnSync(
+        "tar",
+        ["-czf", archive, "-C", path.join(root, "source"), "product"],
+        {
+          encoding: "utf8",
+          env: { ...process.env, COPYFILE_DISABLE: "1" },
+        },
+      );
+      assert.equal(packed.status, 0, packed.stderr);
+      const fake = path.join(root, "codesign");
+      fs.writeFileSync(
+        fake,
+        `#!/bin/sh
 if [ "$1" = "--display" ] && [ "$2" = "--entitlements" ]; then
   printf '%s\n' '<key>com.apple.security.cs.allow-jit</key>' >&2
   exit 0
@@ -622,123 +625,78 @@ case "$1" in
   *) for target do :; done; printf 'SIGNED' >> "$target" ;;
 esac
 `,
-    );
-    fs.chmodSync(fake, 0o755);
-    const evidence = path.join(root, "evidence.json");
-    const signed = spawnSync(
-      "python3",
-      [
-        path.resolve(
-          import.meta.dirname,
-          "../scripts/sign-macos-compound-archive.py",
-        ),
-        "--archive",
-        archive,
-        "--work-root",
-        path.join(root, "work"),
-        "--notary-root",
-        path.join(root, "notary"),
-        "--evidence",
-        evidence,
-        "--identity",
-        "certificate",
-        "--keychain",
-        "keychain",
-        "--team-id",
-        "RYNFD6L6DK",
-        "--entitlements-profile",
-        "jit-executable-v1",
-        "--entitlements-paths",
-        "product/runtime/kungfu",
-        "--codesign",
-        fake,
-      ],
-      { encoding: "utf8" },
-    );
-    assert.equal(signed.status, 0, signed.stderr);
-    const proof = JSON.parse(fs.readFileSync(evidence, "utf8"));
-    assert.equal(proof.machOCount, 1);
-    assert.equal(proof.wheelCount, 1);
-    assert.equal(proof.wheelMachOCount, 1);
-    assert.equal(proof.entitlementsProfile, "jit-executable-v1");
-    assert.equal(proof.entitledExecutableCount, 1);
-    assert.deepEqual(proof.entitledPaths, ["product/runtime/kungfu"]);
-    assert.match(proof.entitlementsSha256, /^sha256:[0-9a-f]{64}$/u);
-    assert.ok(proof.checks.includes("jit-executable-entitlement"));
-    const unpacked = path.join(root, "unpacked");
-    fs.mkdirSync(unpacked);
-    assert.equal(spawnSync("tar", ["-xzf", archive, "-C", unpacked]).status, 0);
-    assert.match(
-      fs
-        .readFileSync(path.join(unpacked, "product", "runtime", "kungfu"))
-        .toString("latin1"),
-      /SIGNED/u,
-    );
-    const record = spawnSync(
-      "python3",
-      [
-        "-c",
-        "import sys,zipfile; z=zipfile.ZipFile(sys.argv[1]); print(z.read('kungfu-1.0.dist-info/RECORD').decode(), end='')",
-        path.join(unpacked, "product", "runtime", "kungfu.whl"),
-      ],
-      { encoding: "utf8" },
-    );
-    assert.equal(record.status, 0, record.stderr);
-    assert.match(
-      record.stdout,
-      /kungfu\/native\.so,sha256=[A-Za-z0-9_-]{43},/u,
-    );
-    assert.doesNotMatch(record.stdout, /stale/u);
-  } finally {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
-});
-
-test("authority polling retries transient GET transport failures without replaying dispatch POSTs", async () => {
-  let getAttempts = 0;
-  const delays = [];
-  const result = await githubRequest(
-    "/repos/kungfu-systems/buildchain/actions/workflows/artifact-signing-authority.yml/runs",
-    {
-      token: "test-token",
-      fetchImpl: async () => {
-        getAttempts += 1;
-        if (getAttempts === 1) throw new TypeError("fetch failed");
-        return {
-          ok: true,
-          status: 200,
-          json: async () => ({ workflow_runs: [] }),
-        };
-      },
-      delayImpl: async (milliseconds) => delays.push(milliseconds),
-      maxAttempts: 3,
-      warnImpl: () => {},
-    },
-  );
-  assert.deepEqual(result, { workflow_runs: [] });
-  assert.equal(getAttempts, 2);
-  assert.deepEqual(delays, [1_000]);
-
-  let postAttempts = 0;
-  await assert.rejects(
-    () =>
-      githubRequest(
-        "/repos/kungfu-systems/buildchain/actions/workflows/artifact-signing-authority.yml/dispatches",
-        {
-          token: "test-token",
-          method: "POST",
-          body: { ref: FORMAL_AUTHORITY_REF },
-          fetchImpl: async () => {
-            postAttempts += 1;
-            throw new TypeError("fetch failed");
-          },
-          delayImpl: async () =>
-            assert.fail("dispatch POST must not be retried"),
-          maxAttempts: 5,
-          warnImpl: () => {},
-        },
-      ),
-    /fetch failed/,
-  );
-  assert.equal(postAttempts, 1);
-});
+      );
+      fs.chmodSync(fake, 0o755);
+      const evidence = path.join(root, "evidence.json");
+      const signed = spawnSync(
+        "python3",
+        [
+          path.resolve(
+            import.meta.dirname,
+            "../packages/core/providers/signing/macos/compound-archive.py",
+          ),
+          "--archive",
+          archive,
+          "--work-root",
+          path.join(root, "work"),
+          "--notary-root",
+          path.join(root, "notary"),
+          "--evidence",
+          evidence,
+          "--identity",
+          "certificate",
+          "--keychain",
+          "keychain",
+          "--team-id",
+          "RYNFD6L6DK",
+          "--entitlements-profile",
+          "jit-executable-v1",
+          "--entitlements-paths",
+          "product/runtime/kungfu",
+          "--codesign",
+          fake,
+        ],
+        { encoding: "utf8" },
+      );
+      assert.equal(signed.status, 0, signed.stderr);
+      const proof = JSON.parse(fs.readFileSync(evidence, "utf8"));
+      assert.equal(proof.machOCount, 1);
+      assert.equal(proof.wheelCount, 1);
+      assert.equal(proof.wheelMachOCount, 1);
+      assert.equal(proof.entitlementsProfile, "jit-executable-v1");
+      assert.equal(proof.entitledExecutableCount, 1);
+      assert.deepEqual(proof.entitledPaths, ["product/runtime/kungfu"]);
+      assert.match(proof.entitlementsSha256, /^sha256:[0-9a-f]{64}$/u);
+      assert.ok(proof.checks.includes("jit-executable-entitlement"));
+      const unpacked = path.join(root, "unpacked");
+      fs.mkdirSync(unpacked);
+      assert.equal(
+        spawnSync("tar", ["-xzf", archive, "-C", unpacked]).status,
+        0,
+      );
+      assert.match(
+        fs
+          .readFileSync(path.join(unpacked, "product", "runtime", "kungfu"))
+          .toString("latin1"),
+        /SIGNED/u,
+      );
+      const record = spawnSync(
+        "python3",
+        [
+          "-c",
+          "import sys,zipfile; z=zipfile.ZipFile(sys.argv[1]); print(z.read('kungfu-1.0.dist-info/RECORD').decode(), end='')",
+          path.join(unpacked, "product", "runtime", "kungfu.whl"),
+        ],
+        { encoding: "utf8" },
+      );
+      assert.equal(record.status, 0, record.stderr);
+      assert.match(
+        record.stdout,
+        /kungfu\/native\.so,sha256=[A-Za-z0-9_-]{43},/u,
+      );
+      assert.doesNotMatch(record.stdout, /stale/u);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  },
+);

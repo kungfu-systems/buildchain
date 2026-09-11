@@ -1,0 +1,59 @@
+name: binary-assets-publish
+description: Execute the binary-assets publish capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  capability-json:
+    description: Caller needs.publication-authority.outputs.capability-json value.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Admit source checkout
+      id: source-boundary
+      if: ${{ always() }}
+      uses: ./.buildchain/runtime/actions/build/source/admit
+      with:
+        source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
+    - uses: actions/setup-node@v6.4.0
+      with:
+        node-version: "24"
+    - name: Verify source and runtime coordinates
+      uses: ./.buildchain/runtime/actions/build/source/verify-checkouts
+      with:
+        source-sha: ${{ fromJSON(inputs.request-json).source-sha }}
+    - name: Download binary evidence
+      uses: actions/download-artifact@v7.0.0
+      with:
+        run-id: ${{ fromJSON(inputs.request-json).evidence-run-id }}
+        github-token: ${{ github.token }}
+        pattern: buildchain-binary-*
+        path: dist/binary
+        merge-multiple: true
+    - name: Download release passport evidence
+      uses: actions/download-artifact@v7.0.0
+      with:
+        run-id: ${{ fromJSON(inputs.request-json).evidence-run-id }}
+        github-token: ${{ github.token }}
+        name: buildchain-release-passport
+        path: .buildchain/release-passport
+    - name: Publish qualified immutable binary assets
+      uses: ./.buildchain/runtime/actions/publication/binary/publish
+      with:
+        runtime-sha: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
+        source-sha: ${{ fromJSON(inputs.request-json).source-sha }}
+        tag: ${{ fromJSON(inputs.request-json).release-tag }}
+        capability-json: ${{ inputs.capability-json }}
+        token: ${{ github.token }}
+    - name: Retain binary publication readback
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: binary-publication-readback-${{ fromJSON(inputs.request-json).release-tag
+          }}
+        path: .buildchain/binary-publication/readback.json
+        include-hidden-files: true
+        if-no-files-found: error

@@ -1,0 +1,31 @@
+name: Bind the runtime and seal qualified source evidence
+description: Bind the runtime and seal qualified source evidence.
+inputs:
+  runtime-ref:
+    description: Admitted runtime-ref.
+    required: true
+  request-json:
+    description: Admitted request-json.
+    required: true
+  branch:
+    description: Admitted branch.
+    required: true
+  token:
+    description: Admitted token.
+    required: true
+outputs:
+  runtime-sha:
+    description: Verified runtime-sha.
+  runtime-root:
+    description: Verified runtime-root.
+  project-cut-proof-root:
+    description: Verified project-cut-proof-root.
+  qualify-outcome:
+    description: Verified qualify-outcome.
+  proof-outcome:
+    description: Verified proof-outcome.
+  source-proof-root:
+    description: Verified source-proof-root.
+runs:
+  using: node24
+  main: dist/index.js

@@ -1,0 +1,102 @@
+name: tail-reseal-platforms
+description: Execute the tail-reseal platforms capability within its caller job boundary.
+inputs:
+  matrix-json:
+    description: Declared platform matrix value.
+    required: true
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+  runtime-sha:
+    description: runtime sha contract input.
+    required: true
+  request-artifact:
+    description: request artifact contract input.
+    required: true
+  source-run-id:
+    description: source run id contract input.
+    required: true
+  evidence-read-token:
+    description: evidence read token contract input.
+    required: true
+  signing-authority-repository:
+    description: signing authority repository contract input.
+    required: true
+  signing-authority-run-id:
+    description: signing authority run id contract input.
+    required: true
+  signing-result-artifact:
+    description: signing result artifact contract input.
+    required: true
+  signing-token:
+    description: signing token contract input.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Admit source checkout
+      id: source-boundary
+      if: ${{ always() }}
+      uses: ./.buildchain/runtime/actions/build/source/admit
+      with:
+        source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
+    - name: Download exact tail plan
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name: ${{ inputs.request-artifact }}
+        path: .buildchain/tail-reseal
+    - name: Download retained platform payload
+      uses: actions/download-artifact@v7.0.0
+      with:
+        github-token: ${{ github.token }}
+        repository: ${{ github.repository }}
+        run-id: ${{ inputs.source-run-id }}
+        name: ${{ fromJSON(inputs.matrix-json).platform.artifactName }}
+        path: .
+    - name: Download retained platform manifest
+      uses: actions/download-artifact@v7.0.0
+      with:
+        github-token: ${{ github.token }}
+        repository: ${{ github.repository }}
+        run-id: ${{ inputs.source-run-id }}
+        name: ${{ fromJSON(inputs.matrix-json).platform.manifestArtifactName }}
+        path: .buildchain/artifacts/${{ fromJSON(inputs.matrix-json).platform.id }}
+    - name: Download immutable signing authority result
+      if: fromJSON(inputs.matrix-json).platform.id == 'macos-arm64'
+      uses: actions/download-artifact@v7.0.0
+      with:
+        github-token: ${{ inputs.evidence-read-token }}
+        repository: ${{ inputs.signing-authority-repository }}
+        run-id: ${{ inputs.signing-authority-run-id }}
+        name: ${{ inputs.signing-result-artifact }}
+        path: .buildchain/tail-reseal/signing-result
+    - name: Verify retained platform and finalize permitted signing tail
+      uses: ./.buildchain/runtime/actions/release/reseal/finalize-platform
+      with:
+        runtime-sha: ${{ inputs.runtime-sha }}
+        platform: ${{ fromJSON(inputs.matrix-json).platform.id }}
+        finalization-command: ${{ fromJSON(inputs.request-json).macos-finalization-command }}
+        signing-token: ${{ inputs.signing-token }}
+    - name: Upload retained or resealed platform payload
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ fromJSON(inputs.matrix-json).platform.artifactName }}
+        path: |
+          ${{ fromJSON(inputs.matrix-json).platform.artifactPaths[0] }}
+          ${{ fromJSON(inputs.matrix-json).platform.artifactPaths[1] }}
+        include-hidden-files: true
+        if-no-files-found: error
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
+        compression-level: 0
+    - name: Upload platform manifest and readback
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ fromJSON(inputs.matrix-json).platform.manifestArtifactName }}
+        path: |
+          .buildchain/artifacts/${{ fromJSON(inputs.matrix-json).platform.id }}/manifest.json
+          .buildchain/tail-reseal/${{ fromJSON(inputs.matrix-json).platform.id }}-readback.json
+        if-no-files-found: error
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}

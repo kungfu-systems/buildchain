@@ -1,0 +1,12 @@
+name: Build standalone distribution with verified observability
+description: Build standalone distribution with verified observability
+inputs:
+  matrix-json:
+    description: matrix-json admitted binary distribution input.
+    required: true
+  tag:
+    description: tag admitted binary distribution input.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

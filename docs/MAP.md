@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-08
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-08
+  generated_at: 2026-09-10
   invisible_context: not asserted
 ---
 
@@ -45,6 +45,8 @@ running artifact), *use* (consume / extend) - and a **status**:
 These entrypoints keep common destinations within three meaningful hops:
 README or this map, the role entry, and the normative contract or generated
 reference.
+
+The current repository layout is defined in [Code organization](code-organization.md).
 
 ## Capability Coverage
 
@@ -95,7 +97,7 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 | Node API / package exports | `dist/site/node-api-registry.json`, `dist/site/release-provenance.json` | [`cli.md`](cli.md#node-api-and-package-exports) |
 
 `dist/site/kfd-claims.json` is generated from
-`packages/core/buildchain-kfd-claims.js`. Treat that module and JSON file as the
+`packages/core/adoption/buildchain-kfd-claims.js`. Treat that module and JSON file as the
 source claim registry; this map and the manuals explain those claims but do not
 replace them.
 
@@ -168,14 +170,14 @@ replace them.
 | How do ephemeral GitHub-hosted runners share exact dependency or compiler caches without fixed-runner affinity? | [`cli.md`](cli.md#commands) | use/verify | preview |
 | How do I validate an unreleased Buildchain runtime train while keeping `@v3`? | [`runtime-train-validation.md`](runtime-train-validation.md) | use | stable |
 | How do v4 consumers keep floating selectors while proving exact runtime and lock identity? | [`reusable-build-surface.md`](reusable-build-surface.md#v4-floating-consumer-admission) | verify/use | preview |
-| How can a trusted v4 run use a transient exact runtime and resume sealed Stage Capsules after a floating ref moves? | [`v4-runtime-ref-resume-authority.md`](v4-runtime-ref-resume-authority.md) | use/verify | preview |
+| How does the public entry select a runtime and recover with a repaired train? | [`runtime-entry.md`](runtime-entry.md) | use/verify | preview |
 | How do I automatically qualify alpha candidates and publish the newest non-revoked qualified candidate at a fixed window? | [`stable-candidate-patrol.md`](stable-candidate-patrol.md) | use | preview |
 | How do I deploy a site/app preview, staging, or production surface? | [`web-surface-deployments.md`](web-surface-deployments.md) | use | stable |
 | How do I publish observed infrastructure contracts for downstream consumers? | [`infra-contract.md`](infra-contract.md) | use | preview |
 | How do I operate a repeatable, disabled-by-default, budget-fail-closed AWS Windows JIT campaign? | [`aws-us-elastic-runner-burst-plane.md`](aws-us-elastic-runner-burst-plane.md#phase-2-operator-workflow) | use/verify | preview |
-| How do I use the active actions directly? | [`../actions/validate-config/README.md`](../actions/validate-config/README.md), [`../actions/run-lifecycle/README.md`](../actions/run-lifecycle/README.md), [`../actions/promote-buildchain-ref/README.md`](../actions/promote-buildchain-ref/README.md), [`../actions/release-candidate-promote/README.md`](../actions/release-candidate-promote/README.md), [`../actions/report-buildchain-issue/README.md`](../actions/report-buildchain-issue/README.md), [`../actions/github-artifact-attestation/README.md`](../actions/github-artifact-attestation/README.md), [`../actions/macos-credential-island/README.md`](../actions/macos-credential-island/README.md), [`../actions/release-tail/README.md`](../actions/release-tail/README.md); `dist/site/workflow-registry.json#actions` is authoritative for the action inventory. | use | stable |
-| Where are shared build stages maintained? | [resolve-build-plan](../actions/resolve-build-plan/action.yml), [prepare-build-environment](../actions/prepare-build-environment/action.yml), [run-build-stage](../actions/run-build-stage/action.yml), [transfer-build-artifact](../actions/transfer-build-artifact/action.yml), [sign-build-artifact](../actions/sign-build-artifact/action.yml), [attest-build-artifact](../actions/attest-build-artifact/action.yml), [finalize-build-result](../actions/finalize-build-result/action.yml); [ownership](../architecture/build-orchestration.json) | contribute | active |
-| How can a consumer workflow report a Buildchain-owned failure back to Buildchain? | [`consumer-issue-reporting.md`](consumer-issue-reporting.md) + [`../actions/report-buildchain-issue/README.md`](../actions/report-buildchain-issue/README.md) | use | stable |
+| How do I use the active actions directly? | [`../actions/build/lifecycle/validate/README.md`](../actions/build/lifecycle/validate/README.md), [`../actions/build/lifecycle/run/README.md`](../actions/build/lifecycle/run/README.md), [`../actions/release/promotion/ref/README.md`](../actions/release/promotion/ref/README.md), [`../actions/release/promotion/candidate/README.md`](../actions/release/promotion/candidate/README.md), [`../actions/governance/incident/report/README.md`](../actions/governance/incident/report/README.md), [`../actions/build/artifact/prepare-attestation/README.md`](../actions/build/artifact/prepare-attestation/README.md), [`../actions/build/artifact/seal-attestation/README.md`](../actions/build/artifact/seal-attestation/README.md), [`../actions/build/credential/macos-island/README.md`](../actions/build/credential/macos-island/README.md), [`../actions/release/tail/settle/README.md`](../actions/release/tail/settle/README.md); `dist/site/workflow-registry.json#actions` is authoritative for the action inventory. | use | stable |
+| Where are shared build stages maintained? | [resolve-build-plan](../actions/build/lifecycle/plan/action.yml), [prepare-build-environment](../actions/build/lifecycle/prepare/action.yml), [run-build-stage](../actions/build/lifecycle/stage/action.yml), [transfer-build-artifact](../actions/build/artifact/transfer/action.yml), [sign-build-artifact](../actions/build/artifact/sign/action.yml), [attest-build-artifact](../actions/build/artifact/attest/action.yml), [finalize-build-result](../actions/build/artifact/finalize/action.yml); [ownership](../architecture/build-orchestration.json) | contribute | active |
+| How can a consumer workflow report a Buildchain-owned failure back to Buildchain? | [`consumer-issue-reporting.md`](consumer-issue-reporting.md) + [`../actions/governance/incident/report/README.md`](../actions/governance/incident/report/README.md) | use | stable |
 | What do the fixture repositories demonstrate? | [`../fixtures/libnode-shaped/README.md`](../fixtures/libnode-shaped/README.md), [`../fixtures/publish-transaction-shaped/README.md`](../fixtures/publish-transaction-shaped/README.md), [`../fixtures/web-surface-shaped/README.md`](../fixtures/web-surface-shaped/README.md), [`../fixtures/publication-artifact-shaped/README.md`](../fixtures/publication-artifact-shaped/README.md) | verify | stable |
 | What license and contribution terms apply? | [`../LICENSE`](../LICENSE) + [`../LICENSE-POLICY.md`](../LICENSE-POLICY.md) | use | stable |
 | What trademark, official-service, and provider-compliance boundaries apply? | [`../TRADEMARK.md`](../TRADEMARK.md) + [`../ACCEPTABLE_USE.md`](../ACCEPTABLE_USE.md) + [`../PROVIDER_COMPLIANCE.md`](../PROVIDER_COMPLIANCE.md) | use | stable |
@@ -212,7 +214,7 @@ replace them.
   [`reusable-build-surface.md`](reusable-build-surface.md#artifact-transfer-relay).
 - **local Git checkout cache / self-hosted source transport** ->
   [`reusable-build-surface.md`](reusable-build-surface.md#locked-source-checkout-cache).
-- **runtime train validation / temporary `buildchain-ref` override** ->
+- **runtime train validation / temporary `runtime-ref` override** ->
   [`runtime-train-validation.md`](runtime-train-validation.md) and
   [`reusable-build-surface.md`](reusable-build-surface.md).
 - **consumer workflow feedback / automatic Buildchain GitHub issues** ->

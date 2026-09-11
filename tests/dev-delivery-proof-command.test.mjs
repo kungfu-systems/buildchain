@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { devDeliveryProofCliOptions, runDevDeliveryProofCommand } from "../scripts/dev-delivery-proof.mjs";
+import { devDeliveryProofCliOptions, runDevDeliveryProofCommand } from "../packages/core/dev-delivery/commands/dev-delivery-proof.mjs";
 
 const ROOT = `sha256:${"1".repeat(64)}`;
 const ROOT_2 = `sha256:${"2".repeat(64)}`;

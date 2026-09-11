@@ -6,7 +6,27 @@ on:
         description: Locate buildchain.toml when the project cannot be discovered.
         type: string
         required: false
-        default: ''
+        default: ""
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime contract lock path.
+        type: string
+        required: false
+        default: ""
+      resume-run-id:
+        description: Failed execution to resume using its original source and retained build outputs.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflows.
+        type: string
+        required: false
+        default: ""
     secrets:
       BUILDCHAIN_PROMOTION_TOKEN:
         required: false
@@ -41,4 +61,8 @@ jobs:
     uses: ./.github/workflows/.build.yml
     with:
       config-path: ${{ inputs.config-path }}
+      runtime-ref: ${{ inputs.runtime-ref }}
+      contract-lock: ${{ inputs.contract-lock }}
+      resume-run-id: ${{ inputs.resume-run-id }}
+      runtime-selection: ${{ inputs.runtime-selection }}
     secrets: inherit

@@ -1,125 +1,152 @@
 {
-  "schema": "buildchain.dev-delivery-orchestration/v1",
+  "schema": "buildchain.dev-delivery-orchestration/v2",
   "workflow": ".github/workflows/public-ops-dev-auto-merge.yml",
   "terminalWorkflow": ".github/workflows/public-ops-warrant-close.yml",
   "maxOrchestrationLines": 660,
   "nodes": [
     {
       "id": "source",
-      "action": ".github/actions/dev-delivery/source/action.yml",
-      "domains": ["admission"],
-      "inputs": ["request-json", "github-token"],
-      "outputs": [
-        "runtime-sha",
-        "runtime-root",
-        "target-branch",
-        "target-branch-artifact",
-        "proof-source-proof-root",
-        "project-cut-proof-root",
-        "proof-outcome",
-        "qualify-outcome"
+      "implementations": [
+        {
+          "action": "actions/dev-delivery/candidate/admit/action.yml",
+          "domains": ["admission"],
+          "inputs": ["request-json", "github-token"],
+          "outputs": [
+            "runtime-sha",
+            "runtime-root",
+            "target-branch",
+            "target-branch-artifact",
+            "proof-source-proof-root",
+            "project-cut-proof-root",
+            "proof-outcome",
+            "qualify-outcome"
+          ]
+        }
       ]
     },
     {
       "id": "reserve",
-      "action": ".github/actions/dev-delivery/reserve/action.yml",
-      "domains": ["admission"],
-      "inputs": [
-        "request-json",
-        "github-token",
-        "proof-outcome",
-        "target-branch",
-        "proof-source-proof-root",
-        "qualify-outcome",
-        "predecessors-ok"
-      ],
-      "outputs": [
-        "warrant-receipt-root",
-        "warrant-state-root",
-        "warrant-state-commit",
-        "warrant-native-proof-root",
-        "warrant-decision-root",
-        "warrant-qualification-receipt-root",
-        "warrant-handoff-required",
-        "warrant-handoff-dispatched",
-        "warrant-already-qualified",
-        "warrant-outcome"
+      "implementations": [
+        {
+          "action": "actions/dev-delivery/candidate/reserve/action.yml",
+          "domains": ["admission"],
+          "inputs": [
+            "request-json",
+            "github-token",
+            "proof-outcome",
+            "target-branch",
+            "proof-source-proof-root",
+            "qualify-outcome",
+            "predecessors-ok",
+            "runtime-sha"
+          ],
+          "outputs": [
+            "warrant-receipt-root",
+            "warrant-state-root",
+            "warrant-state-commit",
+            "warrant-native-proof-root",
+            "warrant-decision-root",
+            "warrant-qualification-receipt-root",
+            "warrant-handoff-required",
+            "warrant-handoff-dispatched",
+            "warrant-already-qualified",
+            "warrant-outcome"
+          ]
+        }
       ]
     },
     {
       "id": "native",
-      "action": ".github/actions/dev-delivery/native/action.yml",
-      "domains": [
-        "native-execution",
-        "seal-native-execution",
-        "delivery-heartbeat"
-      ],
-      "inputs": ["request-json", "github-token", "needs-json", "phase"],
-      "outputs": [
-        "transfer-root",
-        "transfer-native-outcome",
-        "heartbeat-receipt-root"
+      "implementations": [
+        {
+          "action": "actions/dev-delivery/native/execute/action.yml",
+          "domains": ["native-execution"],
+          "inputs": ["request-json", "needs-json"],
+          "outputs": []
+        },
+        {
+          "action": "actions/dev-delivery/native/seal/action.yml",
+          "domains": ["seal-native-execution"],
+          "inputs": ["request-json", "needs-json"],
+          "outputs": ["transfer-root", "transfer-native-outcome"]
+        },
+        {
+          "action": "actions/dev-delivery/native/heartbeat/action.yml",
+          "domains": ["delivery-heartbeat"],
+          "inputs": ["request-json", "github-token", "needs-json"],
+          "outputs": ["heartbeat-receipt-root"]
+        }
       ]
     },
     {
       "id": "qualify",
-      "action": ".github/actions/dev-delivery/qualify/action.yml",
-      "domains": ["merge-dev-prs"],
-      "inputs": ["request-json", "github-token", "needs-json"],
-      "outputs": [
-        "native-final-native-proof-root",
-        "native-final-decision-root",
-        "native-final-qualification-receipt-root",
-        "boundary-transfer-root",
-        "boundary-root",
-        "boundary-outcome",
-        "boundary-native-outcome",
-        "native-final-outcome"
+      "implementations": [
+        {
+          "action": "actions/dev-delivery/candidate/qualify/action.yml",
+          "domains": ["merge-dev-prs"],
+          "inputs": ["request-json", "github-token", "needs-json"],
+          "outputs": [
+            "native-final-native-proof-root",
+            "native-final-decision-root",
+            "native-final-qualification-receipt-root",
+            "boundary-transfer-root",
+            "boundary-root",
+            "boundary-outcome",
+            "boundary-native-outcome",
+            "native-final-outcome"
+          ]
+        }
       ]
     },
     {
       "id": "settle",
-      "action": ".github/actions/dev-delivery/settle/action.yml",
-      "domains": ["merge-dev-prs", "close"],
-      "inputs": [
-        "request-json",
-        "github-token",
-        "needs-json",
-        "boundary-outcome",
-        "boundary-native-outcome",
-        "phase"
-      ],
-      "outputs": [
-        "evidence-integration-proof-root",
-        "close-receipt-root",
-        "close-final-state-root",
-        "close-successor-wake-json",
-        "failure-final-outcome"
+      "implementations": [
+        {
+          "action": "actions/dev-delivery/warrant/settle-native-failure/action.yml",
+          "domains": ["merge-dev-prs"],
+          "inputs": ["runtime-sha", "branch", "token"],
+          "outputs": ["receipt-root"]
+        },
+        {
+          "action": "actions/dev-delivery/warrant/settle/action.yml",
+          "domains": ["close"],
+          "inputs": ["request-json", "github-token", "runtime-ref"],
+          "outputs": [
+            "evidence-integration-proof-root",
+            "close-receipt-root",
+            "close-final-state-root",
+            "close-successor-wake-json"
+          ]
+        }
       ]
     },
     {
       "id": "land",
-      "action": ".github/actions/dev-delivery/land/action.yml",
-      "domains": ["merge-dev-prs"],
-      "inputs": [
-        "request-json",
-        "github-token",
-        "needs-json",
-        "native-final-outcome",
-        "boundary-outcome",
-        "boundary-native-outcome",
-        "failure-final-outcome",
-        "predecessors-ok"
-      ],
-      "outputs": [
-        "merge-evaluated-count",
-        "merge-merged-count",
-        "merge-enqueued-count",
-        "merge-action-count",
-        "merge-skipped-count",
-        "merge-final-base-sha",
-        "merge-admission-state",
-        "merge-receipt-root"
+      "implementations": [
+        {
+          "action": "actions/dev-delivery/queue/land/action.yml",
+          "domains": ["merge-dev-prs"],
+          "inputs": [
+            "request-json",
+            "github-token",
+            "needs-json",
+            "native-final-outcome",
+            "boundary-outcome",
+            "boundary-native-outcome",
+            "failure-final-outcome",
+            "predecessors-ok"
+          ],
+          "outputs": [
+            "merge-evaluated-count",
+            "merge-merged-count",
+            "merge-enqueued-count",
+            "merge-action-count",
+            "merge-skipped-count",
+            "merge-final-base-sha",
+            "merge-admission-state",
+            "merge-receipt-root"
+          ]
+        }
       ]
     }
   ],
@@ -143,6 +170,6 @@
       "nodes": ["settle"]
     }
   },
-  "maxNodeLines": 360,
-  "maxTotalNodeLines": 1600
+  "maxNodeLines": 160,
+  "maxTotalNodeLines": 960
 }

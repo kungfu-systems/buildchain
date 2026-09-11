@@ -1,0 +1,145 @@
+#!/bin/bash
+set -euo pipefail
+
+: "${BUILDCHAIN_SIGNED_PAYLOAD:?BUILDCHAIN_SIGNED_PAYLOAD is required}"
+: "${BUILDCHAIN_SIGNING_EVIDENCE:?BUILDCHAIN_SIGNING_EVIDENCE is required}"
+: "${BUILDCHAIN_APPLE_CERTIFICATE_P12_BASE64:?Buildchain Apple certificate is required}"
+: "${BUILDCHAIN_APPLE_CERTIFICATE_PASSWORD:?Buildchain Apple certificate password is required}"
+: "${BUILDCHAIN_APPLE_CERTIFICATE_SHA1:?Buildchain Apple certificate fingerprint is required}"
+: "${BUILDCHAIN_APPLE_TEAM_ID:?Buildchain Apple Team ID is required}"
+: "${BUILDCHAIN_APPLE_NOTARY_KEY_P8_BASE64:?Buildchain Apple notary key is required}"
+: "${BUILDCHAIN_APPLE_NOTARY_KEY_ID:?Buildchain Apple notary key ID is required}"
+: "${BUILDCHAIN_APPLE_NOTARY_ISSUER:?Buildchain Apple notary issuer is required}"
+
+case "${BUILDCHAIN_APPLE_CERTIFICATE_SHA1}" in
+  *[!0-9A-Fa-f]*|'') echo "invalid Apple certificate fingerprint" >&2; exit 1 ;;
+esac
+
+authority_tmp="$(mktemp -d "${RUNNER_TEMP:-/tmp}/buildchain-macho-authority.XXXXXX")"
+keychain_path="${authority_tmp}/authority.keychain-db"
+keychain_password="$(openssl rand -hex 32)"
+certificate_path="${authority_tmp}/certificate.p12"
+notary_key_path="${authority_tmp}/AuthKey_${BUILDCHAIN_APPLE_NOTARY_KEY_ID}.p8"
+notary_archive="${authority_tmp}/notary-submission.zip"
+notary_submission="${authority_tmp}/notary-submission.json"
+notary_result="${authority_tmp}/notary-result.json"
+signature_details="${authority_tmp}/codesign-details.txt"
+compound_evidence="${authority_tmp}/compound-evidence.json"
+compound_work="${authority_tmp}/compound-work"
+notary_root="${authority_tmp}/notary-root"
+notary_timeout="${BUILDCHAIN_APPLE_NOTARY_TIMEOUT:-55m}"
+artifact_kind="${BUILDCHAIN_ARTIFACT_KIND:-mach-o}"
+entitlements_profile="${BUILDCHAIN_ENTITLEMENTS_PROFILE:-none}"
+entitlements_paths="${BUILDCHAIN_ENTITLEMENTS_PATHS:-}"
+
+case "${entitlements_profile}" in
+  none|jit-executable-v1) ;;
+  *) echo "unsupported Buildchain entitlements profile: ${entitlements_profile}" >&2; exit 1 ;;
+esac
+
+if [ "${entitlements_profile}" != "none" ] && [ "${artifact_kind}" != "archive" ]; then
+  echo "Buildchain entitlements profile ${entitlements_profile} requires an Apple archive" >&2
+  exit 1
+fi
+
+if { [ "${entitlements_profile}" = "none" ] && [ -n "${entitlements_paths}" ]; } ||
+   { [ "${entitlements_profile}" != "none" ] && [ -z "${entitlements_paths}" ]; }; then
+  echo "Buildchain entitlements paths must be non-empty exactly when a profile is enabled" >&2
+  exit 1
+fi
+
+cleanup() {
+  security delete-keychain "${keychain_path}" >/dev/null 2>&1 || true
+  rm -rf "${authority_tmp}"
+}
+trap cleanup EXIT INT TERM
+
+printf '%s' "${BUILDCHAIN_APPLE_CERTIFICATE_P12_BASE64}" | openssl base64 -d -A > "${certificate_path}"
+printf '%s' "${BUILDCHAIN_APPLE_NOTARY_KEY_P8_BASE64}" | openssl base64 -d -A > "${notary_key_path}"
+chmod 600 "${certificate_path}" "${notary_key_path}"
+
+security create-keychain -p "${keychain_password}" "${keychain_path}"
+security set-keychain-settings -lut 21600 "${keychain_path}"
+security unlock-keychain -p "${keychain_password}" "${keychain_path}"
+security import "${certificate_path}" -k "${keychain_path}" -P "${BUILDCHAIN_APPLE_CERTIFICATE_PASSWORD}" -T /usr/bin/codesign -T /usr/bin/security
+echo "Buildchain macOS authority: configure imported private-key access"
+security set-key-partition-list -S apple-tool:,apple:,codesign: -k "${keychain_password}" "${keychain_path}" >/dev/null
+security list-keychains -d user -s "${keychain_path}"
+echo "Buildchain macOS authority: verify requested signing identity"
+security find-identity -v -p codesigning "${keychain_path}" | grep -Fqi "${BUILDCHAIN_APPLE_CERTIFICATE_SHA1}" || {
+  echo "configured Developer ID identity was not imported" >&2
+  exit 1
+}
+
+case "${artifact_kind}" in
+  archive)
+    echo "Buildchain macOS authority: sign compound archive Mach-O payloads"
+    python3 packages/core/providers/signing/macos/compound-archive.py \
+      --archive "${BUILDCHAIN_SIGNED_PAYLOAD}" \
+      --work-root "${compound_work}" \
+      --notary-root "${notary_root}" \
+      --evidence "${compound_evidence}" \
+      --identity "${BUILDCHAIN_APPLE_CERTIFICATE_SHA1}" \
+      --keychain "${keychain_path}" \
+      --team-id "${BUILDCHAIN_APPLE_TEAM_ID}" \
+      --entitlements-profile "${entitlements_profile}" \
+      --entitlements-paths "${entitlements_paths}"
+    /usr/bin/ditto -c -k --keepParent "${notary_root}" "${notary_archive}"
+    ;;
+  mach-o|binary|dylib)
+    echo "Buildchain macOS authority: sign exact Mach-O payload"
+    codesign --force --options runtime --timestamp --keychain "${keychain_path}" --sign "${BUILDCHAIN_APPLE_CERTIFICATE_SHA1}" "${BUILDCHAIN_SIGNED_PAYLOAD}"
+    codesign --verify --strict --verbose=4 "${BUILDCHAIN_SIGNED_PAYLOAD}"
+    codesign --display --verbose=4 "${BUILDCHAIN_SIGNED_PAYLOAD}" 2> "${signature_details}"
+    grep -Fqx "TeamIdentifier=${BUILDCHAIN_APPLE_TEAM_ID}" "${signature_details}" || {
+      echo "signed Mach-O TeamIdentifier mismatch" >&2
+      exit 1
+    }
+    grep -Fq "Runtime Version" "${signature_details}" || {
+      echo "signed Mach-O does not prove hardened runtime" >&2
+      exit 1
+    }
+    grep -Fq "Timestamp=" "${signature_details}" || {
+      echo "signed Mach-O does not prove a secure timestamp" >&2
+      exit 1
+    }
+    /usr/bin/ditto -c -k --keepParent "${BUILDCHAIN_SIGNED_PAYLOAD}" "${notary_archive}"
+    ;;
+  *)
+    echo "unsupported Apple native artifact kind: ${artifact_kind}" >&2
+    exit 1
+    ;;
+esac
+echo "Buildchain macOS authority: submit signed ${artifact_kind} for notarization"
+xcrun notarytool submit "${notary_archive}" --key "${notary_key_path}" --key-id "${BUILDCHAIN_APPLE_NOTARY_KEY_ID}" --issuer "${BUILDCHAIN_APPLE_NOTARY_ISSUER}" --output-format json > "${notary_submission}"
+notary_id="$(node -e 'const fs=require("fs");const value=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));if(!value.id)throw new Error("Apple notarization submission did not return an id");process.stdout.write(value.id)' "${notary_submission}")"
+echo "Buildchain macOS authority: notarization submission ${notary_id}; wait up to ${notary_timeout}"
+xcrun notarytool wait "${notary_id}" --key "${notary_key_path}" --key-id "${BUILDCHAIN_APPLE_NOTARY_KEY_ID}" --issuer "${BUILDCHAIN_APPLE_NOTARY_ISSUER}" --timeout "${notary_timeout}" --output-format json > "${notary_result}"
+node -e 'const fs=require("fs");const value=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));if(value.status!=="Accepted"||value.id!==process.argv[2])throw new Error("Apple notarization was not accepted for the submitted artifact")' "${notary_result}" "${notary_id}"
+echo "Buildchain macOS authority: Apple accepted notarization ${notary_id}; ${artifact_kind} ticket is available online and cannot be stapled"
+
+node - "${notary_result}" "${BUILDCHAIN_SIGNING_EVIDENCE}" "${BUILDCHAIN_APPLE_CERTIFICATE_SHA1}" "${BUILDCHAIN_APPLE_TEAM_ID}" "${artifact_kind}" "${compound_evidence}" <<'NODE'
+const fs = require("fs");
+const notary = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+const artifactKind = process.argv[6];
+const compound = fs.existsSync(process.argv[7])
+  ? JSON.parse(fs.readFileSync(process.argv[7], "utf8"))
+  : null;
+const checks = compound?.checks || ["codesign-strict", "developer-id-team", "hardened-runtime", "secure-timestamp"];
+checks.push("notarytool-accepted", artifactKind === "archive" ? "compound-notary-ticket-online" : "standalone-notary-ticket-online");
+const evidence = {
+  schemaVersion: 1,
+  contract: "kungfu-buildchain-apple-developer-id-evidence/v1",
+  status: "passed",
+  provider: "apple",
+  certificateSha1: process.argv[4].toUpperCase(),
+  teamId: process.argv[5],
+  notarization: { id: notary.id, status: notary.status, ticketDelivery: "online" },
+  artifactKind,
+  ...(compound ? { compound } : {}),
+  stapling: { status: "not-applicable", reason: artifactKind === "archive" ? "generic archives do not support stapled notarization tickets" : "standalone Mach-O executables do not support stapled notarization tickets" },
+  gatekeeper: { status: "not-directly-assessable", reason: artifactKind === "archive" ? "Gatekeeper assesses the extracted signed code rather than a generic archive container" : "spctl execute assessment applies app semantics and does not directly assess standalone Mach-O executables" },
+  checks,
+};
+fs.writeFileSync(process.argv[3], `${JSON.stringify(evidence, null, 2)}\n`);
+NODE

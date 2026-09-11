@@ -16,16 +16,16 @@ import {
   resolvePublicationRehearsalProviderBindings,
   validatePublicationRehearsalCapsule,
   verifyDomainPublicationRehearsalCapsule,
-} from "../packages/core/publication-rehearsal.js";
+} from "../packages/core/publication/publication-rehearsal.js";
 import {
   compileReleaseTailDeclaration,
   releaseTailRoot,
-} from "../packages/core/release-tail-provider-plane.js";
-import { normalizeBuildchainConfig } from "../packages/core/buildchain-config.js";
+} from "../packages/core/release/release-tail-provider-plane.js";
+import { normalizeBuildchainConfig } from "../packages/core/consumer/buildchain-config.js";
 import {
   parseWorkflowDocument,
   parseYamlUses,
-} from "../packages/core/workflow-yaml-contract.js";
+} from "../packages/core/contracts/workflow-yaml-contract.js";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "..");
 
@@ -639,7 +639,7 @@ test("CLI and config expose the same effect-disabled rehearsal projection", () =
   );
 
   const cli = fs.readFileSync(
-    path.join(repositoryRoot, "scripts/release-tail.mjs"),
+    path.join(repositoryRoot, "packages/core/release/commands/release-tail.mjs"),
     "utf8",
   );
   assert.match(cli, /executeDomainPublicationRehearsal/u);
@@ -648,7 +648,7 @@ test("CLI and config expose the same effect-disabled rehearsal projection", () =
 
 test("repo-local prepublication dogfood resolves the current reusable and exact runtime", () => {
   const workflow = fs.readFileSync(
-    path.join(repositoryRoot, ".github/workflows/release-tail.yml"),
+    path.join(repositoryRoot, ".github/workflows/public-release-tail.yml"),
     "utf8",
   );
   const dogfood = fs.readFileSync(
@@ -663,11 +663,8 @@ test("repo-local prepublication dogfood resolves the current reusable and exact 
   assert.deepEqual(caller.triggers, ["pull_request", "workflow_dispatch"]);
   assert.equal(caller.callJobs.length, 1);
   const [call] = caller.callJobs;
-  assert.equal(call.uses, "./.github/workflows/release-tail.yml");
-  assert.deepEqual(call.with["buildchain-ref"], {
-    kind: "expression",
-    value: "${{ github.event.pull_request.head.sha || github.sha }}",
-  });
+  assert.equal(call.uses, "kungfu-systems/buildchain/.github/workflows/public-release-tail.yml@v4");
+  assert.equal(call.with["buildchain-ref"], undefined);
   assert.equal(call.with["rehearsal-mode"].value, "simulate");
   assert.deepEqual(call.with.execute, { kind: "boolean", value: false });
   assert.equal(call.permissions.contents, "read");
@@ -694,7 +691,7 @@ test("repo-local prepublication dogfood resolves the current reusable and exact 
   const workflowUses = parseYamlUses(workflow).map((entry) => entry.value);
   assert.ok(
     workflowUses.includes(
-      "./.buildchain/release-tail-runtime/actions/release-tail",
+      "./.buildchain/runtime/actions/release/tail/settle",
     ),
   );
   const durableExternalCaller = fs.readFileSync(
@@ -707,10 +704,10 @@ test("repo-local prepublication dogfood resolves the current reusable and exact 
   assert.ok(
     parseYamlUses(durableExternalCaller).some((entry) =>
       entry.value.endsWith(
-        "/.github/workflows/public-build-stage-capsule-canary.yml@v4-alpha",
+        "/.github/workflows/public-build-stage-capsule-canary.yml@v4",
       ),
     ),
-    "external public consumers retain the floating v4-alpha selector",
+    "external public consumers retain the floating v4 selector",
   );
 
   const providerPlaneDoc = fs.readFileSync(
@@ -728,7 +725,7 @@ test("repo-local prepublication dogfood resolves the current reusable and exact 
   assert.equal(productionCall.with.execute.value, true);
   assert.match(
     productionCall.uses,
-    /^kungfu-systems\/buildchain\/\.github\/workflows\/release-tail\.yml@<exact-buildchain-sha>$/u,
+    /^kungfu-systems\/buildchain\/\.github\/workflows\/public-release-tail\.yml@v4$/u,
   );
 });
 
@@ -740,7 +737,7 @@ test("checked-in release-tail Action executes the dogfood capsule without author
   fs.writeFileSync(outputPath, "");
   const result = spawnSync(
     process.execPath,
-    [path.join(repositoryRoot, "actions/release-tail/dist/index.js")],
+    [path.join(repositoryRoot, "actions/release/tail/settle/dist/index.js")],
     {
       cwd: repositoryRoot,
       encoding: "utf8",

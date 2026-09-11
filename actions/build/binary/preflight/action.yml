@@ -1,0 +1,9 @@
+name: Admit exact release-tag binary coordinates
+description: Admit exact release-tag binary coordinates
+inputs:
+  request-json:
+    description: request-json admitted binary distribution input.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

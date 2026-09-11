@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-08-17
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -341,7 +341,7 @@ write-normalize-observe-remutate cycle: `transferRoot`,
 `providerTerminalReadbackRoot`.
 
 Buildchain's tracked self-delivery caller invokes
-`kungfu-systems/buildchain/.github/workflows/dev-pr-auto-merge.yml@v4-alpha`.
+`kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@v4-alpha`.
 The durable selector remains the floating alpha channel, the repository keeps
 matching `.buildchain/contract-lock.json` (`v4`) and
 `.buildchain/alpha-contract-lock.json` (`v4-alpha`), and a train runtime may be
@@ -402,7 +402,7 @@ native proof or reuse authority. Phase-less native candidates remain invalid.
 
 ## Workflow rollout and rollback
 
-The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
+The reusable `public-ops-dev-auto-merge.yml` supports three explicit rollout modes:
 
 - `off` preserves the previous exact-head admission controller;
 - `shadow` qualifies the source and emits a read-only queue submission plan;
@@ -508,26 +508,16 @@ root still match. A delayed `dequeued` event is ignored when GitHub readback
 shows the same exact PR head is already queued again, so an earlier queue event
 cannot close a newer active Warrant generation.
 
-Buildchain uses the same contract for its own protected dev line through
-`self-ops-dev-delivery.yml`. The manual caller requires the exact PR head and
-semantic source roots, accepts an optional reusable native proof, keeps both
-the durable public selector and explicit runtime input on `v4-alpha`, selects
-`delivery-warrant-mode: required`, and targets GitHub Merge Queue. It does not
-offer an `off` switch: rollback is a reviewed change to this caller, not an
-operator-time weakening of a specific delivery attempt.
+Buildchain uses the same public contract for its protected dev line through
+`self-ops-dev-delivery.yml`. The caller keeps the durable selector on `@v4`,
+requires exact PR source roots, and selects `delivery-warrant-mode: required`.
+The central runtime entry selects and prepares execution code. Explicit transient
+runtime selection can choose a repaired train without changing the persisted
+caller. There is no per-attempt Warrant bypass.
 
-`templates/native-dev-delivery.yml` provides the corresponding protected-dev
-consumer workflow. It supports both explicit dispatch and the bounded wake
-event, calls the allowed floating `@v4-alpha` selector, explicitly passes the v4
-runtime ref that locks every delivery job to the same checkout, and keeps the
-native command in the consumer repository rather than inventing
-provider-specific shards. Both callers explicitly bind the queue-admission
-and active-lease status contexts so write/readback fencing uses the same exact
-names. The reusable workflow defaults the explicit runtime input to
-`v4-alpha`; an empty input or any v3 selector fails before the first runtime
-checkout.
-
-This mechanism schedules protected delivery only. It does not serialize local
-development, source-only checks, unrelated channels, release publication, or
-runner provisioning. It never grants authority to enable cloud runner
-campaigns.
+`templates/native-dev-delivery.yml` supplies the corresponding consumer workflow.
+It supports explicit dispatch and the bounded wake event, preserves the native
+command in the consumer repository, and binds queue-admission and active-lease
+status contexts for provider write/readback fencing. Runtime selection follows
+the shared entry precedence; subsequent delivery nodes do not compare Buildchain
+SHAs.

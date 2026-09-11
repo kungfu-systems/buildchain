@@ -3,12 +3,12 @@ import test from "node:test";
 import {
   createUniversalSelfDogfoodRequest,
   verifyUniversalSelfDogfoodPair,
-} from "../scripts/universal-workflow-self-dogfood.mjs";
+} from "../packages/core/workflow/universal-self-dogfood.js";
 
 const sha = (value) => value.repeat(40);
 const root = (value) => `sha256:${value.repeat(64)}`;
 const policy = {
-  schema: "kungfu-buildchain-v4-universal-workflow-admission-policy/v1",
+  schema: "buildchain.universal-workflow-admission-policy/v2",
   sourceRepository: "kungfu-systems/buildchain",
   consumerAdmission: "verified-caller",
   allowedCapabilities: [
@@ -18,7 +18,7 @@ const policy = {
   ],
   permissionCeiling: { contents: "write" },
   contractRoots: [root("a")],
-  targetRef: "dev/v4/v4.0",
+  targetRef: "dev/v4/v4.1",
   allowedReviewers: ["kungfu-origin"],
   minimumApprovals: 1,
   requiredChecks: ["check"],
@@ -26,7 +26,7 @@ const policy = {
   expiresAt: "2026-09-07T00:00:00.000Z",
 };
 
-test("Train-first requests exercise conformance plus alpha and stable routes", () => {
+test("Exact-candidate requests exercise conformance plus alpha and stable routes", () => {
   for (const channel of ["conformance", "alpha", "stable"]) {
     const request = createUniversalSelfDogfoodRequest({
       candidateSha: sha("1"),
@@ -35,8 +35,8 @@ test("Train-first requests exercise conformance plus alpha and stable routes", (
       channel,
       policy,
     });
-    assert.equal(request.mode, "train");
-    assert.equal(request.candidate.expectedSha, sha("1"));
+    assert.equal(request.mode, undefined);
+    assert.equal(request.candidate, undefined);
     assert.equal(request.consumer.sourceSha, sha("2"));
     assert.equal(
       request.capability.id,
@@ -56,7 +56,7 @@ test("primary and recovery results must be byte-equivalent candidate execution",
     requestRoot: root("1"),
     runtime: { repository: "kungfu-systems/buildchain", sha: sha("1") },
     capabilityRoot: root("2"),
-    enginePath: "scripts/universal-workflow-engine.mjs",
+    enginePath: "packages/core/workflow/engine/execution.js",
     output: {
       dryRun: true,
       route: { decision: "Fresh", channel: "alpha" },

@@ -10,7 +10,7 @@ import { test } from "node:test";
 import {
   resolveRendererPath,
   runCandidateBodyPrefixRenderer,
-} from "../scripts/run-candidate-body-prefix-renderer.mjs";
+} from "../packages/core/governance/candidate/body-renderer.js";
 
 function fixture(rendererSource) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-prefix-"));
@@ -67,11 +67,10 @@ test("exact-source renderer emits a multiline prefix without credential environm
     fs.writeFileSync(process.env.BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX_OUTPUT,
       "<!-- consumer-release\\n{\\\"safe\\\":" + safe + "}\\n-->");
   `);
-  const prefix = runCandidateBodyPrefixRenderer(options(row));
+  const prefix = runCandidateBodyPrefixRenderer({ ...options(row), environment: process.env });
   assert.match(prefix, /"safe":true/u);
-  const githubOutput = fs.readFileSync(row.githubOutput, "utf8");
-  assert.match(githubOutput, /^pull-request-body-prefix<<buildchain_/u);
-  assert.match(githubOutput, /<!-- consumer-release/u);
+  assert.match(prefix, /<!-- consumer-release/u);
+  assert.equal(fs.existsSync(row.githubOutput), false);
 });
 
 test("renderer path and exact checkout identity fail closed", () => {
@@ -94,6 +93,7 @@ test("renderer path and exact checkout identity fail closed", () => {
   assert.throws(
     () =>
       runCandidateBodyPrefixRenderer({
+        environment: process.env,
         ...options(row),
         selectedSha: "f".repeat(40),
       }),
@@ -104,7 +104,7 @@ test("renderer path and exact checkout identity fail closed", () => {
 test("renderer failure and managed-marker injection never produce an output", () => {
   const failed = fixture(`throw new Error("synthetic renderer failure");`);
   assert.throws(
-    () => runCandidateBodyPrefixRenderer(options(failed)),
+    () => runCandidateBodyPrefixRenderer({ ...options(failed), environment: process.env }),
     /synthetic renderer failure/u,
   );
   assert.equal(fs.existsSync(failed.githubOutput), false);
@@ -115,7 +115,7 @@ test("renderer failure and managed-marker injection never produce an output", ()
       "<!-- buildchain-dev-alpha-candidate-state\\n{}\\n-->");
   `);
   assert.throws(
-    () => runCandidateBodyPrefixRenderer(options(injected)),
+    () => runCandidateBodyPrefixRenderer({ ...options(injected), environment: process.env }),
     /managed candidate state marker/u,
   );
   assert.equal(fs.existsSync(injected.githubOutput), false);

@@ -1,0 +1,42 @@
+name: qualify-adopter
+description: Execute current failure, retry, exact readback and independent
+  driver verification.
+inputs:
+  request-json:
+    description: Current adopter qualification request.
+    required: true
+  workflow-sha:
+    description: Exact defining runtime commit.
+    required: true
+  consumer-sha:
+    description: Exact admitted consumer commit.
+    required: true
+  platform:
+    description: Actual runner platform.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Check out admitted consumer
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ fromJSON(inputs.request-json).consumer-repository ||
+          github.repository }}
+        ref: ${{ inputs.consumer-sha }}
+        path: .buildchain/consumer
+        persist-credentials: false
+    - name: Exercise public delivery and readback
+      uses: ./.buildchain/runtime/actions/adoption/adopter/exercise-platform
+      with:
+        request-json: ${{ inputs.request-json }}
+        workflow-sha: ${{ inputs.workflow-sha }}
+        consumer-sha: ${{ inputs.consumer-sha }}
+        platform: ${{ inputs.platform }}
+    - name: Preserve exact platform evidence
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: v4-adopter-delivery-${{ fromJSON(inputs.request-json).consumer }}-${{
+          inputs.platform }}-${{ github.sha }}
+        path: .buildchain/adopter-delivery/**/*.json
+        include-hidden-files: true
+        if-no-files-found: error

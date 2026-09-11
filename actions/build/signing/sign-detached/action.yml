@@ -1,0 +1,20 @@
+name: sign-detached
+description:
+  Admit sealed signing requests, execute bounded providers and qualify
+  immutable result evidence.
+inputs:
+  request-json:
+    description: Explicit request-json.
+    required: true
+  item-json:
+    description: Explicit item-json.
+    required: true
+  private-key-base64:
+    description: Explicit private-key-base64.
+    required: true
+  key-id:
+    description: Explicit key-id.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

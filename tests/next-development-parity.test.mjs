@@ -1,9 +1,10 @@
+import { execFileSync } from "node:child_process";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { nextDevelopmentRoot } from "../packages/core/next-development-transition.js";
+import { nextDevelopmentRoot } from "../packages/core/release/next-development-transition.js";
 import { checkPublicDogfoodContract } from "../scripts/check-public-dogfood-contract.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "..");
@@ -14,7 +15,7 @@ const matrix = JSON.parse(
   ),
 );
 
-test("rooted v4 next-development matrix maps every declared invariant", () => {
+test("immutable next-development audit matrix retains its rooted historical evidence", () => {
   const body = structuredClone(matrix);
   delete body.matrixRoot;
   assert.equal(matrix.matrixRoot, nextDevelopmentRoot(body));
@@ -42,7 +43,7 @@ test("rooted v4 next-development matrix maps every declared invariant", () => {
         ...invariant.implementationEvidence,
         ...invariant.verificationEvidence,
       ]) {
-        assert.ok(fs.existsSync(path.join(repositoryRoot, relative)), relative);
+        assert.doesNotThrow(() => execFileSync("git", ["cat-file", "-e", `1bb6333b97ad94e94a81178e956a703dff2b5f84:${relative}`], {cwd: repositoryRoot, stdio: "pipe"}), relative);
       }
     }
   }
@@ -55,7 +56,7 @@ test("public self-dogfood remains the exact thin reusable consumer path", () => 
     result.caller,
     ".github/workflows/self-build-public-consumer-dogfood.yml",
   );
-  assert.equal(result.validationRef, "v4-alpha");
+  assert.equal(result.validationRef, "v4");
   for (const workflow of [
     ".github/workflows/self-build-public-consumer-dogfood.yml",
     ".github/workflows/self-build-alpha-dogfood.yml",

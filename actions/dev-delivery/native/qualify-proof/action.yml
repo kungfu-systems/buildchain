@@ -1,0 +1,28 @@
+name: Qualify transferred native evidence against live provider state
+description: Qualify transferred native evidence against live provider state.
+inputs:
+  runtime-sha:
+    description: Admitted runtime-sha.
+    required: true
+  source-proof-root:
+    description: Admitted source-proof-root.
+    required: true
+  request-json:
+    description: Admitted request-json.
+    required: true
+  branch:
+    description: Admitted branch.
+    required: true
+  token:
+    description: Admitted token.
+    required: true
+outputs:
+  native-proof-root:
+    description: Verified native-proof-root.
+  decision-root:
+    description: Verified decision-root.
+  qualification-receipt-root:
+    description: Verified qualification-receipt-root.
+runs:
+  using: node24
+  main: dist/index.js

@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-07-14
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -80,7 +80,7 @@ Reusable workflows expose these outputs:
   `controller-receipt-digest`, and `controller-receipt-status`.
 
 Final aggregation uses `always()`. A required missing stage, required missing
-evidence, invalid digest, source/runtime mismatch, or missing receipt cannot be
+evidence, invalid digest, source mismatch, or missing receipt cannot be
 reported as qualifying green. `aggregateControllerReceipts()` reports an
 explicit `receipt-missing` status when a plan has no receipt.
 

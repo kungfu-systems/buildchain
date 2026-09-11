@@ -1,0 +1,29 @@
+name: reconcile-adopters
+description: Require exactly one consistent report for every declared platform.
+inputs:
+  request-json:
+    description: Current adopter qualification request.
+    required: true
+  workflow-sha:
+    description: Exact defining runtime commit.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Download current run platform reports
+      uses: actions/download-artifact@v7.0.0
+      with:
+        pattern: v4-adopter-delivery-${{ fromJSON(inputs.request-json).consumer }}-*-${{
+          github.sha }}
+        path: .buildchain/platform-reports
+    - name: Reconcile exact three-platform reports
+      uses: ./.buildchain/runtime/actions/adoption/adopter/aggregate
+      with:
+        request-json: ${{ inputs.request-json }}
+    - name: Preserve rooted qualification
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: v4-adopter-delivery-qualification-${{
+          fromJSON(inputs.request-json).consumer }}-${{ github.sha }}
+        path: .buildchain/adopter-delivery-qualification.json
+        if-no-files-found: error

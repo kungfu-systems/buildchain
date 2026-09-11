@@ -1,0 +1,127 @@
+name: gate-profile-aggregate
+description: Execute the gate-profile aggregate capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  runtime-sha:
+    description: runtime sha contract input.
+    required: true
+  plan-artifact:
+    description: plan artifact contract input.
+    required: true
+  controller-plan-artifact:
+    description: controller plan artifact contract input.
+    required: true
+  source-sha:
+    description: source sha contract input.
+    required: true
+  plan-result:
+    description: plan result contract input.
+    required: true
+  execution-result:
+    description: execution result contract input.
+    required: true
+outputs:
+  gate-aggregate-artifact:
+    description: gate-aggregate-artifact node result.
+    value: ${{ fromJSON(inputs.request-json).artifact-name }}-aggregate-${{
+      inputs.source-sha }}
+  gate-aggregate-json:
+    description: gate-aggregate-json node result.
+    value: ${{ steps.aggregate.outputs.gate-aggregate-json }}
+  gate-aggregate-digest:
+    description: gate-aggregate-digest node result.
+    value: ${{ steps.aggregate.outputs.gate-aggregate-digest }}
+  gate-aggregate-status:
+    description: gate-aggregate-status node result.
+    value: ${{ steps.aggregate.outputs.gate-aggregate-status }}
+  controller-receipt-artifact:
+    description: controller-receipt-artifact node result.
+    value: ${{ fromJSON(inputs.request-json).artifact-name }}-controller-receipt-${{
+      inputs.source-sha }}
+  controller-receipt-json:
+    description: controller-receipt-json node result.
+    value: ${{ steps.controller-receipt.outputs.controller-receipt-json }}
+  controller-receipt-digest:
+    description: controller-receipt-digest node result.
+    value: ${{ steps.controller-receipt.outputs.controller-receipt-digest }}
+  controller-receipt-status:
+    description: controller-receipt-status node result.
+    value: ${{ steps.controller-receipt.outputs.controller-receipt-status }}
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v6.4.0
+      with:
+        node-version: ${{ fromJSON(inputs.request-json).node-version }}
+    - name: Download locked Gate plan
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name: ${{ inputs.plan-artifact }}
+        path: .buildchain/gates/plan
+    - name: Download Shifu profile envelope controller plan
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name: ${{ inputs.controller-plan-artifact }}
+        path: .buildchain/controller
+    - name: Download Shifu Gate receipts
+      continue-on-error: true
+      uses: actions/download-artifact@v7.0.0
+      with:
+        pattern: ${{ fromJSON(inputs.request-json).artifact-name }}-receipt-*-${{
+          inputs.source-sha }}
+        path: .buildchain/gates/downloaded-executions
+        merge-multiple: false
+    - name: Aggregate Shifu Gate receipts
+      id: aggregate
+      continue-on-error: true
+      uses: ./.buildchain/runtime/actions/build/gate/qualify-profile
+      with:
+        source-sha: ${{ inputs.source-sha }}
+    - name: Upload Shifu Gate aggregate
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ fromJSON(inputs.request-json).artifact-name }}-aggregate-${{
+          inputs.source-sha }}
+        path: .buildchain/gates/gate-aggregate.json
+        if-no-files-found: error
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
+        overwrite: true
+    - name: Create Shifu profile envelope controller receipt
+      id: controller-receipt
+      if: ${{ always() }}
+      uses: ./.buildchain/runtime/actions/observability/controller/receipt
+      with:
+        plan-path: .buildchain/controller/plan.json
+        stages-json: '[{"id":"plan","status":"${{ inputs.plan-result
+          }}"},{"id":"execute","status":"${{ inputs.execution-result
+          }}"},{"id":"aggregate","status":"${{ steps.aggregate.outcome }}"}]'
+        evidence-json: ${{ steps.aggregate.outputs.gate-aggregate-digest != '' &&
+          format('[{{"kind":"shifu-gate-aggregate","digest":"{0}"}}]',
+          steps.aggregate.outputs.gate-aggregate-digest) || '[]' }}
+        reason-code: ${{ steps.aggregate.outcome == 'success' && '' ||
+          'gate-aggregate-incomplete' }}
+        reason-summary: Shifu Gate aggregate did not qualify
+        artifact: ${{ fromJSON(inputs.request-json).artifact-name
+          }}-controller-receipt-${{ inputs.source-sha }}
+        receipt-path: .buildchain/controller/receipt.json
+    - name: Upload Shifu profile envelope controller receipt
+      if: ${{ always() && steps.controller-receipt.outcome == 'success' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ fromJSON(inputs.request-json).artifact-name }}-controller-receipt-${{
+          inputs.source-sha }}
+        path: .buildchain/controller/receipt.json
+        if-no-files-found: error
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
+        overwrite: true
+    - name: Enforce aggregate qualification
+      if: ${{ steps.aggregate.outcome != 'success' ||
+        steps.controller-receipt.outputs.controller-receipt-qualifying != 'true'
+        }}
+      uses: ./.buildchain/runtime/actions/workflow/admission/reject
+      with:
+        reason: Enforce aggregate qualification failed

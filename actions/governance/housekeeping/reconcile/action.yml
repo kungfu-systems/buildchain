@@ -1,0 +1,45 @@
+name: Reconcile exact housekeeping scope
+description: Inventory or revalidate a bounded plan and preserve provider decisions in rooted receipts.
+inputs:
+  request-json:
+    description: Typed housekeeping request.
+    required: true
+  repository:
+    description: Admitted repository scope.
+    required: true
+  scope:
+    description: plan, branches or pull-requests.
+    required: true
+  token:
+    description: Scoped provider credential.
+    required: true
+outputs:
+  plan-path:
+    description: plan path
+  report-path:
+    description: report path
+  report-receipt-path:
+    description: report receipt path
+  plan-root:
+    description: plan root
+  report-receipt-root:
+    description: report receipt root
+  action-count:
+    description: action count
+  branch-action-count:
+    description: branch action count
+  pull-request-action-count:
+    description: pull request action count
+  outcome:
+    description: outcome
+  receipt-path:
+    description: receipt path
+  receipt-root:
+    description: receipt root
+  outcome-count:
+    description: outcome count
+  selected-action-count:
+    description: selected action count
+runs:
+  using: node24
+  main: dist/index.js

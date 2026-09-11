@@ -1,0 +1,9 @@
+name: Qualify npm publication preview
+description: Verify the source package and exercise npm packing and publication without publishing.
+inputs:
+  run-check:
+    description: Run the repository check before previewing publication.
+    default: "false"
+runs:
+  using: node24
+  main: dist/index.js

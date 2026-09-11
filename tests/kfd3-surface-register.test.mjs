@@ -29,8 +29,8 @@ import {
   createBuildchainLayoutDiscovery,
   migrateBuildchainLayout,
 } from "@kungfu-tech/buildchain";
-import { createBuildchainKfdSurfaceRegistry } from "../packages/core/buildchain-kfd-claims.js";
-import { normalizeKfd3DistributionDeclaration } from "../packages/core/kfd3-surface-register.js";
+import { createBuildchainKfdSurfaceRegistry } from "../packages/core/adoption/buildchain-kfd-claims.js";
+import { normalizeKfd3DistributionDeclaration } from "../packages/core/adoption/kfd3-surface-register.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");

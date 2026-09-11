@@ -1,0 +1,40 @@
+name: web-controller-plan
+description: Execute the web controller-plan capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed Web workflow request.
+    required: true
+  runtime-json:
+    description: Admitted runtime coordinates.
+    required: true
+  intent-json:
+    description: Verified production release intent.
+    required: true
+outputs:
+  controller-plan-artifact:
+    description: controller-plan-artifact node result.
+    value: buildchain-web-surface-controller-plan-${{
+      fromJSON(inputs.intent-json).production-source-sha }}
+  controller-plan-json:
+    description: controller-plan-json node result.
+    value: ${{ steps.controller-plan.outputs.controller-plan-json }}
+  controller-plan-digest:
+    description: controller-plan-digest node result.
+    value: ${{ steps.controller-plan.outputs.controller-plan-digest }}
+runs:
+  using: composite
+  steps:
+    - name: Initialize Web controller
+      id: controller-plan
+      uses: ./.buildchain/runtime/actions/web/controller/initialize
+      with:
+        request-json: ${{ inputs.request-json }}
+        runtime-json: ${{ inputs.runtime-json }}
+        intent-json: ${{ inputs.intent-json }}
+    - name: Upload web-surface controller plan
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-web-surface-controller-plan-${{
+          fromJSON(inputs.intent-json).production-source-sha }}
+        path: .buildchain/controller/plan.json
+        if-no-files-found: error

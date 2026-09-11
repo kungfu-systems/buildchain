@@ -1,0 +1,119 @@
+name: web-production-apply
+description: Execute the web production-apply capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  needs-runtime-outputs-runtime-sha:
+    description: Caller needs.runtime.outputs.runtime-sha value.
+    required: true
+  needs-publication-authority-outputs-capability-json:
+    description: Caller needs.publication-authority.outputs.capability-json value.
+    required: true
+  needs-external-publication-authority-outputs-capability-json:
+    description: Caller needs.external-publication-authority.outputs.capability-json value.
+    required: true
+  needs-publication-authority-outputs-candidate-json:
+    description: Caller needs.publication-authority.outputs.candidate-json value.
+    required: true
+  needs-release-intent-outputs-production-source-sha:
+    description: Caller needs.release-intent.outputs.production-source-sha value.
+    required: true
+  needs-runtime-outputs-rollback-ref:
+    description: Caller needs.runtime.outputs.rollback-ref value.
+    required: true
+  needs-release-intent-outputs-production-release-pr:
+    description: Caller needs.release-intent.outputs.production-release-pr value.
+    required: true
+  needs-release-intent-outputs-production-release-source:
+    description: Caller needs.release-intent.outputs.production-release-source value.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+outputs:
+  production-apply-result-json:
+    description: production-apply-result-json node result.
+    value: ${{ steps.apply.outputs.web-surface-apply-result-json }}
+runs:
+  using: composite
+  steps:
+    - name: Admit source checkout
+      id: source-boundary
+      if: ${{ always() }}
+      uses: ./.buildchain/runtime/actions/build/source/admit
+      with:
+        source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
+    - name: Download web-surface plan
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name: buildchain-web-surface-plans
+        path: .buildchain/downloaded-plans
+    - name: Verify sealed capability before artifact download
+      uses: ./.buildchain/runtime/actions/web/publication/verify-capability
+      with:
+        capability-json: ${{
+          fromJSON(inputs.needs-publication-authority-outputs-capability-json)
+          ||
+          fromJSON(inputs.needs-external-publication-authority-outputs-capability-json)
+          }}
+        candidate-json: ${{
+          fromJSON(inputs.needs-publication-authority-outputs-candidate-json) }}
+        source-sha: ${{
+          fromJSON(inputs.needs-release-intent-outputs-production-source-sha) }}
+        runtime-sha: ${{ fromJSON(inputs.needs-runtime-outputs-runtime-sha) }}
+        environment: ${{ fromJSON(inputs.request-json).production-environment }}
+        role-arn: ${{ fromJSON(inputs.request-json).production-aws-role-arn }}
+    - name: Download web-surface artifact
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name: buildchain-web-surface-artifact
+        path: ${{ fromJSON(inputs.request-json).working-directory }}/${{
+          fromJSON(inputs.request-json).artifact-path }}
+    - name: Configure production AWS credentials
+      uses: ./.buildchain/runtime/actions/providers/aws/configure
+      with:
+        role: ${{ fromJSON(inputs.request-json).production-aws-role-arn }}
+        region: ${{ fromJSON(inputs.request-json).aws-region }}
+        session-name: buildchain-production-${{ github.run_id }}
+    - name: Apply and verify channel transaction
+      id: apply
+      uses: ./.buildchain/runtime/actions/web/deployment/apply
+      with:
+        request-json: ${{ inputs.request-json }}
+        channel: production
+    - name: Upload production apply diagnostics
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-web-surface-production-diagnostics
+        path: |
+          .buildchain/web-surface-production-preflight.json
+          .buildchain/web-surface-production-apply.json
+          .buildchain/web-surface-production-health.json
+        include-hidden-files: true
+        if-no-files-found: warn
+    - name: Report observed deployment
+      if: ${{ always() }}
+      uses: ./.buildchain/runtime/actions/web/deployment/report
+      with:
+        request-json: ${{ inputs.request-json }}
+        channel: production
+        job-status: ${{ job.status == 'cancelled' && 'cancelled' || github.action_status
+          == 'failure' && 'failure' || 'success' }}
+        runtime-sha: ${{ fromJSON(inputs.needs-runtime-outputs-runtime-sha) }}
+        rollback-pointer: ${{ fromJSON(inputs.needs-runtime-outputs-rollback-ref) }}
+        release-pr: ${{
+          fromJSON(inputs.needs-release-intent-outputs-production-release-pr) }}
+        release-source: ${{
+          fromJSON(inputs.needs-release-intent-outputs-production-release-source)
+          }}
+        token: ${{ github.token }}
+    - name: Upload production release passport
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-web-surface-production-release-passport
+        path: .buildchain/web-surface-production-release-passport.json
+        include-hidden-files: true
+        if-no-files-found: error

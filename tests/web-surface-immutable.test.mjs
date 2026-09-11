@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import test from "node:test";
-import { verifyImmutableS3Object } from "../scripts/web-surface-immutable-object.mjs";
+import { verifyImmutableS3Object } from "../packages/core/web/commands/web-surface-immutable-object.mjs";
 
 function sha256(body) {
   return crypto.createHash("sha256").update(body).digest("hex");

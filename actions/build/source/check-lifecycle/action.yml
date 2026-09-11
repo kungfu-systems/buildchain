@@ -1,0 +1,36 @@
+name: check-lifecycle
+description: Apply Paper admission and execute the declared consumer check lifecycle.
+inputs:
+  request-json:
+    description: request-json
+    required: true
+  runtime-ref:
+    description: Exact selected runtime coordinate.
+    required: true
+outputs:
+  lifecycle-stage:
+    description: lifecycle-stage result.
+    value: ${{ steps.qualification.outputs.lifecycle-stage }}
+  validate-outcome:
+    description: validate-outcome result.
+    value: ${{ steps.qualification.outputs.validate-outcome }}
+  install-outcome:
+    description: install-outcome result.
+    value: ${{ steps.qualification.outputs.install-outcome }}
+  selected-check-outcome:
+    description: selected-check-outcome result.
+    value: ${{ steps.qualification.outputs.selected-check-outcome }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v6.4.0
+      with:
+        node-version: ${{ fromJSON(inputs.request-json).node-version }}
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 11.7.0
+    - id: qualification
+      uses: ./.buildchain/runtime/actions/build/source/run-check
+      with:
+        request-json: ${{ inputs.request-json }}
+        runtime-ref: ${{ inputs.runtime-ref }}

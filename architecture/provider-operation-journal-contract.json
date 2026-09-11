@@ -16,11 +16,11 @@
     "rustContract": "crates/buildchain-domain-contracts/src/provider_operation_journal.rs",
     "rustFold": "crates/buildchain-domain-contracts/src/provider_operation_journal/fold.rs",
     "rustReadback": "crates/buildchain-domain-contracts/src/provider_readback_idempotency.rs",
-    "typescript": "packages/core/provider-operation-journal.js",
-    "typescriptReadback": "packages/core/provider-readback-idempotency.js",
-    "wasmRuntime": "packages/core/domain-wasm.js",
-    "wasmArtifact": "packages/core/buildchain-domain.wasm",
-    "artifactMetadata": "packages/core/domain-wasm-artifact.js"
+    "typescript": "packages/core/release/provider-operation-journal.js",
+    "typescriptReadback": "packages/core/release/provider-readback-idempotency.js",
+    "wasmRuntime": "packages/core/runtime/domain-wasm.js",
+    "wasmArtifact": "packages/core/runtime/buildchain-domain.wasm",
+    "artifactMetadata": "packages/core/runtime/domain-wasm-artifact.js"
   },
   "activationDomain": {
     "architecture": "architecture/release-activation-shadow-domain.json",

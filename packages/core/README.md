@@ -1,170 +1,47 @@
-# Buildchain Core Package
+---
+status: active
+period: ongoing
+theme: buildchain-layered-architecture
+doc_type: implementation-guide
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: B
+review_state: unreviewed
+last_reviewed: 2026-09-10
+ai_provenance:
+  model_family: GPT-6
+  product: Codex
+  generated_at: 2026-09-10
+  visible_context: Buildchain 4.1 source, architecture registries and local validation.
+  invisible_context_boundary: No unpublished release or external consumer qualification is claimed.
+---
 
-Shared code lives here when workflow and action migration shows repeated logic
-that is worth centralizing.
+# Buildchain Core
 
-Current shared surfaces:
+Core contains JavaScript business logic and provider IO, grouped by the closed
+capabilities in [`architecture/code-layout.json`](../../architecture/code-layout.json).
+See [Code organization](../../docs/code-organization.md) for the complete layout.
 
-- `buildchain.toml` loading and normalization;
-- version-state file discovery and update helpers;
-- lifecycle stage normalization and execution;
-- config validation for release-package and `web-surface` projects.
-- toolkit observability logging through `@kungfu-tech/buildchain/logging`;
-- toolkit diagnostics and native profile collection through
-  `@kungfu-tech/buildchain/diagnostics`;
-- source/version/module/product build facts through
-  `@kungfu-tech/buildchain/build-facts`;
-- release passport creation and verification through
-  `@kungfu-tech/buildchain/release-passport`.
-- anchored/manual derived witness preflight and exact-tree evidence through
-  `@kungfu-tech/buildchain/anchored-version-material`.
-- sealed exact-root and KFD assessment inputs for KFX admission through
-  `@kungfu-tech/buildchain/artifact-verification-envelope`.
-- managed KFD / Release Passport badge bundle facts and README marker blocks
-  through `@kungfu-tech/buildchain/badges`.
-- publication artifact manifests, source bundles, and publication artifact
-  passports through `@kungfu-tech/buildchain/publication-artifact`.
-- two-clean-build byte reproducibility receipts through
-  `@kungfu-tech/buildchain/publication-reproducibility`.
-- build-once publication bundle manifests and exact-byte verification through
-  `@kungfu-tech/buildchain/publication-sealed-bundle`.
-- governed Paper work-branch start/submit, fleet audit/update, scaffold,
-  preflight, status, npm bootstrap, build, Alpha, and resume plans through
-  `@kungfu-tech/buildchain/paper`.
+Each capability groups its business transactions, action adapters and supporting
+modules by responsibility. Action adapters invoke named transaction APIs; they do
+not dispatch old CLI steps. Command-line handlers live in `cli/`, and executable
+capability tools in `commands/` delegate to the same core modules. The root `index.js` is the public API aggregation;
+implementation modules import their actual owner directly.
 
-## Toolkit Imports
+Core cannot depend on `actions`, `.github/workflows`, `bin`, or repository
+`scripts`. Rust-owned domain decisions are called through the existing WASM/host
+boundary and have no JavaScript fallback.
 
-The npm package exports ESM APIs. JavaScript build scripts should import these
-APIs directly instead of spawning the `buildchain` CLI:
+Use the generated [Node API Reference](../../docs/node-api-reference.md) for
+current package subpaths, symbols and signatures. For example:
 
 ```js
 import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
 
-const logger = createBuildchainLogger({ source: "user", component: "native" });
-await logger.span("native.package", { phase: "package" }, packageArtifacts);
+const logger = createBuildchainLogger({ source: "user", component: "build" });
+await logger.span("package", { phase: "package" }, packageArtifacts);
 ```
 
-The CLI remains the right surface for GitHub Actions steps, shell scripts, and
-non-JavaScript build tools.
-
-Diagnostics consumers should import the published subpath and compare stable
-contracts through the exported constants instead of hardcoding JSON contract
-names:
-
-```js
-import {
-  BUILDCHAIN_DIAGNOSTICS_CONTRACT,
-  BUILDCHAIN_DIAGNOSTICS_SUMMARY_CONTRACT,
-  collectRunnerDiagnostics,
-  summarizeDiagnosticsArtifacts,
-} from "@kungfu-tech/buildchain/diagnostics";
-```
-
-CommonJS scripts can use dynamic imports for the same package surfaces:
-
-```js
-const { createBuildchainLogger } =
-  await import("@kungfu-tech/buildchain/logging");
-const { collectRunnerDiagnostics } =
-  await import("@kungfu-tech/buildchain/diagnostics");
-```
-
-Build facts consumers can collect source-bound module/product facts before
-publishing and pass those facts into the release passport:
-
-```js
-import {
-  collectModuleBuildFacts,
-  writeBuildFacts,
-} from "@kungfu-tech/buildchain/build-facts";
-
-const fact = collectModuleBuildFacts({ moduleId: "native-core" });
-writeBuildFacts({ fact, output: ".buildchain/facts/native-core.json" });
-```
-
-KFX producers can seal one passing artifact verification with exact roots,
-identity, lifecycle, revocation, and an existing ADR-0052 assessment. Consumers
-verify or project the same envelope instead of reconstructing bindings:
-
-```js
-import {
-  projectArtifactVerificationEnvelopeToKfx,
-  verifyArtifactVerificationEnvelope,
-} from "@kungfu-tech/buildchain/artifact-verification-envelope";
-```
-
-Publication repositories can produce site-consumable paper/report facts without
-becoming web-surface repositories. When `[publication.archive]` is configured,
-the same API also maintains the append-only publication registry used by site
-repositories for latest and historical version pages. The preferred
-`latex-docker` toolchain records the pinned build-images LaTeX builder digest in
-the publication artifact passport:
-
-```js
-import { writePublicationArtifact } from "@kungfu-tech/buildchain/publication-artifact";
-
-writePublicationArtifact({ sourceSha: process.env.GITHUB_SHA });
-```
-
-Before publication admission, prove the exact PDF, source bundle, manifests,
-and npm tarball twice from the same Git commit:
-
-```js
-import { verifyPublicationReproducibility } from "@kungfu-tech/buildchain/publication-reproducibility";
-
-const receipt = verifyPublicationReproducibility({
-  sourceSha: process.env.GITHUB_SHA,
-  promote: true,
-});
-if (!receipt.qualifying) throw new Error("publication is not reproducible");
-```
-
-Bind the promoted bytes into the durable build-once publication envelope:
-
-```js
-import {
-  createPublicationSealedBundle,
-  verifyPublicationSealedBundle,
-} from "@kungfu-tech/buildchain/publication-sealed-bundle";
-```
-
-The sealed manifest names the exact npm tarball and release assets. Promotion
-persists those binary files before registry publication and verifies them again
-when a fresh runner resumes.
-
-Paper automation can use the same typed contracts as the CLI:
-
-```js
-import {
-  collectPaperPreflight,
-  collectPaperStatus,
-  planPaperMigration,
-  planPaperScaffold,
-  writePaperMigration,
-} from "@kungfu-tech/buildchain/paper";
-```
-
-Planning and observation are side-effect free. `writePaperScaffold()` and
-`writePaperMigration()` perform the bounded local writes, while external
-mutations remain explicit CLI operations guarded by `--execute`.
-
-Web-surface validation stays in core because both local scripts and GitHub
-Actions need the same fail-closed interpretation of project, channel, deploy,
-retention, and staging security declarations.
-
-README badge consumers should import the public badge subpath and treat
-Markdown as a projection of the returned facts:
-
-```js
-import {
-  collectBadgeBundleFacts,
-  renderBadgeBundleBlock,
-} from "@kungfu-tech/buildchain/badges";
-
-const facts = await collectBadgeBundleFacts({ cwd: process.cwd() });
-const markdown = renderBadgeBundleBlock(facts);
-```
-
-The older `@kungfu-tech/buildchain/readme-badges` subpath remains available for
-callers that need the full README badge surface instead of the default
-KFD-1 / KFD-2 / KFD-3 / Release Passport bundle.
+The CLI is the adapter for shells and non-JavaScript tools. Core modules can be
+used directly by JavaScript callers. Both paths share the same implementations.

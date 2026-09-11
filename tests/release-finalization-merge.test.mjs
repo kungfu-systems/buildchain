@@ -6,13 +6,13 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-const script = fileURLToPath(new URL("../scripts/next-development-review.mjs", import.meta.url));
+const script = fileURLToPath(new URL("../packages/core/release/commands/next-development-review.mjs", import.meta.url));
 const repository = "kungfu-systems/buildchain", headSha = "a".repeat(40), baseSha = "b".repeat(40);
 const branch = `chore/v4-product-pr/release-v4-v4.0/cccccccccccc-${baseSha.slice(0, 12)}-${headSha.slice(0, 12)}`;
 
 function enqueue(scenario) {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-finalization-merge-"));
-  const plan = { repository, runId: 123, number: 42, headSha, baseSha, branch, reviewId: 91, kind: "stable-finalization" };
+  const plan = { schema: "buildchain.next-development-review/v1", repository, runId: 123, number: 42, headSha, baseSha, branch, reviewId: 91, kind: "stable-finalization" };
   const pull = { number: 42, node_id: "PR_exact", state: "open", draft: false, user: { login: "dongkeren" },
     head: { sha: headSha, ref: branch, repo: { full_name: repository } },
     base: { sha: baseSha, ref: "release/v4/v4.0", repo: { full_name: repository } } };
@@ -29,7 +29,7 @@ function enqueue(scenario) {
     import { pathToFileURL } from 'node:url';
     const plan = ${JSON.stringify(plan)}, pull = ${JSON.stringify(pull)}, run = ${JSON.stringify(run)};
     const scenario = ${JSON.stringify(scenario)};
-    cp.execFileSync = (program, args) => {
+    const transportCall = (program, args) => {
       if (program !== 'gh') throw new Error('unexpected executable');
       if (args[0] === 'pr' && args[1] === 'merge') {
         fs.writeFileSync('merge-call.json', JSON.stringify(args));
@@ -37,7 +37,7 @@ function enqueue(scenario) {
         if (scenario === 'protected-rejection') throw new Error('protected branch requirements not satisfied');
         return '';
       }
-      const endpoint = args[1];
+      const endpoint = args.find(value => value.startsWith("repos/") || value === "graphql");
       if (endpoint === 'graphql') throw new Error('Pull request Pull request is in unstable status');
       if (endpoint.endsWith('/jobs?filter=latest')) return JSON.stringify([{jobs:[{name:'check',status:'completed',conclusion:'success'}]}]);
       if (endpoint.endsWith('/reviews')) return JSON.stringify([scenario === 'missing-review' ? [] : [{id:91,user:{login:'kungfu-origin'},commit_id:plan.headSha,state:'APPROVED'}]]);
@@ -46,6 +46,11 @@ function enqueue(scenario) {
       if (endpoint.includes('/git/ref/heads/')) return JSON.stringify({object:{sha:plan.baseSha}});
       if (endpoint.endsWith('/actions/runs/123')) return JSON.stringify(run);
       throw new Error('unexpected endpoint ' + endpoint);
+    };
+    cp.execFileSync = transportCall;
+    cp.spawnSync = (program, args) => {
+      try { return { status: 0, stdout: transportCall(program, args), stderr: "" }; }
+      catch (error) { return { status: 1, stdout: "", stderr: error.message }; }
     };
     syncBuiltinESMExports();
     process.argv = [process.execPath, ${JSON.stringify(script)}, 'enqueue'];

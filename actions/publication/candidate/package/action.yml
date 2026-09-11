@@ -1,0 +1,10 @@
+name: Package candidate product bytes
+description:
+  Pack immutable product bytes once and bind them to the admitted candidate
+  Passport.
+outputs:
+  artifact-name:
+    description: Sealed product artifact name
+runs:
+  using: node24
+  main: dist/index.js

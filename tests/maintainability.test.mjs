@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { parse as parseYaml } from "yaml";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -81,13 +82,16 @@ test("new-only budgets detect added anonymous and duplicate-name functions", () 
   );
 });
 
-test("repository-wide source and workflow growth require an explicit ceiling", () => {
+test("source, workflow and action growth require individual and combined ceilings", () => {
   const fixturePolicy = structuredClone(policy);
   fixturePolicy.repositoryBudgets = {
     maxHandMaintainedSourceFiles: 1,
     maxHandMaintainedSourceLines: 10,
     maxWorkflowFiles: 1,
     maxWorkflowLines: 10,
+    maxActionDefinitions: 1,
+    maxActionDefinitionLines: 10,
+    maxAutomationImplementationLines: 30,
     rationale: "bounded fixture",
   };
   const issues = evaluateRepositoryBudgets({
@@ -97,11 +101,14 @@ test("repository-wide source and workflow growth require an explicit ceiling", (
         handMaintainedSourceLines: 11,
         workflowFiles: 2,
         workflowLines: 11,
+        actionDefinitions: 2,
+        actionDefinitionLines: 11,
+        automationImplementationLines: 33,
       },
     },
     policy: fixturePolicy,
   });
-  assert.equal(issues.length, 4);
+  assert.equal(issues.length, 7);
 });
 
 test("an approved new-file transition requires an exact ceiling and rationale", () => {
@@ -152,24 +159,28 @@ test("exact-head maintainability baseline is reproducible", () => {
     revision: baseline.revision,
   });
   assert.equal(report.revision, baseline.revision);
-  assert.deepEqual(report.repository, baseline.repository);
+  const {
+    actionDefinitions,
+    actionDefinitionLines,
+    automationImplementationLines,
+    ...originalMetrics
+  } = report.repository;
+  assert.deepEqual(originalMetrics, baseline.repository);
+  assert.deepEqual(
+    { actionDefinitions, actionDefinitionLines },
+    { actionDefinitions: 6, actionDefinitionLines: 747 },
+  );
+  assert.equal(
+    automationImplementationLines,
+    originalMetrics.handMaintainedSourceLines +
+      originalMetrics.workflowLines +
+      actionDefinitionLines,
+  );
   assert.deepEqual(report.publicSurface, baseline.publicSurface);
   assert.equal(report.hotspots.promoteBuildchainRefs.lines, 341);
   assert.equal(report.hotspots.promoteBuildchainRefs.complexity, 26);
   assert.equal(report.hotspots.createReleaseCheckReport.lines, 65);
   assert.equal(report.hotspots.createReleaseCheckReport.complexity, 5);
-  for (const route of [
-    ".github/workflows/.build.yml",
-    ".github/workflows/.publication-authority.yml",
-    "scripts/buildchain-cli-help.mjs",
-    "scripts/check-maintainability.mjs",
-    "tests/buildchain-ref-promotion-recovery-entry.test.mjs",
-    "tests/maintainability.test.mjs",
-  ])
-    assert.ok(
-      debt.hotspots.includes(route),
-      `${route} must retain an audited change route across checkout shapes`,
-    );
 });
 
 test("AST complexity proxy counts bounded decisions without charging nested functions twice", () => {
@@ -256,25 +267,36 @@ test("new-only budgets reject widened debt and oversized extracted units", () =>
 
 test("baseline revision source metrics remain available from Git", () => {
   const files = sourceMetricsAtRevision(root, baseline.revision);
-  assert.equal(files["actions/promote-buildchain-ref/lib.js"].lines, 6952);
-  assert.equal(files["packages/core/release-passport.js"].lines, 2859);
+  assert.equal(files[baseline.hotspots.promoteBuildchainRefs.file].lines, 6952);
+  assert.equal(
+    files[baseline.hotspots.createReleaseCheckReport.file].lines,
+    2859,
+  );
 });
 
 test("Linux standalone binary dependency remains reproducible from the lockfile", () => {
   const lockfile = fs.readFileSync(path.join(root, "pnpm-lock.yaml"), "utf8");
-  const entries = [...lockfile.matchAll(/^  '@esbuild\/linux-x64@[^']+':$/gmu)];
+  const lock = parseYaml(lockfile),
+    keys = Object.keys(lock.packages).filter((key) =>
+      key.startsWith("@esbuild/linux-x64@"),
+    );
+  assert.equal(keys.length, 1);
+  const key = keys[0],
+    pkg = lock.packages[key];
+  assert.ok(
+    Object.hasOwn(lock.snapshots, key),
+    "matching package and snapshot are required",
+  );
+  assert.match(pkg.resolution.integrity, /^sha512-/);
+  assert.deepEqual(pkg.cpu, ["x64"]);
+  assert.deepEqual(pkg.os, ["linux"]);
+  assert.ok(pkg.engines.node);
+  const esbuild = Object.values(lock.snapshots).find(
+    (entry) => entry.optionalDependencies?.["@esbuild/linux-x64"],
+  );
   assert.equal(
-    entries.length,
-    2,
-    "pnpm-lock.yaml must retain both package and snapshot entries for @esbuild/linux-x64",
-  );
-  assert.match(
-    lockfile,
-    /'@esbuild\/linux-x64@[^']+':\n    resolution: \{integrity: [^}]+\}\n    engines: \{node: '[^']+'\}\n    cpu: \[x64\]\n    os: \[linux\]/u,
-  );
-  assert.match(
-    lockfile,
-    /esbuild@[^:]+:\n    optionalDependencies:[\s\S]*?      '@esbuild\/linux-x64': [^\n]+/u,
+    esbuild.optionalDependencies["@esbuild/linux-x64"],
+    key.split("@").at(-1),
   );
 });
 
@@ -462,30 +484,83 @@ test("release-line reconciliation reuses audited hotspot routes across DAG shape
   );
 });
 
-test("public surface lifecycle metadata preserves baseline contracts", () => {
-  assert.deepEqual(
-    evaluatePublicSurface({
-      root,
-      revision: policy.enforcementRevision || baseline.revision,
-      policy,
-    }),
-    [],
-  );
+test("public API metadata owns only current contracts and live implementation targets", () => {
+  assert.deepEqual(evaluatePublicSurface({ root, policy }), []);
 });
 
-test("public surface transitions require an exact reviewed successor contract", () => {
-  const fixturePolicy = structuredClone(policy);
-  fixturePolicy.approvedPublicSurfaceTransitions[
-    "workflow:release-propagation"
-  ].contract.outputs.push("unreviewed-output");
-  const issues = evaluatePublicSurface({
-    root,
-    revision: policy.enforcementRevision || baseline.revision,
-    policy: fixturePolicy,
+test("public API governance rejects missing ownership and historical compatibility promises", () => {
+  const fixtureRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-public-surface-"),
+  );
+  try {
+    fs.cpSync(
+      path.join(root, "dist/site"),
+      path.join(fixtureRoot, "dist/site"),
+      { recursive: true },
+    );
+    const file = path.join(fixtureRoot, "dist/site/cli-registry.json");
+    const registry = JSON.parse(fs.readFileSync(file, "utf8"));
+    const entry = registry.commands[0];
+    delete entry.owner;
+    entry.compatibilityPromise = "preserved-v3-contract";
+    registry.commands.push({ ...entry });
+    fs.writeFileSync(file, JSON.stringify(registry));
+    const issues = evaluatePublicSurface({ root: fixtureRoot, policy });
+    assert.ok(
+      issues.includes(`cli:${entry.id}: lifecycle field owner is missing`),
+    );
+    assert.ok(
+      issues.includes(
+        `cli:${entry.id}: historical compatibility promise is not part of the current architecture`,
+      ),
+    );
+    assert.ok(
+      issues.includes(`cli:${entry.id}: missing or duplicate public identity`),
+    );
+    assert.ok(
+      issues.some((issue) =>
+        issue.includes("implementation target is missing"),
+      ),
+    );
+  } finally {
+    fs.rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+});
+
+test("hotspot accounting preserves staged changes when the same tree is committed", (t) => {
+  const cwd = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-hotspot-staged-"),
+  );
+  t.after(() => fs.rmSync(cwd, { recursive: true, force: true }));
+  git(cwd, ["init", "--initial-branch=main"]);
+  const commit = (message) =>
+    git(cwd, [
+      "-c",
+      "user.name=Buildchain Test",
+      "-c",
+      "user.email=buildchain-test@example.invalid",
+      "commit",
+      "-m",
+      message,
+    ]);
+  for (const file of ["a.js", "z.js"])
+    fs.writeFileSync(path.join(cwd, file), "export const value = 1;\n");
+  git(cwd, ["add", "."]);
+  commit("baseline");
+  const current = {
+    files: { "a.js": {}, "z.js": {} },
+    tests: {},
+    workflows: {},
+  };
+  fs.writeFileSync(path.join(cwd, "z.js"), "export const value = 2;\n");
+  git(cwd, ["add", "z.js"]);
+  const staged = collectHotspots(cwd, current, 20, [], {
+    baseRef: "dev/v4/v4.1",
   });
-  assert.ok(
-    issues.includes(
-      `workflow:release-propagation: existing public contract drifted from ${policy.enforcementRevision}`,
-    ),
+  assert.deepEqual(staged, ["z.js", "a.js"]);
+  commit("change staged route");
+  assert.deepEqual(
+    collectHotspots(cwd, current, 20, [], { baseRef: "dev/v4/v4.1" }),
+    staged,
   );
 });

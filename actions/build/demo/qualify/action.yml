@@ -1,0 +1,71 @@
+name: demo-qualify
+description: Execute the demo qualify capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  workflow-sha:
+    description: Exact workflow-sha.
+    required: true
+  source-sha:
+    description: Exact source-sha.
+    required: true
+  capture-artifact-name:
+    description: Exact capture-artifact-name.
+    required: true
+  capture-artifact-digest:
+    description: Exact capture-artifact-digest.
+    required: true
+outputs:
+  evidence-artifact-name:
+    description: evidence-artifact-name node result.
+    value: ${{ steps.identity.outputs.name }}
+  evidence-artifact-digest:
+    description: evidence-artifact-digest node result.
+    value: ${{ steps.upload.outputs.artifact-digest }}
+  render-result:
+    description: render-result node result.
+    value: ${{ steps.identity.outputs.render-result }}
+runs:
+  using: composite
+  steps:
+    - name: Check out exact consumer source
+      uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      with:
+        ref: ${{ inputs.source-sha }}
+        path: source
+        persist-credentials: false
+    - name: Download exact capture collection
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+      with:
+        name: ${{ inputs.capture-artifact-name }}
+        path: capture-collection
+    - name: Resolve exact capture artifact coordinate
+      uses: ./.buildchain/runtime/actions/build/artifact/resolve
+      with:
+        name: ${{ inputs.capture-artifact-name }}
+        digest: ${{ inputs.capture-artifact-digest }}
+        source-sha: ${{ inputs.source-sha }}
+        output: capture-coordinate.json
+        token: ${{ github.token }}
+    - name: Qualify complete collection and render under declared policy
+      id: identity
+      uses: ./.buildchain/runtime/actions/build/demo/qualify-collection
+      with:
+        runtime-sha: ${{ inputs.workflow-sha }}
+        source-sha: ${{ inputs.source-sha }}
+        renderer-image: ${{ fromJSON(inputs.request-json).renderer-image }}
+        scenario-path: ${{ fromJSON(inputs.request-json).scenario-path }}
+        media-profile: ${{ fromJSON(inputs.request-json).media-profile }}
+        render-media: ${{ fromJSON(inputs.request-json).render-media }}
+        render-failure-advisory: ${{ fromJSON(inputs.request-json).render-failure-advisory }}
+    - name: Upload qualified evidence collection
+      id: upload
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      with:
+        name: ${{ steps.identity.outputs.name }}
+        path: qualified-collection
+        if-no-files-found: error
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
+        compression-level: 0
+        overwrite: false

@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   commitContainsReleaseState,
   createGithubProductAdapters,
-} from "../actions/release-candidate-promote/product-provider-github-adapters.js";
+} from "../packages/core/release/promote-candidate/product-provider-github-adapters.js";
 
 function octokit({ status = "diverged", trees = {} } = {}) {
   return {

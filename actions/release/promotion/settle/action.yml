@@ -1,0 +1,63 @@
+name: promote-settle
+description: Execute the promote settle capability within its caller job boundary.
+inputs:
+  needs-qualify-outputs-action:
+    description: Caller needs.qualify.outputs.action value.
+    required: true
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  needs-qualify-outputs-runtime-sha:
+    description: Caller needs.qualify.outputs.runtime-sha value.
+    required: true
+  needs-qualify-outputs-requested-sha:
+    description: Caller needs.qualify.outputs.requested-sha value.
+    required: true
+outputs:
+  controller-receipt-artifact:
+    description: controller-receipt-artifact node result.
+    value: buildchain-v4-release-settle-${{
+      fromJSON(inputs.needs-qualify-outputs-requested-sha) }}
+  controller-receipt-json:
+    description: controller-receipt-json node result.
+    value: ${{ steps.verify.outputs.receipt-json }}
+  controller-receipt-digest:
+    description: controller-receipt-digest node result.
+    value: ${{ steps.verify.outputs.receipt-root }}
+  controller-receipt-status:
+    description: controller-receipt-status node result.
+    value: ${{ steps.verify.outputs.status || (fromJSON(inputs.request-json).dry-run
+      && 'dry-run' || fromJSON(inputs.needs-qualify-outputs-action) == 'noop' &&
+      'noop' || 'blocked') }}
+runs:
+  using: composite
+  steps:
+    - name: Restore canonical APPLY evidence
+      if: ${{ fromJSON(inputs.needs-qualify-outputs-action) == 'promote' &&
+        !fromJSON(inputs.request-json).dry-run }}
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name: buildchain-v4-release-apply-${{
+          fromJSON(inputs.needs-qualify-outputs-requested-sha) }}
+        path: .buildchain/evidence
+    - name: Verify the single terminal receipt
+      id: verify
+      if: ${{ fromJSON(inputs.needs-qualify-outputs-action) == 'promote' &&
+        !fromJSON(inputs.request-json).dry-run }}
+      uses: ./.buildchain/runtime/actions/publication/settlement/verify
+      with:
+        candidate-sha: ${{ fromJSON(inputs.needs-qualify-outputs-requested-sha) }}
+        runtime-sha: ${{ fromJSON(inputs.needs-qualify-outputs-runtime-sha) }}
+    - name: Retain SETTLE projection
+      if: ${{ steps.verify.outcome == 'success' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-v4-release-settle-${{
+          fromJSON(inputs.needs-qualify-outputs-requested-sha) }}
+        path: |
+          .buildchain/evidence/release-tail/release-invocation.json
+          .buildchain/evidence/release-tail/release-transaction.json
+          .buildchain/evidence/release-tail/release-receipt.json
+          .buildchain/evidence/release-tail/delivery-summary.json
+          .buildchain/evidence/release-tail/buildchain-publication-settlement.json
+        if-no-files-found: error

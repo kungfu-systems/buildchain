@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createDevDeliveryQueue } from "../packages/core/dev-delivery-warrant.js";
+import { createDevDeliveryQueue } from "../packages/core/dev-delivery/dev-delivery-warrant.js";
 import {
   DELIVERY_WARRANT_READ_PROJECTION_CONTRACT,
   projectBaselineQueueToReadState,
   runDeliveryWarrantReadCandidate,
-} from "../packages/core/delivery-warrant-read-candidate.js";
-import { domainContentRoot } from "../packages/core/canonical-contracts.js";
-import { runDevDeliveryCommand } from "../scripts/dev-delivery-warrant.mjs";
+} from "../packages/core/dev-delivery/delivery-warrant-read-candidate.js";
+import { domainContentRoot } from "../packages/core/contracts/canonical-contracts.js";
+import { runDevDeliveryCommand } from "../packages/core/dev-delivery/warrant/service.js";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 const OBSERVED_AT = "2026-08-08T12:00:00.000Z";
@@ -190,8 +190,7 @@ test("caller switch defaults to v3 and affects observe only", async () => {
       branch: "dev/v4/v4.0",
       pullRequestNumber: 200,
       sourceHead: "e".repeat(40),
-      assignmentRoot: ROOT("1"),
-      initiativeRoot: ROOT("2"),
+      sourceRoot: ROOT("1"),
       sourceIdentityRoot: ROOT("3"),
       sourcePatchRoot: ROOT("4"),
       sourceProofRoot: ROOT("5"),

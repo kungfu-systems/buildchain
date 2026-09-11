@@ -1,3 +1,4 @@
+import { sealCandidateFixture } from "./helpers/promote-buildchain-ref-fixtures.mjs";
 // prettier-ignore
 const { GENERATED_COMMIT_SIGN_OFF, OTHER_SHA, PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT, SHA, alignMajorBootstrapReleaseImpact, alphaDistTagForPromotion, alreadyExists, assert, assertAllowedLocalChanges, assertChannelPromotionPr, assertExpectedPublicationVersion, assertPromotableRepository, assertPromotableTargetRef, assertProtectedChannel, assertProviderEnforcedChannelTransaction, collectGitHubReleaseEvidenceAssets, containedReleaseExecutionIdentity, createGitMock, createPublicationSealedBundle, createTreeEquivalentReleaseImpact, crypto, discoverVersionStateFiles, ensureManagedChannelBranchProtection, execFileSync, expectedHeadRefForTarget, explainReleaseLineDryRun, finalizationRequirements, formatReleaseLineDryRun, fs, generateReleaseEvidenceInputs, isAllowedReleaseLineRecoveryPath, latestAlphaForPatch, loadBuildchainConfig, makeTempWorkspace, materializeCommandShim, notFound, os, ownsMajorAlphaChannel, packageManifest, parseReleaseLineRef, parseTags, path, persistDurableReleaseTransaction, plannedPublicationExactTag, productionImpactJson, promoteBuildchainRefs, protectedChannel, publicationArtifactCandidateDigest, publishGitHubReleaseEvidence, releasePassportArtifactFiles, resolveProtectedStatusCheckContext, resolveReleaseImpactInput, resolveTagsForTarget, restoreDurableReleaseTransaction, root, run, runPublishTransaction, runVersionVerification, selectAlphaTag, selectReleaseTag, sha256Json, signedGeneratedCommitMessage, test, testReleaseCommitMatchesTransactionMaterial, transactionContainedInRelease, transitionReleaseTransaction, transientGitHubError, updateVersionStateContents, validatePromotionReleaseCandidate, validateRequiredPublishSourceLock, versionStateBranchName, versionVerificationAllowedPathsForPromotion } = await import("./promote-buildchain-ref-recovery-harness.mjs");
 test("published alpha finalization stays bound to its exact transaction after the protected version-state PR merges", async () => {
@@ -459,10 +460,9 @@ test("published alpha recovery accepts the exact protected merge tree after the 
     if (args.ref.startsWith("heads/buildchain/release-state/")) durableStateReadRefs.push(args.ref);
     return originalGetRef(args);
   };
-  const candidateHash = "a".repeat(64);
   const passportPath = ".buildchain/artifacts/release-candidate-passport.json";
   const recoveryReceiptPath = ".buildchain/artifacts/recovery-receipt.json";
-  const passport = {
+  const passport = sealCandidateFixture({
     schemaVersion: 1,
     contract: "kungfu-buildchain-release-candidate-passport",
     repository: "kungfu-systems/buildchain",
@@ -470,8 +470,8 @@ test("published alpha recovery accepts the exact protected merge tree after the 
     source: { headSha: transactionReleaseSha, mergeRefSha: transactionReleaseSha, treeHash: materialTreeSha },
     platformMatrix: [{ platformId: "linux-x64", artifactName: "buildchain-linux-x64" }],
     diagnostics: {},
-    candidateHash,
-  };
+  });
+  const { candidateHash } = passport;
   const recoveryReceipt = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-release-candidate-recovery/v1",

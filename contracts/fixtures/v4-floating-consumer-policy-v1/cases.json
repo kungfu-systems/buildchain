@@ -45,10 +45,10 @@
       "expected": "passed"
     },
     {
-      "id": "breaking-selected-lock",
+      "id": "surface-metadata-is-not-runtime-readmission",
       "selector": "v4-alpha",
       "breaking": "alpha",
-      "expectedCode": "selected-lock-runtime-incompatible"
+      "expected": "passed"
     },
     {
       "id": "nested-composite-exact-sha",

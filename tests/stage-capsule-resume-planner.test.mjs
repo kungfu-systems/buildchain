@@ -4,8 +4,8 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { ContractFault } from "../packages/core/canonical-contracts.js";
-import { planStageCapsuleResume } from "../packages/core/stage-capsule-resume-planner.js";
+import { ContractFault } from "../packages/core/contracts/canonical-contracts.js";
+import { planStageCapsuleResume } from "../packages/core/build/stage-capsule-resume-planner.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const fixturePath = path.join(
@@ -24,7 +24,7 @@ test("late platform failure restores completed work and rebuilds only the missin
   const plan = planStageCapsuleResume(request);
   assert.equal(
     plan.planRoot,
-    "sha256:38ca577ec06e3312b1d27a1362cf517d64909d22802946ad0b452d911016a10b",
+    "sha256:b67153c8b6c4074842c1d4eec4dac6d2565252a848cfe83b43b9facf93d86bb8",
   );
   assert.deepEqual(
     plan.decisions.map(({ stageKey, decision, reasonCode }) => ({
@@ -44,7 +44,7 @@ test("late platform failure restores completed work and rebuilds only the missin
   assert.deepEqual(plan.requiredRestores, ["build"]);
   assert.deepEqual(plan.requiredStages, ["verify"]);
   assert.equal(plan.mode, "shadow-only");
-  assert.equal(plan.productionAuthority, "v3");
+  assert.equal(plan.productionAuthority, "v4-native");
 });
 
 test("same explicit observations produce byte-identical Rust and JavaScript plans", () => {
@@ -106,11 +106,6 @@ test("identity and retention drift produce exact causal invalidations", () => {
       "toolchain-roots",
       "toolchain-changed",
       (node) => (node.expectedIdentity.toolchainRoots[0].root = changedRoot),
-    ],
-    [
-      "runtime-root",
-      "runtime-changed",
-      (node) => (node.expectedIdentity.runtimeRoot = changedRoot),
     ],
     [
       "policy-root",
@@ -217,7 +212,7 @@ test("closed inputs reject ambient authority", () => {
   }
 });
 
-test("architecture freezes a pure planner and zero v3 authority drift", () => {
+test("architecture freezes a pure planner and zero production authority drift", () => {
   const architecture = JSON.parse(
     fs.readFileSync(
       path.join(root, "architecture/stage-capsule-resume-planner.json"),
@@ -249,6 +244,14 @@ test("real-platform rehearsal projects the same deterministic core", () => {
     const evidence = JSON.parse(result.stdout);
     assert.equal(evidence.platform, platform);
     assert.equal(evidence.planRoot, planStageCapsuleResume(request).planRoot);
-    assert.equal(evidence.productionAuthority, "v3");
+    assert.equal(evidence.productionAuthority, "v4-native");
   }
+});
+
+test("runtime repair alone preserves a valid capsule and resumes the remaining stage", () => {
+  const changed = clone(request);
+  changed.nodes[0].expectedIdentity.runtimeRoot = "sha256:" + "f".repeat(64);
+  const plan = planStageCapsuleResume(changed);
+  assert.deepEqual(plan.requiredRestores, ["build"]);
+  assert.deepEqual(plan.requiredStages, ["verify"]);
 });

@@ -1,0 +1,14 @@
+name: admit-attestation
+description:
+  Bind the exact GitHub attestation subject, signer and retained provider
+  evidence.
+inputs:
+  request-json:
+    description: Exact request-json.
+    required: true
+  definition-sha:
+    description: Exact definition-sha.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

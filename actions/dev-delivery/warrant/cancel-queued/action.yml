@@ -1,0 +1,22 @@
+name: Cancel an exact non-active queued candidate
+description: Cancel an exact non-active queued candidate.
+inputs:
+  runtime-ref:
+    description: Admitted runtime-ref.
+    required: true
+  request-json:
+    description: Admitted request-json.
+    required: true
+  token:
+    description: Admitted token.
+    required: true
+outputs:
+  cancellation-action:
+    description: Verified cancellation-action.
+  cancellation-receipt-root:
+    description: Verified cancellation-receipt-root.
+  final-state-root:
+    description: Verified final-state-root.
+runs:
+  using: node24
+  main: dist/index.js

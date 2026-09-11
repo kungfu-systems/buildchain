@@ -1,0 +1,24 @@
+name: Verify provider attestation and retain bound evidence
+description: Verify provider attestation and retain bound evidence.
+inputs:
+  plan:
+    description: Rooted build plan bound to this run and runtime
+    required: true
+  token:
+    description: Scoped artifact read token
+    required: true
+  bundle-path:
+    description: Bundle emitted by the attestation provider
+    required: true
+  attestation-id:
+    description: Provider attestation identity
+    required: true
+  attestation-url:
+    description: Provider attestation URL
+    required: true
+outputs:
+  artifact:
+    description: Immutable artifact reference
+runs:
+  using: node24
+  main: dist/index.js

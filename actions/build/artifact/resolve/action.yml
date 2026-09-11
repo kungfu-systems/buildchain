@@ -1,0 +1,27 @@
+name: Resolve exact artifact coordinate
+description: Read one live artifact in this workflow run and verify its admitted
+  digest before materializing its coordinate.
+inputs:
+  name:
+    description: Exact same-run artifact name.
+    required: true
+  digest:
+    description: Admitted artifact sha256 digest.
+    required: true
+  source-sha:
+    description: Immutable source commit.
+    required: true
+  output:
+    description: New workspace-relative coordinate file.
+    required: true
+  token:
+    description: Bounded GitHub artifact read token.
+    required: true
+outputs:
+  artifact-id:
+    description: Verified provider artifact ID.
+  coordinate:
+    description: Exact source-bound artifact coordinate JSON.
+runs:
+  using: node24
+  main: dist/index.js

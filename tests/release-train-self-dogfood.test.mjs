@@ -10,7 +10,7 @@ import {
 import {
   createNativeCommandContract,
   createNativeExecutionReceipt,
-} from "../packages/core/dev-delivery-warrant.js";
+} from "../packages/core/dev-delivery/dev-delivery-warrant.js";
 
 const SHA = (digit) => digit.repeat(40);
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
@@ -23,8 +23,7 @@ function fixture(overrides = {}) {
     repository: "kungfu-systems/buildchain",
     sourceBranch: "dev/v4/v4.0",
     targetBranch: "alpha/v4/v4.0",
-    assignmentRoot: ROOT("1"),
-    initiativeRoot: ROOT("2"),
+    sourceRoot: ROOT("1"),
     dependencyProofRoot: ROOT("3"),
     environmentRoot: ROOT("e"),
     nativeCommand: "pnpm run check",

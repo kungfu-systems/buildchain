@@ -1,22 +1,45 @@
 name: Publish npm package
-
 on:
   workflow_dispatch:
     inputs:
       ref:
-        description: "Ref to dry-run. Defaults to the selected workflow ref."
+        description: Ref to dry-run. Defaults to the selected workflow ref.
         required: false
         default: ""
       run-check:
-        description: "Run the full Buildchain check before npm publish dry-run."
+        description: Run the full Buildchain check before npm publish dry-run.
         required: true
         default: true
         type: boolean
-
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
 permissions:
   contents: read
-
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+    timeout-minutes: 5
   dry-run:
     name: Dry-run npm publish
     runs-on: ubuntu-24.04
@@ -27,26 +50,19 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.ref }}
           persist-credentials: false
-
-      - name: Setup Node
-        uses: actions/setup-node@v6.4.0
+        id: source-checkout
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          node-version: "24"
-          registry-url: "https://registry.npmjs.org/"
-
-      - name: Enable pnpm
-        run: |
-          corepack prepare pnpm@11.7.0 --activate
-          corepack enable
-          pnpm --version
-          npm --version
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Verify package
-        if: ${{ inputs.run-check }}
-        run: pnpm run check
-
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+        if: ${{ always() }}
       - name: Dry-run npm publish
-        run: node scripts/npm-publish-dry-run.mjs --json
+        id: node
+        uses: ./.buildchain/runtime/actions/publication/npm/preview
+        with:
+          request-json: ${{ toJSON(inputs) }}
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+        if: ${{ always() }}
+    needs:
+      - execution-runtime

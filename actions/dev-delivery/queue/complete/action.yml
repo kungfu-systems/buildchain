@@ -1,0 +1,45 @@
+name: Enforce terminal delivery outcomes after evidence upload
+description: Enforce terminal delivery outcomes after evidence upload.
+inputs:
+  already-qualified:
+    description: Admitted already-qualified.
+    required: false
+  boundary-outcome:
+    description: Admitted boundary-outcome.
+    required: false
+  native-qualification-outcome:
+    description: Admitted native-qualification-outcome.
+    required: false
+  defer-landing:
+    description: Admitted defer-landing.
+    required: false
+  warrant-mode:
+    description: Admitted warrant-mode.
+    required: false
+  native-job-outcome:
+    description: Admitted native-job-outcome.
+    required: false
+  failure-settlement-outcome:
+    description: Admitted failure-settlement-outcome.
+    required: false
+  run-native:
+    description: Admitted run-native.
+    required: false
+  seal-job-outcome:
+    description: Admitted seal-job-outcome.
+    required: false
+  heartbeat-job-outcome:
+    description: Admitted heartbeat-job-outcome.
+    required: false
+  merge-step-outcome:
+    description: Admitted merge-step-outcome.
+    required: false
+  targeted-ok:
+    description: Admitted targeted-ok.
+    required: false
+  targeted:
+    description: Admitted targeted.
+    required: false
+runs:
+  using: node24
+  main: dist/index.js

@@ -1,0 +1,25 @@
+name: binary-publication-coordinates
+description: Execute the binary-assets resolve capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  token:
+    description: Explicit provider read credential.
+    required: true
+outputs:
+  buildchain-ref:
+    description: buildchain-ref node result.
+  evidence-run-id:
+    description: evidence-run-id node result.
+  release-tag:
+    description: release-tag node result.
+  source-sha:
+    description: source-sha node result.
+  target-ref:
+    description: target-ref node result.
+  publication-version:
+    description: publication-version node result.
+runs:
+  using: node24
+  main: dist/index.js

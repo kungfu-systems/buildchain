@@ -1,0 +1,18 @@
+name: run-build-stage
+description: Execute one ordered TOML lifecycle stage and retain its actual result.
+inputs:
+  plan:
+    description: Rooted build plan
+    required: true
+  platform:
+    description: Selected platform
+    required: true
+  stage:
+    description: install, build or verify
+    required: true
+  token:
+    description: Scoped consumer artifact token
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

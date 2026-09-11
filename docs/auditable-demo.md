@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-08-05
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -26,12 +26,12 @@ two distinct evidence products:
    bundle passes.
 
 The public reusable workflow is
-`.github/workflows/.auditable-demo.yml`. It is consumer-neutral: Buildchain
+`.github/workflows/.build-demo-adapter.yml`. It is consumer-neutral: Buildchain
 does not know how a Kungfu, library, service, or application artifact should be
 interpreted. The consumer owns a small checked-in executable adapter.
 
 For standalone binary CLIs, the higher-level first-class surface is
-`.github/workflows/.declarative-auditable-demo.yml`. A consumer checks in only
+`.github/workflows/public-build-demo.yml`. A consumer checks in only
 `.buildchain/auditable-demo.json`, builds and uploads its exact same-run binary
 plus metadata, and passes the producer-owned artifact name and digest to that
 workflow. Buildchain then owns capture, Gate adaptation, independent native
@@ -122,7 +122,7 @@ authority.
 jobs:
   demo:
     needs: exact-binary
-    uses: kungfu-systems/buildchain/.github/workflows/.declarative-auditable-demo.yml@BUILDCHAIN_EXACT_SHA
+    uses: kungfu-systems/buildchain/.github/workflows/public-build-demo.yml@v4
     with:
       source-ref: ${{ github.sha }}
       binary-artifact-name: ${{ needs.exact-binary.outputs.artifact-name }}
@@ -215,7 +215,7 @@ non-symlink, executable file inside the exact checked-out consumer source.
 
 The Gate:
 
-- checks out the exact consumer source and exact called-workflow SHA;
+- prepares the selected execution runtime and checks out the exact consumer source;
 - resolves and downloads one exact same-run GitHub Artifact;
 - invokes the checked-in adapter by argv, never as an evaluated shell string;
 - rejects undeclared adapter outputs, symlinks, invalid UTF-8, invalid scene or
@@ -353,7 +353,7 @@ jobs:
     permissions:
       actions: read
       contents: read
-    uses: kungfu-systems/buildchain/.github/workflows/.auditable-demo.yml@BUILDCHAIN_EXACT_SHA
+    uses: kungfu-systems/buildchain/.github/workflows/.build-demo-adapter.yml@v4
     with:
       source-ref: ${{ github.sha }}
       source-artifact-name: ${{ needs.build.outputs.artifact-name }}

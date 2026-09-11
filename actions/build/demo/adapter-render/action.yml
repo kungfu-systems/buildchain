@@ -1,0 +1,78 @@
+name: demo-adapter-render
+description: Execute the demo-adapter render capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  workflow-sha:
+    description: Exact workflow-sha.
+    required: true
+  gate-artifact-name:
+    description: Exact gate-artifact-name.
+    required: true
+  gate-root:
+    description: Exact gate-root.
+    required: true
+  source-sha:
+    description: Exact source-sha.
+    required: true
+outputs:
+  media-artifact-name:
+    description: media-artifact-name node result.
+    value: ${{ steps.finalize.outputs.media-artifact-name }}
+  media-artifact-id:
+    description: media-artifact-id node result.
+    value: ${{ steps.upload.outputs.artifact-id }}
+  media-artifact-digest:
+    description: media-artifact-digest node result.
+    value: ${{ steps.upload.outputs.artifact-digest }}
+  media-artifact-url:
+    description: media-artifact-url node result.
+    value: ${{ steps.upload.outputs.artifact-url }}
+  media-root:
+    description: media-root node result.
+    value: ${{ steps.finalize.outputs.media-root }}
+  media-profile:
+    description: media-profile node result.
+    value: ${{ steps.finalize.outputs.media-profile }}
+  media-qualification-root:
+    description: media-qualification-root node result.
+    value: ${{ steps.finalize.outputs.media-qualification-root }}
+runs:
+  using: composite
+  steps:
+    - name: Download exact passing Gate bundle
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+      with:
+        name: ${{ inputs.gate-artifact-name }}
+        path: gate-bundle
+    - name: Verify Gate, render and qualify exact media
+      id: finalize
+      uses: ./.buildchain/runtime/actions/build/demo/render-media
+      with:
+        runtime-sha: ${{ inputs.workflow-sha }}
+        source-sha: ${{ inputs.source-sha }}
+        gate-root: ${{ inputs.gate-root }}
+        renderer-image: ${{ fromJSON(inputs.request-json).renderer-image }}
+        media-profile: ${{ fromJSON(inputs.request-json).media-profile }}
+    - name: Upload content-addressed media bundle
+      id: upload
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      with:
+        name: ${{ steps.finalize.outputs.media-artifact-name }}
+        path: media-bundle
+        if-no-files-found: error
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
+        compression-level: 0
+        overwrite: false
+    - name: Upload render diagnostics
+      if: ${{ always() }}
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      with:
+        name: auditable-demo-render-diagnostics-${{ github.run_id }}-${{
+          github.run_attempt }}
+        path: render-diagnostics
+        if-no-files-found: warn
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
+        compression-level: 0
+        overwrite: false

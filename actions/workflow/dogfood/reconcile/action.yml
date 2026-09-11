@@ -1,0 +1,25 @@
+name: bootstrap-dogfood-reconcile
+description: Execute the bootstrap-dogfood reconcile capability within its
+  caller job boundary.
+inputs:
+  candidate-sha:
+    description: Exact admitted candidate commit.
+    required: true
+  observations-json:
+    description: Primary and recovery job results for all three channels.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Verify all three execution pairs
+      uses: ./.buildchain/runtime/actions/workflow/dogfood/compare
+      with:
+        candidate-sha: ${{ inputs.candidate-sha }}
+        observations-json: ${{ inputs.observations-json }}
+    - name: Retain Exact-candidate self-dogfood evidence
+      uses: actions/upload-artifact@v7.0.0
+      with:
+        name: universal-train-self-dogfood-${{ inputs.candidate-sha }}
+        path: .buildchain/self-dogfood
+        if-no-files-found: error
+        retention-days: 30

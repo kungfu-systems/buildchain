@@ -1,39 +1,37 @@
 name: Buildchain Dogfood Stable Candidate Patrol
-
 on:
   schedule:
-    - cron: "0 19 * * *"
+    - cron: 0 19 * * *
   workflow_dispatch:
     inputs:
-      buildchain-ref:
-        description: "Temporary Buildchain runtime ref"
-        required: false
-        default: ""
       release-now:
-        description: "Exact alpha selected by explicit human authority"
+        description: Exact alpha selected by explicit human authority
         required: false
         default: ""
       dry-run:
-        description: "Evaluate without durable ledger or promotion writes"
+        description: Evaluate without durable ledger or promotion writes
         required: false
         type: boolean
         default: false
-
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
 permissions:
   actions: write
   contents: write
   pull-requests: write
   checks: read
   statuses: read
-
 jobs:
   patrol:
-    uses: ./.github/workflows/stable-candidate-patrol.yml
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-stable-candidate-patrol.yml@v4
     with:
-      buildchain-ref: ${{ inputs.buildchain-ref || 'v4-alpha' }}
       release-now: ${{ inputs.release-now }}
       auto-approve: true
       dry-run: ${{ inputs.dry-run || false }}
+      runtime-ref: ${{ inputs.runtime-ref }}
     secrets:
       promotion-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
       approval-token: ${{ secrets.BUILDCHAIN_APPROVAL_TOKEN || secrets.KUNGFU_GITHUB_TOKEN }}

@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { nextDevelopmentManual } from "../packages/core/next-development-projection.js";
+import { nextDevelopmentManual } from "../packages/core/release/next-development-projection.js";
 
 export const NEXT_DEVELOPMENT_MANUAL_PATH =
   "docs/next-development-transition.md";

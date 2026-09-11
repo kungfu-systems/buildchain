@@ -5,7 +5,6 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
-  BUILD_FACTS_LEGACY_KUNGFU_BUILDINFO_CONTRACT,
   BUILD_FACTS_MODULE_CONTRACT,
   BUILD_FACTS_PRODUCT_CONTRACT,
   aggregateBuildFacts,
@@ -14,7 +13,7 @@ import {
   writeBuildFacts,
 } from "@kungfu-tech/buildchain/build-facts";
 import { validateBuildchainConfig } from "@kungfu-tech/buildchain";
-import { collectGitHubReleasePassport } from "@kungfu-tech/buildchain/release-passport";
+import { collectGitHubReleasePassport } from "@kungfu-tech/buildchain";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
@@ -68,10 +67,6 @@ id = "kungfu"
 module_facts = [".buildchain/facts/core.json"]
 artifacts = ["dist/kungfu.zip"]
 
-[[facts.legacy_projections]]
-type = "kungfu-buildinfo"
-module = "core"
-path = "framework/core/src/kungfu/yijinjing/kungfubuildinfo.json"
 `);
   runGit(cwd, ["add", "."]);
   runGit(cwd, ["commit", "-m", "fixture"]);
@@ -127,7 +122,7 @@ test("Build Facts Node API collects module facts, product facts, and stale sourc
   assert.equal(stale.issues.some((issue) => issue.id === "git.sourceDigest"), true);
 });
 
-test("Build Facts CLI writes module facts, legacy Kungfu buildinfo, product facts, and verifies them", () => {
+test("Build Facts CLI writes module facts, product facts, and verifies them", () => {
   const cwd = createBuildFactsFixture();
   const moduleResult = runBuildchain([
     "facts",
@@ -138,19 +133,11 @@ test("Build Facts CLI writes module facts, legacy Kungfu buildinfo, product fact
     "core",
     "--output",
     ".buildchain/facts/core.json",
-    "--legacy-kungfu-buildinfo",
-    "framework/core/src/kungfu/yijinjing/kungfubuildinfo.json",
     "--json",
   ]);
   const moduleOutput = JSON.parse(moduleResult.stdout);
   assert.equal(moduleOutput.contract, BUILD_FACTS_MODULE_CONTRACT);
   assert.equal(moduleOutput.verification.ok, true, JSON.stringify(moduleOutput.verification.issues, null, 2));
-
-  const legacy = JSON.parse(fs.readFileSync(path.join(cwd, "framework/core/src/kungfu/yijinjing/kungfubuildinfo.json"), "utf8"));
-  assert.equal(legacy.contract, BUILD_FACTS_LEGACY_KUNGFU_BUILDINFO_CONTRACT);
-  assert.equal(legacy.version, "4.0.0-alpha.1");
-  assert.equal(legacy.source.moduleId, "core");
-  assert.match(legacy.buildchain.moduleFactDigest, /^sha256:[a-f0-9]{64}$/);
 
   const aggregateResult = runBuildchain([
     "facts",
@@ -198,4 +185,13 @@ test("Release Passport records build facts as first-class evidence", () => {
   assert.equal(collection.passport.buildFacts[0].fields.contract, BUILD_FACTS_MODULE_CONTRACT);
   assert.equal(collection.passport.evidence.buildFacts[0].contract, BUILD_FACTS_MODULE_CONTRACT);
   assert.equal(collection.passport.evidence.buildFacts[0].id, "core");
+});
+
+test("Build Facts rejects retired projections and unknown lifecycle names", () => {
+  const cwd = createBuildFactsFixture();
+  const result = runBuildchain(["facts", "module", "--cwd", cwd, "--module", "core", "--legacy-kungfu-buildinfo", "old.json"], { expectFailure: true });
+  assert.match(result.stderr, /unsupported facts module option/);
+  assert.equal(fs.existsSync(path.join(cwd, "old.json")), false);
+  fs.appendFileSync(path.join(cwd, "buildchain.toml"), '\n[[facts.legacy_projections]]\ntype = "kungfu-buildinfo"\npath = "old.json"\n');
+  assert.throws(() => validateBuildchainConfig(cwd), /unsupported facts field/);
 });

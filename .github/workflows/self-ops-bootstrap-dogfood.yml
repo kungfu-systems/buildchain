@@ -1,24 +1,37 @@
-name: Universal Bootstrap Train-First Self-Dogfood
-
+name: Universal Bootstrap Exact-Candidate Self-Dogfood
 on:
   pull_request:
     branches:
-      - dev/v4/v4.0
+      - dev/v4/v4.1
   workflow_dispatch:
     inputs:
       candidate-sha:
-        description: "Exact Train candidate SHA"
+        description: Exact candidate SHA
         required: true
         type: string
       pull-request:
-        description: "Same-repository Train-to-dev review PR"
+        description: Same-repository candidate-to-dev review PR
         required: true
         type: number
       consumer-sha:
-        description: "Exact unchanged Buildchain consumer SHA"
+        description: Exact unchanged Buildchain consumer SHA
         required: true
         type: string
-
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      recovery-runtime-ref:
+        description: Transient repaired runtime used through the same public entry.
+        required: false
+        type: string
+        default: ""
 permissions:
   actions: write
   artifact-metadata: write
@@ -33,148 +46,115 @@ permissions:
   pull-requests: write
   security-events: write
   statuses: write
-
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+    timeout-minutes: 5
   prepare:
-    name: Prepare exact Train-first requests
+    name: Prepare exact candidate requests
     runs-on: ubuntu-24.04
     permissions:
       checks: read
       contents: read
       pull-requests: read
     outputs:
-      ready: ${{ steps.requests.outputs.ready }}
-      candidate-sha: ${{ steps.coordinates.outputs.candidate-sha }}
-      conformance-request: ${{ steps.requests.outputs.conformance-request }}
-      alpha-request: ${{ steps.requests.outputs.alpha-request }}
-      stable-request: ${{ steps.requests.outputs.stable-request }}
+      ready: ${{ steps.node.outputs.ready }}
+      candidate-sha: ${{ steps.node.outputs.candidate-sha }}
+      conformance-request: ${{ steps.node.outputs.conformance-request }}
+      alpha-request: ${{ steps.node.outputs.alpha-request }}
+      stable-request: ${{ steps.node.outputs.stable-request }}
     steps:
-      - name: Resolve immutable self-consumer coordinates
-        id: coordinates
-        shell: bash
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          EVENT_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
-          EVENT_PULL_REQUEST: ${{ github.event.pull_request.number }}
-          DISPATCH_CANDIDATE_SHA: ${{ inputs.candidate-sha }}
-          DISPATCH_PULL_REQUEST: ${{ inputs.pull-request }}
-          DISPATCH_CONSUMER_SHA: ${{ inputs.consumer-sha }}
-          EVENT_CONSUMER_SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          if [[ "${EVENT_NAME}" == "pull_request" ]]; then
-            candidate_sha="${EVENT_CANDIDATE_SHA}"
-            pull_request="${EVENT_PULL_REQUEST}"
-            consumer_sha="${EVENT_CONSUMER_SHA}"
-          else
-            candidate_sha="${DISPATCH_CANDIDATE_SHA}"
-            pull_request="${DISPATCH_PULL_REQUEST}"
-            consumer_sha="${DISPATCH_CONSUMER_SHA}"
-          fi
-          [[ "${candidate_sha}" =~ ^[0-9a-f]{40}$ ]]
-          [[ "${consumer_sha}" =~ ^[0-9a-f]{40}$ ]]
-          [[ "${pull_request}" =~ ^[1-9][0-9]*$ ]]
-          {
-            echo "candidate-sha=${candidate_sha}"
-            echo "pull-request=${pull_request}"
-            echo "consumer-sha=${consumer_sha}"
-          } >> "${GITHUB_OUTPUT}"
-
-      - name: Checkout exact candidate request generator
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: kungfu-systems/buildchain
-          ref: ${{ steps.coordinates.outputs.candidate-sha }}
-          path: .buildchain/candidate
-          persist-credentials: false
-
-      - name: Generate closed requests after exact review readiness
-        id: requests
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CANDIDATE_SHA: ${{ steps.coordinates.outputs.candidate-sha }}
-          CONSUMER_SHA: ${{ steps.coordinates.outputs.consumer-sha }}
-          REVIEW_PR: ${{ steps.coordinates.outputs.pull-request }}
-        run: |
-          set -euo pipefail
-          gh api --paginate "repos/kungfu-systems/buildchain/pulls/${REVIEW_PR}/reviews" \
-            | jq -s 'add' > .buildchain-reviews.json
-          gh api --paginate -H 'Accept: application/vnd.github+json' \
-            "repos/kungfu-systems/buildchain/commits/${CANDIDATE_SHA}/check-runs?per_page=100" \
-            | jq -s '[.[].check_runs[]]' > .buildchain-checks.json
-          ready=false
-          if jq -e --arg sha "${CANDIDATE_SHA}" '
-              any(.[]; .state == "APPROVED" and .commit_id == $sha and (.user.login | ascii_downcase) == "kungfu-origin")
-            ' .buildchain-reviews.json >/dev/null \
-            && jq -e 'any(.[]; .name == "check" and .status == "completed" and .conclusion == "success")' \
-              .buildchain-checks.json >/dev/null; then
-            ready=true
-          fi
-          echo "ready=${ready}" >> "${GITHUB_OUTPUT}"
-          for channel in conformance alpha stable; do
-            request="$(node .buildchain/candidate/scripts/universal-workflow-self-dogfood.mjs request \
-              --candidate-sha "${CANDIDATE_SHA}" \
-              --consumer-sha "${CONSUMER_SHA}" \
-              --pull-request "${REVIEW_PR}" \
-              --channel "${channel}")"
-            echo "${channel}-request=${request}" >> "${GITHUB_OUTPUT}"
-          done
-
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Prepare exact candidate requests
+        id: node
+        uses: ./.buildchain/runtime/actions/workflow/dogfood/prepare
+        with:
+          request-json: ${{ toJSON(inputs) }}
+    needs:
+      - execution-runtime
   primary-conformance:
-    name: Train Bootstrap candidate-engine conformance
-    needs: prepare
+    name: Candidate Bootstrap candidate-engine conformance
+    needs:
+      - prepare
+      - execution-runtime
     if: ${{ needs.prepare.outputs.ready == 'true' }}
-    uses: kungfu-systems/buildchain/.github/workflows/bootstrap.yml@train/v4/v4.0/universal-reusable-workflow-bootstrap
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4
     with:
       request-json: ${{ needs.prepare.outputs.conformance-request }}
+      runtime-ref: ${{ inputs.runtime-ref }}
     secrets: inherit
-
   recovery-conformance:
     name: Consumer recovery candidate-engine conformance
-    needs: prepare
+    needs:
+      - prepare
+      - execution-runtime
     if: ${{ needs.prepare.outputs.ready == 'true' }}
-    uses: ./.github/workflows/universal-bootstrap-recovery.yml
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4
     with:
       request-json: ${{ needs.prepare.outputs.conformance-request }}
+      runtime-ref: ${{ inputs.recovery-runtime-ref }}
     secrets: inherit
-
   primary-alpha:
-    name: Train Bootstrap Alpha-shaped rehearsal
-    needs: prepare
+    name: Candidate Bootstrap Alpha-shaped rehearsal
+    needs:
+      - prepare
+      - execution-runtime
     if: ${{ needs.prepare.outputs.ready == 'true' }}
-    uses: kungfu-systems/buildchain/.github/workflows/bootstrap.yml@train/v4/v4.0/universal-reusable-workflow-bootstrap
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4
     with:
       request-json: ${{ needs.prepare.outputs.alpha-request }}
+      runtime-ref: ${{ inputs.runtime-ref }}
     secrets: inherit
-
   recovery-alpha:
     name: Consumer recovery Alpha-shaped rehearsal
-    needs: prepare
+    needs:
+      - prepare
+      - execution-runtime
     if: ${{ needs.prepare.outputs.ready == 'true' }}
-    uses: ./.github/workflows/universal-bootstrap-recovery.yml
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4
     with:
       request-json: ${{ needs.prepare.outputs.alpha-request }}
+      runtime-ref: ${{ inputs.recovery-runtime-ref }}
     secrets: inherit
-
   primary-stable:
-    name: Train Bootstrap stable-shaped rehearsal
-    needs: prepare
+    name: Candidate Bootstrap stable-shaped rehearsal
+    needs:
+      - prepare
+      - execution-runtime
     if: ${{ needs.prepare.outputs.ready == 'true' }}
-    uses: kungfu-systems/buildchain/.github/workflows/bootstrap.yml@train/v4/v4.0/universal-reusable-workflow-bootstrap
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4
     with:
       request-json: ${{ needs.prepare.outputs.stable-request }}
+      runtime-ref: ${{ inputs.runtime-ref }}
     secrets: inherit
-
   recovery-stable:
     name: Consumer recovery stable-shaped rehearsal
-    needs: prepare
+    needs:
+      - prepare
+      - execution-runtime
     if: ${{ needs.prepare.outputs.ready == 'true' }}
-    uses: ./.github/workflows/universal-bootstrap-recovery.yml
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4
     with:
       request-json: ${{ needs.prepare.outputs.stable-request }}
+      runtime-ref: ${{ inputs.recovery-runtime-ref }}
     secrets: inherit
-
   reconcile:
     name: Prove primary and recovery semantic equivalence
     needs:
@@ -185,54 +165,20 @@ jobs:
       - recovery-alpha
       - primary-stable
       - recovery-stable
+      - execution-runtime
     if: ${{ needs.prepare.outputs.ready == 'true' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
-      - name: Checkout exact candidate verifier
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: kungfu-systems/buildchain
-          ref: ${{ needs.prepare.outputs.candidate-sha }}
-          path: .buildchain/candidate
-          persist-credentials: false
-
-      - name: Verify all three execution pairs
-        shell: bash
-        env:
-          CANDIDATE_SHA: ${{ needs.prepare.outputs.candidate-sha }}
-          CONFORMANCE_PRIMARY: ${{ needs.primary-conformance.outputs.result-json }}
-          CONFORMANCE_RECOVERY: ${{ needs.recovery-conformance.outputs.result-json }}
-          ALPHA_PRIMARY: ${{ needs.primary-alpha.outputs.result-json }}
-          ALPHA_RECOVERY: ${{ needs.recovery-alpha.outputs.result-json }}
-          STABLE_PRIMARY: ${{ needs.primary-stable.outputs.result-json }}
-          STABLE_RECOVERY: ${{ needs.recovery-stable.outputs.result-json }}
-        run: |
-          set -euo pipefail
-          mkdir -p .buildchain/self-dogfood
-          for channel in conformance alpha stable; do
-            upper="$(tr '[:lower:]' '[:upper:]' <<< "${channel}")"
-            primary_name="${upper}_PRIMARY"
-            recovery_name="${upper}_RECOVERY"
-            BUILDCHAIN_PRIMARY_RESULT_JSON="${!primary_name}" \
-            BUILDCHAIN_RECOVERY_RESULT_JSON="${!recovery_name}" \
-              node .buildchain/candidate/scripts/universal-workflow-self-dogfood.mjs verify-pair \
-                --candidate-sha "${CANDIDATE_SHA}" \
-                --channel "${channel}" > ".buildchain/self-dogfood/${channel}.json"
-          done
-          jq -s '{schema:"kungfu-buildchain-v4-universal-self-dogfood/v1", pairs:., equivalent:(all(.[]; .equivalent == true))}' \
-            .buildchain/self-dogfood/conformance.json \
-            .buildchain/self-dogfood/alpha.json \
-            .buildchain/self-dogfood/stable.json \
-            > .buildchain/self-dogfood/report.json
-          jq -e '.equivalent == true and (.pairs | length == 3)' \
-            .buildchain/self-dogfood/report.json >/dev/null
-
-      - name: Retain Train-first self-dogfood evidence
-        uses: actions/upload-artifact@v7.0.0
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Prove primary and recovery semantic equivalence
+        id: node
+        uses: ./.buildchain/runtime/actions/workflow/dogfood/reconcile
         with:
-          name: universal-train-self-dogfood-${{ needs.prepare.outputs.candidate-sha }}
-          path: .buildchain/self-dogfood
-          if-no-files-found: error
-          retention-days: 30
+          candidate-sha: ${{ needs.prepare.outputs.candidate-sha }}
+          observations-json: ${{ toJSON(needs) }}

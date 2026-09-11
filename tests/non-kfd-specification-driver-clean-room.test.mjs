@@ -122,14 +122,14 @@ test("an independent non-KFD specification package replays through the common ga
 
     const gateModule = await import(
       pathToFileURL(
-        path.join(buildchainPackage, "packages/core/adopter-delivery-gate.js"),
+        path.join(buildchainPackage, "packages/core/adoption/adopter-delivery-gate.js"),
       )
     );
     const passportModule = await import(
       pathToFileURL(
         path.join(
           buildchainPackage,
-          "packages/core/adopter-delivery-passport.js",
+          "packages/core/adoption/adopter-delivery-passport.js",
         ),
       )
     );

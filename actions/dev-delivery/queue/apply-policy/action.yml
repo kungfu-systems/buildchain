@@ -1,0 +1,15 @@
+name: Reconcile governed dev merge queue policy
+description: Resolve declared governance, plan provider changes and apply only when requested.
+inputs:
+  branch:
+    description: Protected dev branch.
+    required: true
+  apply:
+    description: Apply the resolved plan to the provider.
+    default: "false"
+  token:
+    description: Scoped governance credential.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

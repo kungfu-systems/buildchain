@@ -1,0 +1,60 @@
+name: authority-verify
+description: "Publication authority: verify."
+inputs:
+  request-json:
+    description: Explicit request-json.
+    required: true
+  admission-bundle-json:
+    description: Explicit admission-bundle-json.
+    required: false
+  consumer-gate-json:
+    description: Explicit consumer-gate-json.
+    required: false
+runs:
+  using: composite
+  steps:
+    - name: Verify sealed admission or retain a non-authorizing dry-run result
+      id: result
+      uses: ./.buildchain/runtime/actions/publication/authority/qualify-admission
+      with:
+        request-json: ${{ inputs.request-json }}
+        admission-bundle-json: ${{ inputs.admission-bundle-json }}
+        consumer-gate-json: ${{ inputs.consumer-gate-json }}
+        token: ${{ github.token }}
+    - name: Upload publication capability receipt
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-publication-capability-${{ github.run_id }}-${{
+          github.run_attempt }}
+        path: |
+          .buildchain/publication-authority/capability.json
+          .buildchain/publication-authority/gate-aggregate.json
+          .buildchain/publication-authority/github-governance-audit.json
+          .buildchain/publication-authority/github-governance-receipt.json
+        if-no-files-found: error
+    - name: Upload assembled self-publication evidence
+      if: ${{ !fromJSON(inputs.request-json).dry-run &&
+        fromJSON(inputs.request-json).auto-admission }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-self-publication-admission-${{ github.run_id }}-${{
+          github.run_attempt }}
+        path: .buildchain/publication-authority/auto/*.json
+        if-no-files-found: error
+outputs:
+  capability-json:
+    description: capability-json node result.
+    value: ${{ steps.result.outputs.capability-json }}
+  capability-digest:
+    description: capability-digest node result.
+    value: ${{ steps.result.outputs.capability-digest }}
+  capability-artifact:
+    description: capability-artifact node result.
+    value: buildchain-publication-capability-${{ github.run_id }}-${{
+      github.run_attempt }}
+  gate-aggregate-json:
+    description: gate-aggregate-json node result.
+    value: ${{ steps.result.outputs.gate-aggregate-json }}
+  gate-aggregate-digest:
+    description: gate-aggregate-digest node result.
+    value: ${{ steps.result.outputs.gate-aggregate-digest }}

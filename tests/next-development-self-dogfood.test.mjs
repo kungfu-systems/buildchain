@@ -9,7 +9,7 @@ import {
   validateSelfDogfoodCheckpoint,
   validateSelfDogfoodEvidence,
 } from "../scripts/next-development-self-dogfood.mjs";
-import { nextDevelopmentRoot } from "../packages/core/next-development-transition.js";
+import { nextDevelopmentRoot } from "../packages/core/release/next-development-transition.js";
 
 const REPOSITORY = "kungfu-systems/buildchain";
 const RUNTIME_SHA = "a".repeat(40);

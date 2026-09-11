@@ -18,7 +18,7 @@ import {
   updateBadgeBundleBlock,
   updateReadmeBadgeBlock,
 } from "@kungfu-tech/buildchain/badges";
-import { collectGitHubReleasePassport } from "@kungfu-tech/buildchain/release-passport";
+import { collectGitHubReleasePassport } from "@kungfu-tech/buildchain";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");

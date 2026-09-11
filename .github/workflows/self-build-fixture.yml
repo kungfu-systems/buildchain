@@ -1,27 +1,73 @@
 name: Build Surface Fixture
-
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types:
+      - opened
+      - synchronize
+      - reopened
     branches:
       - dev/v*/v*
       - alpha/v*/v*
       - release/v*/v*
   workflow_dispatch:
-
-permissions: { actions: read, contents: read, issues: write, id-token: write, attestations: write }
+    inputs:
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      resume-run-id:
+        description: Original failed fixture build; preserve its source and valid checkpoints.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+permissions:
+  actions: read
+  contents: read
+  issues: write
+  id-token: write
+  attestations: write
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          resume-run-id: ${{ inputs.resume-run-id }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+    timeout-minutes: 5
   libnode-shaped:
     if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork }}
-    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4
     secrets: inherit
     with:
       config-path: fixtures/libnode-shaped/buildchain.toml
-
+      runtime-selection: ${{ needs.execution-runtime.outputs.selection }}
+    needs:
+      - execution-runtime
   buildchain-package-candidate:
     name: Seal Buildchain npm product payload
-    needs: [libnode-shaped]
-    if: ${{ needs.libnode-shaped.result == 'success' && ((github.event_name == 'pull_request' && (startsWith(github.base_ref, 'alpha/') || startsWith(github.base_ref, 'release/'))) || github.event_name == 'workflow_dispatch') }}
+    needs:
+      - libnode-shaped
+      - execution-runtime
+    if: ${{ needs.libnode-shaped.result == 'success' && ((github.event_name == 'pull_request' &&
+      (startsWith(github.base_ref, 'alpha/') || startsWith(github.base_ref, 'release/'))) ||
+      github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
@@ -30,67 +76,19 @@ jobs:
       - name: Checkout exact candidate source
         uses: actions/checkout@v7.0.0
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ fromJSON(needs.execution-runtime.outputs.selection).source.sha }}
           persist-credentials: false
-
-      - uses: actions/setup-node@v6.4.0
+        id: source-checkout
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          node-version: "24"
-          registry-url: "https://registry.npmjs.org/"
-
-      - name: Download exact Release Candidate Passport
-        uses: actions/download-artifact@v7.0.0
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+        if: ${{ always() }}
+      - name: Seal Buildchain npm product payload
+        id: node
+        uses: ./.buildchain/runtime/actions/build/artifact/package
         with:
-          name: ${{ needs.libnode-shaped.outputs.release-candidate-artifact }}
-          path: .buildchain/buildchain-package-candidate/passport
-
-      - name: Pack Buildchain product bytes once and bind them to the candidate
-        id: package
-        shell: bash
-        run: |
-          set -euo pipefail
-          output_dir=.buildchain/buildchain-package-candidate/payload
-          mkdir -p "${output_dir}"
-          npm pack --ignore-scripts --json --pack-destination "${output_dir}" > .buildchain/buildchain-package-candidate/npm-pack.json
-          OUTPUT_DIR="${output_dir}" node --input-type=module <<'NODE'
-          import crypto from "node:crypto";
-          import fs from "node:fs";
-          import path from "node:path";
-          import { sha256Json } from "./packages/core/release-candidate.js";
-
-          const passportPath = ".buildchain/buildchain-package-candidate/passport/release-candidate-passport.json";
-          const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
-          const tree = String((await import("node:child_process")).execFileSync("git", ["show", "-s", "--format=%T", "HEAD"], { encoding: "utf8" })).trim();
-          if (tree !== passport.source.treeHash) {
-            throw new Error(`package candidate tree ${tree} differs from Passport ${passport.source.treeHash}`);
-          }
-          const tarballs = fs.readdirSync(process.env.OUTPUT_DIR).filter((name) => name.endsWith(".tgz"));
-          if (tarballs.length !== 1) throw new Error(`expected one Buildchain npm tarball, found ${tarballs.length}`);
-          const tarball = path.join(process.env.OUTPUT_DIR, tarballs[0]);
-          const manifest = {
-            schemaVersion: 1,
-            contract: "kungfu-buildchain-product-payload-manifest/v1",
-            artifactName: `buildchain-package-${passport.source.headSha}`,
-            manifestPath: "product-payload-manifest.json",
-            candidateRoot: `sha256:${passport.candidateHash}`,
-            buildSummaryRoot: `sha256:${passport.diagnostics.buildSummaryHash}`,
-            source: { sha: passport.source.headSha, tree: passport.source.treeHash },
-            runtimeSha: passport.buildchain.sha,
-            files: [{
-              path: tarballs[0],
-              size: fs.statSync(tarball).size,
-              sha256: `sha256:${crypto.createHash("sha256").update(fs.readFileSync(tarball)).digest("hex")}`,
-            }],
-          };
-          manifest.root = `sha256:${sha256Json(manifest)}`;
-          fs.writeFileSync(path.join(process.env.OUTPUT_DIR, "product-payload-manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `artifact-name=${manifest.artifactName}\n`);
-          NODE
-
-      - name: Upload sealed Buildchain product payload
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ steps.package.outputs.artifact-name }}
-          path: .buildchain/buildchain-package-candidate/payload/
-          if-no-files-found: error
-          retention-days: 30
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+          passport-artifact: ${{ needs.libnode-shaped.outputs.release-candidate-artifact }}
+        if: ${{ always() }}

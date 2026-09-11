@@ -11,12 +11,12 @@ import {
   renderKfd2ProductClaimOutputs,
   validateKfd2ProductClaimsRegistry,
   writeKfd2ProductClaimOutputs,
-} from "../packages/core/kfd2-product-claims.js";
+} from "../packages/core/adoption/kfd2-product-claims.js";
 import {
   BUILDCHAIN_KFD2_CLAIMS_DIR,
   BUILDCHAIN_KFD2_REGISTRY_PATH,
   BUILDCHAIN_KFD2_RELEASE_CLAIMS_PATH,
-} from "../packages/core/buildchain-layout.js";
+} from "../packages/core/contracts/buildchain-layout.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");

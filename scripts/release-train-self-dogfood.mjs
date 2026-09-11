@@ -13,15 +13,15 @@ import {
   qualifyDevDeliveryWarrant,
   selectDevDeliveryWarrant,
   submitDevDeliveryCandidate,
-} from "../packages/core/dev-delivery-warrant.js";
-import { reconcileActiveReleaseTrain } from "../packages/core/dev-alpha-active-release-train.js";
+} from "../packages/core/dev-delivery/dev-delivery-warrant.js";
+import { reconcileActiveReleaseTrain } from "../packages/core/release/dev-alpha-active-release-train.js";
 import {
   createReleaseBlockerRepair,
   createReleaseTrain,
   releaseTrainRoot,
   settleReleaseBlockerDevLanding,
   transitionReleaseTrain,
-} from "../packages/core/release-train.js";
+} from "../packages/core/release/release-train.js";
 
 export const RELEASE_TRAIN_SELF_DOGFOOD_SCHEMA =
   "kungfu-buildchain-release-train-self-dogfood/v1";
@@ -147,7 +147,7 @@ function normalizeInput(input = {}) {
     targetBranch: branch(input.targetBranch, "targetBranch"),
     ...normalizeFields(
       input,
-      ["assignmentRoot", "initiativeRoot", "dependencyProofRoot", "environmentRoot", "blockerRoot", "patchRoot", "cutLandingEvidenceRoot", "devConflictEvidenceRoot", "devLandingEvidenceRoot"],
+      ["sourceRoot", "dependencyProofRoot", "environmentRoot", "blockerRoot", "patchRoot", "cutLandingEvidenceRoot", "devConflictEvidenceRoot", "devLandingEvidenceRoot"],
       root,
     ),
     ...normalizeFields(
@@ -179,8 +179,7 @@ function deliveryCandidate(input, deliveryClass = "release") {
   return {
     pullRequestNumber: input.pullRequestNumber,
     sourceHead: input.sourceHead,
-    assignmentRoot: input.assignmentRoot,
-    initiativeRoot: input.initiativeRoot,
+    sourceRoot: input.sourceRoot,
     sourceIdentityRoot: input.sourceIdentityRoot,
     sourcePatchRoot: input.sourcePatchRoot,
     sourceProofRoot: input.sourceProofRoot,
@@ -310,8 +309,7 @@ function runTrainCampaign(value, authorityRoots) {
     throw new Error("settled dual landing did not open publication");
   }
   const priorityClaim = createReleaseBlockerPriorityClaim(repaired, {
-    assignmentRoot: value.assignmentRoot,
-    initiativeRoot: value.initiativeRoot,
+    sourceRoot: value.sourceRoot,
     issuedAt: at(value.recordedAt, 5),
   });
   return {
@@ -334,8 +332,7 @@ function runQueueCampaign(value, repaired, priorityClaim) {
     {
       pullRequestNumber: value.ordinaryPullRequestNumber,
       sourceHead: value.originDevSha,
-      assignmentRoot: value.dependencyProofRoot,
-      initiativeRoot: value.initiativeRoot,
+      sourceRoot: value.dependencyProofRoot,
       sourceIdentityRoot: value.dependencyProofRoot,
       sourcePatchRoot: value.dependencyProofRoot,
       sourceProofRoot: value.dependencyProofRoot,
@@ -357,8 +354,7 @@ function runQueueCampaign(value, repaired, priorityClaim) {
   const blocker = deliveryCandidate({
     pullRequestNumber: value.delivery.pullRequestNumber,
     sourceHead: value.devLandingSha,
-    assignmentRoot: value.assignmentRoot,
-    initiativeRoot: value.initiativeRoot,
+    sourceRoot: value.sourceRoot,
     sourceIdentityRoot: repaired.successorTrain.releaseCut.cutRoot,
     sourcePatchRoot: value.patchRoot,
     sourceProofRoot: value.delivery.ciRoot,
@@ -461,9 +457,8 @@ function runQueueCampaign(value, repaired, priorityClaim) {
 export function runReleaseTrainSelfDogfoodCampaign(input = {}) {
   const value = normalizeInput(input);
   const authorityRoots = [
-    value.assignmentRoot,
+    value.sourceRoot,
     value.dependencyProofRoot,
-    value.initiativeRoot,
   ].sort();
   const {
     reconciliation,

@@ -1,0 +1,55 @@
+name: observed-evidence-publish
+description: Execute the observed-evidence publish capability within its caller
+  job boundary.
+inputs:
+  runtime-ref:
+    description: Selected runtime ref with the caller precedence preserved.
+    required: true
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  source-checkout-outcome:
+    description: Actual admitted source checkout outcome.
+    required: true
+outputs:
+  receipt-path:
+    description: receipt-path node result.
+    value: ${{ steps.publish.outputs.receipt-path }}
+runs:
+  using: composite
+  steps:
+    - name: Admit source checkout
+      id: source-boundary
+      if: ${{ always() }}
+      uses: ./.buildchain/runtime/actions/build/source/admit
+      with:
+        source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
+    - name: Checkout public evidence source
+      if: ${{ fromJSON(inputs.request-json).evidence-source-repository != '' }}
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ fromJSON(inputs.request-json).evidence-source-repository }}
+        ref: ${{ fromJSON(inputs.request-json).evidence-source-ref }}
+        path: ${{ fromJSON(inputs.request-json).evidence-source-path }}
+        persist-credentials: false
+    - name: Build and qualify observed evidence
+      uses: ./.buildchain/runtime/actions/observability/evidence/qualify
+      with:
+        request-json: ${{ inputs.request-json }}
+        token: ${{ github.token }}
+    - name: Configure scoped production authority
+      uses: aws-actions/configure-aws-credentials@v5.1.0
+      with:
+        role-to-assume: ${{ fromJSON(inputs.request-json).production-aws-role-arn }}
+        aws-region: us-east-1
+    - name: Publish immutable snapshot then latest
+      id: publish
+      uses: ./.buildchain/runtime/actions/observability/evidence/advance
+      with:
+        request-json: ${{ inputs.request-json }}
+    - name: Upload publication receipt
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: observed-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+        path: ${{ steps.publish.outputs.receipt-path }}
+        if-no-files-found: error

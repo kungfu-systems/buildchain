@@ -1,0 +1,26 @@
+name: sign-windows
+description:
+  Admit sealed signing requests, execute bounded providers and qualify
+  immutable result evidence.
+inputs:
+  request-json:
+    description: Explicit request-json.
+    required: true
+  item-json:
+    description: Explicit item-json.
+    required: true
+  certificate-base64:
+    description: Explicit certificate-base64.
+    required: true
+  certificate-password:
+    description: Explicit certificate-password.
+    required: true
+  certificate-sha1:
+    description: Explicit certificate-sha1.
+    required: true
+  timestamp-url:
+    description: Explicit timestamp-url.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

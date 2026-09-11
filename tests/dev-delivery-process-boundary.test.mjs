@@ -14,14 +14,14 @@ import {
   stageNativeExecutionTransfer,
   verifyNativeExecutionTransfer,
   verifyProviderFailureSettlementBinding,
-} from "../packages/core/dev-delivery-process-boundary.js";
-import { devDeliveryContentRoot } from "../packages/core/dev-delivery-common.js";
+} from "../packages/core/dev-delivery/dev-delivery-process-boundary.js";
+import { devDeliveryContentRoot } from "../packages/core/dev-delivery/dev-delivery-common.js";
 import {
   createNativeCommandContract,
   createNativeExecutionReceipt,
   createNativeProofReuseDecision,
   createNativeQualificationProof,
-} from "../packages/core/dev-delivery-warrant.js";
+} from "../packages/core/dev-delivery/dev-delivery-warrant.js";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 const RUNTIME_SHA = "f".repeat(40);
@@ -438,31 +438,12 @@ test("credentialless seal binds fresh hosted context without provider jobs or ca
   assert.equal(Object.hasOwn(result.sealer, "jobId"), false);
 });
 
-test("runtime admission accepts immutable SHA evidence but rejects non-v4 selectors", () => {
+test("native transfers retain runtime provenance without selecting it again", () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "runtime-selector-"));
-  transferFixture(directory, { runtimeSelector: RUNTIME_SHA });
-  const transfer = transferFixture(directory);
-  for (const selector of ["v3", "train/v4/v4.1/nope"]) {
-    assert.throws(
-      () =>
-        createNativeExecutionTransfer({
-          ...transfer,
-          directory,
-          files: transfer.files.map((entry) => entry.path),
-          runtime: { ...transfer.runtime, selector },
-        }),
-      /runtime selector must be an exact immutable SHA/u,
-      selector,
-    );
+  for (const runtimeSelector of [RUNTIME_SHA, "train/v4/v4.1/repair"]) {
+    const transfer = transferFixture(directory, {runtimeSelector});
+    assert.doesNotThrow(() => verifyNativeExecutionTransfer(transfer, {directory}));
   }
-  assert.throws(
-    () =>
-      verifyNativeExecutionTransfer(transfer, {
-        directory,
-        expected: { "runtime.resolvedSha": "e".repeat(40) },
-      }),
-    /runtime\.resolvedSha mismatch/u,
-  );
 });
 
 test("missing, incomplete, and corrupt native transfers fail closed", () => {

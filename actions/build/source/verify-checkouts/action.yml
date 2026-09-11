@@ -1,0 +1,12 @@
+name: verify-checkouts
+description: Verify the consumer source checkout before publication.
+inputs:
+  source-directory:
+    default: .
+    description: Explicit source-directory for the admitted operation.
+  source-sha:
+    required: true
+    description: Explicit source-sha for the admitted operation.
+runs:
+  using: node24
+  main: dist/index.js

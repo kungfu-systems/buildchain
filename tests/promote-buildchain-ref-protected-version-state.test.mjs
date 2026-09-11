@@ -300,7 +300,7 @@ test("managed channel protection rejects actors outside the exact GitHub Actions
       branch: "dev/v2/v2.14",
       branchProtectionBypassUsers: "release-owner",
     }),
-    /permits only the descriptor-bound github-actions App bypass actor/,
+    /unsupported channel protection option/,
   );
   await assert.rejects(
     () => ensureManagedChannelBranchProtection({

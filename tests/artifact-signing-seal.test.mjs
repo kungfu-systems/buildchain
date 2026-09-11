@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { sealArtifactSigningRequests } from "../scripts/seal-artifact-signing-requests.mjs";
+import { sealArtifactSigningRequests } from "../packages/core/build/signing/seal-requests.js";
 
 const SOURCE_SHA = "1".repeat(40);
 const TREE_SHA = "2".repeat(40);

@@ -389,14 +389,14 @@ test("promotion is limited to buildchain alpha and release line refs", () => {
   assertPromotableTargetRef("release/v1/v1.0");
   assertPromotableTargetRef("release/v1/v1.1");
   assertPromotableTargetRef("publish-gate/major");
-  assertPromotableTargetRef("major-gate");
+  assert.throws(() => assertPromotableTargetRef("major-gate"), /Ref promotion target/);
   assert.throws(
     () => assertPromotableRepository("kungfu-systems", "other"),
     /limited to kungfu-systems\/buildchain/,
   );
   assert.throws(
     () => assertPromotableTargetRef("dev/v1/v1.0"),
-    /alpha\/vN\/vN\.M, release\/vN\/vN\.M, publish-gate\/major, or major-gate/,
+    /alpha\/vN\/vN\.M, release\/vN\/vN\.M, or publish-gate\/major/,
   );
   assert.throws(
     () => assertPromotableTargetRef("release/v1/v2.0"),
@@ -406,7 +406,7 @@ test("promotion is limited to buildchain alpha and release line refs", () => {
   assert.deepEqual(resolveTagsForTarget("release/v1/v1.0"), ["v1", "v1.0"]);
   assert.deepEqual(resolveTagsForTarget("release/v1/v1.1"), ["v1", "v1.1"]);
   assert.deepEqual(resolveTagsForTarget("publish-gate/major"), []);
-  assert.deepEqual(resolveTagsForTarget("major-gate"), []);
+  assert.throws(() => resolveTagsForTarget("major-gate"), /Ref promotion target/);
   assert.throws(
     () => resolveTagsForTarget("alpha/v1/v1.0", ["v1"]),
     /not allowed for alpha promotion/,

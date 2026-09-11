@@ -7,7 +7,7 @@ import {
   createCacheOperationReceipt,
   verifyCacheEvidenceSet,
   verifyCacheOperationReceipt,
-} from "../packages/core/cache-evidence.js";
+} from "../packages/core/observability/cache-evidence.js";
 
 const observed = (unit, value, source = "provider-output") => ({
   status: "observed",

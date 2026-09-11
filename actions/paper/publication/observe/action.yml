@@ -1,0 +1,27 @@
+name: Read back Paper publication and capture propagation
+description: Read back Paper publication and capture propagation.
+inputs:
+  candidate-json:
+    description: candidate-json
+    required: true
+  publication-json:
+    description: publication-json
+    required: true
+  target-json:
+    description: target-json
+    required: true
+  token:
+    description: token
+    required: true
+outputs:
+  upstream-release-json:
+    description: upstream-release-json
+  readback-outcome:
+    description: readback-outcome
+  propagation-configured:
+    description: propagation-configured
+  propagation-work-artifact:
+    description: propagation-work-artifact
+runs:
+  using: node24
+  main: dist/index.js

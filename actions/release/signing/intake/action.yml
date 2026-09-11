@@ -1,0 +1,59 @@
+name: signing-authority-intake
+description: Execute the signing-authority intake capability within its caller job boundary.
+inputs:
+  authority-token:
+    description: Explicit scoped provider credential.
+    required: true
+  promotion-token:
+    description: Explicit scoped provider credential.
+    required: true
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+outputs:
+  detached-matrix:
+    description: detached-matrix node result.
+    value: ${{ steps.inspect.outputs.detached-matrix }}
+  macos-matrix:
+    description: macos-matrix node result.
+    value: ${{ steps.inspect.outputs.macos-matrix }}
+  windows-matrix:
+    description: windows-matrix node result.
+    value: ${{ steps.inspect.outputs.windows-matrix }}
+runs:
+  using: composite
+  steps:
+    - name: Admit source checkout
+      id: source-boundary
+      if: ${{ always() }}
+      uses: ./.buildchain/runtime/actions/build/source/admit
+      with:
+        source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
+    - uses: ./.buildchain/runtime/actions/runtime/dependencies/install
+      with:
+        directory: .
+        production: "false"
+    - name: Download consumer-sealed requests only
+      uses: actions/download-artifact@v7.0.0
+      with:
+        github-token: ${{ inputs.authority-token || inputs.promotion-token }}
+        repository: ${{ fromJSON(inputs.request-json).source-repository }}
+        run-id: ${{ fromJSON(inputs.request-json).source-run-id }}
+        pattern: ${{ fromJSON(inputs.request-json).request-artifact-pattern }}
+        path: .buildchain/authority-intake
+    - name: Validate source, runtime, profiles, and duplicate admission
+      id: inspect
+      uses: ./.buildchain/runtime/actions/build/signing/admit-requests
+      with:
+        request-json: ${{ inputs.request-json }}
+    - name: Retain admitted request set for isolated provider jobs
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: authority-intake-${{ fromJSON(inputs.request-json).correlation-id }}
+        path: .buildchain/authority-intake
+        include-hidden-files: true
+        if-no-files-found: error
+        retention-days: 14

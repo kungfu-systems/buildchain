@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { collectStableReleaseGateReport } from "../scripts/stable-release-gate.mjs";
+import { collectStableReleaseGateReport } from "../packages/core/release/commands/stable-release-gate.mjs";
 
 const ALPHA_SHA = "a".repeat(40);
 const STABLE_SHA = "b".repeat(40);
@@ -69,7 +69,7 @@ test("stable gate collector binds exact alpha tag or SHA runtime inputs to consu
       return response({ object: { type: "commit", sha: STABLE_SHA } });
     }
     if (requestPath.includes("/compare/v2.11.13...v2.12.0-alpha.0")) {
-      return response({ files: [{ filename: "packages/core/stable-release-gate.js" }] });
+      return response({ files: [{ filename: "packages/core/release/stable-release-gate.js" }] });
     }
     if (requestPath.endsWith("/actions/runs/101")) {
       return response({

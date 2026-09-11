@@ -3,11 +3,12 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { inspectWorkflowJob, readWorkflow } from "../scripts/workflow-action-graph.mjs";
 import {
   createBuildchainContractLock,
   createBuildchainContractWorld,
-} from "../packages/core/buildchain-contract.js";
-import { initBuildchainRepo } from "../scripts/init-repo.mjs";
+} from "../packages/core/contracts/buildchain-contract.js";
+import { initBuildchainRepo } from "../packages/core/adoption/commands/init-repo.mjs";
 import {
   assertPromotionCertificationWiring,
   assertTrustGatedJobs,
@@ -17,8 +18,8 @@ import {
 import {
   resolveFloatingConsumerPolicyAuthority,
   scanFloatingConsumerPolicy,
-} from "../packages/core/floating-consumer-policy.js";
-import { scanRuntimeSelectorPersistence } from "../packages/core/runtime-selector-persistence.js";
+} from "../packages/core/consumer/floating-consumer-policy.js";
+import { scanRuntimeSelectorPersistence } from "../packages/core/consumer/runtime-selector-persistence.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 
@@ -26,32 +27,20 @@ test("v4 floating policy contract check accepts the repository wiring", () => {
   assert.equal(checkFloatingConsumerPolicyContract().ok, true);
 });
 
-test("public adopter delivery uploads the receipt resolved under the consumer root", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/public-build-adopter-qualification.yml"),
-    "utf8",
-  );
-  assert.match(
-    workflow,
-    /path: \$\{\{ steps\.policy\.outputs\.v4-consumer-policy-receipt-path \}\}/u,
-  );
-  assert.match(
-    workflow,
-    /path: \$\{\{ steps\.policy\.outputs\.v4-consumer-policy-receipt-path \}\}\n\s+include-hidden-files: true\n\s+if-no-files-found: error/u,
-  );
-  assert.doesNotMatch(
-    workflow,
-    /path: \.buildchain\/evidence\/v4-adopter-delivery-policy-receipt\.json/u,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_INVOCATION_SOURCE_PATH: \$\{\{ inputs\['invocation-source-path'\] \|\| \(github\.repository == 'kungfu-systems\/buildchain' && '\.github\/workflows\/self-build-adopter-dogfood\.yml' \|\| ''\) \}\}/u,
-  );
-  assert.match(
-    workflow,
-    /--repository "\$\{\{ inputs\['consumer-repository'\] \|\| github\.repository \}\}"\n\s+--source-sha "\$\{\{ steps\.consumer-source\.outputs\.sha \}\}"/u,
-  );
-  assert.doesNotMatch(workflow, /github\.event_name == 'workflow_dispatch'/u);
+test("public adopter delivery uploads the exact receipt returned by its admission node", () => {
+  const file = ".github/workflows/public-build-adopter-qualification.yml";
+  const workflow = readWorkflow(file);
+  const graphs = Object.keys(workflow.jobs).map(id => inspectWorkflowJob(file, id));
+  const graph = graphs.find(item => item.actions.has("actions/adoption/adopter/admit"));
+  assert.ok(graph);
+  const upload = graph.steps.find(step => step.name === "Preserve rooted policy");
+  assert.equal(upload.with.path, "${{ steps.policy.outputs.v4-consumer-policy-receipt-path }}");
+  assert.equal(upload.with["include-hidden-files"], true);
+  assert.equal(upload.with["if-no-files-found"], "error");
+  const checkout = graph.steps.find(step => step.name === "Check out admitted consumer");
+  assert.equal(checkout.with.repository, "${{ steps.selection.outputs.repository }}");
+  assert.equal(checkout.with.ref, "${{ steps.selection.outputs.sha }}");
+  assert.equal(checkout.with["persist-credentials"], false);
 });
 
 function writeCurrentRuntimeLocks(consumerRoot) {
@@ -79,18 +68,8 @@ test("alpha promotion wiring admits a consumer that accepted the selected runtim
     path.join(os.tmpdir(), "buildchain-promotion-wiring-"),
   );
   t.after(() => fs.rmSync(consumerRoot, { recursive: true, force: true }));
-  fs.cpSync(path.join(root, ".github"), path.join(consumerRoot, ".github"), {
-    recursive: true,
-  });
-  for (const action of fs.readdirSync(path.join(root, "actions"))) {
-    fs.mkdirSync(path.join(consumerRoot, "actions", action), {
-      recursive: true,
-    });
-    fs.copyFileSync(
-      path.join(root, "actions", action, "action.yml"),
-      path.join(consumerRoot, "actions", action, "action.yml"),
-    );
-  }
+  fs.mkdirSync(path.join(consumerRoot, ".github/workflows"), { recursive: true });
+  fs.writeFileSync(path.join(consumerRoot, ".github/workflows/release.yml"), "jobs:\n  promote:\n    uses: kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4-alpha\n");
   writeCurrentRuntimeLocks(consumerRoot);
   const authority = resolveFloatingConsumerPolicyAuthority({
     runtimeRoot: root,
@@ -98,10 +77,10 @@ test("alpha promotion wiring admits a consumer that accepted the selected runtim
   });
   const result = scanFloatingConsumerPolicy({
     root: consumerRoot,
-    repository: "kungfu-systems/buildchain",
+    repository: "kungfu-systems/example",
     sourceSha: "a".repeat(40),
-    invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
-    invocationSourcePath: ".github/workflows/self-release-promote.yml",
+    invokedWorkflow: ".github/workflows/public-release-promote.yml",
+    invocationSourcePath: ".github/workflows/release.yml",
     expectedInvocationChannel: "alpha",
     resolvedWorkflowSha: "b".repeat(40),
     resolvedRuntimeSha: "b".repeat(40),
@@ -119,7 +98,7 @@ test("bounded recovery is a one-way adapter into the same public publisher", () 
   const relative = ".github/workflows/self-ops-promotion-recovery.yml";
   const workflow = fs.readFileSync(path.join(root, relative), "utf8");
   const publicPromotion = fs.readFileSync(
-    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    path.join(root, ".github/workflows/public-release-promote.yml"),
     "utf8",
   );
   const authority = resolveFloatingConsumerPolicyAuthority({
@@ -139,14 +118,14 @@ test("bounded recovery is a one-way adapter into the same public publisher", () 
       invocationRoot,
       ".github",
       "workflows",
-      "release-candidate-promote.yml",
+      "public-release-promote.yml",
     ),
     [
       "jobs:",
       "  alpha:",
-      "    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha",
+      "    uses: kungfu-systems/buildchain/.github/workflows/.release-promote.yml@v4-alpha",
       "  stable:",
-      "    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4",
+      "    uses: kungfu-systems/buildchain/.github/workflows/.release-promote.yml@v4",
       "",
     ].join("\n"),
   );
@@ -157,8 +136,8 @@ test("bounded recovery is a one-way adapter into the same public publisher", () 
       invocationRoot,
       repository: "kungfu-systems/buildchain",
       sourceSha: "a".repeat(40),
-      invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
-      invocationSourcePath: ".github/workflows/release-candidate-promote.yml",
+      invokedWorkflow: ".github/workflows/.release-promote.yml",
+      invocationSourcePath: ".github/workflows/public-release-promote.yml",
       expectedInvocationChannel: "stable",
       resolvedWorkflowSha: "b".repeat(40),
       resolvedRuntimeSha: "c".repeat(40),
@@ -173,83 +152,45 @@ test("bounded recovery is a one-way adapter into the same public publisher", () 
     fs.rmSync(consumerRoot, { recursive: true, force: true });
   }
   assert.match(workflow, /^  workflow_dispatch:/mu);
-  assert.match(
-    workflow,
-    /^  resume:[\s\S]*release-candidate-promote\.yml@v4-alpha/mu,
-  );
-  assert.ok(
-    publicPromotion.includes(
-      "BUILDCHAIN_INVOCATION_SOURCE_PATH: ${{ inputs.publication-publisher-workflow-path == '.github/workflows/self-ops-promotion-recovery.yml' && '.github/workflows/release-candidate-promote.yml' || inputs.publication-publisher-workflow-path }}",
-    ),
-  );
-  assert.ok(
-    publicPromotion.includes(
-      "BUILDCHAIN_INVOKED_WORKFLOW: ${{ inputs.publication-publisher-workflow-path == '.github/workflows/self-ops-promotion-recovery.yml' && '.github/workflows/.release-candidate-promote.yml' || '.github/workflows/release-candidate-promote.yml' }}",
-    ),
-  );
+  assert.equal(readWorkflow(relative).jobs.resume.uses, "kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4");
+  assert.equal(readWorkflow(".github/workflows/public-release-promote.yml").jobs.invoke.uses, "./.github/workflows/.release-promote.yml");
   assert.doesNotMatch(workflow, /^  consumer-admission:/mu);
-  assert.doesNotMatch(workflow, /uses:.*@alpha\/v4\/v4\.0/u);
-  for (const marker of [
-    "resume-candidate-run-id: ${{ inputs['resume-candidate-run-id'] }}",
-    "resume-buildchain-runtime-sha: ${{ inputs['resume-buildchain-runtime-sha'] }}",
-    "resume-transaction-id: ${{ inputs['resume-transaction-id'] }}",
-    "publish-transaction-override: true",
-  ])
-    assert.match(
-      workflow,
-      new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"),
-    );
+  for (const marker of ["resume-candidate-run-id", "resume-transaction-id"]) {
+    assert.ok(readWorkflow(relative).jobs.resume.with["request-json"].includes(`"${marker}":`));
+  }
+  assert.match(workflow, /"publish-transaction-override": true/);
 });
 
 test("v4 floating policy contract rejects certification without caller lock readback", () => {
   assert.throws(
     () =>
       assertPromotionCertificationWiring(
-        'node "${policy_runtime}/scripts/consumer-policy.mjs" certify',
+        'node "${policy_runtime}/packages/core/consumer/commands/consumer-policy.mjs" certify',
       ),
     /promotion certification is missing/u,
   );
 });
 
-test("fresh promotion roots policy, candidate, publisher, and runtime before APPLY", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
-    "utf8",
-  );
-  assert.match(workflow, /QUALIFY canonical v4 release invocation inputs/u);
-  assert.match(workflow, /publisher-sha=\$\{\{ job\.workflow_sha \}\}/u);
-  assert.match(
-    workflow,
-    /tree="\$\(git -C \.buildchain\/runtime rev-parse 'HEAD\^\{tree\}'\)"/u,
-  );
-  assert.match(workflow, /Translate and admit legacy-compatible inputs/u);
-  assert.match(workflow, /Resolve and qualify the sealed release candidate/u);
-  assert.match(workflow, /APPLY one rooted provider transaction/u);
-  assert.match(
-    workflow,
-    /runtime-commit: \$\{\{ needs\.qualify\.outputs\.runtime-sha \}\}/u,
-  );
-  assert.match(
-    workflow,
-    /runtime-tree: \$\{\{ needs\.qualify\.outputs\.runtime-tree \}\}/u,
-  );
-  assert.doesNotMatch(
-    workflow,
-    /policy_runtime=\.buildchain\/runtime\/promotion-shell/u,
-  );
-  assert.doesNotMatch(
-    workflow,
-    /BUILDCHAIN_EXPECTED_RUNTIME_SHA: \$\{\{ inputs\.resume-expected-candidate-runtime-sha/u,
-  );
+test("fresh promotion records publisher and selected runtime without secondary admission", () => {
+  const graph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "qualify");
+  const node = graph.job.steps.find(step => step.id === "node");
+  assert.equal(node.with["job-workflow-sha"], "${{ toJSON(job.workflow_sha) }}");
+  const qualification = graph.modules.get("packages/core/release/promotion/qualification-action.js");
+  assert.doesNotMatch(qualification, /verifyCheckoutIdentity/);
+  assert.match(qualification, /"publisher-sha": workflowSha/);
+  assert.match(qualification, /"runtime-tree": tree/);
+  const candidate = graph.modules.get("packages/core/release/promotion/candidate.js");
+  assert.doesNotMatch(candidate, /promotion-runtime-authorization/);
+  assert.equal(graph.job.steps[0].uses, "$/actions/runtime/environment/prepare");
 });
 
-test("v4 floating policy contract rejects an unbound certification root", () => {
+test("v4 floating policy contract rejects an unbound publisher identity", () => {
   const workflow = fs
     .readFileSync(
-      path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+      path.join(root, ".github/workflows/.release-promote.yml"),
       "utf8",
     )
-    .replace(/^\s*BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON:.*$/mu, "");
+    .replace(/^\s*job-workflow-sha:.*$/mu, "");
   assert.throws(
     () => assertPromotionCertificationWiring(workflow),
     /promotion certification is missing/u,

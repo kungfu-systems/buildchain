@@ -1,0 +1,14 @@
+name: Qualify exact repository source
+description: Qualify exact repository source
+inputs:
+  token:
+    description: Read-only evidence discovery credential.
+    required: true
+outputs:
+  decision:
+    description: Full source execution, exact proof reuse or regenerated version projection.
+  proof-sealed:
+    description: Successful merge-group execution produced an immutable proof.
+runs:
+  using: node24
+  main: dist/index.js

@@ -1,0 +1,14 @@
+name: compare candidate self-dogfood
+description: Admit reviewed candidate coordinates and qualify primary/recovery
+  execution equivalence.
+inputs:
+  candidate-sha:
+    description: candidate-sha self-dogfood evidence.
+    required: true
+  observations-json:
+    description: observations-json self-dogfood evidence.
+    required: true
+outputs: {}
+runs:
+  using: node24
+  main: dist/index.js

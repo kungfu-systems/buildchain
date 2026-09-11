@@ -1,0 +1,6 @@
+name: Qualify runner compatibility
+description: Verify repository checks and collect and validate a self-hosted
+  passport fixture.
+runs:
+  using: node24
+  main: dist/index.js

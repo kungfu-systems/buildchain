@@ -1,12 +1,36 @@
 name: Self-hosted Runner Smoke
-
 on:
   workflow_dispatch:
-
+    inputs:
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
 permissions:
   contents: read
-
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+    timeout-minutes: 5
   smoke:
     runs-on:
       - self-hosted
@@ -16,42 +40,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7.0.0
-
-      - name: Show runner
-        run: |
-          echo "runner.name=${RUNNER_NAME}"
-          echo "runner.os=${RUNNER_OS}"
-          echo "runner.arch=${RUNNER_ARCH}"
-          node --version
-          corepack --version
-
-      - name: Setup Go
-        uses: actions/setup-go@v6.5.0
+        id: source-checkout
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          go-version: "1.25.x"
-
-      - name: Enable pnpm
-        run: |
-          corepack prepare pnpm@11.7.0 --activate
-          corepack enable
-          pnpm --version
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Check buildchain
-        run: pnpm run check
-
-      - name: Verify release passport compatibility fixture
-        env:
-          BUILDCHAIN_RUNNER_KIND: self-hosted
-        run: |
-          mkdir -p dist/passport-fixture
-          printf 'self-hosted compatibility fixture\n' > dist/passport-fixture/buildchain-self-hosted-fixture.tar.gz
-          node bin/buildchain.mjs collect github-release \
-            --tag "v0.0.0-self-hosted-smoke" \
-            --repository "${GITHUB_REPOSITORY}" \
-            --source-sha "${GITHUB_SHA}" \
-            --assets-dir dist/passport-fixture \
-            --output-dir .buildchain/self-hosted-passport
-          node bin/buildchain.mjs verify release-passport .buildchain/self-hosted-passport/buildchain.release.json
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+        if: ${{ always() }}
+      - name: Execute runner-smoke
+        id: node
+        uses: ./.buildchain/runtime/actions/governance/runner/verify
+        if: ${{ always() }}
+        with:
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+    needs:
+      - execution-runtime

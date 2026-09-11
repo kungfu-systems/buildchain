@@ -1,0 +1,22 @@
+name: Locate accepted source qualification proof
+description: Locate accepted source qualification proof
+inputs:
+  token:
+    description: token admitted qualification coordinates.
+    required: true
+outputs:
+  found:
+    description: found qualification evidence.
+  reason:
+    description: reason qualification evidence.
+  run-id:
+    description: run-id qualification evidence.
+  source-head:
+    description: source-head qualification evidence.
+  artifact-name:
+    description: artifact-name qualification evidence.
+  workflow-path:
+    description: workflow-path qualification evidence.
+runs:
+  using: node24
+  main: dist/index.js

@@ -5,7 +5,7 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 
-const implementationExtensions = new Set([".js", ".mjs", ".cjs", ".rs", ".sh"]);
+const implementationExtensions = new Set([".js", ".mjs", ".cjs", ".rs", ".sh", ".py", ".ps1"]);
 const repositorySourceExtensions = new Set([".js", ".mjs", ".cjs", ".rs"]);
 const importPattern =
   /(?:\bimport\s*(?:\([^)]*?\)|[^"'\n]*?\s+from\s+)?|\bexport\s+[^"'\n]*?\s+from\s+)(["'])([^"'\n]+)\1/g;
@@ -133,7 +133,7 @@ function repositorySourceFiles(root) {
     .filter((file) => !file.startsWith(".tmp-"))
     .filter((file) => !file.startsWith("tests/"))
     .filter((file) => !/(?:^|\/)tests?\//u.test(file))
-    .filter((file) => !/^actions\/[^/]+\/dist\//u.test(file))
+    .filter((file) => !/^actions\/(?:[^/]+\/)+dist\//u.test(file))
     .sort();
 }
 
@@ -289,7 +289,7 @@ function evaluateDependencyDirections(root, index, sourceOverrides) {
           : fs.readFileSync(absoluteSource, "utf8");
         for (const specifier of relativeImports(source)) {
           const target = resolveImportTarget(root, sourcePath, specifier);
-          if (!allowed.some((prefix) => isInside(target, prefix))) {
+          if (!allowed.some((prefix) => isInside(target, prefix)) || (rule.forbiddenRelativeTargets || []).some((prefix) => isInside(target, prefix))) {
             issues.push(
               `${rule.id}: ${sourcePath} imports ${target}, outside allowed dependency direction`,
             );

@@ -1,22 +1,18 @@
+import YAML from "yaml";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { nextDevelopmentAgentInstructions } from "../packages/core/next-development-projection.js";
+import { nextDevelopmentAgentInstructions } from "../packages/core/release/next-development-projection.js";
 import {
   createBuildchainContractWorld,
   finalizeBuildchainContractWorld,
-} from "../packages/core/buildchain-contract.js";
-import {
-  collectPaperAgentEntry,
-  collectPaperPreflight,
-  planPaperMigration,
-  planPaperScaffold,
-  writePaperMigration,
-  writePaperScaffold,
-} from "../packages/core/paper.js";
+} from "../packages/core/contracts/buildchain-contract.js";
+import { collectPaperAgentEntry } from "../packages/core/paper/paper-agent-entry.js";
+import { collectPaperPreflight } from "../packages/core/paper/paper.js";
+import { planPaperMigration, planPaperScaffold, writePaperMigration, writePaperScaffold } from "../packages/core/paper/operations/scaffold.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const tagCommit = "a".repeat(40);
@@ -59,7 +55,7 @@ function installedRuntimeSha({
       [
         "--input-type=module",
         "-e",
-        `import { resolvePaperRuntimeGitSha } from ${JSON.stringify(new URL("../packages/core/paper.js", import.meta.url).href)}; console.log(JSON.stringify(resolvePaperRuntimeGitSha(${JSON.stringify(cwd)})));`,
+        `import { resolvePaperRuntimeGitSha } from ${JSON.stringify(new URL("../packages/core/paper/operations/runtime.js", import.meta.url).href)}; console.log(JSON.stringify(resolvePaperRuntimeGitSha(${JSON.stringify(cwd)})));`,
       ],
       {
         env: {
@@ -167,7 +163,7 @@ function fixture() {
     planPaperScaffold({
       cwd,
       buildchainRoot: root,
-      buildchainVersion: "3.0.4-alpha.13",
+      buildchainVersion: version,
       name: "paper-example",
       title: "Existing paper",
       packageName: "@example/paper-example",
@@ -204,26 +200,19 @@ function fixture() {
 
 test("generated v4 Verify grants the public callee read permissions without write authority", () => {
   const { cwd, options } = fixture();
-  const permissions = (text) =>
-    Object.fromEntries(
-      [
-        ...text
-          .match(/\npermissions:\n([\s\S]*?)\n\n/)[1]
-          .matchAll(/^  ([a-z-]+): (read|write)\s*$/gm),
-      ].map((match) => [match[1], match[2]]),
-    );
+  const permissions = text => YAML.parse(text).permissions;
   assert.deepEqual(
     permissions(
       fs.readFileSync(path.join(cwd, ".github/workflows/verify.yml"), "utf8"),
     ),
-    { contents: "read" },
+    { actions: "read", contents: "read", "pull-requests": "read" },
   );
   assert.equal(writePaperMigration(planPaperMigration(options)).ok, true);
   const caller = permissions(
     fs.readFileSync(path.join(cwd, ".github/workflows/verify.yml"), "utf8"),
   );
   const callee = permissions(
-    fs.readFileSync(path.join(root, ".github/workflows/check.yml"), "utf8"),
+    fs.readFileSync(path.join(root, ".github/workflows/public-build-check.yml"), "utf8"),
   );
   assert.deepEqual(caller, callee);
   assert(Object.values(caller).every((permission) => permission === "read"));
@@ -233,7 +222,7 @@ test("Paper guidance resolves installed script and official ADR without rewritin
   const { cwd, options } = fixture();
   const file = path.join(cwd, "AGENTS.md");
   const note =
-    "Local note: `architecture/decisions/0002-next-development-transition.md` and node scripts/next-development-transition.mjs remain literal examples.\n";
+    "Local note: `architecture/decisions/0002-next-development-transition.md` and node packages/core/release/commands/next-development-transition.mjs remain literal examples.\n";
   fs.writeFileSync(file, note + fs.readFileSync(file, "utf8"));
   commit(cwd);
   assert.equal(writePaperMigration(planPaperMigration(options)).ok, true);
@@ -243,7 +232,7 @@ test("Paper guidance resolves installed script and official ADR without rewritin
     "<!-- buildchain:next-development:v1:start -->",
   )[1];
   const script = section.match(
-    /node node_modules\/@kungfu-tech\/buildchain\/(scripts\/[^ ]+) materialize/,
+    /node node_modules\/@kungfu-tech\/buildchain\/(packages\/core\/release\/commands\/[^ ]+) materialize/,
   )[1];
   assert(fs.existsSync(path.join(root, script)));
   const adr = section.match(
@@ -252,7 +241,7 @@ test("Paper guidance resolves installed script and official ADR without rewritin
   assert(fs.existsSync(path.join(root, adr)));
   assert.match(
     nextDevelopmentAgentInstructions(),
-    /node scripts\/next-development-transition.mjs materialize/,
+    /node packages\/core\/release\/commands\/next-development-transition.mjs materialize/,
   );
   assert.doesNotMatch(section, /\nnode scripts\//);
 });
@@ -273,7 +262,7 @@ test("v4 paper migration preserves content and binds floating callers to distinc
     fs.readFileSync(path.join(cwd, "paper/main.tex"), "utf8"),
     paper,
   );
-  for (const name of ["build.yml", "verify.yml", "paper-release.yml"]) {
+  for (const name of ["build.yml", "verify.yml", "public-release-paper.yml"]) {
     const text = fs.readFileSync(
       path.join(cwd, ".github/workflows", name),
       "utf8",
@@ -283,7 +272,7 @@ test("v4 paper migration preserves content and binds floating callers to distinc
       text,
       /buildchain[^\n]*@[0-9a-f]{40}|buildchain-ref: [0-9a-f]{40}|@v3/,
     );
-    if (name === "paper-release.yml") {
+    if (name === "public-release-paper.yml") {
       assert.match(text, /@v4\n/);
       assert.match(text, /startsWith\(github.ref_name, 'release\/'\)/);
     }
@@ -315,11 +304,7 @@ test("v4 paper migration preserves content and binds floating callers to distinc
     "pass",
     JSON.stringify(preflight),
   );
-  assert.equal(
-    preflight.checks.find((check) => check.id === "agent-entry.runtime-source")
-      .status,
-    "pass",
-  );
+  assert.equal(preflight.checks.some(check => check.id === "agent-entry.runtime-source"), false);
   commit(cwd);
   assert.equal(
     planPaperMigration(options).changes.every(
@@ -355,7 +340,7 @@ test("v4 paper migration rejects a dirty or wrong-channel explicit root", () => 
   assert.throws(() => planPaperMigration(options), /does not belong to v4/);
 });
 
-test("v4 paper CI accepts only the two bound runtime sources", () => {
+test("Paper CI checks source policy independently of selected runtime", () => {
   const { cwd, stableRoot, alphaRoot, options } = fixture();
   writePaperMigration(planPaperMigration(options));
   const env = {
@@ -381,11 +366,11 @@ test("v4 paper CI accepts only the two bound runtime sources", () => {
       env,
       buildchainSha: "a".repeat(40),
     }).ok,
-    false,
+    true,
   );
 });
 
-test("v4 paper preflight admits compatible floating SHA drift only in CI", () => {
+test("Paper source admission never rechecks runtime SHA; provisioning remains rooted", () => {
   const { cwd, alphaRuntime, options } = fixture();
   writePaperMigration(planPaperMigration(options));
   for (const agentEntryMode of ["ci", "local"]) {
@@ -397,9 +382,8 @@ test("v4 paper preflight admits compatible floating SHA drift only in CI", () =>
       agentEntryMode,
     });
     assert.equal(
-      result.checks.find(({ id }) => id === "agent-entry.runtime-source")
-        .status,
-      agentEntryMode === "ci" ? "pass" : "fail",
+      result.checks.some(({ id }) => id === "agent-entry.runtime-source"),
+      false,
       JSON.stringify(result),
     );
   }
@@ -415,7 +399,7 @@ test("v4 paper preflight admits compatible floating SHA drift only in CI", () =>
     agentEntryMode: "ci",
   });
   assert.equal(
-    rejected.checks.find(({ id }) => id === "agent-entry.runtime-source")
+    rejected.checks.find(({ id }) => id === "provisioning.authority")
       .status,
     "fail",
   );

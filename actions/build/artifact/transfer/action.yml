@@ -1,0 +1,31 @@
+name: transfer-build-artifact
+description: Transfer declared artifacts through the governed provider and
+  publish exact references.
+inputs:
+  plan:
+    description: Rooted build plan
+    required: true
+  platform:
+    description: Selected platform
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Configure scoped artifact transport
+      if: ${{ fromJSON(inputs.plan).transfer.mode == 's3-to-github-artifacts' }}
+      uses: aws-actions/configure-aws-credentials@v6.1.0
+      with:
+        role-to-assume: ${{ fromJSON(inputs.plan).environment.transfer.upload_role_arn }}
+        aws-region: ${{ fromJSON(inputs.plan).transfer.s3Region }}
+        audience: ${{ fromJSON(inputs.plan).transfer.oidcAudience }}
+    - name: Publish payload and execution evidence
+      id: transfer
+      uses: ./.buildchain/runtime/actions/build/artifact/retain
+      with:
+        plan: ${{ inputs.plan }}
+        token: ${{ github.token }}
+        platform: ${{ inputs.platform }}
+outputs:
+  artifact:
+    description: Execution artifact reference
+    value: ${{ steps.transfer.outputs.artifact }}

@@ -10,15 +10,15 @@ import {
   PUBLICATION_ARTIFACT_REGISTRY_CONTRACT,
   collectPublicationArtifact,
   writePublicationArtifact,
-} from "../packages/core/publication-artifact.js";
+} from "../packages/core/publication/publication-artifact.js";
 import {
   PUBLICATION_NPM_PACKAGE_CONTRACT,
   preparePublicationNpmPackage,
-} from "../packages/core/publication-package.js";
+} from "../packages/core/publication/publication-package.js";
 import {
   compareSemver,
   hydratePublishedPublicationRegistry,
-} from "../scripts/publication-registry-hydrate.mjs";
+} from "../packages/core/publication/candidate/registry-hydration.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const fixture = path.join(root, "fixtures", "publication-artifact-shaped");

@@ -1,0 +1,23 @@
+name: Execute and validate a declared Gate profile
+description: Execute and validate a declared Gate profile.
+inputs:
+  request-json:
+    description: Public Gate profile request
+    required: true
+  entry-json:
+    description: Admitted Gate matrix entry
+    required: true
+outputs:
+  gate-platform-id:
+    description: gate platform id
+  gate-receipt-path:
+    description: gate receipt path
+  gate-validation-path:
+    description: gate validation path
+  gate-execution-path:
+    description: gate execution path
+  gate-qualifying:
+    description: gate qualifying
+runs:
+  using: node24
+  main: dist/index.js

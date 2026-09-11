@@ -1,0 +1,26 @@
+{
+  "schema": "buildchain.runtime-entry/v1",
+  "protocol": 1,
+  "repository": "kungfu-systems/buildchain",
+  "prepareAction": "actions/runtime/environment/prepare",
+  "directory": ".buildchain/runtime",
+  "selection": {
+    "precedence": ["runtime-parameter", "contract-lock", "workflow-default"],
+    "persistedEntryRefs": ["v4", "v4-alpha"],
+    "workflowEqualityRequired": false,
+    "businessIdentityChecks": false
+  },
+  "execution": {
+    "implementation": "selected-runtime",
+    "preparePerJob": true,
+    "selectionPerExecution": true,
+    "dogfood": "public-consumer"
+  },
+  "recovery": {
+    "runtimeFailure": "new-attempt-with-transient-train",
+    "entryFailure": "upgrade-entry-and-run-from-start",
+    "preserveSource": true,
+    "reuseRequiresValidEvidence": true,
+    "providerEffectsRequireReadback": true
+  }
+}

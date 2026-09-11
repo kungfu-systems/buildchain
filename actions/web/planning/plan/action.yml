@@ -1,0 +1,98 @@
+name: web-plan
+description: Prepare runtime and consumer tools, admit the contract, build one
+  channel plan, and publish its artifacts and review target.
+inputs:
+  request-json:
+    description: Typed public Web request.
+    required: true
+  runtime-json:
+    description: Admitted runtime coordinates.
+    required: true
+  intent-json:
+    description: Verified release intent.
+    required: true
+  selection-json:
+    description: Admitted channel and preview alias.
+    required: true
+  workflow-ref:
+    description: Defining workflow reference.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+outputs:
+  web-surface-channel:
+    description: web-surface-channel node result.
+    value: ${{ steps.web.outputs.web-surface-channel }}
+  web-surface-alias:
+    description: web-surface-alias node result.
+    value: ${{ steps.web.outputs.web-surface-alias }}
+  web-surface-url:
+    description: web-surface-url node result.
+    value: ${{ steps.web.outputs.web-surface-url }}
+  web-surface-urls-json:
+    description: web-surface-urls-json node result.
+    value: ${{ steps.web.outputs.web-surface-urls-json }}
+  web-surface-manifest-json:
+    description: web-surface-manifest-json node result.
+    value: ${{ steps.web.outputs.web-surface-manifest-json }}
+  web-surface-cleanup-plan-json:
+    description: web-surface-cleanup-plan-json node result.
+    value: ${{ steps.web.outputs.web-surface-cleanup-plan-json }}
+  build-outcome:
+    description: build-outcome node result.
+    value: ${{ steps.web.outputs.build-outcome }}
+  verify-outcome:
+    description: verify-outcome node result.
+    value: ${{ steps.web.outputs.verify-outcome }}
+runs:
+  using: composite
+  steps:
+    - name: Admit source checkout
+      id: source-boundary
+      if: ${{ always() }}
+      uses: ./.buildchain/runtime/actions/build/source/admit
+      with:
+        source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
+    - name: Setup Node.js
+      uses: actions/setup-node@v6.4.0
+      with:
+        node-version: ${{ fromJSON(inputs.request-json).node-version }}
+    - name: Prepare consumer package manager
+      uses: pnpm/action-setup@v4
+      with:
+        version: 11.7.0
+        run_install: false
+    - name: Build and plan the admitted channel
+      id: web
+      uses: ./.buildchain/runtime/actions/web/planning/build
+      with:
+        request-json: ${{ inputs.request-json }}
+        runtime-json: ${{ inputs.runtime-json }}
+        intent-json: ${{ inputs.intent-json }}
+        selection-json: ${{ inputs.selection-json }}
+    - name: Upload web-surface plans
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-web-surface-plans
+        path: .buildchain/web-surface-*-plan.json
+        include-hidden-files: true
+        if-no-files-found: ignore
+    - name: Upload web-surface artifact
+      if: ${{ fromJSON(inputs.selection-json).web-surface-channel != '' &&
+        (github.event_name != 'pull_request' || github.event.action != 'closed')
+        }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-web-surface-artifact
+        path: ${{ fromJSON(inputs.request-json).working-directory }}/${{
+          fromJSON(inputs.request-json).artifact-path }}
+        include-hidden-files: true
+        if-no-files-found: error
+    - name: Comment release PR review target
+      if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed'
+        && fromJSON(inputs.request-json).production-release-on-main }}
+      uses: ./.buildchain/runtime/actions/web/feedback/review
+      with:
+        request-json: ${{ inputs.request-json }}
+        token: ${{ github.token }}

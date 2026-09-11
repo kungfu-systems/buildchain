@@ -5,13 +5,13 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { createArtifactSigningRequest } from "../packages/core/artifact-signing.js";
+import { createArtifactSigningRequest } from "../packages/core/build/artifact-signing.js";
 import {
   DMG_RESOURCE_BUSY_FAILURE,
   assembleDmgWithRetry,
   classifyHdiutilCreateFailure,
   createDmgAssemblyIdentity,
-} from "../actions/macos-credential-island/dmg-assembly.js";
+} from "../packages/core/build/macos-credential-island/dmg-assembly.js";
 
 import {
   EVIDENCE_CONTRACT,
@@ -39,7 +39,7 @@ import {
   summarizeNotaryLog,
   validateWheelEntryListing,
   validateWheelMetadata,
-} from "../actions/macos-credential-island/lib.js";
+} from "../packages/core/build/macos-credential-island/lib.js";
 
 const SOURCE_SHA = "1".repeat(40);
 const TREE_SHA = "2".repeat(40);
@@ -731,7 +731,7 @@ test("credential island bundle loads before validating runner inputs", () => {
   const root = path.resolve(import.meta.dirname, "..");
   const bundlePath = path.join(
     root,
-    "actions/macos-credential-island/dist/index.js",
+    "actions/build/credential/macos-island/dist/index.js",
   );
   const bundle = fs.readFileSync(bundlePath, "utf8");
   const result = spawnSync(process.execPath, [bundlePath], {
@@ -753,15 +753,15 @@ test("credential island bundle loads before validating runner inputs", () => {
 test("public action and workflow keep credentials outside the build matrix", () => {
   const root = path.resolve(import.meta.dirname, "..");
   const action = fs.readFileSync(
-    path.join(root, "actions/macos-credential-island/action.yml"),
+    path.join(root, "actions/build/credential/macos-island/action.yml"),
     "utf8",
   );
   const implementation = fs.readFileSync(
-    path.join(root, "actions/macos-credential-island/index.js"),
+    path.join(root, "packages/core/build/macos-credential-island/action.js"),
     "utf8",
   );
   const dmgImplementation = fs.readFileSync(
-    path.join(root, "actions/macos-credential-island/dmg-assembly.js"),
+    path.join(root, "packages/core/build/macos-credential-island/dmg-assembly.js"),
     "utf8",
   );
   const workflow = fs.readFileSync(
@@ -811,16 +811,16 @@ test("public action and workflow keep credentials outside the build matrix", () 
     /assembleDmgWithRetry\([\s\S]*?signAndVerifyDmg\(assembly\.imagePath,[\s\S]*?const notarization = submitNotary\([\s\S]*?staple\(assembly\.imagePath\)[\s\S]*?COPYFILE_EXCL/,
   );
   assert.match(implementation, /dmgCodesign: true/);
-  const sign = fs.readFileSync(path.join(root, "actions/sign-build-artifact/action.yml"), "utf8");
-  const stage = fs.readFileSync(path.join(root, "scripts/build/stage.mjs"), "utf8");
-  const plan = fs.readFileSync(path.join(root, "scripts/build/plan.mjs"), "utf8");
-  assert.match(stage, /CSC_IDENTITY_AUTO_DISCOVERY: plan.build.macos_signing.app_path \? "false"/u);
-  assert.match(stage, /seal-macos-credential-input.mjs/u);
+  const sign = fs.readFileSync(path.join(root, "actions/build/artifact/sign/action.yml"), "utf8");
+  const stage = fs.readFileSync(path.join(root, "packages/core/build/lifecycle/stage.js"), "utf8");
+  const plan = fs.readFileSync(path.join(root, "packages/core/build/plan/matrices.js"), "utf8");
+  assert.match(stage, /CSC_IDENTITY_AUTO_DISCOVERY: plan.build.macos_signing.app_path\s*\? "false"/u);
+  assert.match(stage, /sealMacosCredentialInput\(/u);
   assert.match(plan, /macOS signing requires a governed credential environment/u);
   assert.match(workflow, /checkout-source:.*matrix.platform.kind == 'artifact'/u);
-  assert.match(workflow, /matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_CERTIFICATE/u);
+  assert.match(workflow, /matrix.platform.kind == 'credential' &&\s+secrets.BUILDCHAIN_MACOS_CERTIFICATE/u);
   assert.match(sign, /inputs.kind == 'credential'/u);
-  assert.match(sign, /uses: .\/.buildchain\/runtime\/actions\/macos-credential-island/u);
+  assert.match(sign, /uses: .\/.buildchain\/runtime\/actions\/build\/credential\/macos-island/u);
   assert.match(sign, /expected-bundle-id:.*steps.identity.outputs.bundle-id/u);
   assert.doesNotMatch(implementation, /execSync|shell:\s*true/);
   assert.match(implementation, /schema:\s*EVIDENCE_CONTRACT/);

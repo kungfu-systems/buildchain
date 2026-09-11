@@ -4,1320 +4,13 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "4.0.10-alpha.1",
+    "version": "4.1.0-alpha.3",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v4",
   "compatibilityPolicy": "major-compatible",
-  "compatibilityFacts": [
-    {
-      "schema": "kungfu.buildchain.compatibility-fact/v1",
-      "factId": "build-channel-router-d40dd0-to-30549a",
-      "factRoot": "sha256:47c1d78adba0d75ac74409d85ad6cf1188d10d25165d2d561118cf76e9ccb701",
-      "sourceRoot": "sha256:ecf235e22344544c30b205323c6e01644561bcda143d0c566acac2571ecd18d7",
-      "targetRoot": "sha256:88cdf46c2a819e99374e7f10e609c34773fb67db9b5161adcb4112c1ccf6dc01",
-      "predicate": {
-        "root": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
-        "record": {
-          "schema": "kungfu.fact.temporal-predicate/v1",
-          "predicateId": "kungfu.buildchain.compatibility:accept-contract-lock/v1",
-          "operations": [
-            "accept-contract-lock"
-          ],
-          "direction": "source-to-target",
-          "pathPolicy": "explicit-bounded",
-          "cyclePolicy": "forbid",
-          "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea"
-        }
-      },
-      "relation": {
-        "root": "sha256:47c1d78adba0d75ac74409d85ad6cf1188d10d25165d2d561118cf76e9ccb701",
-        "record": {
-          "schema": "kungfu.fact.temporal-relation/v1",
-          "relationId": "buildchain:compatibility:build-channel-router-d40dd0-to-30549a",
-          "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
-          "sourceRoot": "sha256:ecf235e22344544c30b205323c6e01644561bcda143d0c566acac2571ecd18d7",
-          "targetRoot": "sha256:88cdf46c2a819e99374e7f10e609c34773fb67db9b5161adcb4112c1ccf6dc01",
-          "validFromCutRoot": "sha256:3b83f02e22ca82fc4a099b5f8c4353fffb1423b0a5cba41860b1ba86f7c8cbb7",
-          "scopeRoot": "sha256:dc381e72e9cad86293254f8542394f1abc27b4b0f07c122cb4cad5f73b381ccb",
-          "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-          "admissionRoots": [
-            "sha256:e449bdc62832fd18b33d93833207d70e843f066a85aae8b0c717234194ecb497"
-          ]
-        }
-      },
-      "proof": {
-        "schema": "kungfu.buildchain.compatibility-proof/v1",
-        "proofId": "build-channel-router-d40dd0-to-30549a",
-        "predicate": "compatible-breaking-digest",
-        "direction": "source-to-target",
-        "operation": "accept-contract-lock",
-        "source": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "controller:build-channel-router",
-          "surfaceKind": "controller",
-          "breakingDigest": "sha256:d40dd05d7e07473d4b2dc1b62fbb0ed6f06449b4d3a7c44a2e8014313e3c0273"
-        },
-        "target": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "controller:build-channel-router",
-          "surfaceKind": "controller",
-          "breakingDigest": "sha256:30549aa26cd1e1dd81f10fe3529d3c6e3f8438a6efa0100c47ebae4d2f3d71df"
-        },
-        "scope": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "controller:build-channel-router",
-          "surfaceKind": "controller",
-          "majorLines": [
-            "v2",
-            "v3"
-          ],
-          "operation": "accept-contract-lock"
-        },
-        "scopeRoot": "sha256:dc381e72e9cad86293254f8542394f1abc27b4b0f07c122cb4cad5f73b381ccb",
-        "evidence": {
-          "kind": "protected-pull-request-contract-acceptance",
-          "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2549",
-          "protectedBase": "dev/v3/v3.0",
-          "sourceCommit": "0d87b772265066f5e6157e1ba6a2ba1021fb5225",
-          "mergeCommit": "34fad9d3a94c450d75c0d06fd6ed00470c992ff7",
-          "contractDigest": "sha256:2584ba36ab54cd5e9bab9e34dfc08d87a55dc57de1be7641492bf7ceb1366350",
-          "compatibilityDigest": "sha256:80f65cc191b1f771475184edf8a1bf9c10dd69bb58060aa09313d0e1e57f508a"
-        },
-        "evidenceRoot": "sha256:e449bdc62832fd18b33d93833207d70e843f066a85aae8b0c717234194ecb497",
-        "authority": {
-          "kind": "protected-base-contract-authority",
-          "repository": "kungfu-systems/buildchain",
-          "protectedBase": "dev/v3/v3.0"
-        },
-        "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-        "cut": {
-          "kind": "protected-git-cut",
-          "repository": "kungfu-systems/buildchain",
-          "protectedBase": "dev/v3/v3.0",
-          "commit": "34fad9d3a94c450d75c0d06fd6ed00470c992ff7"
-        },
-        "cutRoot": "sha256:3b83f02e22ca82fc4a099b5f8c4353fffb1423b0a5cba41860b1ba86f7c8cbb7",
-        "proofRoot": "sha256:36d2e188f43385d6191116393aa81ea025ccf61e21a1c5eae1d56be92a203b31"
-      }
-    },
-    {
-      "schema": "kungfu.buildchain.compatibility-fact/v1",
-      "factId": "promote-buildchain-ref-action-a59f09-to-6147c0",
-      "factRoot": "sha256:50e5b6e644493ac00d5b1d83a0ec6009f9faaae1bee15e88ee8386c9ec8a775d",
-      "sourceRoot": "sha256:b2ea5e385297f25146de02e5da2247b6a2d7f518d88eac95624a693891107a79",
-      "targetRoot": "sha256:33eee394ed2fe9892fd833eba4dc76dcae95a2ff1d8fb507a926651604be20e9",
-      "predicate": {
-        "root": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
-        "record": {
-          "schema": "kungfu.fact.temporal-predicate/v1",
-          "predicateId": "kungfu.buildchain.compatibility:accept-contract-lock/v1",
-          "operations": [
-            "accept-contract-lock"
-          ],
-          "direction": "source-to-target",
-          "pathPolicy": "explicit-bounded",
-          "cyclePolicy": "forbid",
-          "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea"
-        }
-      },
-      "relation": {
-        "root": "sha256:50e5b6e644493ac00d5b1d83a0ec6009f9faaae1bee15e88ee8386c9ec8a775d",
-        "record": {
-          "schema": "kungfu.fact.temporal-relation/v1",
-          "relationId": "buildchain:compatibility:promote-buildchain-ref-action-a59f09-to-6147c0",
-          "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
-          "sourceRoot": "sha256:b2ea5e385297f25146de02e5da2247b6a2d7f518d88eac95624a693891107a79",
-          "targetRoot": "sha256:33eee394ed2fe9892fd833eba4dc76dcae95a2ff1d8fb507a926651604be20e9",
-          "validFromCutRoot": "sha256:4fd5ae0cdad01a09e91bbb3f183ac595510a8f25baf7ba865de7633a7eacb3eb",
-          "scopeRoot": "sha256:dbf061c2f7608451f0d2ae47e2d7eaa323d7cf61699f20467ac73712748e50c5",
-          "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-          "admissionRoots": [
-            "sha256:454c8cf77d6ecb35de2cdb2f8f80832d7fb31b9f9ef300749ac8b1595fd5cf86"
-          ]
-        }
-      },
-      "proof": {
-        "schema": "kungfu.buildchain.compatibility-proof/v1",
-        "proofId": "promote-buildchain-ref-action-a59f09-to-6147c0",
-        "predicate": "compatible-breaking-digest",
-        "direction": "source-to-target",
-        "operation": "accept-contract-lock",
-        "source": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "promote-buildchain-ref-action",
-          "surfaceKind": "action",
-          "breakingDigest": "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874"
-        },
-        "target": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "promote-buildchain-ref-action",
-          "surfaceKind": "action",
-          "breakingDigest": "sha256:6147c0a8d5c36bfaa6021871574e1fc28192a3f1b8cfdae4d24ef3059ac1ebda"
-        },
-        "scope": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "promote-buildchain-ref-action",
-          "surfaceKind": "action",
-          "majorLines": [
-            "v2",
-            "v3"
-          ],
-          "operation": "accept-contract-lock"
-        },
-        "scopeRoot": "sha256:dbf061c2f7608451f0d2ae47e2d7eaa323d7cf61699f20467ac73712748e50c5",
-        "evidence": {
-          "kind": "protected-pull-request-contract-acceptance",
-          "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/1556",
-          "protectedBase": "dev/v2/v2.14",
-          "sourceCommit": "f8e2c5d28ef34d711892589331b7e018095a96d7",
-          "mergeCommit": "6e0c29be1489f686a9a3792b46bfaa4466828393",
-          "contractDigest": "sha256:f6dbf5147d9ad3b8c49ba6630cd52b8c7853ead7c921d7e1210a393aebf97d1f",
-          "compatibilityDigest": "sha256:cdf588422ec6b460bd6f631400efa6e361a045e052c8967d6c50fadd7aa4dd90"
-        },
-        "evidenceRoot": "sha256:454c8cf77d6ecb35de2cdb2f8f80832d7fb31b9f9ef300749ac8b1595fd5cf86",
-        "authority": {
-          "kind": "protected-base-contract-authority",
-          "repository": "kungfu-systems/buildchain",
-          "protectedBase": "dev/v3/v3.0"
-        },
-        "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-        "cut": {
-          "kind": "protected-git-cut",
-          "repository": "kungfu-systems/buildchain",
-          "protectedBase": "dev/v3/v3.0",
-          "commit": "ff0f9006be1c8f63be40e67789e0cfd28fd69d46"
-        },
-        "cutRoot": "sha256:4fd5ae0cdad01a09e91bbb3f183ac595510a8f25baf7ba865de7633a7eacb3eb",
-        "proofRoot": "sha256:e6f93f44a6613a9d6de776ebe8f29b1779b0cd18a24bdf126ec6c1a07770fa75"
-      }
-    },
-    {
-      "schema": "kungfu.buildchain.compatibility-fact/v1",
-      "factId": "advanced-release-candidate-promote-aa30f2-to-9db8dd",
-      "factRoot": "sha256:5664da2363bed0b45497215b60763c3be627e568eb3182af5891c23ae3875fbe",
-      "sourceRoot": "sha256:df85dfa54c463f6889cfa1374a1b67c25f41e3e32cd59dee80262d4c766945e9",
-      "targetRoot": "sha256:07960d74a035f5417974f7761c4cb2a203e7fc6166366a3d113f09f41df597e8",
-      "predicate": {
-        "root": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
-        "record": {
-          "schema": "kungfu.fact.temporal-predicate/v1",
-          "predicateId": "kungfu.buildchain.compatibility:accept-contract-lock/v1",
-          "operations": [
-            "accept-contract-lock"
-          ],
-          "direction": "source-to-target",
-          "pathPolicy": "explicit-bounded",
-          "cyclePolicy": "forbid",
-          "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea"
-        }
-      },
-      "relation": {
-        "root": "sha256:5664da2363bed0b45497215b60763c3be627e568eb3182af5891c23ae3875fbe",
-        "record": {
-          "schema": "kungfu.fact.temporal-relation/v1",
-          "relationId": "buildchain:compatibility:advanced-release-candidate-promote-aa30f2-to-9db8dd",
-          "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
-          "sourceRoot": "sha256:df85dfa54c463f6889cfa1374a1b67c25f41e3e32cd59dee80262d4c766945e9",
-          "targetRoot": "sha256:07960d74a035f5417974f7761c4cb2a203e7fc6166366a3d113f09f41df597e8",
-          "validFromCutRoot": "sha256:4fd5ae0cdad01a09e91bbb3f183ac595510a8f25baf7ba865de7633a7eacb3eb",
-          "scopeRoot": "sha256:c9746475e09a42adf6e33cf3656d9d7cef8e880ba3efc31b8a3cd599b938a124",
-          "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-          "admissionRoots": [
-            "sha256:c428bab55d265c91220aa10f7f3d8be508bdc1b412049ca9de48fa6f9898a373"
-          ]
-        }
-      },
-      "proof": {
-        "schema": "kungfu.buildchain.compatibility-proof/v1",
-        "proofId": "advanced-release-candidate-promote-aa30f2-to-9db8dd",
-        "predicate": "compatible-breaking-digest",
-        "direction": "source-to-target",
-        "operation": "accept-contract-lock",
-        "source": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "advanced-release-candidate-promote",
-          "surfaceKind": "workflow",
-          "breakingDigest": "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
-        },
-        "target": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "advanced-release-candidate-promote",
-          "surfaceKind": "workflow",
-          "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5"
-        },
-        "scope": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "advanced-release-candidate-promote",
-          "surfaceKind": "workflow",
-          "majorLines": [
-            "v2",
-            "v3"
-          ],
-          "operation": "accept-contract-lock"
-        },
-        "scopeRoot": "sha256:c9746475e09a42adf6e33cf3656d9d7cef8e880ba3efc31b8a3cd599b938a124",
-        "evidence": {
-          "kind": "protected-pull-request-contract-acceptance",
-          "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2342",
-          "protectedBase": "dev/v3/v3.0",
-          "sourceCommit": "8870db287a9ee5fb95eebbbe907b1649d84d5b7f",
-          "mergeCommit": "30b605adea1ed33dcf0bbb4cc7b666b64a6ccd18",
-          "contractDigest": "sha256:9c07dbdb9aa8390569cd07ace044af45e6751b91ffe8fcc0cb69a77388b0f72b",
-          "compatibilityDigest": "sha256:80cfdf1786019217c439810f1a80d2866bf8f7ef35a6fa569e1a687fb2bf4cbe"
-        },
-        "evidenceRoot": "sha256:c428bab55d265c91220aa10f7f3d8be508bdc1b412049ca9de48fa6f9898a373",
-        "authority": {
-          "kind": "protected-base-contract-authority",
-          "repository": "kungfu-systems/buildchain",
-          "protectedBase": "dev/v3/v3.0"
-        },
-        "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-        "cut": {
-          "kind": "protected-git-cut",
-          "repository": "kungfu-systems/buildchain",
-          "protectedBase": "dev/v3/v3.0",
-          "commit": "ff0f9006be1c8f63be40e67789e0cfd28fd69d46"
-        },
-        "cutRoot": "sha256:4fd5ae0cdad01a09e91bbb3f183ac595510a8f25baf7ba865de7633a7eacb3eb",
-        "proofRoot": "sha256:36c85ba487be1528e85776d2bc5f766a971d42ac238aec30071945f7d60d9fc5"
-      }
-    },
-    {
-      "schema": "kungfu.buildchain.compatibility-fact/v1",
-      "factId": "reusable-build-a6a353-to-dfbedd",
-      "factRoot": "sha256:7c85c77b8282d123924b89b4f5b239b58b7b1383af91b9006425d9269a2c6ce5",
-      "sourceRoot": "sha256:d62613e555428da8c08287d9335f00b5ecf4c90950307e1b2407bf84ffbc633d",
-      "targetRoot": "sha256:db4272cd6eba98596dedf2bb6c843604fa977950e188fdde6df22534d9715c23",
-      "predicate": {
-        "root": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
-        "record": {
-          "schema": "kungfu.fact.temporal-predicate/v1",
-          "predicateId": "kungfu.buildchain.compatibility:accept-contract-lock/v1",
-          "operations": [
-            "accept-contract-lock"
-          ],
-          "direction": "source-to-target",
-          "pathPolicy": "explicit-bounded",
-          "cyclePolicy": "forbid",
-          "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea"
-        }
-      },
-      "relation": {
-        "root": "sha256:7c85c77b8282d123924b89b4f5b239b58b7b1383af91b9006425d9269a2c6ce5",
-        "record": {
-          "schema": "kungfu.fact.temporal-relation/v1",
-          "relationId": "buildchain:compatibility:reusable-build-a6a353-to-dfbedd",
-          "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
-          "sourceRoot": "sha256:d62613e555428da8c08287d9335f00b5ecf4c90950307e1b2407bf84ffbc633d",
-          "targetRoot": "sha256:db4272cd6eba98596dedf2bb6c843604fa977950e188fdde6df22534d9715c23",
-          "validFromCutRoot": "sha256:4a758c2d730bf99a28ae37057e865e9f0cb8a516200b5a0c29851ca414efa556",
-          "scopeRoot": "sha256:b50ae93f868501c8acfc93d93dc2deec916a4fcf12c19f959fbb3893cc11bb6c",
-          "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-          "admissionRoots": [
-            "sha256:8e0184e579c42a66851992a79d54b6f8add9eea776a589bc3004fe0e2177b15c"
-          ]
-        }
-      },
-      "proof": {
-        "schema": "kungfu.buildchain.compatibility-proof/v1",
-        "proofId": "reusable-build-a6a353-to-dfbedd",
-        "predicate": "compatible-breaking-digest",
-        "direction": "source-to-target",
-        "operation": "accept-contract-lock",
-        "source": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "reusable-build",
-          "surfaceKind": "workflow",
-          "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650"
-        },
-        "target": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "reusable-build",
-          "surfaceKind": "workflow",
-          "breakingDigest": "sha256:dfbedd543ae0c067982b5c8c02d98dd2f7f7df88752be97fb330da6b0ba30faa"
-        },
-        "scope": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "reusable-build",
-          "surfaceKind": "workflow",
-          "majorLines": [
-            "v2",
-            "v3"
-          ],
-          "operation": "accept-contract-lock"
-        },
-        "scopeRoot": "sha256:b50ae93f868501c8acfc93d93dc2deec916a4fcf12c19f959fbb3893cc11bb6c",
-        "evidence": {
-          "kind": "protected-pull-request-contract-acceptance",
-          "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2089",
-          "protectedBase": "dev/v3/v3.0",
-          "sourceCommit": "1a6cb874bc6f1611f3eef607e711d3532798e9e7",
-          "mergeCommit": "71a75f21159b994241ec7cb2c50f7a150c5d440b",
-          "contractDigest": "sha256:7c2a7c132a2b2722f70f148b81048147047d4d2c46cf33f7cd2dc158aec092e0",
-          "compatibilityDigest": "sha256:61af7d0871220bc0909008bdc571905ad500cccf853e7841bc5d462a34b2d436"
-        },
-        "evidenceRoot": "sha256:8e0184e579c42a66851992a79d54b6f8add9eea776a589bc3004fe0e2177b15c",
-        "authority": {
-          "kind": "protected-base-contract-authority",
-          "repository": "kungfu-systems/buildchain",
-          "protectedBase": "dev/v3/v3.0"
-        },
-        "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-        "cut": {
-          "kind": "protected-git-cut",
-          "repository": "kungfu-systems/buildchain",
-          "protectedBase": "dev/v3/v3.0",
-          "commit": "71a75f21159b994241ec7cb2c50f7a150c5d440b"
-        },
-        "cutRoot": "sha256:4a758c2d730bf99a28ae37057e865e9f0cb8a516200b5a0c29851ca414efa556",
-        "proofRoot": "sha256:b99176f414752ffb276f4add6183aa81eeb480598368ca4f57804f024212d0f5"
-      }
-    },
-    {
-      "schema": "kungfu.buildchain.compatibility-fact/v1",
-      "factId": "build-lifecycle-e264a7-to-6b8d38",
-      "factRoot": "sha256:b45ecad5988d358bc4604f28db0faad793a02d8ee8592cc1f4323365e951c6f0",
-      "sourceRoot": "sha256:556fde50370a3065212b7357efccc4e84f6332dc4c8ff94357caf5f428773fdf",
-      "targetRoot": "sha256:da550aa8c13f0f1424d1edf68653611a8206b49b1f82d0939d248010d49e9080",
-      "predicate": {
-        "root": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
-        "record": {
-          "schema": "kungfu.fact.temporal-predicate/v1",
-          "predicateId": "kungfu.buildchain.compatibility:accept-contract-lock/v1",
-          "operations": [
-            "accept-contract-lock"
-          ],
-          "direction": "source-to-target",
-          "pathPolicy": "explicit-bounded",
-          "cyclePolicy": "forbid",
-          "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea"
-        }
-      },
-      "relation": {
-        "root": "sha256:b45ecad5988d358bc4604f28db0faad793a02d8ee8592cc1f4323365e951c6f0",
-        "record": {
-          "schema": "kungfu.fact.temporal-relation/v1",
-          "relationId": "buildchain:compatibility:build-lifecycle-e264a7-to-6b8d38",
-          "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
-          "sourceRoot": "sha256:556fde50370a3065212b7357efccc4e84f6332dc4c8ff94357caf5f428773fdf",
-          "targetRoot": "sha256:da550aa8c13f0f1424d1edf68653611a8206b49b1f82d0939d248010d49e9080",
-          "validFromCutRoot": "sha256:4fd5ae0cdad01a09e91bbb3f183ac595510a8f25baf7ba865de7633a7eacb3eb",
-          "scopeRoot": "sha256:c1a391a06ad2732c09c09fe0a0806569ac066684f5f2cd381a634c7784da6de3",
-          "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-          "admissionRoots": [
-            "sha256:ec5b8374a76dea9fd344cace735f46caa7a8167eef1becd55fbdb0d3cd6f1109"
-          ]
-        }
-      },
-      "proof": {
-        "schema": "kungfu.buildchain.compatibility-proof/v1",
-        "proofId": "build-lifecycle-e264a7-to-6b8d38",
-        "predicate": "compatible-breaking-digest",
-        "direction": "source-to-target",
-        "operation": "accept-contract-lock",
-        "source": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "controller:build-lifecycle",
-          "surfaceKind": "controller",
-          "breakingDigest": "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be"
-        },
-        "target": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "controller:build-lifecycle",
-          "surfaceKind": "controller",
-          "breakingDigest": "sha256:6b8d38e92b2c67b5bc83fae0a3fd95bfa47582fbc176e6cdeebe7630a57534cb"
-        },
-        "scope": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "controller:build-lifecycle",
-          "surfaceKind": "controller",
-          "majorLines": [
-            "v2",
-            "v3"
-          ],
-          "operation": "accept-contract-lock"
-        },
-        "scopeRoot": "sha256:c1a391a06ad2732c09c09fe0a0806569ac066684f5f2cd381a634c7784da6de3",
-        "evidence": {
-          "kind": "protected-pull-request-contract-acceptance",
-          "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2058",
-          "protectedBase": "dev/v3/v3.0",
-          "sourceCommit": "c9a86bd1ac17b4fae54b0410498830edad80d831",
-          "mergeCommit": "3991801a7a7d6fe5e31b9a670dfde7ea59e61253",
-          "contractDigest": "sha256:da72850bbd3088f0e9eb20c17382557e0dfb7e68bf4469d352ed870ee8a334e8",
-          "compatibilityDigest": "sha256:32a651504c57829085dc8863f0e41dee98eb60708ff6dec958c9c7e4b1010102"
-        },
-        "evidenceRoot": "sha256:ec5b8374a76dea9fd344cace735f46caa7a8167eef1becd55fbdb0d3cd6f1109",
-        "authority": {
-          "kind": "protected-base-contract-authority",
-          "repository": "kungfu-systems/buildchain",
-          "protectedBase": "dev/v3/v3.0"
-        },
-        "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-        "cut": {
-          "kind": "protected-git-cut",
-          "repository": "kungfu-systems/buildchain",
-          "protectedBase": "dev/v3/v3.0",
-          "commit": "ff0f9006be1c8f63be40e67789e0cfd28fd69d46"
-        },
-        "cutRoot": "sha256:4fd5ae0cdad01a09e91bbb3f183ac595510a8f25baf7ba865de7633a7eacb3eb",
-        "proofRoot": "sha256:9024634cef43a9d695fa224d26be9aeb6370d3c981b003ece3b659dde8e73713"
-      }
-    },
-    {
-      "schema": "kungfu.buildchain.compatibility-fact/v1",
-      "factId": "web-surface-da569f-to-27f0cb",
-      "factRoot": "sha256:bba5690e6c535b54623d31b3260e59381bdb50161d7bff33b8e42b8b6dd3135a",
-      "sourceRoot": "sha256:b613d47196d2589279675d55435cb23f9dfc59bf5cdd37430c692b47e981bf23",
-      "targetRoot": "sha256:a409f21ebea76066bbf6ae064f220bef20cceba806e35ffc1caa107cacd0c0c2",
-      "predicate": {
-        "root": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
-        "record": {
-          "schema": "kungfu.fact.temporal-predicate/v1",
-          "predicateId": "kungfu.buildchain.compatibility:accept-contract-lock/v1",
-          "operations": [
-            "accept-contract-lock"
-          ],
-          "direction": "source-to-target",
-          "pathPolicy": "explicit-bounded",
-          "cyclePolicy": "forbid",
-          "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea"
-        }
-      },
-      "relation": {
-        "root": "sha256:bba5690e6c535b54623d31b3260e59381bdb50161d7bff33b8e42b8b6dd3135a",
-        "record": {
-          "schema": "kungfu.fact.temporal-relation/v1",
-          "relationId": "buildchain:compatibility:web-surface-da569f-to-27f0cb",
-          "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
-          "sourceRoot": "sha256:b613d47196d2589279675d55435cb23f9dfc59bf5cdd37430c692b47e981bf23",
-          "targetRoot": "sha256:a409f21ebea76066bbf6ae064f220bef20cceba806e35ffc1caa107cacd0c0c2",
-          "validFromCutRoot": "sha256:4a758c2d730bf99a28ae37057e865e9f0cb8a516200b5a0c29851ca414efa556",
-          "scopeRoot": "sha256:0288a1bc232405047630819733074df11cfd86596c0fc95afd4403948399d679",
-          "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-          "admissionRoots": [
-            "sha256:8e0184e579c42a66851992a79d54b6f8add9eea776a589bc3004fe0e2177b15c"
-          ]
-        }
-      },
-      "proof": {
-        "schema": "kungfu.buildchain.compatibility-proof/v1",
-        "proofId": "web-surface-da569f-to-27f0cb",
-        "predicate": "compatible-breaking-digest",
-        "direction": "source-to-target",
-        "operation": "accept-contract-lock",
-        "source": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "web-surface",
-          "surfaceKind": "workflow",
-          "breakingDigest": "sha256:da569f90374e878948e3d5160ed9929338ce0572473ca8ee54867b0fe1aaeace"
-        },
-        "target": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "web-surface",
-          "surfaceKind": "workflow",
-          "breakingDigest": "sha256:27f0cb9c7d97288850d215be8696b323471c41fd1cdf3a2ff3ebf21f62541960"
-        },
-        "scope": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "web-surface",
-          "surfaceKind": "workflow",
-          "majorLines": [
-            "v2",
-            "v3"
-          ],
-          "operation": "accept-contract-lock"
-        },
-        "scopeRoot": "sha256:0288a1bc232405047630819733074df11cfd86596c0fc95afd4403948399d679",
-        "evidence": {
-          "kind": "protected-pull-request-contract-acceptance",
-          "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2089",
-          "protectedBase": "dev/v3/v3.0",
-          "sourceCommit": "1a6cb874bc6f1611f3eef607e711d3532798e9e7",
-          "mergeCommit": "71a75f21159b994241ec7cb2c50f7a150c5d440b",
-          "contractDigest": "sha256:7c2a7c132a2b2722f70f148b81048147047d4d2c46cf33f7cd2dc158aec092e0",
-          "compatibilityDigest": "sha256:61af7d0871220bc0909008bdc571905ad500cccf853e7841bc5d462a34b2d436"
-        },
-        "evidenceRoot": "sha256:8e0184e579c42a66851992a79d54b6f8add9eea776a589bc3004fe0e2177b15c",
-        "authority": {
-          "kind": "protected-base-contract-authority",
-          "repository": "kungfu-systems/buildchain",
-          "protectedBase": "dev/v3/v3.0"
-        },
-        "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-        "cut": {
-          "kind": "protected-git-cut",
-          "repository": "kungfu-systems/buildchain",
-          "protectedBase": "dev/v3/v3.0",
-          "commit": "71a75f21159b994241ec7cb2c50f7a150c5d440b"
-        },
-        "cutRoot": "sha256:4a758c2d730bf99a28ae37057e865e9f0cb8a516200b5a0c29851ca414efa556",
-        "proofRoot": "sha256:3ba66a1e8f8d00ddd45f3f448bcccb15469cbd31f5765d36f61e4cfe7fd0dd41"
-      }
-    },
-    {
-      "schema": "kungfu.buildchain.compatibility-fact/v1",
-      "factId": "build-lifecycle-307459-to-6b8d38",
-      "factRoot": "sha256:c803aa7787c92e9ac71e0f52b6d2ec0cc76e8bc0e55f192affa9546286899ce9",
-      "sourceRoot": "sha256:4ac7d3ce8c279470d2ae71deda9a8a898064c240e75f02006c0ea4057ce690b1",
-      "targetRoot": "sha256:da550aa8c13f0f1424d1edf68653611a8206b49b1f82d0939d248010d49e9080",
-      "predicate": {
-        "root": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
-        "record": {
-          "schema": "kungfu.fact.temporal-predicate/v1",
-          "predicateId": "kungfu.buildchain.compatibility:accept-contract-lock/v1",
-          "operations": [
-            "accept-contract-lock"
-          ],
-          "direction": "source-to-target",
-          "pathPolicy": "explicit-bounded",
-          "cyclePolicy": "forbid",
-          "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea"
-        }
-      },
-      "relation": {
-        "root": "sha256:c803aa7787c92e9ac71e0f52b6d2ec0cc76e8bc0e55f192affa9546286899ce9",
-        "record": {
-          "schema": "kungfu.fact.temporal-relation/v1",
-          "relationId": "buildchain:compatibility:build-lifecycle-307459-to-6b8d38",
-          "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
-          "sourceRoot": "sha256:4ac7d3ce8c279470d2ae71deda9a8a898064c240e75f02006c0ea4057ce690b1",
-          "targetRoot": "sha256:da550aa8c13f0f1424d1edf68653611a8206b49b1f82d0939d248010d49e9080",
-          "validFromCutRoot": "sha256:4fd5ae0cdad01a09e91bbb3f183ac595510a8f25baf7ba865de7633a7eacb3eb",
-          "scopeRoot": "sha256:c1a391a06ad2732c09c09fe0a0806569ac066684f5f2cd381a634c7784da6de3",
-          "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-          "admissionRoots": [
-            "sha256:ec5b8374a76dea9fd344cace735f46caa7a8167eef1becd55fbdb0d3cd6f1109"
-          ]
-        }
-      },
-      "proof": {
-        "schema": "kungfu.buildchain.compatibility-proof/v1",
-        "proofId": "build-lifecycle-307459-to-6b8d38",
-        "predicate": "compatible-breaking-digest",
-        "direction": "source-to-target",
-        "operation": "accept-contract-lock",
-        "source": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "controller:build-lifecycle",
-          "surfaceKind": "controller",
-          "breakingDigest": "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1"
-        },
-        "target": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "controller:build-lifecycle",
-          "surfaceKind": "controller",
-          "breakingDigest": "sha256:6b8d38e92b2c67b5bc83fae0a3fd95bfa47582fbc176e6cdeebe7630a57534cb"
-        },
-        "scope": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "controller:build-lifecycle",
-          "surfaceKind": "controller",
-          "majorLines": [
-            "v2",
-            "v3"
-          ],
-          "operation": "accept-contract-lock"
-        },
-        "scopeRoot": "sha256:c1a391a06ad2732c09c09fe0a0806569ac066684f5f2cd381a634c7784da6de3",
-        "evidence": {
-          "kind": "protected-pull-request-contract-acceptance",
-          "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2058",
-          "protectedBase": "dev/v3/v3.0",
-          "sourceCommit": "c9a86bd1ac17b4fae54b0410498830edad80d831",
-          "mergeCommit": "3991801a7a7d6fe5e31b9a670dfde7ea59e61253",
-          "contractDigest": "sha256:da72850bbd3088f0e9eb20c17382557e0dfb7e68bf4469d352ed870ee8a334e8",
-          "compatibilityDigest": "sha256:32a651504c57829085dc8863f0e41dee98eb60708ff6dec958c9c7e4b1010102"
-        },
-        "evidenceRoot": "sha256:ec5b8374a76dea9fd344cace735f46caa7a8167eef1becd55fbdb0d3cd6f1109",
-        "authority": {
-          "kind": "protected-base-contract-authority",
-          "repository": "kungfu-systems/buildchain",
-          "protectedBase": "dev/v3/v3.0"
-        },
-        "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-        "cut": {
-          "kind": "protected-git-cut",
-          "repository": "kungfu-systems/buildchain",
-          "protectedBase": "dev/v3/v3.0",
-          "commit": "ff0f9006be1c8f63be40e67789e0cfd28fd69d46"
-        },
-        "cutRoot": "sha256:4fd5ae0cdad01a09e91bbb3f183ac595510a8f25baf7ba865de7633a7eacb3eb",
-        "proofRoot": "sha256:3bd1c54198b78a462d2005ac66c139ad4d6f1962925c8f0971b4d0a222f1a7c5"
-      }
-    },
-    {
-      "schema": "kungfu.buildchain.compatibility-fact/v1",
-      "factId": "release-candidate-promote-acd401-to-e60642",
-      "factRoot": "sha256:ec1c70ff70cca52ac276fab344b1c2d00c9581a8efec6d6fa37d56cb11632af1",
-      "sourceRoot": "sha256:4e97e8e31e7d00e6f616774fec9ab802d5274ed15c852d4e922a1187cd599f91",
-      "targetRoot": "sha256:465664b29542d294179396d8c78d507551373f34a5ee0d2682b342fe523174ad",
-      "predicate": {
-        "root": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
-        "record": {
-          "schema": "kungfu.fact.temporal-predicate/v1",
-          "predicateId": "kungfu.buildchain.compatibility:accept-contract-lock/v1",
-          "operations": [
-            "accept-contract-lock"
-          ],
-          "direction": "source-to-target",
-          "pathPolicy": "explicit-bounded",
-          "cyclePolicy": "forbid",
-          "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea"
-        }
-      },
-      "relation": {
-        "root": "sha256:ec1c70ff70cca52ac276fab344b1c2d00c9581a8efec6d6fa37d56cb11632af1",
-        "record": {
-          "schema": "kungfu.fact.temporal-relation/v1",
-          "relationId": "buildchain:compatibility:release-candidate-promote-acd401-to-e60642",
-          "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
-          "sourceRoot": "sha256:4e97e8e31e7d00e6f616774fec9ab802d5274ed15c852d4e922a1187cd599f91",
-          "targetRoot": "sha256:465664b29542d294179396d8c78d507551373f34a5ee0d2682b342fe523174ad",
-          "validFromCutRoot": "sha256:4fd5ae0cdad01a09e91bbb3f183ac595510a8f25baf7ba865de7633a7eacb3eb",
-          "scopeRoot": "sha256:0b8668413118308004e8ded1e9d051d94c68311c3944791babb9a4ad29d2d50b",
-          "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-          "admissionRoots": [
-            "sha256:c428bab55d265c91220aa10f7f3d8be508bdc1b412049ca9de48fa6f9898a373"
-          ]
-        }
-      },
-      "proof": {
-        "schema": "kungfu.buildchain.compatibility-proof/v1",
-        "proofId": "release-candidate-promote-acd401-to-e60642",
-        "predicate": "compatible-breaking-digest",
-        "direction": "source-to-target",
-        "operation": "accept-contract-lock",
-        "source": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "release-candidate-promote",
-          "surfaceKind": "workflow",
-          "breakingDigest": "sha256:acd401cfc46450115a3763fd4b679d85f185e8757ebd52510d6262e1533df4cf"
-        },
-        "target": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "release-candidate-promote",
-          "surfaceKind": "workflow",
-          "breakingDigest": "sha256:e60642aa298933d2c103284794921a6c340a50aa91ee528b06e58892a2a006bf"
-        },
-        "scope": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "release-candidate-promote",
-          "surfaceKind": "workflow",
-          "majorLines": [
-            "v2",
-            "v3"
-          ],
-          "operation": "accept-contract-lock"
-        },
-        "scopeRoot": "sha256:0b8668413118308004e8ded1e9d051d94c68311c3944791babb9a4ad29d2d50b",
-        "evidence": {
-          "kind": "protected-pull-request-contract-acceptance",
-          "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2342",
-          "protectedBase": "dev/v3/v3.0",
-          "sourceCommit": "8870db287a9ee5fb95eebbbe907b1649d84d5b7f",
-          "mergeCommit": "30b605adea1ed33dcf0bbb4cc7b666b64a6ccd18",
-          "contractDigest": "sha256:9c07dbdb9aa8390569cd07ace044af45e6751b91ffe8fcc0cb69a77388b0f72b",
-          "compatibilityDigest": "sha256:80cfdf1786019217c439810f1a80d2866bf8f7ef35a6fa569e1a687fb2bf4cbe"
-        },
-        "evidenceRoot": "sha256:c428bab55d265c91220aa10f7f3d8be508bdc1b412049ca9de48fa6f9898a373",
-        "authority": {
-          "kind": "protected-base-contract-authority",
-          "repository": "kungfu-systems/buildchain",
-          "protectedBase": "dev/v3/v3.0"
-        },
-        "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-        "cut": {
-          "kind": "protected-git-cut",
-          "repository": "kungfu-systems/buildchain",
-          "protectedBase": "dev/v3/v3.0",
-          "commit": "ff0f9006be1c8f63be40e67789e0cfd28fd69d46"
-        },
-        "cutRoot": "sha256:4fd5ae0cdad01a09e91bbb3f183ac595510a8f25baf7ba865de7633a7eacb3eb",
-        "proofRoot": "sha256:cb642b68aaf60e9c0eb93d46a2a1fc482810142201c7340ad7efe824b1683921"
-      }
-    },
-    {
-      "schema": "kungfu.buildchain.compatibility-fact/v1",
-      "factId": "release-propagation-d7a1f1-to-b873ce",
-      "factRoot": "sha256:f6e89a46bb73e93583477eeb3bc3a8bd1f36bdafd040777fb3a999460191b360",
-      "sourceRoot": "sha256:9d5429548ca8095450edd77104ffcd3ba9ee0f3cf6b24d690ea179938b932ed5",
-      "targetRoot": "sha256:06f31cc613d65375a8a893d0d0f7cb665bce2346d04448b348bdc384590826e8",
-      "predicate": {
-        "root": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
-        "record": {
-          "schema": "kungfu.fact.temporal-predicate/v1",
-          "predicateId": "kungfu.buildchain.compatibility:accept-contract-lock/v1",
-          "operations": [
-            "accept-contract-lock"
-          ],
-          "direction": "source-to-target",
-          "pathPolicy": "explicit-bounded",
-          "cyclePolicy": "forbid",
-          "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea"
-        }
-      },
-      "relation": {
-        "root": "sha256:f6e89a46bb73e93583477eeb3bc3a8bd1f36bdafd040777fb3a999460191b360",
-        "record": {
-          "schema": "kungfu.fact.temporal-relation/v1",
-          "relationId": "buildchain:compatibility:release-propagation-d7a1f1-to-b873ce",
-          "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
-          "sourceRoot": "sha256:9d5429548ca8095450edd77104ffcd3ba9ee0f3cf6b24d690ea179938b932ed5",
-          "targetRoot": "sha256:06f31cc613d65375a8a893d0d0f7cb665bce2346d04448b348bdc384590826e8",
-          "validFromCutRoot": "sha256:8bff86e6995cb22ff77eb3ea5a62b843734e9b9688694dc3d6e3e8847fd88499",
-          "scopeRoot": "sha256:0ff862e406419464370403011c3bf90d291d85a2c08ae8179d6b8d540c9e70f2",
-          "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-          "admissionRoots": [
-            "sha256:943908ff0b680d7ae84c68dc90412e4e6292323531b5e449ce4d1433061258c8"
-          ]
-        }
-      },
-      "proof": {
-        "schema": "kungfu.buildchain.compatibility-proof/v1",
-        "proofId": "release-propagation-d7a1f1-to-b873ce",
-        "predicate": "compatible-breaking-digest",
-        "direction": "source-to-target",
-        "operation": "accept-contract-lock",
-        "source": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "controller:release-propagation",
-          "surfaceKind": "controller",
-          "breakingDigest": "sha256:d7a1f15990ce8bd13149474888232c7d4451dd2a49bebf4d4ce1336695da430e"
-        },
-        "target": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "controller:release-propagation",
-          "surfaceKind": "controller",
-          "breakingDigest": "sha256:b873ceb65618972bea615afcb9c616c138ce834b3246ec7237ef87c1618d68bd"
-        },
-        "scope": {
-          "contract": "kungfu-buildchain-runtime-contract-world",
-          "surfaceId": "controller:release-propagation",
-          "surfaceKind": "controller",
-          "majorLines": [
-            "v2",
-            "v3"
-          ],
-          "operation": "accept-contract-lock"
-        },
-        "scopeRoot": "sha256:0ff862e406419464370403011c3bf90d291d85a2c08ae8179d6b8d540c9e70f2",
-        "evidence": {
-          "kind": "protected-pull-request-contract-acceptance",
-          "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2143",
-          "protectedBase": "dev/v3/v3.0",
-          "sourceCommit": "b63aff4dd63ad6017b8f48e1c690f595a9c832a2",
-          "mergeCommit": "487ee09ca4832ffd15607db00060df4c0839fbae",
-          "contractDigest": "sha256:00c37f8a663387831ba4d066056d0b21d4f3c5f3ea5b0cf84456af332cf8d87e",
-          "compatibilityDigest": "sha256:3bbcaf835844260ed98414d3bd176667245d12131e13fc748e4c2fae12399691"
-        },
-        "evidenceRoot": "sha256:943908ff0b680d7ae84c68dc90412e4e6292323531b5e449ce4d1433061258c8",
-        "authority": {
-          "kind": "protected-base-contract-authority",
-          "repository": "kungfu-systems/buildchain",
-          "protectedBase": "dev/v3/v3.0"
-        },
-        "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-        "cut": {
-          "kind": "protected-git-cut",
-          "repository": "kungfu-systems/buildchain",
-          "protectedBase": "dev/v3/v3.0",
-          "commit": "487ee09ca4832ffd15607db00060df4c0839fbae"
-        },
-        "cutRoot": "sha256:8bff86e6995cb22ff77eb3ea5a62b843734e9b9688694dc3d6e3e8847fd88499",
-        "proofRoot": "sha256:8b98ff903d3abd8d9a9b6a0b250efd8fdf6fd5d4127aa4d0d0c4a5b3db87f353"
-      }
-    }
-  ],
-  "compatibilityProofs": [
-    {
-      "schema": "kungfu.buildchain.compatibility-proof/v1",
-      "proofId": "advanced-release-candidate-promote-aa30f2-to-9db8dd",
-      "predicate": "compatible-breaking-digest",
-      "direction": "source-to-target",
-      "operation": "accept-contract-lock",
-      "source": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "advanced-release-candidate-promote",
-        "surfaceKind": "workflow",
-        "breakingDigest": "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
-      },
-      "target": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "advanced-release-candidate-promote",
-        "surfaceKind": "workflow",
-        "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5"
-      },
-      "scope": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "advanced-release-candidate-promote",
-        "surfaceKind": "workflow",
-        "majorLines": [
-          "v2",
-          "v3"
-        ],
-        "operation": "accept-contract-lock"
-      },
-      "scopeRoot": "sha256:c9746475e09a42adf6e33cf3656d9d7cef8e880ba3efc31b8a3cd599b938a124",
-      "evidence": {
-        "kind": "protected-pull-request-contract-acceptance",
-        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2342",
-        "protectedBase": "dev/v3/v3.0",
-        "sourceCommit": "8870db287a9ee5fb95eebbbe907b1649d84d5b7f",
-        "mergeCommit": "30b605adea1ed33dcf0bbb4cc7b666b64a6ccd18",
-        "contractDigest": "sha256:9c07dbdb9aa8390569cd07ace044af45e6751b91ffe8fcc0cb69a77388b0f72b",
-        "compatibilityDigest": "sha256:80cfdf1786019217c439810f1a80d2866bf8f7ef35a6fa569e1a687fb2bf4cbe"
-      },
-      "evidenceRoot": "sha256:c428bab55d265c91220aa10f7f3d8be508bdc1b412049ca9de48fa6f9898a373",
-      "authority": {
-        "kind": "protected-base-contract-authority",
-        "repository": "kungfu-systems/buildchain",
-        "protectedBase": "dev/v3/v3.0"
-      },
-      "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-      "cut": {
-        "kind": "protected-git-cut",
-        "repository": "kungfu-systems/buildchain",
-        "protectedBase": "dev/v3/v3.0",
-        "commit": "ff0f9006be1c8f63be40e67789e0cfd28fd69d46"
-      },
-      "cutRoot": "sha256:4fd5ae0cdad01a09e91bbb3f183ac595510a8f25baf7ba865de7633a7eacb3eb",
-      "proofRoot": "sha256:36c85ba487be1528e85776d2bc5f766a971d42ac238aec30071945f7d60d9fc5"
-    },
-    {
-      "schema": "kungfu.buildchain.compatibility-proof/v1",
-      "proofId": "build-channel-router-d40dd0-to-30549a",
-      "predicate": "compatible-breaking-digest",
-      "direction": "source-to-target",
-      "operation": "accept-contract-lock",
-      "source": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "controller:build-channel-router",
-        "surfaceKind": "controller",
-        "breakingDigest": "sha256:d40dd05d7e07473d4b2dc1b62fbb0ed6f06449b4d3a7c44a2e8014313e3c0273"
-      },
-      "target": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "controller:build-channel-router",
-        "surfaceKind": "controller",
-        "breakingDigest": "sha256:30549aa26cd1e1dd81f10fe3529d3c6e3f8438a6efa0100c47ebae4d2f3d71df"
-      },
-      "scope": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "controller:build-channel-router",
-        "surfaceKind": "controller",
-        "majorLines": [
-          "v2",
-          "v3"
-        ],
-        "operation": "accept-contract-lock"
-      },
-      "scopeRoot": "sha256:dc381e72e9cad86293254f8542394f1abc27b4b0f07c122cb4cad5f73b381ccb",
-      "evidence": {
-        "kind": "protected-pull-request-contract-acceptance",
-        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2549",
-        "protectedBase": "dev/v3/v3.0",
-        "sourceCommit": "0d87b772265066f5e6157e1ba6a2ba1021fb5225",
-        "mergeCommit": "34fad9d3a94c450d75c0d06fd6ed00470c992ff7",
-        "contractDigest": "sha256:2584ba36ab54cd5e9bab9e34dfc08d87a55dc57de1be7641492bf7ceb1366350",
-        "compatibilityDigest": "sha256:80f65cc191b1f771475184edf8a1bf9c10dd69bb58060aa09313d0e1e57f508a"
-      },
-      "evidenceRoot": "sha256:e449bdc62832fd18b33d93833207d70e843f066a85aae8b0c717234194ecb497",
-      "authority": {
-        "kind": "protected-base-contract-authority",
-        "repository": "kungfu-systems/buildchain",
-        "protectedBase": "dev/v3/v3.0"
-      },
-      "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-      "cut": {
-        "kind": "protected-git-cut",
-        "repository": "kungfu-systems/buildchain",
-        "protectedBase": "dev/v3/v3.0",
-        "commit": "34fad9d3a94c450d75c0d06fd6ed00470c992ff7"
-      },
-      "cutRoot": "sha256:3b83f02e22ca82fc4a099b5f8c4353fffb1423b0a5cba41860b1ba86f7c8cbb7",
-      "proofRoot": "sha256:36d2e188f43385d6191116393aa81ea025ccf61e21a1c5eae1d56be92a203b31"
-    },
-    {
-      "schema": "kungfu.buildchain.compatibility-proof/v1",
-      "proofId": "web-surface-da569f-to-27f0cb",
-      "predicate": "compatible-breaking-digest",
-      "direction": "source-to-target",
-      "operation": "accept-contract-lock",
-      "source": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "web-surface",
-        "surfaceKind": "workflow",
-        "breakingDigest": "sha256:da569f90374e878948e3d5160ed9929338ce0572473ca8ee54867b0fe1aaeace"
-      },
-      "target": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "web-surface",
-        "surfaceKind": "workflow",
-        "breakingDigest": "sha256:27f0cb9c7d97288850d215be8696b323471c41fd1cdf3a2ff3ebf21f62541960"
-      },
-      "scope": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "web-surface",
-        "surfaceKind": "workflow",
-        "majorLines": [
-          "v2",
-          "v3"
-        ],
-        "operation": "accept-contract-lock"
-      },
-      "scopeRoot": "sha256:0288a1bc232405047630819733074df11cfd86596c0fc95afd4403948399d679",
-      "evidence": {
-        "kind": "protected-pull-request-contract-acceptance",
-        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2089",
-        "protectedBase": "dev/v3/v3.0",
-        "sourceCommit": "1a6cb874bc6f1611f3eef607e711d3532798e9e7",
-        "mergeCommit": "71a75f21159b994241ec7cb2c50f7a150c5d440b",
-        "contractDigest": "sha256:7c2a7c132a2b2722f70f148b81048147047d4d2c46cf33f7cd2dc158aec092e0",
-        "compatibilityDigest": "sha256:61af7d0871220bc0909008bdc571905ad500cccf853e7841bc5d462a34b2d436"
-      },
-      "evidenceRoot": "sha256:8e0184e579c42a66851992a79d54b6f8add9eea776a589bc3004fe0e2177b15c",
-      "authority": {
-        "kind": "protected-base-contract-authority",
-        "repository": "kungfu-systems/buildchain",
-        "protectedBase": "dev/v3/v3.0"
-      },
-      "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-      "cut": {
-        "kind": "protected-git-cut",
-        "repository": "kungfu-systems/buildchain",
-        "protectedBase": "dev/v3/v3.0",
-        "commit": "71a75f21159b994241ec7cb2c50f7a150c5d440b"
-      },
-      "cutRoot": "sha256:4a758c2d730bf99a28ae37057e865e9f0cb8a516200b5a0c29851ca414efa556",
-      "proofRoot": "sha256:3ba66a1e8f8d00ddd45f3f448bcccb15469cbd31f5765d36f61e4cfe7fd0dd41"
-    },
-    {
-      "schema": "kungfu.buildchain.compatibility-proof/v1",
-      "proofId": "build-lifecycle-307459-to-6b8d38",
-      "predicate": "compatible-breaking-digest",
-      "direction": "source-to-target",
-      "operation": "accept-contract-lock",
-      "source": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "controller:build-lifecycle",
-        "surfaceKind": "controller",
-        "breakingDigest": "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1"
-      },
-      "target": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "controller:build-lifecycle",
-        "surfaceKind": "controller",
-        "breakingDigest": "sha256:6b8d38e92b2c67b5bc83fae0a3fd95bfa47582fbc176e6cdeebe7630a57534cb"
-      },
-      "scope": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "controller:build-lifecycle",
-        "surfaceKind": "controller",
-        "majorLines": [
-          "v2",
-          "v3"
-        ],
-        "operation": "accept-contract-lock"
-      },
-      "scopeRoot": "sha256:c1a391a06ad2732c09c09fe0a0806569ac066684f5f2cd381a634c7784da6de3",
-      "evidence": {
-        "kind": "protected-pull-request-contract-acceptance",
-        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2058",
-        "protectedBase": "dev/v3/v3.0",
-        "sourceCommit": "c9a86bd1ac17b4fae54b0410498830edad80d831",
-        "mergeCommit": "3991801a7a7d6fe5e31b9a670dfde7ea59e61253",
-        "contractDigest": "sha256:da72850bbd3088f0e9eb20c17382557e0dfb7e68bf4469d352ed870ee8a334e8",
-        "compatibilityDigest": "sha256:32a651504c57829085dc8863f0e41dee98eb60708ff6dec958c9c7e4b1010102"
-      },
-      "evidenceRoot": "sha256:ec5b8374a76dea9fd344cace735f46caa7a8167eef1becd55fbdb0d3cd6f1109",
-      "authority": {
-        "kind": "protected-base-contract-authority",
-        "repository": "kungfu-systems/buildchain",
-        "protectedBase": "dev/v3/v3.0"
-      },
-      "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-      "cut": {
-        "kind": "protected-git-cut",
-        "repository": "kungfu-systems/buildchain",
-        "protectedBase": "dev/v3/v3.0",
-        "commit": "ff0f9006be1c8f63be40e67789e0cfd28fd69d46"
-      },
-      "cutRoot": "sha256:4fd5ae0cdad01a09e91bbb3f183ac595510a8f25baf7ba865de7633a7eacb3eb",
-      "proofRoot": "sha256:3bd1c54198b78a462d2005ac66c139ad4d6f1962925c8f0971b4d0a222f1a7c5"
-    },
-    {
-      "schema": "kungfu.buildchain.compatibility-proof/v1",
-      "proofId": "release-propagation-d7a1f1-to-b873ce",
-      "predicate": "compatible-breaking-digest",
-      "direction": "source-to-target",
-      "operation": "accept-contract-lock",
-      "source": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "controller:release-propagation",
-        "surfaceKind": "controller",
-        "breakingDigest": "sha256:d7a1f15990ce8bd13149474888232c7d4451dd2a49bebf4d4ce1336695da430e"
-      },
-      "target": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "controller:release-propagation",
-        "surfaceKind": "controller",
-        "breakingDigest": "sha256:b873ceb65618972bea615afcb9c616c138ce834b3246ec7237ef87c1618d68bd"
-      },
-      "scope": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "controller:release-propagation",
-        "surfaceKind": "controller",
-        "majorLines": [
-          "v2",
-          "v3"
-        ],
-        "operation": "accept-contract-lock"
-      },
-      "scopeRoot": "sha256:0ff862e406419464370403011c3bf90d291d85a2c08ae8179d6b8d540c9e70f2",
-      "evidence": {
-        "kind": "protected-pull-request-contract-acceptance",
-        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2143",
-        "protectedBase": "dev/v3/v3.0",
-        "sourceCommit": "b63aff4dd63ad6017b8f48e1c690f595a9c832a2",
-        "mergeCommit": "487ee09ca4832ffd15607db00060df4c0839fbae",
-        "contractDigest": "sha256:00c37f8a663387831ba4d066056d0b21d4f3c5f3ea5b0cf84456af332cf8d87e",
-        "compatibilityDigest": "sha256:3bbcaf835844260ed98414d3bd176667245d12131e13fc748e4c2fae12399691"
-      },
-      "evidenceRoot": "sha256:943908ff0b680d7ae84c68dc90412e4e6292323531b5e449ce4d1433061258c8",
-      "authority": {
-        "kind": "protected-base-contract-authority",
-        "repository": "kungfu-systems/buildchain",
-        "protectedBase": "dev/v3/v3.0"
-      },
-      "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-      "cut": {
-        "kind": "protected-git-cut",
-        "repository": "kungfu-systems/buildchain",
-        "protectedBase": "dev/v3/v3.0",
-        "commit": "487ee09ca4832ffd15607db00060df4c0839fbae"
-      },
-      "cutRoot": "sha256:8bff86e6995cb22ff77eb3ea5a62b843734e9b9688694dc3d6e3e8847fd88499",
-      "proofRoot": "sha256:8b98ff903d3abd8d9a9b6a0b250efd8fdf6fd5d4127aa4d0d0c4a5b3db87f353"
-    },
-    {
-      "schema": "kungfu.buildchain.compatibility-proof/v1",
-      "proofId": "build-lifecycle-e264a7-to-6b8d38",
-      "predicate": "compatible-breaking-digest",
-      "direction": "source-to-target",
-      "operation": "accept-contract-lock",
-      "source": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "controller:build-lifecycle",
-        "surfaceKind": "controller",
-        "breakingDigest": "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be"
-      },
-      "target": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "controller:build-lifecycle",
-        "surfaceKind": "controller",
-        "breakingDigest": "sha256:6b8d38e92b2c67b5bc83fae0a3fd95bfa47582fbc176e6cdeebe7630a57534cb"
-      },
-      "scope": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "controller:build-lifecycle",
-        "surfaceKind": "controller",
-        "majorLines": [
-          "v2",
-          "v3"
-        ],
-        "operation": "accept-contract-lock"
-      },
-      "scopeRoot": "sha256:c1a391a06ad2732c09c09fe0a0806569ac066684f5f2cd381a634c7784da6de3",
-      "evidence": {
-        "kind": "protected-pull-request-contract-acceptance",
-        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2058",
-        "protectedBase": "dev/v3/v3.0",
-        "sourceCommit": "c9a86bd1ac17b4fae54b0410498830edad80d831",
-        "mergeCommit": "3991801a7a7d6fe5e31b9a670dfde7ea59e61253",
-        "contractDigest": "sha256:da72850bbd3088f0e9eb20c17382557e0dfb7e68bf4469d352ed870ee8a334e8",
-        "compatibilityDigest": "sha256:32a651504c57829085dc8863f0e41dee98eb60708ff6dec958c9c7e4b1010102"
-      },
-      "evidenceRoot": "sha256:ec5b8374a76dea9fd344cace735f46caa7a8167eef1becd55fbdb0d3cd6f1109",
-      "authority": {
-        "kind": "protected-base-contract-authority",
-        "repository": "kungfu-systems/buildchain",
-        "protectedBase": "dev/v3/v3.0"
-      },
-      "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-      "cut": {
-        "kind": "protected-git-cut",
-        "repository": "kungfu-systems/buildchain",
-        "protectedBase": "dev/v3/v3.0",
-        "commit": "ff0f9006be1c8f63be40e67789e0cfd28fd69d46"
-      },
-      "cutRoot": "sha256:4fd5ae0cdad01a09e91bbb3f183ac595510a8f25baf7ba865de7633a7eacb3eb",
-      "proofRoot": "sha256:9024634cef43a9d695fa224d26be9aeb6370d3c981b003ece3b659dde8e73713"
-    },
-    {
-      "schema": "kungfu.buildchain.compatibility-proof/v1",
-      "proofId": "reusable-build-a6a353-to-dfbedd",
-      "predicate": "compatible-breaking-digest",
-      "direction": "source-to-target",
-      "operation": "accept-contract-lock",
-      "source": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "reusable-build",
-        "surfaceKind": "workflow",
-        "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650"
-      },
-      "target": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "reusable-build",
-        "surfaceKind": "workflow",
-        "breakingDigest": "sha256:dfbedd543ae0c067982b5c8c02d98dd2f7f7df88752be97fb330da6b0ba30faa"
-      },
-      "scope": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "reusable-build",
-        "surfaceKind": "workflow",
-        "majorLines": [
-          "v2",
-          "v3"
-        ],
-        "operation": "accept-contract-lock"
-      },
-      "scopeRoot": "sha256:b50ae93f868501c8acfc93d93dc2deec916a4fcf12c19f959fbb3893cc11bb6c",
-      "evidence": {
-        "kind": "protected-pull-request-contract-acceptance",
-        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2089",
-        "protectedBase": "dev/v3/v3.0",
-        "sourceCommit": "1a6cb874bc6f1611f3eef607e711d3532798e9e7",
-        "mergeCommit": "71a75f21159b994241ec7cb2c50f7a150c5d440b",
-        "contractDigest": "sha256:7c2a7c132a2b2722f70f148b81048147047d4d2c46cf33f7cd2dc158aec092e0",
-        "compatibilityDigest": "sha256:61af7d0871220bc0909008bdc571905ad500cccf853e7841bc5d462a34b2d436"
-      },
-      "evidenceRoot": "sha256:8e0184e579c42a66851992a79d54b6f8add9eea776a589bc3004fe0e2177b15c",
-      "authority": {
-        "kind": "protected-base-contract-authority",
-        "repository": "kungfu-systems/buildchain",
-        "protectedBase": "dev/v3/v3.0"
-      },
-      "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-      "cut": {
-        "kind": "protected-git-cut",
-        "repository": "kungfu-systems/buildchain",
-        "protectedBase": "dev/v3/v3.0",
-        "commit": "71a75f21159b994241ec7cb2c50f7a150c5d440b"
-      },
-      "cutRoot": "sha256:4a758c2d730bf99a28ae37057e865e9f0cb8a516200b5a0c29851ca414efa556",
-      "proofRoot": "sha256:b99176f414752ffb276f4add6183aa81eeb480598368ca4f57804f024212d0f5"
-    },
-    {
-      "schema": "kungfu.buildchain.compatibility-proof/v1",
-      "proofId": "release-candidate-promote-acd401-to-e60642",
-      "predicate": "compatible-breaking-digest",
-      "direction": "source-to-target",
-      "operation": "accept-contract-lock",
-      "source": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "release-candidate-promote",
-        "surfaceKind": "workflow",
-        "breakingDigest": "sha256:acd401cfc46450115a3763fd4b679d85f185e8757ebd52510d6262e1533df4cf"
-      },
-      "target": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "release-candidate-promote",
-        "surfaceKind": "workflow",
-        "breakingDigest": "sha256:e60642aa298933d2c103284794921a6c340a50aa91ee528b06e58892a2a006bf"
-      },
-      "scope": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "release-candidate-promote",
-        "surfaceKind": "workflow",
-        "majorLines": [
-          "v2",
-          "v3"
-        ],
-        "operation": "accept-contract-lock"
-      },
-      "scopeRoot": "sha256:0b8668413118308004e8ded1e9d051d94c68311c3944791babb9a4ad29d2d50b",
-      "evidence": {
-        "kind": "protected-pull-request-contract-acceptance",
-        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2342",
-        "protectedBase": "dev/v3/v3.0",
-        "sourceCommit": "8870db287a9ee5fb95eebbbe907b1649d84d5b7f",
-        "mergeCommit": "30b605adea1ed33dcf0bbb4cc7b666b64a6ccd18",
-        "contractDigest": "sha256:9c07dbdb9aa8390569cd07ace044af45e6751b91ffe8fcc0cb69a77388b0f72b",
-        "compatibilityDigest": "sha256:80cfdf1786019217c439810f1a80d2866bf8f7ef35a6fa569e1a687fb2bf4cbe"
-      },
-      "evidenceRoot": "sha256:c428bab55d265c91220aa10f7f3d8be508bdc1b412049ca9de48fa6f9898a373",
-      "authority": {
-        "kind": "protected-base-contract-authority",
-        "repository": "kungfu-systems/buildchain",
-        "protectedBase": "dev/v3/v3.0"
-      },
-      "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-      "cut": {
-        "kind": "protected-git-cut",
-        "repository": "kungfu-systems/buildchain",
-        "protectedBase": "dev/v3/v3.0",
-        "commit": "ff0f9006be1c8f63be40e67789e0cfd28fd69d46"
-      },
-      "cutRoot": "sha256:4fd5ae0cdad01a09e91bbb3f183ac595510a8f25baf7ba865de7633a7eacb3eb",
-      "proofRoot": "sha256:cb642b68aaf60e9c0eb93d46a2a1fc482810142201c7340ad7efe824b1683921"
-    },
-    {
-      "schema": "kungfu.buildchain.compatibility-proof/v1",
-      "proofId": "promote-buildchain-ref-action-a59f09-to-6147c0",
-      "predicate": "compatible-breaking-digest",
-      "direction": "source-to-target",
-      "operation": "accept-contract-lock",
-      "source": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "promote-buildchain-ref-action",
-        "surfaceKind": "action",
-        "breakingDigest": "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874"
-      },
-      "target": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "promote-buildchain-ref-action",
-        "surfaceKind": "action",
-        "breakingDigest": "sha256:6147c0a8d5c36bfaa6021871574e1fc28192a3f1b8cfdae4d24ef3059ac1ebda"
-      },
-      "scope": {
-        "contract": "kungfu-buildchain-runtime-contract-world",
-        "surfaceId": "promote-buildchain-ref-action",
-        "surfaceKind": "action",
-        "majorLines": [
-          "v2",
-          "v3"
-        ],
-        "operation": "accept-contract-lock"
-      },
-      "scopeRoot": "sha256:dbf061c2f7608451f0d2ae47e2d7eaa323d7cf61699f20467ac73712748e50c5",
-      "evidence": {
-        "kind": "protected-pull-request-contract-acceptance",
-        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/1556",
-        "protectedBase": "dev/v2/v2.14",
-        "sourceCommit": "f8e2c5d28ef34d711892589331b7e018095a96d7",
-        "mergeCommit": "6e0c29be1489f686a9a3792b46bfaa4466828393",
-        "contractDigest": "sha256:f6dbf5147d9ad3b8c49ba6630cd52b8c7853ead7c921d7e1210a393aebf97d1f",
-        "compatibilityDigest": "sha256:cdf588422ec6b460bd6f631400efa6e361a045e052c8967d6c50fadd7aa4dd90"
-      },
-      "evidenceRoot": "sha256:454c8cf77d6ecb35de2cdb2f8f80832d7fb31b9f9ef300749ac8b1595fd5cf86",
-      "authority": {
-        "kind": "protected-base-contract-authority",
-        "repository": "kungfu-systems/buildchain",
-        "protectedBase": "dev/v3/v3.0"
-      },
-      "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
-      "cut": {
-        "kind": "protected-git-cut",
-        "repository": "kungfu-systems/buildchain",
-        "protectedBase": "dev/v3/v3.0",
-        "commit": "ff0f9006be1c8f63be40e67789e0cfd28fd69d46"
-      },
-      "cutRoot": "sha256:4fd5ae0cdad01a09e91bbb3f183ac595510a8f25baf7ba865de7633a7eacb3eb",
-      "proofRoot": "sha256:e6f93f44a6613a9d6de776ebe8f29b1779b0cd18a24bdf126ec6c1a07770fa75"
-    }
-  ],
+  "compatibilityFacts": [],
+  "compatibilityProofs": [],
   "surfaces": [
     {
       "contractVersion": 1,
@@ -1327,21 +20,11 @@
       "kind": "workflow",
       "path": ".github/workflows/.build.yml",
       "publicRef": "kungfu-systems/buildchain/.github/workflows/.build.yml@v4",
-      "requiredInputs": [],
-      "requiredOutputs": [
-        "buildchain-runtime-sha",
-        "publish-source-sha",
-        "build-summary-artifact",
-        "release-candidate-artifact"
-      ],
       "breakingDefaults": {
         "configurationAuthority": "buildchain.toml",
-        "runtimeIdentity": "exact-called-workflow",
+        "runtimeIdentity": "entry-selected-complete-runtime",
         "projectDiscovery": "unambiguous-root-or-config-path"
       },
-      "optionalInputs": [
-        "config-path"
-      ],
       "guarantees": [
         "runtime floating refs are resolved to immutable SHAs before matrix jobs",
         "publish source locks are verified before heavy build jobs",
@@ -1349,8 +32,19 @@
         "contract drift is checked before heavy build jobs for stable floating refs",
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
-      "breakingDigest": "sha256:eee8d601f94fae3b9d440e467792ca5cb9e7fd0a42cd3ad13a72f3f7087de5e9",
-      "auditDigest": "sha256:f5deee5398a049d0ed3e92028fd31159329cc849ce1782e4699b4e961d75d6f0"
+      "requiredInputs": [],
+      "optionalInputs": [
+        "config-path",
+        "contract-lock",
+        "resume-run-id",
+        "runtime-ref",
+        "runtime-selection"
+      ],
+      "requiredOutputs": [
+        "result"
+      ],
+      "breakingDigest": "sha256:cda31fcfd64bd8a895216d9537910a9676736e70aef0fde8a1697b2c88222ed5",
+      "auditDigest": "sha256:d6c7d523fa1d08350ca53483a7315111cf96eeb6623f3069f6c53a8487adeb74"
     },
     {
       "contractVersion": 1,
@@ -1360,29 +54,33 @@
       "kind": "workflow",
       "path": ".github/workflows/build.yml",
       "publicRef": "kungfu-systems/buildchain/.github/workflows/build.yml@v4",
-      "requiredInputs": [],
-      "requiredOutputs": [
-        "buildchain-channel",
-        "buildchain-runtime-sha",
-        "build-summary-artifact"
-      ],
       "breakingDefaults": {
         "configurationAuthority": "buildchain.toml",
-        "runtimeIdentity": "exact-called-workflow",
+        "runtimeIdentity": "entry-selected-complete-runtime",
         "projectDiscovery": "unambiguous-root-or-config-path"
       },
-      "optionalInputs": [
-        "config-path"
-      ],
       "guarantees": [
         "single-project consumers require no workflow inputs",
         "project settings have one TOML authority and environment profiles own infrastructure",
-        "the called floating ref determines channel and exact runtime SHA",
+        "the floating entry selects runtime parameters before contract locks and its default",
         "stable and alpha select their matching repository contract locks",
         "source, runtime and configuration roots are bound before the build matrix"
       ],
-      "breakingDigest": "sha256:f49f1c3e437f82b60852aa232054799abe821987ae81b990ed5f85f604bca572",
-      "auditDigest": "sha256:9a2f2cec168ff4734f302368679073971bff60c84d3335372363a9206c74dbc8"
+      "requiredInputs": [],
+      "optionalInputs": [
+        "config-path",
+        "contract-lock",
+        "resume-run-id",
+        "runtime-ref",
+        "runtime-selection"
+      ],
+      "requiredOutputs": [
+        "controller-receipt-artifact",
+        "release-candidate-artifact",
+        "result"
+      ],
+      "breakingDigest": "sha256:7574ae8fc694534860bd633efcc3caaffd121a5d7d778a1f96c560f1999434b3",
+      "auditDigest": "sha256:0c88962bb6d63009f6fa9a3703daff9592915389a545be222f5d0f551e1407b6"
     },
     {
       "contractVersion": 1,
@@ -1390,21 +88,10 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "dev-pr-auto-merge",
       "kind": "workflow",
-      "path": ".github/workflows/dev-pr-auto-merge.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/dev-pr-auto-merge.yml@v4-alpha",
-      "requiredInputs": [
-        "target-branch",
-        "expected-pr-number",
-        "expected-head-sha"
-      ],
-      "requiredOutputs": [
-        "admission-receipt-root",
-        "warrant-state-root",
-        "provider-heartbeat-receipt-root",
-        "provider-finalizer-boundary-root"
-      ],
+      "path": ".github/workflows/public-ops-dev-auto-merge.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@v4",
       "breakingDefaults": {
-        "runtimeSelectorDefault": "v4",
+        "runtimeSelectorDefault": "consumer-contract-lock-or-entry",
         "authorityMode": "two-phase-delivery-warrant",
         "boundedAuthorityWorkflowIntegration": "not-advertised",
         "boundedAuthoritySupportedSurfaces": [
@@ -1412,50 +99,11 @@
           "node-api",
           "schema"
         ],
-        "publicFloatingCaller": "v4-alpha",
-        "durableSelfDeliveryRef": "v4-alpha",
+        "publicFloatingCaller": "v4",
+        "durableSelfDeliveryRef": "v4",
         "independentHeartbeatRunner": "macos-15",
         "candidateCredentialAccess": "forbidden"
       },
-      "optionalInputs": [
-        "buildchain-repository",
-        "buildchain-ref",
-        "source-workflow-run-id",
-        "legacy-active-owner-binding-json",
-        "delivery-warrant-mode",
-        "handoff-workflow-id",
-        "source-workflow-id",
-        "assignment-root",
-        "initiative-root",
-        "source-identity-root",
-        "source-patch-root",
-        "plan-root",
-        "closure-root",
-        "dependency-root",
-        "toolchain-root",
-        "environment-root",
-        "affected-paths-json",
-        "shard-evidence-roots-json",
-        "release-blocker-priority-json",
-        "native-proof-json",
-        "native-command",
-        "native-command-root",
-        "native-heartbeat-seconds",
-        "delivery-class",
-        "delivery-priority",
-        "required-status-checks",
-        "queue-admission-context",
-        "active-lease-context",
-        "ready-label",
-        "block-labels",
-        "allowed-head-prefixes",
-        "require-approval",
-        "same-repository-only",
-        "max-merges",
-        "merge-method",
-        "landing-mode",
-        "dry-run"
-      ],
       "guarantees": [
         "this reusable workflow executes the single-flight v1 Delivery Warrant and does not advertise bounded v2 Landing integration",
         "bounded v2 authority is a separate opt-in CLI, Node API, and schema surface whose controller deployment must be explicit",
@@ -1464,8 +112,74 @@
         "the finalizer validates rooted heartbeat continuity and latest durable state before qualification, failure settlement, or landing",
         "durable consumers call the public floating workflow and may route a train or exact runtime only through trusted non-persistent dispatch input"
       ],
-      "breakingDigest": "sha256:21b65d0746d2e8b3e8a7df4c6fab295a85c8fd42cc405ec3bc5df5cdab0421f0",
-      "auditDigest": "sha256:afc5ba3216429943f57a6f5c805cefe85e342d70a65fab3bc561c08f5a838cf9"
+      "requiredInputs": [],
+      "optionalInputs": [
+        "active-lease-context",
+        "affected-paths-json",
+        "allowed-head-prefixes",
+        "block-labels",
+        "closure-root",
+        "contract-lock",
+        "defer-landing",
+        "delivery-class",
+        "delivery-priority",
+        "delivery-warrant-mode",
+        "dependency-root",
+        "diagnostic-context",
+        "dry-run",
+        "environment-root",
+        "expected-head-sha",
+        "expected-pr-number",
+        "handoff-workflow-id",
+        "landing-mode",
+        "max-merges",
+        "merge-method",
+        "native-command",
+        "native-command-root",
+        "native-heartbeat-seconds",
+        "native-proof-json",
+        "plan-root",
+        "project-cut-proof-json",
+        "queue-admission-context",
+        "ready-label",
+        "release-blocker-priority-json",
+        "require-approval",
+        "required-status-checks",
+        "runtime-ref",
+        "runtime-selection",
+        "same-repository-only",
+        "shard-evidence-roots-json",
+        "source-identity-root",
+        "source-patch-root",
+        "source-root",
+        "source-workflow-run-id",
+        "target-branch",
+        "toolchain-root",
+        "warrant-lease-seconds"
+      ],
+      "requiredOutputs": [
+        "action-count",
+        "admission-receipt-root",
+        "admission-state",
+        "enqueued-count",
+        "evaluated-count",
+        "final-base-sha",
+        "merged-count",
+        "native-execution-transfer-root",
+        "native-proof-root",
+        "native-reuse-decision-root",
+        "project-cut-proof-root",
+        "provider-finalizer-boundary-root",
+        "provider-heartbeat-receipt-root",
+        "qualified-warrant-receipt-root",
+        "skipped-count",
+        "source-proof-root",
+        "warrant-receipt-root",
+        "warrant-state-commit",
+        "warrant-state-root"
+      ],
+      "breakingDigest": "sha256:1bd7d62abdf4f14c84010093aa044ff99eeabc92705d965e13043908cfec87ac",
+      "auditDigest": "sha256:8d159b9c50369a159680aea8d453d9f72deee7b19637995acef27e77b7b8d6a5"
     },
     {
       "contractVersion": 1,
@@ -1473,59 +187,14 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "release-candidate-promote",
       "kind": "workflow",
-      "path": ".github/workflows/release-candidate-promote.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4",
-      "requiredInputs": [
-        "channel"
-      ],
-      "requiredOutputs": [
-        "promoted-sha",
-        "built-source-sha",
-        "release-candidate-artifact",
-        "release-candidate-action"
-      ],
+      "path": ".github/workflows/public-release-promote.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4",
       "breakingDefaults": {
         "channelDefault": "auto",
-        "alphaShellDefault": "v4-alpha",
-        "stableShellDefault": "v4",
+        "runtimeSelectionOwner": "actions/runtime/selection/resolve",
         "promoteOnlyReleaseCandidate": true,
         "requiredStatusCheck": "check / check"
       },
-      "optionalInputs": [
-        "buildchain-channel",
-        "buildchain-ref",
-        "buildchain-alpha-contract-lock-path",
-        "buildchain-stable-contract-lock-path",
-        "release-candidate-workflow-file",
-        "release-candidate-workflow-name",
-        "resume-candidate-repository",
-        "resume-candidate-run-id",
-        "resume-expected-workflow-file",
-        "resume-expected-workflow-name",
-        "resume-expected-source-tree",
-        "resume-expected-candidate-root",
-        "resume-expected-candidate-runtime-sha",
-        "resume-buildchain-runtime-sha",
-        "resume-transaction-id",
-        "publish-required-artifacts-json",
-        "release-passport-kfd-1-witness-jsons",
-        "release-passport-kfd-2-claim-jsons",
-        "release-passport-kfd-3-prebuild-witness-jsons",
-        "release-passport-kfd-3-artifact-witness-jsons",
-        "release-passport-kfd-3-artifact-verify-command",
-        "release-passport-invariant-passport-jsons",
-        "release-passport-invariant-passport-command",
-        "release-passport-evidence-jsons",
-        "release-passport-attachment-command",
-        "github-artifact-attestation-policy-json",
-        "github-artifact-attestation-environment",
-        "github-artifact-attestation-retention-days",
-        "buildchain-contract-lock-path",
-        "buildchain-contract-drift-issue-mode",
-        "github-release",
-        "github-release-title",
-        "github-release-notes"
-      ],
       "publishArtifactSchema": {
         "requirementDigest": "optional-before-publish-required-after-publish",
         "exactRefResolution": "missing requirement refs resolve to the promoted exact version",
@@ -1563,8 +232,61 @@
         "publish-gate source locks are created by the wrapper and enforced by promote-buildchain-ref before publish side effects",
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
-      "breakingDigest": "sha256:5f10c81d3f80cb417960be682921884639c40b6d875f1a3b1ffae7e652c3f468",
-      "auditDigest": "sha256:357b3e3b3a25efaf6dbf6c82e95265520eb8e41060572b3496c50f4f6c83d89e"
+      "requiredInputs": [
+        "request-json"
+      ],
+      "optionalInputs": [
+        "contract-lock",
+        "runtime-ref",
+        "runtime-selection"
+      ],
+      "requiredOutputs": [
+        "buildchain-channel",
+        "built-source-sha",
+        "controller-plan-artifact",
+        "controller-plan-digest",
+        "controller-plan-json",
+        "controller-receipt-artifact",
+        "controller-receipt-digest",
+        "controller-receipt-json",
+        "controller-receipt-status",
+        "github-artifact-attestation-evidence-root",
+        "github-artifact-attestation-id",
+        "github-artifact-attestation-publication-receipt-digest",
+        "github-artifact-attestation-url",
+        "promoted-sha",
+        "promotion-contract-lock-digest",
+        "promotion-contract-lock-path",
+        "promotion-override-used",
+        "promotion-publication-channel",
+        "promotion-router-ref",
+        "promotion-router-sha",
+        "promotion-runtime-ref",
+        "promotion-runtime-sha",
+        "promotion-shell-ref",
+        "promotion-shell-sha",
+        "promotion-target-ref",
+        "publication-capability-digest",
+        "publication-commit-evidence-digest",
+        "publication-commit-evidence-path",
+        "publication-commit-payload-root",
+        "publication-commit-url",
+        "release-candidate-action",
+        "release-candidate-artifact",
+        "release-candidate-recovery-receipt-artifact",
+        "release-candidate-recovery-root",
+        "release-invocation-root",
+        "release-propagation-work-artifact",
+        "release-receipt-root",
+        "release-tail-declaration-root",
+        "release-tail-receipt-roots-json",
+        "release-tail-state-root",
+        "release-tail-transaction-root",
+        "release-tail-transaction-state",
+        "release-transaction-root"
+      ],
+      "breakingDigest": "sha256:a32cbccc2a4b6e1a16f9feba892a1e8d4b8db0098ff63ea2e9719e985da64a7c",
+      "auditDigest": "sha256:93b4545f1b37650a575f8a7cd8d18410eb37549229b47a771912521ff030da79"
     },
     {
       "contractVersion": 1,
@@ -1572,63 +294,60 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "advanced-release-candidate-promote",
       "kind": "workflow",
-      "path": ".github/workflows/.release-candidate-promote.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4",
-      "requiredInputs": [
-        "channel"
-      ],
-      "requiredOutputs": [
-        "promoted-sha",
-        "built-source-sha",
-        "release-candidate-artifact",
-        "release-candidate-action"
-      ],
+      "path": ".github/workflows/.release-promote.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.release-promote.yml@v4",
       "breakingDefaults": {
         "promoteOnlyReleaseCandidate": true,
         "requiredStatusCheck": "check / check"
       },
-      "optionalInputs": [
-        "buildchain-ref",
-        "buildchain-expected-channel",
-        "buildchain-expected-major",
-        "buildchain-contract-lock-path",
-        "promotion-router-ref",
-        "promotion-router-sha",
-        "promotion-shell-ref",
-        "promotion-shell-sha",
-        "promotion-runtime-ref",
-        "promotion-runtime-sha",
-        "promotion-contract-lock-path",
-        "promotion-contract-lock-digest",
-        "promotion-publication-channel",
-        "promotion-target-ref",
-        "promotion-override-used",
-        "resume-candidate-repository",
-        "resume-candidate-run-id",
-        "resume-expected-workflow-file",
-        "resume-expected-workflow-name",
-        "resume-expected-source-tree",
-        "resume-expected-candidate-root",
-        "resume-expected-candidate-runtime-sha",
-        "resume-buildchain-runtime-sha",
-        "resume-transaction-id"
-      ],
       "guarantees": [
-        "advanced promotion verifies routed shell, runtime, lock, publication channel, and target bindings before candidate resolution",
+        "advanced promotion verifies publication intent and source evidence using the prepared runtime",
         "promotion reuses PR-stage release-candidate artifacts and does not run the heavy native build matrix",
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph"
       ],
-      "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-      "auditDigest": "sha256:b1755a45984fa324ef9eb2a29c73f31ff97560ff3c6e97bf100334e74bd8b76c",
-      "compatibleBreakingDigests": [
-        "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
+      "requiredInputs": [
+        "request-json"
       ],
-      "compatibilityProofRoots": [
-        "sha256:36c85ba487be1528e85776d2bc5f766a971d42ac238aec30071945f7d60d9fc5"
+      "optionalInputs": [
+        "contract-lock",
+        "runtime-ref",
+        "runtime-selection"
       ],
-      "compatibilityFactRoots": [
-        "sha256:5664da2363bed0b45497215b60763c3be627e568eb3182af5891c23ae3875fbe"
-      ]
+      "requiredOutputs": [
+        "built-source-sha",
+        "controller-plan-artifact",
+        "controller-plan-digest",
+        "controller-plan-json",
+        "controller-receipt-artifact",
+        "controller-receipt-digest",
+        "controller-receipt-json",
+        "controller-receipt-status",
+        "github-artifact-attestation-evidence-root",
+        "github-artifact-attestation-id",
+        "github-artifact-attestation-publication-receipt-digest",
+        "github-artifact-attestation-url",
+        "promoted-sha",
+        "publication-capability-digest",
+        "publication-commit-evidence-digest",
+        "publication-commit-evidence-path",
+        "publication-commit-payload-root",
+        "publication-commit-url",
+        "release-candidate-action",
+        "release-candidate-artifact",
+        "release-candidate-recovery-receipt-artifact",
+        "release-candidate-recovery-root",
+        "release-invocation-root",
+        "release-propagation-work-artifact",
+        "release-receipt-root",
+        "release-tail-declaration-root",
+        "release-tail-receipt-roots-json",
+        "release-tail-state-root",
+        "release-tail-transaction-root",
+        "release-tail-transaction-state",
+        "release-transaction-root"
+      ],
+      "breakingDigest": "sha256:3130cd971f83ef8fb44cbe3ea0e25c95b65693aaab15b6cc4e5a1e3657f2b6ee",
+      "auditDigest": "sha256:0db2252d311d3db96afb72636fb76c17229800aa1c1cde202ee6a097c36c534a"
     },
     {
       "contractVersion": 1,
@@ -1636,33 +355,13 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "web-surface",
       "kind": "workflow",
-      "path": ".github/workflows/.web-surface.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v4",
-      "requiredInputs": [],
-      "requiredOutputs": [
-        "buildchain-runtime-sha",
-        "web-surface-channel",
-        "web-surface-url",
-        "web-surface-manifest-json"
-      ],
+      "path": ".github/workflows/public-release-web.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v4",
       "breakingDefaults": {
-        "buildchainRefDefault": "workflow-shell-ref-or-v3",
+        "runtimeSelectionOwner": "actions/runtime/selection/resolve",
         "contractCompatibilityPolicy": "major-compatible",
         "breakingDriftPolicy": "fail-closed-before-build"
       },
-      "optionalInputs": [
-        "buildchain-ref",
-        "buildchain-contract-lock-path",
-        "buildchain-contract-compatibility-policy",
-        "buildchain-contract-drift-issue-mode",
-        "build-command",
-        "verify-command",
-        "artifact-path",
-        "preview-apply",
-        "staging-apply",
-        "production-apply",
-        "production-release-on-main"
-      ],
       "guarantees": [
         "runtime floating refs are resolved to immutable SHAs before caller build and deploy work",
         "contract drift is checked before caller build, web-surface render, deploy planning, and apply side effects",
@@ -1671,17 +370,73 @@
         "effective channel and preview alias are injected before caller build and verify commands",
         "channel-aware artifact host facts are checked against the deploy plan before adapter side effects"
       ],
-      "breakingDigest": "sha256:27f0cb9c7d97288850d215be8696b323471c41fd1cdf3a2ff3ebf21f62541960",
-      "auditDigest": "sha256:5c006ccc4e465649d971490a8cb40f4601a7a83b6496077e2a1d2a1baf90893b",
-      "compatibleBreakingDigests": [
-        "sha256:da569f90374e878948e3d5160ed9929338ce0572473ca8ee54867b0fe1aaeace"
+      "requiredInputs": [],
+      "optionalInputs": [
+        "artifact-path",
+        "aws-region",
+        "build-command",
+        "contract-lock",
+        "fail-on-release-pr-error",
+        "github-governance-receipt-json",
+        "node-version",
+        "preview-apply",
+        "preview-aws-role-arn",
+        "preview-cleanup-apply",
+        "preview-comment",
+        "preview-environment",
+        "production-apply",
+        "production-approved",
+        "production-aws-role-arn",
+        "production-environment",
+        "production-release-app-client-id",
+        "production-release-branch-channel",
+        "production-release-head-prefix",
+        "production-release-label",
+        "production-release-on-main",
+        "production-release-pr-mode",
+        "production-source-sha",
+        "publication-admission-json",
+        "publication-control-plane-audit-json",
+        "publication-expected-json",
+        "publication-gate-aggregate-json",
+        "publication-runner-provenance-json",
+        "publication-used-nonces-json",
+        "release-feedback-actor-privacy",
+        "runtime-ref",
+        "runtime-selection",
+        "staging-apply",
+        "staging-aws-role-arn",
+        "staging-environment",
+        "verify-command",
+        "working-directory"
       ],
-      "compatibilityProofRoots": [
-        "sha256:3ba66a1e8f8d00ddd45f3f448bcccb15469cbd31f5765d36f61e4cfe7fd0dd41"
+      "requiredOutputs": [
+        "buildchain-runtime-class",
+        "buildchain-runtime-override",
+        "buildchain-runtime-ref",
+        "buildchain-runtime-sha",
+        "controller-plan-artifact",
+        "controller-plan-digest",
+        "controller-plan-json",
+        "controller-receipt-artifact",
+        "controller-receipt-digest",
+        "controller-receipt-json",
+        "controller-receipt-status",
+        "preview-apply-result-json",
+        "preview-cleanup-result-json",
+        "production-apply-result-json",
+        "production-release-pr-url",
+        "release-pr-status",
+        "staging-apply-result-json",
+        "web-surface-alias",
+        "web-surface-channel",
+        "web-surface-cleanup-plan-json",
+        "web-surface-manifest-json",
+        "web-surface-url",
+        "web-surface-urls-json"
       ],
-      "compatibilityFactRoots": [
-        "sha256:bba5690e6c535b54623d31b3260e59381bdb50161d7bff33b8e42b8b6dd3135a"
-      ]
+      "breakingDigest": "sha256:8d4c5471402f9cb3c0b8db5d2e75fcc6ea826aee0649066c9bbbb41a4a939a61",
+      "auditDigest": "sha256:728c58f1fcba02b0cd6f90d51f1e2125f000bd4674d798136ce13fb65cc5ef2c"
     },
     {
       "contractVersion": 1,
@@ -1689,29 +444,8 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "auditable-demo",
       "kind": "workflow",
-      "path": ".github/workflows/.auditable-demo.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/.auditable-demo.yml@v4",
-      "requiredInputs": [
-        "source-artifact-name",
-        "source-artifact-digest",
-        "adapter-path",
-        "renderer-image"
-      ],
-      "requiredOutputs": [
-        "source-sha",
-        "gate-artifact-name",
-        "gate-artifact-id",
-        "gate-artifact-digest",
-        "gate-artifact-url",
-        "gate-root",
-        "media-artifact-name",
-        "media-artifact-id",
-        "media-artifact-digest",
-        "media-artifact-url",
-        "media-root",
-        "media-profile",
-        "media-qualification-root"
-      ],
+      "path": ".github/workflows/.build-demo-adapter.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.build-demo-adapter.yml@v4",
       "breakingDefaults": {
         "trustedEventRequired": true,
         "renderMediaDefault": false,
@@ -1719,14 +453,6 @@
         "artifactRetentionDaysDefault": 14,
         "gatePolicy": "required-before-selective-render"
       },
-      "optionalInputs": [
-        "buildchain-repository",
-        "source-ref",
-        "render-media",
-        "media-profile",
-        "artifact-retention-days",
-        "require-trusted-event"
-      ],
       "guarantees": [
         "the source GitHub Artifact is admitted by exact same-run name and archive digest",
         "the checked-in consumer adapter runs from the exact consumer source with a disposable home and reduced environment",
@@ -1738,8 +464,40 @@
         "Build Images owns encoding, Buildchain owns qualification and receipts, and site repositories own browser loading and accessibility behavior",
         "media qualification does not claim browser playback, responsive layout, reduced-motion behavior, accessibility, or production deployment"
       ],
-      "breakingDigest": "sha256:425f8d3d1ba205dd6fe35a20f1dc6dad7d7c563872283e3af79fea4d5c475692",
-      "auditDigest": "sha256:33d86446d6cbcce9ba7f386a32db0afbf32e52ff995ddd4b3cf1989831d7f2db"
+      "requiredInputs": [
+        "adapter-path",
+        "renderer-image",
+        "source-artifact-digest",
+        "source-artifact-name"
+      ],
+      "optionalInputs": [
+        "adapter-arguments-json",
+        "artifact-retention-days",
+        "contract-lock",
+        "media-profile",
+        "render-media",
+        "require-trusted-event",
+        "runtime-ref",
+        "runtime-selection",
+        "source-ref"
+      ],
+      "requiredOutputs": [
+        "gate-artifact-digest",
+        "gate-artifact-id",
+        "gate-artifact-name",
+        "gate-artifact-url",
+        "gate-root",
+        "media-artifact-digest",
+        "media-artifact-id",
+        "media-artifact-name",
+        "media-artifact-url",
+        "media-profile",
+        "media-qualification-root",
+        "media-root",
+        "source-sha"
+      ],
+      "breakingDigest": "sha256:782074f938bedd8bf1cfe0e5428e1103c9471af93d4822c0cb7a677c659ff1a2",
+      "auditDigest": "sha256:442381ba8ec8d2c4045b241abd0d50bdc9b8a97b05bdb37bc52407ffca2f3ca7"
     },
     {
       "contractVersion": 1,
@@ -1747,21 +505,8 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "declarative-auditable-demo",
       "kind": "workflow",
-      "path": ".github/workflows/.declarative-auditable-demo.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/.declarative-auditable-demo.yml@v4",
-      "requiredInputs": [
-        "binary-artifact-name",
-        "binary-artifact-digest",
-        "renderer-image"
-      ],
-      "requiredOutputs": [
-        "source-sha",
-        "capture-artifact-name",
-        "capture-artifact-digest",
-        "evidence-artifact-name",
-        "evidence-artifact-digest",
-        "publication-pr-url"
-      ],
+      "path": ".github/workflows/public-build-demo.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/public-build-demo.yml@v4",
       "breakingDefaults": {
         "scenarioPathDefault": ".buildchain/auditable-demo.json",
         "renderMediaDefault": false,
@@ -1770,16 +515,6 @@
         "artifactRetentionDaysDefault": 14,
         "executionBoundary": "exact-binary-network-none-secret-free-60-seconds"
       },
-      "optionalInputs": [
-        "buildchain-repository",
-        "source-ref",
-        "scenario-path",
-        "render-media",
-        "media-profile",
-        "materialize",
-        "materialize-base-ref",
-        "artifact-retention-days"
-      ],
       "guarantees": [
         "one versioned declaration can contain multiple demos with multiple ordered literal argv steps",
         "every demo uses the exact same-run standalone binary admitted by producer-owned artifact name and digest",
@@ -1789,8 +524,35 @@
         "manual, alpha, and release callers use the same capture, Gate, renderer, passport, and materializer implementation",
         "identity, compliance, Product System metadata, package metadata, registry history, scans, and generation grant no authority"
       ],
-      "breakingDigest": "sha256:0bcba689ab5060e12230db4118895242ecb48677ff581ea0360b1833bdac558c",
-      "auditDigest": "sha256:b00e330b547e6e823f9cf83ac97406ca7c93c688a9e80e63af5bc39cbf840941"
+      "requiredInputs": [
+        "binary-artifact-digest",
+        "binary-artifact-name",
+        "renderer-image"
+      ],
+      "optionalInputs": [
+        "artifact-retention-days",
+        "contract-lock",
+        "materialize",
+        "materialize-base-ref",
+        "media-profile",
+        "render-failure-advisory",
+        "render-media",
+        "runtime-ref",
+        "runtime-selection",
+        "scenario-path",
+        "source-ref"
+      ],
+      "requiredOutputs": [
+        "capture-artifact-digest",
+        "capture-artifact-name",
+        "evidence-artifact-digest",
+        "evidence-artifact-name",
+        "publication-pr-url",
+        "render-result",
+        "source-sha"
+      ],
+      "breakingDigest": "sha256:20412f25271537165e25d8a7d65e716701745570a419c482777a088466c5dd6f",
+      "auditDigest": "sha256:1eb1d1d1f4dceaac923db3abe302cd65044bb800ccbae71aa56e8ea9aa39e468"
     },
     {
       "contractVersion": 1,
@@ -1798,8 +560,8 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "release-candidate-promote-action",
       "kind": "action",
-      "path": "actions/release-candidate-promote/action.yml",
-      "publicRef": "kungfu-systems/buildchain/actions/release-candidate-promote@v4",
+      "path": "actions/release/promotion/candidate/action.yml",
+      "publicRef": "kungfu-systems/buildchain/actions/release/promotion/candidate@v4",
       "requiredInputs": [
         "token",
         "repository",
@@ -1836,7 +598,7 @@
         "no consumer command, script, shell, checkout, or executable tail hook is accepted"
       ],
       "breakingDigest": "sha256:930a8c3bb97347aea40ab19c4ee1dc29c1f4b75897e19bc0d56da1018fa382c8",
-      "auditDigest": "sha256:4d51bce0908155875a70f8168fc545fe164bd1b6a4146a3de56b4dd7a5c1758c"
+      "auditDigest": "sha256:17c4a1b24c1afb1c5e6b2226489878de5158287c931ef5e5c690221f594fd98f"
     },
     {
       "contractVersion": 1,
@@ -1844,8 +606,8 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "promote-buildchain-ref-action",
       "kind": "action",
-      "path": "actions/promote-buildchain-ref/action.yml",
-      "publicRef": "kungfu-systems/buildchain/actions/promote-buildchain-ref@v4",
+      "path": "actions/release/promotion/ref/action.yml",
+      "publicRef": "kungfu-systems/buildchain/actions/release/promotion/ref@v4",
       "requiredInputs": [
         "token",
         "sha",
@@ -1873,9 +635,7 @@
         "release-passport-evidence-jsons",
         "release-passport-attachment-command",
         "release-passport-github-artifact-attestation-policy-jsons",
-        "github-release",
-        "github-release-title",
-        "github-release-notes"
+        "github-release"
       ],
       "publishArtifactSchema": {
         "requirementDigest": "optional-before-publish-required-after-publish",
@@ -1907,16 +667,7 @@
         "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata bound to the authoritative publication channel and tag syntax retained as the fallback for ordinary callers"
       ],
       "breakingDigest": "sha256:6147c0a8d5c36bfaa6021871574e1fc28192a3f1b8cfdae4d24ef3059ac1ebda",
-      "auditDigest": "sha256:2422f86979d2ce521a39e0f19db23cac4bd251bc21f701237a0105fb802e453b",
-      "compatibleBreakingDigests": [
-        "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874"
-      ],
-      "compatibilityProofRoots": [
-        "sha256:e6f93f44a6613a9d6de776ebe8f29b1779b0cd18a24bdf126ec6c1a07770fa75"
-      ],
-      "compatibilityFactRoots": [
-        "sha256:50e5b6e644493ac00d5b1d83a0ec6009f9faaae1bee15e88ee8386c9ec8a775d"
-      ]
+      "auditDigest": "sha256:1b8f8615a114a6f352aeb79a0d25c8ed08b9305f07cabac7a2d4be76cd0ec705"
     },
     {
       "contractVersion": 1,
@@ -1924,8 +675,8 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "macos-credential-island-action",
       "kind": "action",
-      "path": "actions/macos-credential-island/action.yml",
-      "publicRef": "kungfu-systems/buildchain/actions/macos-credential-island@v4",
+      "path": "actions/build/credential/macos-island/action.yml",
+      "publicRef": "kungfu-systems/buildchain/actions/build/credential/macos-island@v4",
       "requiredInputs": [
         "input-root",
         "output-root",
@@ -1980,8 +731,8 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "report-buildchain-issue-action",
       "kind": "action",
-      "path": "actions/report-buildchain-issue/action.yml",
-      "publicRef": "kungfu-systems/buildchain/actions/report-buildchain-issue@v4",
+      "path": "actions/governance/incident/report/action.yml",
+      "publicRef": "kungfu-systems/buildchain/actions/governance/incident/report@v4",
       "requiredInputs": [
         "token"
       ],
@@ -2015,7 +766,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "release-passport-schema",
       "kind": "schema",
-      "path": "packages/core/release-passport.js",
+      "path": "packages/core/release/release-passport.js",
       "requiredInputs": [
         "buildchain.release.json"
       ],
@@ -2031,7 +782,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:c1648ab8f104b4a929a094126082e7502b9381f3590ecf7acc959eb6d4b20877"
+      "auditDigest": "sha256:baf6dea00db705099a4a04b317f8b1abcb8e515b28b4230dd24195a720feb9b7"
     },
     {
       "contractVersion": 1,
@@ -2039,7 +790,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "kfd-1-release-gate",
       "kind": "schema",
-      "path": "packages/core/kfd-gate.js",
+      "path": "packages/core/adoption/kfd-gate.js",
       "requiredInputs": [
         "KFD-1 witness JSON"
       ],
@@ -2064,7 +815,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "kfd-2-release-trust-passport-audit",
       "kind": "schema",
-      "path": "packages/core/release-passport.js",
+      "path": "packages/core/release/release-passport.js",
       "requiredInputs": [
         "public release claim evidence"
       ],
@@ -2080,7 +831,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:c1648ab8f104b4a929a094126082e7502b9381f3590ecf7acc959eb6d4b20877"
+      "auditDigest": "sha256:baf6dea00db705099a4a04b317f8b1abcb8e515b28b4230dd24195a720feb9b7"
     },
     {
       "contractVersion": 1,
@@ -2088,7 +839,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "kfd-3-collaboration-interface-release-gate",
       "kind": "schema",
-      "path": "packages/core/kfd-gate.js",
+      "path": "packages/core/adoption/kfd-gate.js",
       "requiredInputs": [
         "KFD-3 prebuild witness JSON",
         "KFD-3 artifact witness JSON or verify command"
@@ -2140,7 +891,7 @@
         "README badge block checks and writes are generated from machine-readable repository facts"
       ],
       "breakingDigest": "sha256:90a73892b2d6c214048448d5f45df75639bdf7b7e8fefd9c596e04b087407bcc",
-      "auditDigest": "sha256:765a3bfba4facef7e6d44c108f4031828ab647049ddb8c3faf23bad640fdce9f"
+      "auditDigest": "sha256:5371a68edf3cf389ba209c285a5a7d3bda11199ced4ad454646200e2494358a3"
     },
     {
       "contractVersion": 1,
@@ -2148,7 +899,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "homebrew-distribution-index",
       "kind": "node-api",
-      "path": "packages/core/homebrew.js",
+      "path": "packages/core/build/homebrew.js",
       "requiredInputs": [
         "upstream release passport"
       ],
@@ -2175,7 +926,7 @@
         "CLI and JavaScript callers use the same Node API implementation"
       ],
       "breakingDigest": "sha256:148c0387ff4cea76433bbde80cd9d77c5aa67e1a29856ced33e4d819366f2213",
-      "auditDigest": "sha256:0e978219bd6fca754d80a616d538d5825b116eec78b65857bbe5063b8c84d933"
+      "auditDigest": "sha256:be87a8f8ba03c6164d93102df8bb214c877e2d1d37e4ced8da096aa909a4e6a6"
     },
     {
       "contractVersion": 1,
@@ -2183,7 +934,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "readme-badge-facts",
       "kind": "node-api",
-      "path": "packages/core/readme-badges.js",
+      "path": "packages/core/web/readme-badges.js",
       "requiredInputs": [
         "repository checkout"
       ],
@@ -2208,7 +959,7 @@
         "CLI and JavaScript callers use the same Node API implementation"
       ],
       "breakingDigest": "sha256:bcd72ad6dfba8013c96f8b2f7b0a307d2e7713972a1219348f0d5ecc493939a0",
-      "auditDigest": "sha256:13914ebabbc92ed49dd842c2aa51cc99d72b0732423c0b53a030c6458a0cd9d8"
+      "auditDigest": "sha256:8e38effc20c682d27fc883f02eb7726ba0c5f5d2219c00d78d893d69679c20c0"
     },
     {
       "contractVersion": 1,
@@ -2230,7 +981,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:338b63c8e6590630235521cd0537c5f76a0e68888772c3163d178a55902175d0"
+      "auditDigest": "sha256:c1ceec726aa1d12ec03d6963fbb8e4950857a7e69250f2d45c399c9470ea9344"
     },
     {
       "contractVersion": 1,
@@ -2252,7 +1003,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:1ebbde7222663b1387f69a0e9307a5d4870a1bf395e9a611660e7ca35c5edaf9"
+      "auditDigest": "sha256:e88cb115ee4261b72b5dc8a6f7c21d39e2f62a2bba3a39e9042cf96b053f4c36"
     },
     {
       "contractVersion": 1,
@@ -2260,7 +1011,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "controller:source-check",
       "kind": "controller",
-      "path": ".github/workflows/check.yml",
+      "path": ".github/workflows/public-build-check.yml",
       "requiredInputs": [],
       "requiredOutputs": [
         "controller-plan-json",
@@ -2272,7 +1023,7 @@
       "breakingDefaults": {
         "evidenceContract": "buildchain.controller-evidence/v1",
         "descriptorVersion": 1,
-        "workflowPath": ".github/workflows/check.yml",
+        "workflowPath": ".github/workflows/public-build-check.yml",
         "requiredStages": [
           "resolve-runtime",
           "checkout-source",
@@ -2292,30 +1043,26 @@
         "inputClassificationPolicy": "buildchain-controller-input-policy/v1"
       },
       "optionalInputs": [
-        "buildchain-ref",
-        "buildchain-repository",
+        "contract-lock",
         "mode",
         "node-version",
         "require-version-state",
+        "runtime-ref",
+        "runtime-selection",
         "source-proof-closure-paths-json",
         "source-proof-dependency-paths-json",
         "source-proof-policy-paths-json",
         "source-proof-required-contexts-json",
         "source-proof-reuse",
-        "universal-request-json",
         "upload-artifacts",
         "working-directory"
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:cdb7dc4e69031dcd2c590789c666ececbad6bcc9cb916ae5b7f4cee4cda6d63e",
-        "registryDigest": "sha256:45253e3ac9bcae7908b9180fb7cde0b064e8f01a1b082e2780b246d4a345bc63",
+        "digest": "sha256:3f2f0e2f9f8a21ea3db046cb477f2534711de29745e3f40be959eef398a2e692",
+        "registryDigest": "sha256:f3a2670f026d44ad84d482668ef5ee2a447a4f80f986c96986d61977272bdccd",
         "inputClassifications": {
-          "buildchain-ref": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-repository": {
+          "contract-lock": {
             "classification": "included",
             "source": "workflow-call-input"
           },
@@ -2328,6 +1075,14 @@
             "source": "workflow-call-input"
           },
           "require-version-state": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "runtime-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "runtime-selection": {
             "classification": "included",
             "source": "workflow-call-input"
           },
@@ -2351,10 +1106,6 @@
             "classification": "included",
             "source": "workflow-call-input"
           },
-          "universal-request-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
           "upload-artifacts": {
             "classification": "included",
             "source": "workflow-call-input"
@@ -2371,8 +1122,8 @@
         "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
-      "breakingDigest": "sha256:d4bd0f2a1921bfed71a4d9104d45934555bde74a5c189f93ad79f37074c02b87",
-      "auditDigest": "sha256:fbf3549e4f4987733f53ff362bf49d2001d56ae5842bbd1ed343c0fba40d9429"
+      "breakingDigest": "sha256:c90592a71d859c9814e70cb1c8603d8240271e8049fe4e754fe4776b8f1b1a4c",
+      "auditDigest": "sha256:003787b94b61d80b06aee69603f3a49a869633e4eedb25161ec200ec777e4978"
     },
     {
       "contractVersion": 1,
@@ -2422,12 +1173,16 @@
         "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
         "BUILDCHAIN_PROMOTION_TOKEN",
         "config-path",
+        "contract-lock",
+        "resume-run-id",
+        "runtime-ref",
+        "runtime-selection",
         "configuration-root"
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:4a6897900f70c1353ea8b6fb3379186d50a4f221d3c000f91436d6785d34d876",
-        "registryDigest": "sha256:45253e3ac9bcae7908b9180fb7cde0b064e8f01a1b082e2780b246d4a345bc63",
+        "digest": "sha256:849a51ff18efbc2bf4668cd6ba6e08004caf5fc01de4676eade0f917d24c5fd1",
+        "registryDigest": "sha256:f3a2670f026d44ad84d482668ef5ee2a447a4f80f986c96986d61977272bdccd",
         "inputClassifications": {
           "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64": {
             "classification": "redacted",
@@ -2457,6 +1212,22 @@
             "classification": "digest-only",
             "source": "workflow-call-input"
           },
+          "contract-lock": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "resume-run-id": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "runtime-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "runtime-selection": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
           "configuration-root": {
             "classification": "included",
             "source": "resolved-build-plan"
@@ -2470,7 +1241,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:6adb4adc805a741ec7e54a769c4bb89ef66805bb63ac99dfab06ba11f36d9381",
-      "auditDigest": "sha256:f5deee5398a049d0ed3e92028fd31159329cc849ce1782e4699b4e961d75d6f0"
+      "auditDigest": "sha256:d6c7d523fa1d08350ca53483a7315111cf96eeb6623f3069f6c53a8487adeb74"
     },
     {
       "contractVersion": 1,
@@ -2478,7 +1249,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "controller:shifu-gate-profile-envelope",
       "kind": "controller",
-      "path": ".github/workflows/.gate-profile.yml",
+      "path": ".github/workflows/.build-gate-profile.yml",
       "requiredInputs": [],
       "requiredOutputs": [
         "controller-plan-json",
@@ -2490,7 +1261,7 @@
       "breakingDefaults": {
         "evidenceContract": "buildchain.controller-evidence/v1",
         "descriptorVersion": 1,
-        "workflowPath": ".github/workflows/.gate-profile.yml",
+        "workflowPath": ".github/workflows/.build-gate-profile.yml",
         "requiredStages": [
           "plan",
           "execute",
@@ -2508,8 +1279,6 @@
       "optionalInputs": [
         "artifact-name",
         "artifact-retention-days",
-        "buildchain-ref",
-        "buildchain-repository",
         "cargo-registry-index",
         "checkout-cache-fallback",
         "checkout-cache-fetch-attempts",
@@ -2518,6 +1287,7 @@
         "checkout-cache-mode",
         "checkout-cache-reference-repository-template",
         "checkout-cache-timeout-seconds",
+        "contract-lock",
         "gate-command-json",
         "gate-environment-json",
         "gate-plan-command-json",
@@ -2528,34 +1298,27 @@
         "platforms-json",
         "require-trusted-event",
         "runner-preset",
+        "runtime-ref",
+        "runtime-selection",
         "rust-toolchain",
         "rustup-dist-server",
         "rustup-update-root",
         "shifu-cache-profile-digest",
         "shifu-cache-profile-ref",
         "source-ref",
-        "universal-request-json",
         "untrusted-policy",
         "working-directory"
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:76c8da1ca1d7c6014cbda3ae3c82b2e28dafda45ddc7d3b4d6fccb6d3fd4853e",
-        "registryDigest": "sha256:45253e3ac9bcae7908b9180fb7cde0b064e8f01a1b082e2780b246d4a345bc63",
+        "digest": "sha256:83fb2f980409ff9eb7091fc675b1f1ecd471d335945d8fa6003357f0af709dd5",
+        "registryDigest": "sha256:f3a2670f026d44ad84d482668ef5ee2a447a4f80f986c96986d61977272bdccd",
         "inputClassifications": {
           "artifact-name": {
             "classification": "included",
             "source": "workflow-call-input"
           },
           "artifact-retention-days": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-ref": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-repository": {
             "classification": "included",
             "source": "workflow-call-input"
           },
@@ -2589,6 +1352,10 @@
           },
           "checkout-cache-timeout-seconds": {
             "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "contract-lock": {
+            "classification": "included",
             "source": "workflow-call-input"
           },
           "gate-command-json": {
@@ -2631,6 +1398,14 @@
             "classification": "digest-only",
             "source": "workflow-call-input"
           },
+          "runtime-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "runtime-selection": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
           "rust-toolchain": {
             "classification": "included",
             "source": "workflow-call-input"
@@ -2655,10 +1430,6 @@
             "classification": "included",
             "source": "workflow-call-input"
           },
-          "universal-request-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
           "untrusted-policy": {
             "classification": "included",
             "source": "workflow-call-input"
@@ -2675,8 +1446,8 @@
         "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
-      "breakingDigest": "sha256:5f1868478b7ccd9fb79aea76bc771289d2ca6bd2dccd1abf57575426f1eae5fb",
-      "auditDigest": "sha256:f5ad2bc08c4092aa27dc257d669a25fe27713c5df90f130ae4e70af983860ace"
+      "breakingDigest": "sha256:93d630270c6db2c6993f0965d44280e0f178159d8d74519c7752a38d5771d02e",
+      "auditDigest": "sha256:a85a81d1d2e43e945f9ad9fe514b38278d74e7851d1e6b471a2935a6c4648268"
     },
     {
       "contractVersion": 1,
@@ -2684,7 +1455,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "controller:web-surface",
       "kind": "controller",
-      "path": ".github/workflows/.web-surface.yml",
+      "path": ".github/workflows/public-release-web.yml",
       "requiredInputs": [],
       "requiredOutputs": [
         "controller-plan-json",
@@ -2696,7 +1467,7 @@
       "breakingDefaults": {
         "evidenceContract": "buildchain.controller-evidence/v1",
         "descriptorVersion": 1,
-        "workflowPath": ".github/workflows/.web-surface.yml",
+        "workflowPath": ".github/workflows/public-release-web.yml",
         "requiredStages": [
           "resolve-runtime",
           "plan",
@@ -2719,13 +1490,7 @@
         "artifact-path",
         "aws-region",
         "build-command",
-        "buildchain-contract-compatibility-policy",
-        "buildchain-contract-drift-issue-mode",
-        "buildchain-contract-expected-channel",
-        "buildchain-contract-expected-major",
-        "buildchain-contract-lock-path",
-        "buildchain-ref",
-        "buildchain-repository",
+        "contract-lock",
         "fail-on-release-pr-error",
         "github-governance-receipt-json",
         "node-version",
@@ -2739,7 +1504,6 @@
         "production-aws-role-arn",
         "production-environment",
         "production-release-app-client-id",
-        "production-release-app-id",
         "production-release-app-private-key",
         "production-release-branch-channel",
         "production-release-head-prefix",
@@ -2755,17 +1519,18 @@
         "publication-runner-provenance-json",
         "publication-used-nonces-json",
         "release-feedback-actor-privacy",
+        "runtime-ref",
+        "runtime-selection",
         "staging-apply",
         "staging-aws-role-arn",
         "staging-environment",
-        "universal-request-json",
         "verify-command",
         "working-directory"
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:8977c5222c4e30ee2d22e6519add1760cbbd917097b57f576d249001918217c8",
-        "registryDigest": "sha256:45253e3ac9bcae7908b9180fb7cde0b064e8f01a1b082e2780b246d4a345bc63",
+        "digest": "sha256:8818db80d272797d84488cd5db915014edf0081b78afa8a52561f54e0deee908",
+        "registryDigest": "sha256:f3a2670f026d44ad84d482668ef5ee2a447a4f80f986c96986d61977272bdccd",
         "inputClassifications": {
           "artifact-path": {
             "classification": "digest-only",
@@ -2779,31 +1544,7 @@
             "classification": "digest-only",
             "source": "workflow-call-input"
           },
-          "buildchain-contract-compatibility-policy": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-contract-drift-issue-mode": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-contract-expected-channel": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-contract-expected-major": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-contract-lock-path": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "buildchain-ref": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-repository": {
+          "contract-lock": {
             "classification": "included",
             "source": "workflow-call-input"
           },
@@ -2859,10 +1600,6 @@
             "classification": "included",
             "source": "workflow-call-input"
           },
-          "production-release-app-id": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
           "production-release-app-private-key": {
             "classification": "redacted",
             "source": "workflow-call-secret"
@@ -2889,7 +1626,7 @@
           },
           "production-release-pr-token": {
             "classification": "redacted",
-            "source": "workflow-call-input"
+            "source": "workflow-call-secret"
           },
           "production-source-sha": {
             "classification": "included",
@@ -2923,6 +1660,14 @@
             "classification": "included",
             "source": "workflow-call-input"
           },
+          "runtime-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "runtime-selection": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
           "staging-apply": {
             "classification": "included",
             "source": "workflow-call-input"
@@ -2932,10 +1677,6 @@
             "source": "workflow-call-input"
           },
           "staging-environment": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "universal-request-json": {
             "classification": "digest-only",
             "source": "workflow-call-input"
           },
@@ -2955,8 +1696,8 @@
         "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
-      "breakingDigest": "sha256:f14825324a16b51c2e9ed708ebe64e1932e05b6d5e0866f83aea8439decb4a27",
-      "auditDigest": "sha256:5c006ccc4e465649d971490a8cb40f4601a7a83b6496077e2a1d2a1baf90893b"
+      "breakingDigest": "sha256:ad5e695f42245fdbe53afbef5311ae52f113c9016bec46eaff4476aeb158ec17",
+      "auditDigest": "sha256:728c58f1fcba02b0cd6f90d51f1e2125f000bd4674d798136ce13fb65cc5ef2c"
     },
     {
       "contractVersion": 1,
@@ -2964,7 +1705,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "controller:publication-artifact",
       "kind": "controller",
-      "path": ".github/workflows/publication-artifact.yml",
+      "path": ".github/workflows/public-build-publication.yml",
       "requiredInputs": [],
       "requiredOutputs": [
         "controller-plan-json",
@@ -2976,7 +1717,7 @@
       "breakingDefaults": {
         "evidenceContract": "buildchain.controller-evidence/v1",
         "descriptorVersion": 1,
-        "workflowPath": ".github/workflows/publication-artifact.yml",
+        "workflowPath": ".github/workflows/public-build-publication.yml",
         "requiredStages": [
           "resolve-runtime",
           "build",
@@ -3001,30 +1742,27 @@
         "artifact-retention-days",
         "build-command",
         "buildchain-alpha-contract-lock-path",
-        "buildchain-contract-compatibility-policy",
-        "buildchain-contract-drift-issue-mode",
-        "buildchain-contract-lock-path",
-        "buildchain-ref",
-        "buildchain-repository",
         "buildchain-stable-contract-lock-path",
+        "contract-lock",
         "node-version",
         "package-name",
         "prepare-paper-package",
         "publish-dist-tag",
+        "runtime-ref",
+        "runtime-selection",
         "setup-node",
         "target-ref",
         "toolchain-command",
         "toolchain-digest",
         "toolchain-image",
         "toolchain-type",
-        "universal-request-json",
         "verify-command",
         "working-directory"
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:6768756f1a1855ffec164c9745a45805b775741d2ef72f464bfac093efffee7d",
-        "registryDigest": "sha256:45253e3ac9bcae7908b9180fb7cde0b064e8f01a1b082e2780b246d4a345bc63",
+        "digest": "sha256:8807dfdad8dc0ae15b51616049804b8a44936d37e364d209e099f680385d81af",
+        "registryDigest": "sha256:f3a2670f026d44ad84d482668ef5ee2a447a4f80f986c96986d61977272bdccd",
         "inputClassifications": {
           "artifact-name": {
             "classification": "included",
@@ -3046,28 +1784,12 @@
             "classification": "digest-only",
             "source": "workflow-call-input"
           },
-          "buildchain-contract-compatibility-policy": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-contract-drift-issue-mode": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-contract-lock-path": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "buildchain-ref": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-repository": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
           "buildchain-stable-contract-lock-path": {
             "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "contract-lock": {
+            "classification": "included",
             "source": "workflow-call-input"
           },
           "node-version": {
@@ -3083,6 +1805,14 @@
             "source": "workflow-call-input"
           },
           "publish-dist-tag": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "runtime-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "runtime-selection": {
             "classification": "included",
             "source": "workflow-call-input"
           },
@@ -3110,10 +1840,6 @@
             "classification": "included",
             "source": "workflow-call-input"
           },
-          "universal-request-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
           "verify-command": {
             "classification": "digest-only",
             "source": "workflow-call-input"
@@ -3130,8 +1856,8 @@
         "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
-      "breakingDigest": "sha256:3f76502666069c2727d23efcfdb08fb80f89ced1955a69e29f11525ae88aca1d",
-      "auditDigest": "sha256:ec5251321f4ed443749fff90b26720933ba145ccc37b018082a708088705b7cd"
+      "breakingDigest": "sha256:64043b583051b8fc5320b5d6f2304120037fb6a14b8448edbf6e91908f719739",
+      "auditDigest": "sha256:8ffe778e9895143bb9fc6571dc7b04006eddc9def16691fae9b45bb4329d28c7"
     },
     {
       "contractVersion": 1,
@@ -3139,7 +1865,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "controller:paper-release",
       "kind": "controller",
-      "path": ".github/workflows/paper-release.yml",
+      "path": ".github/workflows/public-release-paper.yml",
       "requiredInputs": [],
       "requiredOutputs": [
         "controller-plan-json",
@@ -3151,7 +1877,7 @@
       "breakingDefaults": {
         "evidenceContract": "buildchain.controller-evidence/v1",
         "descriptorVersion": 1,
-        "workflowPath": ".github/workflows/paper-release.yml",
+        "workflowPath": ".github/workflows/public-release-paper.yml",
         "requiredStages": [
           "resolve-runtime",
           "build",
@@ -3176,53 +1902,61 @@
         "inputClassificationPolicy": "buildchain-controller-input-policy/v1"
       },
       "optionalInputs": [
+        "BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID",
+        "BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY",
+        "BUILDCHAIN_GENERATED_WRITE_TOKEN",
+        "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY",
         "artifact-name",
+        "artifact-paths",
         "artifact-retention-days",
         "branch-protection-bypass-apps",
-        "branch-protection-bypass-teams",
-        "branch-protection-bypass-users",
-        "build-command",
-        "buildchain-contract-compatibility-policy",
-        "buildchain-contract-drift-issue-mode",
-        "buildchain-contract-lock-path",
-        "buildchain-ref",
-        "buildchain-repository",
+        "contract-lock",
         "dry-run",
         "github-governance-receipt-json",
         "github-release",
-        "github-release-notes",
-        "github-release-title",
-        "node-version",
         "package-name",
-        "publication-admission-json",
-        "publication-control-plane-audit-json",
-        "publication-expected-json",
-        "publication-runner-provenance-json",
-        "publication-used-nonces-json",
         "publish-dist-tag",
-        "publish-package-set-order",
+        "publisher-workflow-path",
         "release-passport-impact-json",
         "release-passport-output-dir",
         "release-passport-product-name",
         "required-status-check",
-        "setup-node",
+        "runtime-ref",
+        "runtime-selection",
         "target-ref",
         "target-sha",
-        "toolchain-command",
-        "toolchain-digest",
-        "toolchain-image",
         "toolchain-type",
-        "universal-request-json",
         "verify-command",
-        "working-directory"
+        "working-directory",
+        "candidate-receipt-digest"
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:24602f0ed35bbfb794051921b90686c9eed2434b17fd5da14e9ad95355c01634",
-        "registryDigest": "sha256:45253e3ac9bcae7908b9180fb7cde0b064e8f01a1b082e2780b246d4a345bc63",
+        "digest": "sha256:f98dae8ad9a494e651690ac128cf4b1b4a6df55cfb255ecca24dae60d0d205fa",
+        "registryDigest": "sha256:f3a2670f026d44ad84d482668ef5ee2a447a4f80f986c96986d61977272bdccd",
         "inputClassifications": {
+          "BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "BUILDCHAIN_GENERATED_WRITE_TOKEN": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
           "artifact-name": {
             "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "artifact-paths": {
+            "classification": "digest-only",
             "source": "workflow-call-input"
           },
           "artifact-retention-days": {
@@ -3233,35 +1967,7 @@
             "classification": "included",
             "source": "workflow-call-input"
           },
-          "branch-protection-bypass-teams": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "branch-protection-bypass-users": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "build-command": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "buildchain-contract-compatibility-policy": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-contract-drift-issue-mode": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-contract-lock-path": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "buildchain-ref": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-repository": {
+          "contract-lock": {
             "classification": "included",
             "source": "workflow-call-input"
           },
@@ -3277,48 +1983,16 @@
             "classification": "included",
             "source": "workflow-call-input"
           },
-          "github-release-notes": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "github-release-title": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "node-version": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
           "package-name": {
             "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "publication-admission-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "publication-control-plane-audit-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "publication-expected-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "publication-runner-provenance-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "publication-used-nonces-json": {
-            "classification": "digest-only",
             "source": "workflow-call-input"
           },
           "publish-dist-tag": {
             "classification": "included",
             "source": "workflow-call-input"
           },
-          "publish-package-set-order": {
-            "classification": "included",
+          "publisher-workflow-path": {
+            "classification": "digest-only",
             "source": "workflow-call-input"
           },
           "release-passport-impact-json": {
@@ -3337,7 +2011,11 @@
             "classification": "included",
             "source": "workflow-call-input"
           },
-          "setup-node": {
+          "runtime-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "runtime-selection": {
             "classification": "included",
             "source": "workflow-call-input"
           },
@@ -3349,24 +2027,8 @@
             "classification": "included",
             "source": "workflow-call-input"
           },
-          "toolchain-command": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "toolchain-digest": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "toolchain-image": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
           "toolchain-type": {
             "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "universal-request-json": {
-            "classification": "digest-only",
             "source": "workflow-call-input"
           },
           "verify-command": {
@@ -3376,6 +2038,10 @@
           "working-directory": {
             "classification": "digest-only",
             "source": "workflow-call-input"
+          },
+          "candidate-receipt-digest": {
+            "classification": "included",
+            "source": "admitted-publication-candidate"
           }
         }
       },
@@ -3385,8 +2051,8 @@
         "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
-      "breakingDigest": "sha256:0eb318df455ef9cb737a7c2515a2411b685d34ed0bde7b5f5b173a7a42513114",
-      "auditDigest": "sha256:e16dea163b7862a7dc010b3ebf8a16a6126603d8966d79974e00902eca4e3437"
+      "breakingDigest": "sha256:1175b298251f200a6290c7f46d79f70e5c703279d3a5c5e9776bb18d4e4f7b52",
+      "auditDigest": "sha256:0bd9ce9bff3b6e6472d153cdd291c97de83a78b5679d795a3016a38df4c6b364"
     },
     {
       "contractVersion": 1,
@@ -3394,7 +2060,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "controller:release-candidate-promotion",
       "kind": "controller",
-      "path": ".github/workflows/.release-candidate-promote.yml",
+      "path": ".github/workflows/.release-promote.yml",
       "requiredInputs": [],
       "requiredOutputs": [
         "controller-plan-json",
@@ -3406,7 +2072,7 @@
       "breakingDefaults": {
         "evidenceContract": "buildchain.controller-evidence/v1",
         "descriptorVersion": 1,
-        "workflowPath": ".github/workflows/.release-candidate-promote.yml",
+        "workflowPath": ".github/workflows/.release-promote.yml",
         "requiredStages": [
           "preflight",
           "admit-release-candidate",
@@ -3438,136 +2104,18 @@
         "BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY",
         "BUILDCHAIN_PUBLICATION_COMMIT_TOKEN",
         "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY",
-        "allow-repository",
-        "artifact-name",
-        "artifact-patterns",
-        "branch-protection-bypass-apps",
-        "branch-protection-bypass-teams",
-        "branch-protection-bypass-users",
-        "buildchain-alpha-contract-lock-path",
-        "buildchain-contract-compatibility-policy",
-        "buildchain-contract-drift-issue-mode",
-        "buildchain-contract-lock-path",
-        "buildchain-expected-channel",
-        "buildchain-expected-major",
         "buildchain-issue-app-id",
         "buildchain-issue-app-private-key",
         "buildchain-issue-token",
-        "buildchain-ref",
-        "buildchain-repository",
-        "buildchain-stable-contract-lock-path",
-        "channel",
-        "declarative-release-tail",
-        "dry-run",
-        "github-artifact-attestation-environment",
-        "github-artifact-attestation-policy-json",
-        "github-artifact-attestation-retention-days",
-        "github-governance-receipt-json",
-        "github-release",
-        "github-release-notes",
-        "github-release-payload-patterns",
-        "github-release-title",
-        "package-manager",
-        "promotion-contract-lock-digest",
-        "promotion-contract-lock-path",
-        "promotion-override-used",
-        "promotion-publication-channel",
-        "promotion-router-ref",
-        "promotion-router-sha",
-        "promotion-runtime-authorization-json",
-        "promotion-runtime-authorization-root",
-        "promotion-runtime-ref",
-        "promotion-runtime-sha",
-        "promotion-shell-ref",
-        "promotion-shell-sha",
-        "promotion-target-ref",
-        "provider-failure-after-capability",
-        "publication-admission-json",
-        "publication-authority-workflow-path",
-        "publication-auto-admission",
-        "publication-auto-no-gate",
-        "publication-commit-command",
-        "publication-commit-evidence-path",
-        "publication-consumer-predicate-id",
-        "publication-consumer-qualification-command",
-        "publication-consumer-qualification-controller-sha",
-        "publication-control-plane-audit-json",
-        "publication-expected-json",
-        "publication-gate-aggregate-json",
-        "publication-gate-command",
-        "publication-gate-controller-sha",
-        "publication-package-name",
-        "publication-product",
-        "publication-publisher-workflow-path",
-        "publication-runner-provenance-json",
-        "publication-target",
-        "publication-used-nonces-json",
-        "publication-used-qualification-nonces-json",
-        "publish-artifact-kind",
-        "publish-command",
-        "publish-dist-tag",
-        "publish-mode",
-        "publish-package-main",
-        "publish-package-set-order",
-        "publish-rematerialize-on-resume",
-        "publish-required-artifacts-json",
-        "publish-target",
-        "publish-transaction-override",
-        "release-activation-command",
-        "release-activation-receipt-set-path",
-        "release-candidate-family-assignment-id",
-        "release-candidate-family-evidence-required",
-        "release-candidate-family-evidence-root",
-        "release-candidate-family-initiative-id",
-        "release-candidate-wait-seconds",
-        "release-candidate-workflow-file",
-        "release-candidate-workflow-name",
-        "release-passport",
-        "release-passport-adopter-delivery-json",
-        "release-passport-attachment-command",
-        "release-passport-buildchain-self-kfd",
-        "release-passport-evidence-command",
-        "release-passport-evidence-jsons",
-        "release-passport-evidence-path",
-        "release-passport-impact-json",
-        "release-passport-invariant-passport-command",
-        "release-passport-invariant-passport-jsons",
-        "release-passport-kfd-1-witness-jsons",
-        "release-passport-kfd-2-claim-jsons",
-        "release-passport-kfd-3-artifact-verify-command",
-        "release-passport-kfd-3-artifact-witness-jsons",
-        "release-passport-kfd-3-prebuild-witness-jsons",
-        "release-passport-kfd-adopter-manifest-gate-json",
-        "release-passport-kfd-adopter-manifest-json",
-        "release-passport-kfd-product-gate-jsons",
-        "release-passport-kfd-support-matrix-json",
-        "release-passport-output-dir",
-        "release-passport-platform-manifest-paths",
-        "release-passport-product-name",
-        "release-passport-v4-runtime-resume-evidence-json",
-        "release-propagation-config-path",
-        "required-artifact-count",
-        "required-status-check",
-        "resume-buildchain-runtime-sha",
-        "resume-candidate-repository",
-        "resume-candidate-run-id",
-        "resume-expected-candidate-root",
-        "resume-expected-candidate-runtime-sha",
-        "resume-expected-source-tree",
-        "resume-expected-workflow-file",
-        "resume-expected-workflow-name",
-        "resume-transaction-id",
-        "runner-preset",
-        "standalone-binary-distribution",
-        "target-ref",
-        "target-sha",
-        "trusted-publishing",
-        "universal-request-json"
+        "contract-lock",
+        "request-json",
+        "runtime-ref",
+        "runtime-selection"
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:13a70da4c3234954c2acf5ff96c077e00b06297316bb2287ce28661ce1e62ef1",
-        "registryDigest": "sha256:45253e3ac9bcae7908b9180fb7cde0b064e8f01a1b082e2780b246d4a345bc63",
+        "digest": "sha256:699a18f875d395d830bb07c511ec7e6e9dff1ac97a057004a0e58c51d065ce19",
+        "registryDigest": "sha256:f3a2670f026d44ad84d482668ef5ee2a447a4f80f986c96986d61977272bdccd",
         "inputClassifications": {
           "BUILDCHAIN_ISSUE_APP_ID": {
             "classification": "redacted",
@@ -3597,54 +2145,6 @@
             "classification": "redacted",
             "source": "workflow-call-secret"
           },
-          "allow-repository": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "artifact-name": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "artifact-patterns": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "branch-protection-bypass-apps": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "branch-protection-bypass-teams": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "branch-protection-bypass-users": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-alpha-contract-lock-path": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "buildchain-contract-compatibility-policy": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-contract-drift-issue-mode": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-contract-lock-path": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "buildchain-expected-channel": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-expected-major": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
           "buildchain-issue-app-id": {
             "classification": "redacted",
             "source": "workflow-call-secret"
@@ -3657,444 +2157,20 @@
             "classification": "redacted",
             "source": "workflow-call-secret"
           },
-          "buildchain-ref": {
+          "contract-lock": {
             "classification": "included",
             "source": "workflow-call-input"
           },
-          "buildchain-repository": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-stable-contract-lock-path": {
+          "request-json": {
             "classification": "digest-only",
             "source": "workflow-call-input"
           },
-          "channel": {
+          "runtime-ref": {
             "classification": "included",
             "source": "workflow-call-input"
           },
-          "declarative-release-tail": {
+          "runtime-selection": {
             "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "dry-run": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "github-artifact-attestation-environment": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "github-artifact-attestation-policy-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "github-artifact-attestation-retention-days": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "github-governance-receipt-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "github-release": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "github-release-notes": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "github-release-payload-patterns": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "github-release-title": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "package-manager": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "promotion-contract-lock-digest": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "promotion-contract-lock-path": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "promotion-override-used": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "promotion-publication-channel": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "promotion-router-ref": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "promotion-router-sha": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "promotion-runtime-authorization-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "promotion-runtime-authorization-root": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "promotion-runtime-ref": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "promotion-runtime-sha": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "promotion-shell-ref": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "promotion-shell-sha": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "promotion-target-ref": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "provider-failure-after-capability": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "publication-admission-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "publication-authority-workflow-path": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "publication-auto-admission": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "publication-auto-no-gate": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "publication-commit-command": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "publication-commit-evidence-path": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "publication-consumer-predicate-id": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "publication-consumer-qualification-command": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "publication-consumer-qualification-controller-sha": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "publication-control-plane-audit-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "publication-expected-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "publication-gate-aggregate-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "publication-gate-command": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "publication-gate-controller-sha": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "publication-package-name": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "publication-product": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "publication-publisher-workflow-path": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "publication-runner-provenance-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "publication-target": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "publication-used-nonces-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "publication-used-qualification-nonces-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "publish-artifact-kind": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "publish-command": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "publish-dist-tag": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "publish-mode": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "publish-package-main": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "publish-package-set-order": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "publish-rematerialize-on-resume": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "publish-required-artifacts-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "publish-target": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "publish-transaction-override": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "release-activation-command": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-activation-receipt-set-path": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-candidate-family-assignment-id": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "release-candidate-family-evidence-required": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "release-candidate-family-evidence-root": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "release-candidate-family-initiative-id": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "release-candidate-wait-seconds": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "release-candidate-workflow-file": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "release-candidate-workflow-name": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "release-passport": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "release-passport-adopter-delivery-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-passport-attachment-command": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-passport-buildchain-self-kfd": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "release-passport-evidence-command": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-passport-evidence-jsons": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-passport-evidence-path": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-passport-impact-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-passport-invariant-passport-command": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-passport-invariant-passport-jsons": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-passport-kfd-1-witness-jsons": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-passport-kfd-2-claim-jsons": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-passport-kfd-3-artifact-verify-command": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-passport-kfd-3-artifact-witness-jsons": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-passport-kfd-3-prebuild-witness-jsons": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-passport-kfd-adopter-manifest-gate-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-passport-kfd-adopter-manifest-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-passport-kfd-product-gate-jsons": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-passport-kfd-support-matrix-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-passport-output-dir": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "release-passport-platform-manifest-paths": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-passport-product-name": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "release-passport-v4-runtime-resume-evidence-json": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "release-propagation-config-path": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "required-artifact-count": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "required-status-check": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "resume-buildchain-runtime-sha": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "resume-candidate-repository": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "resume-candidate-run-id": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "resume-expected-candidate-root": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "resume-expected-candidate-runtime-sha": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "resume-expected-source-tree": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "resume-expected-workflow-file": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "resume-expected-workflow-name": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "resume-transaction-id": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "runner-preset": {
-            "classification": "digest-only",
-            "source": "workflow-call-input"
-          },
-          "standalone-binary-distribution": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "target-ref": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "target-sha": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "trusted-publishing": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "universal-request-json": {
-            "classification": "digest-only",
             "source": "workflow-call-input"
           }
         }
@@ -4105,8 +2181,8 @@
         "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
-      "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:b1755a45984fa324ef9eb2a29c73f31ff97560ff3c6e97bf100334e74bd8b76c"
+      "breakingDigest": "sha256:884bc7c4dccbc561b1d22a20cc5f7f50172c9691775aa2b84179e036a138cb20",
+      "auditDigest": "sha256:0db2252d311d3db96afb72636fb76c17229800aa1c1cde202ee6a097c36c534a"
     },
     {
       "contractVersion": 1,
@@ -4114,7 +2190,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "controller:release-propagation",
       "kind": "controller",
-      "path": ".github/workflows/release-propagation.yml",
+      "path": ".github/workflows/public-release-propagation.yml",
       "requiredInputs": [],
       "requiredOutputs": [
         "controller-plan-json",
@@ -4126,7 +2202,7 @@
       "breakingDefaults": {
         "evidenceContract": "buildchain.controller-evidence/v1",
         "descriptorVersion": 1,
-        "workflowPath": ".github/workflows/release-propagation.yml",
+        "workflowPath": ".github/workflows/public-release-propagation.yml",
         "requiredStages": [
           "resolve-runtime",
           "plan",
@@ -4149,8 +2225,7 @@
       "optionalInputs": [
         "agent-work-context-json",
         "agent-work-mode",
-        "buildchain-ref",
-        "buildchain-repository",
+        "contract-lock",
         "downstream-base-ref",
         "downstream-branch",
         "downstream-prepare-command",
@@ -4165,14 +2240,15 @@
         "pr-title",
         "propagation-token",
         "refresh-managed-readme-badges",
+        "runtime-ref",
+        "runtime-selection",
         "source-node",
-        "universal-request-json",
         "upstream-release-json"
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:e5aca2f9ebac530742cae8aa1e5959179bc3eca29bba384dd8f7cdf5821f5648",
-        "registryDigest": "sha256:45253e3ac9bcae7908b9180fb7cde0b064e8f01a1b082e2780b246d4a345bc63",
+        "digest": "sha256:bf6c18f33642654314281e4f1aaf49c16d3a8e765e62c7162ad53beaef630c76",
+        "registryDigest": "sha256:f3a2670f026d44ad84d482668ef5ee2a447a4f80f986c96986d61977272bdccd",
         "inputClassifications": {
           "agent-work-context-json": {
             "classification": "digest-only",
@@ -4182,11 +2258,7 @@
             "classification": "included",
             "source": "workflow-call-input"
           },
-          "buildchain-ref": {
-            "classification": "included",
-            "source": "workflow-call-input"
-          },
-          "buildchain-repository": {
+          "contract-lock": {
             "classification": "included",
             "source": "workflow-call-input"
           },
@@ -4246,12 +2318,16 @@
             "classification": "included",
             "source": "workflow-call-input"
           },
-          "source-node": {
+          "runtime-ref": {
             "classification": "included",
             "source": "workflow-call-input"
           },
-          "universal-request-json": {
-            "classification": "digest-only",
+          "runtime-selection": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "source-node": {
+            "classification": "included",
             "source": "workflow-call-input"
           },
           "upstream-release-json": {
@@ -4266,17 +2342,8 @@
         "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
-      "breakingDigest": "sha256:b873ceb65618972bea615afcb9c616c138ce834b3246ec7237ef87c1618d68bd",
-      "auditDigest": "sha256:5fc657f586de6f5a9ffa9e0be61c22b6f99318026d718bd518a04a40197faf97",
-      "compatibleBreakingDigests": [
-        "sha256:d7a1f15990ce8bd13149474888232c7d4451dd2a49bebf4d4ce1336695da430e"
-      ],
-      "compatibilityProofRoots": [
-        "sha256:8b98ff903d3abd8d9a9b6a0b250efd8fdf6fd5d4127aa4d0d0c4a5b3db87f353"
-      ],
-      "compatibilityFactRoots": [
-        "sha256:f6e89a46bb73e93583477eeb3bc3a8bd1f36bdafd040777fb3a999460191b360"
-      ]
+      "breakingDigest": "sha256:63cbc80ea892431ee4780c358a60f4357ba95553c632dd86e1d62c18e375ecca",
+      "auditDigest": "sha256:64f8aa3f462050f332bba0880eabec68cb149239656f06c134dad17d1bb01318"
     },
     {
       "contractVersion": 1,
@@ -4296,7 +2363,7 @@
       "breakingDefaults": {
         "evidenceContract": "buildchain.controller-evidence/v1",
         "descriptorVersion": 1,
-        "workflowPath": ".github/workflows/binary-distribution.yml",
+        "workflowPath": ".github/workflows/self-build-binary-distribution.yml",
         "requiredStages": [
           "resolve-runtime",
           "build",
@@ -4319,8 +2386,8 @@
       "optionalInputs": [],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:79fcf0b55df11186a5096aca13eaa965768ce7ee84b1e979eb1463f0b3f4e05e",
-        "registryDigest": "sha256:45253e3ac9bcae7908b9180fb7cde0b064e8f01a1b082e2780b246d4a345bc63",
+        "digest": "sha256:2e6bee5214be76d3f2b8088e23f3a61a79124696f2d69ec3cc86d793d2306ead",
+        "registryDigest": "sha256:f3a2670f026d44ad84d482668ef5ee2a447a4f80f986c96986d61977272bdccd",
         "inputClassifications": {}
       },
       "guarantees": [
@@ -4329,13 +2396,13 @@
         "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
-      "breakingDigest": "sha256:7c18fdd3df180db9e1f043a2286ef3f02fae60b84e42b76cd50da9cfeb77883d",
-      "auditDigest": "sha256:f53bd6542ba64b6f8840ea3f85a4d172dce1b8439b7f45a4503cf4bfa0eae15e"
+      "breakingDigest": "sha256:c8dc1280b05fa2fc1e976292d7a3d31d6dfb99ce1a814834462e634b38671859",
+      "auditDigest": "sha256:4c892cec44e63f9e11a30efe5d19b6fbc4d655f7efc434f6fb0e06aaa705a57a"
     }
   ],
-  "compatibilityFactRegistryRoot": "sha256:232fd556a2372b29db586bbc2acbdfce6464a68c93902797ff527f75f7816c42",
-  "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
-  "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
-  "compatibilityDigest": "sha256:60eefd1c05bc2cddeab8065c5b96ea2ea083d4f87f7de39843a0fffdd1deb98e",
-  "contractDigest": "sha256:223c41a46603d29e7cc63f2c5123ba443bf3db5d457a8e5bf7018ba0d0e7d94b"
+  "compatibilityFactRegistryRoot": "sha256:ea8f656c9fd74aa2d2fb9b7807e7daa39a708f6a7cd37ab7d154eac7be5605a6",
+  "compatibilityFactCutRoot": "sha256:58f33e498596505a26b6fc3c7ae5acef847ff699eee6c7e17a7b318a40bdf0d6",
+  "compatibilityProofRegistryRoot": "sha256:2f6477405c7891b754b33ad6515d55618bd320e7cdc59330d7cc645e17201e72",
+  "compatibilityDigest": "sha256:b1088f1c224329b16cd23c285bc69334aa1ee102e5b44d5c09aaf156d76821b6",
+  "contractDigest": "sha256:5a95358562ed88a5d474e04e09dc6cf90cf76654c955c567c3290b8f25c234b6"
 }

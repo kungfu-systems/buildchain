@@ -1,0 +1,98 @@
+name: Reserve delivery turn
+description: Owned reserve node of protected dev delivery.
+inputs:
+  request-json:
+    description: Typed public workflow inputs, serialized once by the caller.
+    required: true
+  github-token:
+    description: Provider token; supplied only in a credentialed job.
+    required: false
+    default: ""
+  proof-outcome:
+    description: Predecessor node proof-outcome.
+    required: false
+    default: ""
+  target-branch:
+    description: Predecessor node target-branch.
+    required: false
+    default: ""
+  proof-source-proof-root:
+    description: Predecessor node proof-source-proof-root.
+    required: false
+    default: ""
+  qualify-outcome:
+    description: Predecessor node qualify-outcome.
+    required: false
+    default: ""
+  predecessors-ok:
+    description: Whether prior job steps succeeded; reservation reporting still runs
+      on failure.
+    required: true
+  runtime-sha:
+    description: Exact source-admitted runtime commit.
+    required: true
+outputs:
+  warrant-receipt-root:
+    description: warrant-receipt-root.
+    value: ${{ steps.warrant.outputs.warrant-receipt-root }}
+  warrant-state-root:
+    description: warrant-state-root.
+    value: ${{ steps.warrant.outputs.warrant-state-root }}
+  warrant-state-commit:
+    description: warrant-state-commit.
+    value: ${{ steps.warrant.outputs.warrant-state-commit }}
+  warrant-native-proof-root:
+    description: warrant-native-proof-root.
+    value: ${{ steps.warrant.outputs.native-proof-root }}
+  warrant-decision-root:
+    description: warrant-decision-root.
+    value: ${{ steps.warrant.outputs.decision-root }}
+  warrant-qualification-receipt-root:
+    description: warrant-qualification-receipt-root.
+    value: ${{ steps.warrant.outputs.qualification-receipt-root }}
+  warrant-handoff-required:
+    description: warrant-handoff-required.
+    value: ${{ steps.warrant.outputs.handoff-required }}
+  warrant-handoff-dispatched:
+    description: warrant-handoff-dispatched.
+    value: ${{ steps.warrant.outputs.handoff-dispatched }}
+  warrant-already-qualified:
+    description: warrant-already-qualified.
+    value: ${{ steps.warrant.outputs.already-qualified }}
+  warrant-outcome:
+    description: warrant-outcome.
+    value: ${{ steps.warrant.outputs.warrant-outcome }}
+runs:
+  using: composite
+  steps:
+    - name: Schedule exact qualified candidate
+      id: warrant
+      continue-on-error: true
+      uses: ./.buildchain/runtime/actions/dev-delivery/candidate/schedule
+      with:
+        runtime-sha: ${{ inputs.runtime-sha }}
+        request-json: ${{ inputs.request-json }}
+        branch: ${{ inputs.target-branch }}
+        source-proof-root: ${{ inputs.proof-source-proof-root }}
+        qualification-outcome: ${{ inputs.qualify-outcome }}
+        proof-outcome: ${{ inputs.proof-outcome }}
+        predecessors-ok: ${{ inputs.predecessors-ok }}
+        token: ${{ inputs.github-token || github.token }}
+    - name: Upload immutable admission state for native execution
+      if: ${{ fromJSON(inputs.request-json).delivery-warrant-mode == 'required' &&
+        steps.warrant.outcome == 'success' &&
+        steps.warrant.outputs.handoff-required != 'true' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-dev-delivery-control-${{ github.run_id }}-${{
+          github.run_attempt }}-${{
+          fromJSON(inputs.request-json).expected-pr-number }}
+        path: .buildchain/dev-delivery/
+        if-no-files-found: error
+        retention-days: 1
+    - name: Enforce scheduling outcome
+      if: ${{ always() && steps.warrant.outcome != 'success' }}
+      uses: ./.buildchain/runtime/actions/workflow/admission/reject
+      with:
+        reason: Exact delivery candidate scheduling failed; inspect retained admission
+          evidence

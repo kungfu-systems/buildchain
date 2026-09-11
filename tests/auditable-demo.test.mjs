@@ -4,29 +4,15 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import {
-  finalizeGate,
-  finalizeMedia,
-  inspectIsoBmffFastStart,
-  inspectRendererMedia,
-  parseAdapterArguments,
-  prepareSmoke,
-  qualifyMediaFixture,
-  renditionInputRoots,
-  runAdapter,
-  sha256,
-  stableJson,
-  validateAdapterOutput,
-  validateSourceCoordinate,
-  verifyChecksums,
-  verifyGate,
-  verifyRendererOutput,
-  writeChecksums,
-} from "../scripts/auditable-demo.mjs";
-import {
-  readRendererManifest,
-  validateRendererComposition,
-} from "../scripts/auditable-demo-renditions.mjs";
+import { finalizeGate, renditionInputRoots, verifyGate } from "../packages/core/build/demo/gate.js";
+import { finalizeMedia } from "../packages/core/build/demo/media-bundle.js";
+import { inspectIsoBmffFastStart, inspectRendererMedia } from "../packages/core/build/demo/media-inspection.js";
+import { parseAdapterArguments, prepareSmoke, runAdapter, validateAdapterOutput } from "../packages/core/build/demo/adapter.js";
+import { qualifyMediaFixture, verifyRendererOutput } from "../packages/core/build/demo/renderer-evidence.js";
+import { sha256, stableJson, verifyChecksums, writeChecksums } from "../packages/core/build/demo/io.js";
+import { validateSourceCoordinate } from "../packages/core/build/demo/schema.js";
+import { readRendererManifest } from "../packages/core/build/demo/renditions.js";
+import { validateRendererComposition } from "../packages/core/build/demo/composition.js";
 
 const RENDERER_IMAGE = `ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:${"a".repeat(64)}`;
 const SOURCE_SHA = "b".repeat(40);
@@ -575,13 +561,13 @@ if (values["--demo-id"] !== "agent-work-lab") process.exit(10);
   fs.chmodSync(adapter, 0o755);
 
   runAdapter({
-    "--source-root": source,
-    "--artifact-root": artifact,
-    "--source-coordinate": coordinate,
-    "--adapter": "adapter.mjs",
-    "--adapter-arguments-json": '["--demo-id","agent-work-lab"]',
-    "--output": output,
-    "--diagnostics": diagnostics,
+    "sourceRoot": source,
+    "artifactRoot": artifact,
+    "sourceCoordinate": coordinate,
+    "adapter": "adapter.mjs",
+    "adapterArgumentsJson": '["--demo-id","agent-work-lab"]',
+    "output": output,
+    "diagnostics": diagnostics,
   });
 
   const execution = JSON.parse(
@@ -617,7 +603,7 @@ test("adapter output is strict and smoke input is bounded", (t) => {
   const validated = validateAdapterOutput(adapter);
   assert.equal(validated.scene.durationMs, 60000);
 
-  prepareSmoke({ "--adapter-output": adapter, "--output": smoke });
+  prepareSmoke({ "adapterOutput": adapter, "output": smoke });
   const smokeScene = JSON.parse(fs.readFileSync(path.join(smoke, "scene.json"), "utf8"));
   const smokeProjection = JSON.parse(fs.readFileSync(path.join(smoke, "public-projection.json"), "utf8"));
   assert.equal(smokeScene.durationMs, 1000);
@@ -814,7 +800,7 @@ test("qualified Gate and selective media remain bound to exact roots", (t) => {
   const fullOutput = path.join(root, "full-output");
   const media = path.join(root, "media");
   writeAdapterOutput(adapter, 2500, true);
-  prepareSmoke({ "--adapter-output": adapter, "--output": smokeInput });
+  prepareSmoke({ "adapterOutput": adapter, "output": smokeInput });
   writeRendererOutput(smokeOutput, {
     transcript: path.join(smokeInput, "complete-transcript.txt"),
     projection: path.join(smokeInput, "public-projection.json"),
@@ -843,22 +829,22 @@ test("qualified Gate and selective media remain bound to exact roots", (t) => {
     expiresAt: "2026-08-08T00:00:00Z",
   }));
   finalizeGate({
-    "--adapter-output": adapter,
-    "--smoke-input": smokeInput,
-    "--smoke-output": smokeOutput,
-    "--source-coordinate": sourceCoordinate,
-    "--diagnostics": diagnostics,
-    "--adapter": "scripts/demo-adapter",
-    "--renderer-image": RENDERER_IMAGE,
-    "--source-sha": SOURCE_SHA,
-    "--output": gate,
+    "adapterOutput": adapter,
+    "smokeInput": smokeInput,
+    "smokeOutput": smokeOutput,
+    "sourceCoordinate": sourceCoordinate,
+    "diagnostics": diagnostics,
+    "adapter": "scripts/demo-adapter",
+    "rendererImage": RENDERER_IMAGE,
+    "sourceSha": SOURCE_SHA,
+    "output": gate,
   });
   const gateRoot = verifyChecksums(gate);
   verifyGate({
-    "--bundle": gate,
-    "--expected-root": gateRoot,
-    "--renderer-image": RENDERER_IMAGE,
-    "--source-sha": SOURCE_SHA,
+    "bundle": gate,
+    "expectedRoot": gateRoot,
+    "rendererImage": RENDERER_IMAGE,
+    "sourceSha": SOURCE_SHA,
   });
   const gateReceipt = JSON.parse(fs.readFileSync(path.join(gate, "gate-receipt.json"), "utf8"));
   assert.equal(gateReceipt.qualifiedInputs.terminalCapture.schema, "kungfu.terminal-capture/v1");
@@ -874,13 +860,13 @@ test("qualified Gate and selective media remain bound to exact roots", (t) => {
     terminalCapture: path.join(gate, "terminal-capture.json"),
   });
   finalizeMedia({
-    "--gate-bundle": gate,
-    "--gate-root": gateRoot,
-    "--render-output": fullOutput,
-    "--renderer-image": RENDERER_IMAGE,
-    "--source-sha": SOURCE_SHA,
-    "--media-profile": "archive-v1",
-    "--output": media,
+    "gateBundle": gate,
+    "gateRoot": gateRoot,
+    "renderOutput": fullOutput,
+    "rendererImage": RENDERER_IMAGE,
+    "sourceSha": SOURCE_SHA,
+    "mediaProfile": "archive-v1",
+    "output": media,
   });
   const mediaReceipt = JSON.parse(fs.readFileSync(path.join(media, "media-receipt.json"), "utf8"));
   assert.equal(mediaReceipt.schema, "buildchain.auditable-demo-media/v1");
@@ -895,29 +881,29 @@ test("qualified Gate and selective media remain bound to exact roots", (t) => {
   const mediaInspectionPath = path.join(root, "media-inspection.json");
   writeMediaInspectionWitness(smokeInspectionPath, smokeOutput);
   finalizeGate({
-    "--adapter-output": adapter,
-    "--smoke-input": smokeInput,
-    "--smoke-output": smokeOutput,
-    "--source-coordinate": sourceCoordinate,
-    "--diagnostics": diagnostics,
-    "--adapter": "scripts/demo-adapter",
-    "--renderer-image": RENDERER_IMAGE,
-    "--source-sha": SOURCE_SHA,
-    "--media-profile": "web-delivery-v1",
-    "--media-inspection": smokeInspectionPath,
-    "--output": webGate,
+    "adapterOutput": adapter,
+    "smokeInput": smokeInput,
+    "smokeOutput": smokeOutput,
+    "sourceCoordinate": sourceCoordinate,
+    "diagnostics": diagnostics,
+    "adapter": "scripts/demo-adapter",
+    "rendererImage": RENDERER_IMAGE,
+    "sourceSha": SOURCE_SHA,
+    "mediaProfile": "web-delivery-v1",
+    "mediaInspection": smokeInspectionPath,
+    "output": webGate,
   });
   const webGateRoot = verifyChecksums(webGate);
   writeMediaInspectionWitness(mediaInspectionPath, fullOutput);
   finalizeMedia({
-    "--gate-bundle": webGate,
-    "--gate-root": webGateRoot,
-    "--render-output": fullOutput,
-    "--renderer-image": RENDERER_IMAGE,
-    "--source-sha": SOURCE_SHA,
-    "--media-profile": "web-delivery-v1",
-    "--media-inspection": mediaInspectionPath,
-    "--output": webMedia,
+    "gateBundle": webGate,
+    "gateRoot": webGateRoot,
+    "renderOutput": fullOutput,
+    "rendererImage": RENDERER_IMAGE,
+    "sourceSha": SOURCE_SHA,
+    "mediaProfile": "web-delivery-v1",
+    "mediaInspection": mediaInspectionPath,
+    "output": webMedia,
   });
   const webMediaReceipt = JSON.parse(fs.readFileSync(path.join(webMedia, "media-receipt.json"), "utf8"));
   assert.equal(webMediaReceipt.schema, "buildchain.auditable-demo-media/v2");
@@ -929,10 +915,10 @@ test("qualified Gate and selective media remain bound to exact roots", (t) => {
   fs.writeFileSync(path.join(gate, "scene.json"), "{}\n");
   assert.throws(
     () => verifyGate({
-      "--bundle": gate,
-      "--expected-root": gateRoot,
-      "--renderer-image": RENDERER_IMAGE,
-      "--source-sha": SOURCE_SHA,
+      "bundle": gate,
+      "expectedRoot": gateRoot,
+      "rendererImage": RENDERER_IMAGE,
+      "sourceSha": SOURCE_SHA,
     }),
     /checksum mismatch/,
   );
@@ -1335,9 +1321,9 @@ process.stdout.write(JSON.stringify({
   process.env.PATH = `${tools}:${originalPath}`;
   try {
     inspectRendererMedia({
-      "--render-output": output,
-      "--renderer-image": RENDERER_IMAGE,
-      "--output": witness,
+      "renderOutput": output,
+      "rendererImage": RENDERER_IMAGE,
+      "output": witness,
     });
   } finally {
     process.env.PATH = originalPath;
@@ -1350,14 +1336,14 @@ process.stdout.write(JSON.stringify({
 
   const evidence = path.join(root, "fixture-evidence.json");
   qualifyMediaFixture({
-    "--render-output": output,
-    "--media-inspection": witness,
-    "--media-profile": "web-delivery-v1",
-    "--renderer-image": RENDERER_IMAGE,
-    "--renderer-source-repository": "kungfu-systems/build-images",
-    "--renderer-source-ref": "refs/tags/v1.3.0-alpha.16",
-    "--renderer-source-sha": SOURCE_SHA,
-    "--output": evidence,
+    "renderOutput": output,
+    "mediaInspection": witness,
+    "mediaProfile": "web-delivery-v1",
+    "rendererImage": RENDERER_IMAGE,
+    "rendererSourceRepository": "kungfu-systems/build-images",
+    "rendererSourceRef": "refs/tags/v1.3.0-alpha.16",
+    "rendererSourceSha": SOURCE_SHA,
+    "output": evidence,
   });
   const measured = JSON.parse(fs.readFileSync(evidence, "utf8"));
   assert.equal(measured.schema, "buildchain.auditable-demo-media-profile-fixture/v1");
@@ -1375,14 +1361,14 @@ process.stdout.write(JSON.stringify({
   fs.writeFileSync(witness, stableJson(observed));
   assert.throws(
     () => qualifyMediaFixture({
-      "--render-output": output,
-      "--media-inspection": witness,
-      "--media-profile": "web-delivery-v1",
-      "--renderer-image": RENDERER_IMAGE,
-      "--renderer-source-repository": "kungfu-systems/build-images",
-      "--renderer-source-ref": "refs/tags/v1.3.0-alpha.16",
-      "--renderer-source-sha": SOURCE_SHA,
-      "--output": path.join(root, "invalid-evidence.json"),
+      "renderOutput": output,
+      "mediaInspection": witness,
+      "mediaProfile": "web-delivery-v1",
+      "rendererImage": RENDERER_IMAGE,
+      "rendererSourceRepository": "kungfu-systems/build-images",
+      "rendererSourceRef": "refs/tags/v1.3.0-alpha.16",
+      "rendererSourceSha": SOURCE_SHA,
+      "output": path.join(root, "invalid-evidence.json"),
     }),
     /untrustedClaim is not declared/,
   );

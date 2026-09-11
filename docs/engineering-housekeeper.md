@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: reviewed
-last_reviewed: 2026-08-10
+last_reviewed: 2026-09-11
 ---
 
 # Engineering Housekeeper
@@ -29,7 +29,7 @@ their heads are already ancestors of a mainline.
 The reusable entrypoint is:
 
 ```yaml
-uses: kungfu-systems/buildchain/.github/workflows/engineering-housekeeper.yml@v4
+uses: kungfu-systems/buildchain/.github/workflows/public-ops-housekeeping.yml@v4
 ```
 
 The v4 surface is a traceable forward-port of protected v3 merge
@@ -48,7 +48,7 @@ separate plan, Markdown report, and dry-run receipt artifacts:
 ```yaml
 jobs:
   housekeeper:
-    uses: kungfu-systems/buildchain/.github/workflows/engineering-housekeeper.yml@v4
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-housekeeping.yml@v4
     permissions:
       contents: read
       pull-requests: read
@@ -89,7 +89,7 @@ An unattended scheduled caller can set both values in committed policy.
 ```yaml
 jobs:
   housekeeper:
-    uses: kungfu-systems/buildchain/.github/workflows/engineering-housekeeper.yml@v4
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-housekeeping.yml@v4
     permissions:
       contents: write
       pull-requests: write
@@ -127,8 +127,8 @@ continue.
 | `stale-pull-request-label`  | string  | empty                       | Empty keeps pull requests report-only; non-empty permits labeling, never closure. |
 | `max-actions`               | number  | `20`                        | Positive global apply limit.                                                      |
 | `artifact-retention-days`   | number  | `30`                        | Retention for plan, report, and receipts.                                         |
-| `buildchain-repository`     | string  | `kungfu-systems/buildchain` | Runtime source repository.                                                        |
-| `buildchain-ref`            | string  | `v4`                        | Runtime ref; trusted qualification may pass a train or exact SHA.                 |
+| `runtime-ref` | string | empty | Transient runtime selected by the central entry; otherwise use the lock or entry default. |
+| `contract-lock` | string | empty | Optional consumer-relative contract lock path. |
 
 Stable outputs are `plan-root`, `report-receipt-root`, optional
 `branch-receipt-root` and `pull-request-receipt-root`, `action-count`,

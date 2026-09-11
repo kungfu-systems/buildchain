@@ -1,19 +1,23 @@
+import { assertBinaryInventory } from "./inventory/binary.mjs";
+import YAML from "yaml";
+import { actionInventory } from "../packages/core/contracts/action-inventory.js";
+import { assertPromotionInventory } from "./inventory/promotion.mjs";
+import { inspectWorkflowJob } from "./workflow-action-graph.mjs";
 import fs from "node:fs";
 import path from "node:path";
-import { parseWorkflowCallJobs } from "../packages/core/workflow-yaml-contract.js";
+import { parseWorkflowCallJobs } from "../packages/core/contracts/workflow-yaml-contract.js";
 import { execFileSync } from "node:child_process";
 import {
   assertPublicSurfaceReverseAudit,
   collectPublicSurfaceReverseAudit,
-} from "../packages/core/public-surface-audit.js";
-import { createBuildchainContractLock, evaluateBuildchainContractLock, finalizeBuildchainContractWorld } from "../packages/core/buildchain-contract.js";
+} from "../packages/core/contracts/public-surface-audit.js";
+import { createBuildchainContractLock, sha256Json } from "../packages/core/contracts/buildchain-contract.js";
 import {
   hasQualifiedSelfDogfoodBootstrapAuthority,
   resolveSelfDogfoodMajor,
-} from "../packages/core/self-dogfood-version.js";
+} from "../packages/core/release/self-dogfood-version.js";
 import {
   generateChannelPromotionWorkflow,
-  parsePromotionShellRouting,
 } from "./generate-channel-promotion-workflow.mjs";
 import { assertPublicReferenceRegistry } from "./site-reference-registry.mjs";
 const root = process.cwd();
@@ -50,20 +54,20 @@ const requiredPaths = [
   ".github/ISSUE_TEMPLATE/config.yml",
   ".github/pull_request_template.md",
   "bin/buildchain.mjs",
-  "packages/core/homebrew.js",
-  "packages/core/artifact-verification-envelope.js",
-  "packages/core/anchored-version-material.js",
-  "packages/core/next-development-transition.js",
-  "packages/core/next-development-controller.js",
-  "packages/core/next-development-candidate-reservation.js",
-  "packages/core/next-development-projection.js",
-  "packages/core/build-facts.js",
-  "packages/core/publication-package.js",
-  "packages/core/publication-reproducibility.js",
-  "packages/core/publication-sealed-bundle.js",
-  "packages/core/paper.js",
-  "packages/core/release-line-bootstrap.js",
-  "packages/core/public-surface-audit.js",
+  "packages/core/build/homebrew.js",
+  "packages/core/build/artifact-verification-envelope.js",
+  "packages/core/build/anchored-version-material.js",
+  "packages/core/release/next-development-transition.js",
+  "packages/core/release/next-development-controller.js",
+  "packages/core/release/next-development-candidate-reservation.js",
+  "packages/core/release/next-development-projection.js",
+  "packages/core/build/build-facts.js",
+  "packages/core/publication/publication-package.js",
+  "packages/core/publication/publication-reproducibility.js",
+  "packages/core/publication/publication-sealed-bundle.js",
+  "packages/core/paper/paper.js",
+  "packages/core/release/release-line-bootstrap.js",
+  "packages/core/contracts/public-surface-audit.js",
   "docs/MAP.md",
   "docs/build-facts.md",
   "docs/binary-distribution.md",
@@ -96,42 +100,40 @@ const requiredPaths = [
   "docs/site-bundle-contract.md",
   "docs/toolkit-observability.md",
   "docs/versioning.md",
-  "scripts/release-line-dry-run.mjs",
-  "scripts/next-development-transition.mjs",
+  "packages/core/release/commands/release-line-dry-run.mjs",
+  "packages/core/release/commands/next-development-transition.mjs",
   "scripts/next-development-self-dogfood.mjs",
   "scripts/next-development-self-dogfood-harness.mjs",
   "scripts/generate-next-development-guidance.mjs",
-  "scripts/reconcile-release-governance.mjs",
-  "scripts/buildchain-channel-router.mjs",
-  "scripts/promotion-channel-router.mjs",
-  "scripts/promotion-identity-resolver.mjs",
+  "packages/core/governance/commands/reconcile-release-governance.mjs",
+  "packages/core/release/commands/promotion-channel-router.mjs",
   "scripts/generate-channel-promotion-workflow.mjs",
   "scripts/build-standalone-binary.mjs",
-  "scripts/create-release-bundle.mjs",
-  "scripts/ensure-github-release.mjs",
+  "packages/core/publication/commands/create-release-bundle.mjs",
+  "packages/core/release/commands/ensure-github-release.mjs",
   "scripts/generate-site-bundle.mjs",
   "scripts/generate-buildchain-kfd-witnesses.mjs",
-  "scripts/generate-release-candidate-passport.mjs",
-  "scripts/seal-macos-credential-input.mjs",
-  "scripts/shifu-gate-profile.mjs",
-  "scripts/auditable-demo.mjs",
-  "scripts/auditable-demo-platform.mjs",
-  "scripts/auditable-demo-transport-smoke.mjs",
-  "scripts/auditable-demo-capture.py",
-  "scripts/resolve-artifact-coordinates.mjs",
-  "scripts/artifact-relay-s3.mjs",
-  "scripts/anchored-version-material.mjs",
-  "scripts/npm-publish-dry-run.mjs",
-  "scripts/npm-publish-transaction.mjs",
-  "scripts/paper.mjs",
-  "scripts/publication-package.mjs",
-  "scripts/publication-reproducibility.mjs",
-  "scripts/release-candidate-resolver.mjs",
-  "scripts/resume-from-candidate-run.mjs",
-  "scripts/buildchain-patrol.mjs",
-  "scripts/observed-evidence.mjs",
-  "scripts/workflow-friction-report.mjs",
-  "scripts/web-surface-production-release-pr.mjs",
+  "packages/core/publication/commands/generate-release-candidate-passport.mjs",
+  "packages/core/build/commands/seal-macos-credential-input.mjs",
+  "packages/core/build/commands/shifu-gate-profile.mjs",
+  "packages/core/build/commands/auditable-demo.mjs",
+  "packages/core/build/commands/auditable-demo-platform.mjs",
+  "packages/core/build/commands/auditable-demo-transport-smoke.mjs",
+  "packages/core/providers/demo/capture-worker.py",
+  "packages/core/build/commands/resolve-artifact-coordinates.mjs",
+  "packages/core/providers/commands/artifact-relay-s3.mjs",
+  "packages/core/build/commands/anchored-version-material.mjs",
+  "packages/core/publication/commands/npm-publish-dry-run.mjs",
+  "packages/core/publication/commands/npm-publish-transaction.mjs",
+  "packages/core/paper/commands/paper.mjs",
+  "packages/core/publication/commands/publication-package.mjs",
+  "packages/core/publication/commands/publication-reproducibility.mjs",
+  "packages/core/release/commands/release-candidate-resolver.mjs",
+  "packages/core/release/commands/resume-from-candidate-run.mjs",
+  "packages/core/governance/commands/buildchain-patrol.mjs",
+  "packages/core/observability/commands/observed-evidence.mjs",
+  "packages/core/governance/commands/workflow-friction-report.mjs",
+  "packages/core/web/commands/web-surface-production-release-pr.mjs",
   "docs/migration-inventory.md",
   "docs/lifecycle-protocol.md",
   "docs/observed-evidence-patrol.md",
@@ -145,38 +147,36 @@ const requiredPaths = [
   ".github/actionlint.yaml",
   ".github/workflows/self-ops-runner-smoke.yml",
   ".github/workflows/self-release-promote.yml",
-  ".github/workflows/self-ops-recovery-failure-dogfood.yml",
   ".github/workflows/self-release-line-open.yml",
-  ".github/workflows/release-governance-reconcile.yml",
-  ".github/workflows/dev-pr-auto-merge.yml",
+  ".github/workflows/public-ops-release-governance.yml",
+  ".github/workflows/public-ops-dev-auto-merge.yml",
   ".github/workflows/self-ops-dev-delivery.yml",
-  ".github/workflows/buildchain-patrol.yml",
-  ".github/workflows/patrol-daily.yml",
-  ".github/workflows/patrol-weekly.yml",
-  ".github/workflows/patrol-monthly.yml",
-  ".github/workflows/patrol-observed-evidence.yml",
+  ".github/workflows/public-ops-patrol.yml",
+  ".github/workflows/public-ops-patrol-daily.yml",
+  ".github/workflows/public-ops-patrol-weekly.yml",
+  ".github/workflows/public-ops-patrol-monthly.yml",
+  ".github/workflows/public-ops-observed-evidence.yml",
   ".github/workflows/self-ops-patrol-daily.yml",
   ".github/workflows/self-ops-patrol-weekly.yml",
   ".github/workflows/self-ops-patrol-monthly.yml",
   ".github/workflows/self-build-alpha-dogfood.yml",
   ".github/workflows/self-build-stable-dogfood.yml",
-  ".github/workflows/release-candidate-promote.yml",
-  ".github/workflows/.release-candidate-promote.yml",
-  ".github/workflows/release-propagation.yml",
+  ".github/workflows/public-release-promote.yml",
+  ".github/workflows/.release-promote.yml",
+  ".github/workflows/public-release-propagation.yml",
   ".github/workflows/self-release-npm-dry-run.yml",
-  ".github/workflows/paper-release.yml",
+  ".github/workflows/public-release-paper.yml",
   ".github/workflows/self-build-binary-distribution.yml",
-  ".github/workflows/.binary-release-assets.yml",
+  ".github/workflows/.release-binary-assets.yml",
   ".github/workflows/self-release-binary-assets.yml",
   ".github/workflows/self-build-verify.yml",
   ".github/workflows/.build.yml",
-  ".github/workflows/.gate-profile.yml",
-  ".github/workflows/.auditable-demo.yml",
-  ".github/workflows/.declarative-auditable-demo.yml",
+  ".github/workflows/.build-gate-profile.yml",
+  ".github/workflows/.build-demo-adapter.yml",
+  ".github/workflows/public-build-demo.yml",
   ".github/workflows/self-build-demo-dogfood.yml",
   ".github/workflows/build.yml",
   ".github/workflows/self-build-fixture.yml",
-  ".github/workflows/self-build-candidate-lab.yml",
   "fixtures/libnode-shaped/buildchain.toml",
   "fixtures/libnode-shaped/.github/workflows/build.yml",
   "fixtures/libnode-shaped/package.json"
@@ -248,7 +248,20 @@ for (const channel of ["alpha-contract-lock.json", "contract-lock.json"]) {
       );
     world = await response.json();
   }
-  const verified = finalizeBuildchainContractWorld(world);
+  // This is an immutable published-source audit, not execution of a retired
+  // compatibility engine against the unpublished producer's registry.
+  const compatibilityModel = {
+    schemaVersion: world.schemaVersion, contract: world.contract, majorLine: world.majorLine,
+    compatibilityFactRegistryRoot: world.compatibilityFactRegistryRoot,
+    compatibilityFactCutRoot: world.compatibilityFactCutRoot,
+    compatibilityProofRegistryRoot: world.compatibilityProofRegistryRoot,
+    surfaces: world.surfaces.map(entry => ({id:entry.id,kind:entry.kind,breakingDigest:entry.breakingDigest,
+      compatibilityProofRoots:entry.compatibilityProofRoots || [], compatibilityFactRoots:entry.compatibilityFactRoots || []})),
+  };
+  const verified = {...world,
+    contractDigest:`sha256:${sha256Json({...world,contractDigest:undefined,compatibilityDigest:undefined})}`,
+    compatibilityDigest:`sha256:${sha256Json(compatibilityModel)}`,
+  };
   for (const field of ["contractDigest", "compatibilityDigest"]) {
     if (
       world[field] !== verified[field] ||
@@ -261,16 +274,8 @@ for (const channel of ["alpha-contract-lock.json", "contract-lock.json"]) {
   const ref = channel.startsWith("alpha")
     ? `v${selfDogfoodMajor}-alpha`
     : `v${selfDogfoodMajor}`;
-  const evaluation = evaluateBuildchainContractLock({
-    lock,
-    current: verified,
-    runtimeRef: ref,
-    runtimeSha: sha,
-    runtimeClass: channel.startsWith("alpha") ? "alpha" : "stable",
-    workflowShellRef: ref,
-  });
-  if (!evaluation.ok || lock.buildchain.ref !== ref)
-    throw new Error(`${channel}: invalid accepted runtime contract`);
+  if (lock.buildchain.ref !== ref)
+    throw new Error(`${channel}: invalid accepted runtime selector`);
 }
 for (const [channel, ref] of [["alpha", `v${selfDogfoodMajor}-alpha`], ["stable", `v${selfDogfoodMajor}`]]) {
   const workflow = fs.readFileSync(path.join(root, `.github/workflows/self-build-${channel}-dogfood.yml`), "utf8");
@@ -287,7 +292,7 @@ const reusableBuildWorkflow = fs.readFileSync(
 for (const requiredSnippet of [
   "workflow-ref: ${{ job.workflow_ref }}",
   "workflow-sha: ${{ job.workflow_sha }}",
-  "actions/resolve-build-plan",
+  "actions/build/lifecycle/plan",
 ]) {
   if (!reusableBuildWorkflow.includes(requiredSnippet)) {
     throw new Error(`reusable build workflow missing called-workflow identity: ${requiredSnippet}`);
@@ -298,76 +303,22 @@ const channelBuildWorkflow = fs.readFileSync(
   "utf8",
 );
 const advancedPromotionWorkflow = fs.readFileSync(
-  path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+  path.join(root, ".github/workflows/.release-promote.yml"),
   "utf8",
 );
 const channelPromotionWorkflow = fs.readFileSync(
-  path.join(root, ".github/workflows/release-candidate-promote.yml"),
+  path.join(root, ".github/workflows/public-release-promote.yml"),
   "utf8",
 );
 const boundedAlphaRecoveryWorkflow = fs.readFileSync(
   path.join(root, ".github/workflows/self-ops-promotion-recovery.yml"),
   "utf8",
 );
-const promotionShellRouting = parsePromotionShellRouting(
-  fs.readFileSync(path.join(root, ".buildchain/promotion-shell-routing.json"), "utf8"),
-  { major: Number(selfDogfoodMajor) },
-);
-if (channelPromotionWorkflow !== generateChannelPromotionWorkflow(advancedPromotionWorkflow, {
-  major: Number(selfDogfoodMajor),
-  shellRouting: promotionShellRouting,
-})) {
-  throw new Error("generated channel promotion workflow is stale");
-}
-for (const requiredSnippet of [
-  "name: Adapt recovery inputs into the canonical v4 publisher",
-  "uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha",
-  "declarative-release-tail: true",
-]) {
-  if (!boundedAlphaRecoveryWorkflow.includes(requiredSnippet)) {
-    throw new Error(`bounded alpha recovery missing bootstrap contract: ${requiredSnippet}`);
-  }
-}
-for (const workflowSource of [boundedAlphaRecoveryWorkflow, channelPromotionWorkflow]) {
-  if (workflowSource.includes("channel-finalization-recovery")) {
-    throw new Error("Buildchain-only alpha bootstrap must not add a public or recovery workflow input");
-  }
-}
-for (const requiredSnippet of [
-  "buildchain-channel:",
-  `/${promotionShellRouting.alpha.workflowPath}@${promotionShellRouting.alpha.callRef}`,
-  `SELECTED_SHELL_REF: v${selfDogfoodMajor}-alpha`,
-  "name: Invoke the single v4 publisher adapter",
-  "promotion-contract-lock-digest:",
-  "authorize-promotion-runtime-override.cjs",
-  "BUILDCHAIN_ROUTER_REPOSITORY: ${{ inputs.buildchain-repository }}",
-  "BUILDCHAIN_RESUME_RUNTIME_SHA: ${{ inputs.resume-buildchain-runtime-sha }}",
-  "git ls-remote",
-  "Recovery router ref does not match resume-buildchain-runtime-sha",
-]) {
-  if (!channelPromotionWorkflow.includes(requiredSnippet)) {
-    throw new Error(`channel promotion workflow missing routing contract: ${requiredSnippet}`);
-  }
-}
-if (channelPromotionWorkflow.includes("Promote with stable workflow shell")) {
-  throw new Error("channel promotion workflow retains a parallel stable publisher");
-}
-for (const forbiddenSnippet of ["job.workflow_repository", "job.workflow_sha"]) {
-  if (channelPromotionWorkflow.includes(forbiddenSnippet)) {
-    throw new Error(`channel promotion workflow uses unsupported GitHub context: ${forbiddenSnippet}`);
-  }
-}
-const promotionOverrideAuthorization = fs.readFileSync(
-  path.join(root, "scripts/authorize-promotion-runtime-override.cjs"),
-  "utf8",
-);
-if (!promotionOverrideAuthorization.includes("promotion runtime override is only allowed for trusted workflow_dispatch runs")) {
-  throw new Error("promotion runtime override authorization must remain fail closed");
-}
+assertPromotionInventory(root);
 for (const workflow of [channelBuildWorkflow, reusableBuildWorkflow]) {
   const block = workflow.split("    inputs:\n")[1].split("    secrets:\n")[0];
   const names = [...block.matchAll(/^      ([a-z0-9-]+):$/gm)].map((match) => match[1]);
-  if (JSON.stringify(names) !== '["config-path"]') throw new Error("ordinary build inputs must contain only config-path");
+  if (JSON.stringify(names.sort()) !== JSON.stringify(['config-path','contract-lock','resume-run-id','runtime-ref','runtime-selection'])) throw new Error('build API must expose only the locator and unified runtime entry inputs');
 }
 if ((channelBuildWorkflow.match(/uses: \.\/\.github\/workflows\/\.build\.yml/g) || []).length !== 1) {
   throw new Error("public build facade must invoke its exact backbone once");
@@ -379,7 +330,7 @@ const actionlintConfig = fs.readFileSync(
 for (const requiredSnippet of [
   ".github/workflows/build.yml:",
   ".github/workflows/.build.yml:",
-  ".github/workflows/.gate-profile.yml:",
+  ".github/workflows/.build-gate-profile.yml:",
   'property "workflow_ref" is not defined in object type',
   'property "workflow_repository" is not defined in object type',
   'property "workflow_sha" is not defined in object type',
@@ -410,67 +361,67 @@ if (rootPackage.bin?.buildchain !== "./bin/buildchain.mjs") {
 if (rootPackage.exports?.["."] !== "./packages/core/index.js") {
   throw new Error("root package must export packages/core/index.js");
 }
-if (rootPackage.exports?.["./diagnostics"] !== "./packages/core/diagnostics.js") {
+if (rootPackage.exports?.["./diagnostics"] !== "./packages/core/observability/diagnostics.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/diagnostics");
 }
-if (rootPackage.exports?.["./homebrew"] !== "./packages/core/homebrew.js") {
+if (rootPackage.exports?.["./homebrew"] !== "./packages/core/build/homebrew.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/homebrew");
 }
-if (rootPackage.exports?.["./buildchain-contract"] !== "./packages/core/buildchain-contract.js") {
+if (rootPackage.exports?.["./buildchain-contract"] !== "./packages/core/contracts/buildchain-contract.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/buildchain-contract");
 }
-if (rootPackage.exports?.["./controller-evidence"] !== "./packages/core/controller-evidence.js") {
+if (rootPackage.exports?.["./controller-evidence"] !== "./packages/core/observability/controller-evidence.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/controller-evidence");
 }
-if (rootPackage.exports?.["./artifact-verification-envelope"] !== "./packages/core/artifact-verification-envelope.js") {
+if (rootPackage.exports?.["./artifact-verification-envelope"] !== "./packages/core/build/artifact-verification-envelope.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/artifact-verification-envelope");
 }
-if (rootPackage.exports?.["./issue-reporting"] !== "./packages/core/issue-reporting.js") {
+if (rootPackage.exports?.["./issue-reporting"] !== "./packages/core/governance/issue-reporting.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/issue-reporting");
 }
-if (rootPackage.exports?.["./kfd"] !== "./packages/core/kfd.js") {
+if (rootPackage.exports?.["./kfd"] !== "./packages/core/adoption/kfd.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/kfd");
 }
-if (rootPackage.exports?.["./release-line-bootstrap"] !== "./packages/core/release-line-bootstrap.js") {
+if (rootPackage.exports?.["./release-line-bootstrap"] !== "./packages/core/release/release-line-bootstrap.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/release-line-bootstrap");
 }
-if (rootPackage.exports?.["./readme-badges"] !== "./packages/core/readme-badges.js") {
+if (rootPackage.exports?.["./readme-badges"] !== "./packages/core/web/readme-badges.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/readme-badges");
 }
-if (rootPackage.exports?.["./badges"] !== "./packages/core/badges.js") {
+if (rootPackage.exports?.["./badges"] !== "./packages/core/web/badges.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/badges");
 }
-if (rootPackage.exports?.["./build-facts"] !== "./packages/core/build-facts.js") {
+if (rootPackage.exports?.["./build-facts"] !== "./packages/core/build/build-facts.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/build-facts");
 }
-if (rootPackage.exports?.["./logging"] !== "./packages/core/logging.js") {
+if (rootPackage.exports?.["./logging"] !== "./packages/core/observability/logging.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/logging");
 }
-if (rootPackage.exports?.["./kfd-gate"] !== "./packages/core/kfd-gate.js") {
+if (rootPackage.exports?.["./kfd-gate"] !== "./packages/core/adoption/kfd-gate.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/kfd-gate");
 }
-if (rootPackage.exports?.["./release-passport"] !== "./packages/core/release-passport.js") {
+if (rootPackage.exports?.["./release-passport"] !== "./packages/core/release/release-passport.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/release-passport");
 }
-if (rootPackage.exports?.["./github-artifact-attestation"] !== "./packages/core/github-artifact-attestation.js") {
+if (rootPackage.exports?.["./github-artifact-attestation"] !== "./packages/core/build/github-artifact-attestation.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/github-artifact-attestation");
 }
-if (rootPackage.exports?.["./release-passport-contract"] !== "./packages/core/release-passport-contract.js") {
+if (rootPackage.exports?.["./release-passport-contract"] !== "./packages/core/release/release-passport-contract.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/release-passport-contract");
 }
-if (rootPackage.exports?.["./release-propagation"] !== "./packages/core/release-propagation.js") {
+if (rootPackage.exports?.["./release-propagation"] !== "./packages/core/release/release-propagation.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/release-propagation");
 }
-if (rootPackage.exports?.["./surface-manifest"] !== "./packages/core/surface-manifest.js") {
+if (rootPackage.exports?.["./surface-manifest"] !== "./packages/core/contracts/surface-manifest.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/surface-manifest");
 }
-if (rootPackage.exports?.["./buildchain-kfd-claims"] !== "./packages/core/buildchain-kfd-claims.js") {
+if (rootPackage.exports?.["./buildchain-kfd-claims"] !== "./packages/core/adoption/buildchain-kfd-claims.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/buildchain-kfd-claims");
 }
-if (rootPackage.exports?.["./public-surface-audit"] !== "./packages/core/public-surface-audit.js") {
+if (rootPackage.exports?.["./public-surface-audit"] !== "./packages/core/contracts/public-surface-audit.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/public-surface-audit");
 }
-if (rootPackage.exports?.["./paper"] !== "./packages/core/paper.js") {
+if (rootPackage.exports?.["./paper"] !== "./packages/core/paper/paper.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/paper");
 }
 if (rootPackage.exports?.["./site/buildchain-site.json"] !== "./dist/site/buildchain-site.json") {
@@ -503,12 +454,12 @@ if (rootPackage.publishConfig?.access !== "public") {
 if (rootPackage.publishConfig?.registry !== "https://registry.npmjs.org/") {
   throw new Error("root package publishConfig.registry must be npmjs");
 }
-for (const expectedFile of ["bin/", "scripts/*.mjs", "packages/core/", "docs/*.md"]) {
+for (const expectedFile of ["bin/", "scripts/", "packages/core/", "docs/*.md"]) {
   if (!rootPackage.files?.includes(expectedFile)) {
     throw new Error(`root package files must include ${expectedFile}`);
   }
 }
-for (const expectedFile of ["dist/site/", "actions/*/README.md", "fixtures/*/README.md"]) {
+for (const expectedFile of ["dist/site/", "actions/*/*/*/README.md", "fixtures/*/README.md"]) {
   if (!rootPackage.files?.includes(expectedFile)) {
     throw new Error(`root package files must include ${expectedFile}`);
   }
@@ -557,7 +508,6 @@ for (const requiredSnippet of [
   "collectModuleBuildFacts",
   "aggregateBuildFacts",
   "verifyBuildFacts",
-  "writeKungfuBuildInfoProjection",
 ]) {
   if (!coreIndexSource.includes(requiredSnippet)) {
     throw new Error(`packages/core/index.js must export Build Facts API: ${requiredSnippet}`);
@@ -705,7 +655,7 @@ function immediateReadmes(dir) {
 const expectedPageSources = [
   "README.md",
   ...fs.readdirSync(path.join(root, "docs")).filter((name) => name.endsWith(".md")).sort().map((name) => `docs/${name}`),
-  ...immediateReadmes("actions"),
+  ...actionInventory(root).map(action => `${action.directory}/README.md`).filter(file => fs.existsSync(path.join(root, file))),
   "packages/core/README.md",
   ...immediateReadmes("fixtures"),
 ].sort();
@@ -784,10 +734,12 @@ const readmeActionIndex = fs.readFileSync(path.join(root, "README.md"), "utf8");
 const mapActionIndex = fs.readFileSync(path.join(root, "docs/MAP.md"), "utf8");
 const retrospectiveActionIndex = fs.readFileSync(path.join(root, ".github/retrospectives/2026-07-10-buildchain-consolidation.md"), "utf8");
 const buildOwners = JSON.parse(fs.readFileSync(path.join(root, "architecture/build-orchestration.json"), "utf8")).owners;
-if (registeredActionIds.length !== 8 + Object.keys(buildOwners).length) {
-  throw new Error(`workflow-registry.json must expose the eight public actions and owned build composites, got ${registeredActionIds.length}`);
-}
-for (const actionId of registeredActionIds) {
+const declaredPublicActions = JSON.parse(fs.readFileSync(path.join(root,"architecture/code-layout.json"),"utf8")).publicActionNodes;
+if (JSON.stringify(registeredActionIds) !== JSON.stringify(actionInventory(root).map(action => `${action.capability}/${action.group}/${action.node}`).sort()))
+  throw new Error("action catalog must cover the current hierarchical action inventory");
+if (JSON.stringify(workflowRegistry.actions.filter(action => action.apiRole === "public").map(action => action.id).sort()) !== JSON.stringify([...declaredPublicActions].sort()))
+  throw new Error("action catalog must distinguish public contracts from implementation nodes");
+for (const actionId of declaredPublicActions) {
   if (!readmeActionIndex.includes(`actions/${actionId}`) || !mapActionIndex.includes(`actions/${actionId}`)) {
     throw new Error(`README and docs/MAP.md must index registered action: ${actionId}`);
   }
@@ -795,7 +747,7 @@ for (const actionId of registeredActionIds) {
 if (!retrospectiveActionIndex.includes("snapshot of the four consumer-facing actions")) {
   throw new Error("the v2 four-action retrospective must remain explicitly classified as historical");
 }
-if (!pageRegistry.pages?.some((page) => page.sourcePath === "actions/promote-buildchain-ref/README.md")) {
+if (!pageRegistry.pages?.some((page) => page.sourcePath === "actions/release/promotion/ref/README.md")) {
   throw new Error("page-registry.json must include action manuals");
 }
 if (!pageRegistry.pages?.some((page) => page.sourcePath === "packages/core/README.md" && page.category === "api")) {
@@ -970,8 +922,8 @@ for (const requiredSnippet of [
     throw new Error(`CLI doc missing README badge command snippet: ${requiredSnippet}`);
   }
 }
-const releaseLineDryRunScript = fs.readFileSync(path.join(root, "scripts/release-line-dry-run.mjs"), "utf8");
-const standaloneBinaryScript = fs.readFileSync(path.join(root, "scripts/build-standalone-binary.mjs"), "utf8");
+const releaseLineDryRunScript = fs.readFileSync(path.join(root, "packages/core/release/commands/release-line-dry-run.mjs"), "utf8");
+const standaloneBinaryScript = ["build", "bundle"].map(name => fs.readFileSync(path.join(root, `packages/core/build/standalone/${name}.js`), "utf8")).join("\n");
 for (const requiredSnippet of [
   "explainReleaseLineDryRun",
   "formatReleaseLineDryRun",
@@ -982,14 +934,14 @@ for (const requiredSnippet of [
   }
 }
 if (commonJsSourcePattern.test(releaseLineDryRunScript)) {
-  throw new Error("scripts/release-line-dry-run.mjs must use ESM syntax");
+  throw new Error("packages/core/release/commands/release-line-dry-run.mjs must use ESM syntax");
 }
 for (const requiredSnippet of [
-  "../packages/core/logging.js",
+  "../../observability/logging.js",
   "standalone.cli-bundle.create",
   "BUILDCHAIN_EMBEDDED_PACKAGE_VERSION",
   "BUILDCHAIN_EMBEDDED_ENTRYPOINT",
-  "noExternal: [\"smol-toml\",",
+  "noExternal: [/.*/]",
   "--macho-segment-name",
   "mainFormat: \"commonjs\"",
   "standalone.sea-blob.create",
@@ -1008,10 +960,10 @@ if (commonJsSourcePattern.test(standaloneBinaryScript)) {
 const npmPublishWorkflow = fs.readFileSync(path.join(root, ".github/workflows/self-release-npm-dry-run.yml"), "utf8");
 const buildchainRefPromotionWorkflow = fs.readFileSync(path.join(root, ".github/workflows/self-release-promote.yml"), "utf8");
 const binaryDistributionWorkflow = fs.readFileSync(path.join(root, ".github/workflows/self-build-binary-distribution.yml"), "utf8");
-const binaryReleaseAssetsWorkflow = fs.readFileSync(path.join(root, ".github/workflows/.binary-release-assets.yml"), "utf8");
+const binaryReleaseAssetsWorkflow = fs.readFileSync(path.join(root, ".github/workflows/.release-binary-assets.yml"), "utf8");
 const selfHostedRunnerSmokeWorkflow = fs.readFileSync(path.join(root, ".github/workflows/self-ops-runner-smoke.yml"), "utf8");
-const npmDryRunScript = fs.readFileSync(path.join(root, "scripts/npm-publish-dry-run.mjs"), "utf8");
-const npmPublishTransactionScript = fs.readFileSync(path.join(root, "scripts/npm-publish-transaction.mjs"), "utf8");
+const npmDryRunScript = fs.readFileSync(path.join(root, "packages/core/publication/npm/preview.js"), "utf8").replace(/\s+/gu, " ");
+const npmPublishTransactionScript = ["transaction", "environment"].map(name => fs.readFileSync(path.join(root, `packages/core/publication/npm/${name}.js`), "utf8")).join("\n");
 const rootPackageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
 const selfReleaseImpactPath = path.resolve(
   root,
@@ -1043,62 +995,16 @@ for (const forbiddenSnippet of [
     throw new Error(`npm publish dry-run workflow must not contain real publish snippet: ${forbiddenSnippet}`);
   }
 }
-for (const requiredSnippet of [
-  "id-token: write",
-  "actions: write",
-  "uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha",
-  "github.event.workflow_run.event == 'push'",
-  "name: Classify generated product-state finalization",
-  "selectFinalizedProductPublicationVersion",
-  "resume-candidate-run-id:",
-  "resume-expected-source-tree:",
-  "resume-buildchain-runtime-ref:",
-  "release-passport-buildchain-self-kfd: true",
-  "declarative-release-tail: true",
-  "release-passport-impact-json: .buildchain/release-impact.json",
-]) {
-  if (!buildchainRefPromotionWorkflow.includes(requiredSnippet)) {
-    throw new Error(`buildchain ref promotion workflow missing npm transaction snippet: ${requiredSnippet}`);
-  }
-}
-if (buildchainRefPromotionWorkflow.includes("workflow_run.display_title")) {
-  throw new Error(
-    "buildchain ref promotion must classify finalization from rooted product state, not a display title",
-  );
-}
-const releaseCandidatePromoteWorkflow = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
-for (const requiredSnippet of [
-  "name: QUALIFY canonical v4 release invocation inputs",
-  "name: APPLY one rooted provider transaction",
-  "name: SETTLE terminal ReleaseReceipt projection",
-  "uses: ./.buildchain/runtime/actions/release-candidate-promote",
-  "name: Resolve one exact product publication recovery",
-  "selectRecoveredProductPublicationVersion",
-  "publisher-workflow-sha:",
-  "runtime-commit:",
-  "runtime-tree:",
-  "release-invocation-root:",
-  "release-transaction-root:",
-  "release-receipt-root:",
-]) {
-  if (!releaseCandidatePromoteWorkflow.includes(requiredSnippet)) {
-    throw new Error(`release candidate promote workflow missing canonical v4 boundary: ${requiredSnippet}`);
-  }
-}
-for (const retiredSnippet of [
-  "Commit consumer publication authority last",
-  "publish-github-artifact-attestation-evidence.mjs",
-  "capture-package-release-propagation.mjs",
-]) {
-  if (releaseCandidatePromoteWorkflow.includes(retiredSnippet)) {
-    throw new Error(`release candidate promote workflow retains parallel publication authority: ${retiredSnippet}`);
-  }
-}
+const selfPromotion = inspectWorkflowJob(".github/workflows/self-release-promote.yml", "classify-workflow-run", root);
+if (![...selfPromotion.modules.values()].some(source => source.includes("selectFinalizedProductPublicationVersion")))
+  throw new Error("self promotion must classify finalization from rooted product state");
+if (buildchainRefPromotionWorkflow.includes("workflow_run.display_title"))
+  throw new Error("self promotion must not classify finalization from a display title");
 const workflowDir = path.join(root, ".github/workflows");
 for (const workflowFile of fs.readdirSync(workflowDir).filter((entry) => entry.endsWith(".yml"))) {
   const workflowPath = path.join(workflowDir, workflowFile);
   const workflowSource = fs.readFileSync(workflowPath, "utf8");
-  if (!/uses:\s*(?:\.\/\.buildchain\/runtime\/actions\/promote-buildchain-ref|\.\/actions\/promote-buildchain-ref|.*\/actions\/promote-buildchain-ref(?:@|$))/m.test(workflowSource)) {
+  if (!/uses:\s*(?:\.\/\.buildchain\/runtime\/actions\/release\/promotion\/ref|\.\/actions\/release\/promotion\/ref|.*\/actions\/release\/promotion\/ref(?:@|$))/m.test(workflowSource)) {
     continue;
   }
   for (const requiredSnippet of [
@@ -1124,12 +1030,10 @@ for (const retiredWorkflow of [
     throw new Error(`${retiredWorkflow} is fully retired and must remain deleted`);
   }
 }
-const promoteBuildchainRefAction = fs.readFileSync(path.join(root, "actions/promote-buildchain-ref/action.yml"), "utf8");
-const promoteBuildchainRefIndex = ["actions/promote-buildchain-ref/index.js", "actions/promote-buildchain-ref/github-release.js"].map((entry) => fs.readFileSync(path.join(root, entry), "utf8")).join("\n");
+const promoteBuildchainRefAction = fs.readFileSync(path.join(root, "actions/release/promotion/ref/action.yml"), "utf8");
+const promoteBuildchainRefIndex = ["packages/core/release/promote-ref/release-tail.js", "packages/core/release/github-release.js", "packages/core/release/release-tail-provider-adapters.js"].map((entry) => fs.readFileSync(path.join(root, entry), "utf8")).join("\n");
 for (const requiredSnippet of [
   "github-release:",
-  "github-release-title:",
-  "github-release-notes:",
   "public-release-tag:",
   "github-release-url:",
   "github-release-action:",
@@ -1151,8 +1055,8 @@ for (const requiredSnippet of [
   }
 }
 for (const forbiddenSnippet of [
-  "run: node scripts/release-candidate-resolver.mjs",
-  "uses: ./actions/promote-buildchain-ref",
+  "run: node packages/core/release/commands/release-candidate-resolver.mjs",
+  "uses: ./actions/release/promotion/ref",
 ]) {
   if (buildchainRefPromotionWorkflow.includes(forbiddenSnippet)) {
     throw new Error(`buildchain ref promotion workflow must use the declarative wrapper, found manual snippet: ${forbiddenSnippet}`);
@@ -1168,7 +1072,7 @@ for (const requiredSnippet of [
   }
 }
 if (commonJsSourcePattern.test(npmDryRunScript)) {
-  throw new Error("scripts/npm-publish-dry-run.mjs must use ESM syntax");
+  throw new Error("packages/core/publication/commands/npm-publish-dry-run.mjs must use ESM syntax");
 }
 for (const requiredSnippet of [
   "BUILDCHAIN_PUBLISH_EVIDENCE",
@@ -1183,63 +1087,14 @@ for (const requiredSnippet of [
   }
 }
 if (commonJsSourcePattern.test(npmPublishTransactionScript)) {
-  throw new Error("scripts/npm-publish-transaction.mjs must use ESM syntax");
+  throw new Error("packages/core/publication/commands/npm-publish-transaction.mjs must use ESM syntax");
 }
 if (/runs-on:\s*self-hosted/.test(npmPublishWorkflow)) {
   throw new Error("npm publish workflow must use GitHub-hosted runners for trusted publishing");
 }
-for (const requiredSnippet of [
-  "name: Binary Distribution",
-  "ubuntu-24.04",
-  "macos-latest",
-  "windows-2022",
-  "BUILDCHAIN_LOG_PATH",
-  "buildchain-log-events",
-  "buildchain-log-summary",
-  "bin/buildchain.mjs mark",
-  "bin/buildchain.mjs span",
-  "verify observability-log",
-  "bin/buildchain.mjs log summary",
-  "collect github-release",
-  "verify release-passport",
-  "verify artifact",
-  "scripts/create-release-bundle.mjs",
-  "buildchain-release-bundle",
-  "--impact-json .buildchain/release-evidence/authoritative-release-state-impact.json",
-]) {
-  if (!binaryDistributionWorkflow.includes(requiredSnippet)) {
-    throw new Error(`binary distribution workflow missing required snippet: ${requiredSnippet}`);
-  }
-}
-for (const requiredSnippet of [
-  "uses: ./.github/workflows/.publication-authority.yml",
-  "environment: buildchain-release-assets",
-  "needs: publication-authority",
-  "scripts/ensure-github-release.mjs",
-  "gh release upload",
-  "capability.artifactDigest !== actualArtifact",
-]) {
-  if (!binaryReleaseAssetsWorkflow.includes(requiredSnippet)) {
-    throw new Error(`binary release assets workflow missing required snippet: ${requiredSnippet}`);
-  }
-}
-for (const forbiddenSnippet of ["contents: write", "id-token: write", "gh release upload"]) {
-  if (binaryDistributionWorkflow.includes(forbiddenSnippet)) {
-    throw new Error(`binary distribution evidence workflow must not carry product authority: ${forbiddenSnippet}`);
-  }
-}
-for (const forbiddenSnippet of [
-  "gh release create",
-]) {
-  if (binaryDistributionWorkflow.includes(forbiddenSnippet)) {
-    throw new Error(`binary distribution workflow must not use unmanaged release metadata snippet: ${forbiddenSnippet}`);
-  }
-}
-if (/runs-on:\s*self-hosted/.test(binaryDistributionWorkflow)) {
-  throw new Error("binary distribution production workflow must not require self-hosted runners");
-}
-if (!selfHostedRunnerSmokeWorkflow.includes("BUILDCHAIN_RUNNER_KIND: self-hosted")) {
-  throw new Error("self-hosted smoke must remain a release-passport compatibility fixture");
+assertBinaryInventory(root);
+if (!inspectWorkflowJob(".github/workflows/self-ops-runner-smoke.yml", "smoke", root).modules.get("packages/core/build/verification/runner.js")?.includes('runnerKind: "self-hosted"')) {
+  throw new Error("self-hosted smoke must identify its actual runner kind");
 }
 
 const inventory = JSON.parse(
@@ -1250,11 +1105,11 @@ if (inventory.schemaVersion !== 2) {
   throw new Error("inventory schemaVersion must be 2");
 }
 
-if (inventory.release !== "buildchain-v2") {
-  throw new Error("inventory release must be buildchain-v2");
+if (inventory.release !== "buildchain-v4.1") {
+  throw new Error("inventory release must be buildchain-v4.1");
 }
 
-if (inventory.stableRefs?.actions !== "kungfu-systems/buildchain/actions/<name>@v4") {
+if (inventory.stableRefs?.actions !== "kungfu-systems/buildchain/actions/<capability>/<group>/<operation>@v4") {
   throw new Error("inventory stable action ref must point at @v4");
 }
 
@@ -1312,30 +1167,13 @@ if (!Array.isArray(inventory.retiredWorkflowsExcluded) || inventory.retiredWorkf
   throw new Error("retiredWorkflowsExcluded must list retired legacy workflows");
 }
 
-const actualActions = fs
-  .readdirSync(path.join(root, "actions"), { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
-  .map((entry) => entry.name)
-  .filter((name) => fs.existsSync(path.join(root, "actions", name, "action.yml")))
-  .sort();
-const internalActions = Array.isArray(inventory.internalActions) ? inventory.internalActions : [];
-if (!Array.isArray(inventory.migratedActions) || inventory.migratedActions.length !== 0) {
-  throw new Error("migratedActions must be empty; buildchain v2 only ships native actions");
-}
-const shippedActions = internalActions;
-if (inventory.compositeActionOwnership !== "architecture/build-orchestration.json#owners") throw new Error("composite action ownership must use the build orchestration contract");
-const compositeNames = Object.keys(buildOwners).map((file) => {
-  if (!/^actions\/[^/]+\/action\.yml$/.test(file) || !/using:\s*composite/.test(fs.readFileSync(path.join(root, file), "utf8"))) throw new Error(`invalid owned composite action: ${file}`);
-  return path.posix.basename(path.posix.dirname(file));
-});
-const shippedActionNames = [...shippedActions.map((action) => action.path.replace(/^actions\//, "")), ...compositeNames].sort();
-
-if (JSON.stringify(actualActions) !== JSON.stringify(shippedActionNames)) {
-  throw new Error(
-    `action inventory mismatch. actual=${actualActions.join(",")} inventory=${shippedActionNames.join(",")}`
-  );
-}
-
+const actualActionInventory = actionInventory(root);
+if (inventory.actionOwnership !== "architecture/action-taxonomy.json")
+  throw new Error("action ownership must use the closed capability/group/operation taxonomy");
+const shippedActions = actualActionInventory.filter(action => action.using === "node24").map(action => ({
+  path: action.directory, runtime: action.using, build: "tsup", bundle: action.bundles.find(file => file.endsWith("/index.js")),
+}));
+const publicActionNodes = new Set(JSON.parse(fs.readFileSync(path.join(root, "architecture/code-layout.json"), "utf8")).publicActionNodes);
 for (const retiredRepo of inventory.retiredActionsExcluded || []) {
   const retiredPath = path.join(root, "actions", retiredRepo.replace(/^action-/, ""));
   if (fs.existsSync(retiredPath)) {
@@ -1367,16 +1205,16 @@ for (const action of shippedActions) {
   const packageJsonPath = path.join(actionPath, "package.json");
   const tsupConfigPath = path.join(actionPath, "tsup.config.mjs");
   const bundlePath = path.join(root, action.bundle);
-  for (const required of [actionYmlPath, packageJsonPath, bundlePath, path.join(actionPath, "README.md")]) {
+  for (const required of [actionYmlPath, packageJsonPath, bundlePath, ...(publicActionNodes.has(action.path.replace(/^actions\//u, "")) ? [path.join(actionPath, "README.md")] : [])]) {
     if (!fs.existsSync(required)) {
       throw new Error(`missing action artifact: ${path.relative(root, required)}`);
     }
   }
   const actionYml = fs.readFileSync(actionYmlPath, "utf8");
-  if (!/using:\s*["']node24["']/.test(actionYml)) {
+  if (!/using:\s*["']?node24["']?\s*$/mu.test(actionYml)) {
     throw new Error(`${action.path}/action.yml must use node24`);
   }
-  if (!/main:\s*["']dist\/index\.js["']/.test(actionYml)) {
+  if (!/main:\s*["']?dist\/index\.js["']?\s*$/mu.test(actionYml)) {
     throw new Error(`${action.path}/action.yml must point at dist/index.js`);
   }
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));

@@ -1,17 +1,7 @@
 name: Patrol Observed Evidence
-
 on:
   workflow_call:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
-      buildchain-ref:
-        type: string
-        default: v3
-        required: false
       build-command:
         type: string
         required: true
@@ -50,109 +40,74 @@ on:
         type: string
         required: false
         default: production
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
     outputs:
       receipt-path:
         value: ${{ jobs.publish.outputs.receipt-path }}
-
 permissions:
   contents: read
   id-token: write
-
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   publish:
-    if: ${{ inputs.universal-request-json == '' }}
     runs-on: ubuntu-24.04
     environment: ${{ inputs.production-environment }}
     concurrency:
       group: observed-evidence-${{ github.repository }}-${{ inputs.production-bucket }}
       cancel-in-progress: false
     outputs:
-      receipt-path: ${{ steps.publish.outputs.receipt-path }}
+      receipt-path: ${{ steps.node.outputs.receipt-path }}
     steps:
-      - name: Admit trusted default-branch caller
-        shell: bash
-        run: |
-          expected="refs/heads/${{ github.event.repository.default_branch }}"
-          if [[ "${GITHUB_EVENT_NAME}" != "schedule" && "${GITHUB_EVENT_NAME}" != "workflow_dispatch" ]]; then
-            echo "::error::observed evidence publication only admits schedule or workflow_dispatch callers"
-            exit 1
-          fi
-          if [[ "${GITHUB_REF}" != "${expected}" ]]; then
-            echo "::error::observed evidence publication requires the caller default branch: ${expected}"
-            exit 1
-          fi
-
       - name: Checkout caller default branch
         uses: actions/checkout@v7.0.0
         with:
-          ref: ${{ github.event.repository.default_branch }}
+          ref: ${{ github.sha }}
           persist-credentials: false
-
-      - name: Checkout Buildchain runtime
-        uses: actions/checkout@v7.0.0
+        id: source-checkout
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: kungfu-systems/buildchain
-          ref: ${{ inputs.buildchain-ref }}
-          path: .buildchain/runtime
-          persist-credentials: false
-
-      - name: Checkout public evidence source
-        if: ${{ inputs.evidence-source-repository != '' }}
-        uses: actions/checkout@v7.0.0
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Admit evidence publisher
+        uses: ./.buildchain/runtime/actions/observability/evidence/admit-publisher
+      - name: Execute observed-evidence-publish
+        id: node
+        uses: ./.buildchain/runtime/actions/observability/evidence/publish
         with:
-          repository: ${{ inputs.evidence-source-repository }}
-          ref: ${{ inputs.evidence-source-ref }}
-          path: ${{ inputs.evidence-source-path }}
-          persist-credentials: false
-
-      - uses: actions/setup-node@v6.4.0
-        with:
-          node-version: "24"
-
-      - name: Generate observed evidence bundle
-        shell: bash
-        run: ${{ inputs.build-command }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-
-      - name: Verify caller evidence semantics
-        shell: bash
-        run: ${{ inputs.verify-command }}
-
-      - name: Verify Buildchain bundle contract
-        run: node .buildchain/runtime/scripts/observed-evidence.mjs --manifest "${{ inputs.manifest-path }}" --artifact-root "${{ inputs.artifact-path }}" --bucket "${{ inputs.production-bucket }}"
-
-      - name: Configure scoped production authority
-        uses: aws-actions/configure-aws-credentials@v5.1.0
-        with:
-          role-to-assume: ${{ inputs.production-aws-role-arn }}
-          aws-region: us-east-1
-
-      - name: Publish immutable snapshot then latest
-        id: publish
-        shell: bash
-        run: |
-          receipt=".buildchain/observed-evidence/receipt.json"
-          mkdir -p "$(dirname "${receipt}")"
-          node .buildchain/runtime/scripts/observed-evidence.mjs \
-            --manifest "${{ inputs.manifest-path }}" \
-            --artifact-root "${{ inputs.artifact-path }}" \
-            --bucket "${{ inputs.production-bucket }}" \
-            --distribution-id "${{ inputs.cloudfront-distribution }}" \
-            --execute true \
-            --output "${receipt}"
-          echo "receipt-path=${receipt}" >> "${GITHUB_OUTPUT}"
-
-      - name: Upload publication receipt
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: observed-evidence-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ steps.publish.outputs.receipt-path }}
-          if-no-files-found: error
+          runtime-ref: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
+          request-json: ${{ toJSON(inputs) }}
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+        if: ${{ always() }}
+    needs:
+      - execution-runtime

@@ -2,12 +2,13 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
+import { inspectWorkflowJob, readWorkflow as parseWorkflow } from "../scripts/workflow-action-graph.mjs";
 
 const readWorkflow = (name) =>
   fs.readFileSync(path.resolve(".github/workflows", name), "utf8");
 
-const advanced = readWorkflow(".release-candidate-promote.yml");
-const publicWorkflow = readWorkflow("release-candidate-promote.yml");
+const advanced = readWorkflow(".release-promote.yml");
+const publicWorkflow = readWorkflow("public-release-promote.yml");
 const recovery = readWorkflow("self-ops-promotion-recovery.yml");
 const selfPromotion = readWorkflow("self-release-promote.yml");
 
@@ -21,25 +22,18 @@ test("canonical publisher has one QUALIFY APPLY SETTLE execution topology", () =
   );
 });
 
-test("public and recovery adapters invoke only the floating alpha publisher", () => {
-  for (const workflow of [publicWorkflow, recovery]) {
-    assert.match(
-      workflow,
-      /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.?release-candidate-promote\.yml@v4-alpha/u,
-    );
-    assert.doesNotMatch(
-      workflow,
-      /\.release-candidate-promote\.yml@v4(?:\n|$)/u,
-    );
-  }
-  assert.match(publicWorkflow, /^  invoke:/m);
-  assert.match(recovery, /^  resume:/m);
+test("public admission and recovery enter one source-owned publisher", () => {
+  const api = parseWorkflow(".github/workflows/public-release-promote.yml");
+  assert.equal(api.jobs.invoke.uses, "./.github/workflows/.release-promote.yml");
+  assert.equal(api.jobs.invoke.with["request-json"], "${{ needs.consumer-admission.outputs.invocation-json }}");
+  const recover = parseWorkflow(".github/workflows/self-ops-promotion-recovery.yml");
+  assert.equal(recover.jobs.resume.uses, "kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4");
 });
 
-test("Buildchain self-promotion uses one current-major alpha publisher", () => {
+test("Buildchain self-promotion uses one public publisher at the defining commit", () => {
   assert.match(
     selfPromotion,
-    /^  promote:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/m,
+    /^  promote:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-release-promote\.yml@v4/m,
   );
   assert.doesNotMatch(selfPromotion, /^  promote-(?:alpha|stable):/m);
   assert.doesNotMatch(
@@ -58,9 +52,11 @@ test("APPLY retains one rooted transaction and SETTLE reads its receipt", () => 
   assert.match(apply, /release-invocation-root:/);
   assert.match(apply, /release-transaction-root:/);
   assert.match(apply, /release-receipt-root:/);
-  assert.match(apply, /Resume the same transaction journal/);
-  assert.match(settle, /release-receipt\.json/);
-  assert.match(settle, /receipt-root=/);
+  const applyGraph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "apply");
+  assert.ok(applyGraph.steps.some(step => step.name === "Resume the same transaction journal"));
+  const settleGraph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "settle");
+  assert.match(JSON.stringify(settleGraph.steps), /release-receipt\.json/);
+  assert.match([...settleGraph.modules.values()].join("\n"), /core.setOutput\("receipt-root", receipt.receiptRoot\)/);
 });
 
 test("only APPLY carries provider mutation permissions", () => {
@@ -77,7 +73,7 @@ test("only APPLY carries provider mutation permissions", () => {
   assert.match(qualify, /permissions:\n(?:      [a-z-]+: read\n)*      contents: read/u);
   assert.doesNotMatch(qualify, /contents: write|id-token: write/);
   assert.doesNotMatch(apply, /^    permissions:/mu);
-  assert.match(apply, /uses:.*actions\/release-candidate-promote/u);
+  assert.ok(inspectWorkflowJob(".github/workflows/.release-promote.yml", "apply").actions.has("actions/release/promotion/candidate"));
   assert.match(settle, /permissions:\n(?:      [a-z-]+: read\n)*      contents: read/u);
   assert.doesNotMatch(settle, /contents: write|id-token: write/);
 });

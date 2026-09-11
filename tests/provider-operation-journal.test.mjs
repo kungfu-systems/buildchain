@@ -4,14 +4,14 @@ import fs from "node:fs";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { ContractFault } from "../packages/core/canonical-contracts.js";
+import { ContractFault } from "../packages/core/contracts/canonical-contracts.js";
 import {
   foldProviderOperationJournal,
   projectProviderOperationFixtures,
   providerOperationJournalRoot,
   providerOperationJournalStateRoot,
   validateProviderOperationIdentity,
-} from "../packages/core/provider-operation-journal.js";
+} from "../packages/core/release/provider-operation-journal.js";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const fixturePath = new URL(
@@ -179,7 +179,10 @@ test("architecture freezes one schema authority, one fold writer, and the v4 pro
 
 test("journal implementations contain no provider, network, filesystem, or ambient authority", () => {
   const javascript = fs.readFileSync(
-    new URL("../packages/core/provider-operation-journal.js", import.meta.url),
+    new URL(
+      "../packages/core/release/provider-operation-journal.js",
+      import.meta.url,
+    ),
     "utf8",
   );
   const rust = [

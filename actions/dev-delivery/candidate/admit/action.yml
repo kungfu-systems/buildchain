@@ -1,0 +1,54 @@
+name: Admit exact source
+description: Owned source node of protected dev delivery.
+inputs:
+  request-json:
+    description: Typed public workflow inputs, serialized once by the caller.
+    required: true
+  github-token:
+    description: Provider token; supplied only in a credentialed job.
+    required: false
+    default: ""
+outputs:
+  runtime-sha:
+    description: runtime-sha.
+    value: ${{ steps.source.outputs.runtime-sha }}
+  runtime-root:
+    description: runtime-root.
+    value: ${{ steps.source.outputs.runtime-root }}
+  target-branch:
+    description: target-branch.
+    value: ${{ steps.target.outputs.branch }}
+  target-branch-artifact:
+    description: target-branch-artifact.
+    value: ${{ steps.target.outputs.branch-artifact }}
+  proof-source-proof-root:
+    description: proof-source-proof-root.
+    value: ${{ steps.source.outputs.source-proof-root }}
+  project-cut-proof-root:
+    description: project-cut-proof-root.
+    value: ${{ steps.source.outputs.project-cut-proof-root }}
+  proof-outcome:
+    description: proof-outcome.
+    value: ${{ steps.source.outputs.proof-outcome }}
+  qualify-outcome:
+    description: qualify-outcome.
+    value: ${{ steps.source.outputs.qualify-outcome }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v6.4.0
+      with:
+        node-version: "24"
+    - name: Admit delivery coordinates and native contract
+      id: target
+      uses: ./.buildchain/runtime/actions/dev-delivery/candidate/inspect-request
+      with:
+        request-json: ${{ inputs.request-json }}
+    - name: Qualify and seal exact source evidence
+      id: source
+      uses: ./.buildchain/runtime/actions/dev-delivery/candidate/qualify-source
+      with:
+        runtime-ref: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
+        request-json: ${{ inputs.request-json }}
+        branch: ${{ steps.target.outputs.branch }}
+        token: ${{ inputs.github-token || github.token }}

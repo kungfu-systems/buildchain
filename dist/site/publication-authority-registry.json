@@ -4,34 +4,6 @@
   "defaultDecision": "deny",
   "entries": [
     {
-      "workflowPath": ".github/workflows/.auditable-demo.yml",
-      "authorityClass": "non-publication-oidc",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/.auditable-demo.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/.binary-release-assets.yml",
-      "authorityClass": "product-publication",
-      "publicationCapable": true,
-      "capabilityIds": [
-        "github-release"
-      ],
-      "credentialMode": "github-token",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/.binary-release-assets.yml",
-      "environment": "buildchain-release-assets",
-      "environmentMode": "fixed",
-      "runnerPolicy": "qualified-measured",
-      "notes": ""
-    },
-    {
       "workflowPath": ".github/workflows/.build-demo-adapter.yml",
       "authorityClass": "non-publication-oidc",
       "publicationCapable": false,
@@ -97,19 +69,6 @@
       "notes": ""
     },
     {
-      "workflowPath": ".github/workflows/.declarative-auditable-demo.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/.declarative-auditable-demo.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
       "workflowPath": ".github/workflows/.ops-git-sync.yml",
       "authorityClass": "governance-write",
       "publicationCapable": false,
@@ -117,19 +76,6 @@
       "credentialMode": "none",
       "publisherWorkflowMode": "fixed",
       "publisherWorkflowPath": ".github/workflows/.ops-git-sync.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/.publication-authority.yml",
-      "authorityClass": "evidence-publication",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/.publication-authority.yml",
       "environment": "",
       "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
@@ -164,23 +110,6 @@
       "notes": ""
     },
     {
-      "workflowPath": ".github/workflows/.release-candidate-promote.yml",
-      "authorityClass": "product-publication",
-      "publicationCapable": true,
-      "capabilityIds": [
-        "channel-ref",
-        "github-release",
-        "npm-publish"
-      ],
-      "credentialMode": "trusted-publishing",
-      "publisherWorkflowMode": "caller-bound",
-      "publisherWorkflowPath": ".github/workflows/.release-candidate-promote.yml",
-      "environment": "none",
-      "environmentMode": "fixed",
-      "runnerPolicy": "qualified-measured",
-      "notes": ""
-    },
-    {
       "workflowPath": ".github/workflows/.release-promote.yml",
       "authorityClass": "product-publication",
       "publicationCapable": true,
@@ -198,101 +127,6 @@
       "notes": ""
     },
     {
-      "workflowPath": ".github/workflows/.release-verify.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/.release-verify.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/.sam-verify.yml",
-      "authorityClass": "retired-deny",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/.sam-verify.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/.sync-remote-git.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/.sync-remote-git.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/.web-surface.yml",
-      "authorityClass": "product-publication",
-      "publicationCapable": true,
-      "capabilityIds": [
-        "web-production"
-      ],
-      "credentialMode": "oidc",
-      "publisherWorkflowMode": "caller-bound",
-      "publisherWorkflowPath": ".github/workflows/.web-surface.yml",
-      "environment": "consumer-defined",
-      "environmentMode": "caller-bound",
-      "runnerPolicy": "qualified-measured",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/.wheel-verify.yml",
-      "authorityClass": "retired-deny",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/.wheel-verify.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/artifact-signing-authority.yml",
-      "authorityClass": "evidence-publication",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/artifact-signing-authority.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/bootstrap.yml",
-      "authorityClass": "product-publication",
-      "publicationCapable": true,
-      "capabilityIds": [
-        "universal-candidate-execution"
-      ],
-      "credentialMode": "caller-secrets",
-      "publisherWorkflowMode": "caller-bound",
-      "publisherWorkflowPath": ".github/workflows/bootstrap.yml",
-      "environment": "none",
-      "environmentMode": "fixed",
-      "runnerPolicy": "qualified-measured",
-      "notes": ""
-    },
-    {
       "workflowPath": ".github/workflows/build.yml",
       "authorityClass": "non-publication-oidc",
       "publicationCapable": false,
@@ -300,198 +134,6 @@
       "credentialMode": "none",
       "publisherWorkflowMode": "fixed",
       "publisherWorkflowPath": ".github/workflows/build.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/buildchain-patrol.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/buildchain-patrol.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/dev-alpha-candidate-patrol.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/dev-alpha-candidate-patrol.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/dev-delivery-warrant-cancel.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/dev-delivery-warrant-cancel.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/dev-delivery-warrant-close.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/dev-delivery-warrant-close.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/dev-pr-auto-merge.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/dev-pr-auto-merge.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/dev-qualification-patrol.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/dev-qualification-patrol.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/engineering-housekeeper.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/engineering-housekeeper.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/github-artifact-attestation.yml",
-      "authorityClass": "evidence-publication",
-      "publicationCapable": true,
-      "capabilityIds": [
-        "github-artifact-attestation"
-      ],
-      "credentialMode": "oidc",
-      "publisherWorkflowMode": "caller-bound",
-      "publisherWorkflowPath": ".github/workflows/github-artifact-attestation.yml",
-      "environment": "consumer-defined",
-      "environmentMode": "caller-bound",
-      "runnerPolicy": "qualified-measured",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/paper-release-sealed.yml",
-      "authorityClass": "product-publication",
-      "publicationCapable": true,
-      "capabilityIds": [
-        "github-release",
-        "npm-publish"
-      ],
-      "credentialMode": "trusted-publishing",
-      "publisherWorkflowMode": "caller-bound",
-      "publisherWorkflowPath": ".github/workflows/paper-release-sealed.yml",
-      "environment": "none",
-      "environmentMode": "fixed",
-      "runnerPolicy": "qualified-measured",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/paper-release.yml",
-      "authorityClass": "product-publication",
-      "publicationCapable": true,
-      "capabilityIds": [
-        "github-release",
-        "npm-publish"
-      ],
-      "credentialMode": "trusted-publishing",
-      "publisherWorkflowMode": "caller-bound",
-      "publisherWorkflowPath": ".github/workflows/paper-release.yml",
-      "environment": "none",
-      "environmentMode": "fixed",
-      "runnerPolicy": "qualified-measured",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/patrol-daily.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/patrol-daily.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/patrol-monthly.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/patrol-monthly.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/patrol-observed-evidence.yml",
-      "authorityClass": "product-publication",
-      "publicationCapable": true,
-      "capabilityIds": [
-        "observed-evidence-publication"
-      ],
-      "credentialMode": "oidc",
-      "publisherWorkflowMode": "caller-bound",
-      "publisherWorkflowPath": ".github/workflows/patrol-observed-evidence.yml",
-      "environment": "consumer-defined",
-      "environmentMode": "caller-bound",
-      "runnerPolicy": "qualified-measured",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/patrol-weekly.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/patrol-weekly.yml",
       "environment": "",
       "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
@@ -534,21 +176,6 @@
       "environment": "",
       "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/public-ops-bootstrap-recovery.yml",
-      "authorityClass": "product-publication",
-      "publicationCapable": true,
-      "capabilityIds": [
-        "universal-candidate-execution"
-      ],
-      "credentialMode": "caller-secrets",
-      "publisherWorkflowMode": "caller-bound",
-      "publisherWorkflowPath": ".github/workflows/public-ops-bootstrap-recovery.yml",
-      "environment": "none",
-      "environmentMode": "fixed",
-      "runnerPolicy": "qualified-measured",
       "notes": ""
     },
     {
@@ -742,22 +369,6 @@
       "notes": ""
     },
     {
-      "workflowPath": ".github/workflows/public-release-paper-sealed.yml",
-      "authorityClass": "product-publication",
-      "publicationCapable": true,
-      "capabilityIds": [
-        "github-release",
-        "npm-publish"
-      ],
-      "credentialMode": "trusted-publishing",
-      "publisherWorkflowMode": "caller-bound",
-      "publisherWorkflowPath": ".github/workflows/public-release-paper-sealed.yml",
-      "environment": "none",
-      "environmentMode": "fixed",
-      "runnerPolicy": "qualified-measured",
-      "notes": ""
-    },
-    {
       "workflowPath": ".github/workflows/public-release-paper.yml",
       "authorityClass": "product-publication",
       "publicationCapable": true,
@@ -845,67 +456,6 @@
       "publisherWorkflowMode": "caller-bound",
       "publisherWorkflowPath": ".github/workflows/public-release-web.yml",
       "environment": "consumer-defined",
-      "environmentMode": "caller-bound",
-      "runnerPolicy": "qualified-measured",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/publication-artifact.yml",
-      "authorityClass": "evidence-publication",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/publication-artifact.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/release-candidate-promote.yml",
-      "authorityClass": "product-publication",
-      "publicationCapable": true,
-      "capabilityIds": [
-        "channel-ref",
-        "github-release",
-        "npm-publish"
-      ],
-      "credentialMode": "trusted-publishing",
-      "publisherWorkflowMode": "caller-bound",
-      "publisherWorkflowPath": ".github/workflows/release-candidate-promote.yml",
-      "environment": "none",
-      "environmentMode": "fixed",
-      "runnerPolicy": "qualified-measured",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/release-propagation.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/release-propagation.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/release-tail.yml",
-      "authorityClass": "product-publication",
-      "publicationCapable": true,
-      "capabilityIds": [
-        "artifact.publish",
-        "release.activate",
-        "released-evidence.synthesize",
-        "signed-channel.commit"
-      ],
-      "credentialMode": "caller-secrets",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/release-tail.yml",
-      "environment": "caller-bound",
       "environmentMode": "caller-bound",
       "runnerPolicy": "qualified-measured",
       "notes": ""
@@ -1215,51 +765,9 @@
       "environmentMode": "fixed",
       "runnerPolicy": "qualified-measured",
       "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/stable-candidate-patrol.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/stable-candidate-patrol.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/universal-bootstrap-recovery.yml",
-      "authorityClass": "product-publication",
-      "publicationCapable": true,
-      "capabilityIds": [
-        "universal-candidate-execution"
-      ],
-      "credentialMode": "caller-secrets",
-      "publisherWorkflowMode": "caller-bound",
-      "publisherWorkflowPath": ".github/workflows/universal-bootstrap-recovery.yml",
-      "environment": "none",
-      "environmentMode": "fixed",
-      "runnerPolicy": "qualified-measured",
-      "notes": ""
     }
   ],
   "workflowFacts": [
-    {
-      "path": ".github/workflows/.auditable-demo.yml",
-      "signals": [],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/.binary-release-assets.yml",
-      "signals": [
-        "write-permission",
-        "environment",
-        "github-release"
-      ],
-      "classified": true
-    },
     {
       "path": ".github/workflows/.build-demo-adapter.yml",
       "signals": [],
@@ -1271,28 +779,6 @@
       "classified": false
     },
     {
-      "path": ".github/workflows/.build-release-verify-compat.yml",
-      "signals": [
-        "write-permission",
-        "cloud-credential"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/.build-sam-verify-compat.yml",
-      "signals": [
-        "cloud-credential"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/.build-wheel-verify-compat.yml",
-      "signals": [
-        "cloud-credential"
-      ],
-      "classified": true
-    },
-    {
       "path": ".github/workflows/.build.yml",
       "signals": [
         "write-permission",
@@ -1302,32 +788,7 @@
       "classified": true
     },
     {
-      "path": ".github/workflows/.bump-minor-version.yml",
-      "signals": [],
-      "classified": false
-    },
-    {
-      "path": ".github/workflows/.declarative-auditable-demo.yml",
-      "signals": [
-        "write-permission",
-        "git-push"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/.gate-profile.yml",
-      "signals": [],
-      "classified": false
-    },
-    {
       "path": ".github/workflows/.ops-git-sync.yml",
-      "signals": [
-        "git-push"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/.publication-authority.yml",
       "signals": [],
       "classified": true
     },
@@ -1340,84 +801,12 @@
       "path": ".github/workflows/.release-binary-assets.yml",
       "signals": [
         "write-permission",
-        "environment",
-        "github-release"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/.release-candidate-promote.yml",
-      "signals": [],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/.release-minor-bump-compat.yml",
-      "signals": [],
-      "classified": false
-    },
-    {
-      "path": ".github/workflows/.release-page-sync-retired.yml",
-      "signals": [],
-      "classified": false
-    },
-    {
-      "path": ".github/workflows/.release-promote.yml",
-      "signals": [],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/.release-verify.yml",
-      "signals": [
-        "write-permission",
-        "cloud-credential"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/.sam-verify.yml",
-      "signals": [
-        "cloud-credential"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/.sync-release-page.yml",
-      "signals": [],
-      "classified": false
-    },
-    {
-      "path": ".github/workflows/.sync-remote-git.yml",
-      "signals": [
-        "git-push"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/.web-surface.yml",
-      "signals": [
-        "write-permission",
-        "oidc",
-        "environment",
-        "cloud-credential"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/.wheel-verify.yml",
-      "signals": [
-        "cloud-credential"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/artifact-signing-authority.yml",
-      "signals": [
         "environment"
       ],
       "classified": true
     },
     {
-      "path": ".github/workflows/bootstrap.yml",
+      "path": ".github/workflows/.release-promote.yml",
       "signals": [],
       "classified": true
     },
@@ -1426,113 +815,6 @@
       "signals": [
         "write-permission",
         "oidc"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/buildchain-patrol.yml",
-      "signals": [
-        "write-permission"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/check.yml",
-      "signals": [],
-      "classified": false
-    },
-    {
-      "path": ".github/workflows/dev-alpha-candidate-patrol.yml",
-      "signals": [
-        "write-permission"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/dev-delivery-warrant-cancel.yml",
-      "signals": [
-        "write-permission"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/dev-delivery-warrant-close.yml",
-      "signals": [
-        "write-permission"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/dev-pr-auto-merge.yml",
-      "signals": [
-        "write-permission"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/dev-qualification-patrol.yml",
-      "signals": [
-        "write-permission"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/engineering-housekeeper.yml",
-      "signals": [],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/github-artifact-attestation.yml",
-      "signals": [
-        "write-permission",
-        "oidc",
-        "environment"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/paper-release-sealed.yml",
-      "signals": [
-        "write-permission",
-        "oidc"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/paper-release.yml",
-      "signals": [
-        "write-permission",
-        "oidc"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/patrol-daily.yml",
-      "signals": [
-        "write-permission"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/patrol-monthly.yml",
-      "signals": [
-        "write-permission"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/patrol-observed-evidence.yml",
-      "signals": [
-        "oidc",
-        "environment",
-        "cloud-credential"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/patrol-weekly.yml",
-      "signals": [
-        "write-permission"
       ],
       "classified": true
     },
@@ -1549,8 +831,7 @@
     {
       "path": ".github/workflows/public-build-demo.yml",
       "signals": [
-        "write-permission",
-        "git-push"
+        "write-permission"
       ],
       "classified": true
     },
@@ -1570,14 +851,6 @@
       "path": ".github/workflows/public-ops-alpha-candidate-patrol.yml",
       "signals": [
         "write-permission"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/public-ops-bootstrap-recovery.yml",
-      "signals": [
-        "write-permission",
-        "oidc"
       ],
       "classified": true
     },
@@ -1609,8 +882,7 @@
       "path": ".github/workflows/public-ops-observed-evidence.yml",
       "signals": [
         "oidc",
-        "environment",
-        "cloud-credential"
+        "environment"
       ],
       "classified": true
     },
@@ -1690,14 +962,6 @@
       "classified": true
     },
     {
-      "path": ".github/workflows/public-release-paper-sealed.yml",
-      "signals": [
-        "write-permission",
-        "oidc"
-      ],
-      "classified": true
-    },
-    {
       "path": ".github/workflows/public-release-paper.yml",
       "signals": [
         "write-permission",
@@ -1713,8 +977,7 @@
     {
       "path": ".github/workflows/public-release-propagation.yml",
       "signals": [
-        "write-permission",
-        "git-push"
+        "write-permission"
       ],
       "classified": true
     },
@@ -1735,39 +998,8 @@
       "signals": [
         "write-permission",
         "oidc",
-        "environment",
-        "cloud-credential"
+        "environment"
       ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/publication-artifact.yml",
-      "signals": [
-        "write-permission"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/release-candidate-promote.yml",
-      "signals": [],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/release-governance-reconcile.yml",
-      "signals": [],
-      "classified": false
-    },
-    {
-      "path": ".github/workflows/release-propagation.yml",
-      "signals": [
-        "write-permission",
-        "git-push"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/release-tail.yml",
-      "signals": [],
       "classified": true
     },
     {
@@ -1791,7 +1023,7 @@
       "classified": true
     },
     {
-      "path": ".github/workflows/self-build-candidate-lab.yml",
+      "path": ".github/workflows/self-build-channel-verify.yml",
       "signals": [],
       "classified": false
     },
@@ -1809,20 +1041,16 @@
     },
     {
       "path": ".github/workflows/self-build-fixture.yml",
-      "signals": [],
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
       "classified": true
     },
     {
       "path": ".github/workflows/self-build-public-consumer-dogfood.yml",
       "signals": [],
       "classified": false
-    },
-    {
-      "path": ".github/workflows/self-build-release-verify-compat.yml",
-      "signals": [
-        "write-permission"
-      ],
-      "classified": true
     },
     {
       "path": ".github/workflows/self-build-stable-candidate-qualification.yml",
@@ -1920,11 +1148,6 @@
       "classified": true
     },
     {
-      "path": ".github/workflows/self-ops-recovery-failure-dogfood.yml",
-      "signals": [],
-      "classified": false
-    },
-    {
       "path": ".github/workflows/self-ops-runner-smoke.yml",
       "signals": [],
       "classified": false
@@ -1939,23 +1162,16 @@
     {
       "path": ".github/workflows/self-release-binary-assets.yml",
       "signals": [
-        "write-permission",
-        "github-release"
+        "write-permission"
       ],
       "classified": true
     },
     {
       "path": ".github/workflows/self-release-line-open.yml",
       "signals": [
-        "write-permission",
-        "git-push"
+        "write-permission"
       ],
       "classified": true
-    },
-    {
-      "path": ".github/workflows/self-release-new-version-compat.yml",
-      "signals": [],
-      "classified": false
     },
     {
       "path": ".github/workflows/self-release-next-development.yml",
@@ -1986,26 +1202,10 @@
       "path": ".github/workflows/self-release-tail-dogfood.yml",
       "signals": [
         "write-permission",
-        "oidc",
-        "npm-publish"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/stable-candidate-patrol.yml",
-      "signals": [
-        "write-permission"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/universal-bootstrap-recovery.yml",
-      "signals": [
-        "write-permission",
         "oidc"
       ],
       "classified": true
     }
   ],
-  "registryDigest": "be00795530dcfd70c0d11b2461eb712d0185246533921e4c8c95b565d37ec5d4"
+  "registryDigest": "536dca8dab8dd8e28018a6fd9ac023d0d116e0fdb612ecda870a0a2225a3f77b"
 }

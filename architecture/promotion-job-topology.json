@@ -1,0 +1,104 @@
+{
+  "execution-runtime": {
+    "runs-on": "ubuntu-24.04",
+    "permissions": {
+      "contents": "read"
+    },
+    "outputs": {
+      "selection": "${{ steps.select.outputs.selection }}"
+    },
+    "steps": [
+      {
+        "id": "select",
+        "uses": "$/actions/runtime/selection/resolve",
+        "with": {
+          "runtime-ref": "${{ inputs.runtime-ref }}",
+          "contract-lock": "${{ inputs.contract-lock }}",
+          "workflow-ref": "${{ job.workflow_ref }}",
+          "workflow-sha": "${{ job.workflow_sha }}",
+          "token": "${{ github.token }}",
+          "selection": "${{ inputs.runtime-selection }}"
+        }
+      }
+    ],
+    "timeout-minutes": 5
+  },
+  "resolve-promotion": {
+    "name": "Bind publication intent to the selected runtime",
+    "runs-on": "ubuntu-24.04",
+    "permissions": {
+      "contents": "read"
+    },
+    "outputs": {
+      "repository": "${{ steps.node.outputs.repository }}",
+      "channel": "${{ steps.node.outputs.channel }}",
+      "publication-channel": "${{ steps.node.outputs.publication-channel }}",
+      "target-ref": "${{ steps.node.outputs.target-ref }}",
+      "router-ref": "${{ steps.node.outputs.router-ref }}",
+      "router-sha": "${{ steps.node.outputs.router-sha }}",
+      "shell-ref": "${{ steps.node.outputs.shell-ref }}",
+      "shell-call-ref": "${{ steps.node.outputs.shell-call-ref }}",
+      "shell-sha": "${{ steps.node.outputs.shell-sha }}",
+      "runtime-ref": "${{ steps.node.outputs.runtime-ref }}",
+      "runtime-sha": "${{ steps.node.outputs.runtime-sha }}",
+      "contract-lock-path": "${{ steps.node.outputs.contract-lock-path }}",
+      "contract-lock-digest": "${{ steps.node.outputs.contract-lock-digest }}",
+      "override-used": "${{ steps.node.outputs.override-used }}",
+      "selection-source": "${{ steps.node.outputs.selection-source }}",
+      "reason": "${{ steps.node.outputs.reason }}",
+      "request-json": "${{ steps.node.outputs.request-json }}"
+    },
+    "steps": [
+      {
+        "name": "Prepare selected execution runtime",
+        "uses": "$/actions/runtime/environment/prepare",
+        "with": {
+          "selection": "${{ needs.execution-runtime.outputs.selection }}",
+          "token": "${{ github.token }}"
+        }
+      },
+      {
+        "name": "Resolve and bind promotion identities",
+        "id": "node",
+        "uses": "./.buildchain/runtime/actions/release/promotion/resolve",
+        "with": {
+          "request-json": "${{ inputs.request-json }}",
+          "workflow-sha": "${{ job.workflow_sha }}",
+          "workflow-ref": "${{ job.workflow_ref }}",
+          "workflow-repository": "${{ job.workflow_repository }}"
+        }
+      }
+    ],
+    "needs": ["execution-runtime"]
+  },
+  "consumer-admission": {
+    "name": "Admit v4 floating consumer policy",
+    "needs": ["resolve-promotion", "execution-runtime"],
+    "runs-on": "ubuntu-24.04",
+    "permissions": {
+      "contents": "read"
+    },
+    "outputs": {
+      "invocation-json": "${{ steps.node.outputs.invocation-json }}"
+    },
+    "steps": [
+      {
+        "name": "Prepare selected execution runtime",
+        "uses": "$/actions/runtime/environment/prepare",
+        "with": {
+          "selection": "${{ needs.execution-runtime.outputs.selection }}",
+          "token": "${{ github.token }}"
+        }
+      },
+      {
+        "name": "Admit consumer publication request",
+        "id": "node",
+        "uses": "./.buildchain/runtime/actions/release/promotion/admit",
+        "with": {
+          "request-json": "${{ needs.resolve-promotion.outputs.request-json }}",
+          "selection-json": "${{ toJSON(needs.resolve-promotion.outputs) }}"
+        }
+      }
+    ]
+  }
+}

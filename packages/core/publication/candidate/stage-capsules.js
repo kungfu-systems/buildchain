@@ -1,0 +1,205 @@
+import fs from "node:fs";
+import path from "node:path";
+import { domainContentRoot } from "../../contracts/canonical-contracts.js";
+import {
+  STAGE_CAPSULE_CONTRACT,
+  STAGE_CAPSULE_IDENTITY_CONTRACT,
+  stageCapsuleIdentityRoot,
+  stageCapsuleRoot,
+  validateStageCapsule,
+} from "../../build/stage-capsule.js";
+import { runtimeResumeDocumentRoot } from "../../release/recovery/lineage.js";
+import { createDomainPublicationQualificationReceipt } from "../publication-qualification.js";
+
+const readJsonFile = (file) => JSON.parse(fs.readFileSync(file, "utf8"));
+export function createReleaseCandidateStageCapsules({
+  passport,
+  buildSummary,
+  coordinates,
+}) {
+  if (!passport.consumerPolicy?.receiptRoot) return undefined;
+  if (
+    coordinates.repository !== passport.repository ||
+    String(coordinates.runId) !== String(passport.workflow.runId) ||
+    String(coordinates.runAttempt) !== String(passport.workflow.runAttempt) ||
+    coordinates.sourceSha !== passport.source.headSha
+  ) {
+    throw new Error(
+      "Stage Capsule coordinate set does not bind the candidate run",
+    );
+  }
+  const coordinateByPlatform = new Map(
+    coordinates.artifacts.map((entry) => [entry.platformId, entry]),
+  );
+  const qualificationArtifacts = passport.platformMatrix.map((platform) => {
+    const coordinate = coordinateByPlatform.get(platform.platformId);
+    if (!coordinate || coordinate.name !== platform.artifactName)
+      throw new Error(
+        `Stage Capsule coordinate missing for ${platform.platformId}`,
+      );
+    const manifest = readJsonFile(platform.manifestPath);
+    return {
+      role: platform.artifactName,
+      platform: platform.platformId,
+      artifactRoot: coordinate.digest,
+      manifestRoot: domainContentRoot(
+        "stage-capsule-artifact-manifest",
+        manifest,
+      ),
+    };
+  });
+  const qualificationExpiresAt = coordinates.artifacts
+    .map((entry) => entry.expiresAt)
+    .sort((left, right) => Date.parse(left) - Date.parse(right))[0];
+  const qualificationReceipt = createDomainPublicationQualificationReceipt({
+    repository: passport.repository,
+    candidateRoot: `sha256:${passport.candidateHash}`,
+    sourceSha: passport.source.headSha,
+    sourceRoot: domainContentRoot("candidate-identity", passport.source),
+    policyDigest: passport.consumerPolicy.receiptRoot,
+    artifacts: qualificationArtifacts,
+    issuedAt:
+      passport.createdAt ||
+      new Date(Date.parse(qualificationExpiresAt) - 86_400_000).toISOString(),
+    expiresAt: qualificationExpiresAt,
+  });
+  const qualificationRoot = qualificationReceipt.receiptRoot;
+  const entries = passport.platformMatrix
+    .map((platform) => {
+      const coordinate = coordinateByPlatform.get(platform.platformId);
+      if (!coordinate || coordinate.name !== platform.artifactName) {
+        throw new Error(
+          `Stage Capsule coordinate missing for ${platform.platformId}`,
+        );
+      }
+      const manifest = readJsonFile(platform.manifestPath);
+      const identity = {
+        schema: STAGE_CAPSULE_IDENTITY_CONTRACT,
+        sourceRoot: domainContentRoot("candidate-identity", passport.source),
+        platform: platform.platformId,
+        platformRoot: domainContentRoot(
+          "candidate-identity",
+          manifest.platform,
+        ),
+        stage: "verify",
+        toolchainRoots: [],
+        runtimeRoot: domainContentRoot("candidate-identity", {
+          sha: passport.buildchain.sha,
+        }),
+        policyRoot: passport.consumerPolicy.receiptRoot,
+        declaredInputs: [
+          {
+            name: "release-candidate",
+            root: `sha256:${passport.candidateHash}`,
+          },
+        ],
+        transformationRoot: domainContentRoot("candidate-identity", {
+          lifecycle: manifest.lifecycle,
+          summary: platform.summary,
+        }),
+        outputManifestRoot: domainContentRoot(
+          "stage-capsule-artifact-manifest",
+          { artifact: coordinate, manifest },
+        ),
+        qualificationRoot,
+        observationRoots: [
+          {
+            name: "provider-coordinate",
+            root: domainContentRoot("provider-readback-sample", coordinate),
+          },
+        ],
+      };
+      const capsule = {
+        schema: STAGE_CAPSULE_CONTRACT,
+        writerAuthority: "typescript-v3",
+        rustAuthority: "validation-only",
+        identity,
+        identityRoot: stageCapsuleIdentityRoot(identity),
+        retentionPromise: {
+          class: "github-artifact",
+          retainUntil: coordinate.expiresAt,
+        },
+        capsuleRoot: `sha256:${"0".repeat(64)}`,
+      };
+      capsule.capsuleRoot = stageCapsuleRoot(capsule);
+      validateStageCapsule(capsule);
+      return {
+        platform: platform.platformId,
+        artifactName: coordinate.name,
+        artifactDigest: coordinate.digest,
+        publicationArtifact: qualificationArtifacts.find(
+          ({ platform: platformId }) => platformId === platform.platformId,
+        ),
+        artifact: coordinate,
+        capsule,
+      };
+    })
+    .sort((left, right) => left.platform.localeCompare(right.platform));
+  const body = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-v4-release-candidate-stage-capsules/v1",
+    status: "sealed",
+    repository: passport.repository,
+    buildAttempt: {
+      id: `github-run:${passport.workflow.runId}:attempt:${passport.workflow.runAttempt}`,
+      runtimeSha: passport.buildchain.sha,
+    },
+    source: {
+      sha: passport.source.headSha,
+      treeSha: passport.source.treeHash,
+    },
+    consumerPolicyReceiptRoot: passport.consumerPolicy.receiptRoot,
+    publicationQualificationRoot: qualificationRoot,
+    publicationQualificationReceipt: qualificationReceipt,
+    capsules: entries,
+  };
+  return { ...body, root: runtimeResumeDocumentRoot(body) };
+}
+
+export function writeReleaseCandidateStageCapsules({
+  passport,
+  buildSummary,
+  outputPath,
+  coordinatesPath,
+  workspace,
+}) {
+  if (!fs.existsSync(coordinatesPath)) {
+    if (passport.consumerPolicy?.receiptRoot) {
+      throw new Error(
+        "v4 release candidate Stage Capsules require exact artifact coordinates",
+      );
+    }
+    return { path: "", root: "" };
+  }
+  const stageCapsules = createReleaseCandidateStageCapsules({
+    passport,
+    buildSummary,
+    coordinates: readJsonFile(coordinatesPath),
+  });
+  if (!stageCapsules) return { path: "", root: "" };
+  const stageCapsulesPath = path.join(
+    path.dirname(outputPath),
+    "release-candidate-stage-capsules.json",
+  );
+  fs.writeFileSync(
+    stageCapsulesPath,
+    `${JSON.stringify(stageCapsules, null, 2)}\n`,
+  );
+  const qualificationPath = path.join(
+    path.dirname(outputPath),
+    "release-candidate-publication-qualification.json",
+  );
+  fs.writeFileSync(
+    qualificationPath,
+    `${JSON.stringify(stageCapsules.publicationQualificationReceipt, null, 2)}\n`,
+  );
+  return {
+    path: path.relative(workspace, stageCapsulesPath).split(path.sep).join("/"),
+    root: stageCapsules.root,
+    qualificationPath: path
+      .relative(workspace, qualificationPath)
+      .split(path.sep)
+      .join("/"),
+    qualificationRoot: stageCapsules.publicationQualificationRoot,
+  };
+}

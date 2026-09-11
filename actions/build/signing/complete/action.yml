@@ -1,0 +1,21 @@
+name: Complete detached signing and verify final artifact bytes
+description: Complete detached signing and verify final artifact bytes.
+inputs:
+  plan:
+    description: Rooted build plan
+    required: true
+  platform:
+    description: Declared build platform
+    required: true
+  token:
+    description: Scoped artifact read credential
+    required: true
+  control-token:
+    description: Detached signing authority credential; never forwarded to consumer execution
+    required: false
+runs:
+  using: node24
+  main: dist/index.js
+outputs:
+  artifact:
+    description: Immutable artifact reference

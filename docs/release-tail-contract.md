@@ -1,71 +1,51 @@
 ---
 status: draft
-period: 2026-08-07
+period: ongoing
 theme: buildchain-release-tail-contract
 doc_type: architecture
 source_level: local-files
 confidence: high
 sensitivity: public
-evidence_grade: A
-review_state: self-reviewed
-last_reviewed: 2026-08-13
+evidence_grade: B
+review_state: unreviewed
+last_reviewed: 2026-09-09
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-08-07
-  visible_context: Buildchain dev/v3/v3.0 release workflows, the v4 capability manifest and architecture constitution, promotion Action, transaction and activation code, local exact-head managed-consumer callers, and the Kungfu alpha release-tail implementation.
+  generated_at: 2026-09-09
+  visible_context: Current Buildchain 4.1 workflow and action graph, promotion request schemas, provider transaction implementation and retained historical inventory.
   invisible_context_boundary: Did not read credentials, private logs, signed URLs, provider state, or unpublished release assets.
 ---
 
 # Declarative release-tail contract
 
-Buildchain's v3 compatibility line lets a consumer repository provide shell
-commands at several points around publication. Those hooks made early adoption
-possible, but they also let a consumer redefine the final release transaction. The
-machine authority for the current inventory is
-[`architecture/release-tail-contract-inventory.json`](../architecture/release-tail-contract-inventory.json).
+The current machine authority is
+[`architecture/release-tail-contract.json`](../architecture/release-tail-contract.json).
+The public promotion workflow accepts one typed request, then dispatches
+QUALIFY, APPLY and SETTLE. APPLY reaches the canonical provider transaction;
+it cannot forward arbitrary publication, activation, commit or evidence commands.
 The declaration schema is
-[`contracts/release-tail-capabilities-v1.schema.json`](../contracts/release-tail-capabilities-v1.schema.json).
+[`contracts/release-tail-capabilities-v1.schema.json`](../contracts/release-tail-capabilities-v1.schema.json),
+and provider behavior is documented in [release-tail-provider-plane.md](release-tail-provider-plane.md).
 
-This contract freezes the replacement boundary. The Buildchain-owned provider
-implementation is documented in
-[`release-tail-provider-plane.md`](./release-tail-provider-plane.md). Adding the
-provider plane does not itself cut over a consumer, run a release, or
-reinterpret an already published release.
+## Current executable boundaries
 
-The v4 line carries this contract as its production release-tail boundary. The
-v4 capability manifest names `typescript-v4` as the sole writer and marks the
-legacy v3 writer retired. Deterministic v4 journal, activation, stable-fence,
-recovery, provider readback, rollback, and N-1 qualification contracts gate
-every provider mutation; the retained v3 release ref is rollback evidence, not
-an active fallback writer.
+Four separately owned command surfaces remain outside the canonical promotion
+transaction: consumer admission predicates, the direct ref-promotion Action's
+publication command, product evidence preparation, and version-state verification.
+Their nine workflow, Action, config and CLI coordinates have five execution sites.
+The checker verifies the current Paper and publication-authority callers against
+the actual composite Action graph. These are current contracts with no historical
+aliases, migration window or fallback execution path.
 
-## Current executable surfaces
+The direct ref-promotion Action accepts `release-passport-attachment-command` for
+product attachments. Its old evidence-command alias is removed. Canonical public
+promotion uses typed publication data and does not call that separate Action.
 
-The reverse scan classifies 27 workflow, Action, config, and CLI coordinates
-into seven owned surface groups:
-
-| Surface                                                                  | Current role                                              | Replacement                                                 |
-| ------------------------------------------------------------------------ | --------------------------------------------------------- | ----------------------------------------------------------- |
-| `publication-gate-command`, `publication-consumer-qualification-command` | Consumer-owned admission and predicate logic              | Buildchain-evaluated declarative predicates                 |
-| `publish-command`, `lifecycle.publish`                                   | Artifact/package materialization and provider publication | `artifact.publish`                                          |
-| KFD-3, invariant Passport, and attachment commands                       | Product-specific evidence generation                      | Typed evidence requirements and Buildchain-owned projectors |
-| `publication-commit-command`                                             | Final signed or well-known channel authority move         | `signed-channel.commit`                                     |
-| `release-activation-command`                                             | Site activation and production readback                   | `release.activate`                                          |
-| reusable-workflow `release-passport-evidence-command`                    | Receipt-only released-evidence synthesis                  | `released-evidence.synthesize`                              |
-| Action `verification-command`                                            | Version-state verification before release-tail execution  | Separate version-state contract; not part of release tail   |
-
-One name is already ambiguous. In the reusable promotion workflow,
-`release-passport-evidence-command` means post-activation released-evidence
-synthesis. In the lower-level promotion Action, the same name is a deprecated
-alias for `release-passport-attachment-command`. New declarations reject that
-cross-layer alias collision instead of preserving it as a permanent escape
-hatch.
-
-The current v3 managed-caller snapshot covers Buildchain self-bootstrap, both
-Buildchain paper release paths, Kungfu, Libnode, KFD, and the Kungfu product
-white paper. The inventory binds every snapshot to an exact commit, tree,
-workflow path, runtime ref, and the executable surface groups it uses. The inventory covers the declared release-tail contract.
+The exact old managed-consumer snapshot remains in
+[`release-tail-contract-inventory.json`](../architecture/release-tail-contract-inventory.json)
+as historical evidence. It grants no current execution or compatibility authority;
+this change makes no claim about updating those external repositories.
 
 ## Capability declaration
 
@@ -121,27 +101,12 @@ only retry classes, and no local executor may exceed three attempts. Provider
 conflict, identity drift, missing readback, and exhausted retry remain explicit
 terminal classifications; an adapter cannot convert them into success.
 
-## Compatibility and migration
+## Publication identity
 
-The compatibility window begins when
-`train/v3/v3.0/release-tail-contract` is published. It closes at the earlier of
-90 days or the first v3.2 stable release, and spans at most two minor lines.
-
-During that window:
-
-- previously published tags, assets, packages, signed channel documents,
-  Passports, and receipts remain immutable;
-- only the exact enumerated callers may use the legacy adapter;
-- every exception has an owner, the common expiry, and a removal test;
-- migrated declarations create new transactions and never reinterpret settled
-  history;
-- no new arbitrary command input or generic plugin is accepted.
-
-Cutover order is the Buildchain paper callers plus a self-bootstrap no-command
-regression, Kungfu's complete Alpha tail, Libnode evidence generation,
-KFD/white-paper no-command regression, then deletion of the Action alias and
-all remaining command inputs. This card
-defines that order only; consumer migrations are separate changes.
+Published tags, assets, package coordinates, signed channel documents, Passports
+and receipts remain immutable. Current declarations create their own transactions;
+they never reinterpret settled history. No compatibility reader or migration
+exception is used to admit a current request.
 
 ## Failure rules
 
@@ -152,7 +117,7 @@ The contract fails closed when:
 - an effect lacks stable operation identity;
 - a mutation lacks readback and receipt contracts;
 - local retry is unbounded;
-- an exception lacks an owner, expiry, or executable removal test.
+- an alias or compatibility fallback is introduced into the current contract.
 
 Run the contract check with:
 
@@ -163,4 +128,4 @@ node --test tests/release-tail-contract.test.mjs
 
 The tests mutate the inventory and declaration fixtures to prove that orphaned
 hooks, ambiguous ownership, embedded commands, missing identity/readback,
-unbounded retry, and permanent escape hatches are rejected.
+unbounded retry, command aliases and compatibility fallbacks are rejected.

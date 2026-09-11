@@ -1,0 +1,26 @@
+name: Maintain exact delivery attempt lease
+description:
+  Heartbeat the admitted Warrant until the exact native execution and seal
+  jobs are terminal.
+inputs:
+  runtime-sha:
+    description: Immutable admitted runtime commit
+    required: true
+  branch:
+    description: Protected dev branch
+    required: true
+  token:
+    description: Scoped Warrant and provider read credential
+    required: true
+  lease-seconds:
+    description: Admitted lease duration
+    required: true
+  heartbeat-seconds:
+    description: Heartbeat interval
+    required: true
+outputs:
+  receipt-root:
+    description: Rooted exact-attempt heartbeat receipt
+runs:
+  using: node24
+  main: dist/index.js

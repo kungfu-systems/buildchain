@@ -1,0 +1,43 @@
+name: binary-distribution-binary
+description: Execute the binary-distribution binary capability within its caller
+  job boundary.
+inputs:
+  matrix-json:
+    description: Declared platform matrix value.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Admit source checkout
+      id: source-boundary
+      if: ${{ always() }}
+      uses: ./.buildchain/runtime/actions/build/source/admit
+      with:
+        source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
+        expected-sha: ${{ github.sha }}
+    - uses: actions/setup-node@v6.4.0
+      with:
+        node-version: "24"
+    - name: Install dependencies
+      uses: ./.buildchain/runtime/actions/runtime/dependencies/install
+      with:
+        directory: .
+        production: "false"
+        ignore-scripts: "false"
+    - name: Build and verify standalone distribution
+      uses: ./.buildchain/runtime/actions/build/binary/package
+      with:
+        matrix-json: ${{ inputs.matrix-json }}
+        tag: ${{ env.RELEASE_TAG }}
+    - name: Upload binary artifact
+      uses: actions/upload-artifact@v6.0.0
+      with:
+        name: buildchain-binary-${{ fromJSON(inputs.matrix-json).platform }}
+        path: |
+          dist/binary/*
+          !dist/binary/buildchain
+          !dist/binary/buildchain.exe
+        if-no-files-found: error

@@ -1,0 +1,9 @@
+import * as github from "@actions/github";
+import { promoteReleaseCandidate } from "./transaction.js";
+export async function candidatePublicationAction(core, env) {
+  const required = new Set(["candidate-build-summary-path", "required-artifacts-path", "target-ref", "target-sha", "candidate-passport-path", "channel", "product-publication-intent-path", "publication-qualification-path", "publisher-workflow-sha", "repository", "runtime-commit", "runtime-tree", "source-sha", "stage-capsules-path", "tag", "token", "version"]);
+  const request = Object.fromEntries(["recovery-receipt-path", "candidate-build-summary-path", "candidate-passport-path", "channel", "failure-after-capability", "mutation-token", "product-publication-intent-path", "publication-qualification-path", "publish-artifact-kind", "publish-auth", "publish-command", "publish-dist-tag", "publish-mode", "publish-package-main", "publish-package-set-order", "publisher-workflow-sha", "repository", "required-artifacts-path", "required-status-check", "resume-transaction-id", "runtime-commit", "runtime-tree", "sealed-bundle-manifest", "sealed-bundle-root", "source-sha", "stage-capsules-path", "state-path", "tag", "target-ref", "target-sha", "token", "version"].map(name => [name, core.getInput(name, { required: required.has(name) }).trim()]));
+  for (const name of ["publish-rematerialize-on-resume", "publish-transaction-override"]) request[name] = core.getBooleanInput(name);
+  request["artifact-paths"] = core.getMultilineInput("artifact-paths").filter(Boolean);
+  return promoteReleaseCandidate(request, { octokit: github.getOctokit(request.token), mutationOctokit: github.getOctokit(request["mutation-token"] || request.token), actor: env.GITHUB_ACTOR, runId: env.GITHUB_RUN_ID || "", observe: outputs => { for (const [key, value] of Object.entries(outputs)) core.setOutput(key, value); } });
+}

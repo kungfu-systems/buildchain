@@ -1,0 +1,48 @@
+name: Admit checked floating consumer policy
+description: Admit checked floating consumer policy.
+inputs:
+  directory:
+    description: Exact consumer checkout directory
+    required: true
+  workflow:
+    description: Public reusable workflow being consumed
+    required: true
+  workflow-sha:
+    description: Exact called workflow and scanner commit
+    required: true
+  source-sha:
+    description: Exact consumer source commit; defaults to the triggering source.
+  runtime-sha:
+    description: Exact admitted runtime when it differs from the defining workflow.
+  stable-lock-path:
+    description: Consumer stable contract lock path.
+    default: .buildchain/contract-lock.json
+  alpha-lock-path:
+    description: Consumer alpha contract lock path.
+    default: .buildchain/alpha-contract-lock.json
+  invocation-directory:
+    description: Exact caller definition checkout, if distinct from consumer source.
+  definition-repository:
+    description: Repository defining a source-owned invocation.
+  definition-sha:
+    description: Exact caller definition commit.
+  expected-channel:
+    description: Admitted public invocation channel.
+outputs:
+  v4-consumer-policy-status:
+    description: v4 consumer policy status
+  v4-consumer-policy-receipt-path:
+    description: v4 consumer policy receipt path
+  v4-consumer-policy-receipt-root:
+    description: v4 consumer policy receipt root
+  v4-consumer-policy-receipt-json:
+    description: v4 consumer policy receipt json
+  v4-consumer-policy-channel:
+    description: v4 consumer policy channel
+  v4-consumer-policy-selector:
+    description: v4 consumer policy selector
+  v4-consumer-policy-scanner-root:
+    description: v4 consumer policy scanner root
+runs:
+  using: node24
+  main: dist/index.js

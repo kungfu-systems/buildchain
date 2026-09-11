@@ -10,7 +10,7 @@ import {
   macosJitRunnerLabels,
   renderMacosJitBootstrap,
   verifyMacosEc2JitQualification,
-} from "../scripts/aws-macos-jit-core.mjs";
+} from "../packages/core/providers/commands/aws-macos-jit-core.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 

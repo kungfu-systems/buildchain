@@ -1,31 +1,16 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
+import { actionInventory } from "../packages/core/contracts/action-inventory.js";
 import { fileURLToPath } from "node:url";
-import { spawnSyncCommand } from "../packages/core/spawn-command.js";
+import { spawnSyncCommand } from "../packages/core/runtime/spawn-command.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const actionsRoot = path.join(root, "actions");
-const javascriptBundlePaths = readdirSync(actionsRoot, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
-  .map((entry) => path.join(actionsRoot, entry.name, "dist", "index.js"))
-  .filter((bundlePath) => {
-    try {
-      readFileSync(bundlePath);
-      return true;
-    } catch {
-      return false;
-    }
-  })
-  .sort();
-const wasmBundlePaths = [
-  "promote-buildchain-ref",
-  "release-tail",
-  "release-candidate-promote",
-].map((name) =>
-  path.join(actionsRoot, name, "dist", "buildchain-domain.wasm"),
-);
-const bundlePaths = [...javascriptBundlePaths, ...wasmBundlePaths];
+const discover = () =>
+  actionInventory(root).flatMap((action) =>
+    action.bundles.map((file) => path.join(root, file)),
+  );
 
+const bundlePaths = discover();
 const before = new Map(
   bundlePaths.map((bundlePath) => [bundlePath, readFileSync(bundlePath)]),
 );
@@ -42,8 +27,12 @@ if (build.status !== 0) {
   process.exit(build.status ?? 1);
 }
 
-const changed = bundlePaths.filter(
-  (bundlePath) => !before.get(bundlePath).equals(readFileSync(bundlePath)),
+const afterPaths = discover();
+const changed = [...new Set([...bundlePaths, ...afterPaths])].filter(
+  (bundlePath) =>
+    !before.has(bundlePath) ||
+    !afterPaths.includes(bundlePath) ||
+    !before.get(bundlePath).equals(readFileSync(bundlePath)),
 );
 if (changed.length > 0) {
   console.error("Generated action bundles were stale before the build:");

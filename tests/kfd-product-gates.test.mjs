@@ -11,18 +11,16 @@ import {
   kfdProductGateDigest,
   validateKfdProductGateResult,
   verifyKfdRecord,
-} from "../packages/core/kfd-product-gates.js";
+} from "../packages/core/adoption/kfd-product-gates.js";
 import {
   KFD_ADOPTER_MANIFEST_GATE_CONTRACT,
   createKfdAdopterManifestGate,
   createKfdLegacySupportMatrixProjection,
   validateKfdAdopterManifestGate,
   validateKfdLegacySupportMatrixProjection,
-} from "../packages/core/kfd-adopter-manifest.js";
-import {
-  collectGitHubReleasePassport,
-  verifyReleasePassport,
-} from "../packages/core/release-passport.js";
+} from "../packages/core/adoption/kfd-adopter-manifest.js";
+import { collectGitHubReleasePassport } from "../packages/core/release/passport/collection.js";
+import { verifyReleasePassport } from "../packages/core/release/release-passport.js";
 
 import { sourceSha, checkedAt, kfdPackageArtifactRoot, tempDir, writeJson, evidence, gateInput, kfd4Records, passingGate, buildchainAdopterManifest } from "./helpers/kfd-product-gates.mjs";
 

@@ -59,7 +59,7 @@ release candidate consumed the caller-supplied family evidence exactly.
 Promotion workflows that should not rebuild artifacts can enable:
 
 ```yaml
-- uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v3
+- uses: kungfu-systems/buildchain/actions/release/promotion/ref@v3
   with:
     token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
     sha: ${{ needs.build.outputs.publish-source-sha }}
@@ -111,11 +111,10 @@ finished uploading evidence, the resolver waits up to ten minutes for the exact
 merged PR's successful workflow run and paired artifacts. Polling remains bound
 to the PR/head identity; timeout or a sibling run still fails closed.
 
-The public promotion router preserves the requested `vN` or `vN-alpha` ref as
-audit metadata, but binds the router to GitHub's selected reusable-workflow SHA
-and resolves each remaining floating shell/runtime ref exactly once. Every
-later checkout and delegated promotion receives those immutable SHAs, so a
-channel tag moving during the run cannot mix two Buildchain revisions.
+The public promotion entry selects one execution runtime through the shared
+[Runtime entry contract](runtime-entry.md). Entry and execution commits may differ.
+Every later job prepares that selection without resolving another Buildchain ref
+or checking entry/runtime SHA equality.
 
 ## Resume from an existing candidate run
 
@@ -128,7 +127,7 @@ See GitHub's [reusable workflow rerun behavior](https://docs.github.com/en/actio
 and [workflow rerun identity rules](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs).
 
 The supported recovery boundary is a new `workflow_dispatch` (or another new
-caller event) that invokes `release-candidate-promote.yml` and supplies the old
+caller event) that invokes `public-release-promote.yml` and supplies the old
 candidate run explicitly:
 
 ```yaml
@@ -139,12 +138,10 @@ on:
       candidate-run-id: { required: true, type: string }
       target-sha: { required: true, type: string }
       expected-tree: { required: true, type: string }
-      candidate-runtime-sha: { required: true, type: string }
-      buildchain-runtime-sha: { required: true, type: string }
-
+      runtime-ref: { required: true, type: string }
 jobs:
   resume:
-    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@<exact-current-buildchain-sha>
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4
     permissions:
       actions: write
       checks: write
@@ -153,22 +150,20 @@ jobs:
       pull-requests: write
     secrets: inherit
     with:
-      buildchain-ref: ${{ inputs.buildchain-runtime-sha }}
-      channel: alpha
-      target-ref: alpha/v3/v3.0
-      target-sha: ${{ inputs.target-sha }}
-      artifact-name: product
-      artifact-patterns: product-package-*
-      release-candidate-workflow-file: build.yml
-      release-candidate-workflow-name: Build
-      resume-candidate-repository: ${{ github.repository }}
-      resume-candidate-run-id: ${{ inputs.candidate-run-id }}
-      resume-expected-workflow-file: build.yml
-      resume-expected-workflow-name: Build
-      resume-expected-source-tree: ${{ inputs.expected-tree }}
-      resume-expected-candidate-runtime-sha: ${{ inputs.candidate-runtime-sha }}
-      resume-buildchain-runtime-sha: ${{ inputs.buildchain-runtime-sha }}
-      publish-transaction-override: true
+      runtime-ref: ${{ inputs.runtime-ref }}
+      request-json: >-
+        {"schema":"buildchain.promotion-request/v1",
+        "channel":"alpha", "target-ref":"alpha/v4/v4.1",
+        "target-sha":${{ toJSON(inputs.target-sha) }},
+        "artifact-name":"product", "artifact-patterns":"product-package-*",
+        "release-candidate-workflow-file":"build.yml",
+        "release-candidate-workflow-name":"Build",
+        "resume-candidate-repository":${{ toJSON(github.repository) }},
+        "resume-candidate-run-id":${{ toJSON(inputs.candidate-run-id) }},
+        "resume-expected-workflow-file":"build.yml",
+        "resume-expected-workflow-name":"Build",
+        "resume-expected-source-tree":${{ toJSON(inputs.expected-tree) }},
+        "publish-transaction-override":true}
 ```
 
 `resume-expected-candidate-root` may replace `resume-expected-source-tree`, or
@@ -277,7 +272,7 @@ pre-build/artifact evidence into the wrapper:
 ```yaml
 jobs:
   promote:
-    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v3
     with:
       buildchain-channel: auto
       buildchain-alpha-contract-lock-path: .buildchain/alpha-contract-lock.json
@@ -321,8 +316,7 @@ and payload bytes. It can read those inputs through
 permission, or provider write permission. Buildchain validates the aggregate
 digest and exact source binding before it seals a capability. Exactly one of
 the supplied aggregate, consumer command, or explicit no-Gate decision is
-allowed. Buildchain still requires caller-owned RC evidence, an exact authority
-runtime and source SHA, a repository-local publisher workflow, matching npm
+allowed. Buildchain still requires caller-owned RC evidence, an exact source SHA and prepared execution runtime, a repository-local publisher workflow, matching npm
 target/package identity or exact caller-bound GitHub Release target, and a
 qualifying control-plane audit.
 

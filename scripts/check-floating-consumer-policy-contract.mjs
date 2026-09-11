@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 import fs from "node:fs";
+import YAML from "yaml";
+import { inspectWorkflowJob } from "./workflow-action-graph.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseYamlUses } from "../packages/core/workflow-yaml-contract.js";
+import { parseYamlUses } from "../packages/core/contracts/workflow-yaml-contract.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = (relative) => fs.readFileSync(path.join(root, relative), "utf8");
@@ -31,11 +33,8 @@ export function assertTrustGatedJobs(source, jobs) {
 }
 
 function jobDependsOn(source, job, dependency) {
-  const block = workflowJobBlock(source, job);
-  return new RegExp(
-    `^    needs:\\s*(?:${dependency}|\\[[^\\]]*\\b${dependency}\\b[^\\]]*\\])\\s*$`,
-    "mu",
-  ).test(block);
+  const needs = YAML.parse(source)?.jobs?.[job]?.needs;
+  return (Array.isArray(needs) ? needs : [needs]).includes(dependency);
 }
 
 function assertOrdered(relative, markers) {
@@ -51,17 +50,13 @@ function assertOrdered(relative, markers) {
 }
 
 export function assertPromotionCertificationWiring(source) {
-  for (const marker of [
-    "Translate and admit legacy-compatible inputs",
-    "BUILDCHAIN_PROMOTION_INPUTS_JSON: ${{ toJSON(inputs) }}",
-    "Resolve and qualify the sealed release candidate",
-    "BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON",
-    "QUALIFY canonical v4 release invocation inputs",
-  ]) {
-    if (!source.includes(marker)) {
-      fail(`promotion certification is missing ${marker}`);
-    }
-  }
+  const workflow = YAML.parse(source);
+  const node = workflow?.jobs?.qualify?.steps?.find((step) => step.id === "node");
+  if (node?.uses !== "./.buildchain/runtime/actions/release/promotion/qualify" ||
+      node.with?.["request-json"] !== "${{ inputs.request-json }}" ||
+      node.with?.["job-workflow-sha"] !== "${{ toJSON(job.workflow_sha) }}")
+    fail("promotion certification is missing its exact owned node and typed request binding");
+  if (!jobDependsOn(source, "apply", "qualify")) fail("promotion certification is missing before APPLY");
 }
 
 function assertPersistedSelectors() {
@@ -78,11 +73,6 @@ function assertPersistedSelectors() {
       );
       if (!match) continue;
       const selector = match[2];
-      const protectedBootstrap =
-        relative ===
-          ".github/workflows/self-ops-promotion-recovery.yml" &&
-        match[1] === ".github/workflows/.release-candidate-promote.yml" &&
-        selector === "alpha/v4/v4.0";
       const isCurrentMajor =
         selector === "v4" ||
         selector === "v4-alpha" ||
@@ -90,9 +80,8 @@ function assertPersistedSelectors() {
         /^[0-9a-f]{40}$/iu.test(selector) ||
         selector.includes("${{");
       if (
-        (isCurrentMajor || protectedBootstrap) &&
-        !["v4", "v4-alpha"].includes(selector) &&
-        !protectedBootstrap
+        isCurrentMajor &&
+        !["v4", "v4-alpha"].includes(selector)
       ) {
         offenders.push(`${relative}:${node.line} @${selector}`);
       }
@@ -112,33 +101,34 @@ export function checkFloatingConsumerPolicyContract() {
     fail("architecture policy contract is missing");
   }
   if (
-    policy.contractLocks?.selectedLockMustBindResolvedWorkflowShell !== true
+    policy.contractLocks?.runtimeSelectionOwner !== "actions/runtime/selection/resolve"
   ) {
-    fail("contract lock must bind the visible workflow shell");
+    fail("contract lock selection must belong to the unified entry");
   }
   assertPersistedSelectors();
-  assertOrdered("scripts/build/plan.mjs", ["consumer-policy.mjs", "validate-package-manager-contract.mjs", "buildchain-contract-lock.mjs"]);
+  assertOrdered("packages/core/build/plan/admission.js", ["const policy = scanConsumerPolicy(", "validatePackageManagerContract({"]);
   const buildWorkflow = read(".github/workflows/.build.yml");
-  const planner = read("scripts/build/plan.mjs");
-  if (!planner.includes("BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: plan.identity.channel") ||
+  const planner = read("packages/core/build/plan/admission.js");
+  if (!planner.includes("expectedInvocationChannel: plan.identity.channel") ||
       !buildWorkflow.includes("workflow-sha: ${{ job.workflow_sha }}") ||
-      !buildWorkflow.includes("actions/resolve-build-plan")) fail("build planning must bind called workflow and channel admission");
+      !buildWorkflow.includes("actions/build/lifecycle/plan")) fail("build planning must bind called workflow and channel admission");
   assertTrustGatedJobs(buildWorkflow, ["build-native", "build-container", "sign", "attest", "deliver"]);
-  assertOrdered(".github/workflows/publication-artifact.yml", [
-    "Enforce v4 floating consumer policy",
-    "Resolve controller identities",
-    "Install Buildchain runtime dependencies",
+  assertOrdered("actions/publication/candidate/plan/action.yml", [
+    "Admit source checkout", "Enforce v4 floating consumer policy", "Resolve controller identities",
   ]);
+  const publication = YAML.parse(read(".github/workflows/public-build-publication.yml"));
+  if (!Object.values(publication.jobs).some((job) => job.steps?.some((step) => step.uses?.endsWith("/actions/publication/candidate/plan"))))
+    fail("publication does not invoke its consumer policy node");
   const stageCanary = read(".github/workflows/public-build-stage-capsule-canary.yml");
   if (
     !stageCanary.includes("consumer-admission:") ||
-    !stageCanary.includes("needs: consumer-admission")
+    !jobDependsOn(stageCanary, "qualify", "consumer-admission")
   ) {
     fail(
       "Stage Capsule qualification is not transitively gated by consumer admission",
     );
   }
-  const promotion = read(".github/workflows/release-candidate-promote.yml");
+  const promotion = read(".github/workflows/public-release-promote.yml");
   if (
     !promotion.includes("consumer-admission:") ||
     !jobDependsOn(promotion, "invoke", "consumer-admission")
@@ -148,17 +138,17 @@ export function checkFloatingConsumerPolicyContract() {
     );
   }
   assertPromotionCertificationWiring(
-    read(".github/workflows/.release-candidate-promote.yml"),
+    read(".github/workflows/.release-promote.yml"),
   );
   for (const [relative, marker] of [
-    ["packages/core/release-candidate.js", "consumerPolicy"],
-    ["packages/core/release-passport.js", "v4ConsumerPolicy"],
+    ["packages/core/release/release-candidate.js", "consumerPolicy"],
+    ["packages/core/release/passport/assembly-render.js", "v4ConsumerPolicy"],
     [
-      "actions/release-candidate-promote/index.js",
+      "packages/core/release/promote-candidate/release-documents.js",
       "candidate.consumerPolicy?.receiptRoot",
     ],
     [
-      "actions/release-candidate-promote/index.js",
+      "packages/core/release/promote-candidate/release-documents.js",
       "createReleaseInvocation",
     ],
   ]) {

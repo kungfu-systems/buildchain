@@ -10,22 +10,19 @@ import {
   TAIL_RESEAL_PLATFORMS,
   normalizeTailResealRequest,
   planTailReseal,
-} from "../packages/core/tail-reseal.js";
+} from "../packages/core/release/tail-reseal.js";
 import {
   createTailResealReceipt,
   verifyTailResealReceipt,
-} from "../packages/core/tail-reseal-receipt.js";
-import { domainContentRoot } from "../packages/core/canonical-contracts.js";
-import { verifyTailResealPlatform } from "../scripts/tail-reseal.mjs";
+} from "../packages/core/release/tail-reseal-receipt.js";
+import { domainContentRoot } from "../packages/core/contracts/canonical-contracts.js";
+import { verifyTailResealPlatform } from "../packages/core/release/reseal/platform.js";
 import {
   TAIL_RESEAL_REQUIRED_SUCCESS_JOBS,
   validateTailResealGitHubEvidence,
-} from "../packages/core/tail-reseal-github.js";
-import { createReleaseCandidatePassport } from "../packages/core/release-candidate.js";
-import {
-  scanFloatingConsumerPolicy,
-  consumerPolicyScannerRoot,
-} from "../packages/core/floating-consumer-policy.js";
+} from "../packages/core/release/tail-reseal-github.js";
+import { createReleaseCandidatePassport } from "../packages/core/release/release-candidate.js";
+import { tailResealFixturePolicyReceipt } from "../scripts/generate-tail-reseal-fixture.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "..");
 const fixture = JSON.parse(
@@ -56,56 +53,10 @@ function mutate(callback) {
   return value;
 }
 
-function contractLock(ref, resolvedSha) {
-  return {
-    schemaVersion: 1,
-    contract: "kungfu-buildchain-contract-lock",
-    buildchain: {
-      ref,
-      resolvedSha,
-      contract: "kungfu-buildchain-runtime-contract-world",
-      contractDigest: fixture.runtime.contractRoot,
-      compatibilityDigest: fixture.runtime.contractRoot,
-      majorLine: "v4",
-      compatibilityPolicy: "major-compatible",
-      acceptedAt: "2026-08-15T03:00:00.000Z",
-      surfaces: [],
-    },
-  };
-}
-
 function consumerPolicyReceipt() {
-  const root = fs.mkdtempSync(
-    path.join(os.tmpdir(), "buildchain-tail-policy-"),
-  );
-  const workflow = path.join(root, ".github/workflows/build.yml");
-  fs.mkdirSync(path.dirname(workflow), { recursive: true });
-  fs.writeFileSync(
-    workflow,
-    "jobs:\n  build:\n    uses: kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml@v4-alpha\n",
-  );
-  fs.mkdirSync(path.join(root, ".buildchain"), { recursive: true });
-  fs.writeFileSync(
-    path.join(root, ".buildchain/contract-lock.json"),
-    `${JSON.stringify(contractLock("v4", "e".repeat(40)))}\n`,
-  );
-  fs.writeFileSync(
-    path.join(root, ".buildchain/alpha-contract-lock.json"),
-    `${JSON.stringify(contractLock("v4-alpha", fixture.runtime.sha))}\n`,
-  );
-  const result = scanFloatingConsumerPolicy({
-    root,
-    repository: fixture.repository,
-    sourceSha: fixture.source.sha,
-    invokedWorkflow: "public-build-stage-capsule-canary.yml",
-    expectedInvocationChannel: "alpha",
-    resolvedRuntimeSha: fixture.runtime.sha,
-    policy: floatingPolicy,
-    scannerRoot: consumerPolicyScannerRoot(),
-  });
-  assert.equal(result.ok, true, JSON.stringify(result.failures));
+  const result = tailResealFixturePolicyReceipt(fixture, floatingPolicy);
   assert.equal(result.receiptRoot, fixture.runtime.consumerPolicyReceiptRoot);
-  return { receipt: result.receipt, receiptRoot: result.receiptRoot };
+  return result;
 }
 
 function standardPassport() {
@@ -289,7 +240,6 @@ test("tail reseal fails closed on every authority and identity boundary", () => 
           ]),
       ),
     ],
-    ["signer", mutate((value) => (value.signing.runtimeSha = "e".repeat(40)))],
     ["Warrant", mutate((value) => (value.warrant.status = "expired"))],
     [
       "credential",

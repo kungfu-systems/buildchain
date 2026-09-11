@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-08-07
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -30,8 +30,8 @@ The frozen boundary and migration inventory remain in
 - Node: `@kungfu-tech/buildchain/release-tail-provider-plane`,
   `release-tail-provider-adapters`, and `release-tail-compatibility`.
 - CLI: `buildchain release-tail plan|init|status|verify|compat`.
-- Action: `kungfu-systems/buildchain/actions/release-tail@<exact-ref>`.
-- reusable workflow: `kungfu-systems/buildchain/.github/workflows/release-tail.yml@<exact-ref>`.
+- Action: `kungfu-systems/buildchain/actions/release/tail/settle@<exact-ref>`.
+- reusable workflow: `kungfu-systems/buildchain/.github/workflows/public-release-tail.yml@<exact-ref>`.
 
 The Action is the provider-executing entry point. The CLI compiles, initializes,
 inspects, verifies, and diagnoses bounded v3 compatibility using the same core
@@ -55,9 +55,8 @@ jobs:
   release-tail:
     permissions:
       contents: write
-    uses: kungfu-systems/buildchain/.github/workflows/release-tail.yml@<exact-buildchain-sha>
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-tail.yml@v4
     with:
-      buildchain-ref: <exact-buildchain-sha>
       declaration-path: .buildchain/release-tail/declaration.json
       provider-bindings-path: .buildchain/release-tail/provider-bindings.json
       execute: true
@@ -116,29 +115,20 @@ Provider execution belongs in the Action or reusable workflow so token handling
 and provider permissions remain explicit. Retain the state artifact: it is the
 resume boundary and evidence source, not a disposable log.
 
-## Buildchain self-dogfood route
+## Buildchain self-promotion route
 
-Buildchain self-release calls the same public reusable workflow coordinate as a
-consumer:
+Buildchain invokes `./.github/workflows/public-release-promote.yml` at the same
+commit as its caller. Admission independently verifies the defining repository,
+exact committed workflow bytes and both consumer lock roots. External consumers
+use the public floating-channel API after publication. See
+[Promotion request](release-promotion-request.md).
 
-```text
-kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@train/v3/v3.0/consumer-equivalent-self-dogfood
-```
+The promotion action executes one declaration-driven GitHub Release transaction.
+Its plan, provider observations and receipts bind the exact subject and asset
+roots. A completed-transaction recovery explicitly verifies the existing public
+Passport and immutable assets before reusing or repairing evidence. A provider
+failure cannot select a different publication implementation.
 
-The public router resolves the workflow shell and runtime to exact SHAs. For
-alpha self-release, the promotion Action materializes the sealed GitHub Release
-asset declaration, executes it through this provider plane, and retains the
-declaration root, transaction root, state root, receipt roots, controller
-receipt, and route-parity evidence. The legacy GitHub Release helper is not a
-fallback when `declarative-release-tail` is enabled; a provider or readback
-failure fails the authoritative run.
-
-Stable routing remains on the existing `v3` shell and does not receive the new
-alpha-train input. Stable cutover is a separate gate after prerelease dogfood.
-
-## v3 compatibility boundary
-
-`release-tail compat --hooks-json <json-or-path>` recognizes only the frozen v3
-hook names. It emits diagnostics for enumerated legacy callers and rejects any
-new command-bearing release-tail field. Compatibility never converts legacy
-shell into a new provider plugin and never reinterprets settled release history.
+Release metadata follows the declared tag and channel. The old mode selector and
+custom title/notes ports are removed. Retired shell-hook compatibility commands
+are absent; the current typed request rejects undeclared fields.

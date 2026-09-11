@@ -1,3 +1,5 @@
+import { candidateStateBody, candidateStateMarker } from "../packages/core/governance/alpha-candidate/state.js";
+import { inspectWorkflowJob, readWorkflow } from "../scripts/workflow-action-graph.mjs";
 // SPDX-License-Identifier: Apache-2.0
 
 import assert from "node:assert/strict";
@@ -8,21 +10,18 @@ import { test } from "node:test";
 import {
   channelCandidateSourceLockRef,
   decideChannelCandidate,
-} from "../packages/core/channel-candidate.js";
-import {
-  createGitHubChannelCandidateClient,
-  managedCandidateFromPullRequest,
-  normalizeDevAlphaPatrolOptions,
-  parseCandidateStateMarker,
-  reconcileActiveReleaseTrain,
-  runDevAlphaCandidatePatrol,
-  selectLatestQualifiedSource,
-} from "../scripts/dev-alpha-candidate-patrol.mjs";
+} from "../packages/core/release/channel-candidate.js";
+import { createGitHubChannelCandidateClient } from "../packages/core/governance/alpha-candidate/provider.js";
+import { managedCandidateFromPullRequest, parseCandidateStateMarker } from "../packages/core/governance/alpha-candidate/state.js";
+import { normalizeDevAlphaPatrolOptions } from "../packages/core/governance/alpha-candidate/options.js";
+import { reconcileActiveReleaseTrain } from "../packages/core/release/dev-alpha-active-release-train.js";
+import { runDevAlphaCandidatePatrol } from "../packages/core/governance/alpha-candidate/controller.js";
+import { selectLatestQualifiedSource } from "../packages/core/release/dev-alpha-candidate-selection.js";
 import {
   createReleaseTrain,
   transitionReleaseTrain,
-} from "../packages/core/release-train.js";
-import { readGitHubNextDevelopmentVersionReservation } from "../packages/core/next-development-candidate-reservation.js";
+} from "../packages/core/release/release-train.js";
+import { readGitHubNextDevelopmentVersionReservation } from "../packages/core/release/next-development-candidate-reservation.js";
 
 const SOURCE_SHA = "a".repeat(40);
 const TARGET_SHA = "b".repeat(40);
@@ -436,6 +435,7 @@ function candidatePullRequest({
         "Buildchain exact-source channel candidate.",
         "",
         `- Source SHA: \`${sourceSha}\``,
+        candidateStateMarker(candidateStateBody({ options: patrolOptions, targetSha: TARGET_SHA, decision: { decisionRoot: `sha256:${"3".repeat(64)}` }, activeCandidate: { sourceSha, sourceLockRef: `buildchain/candidate/alpha-v4-v4.0/${sourceSha.slice(0, 12)}`, decisionRoot: `sha256:${"3".repeat(64)}`, pullRequestNumber: number }, nextCandidate: null })),
       ].join("\n"),
     head: {
       ref: `buildchain/candidate/alpha-v4-v4.0/${sourceSha.slice(0, 12)}`,
@@ -652,7 +652,7 @@ test("controller restart resumes the frozen candidate while dev moves", async ()
   );
 });
 
-test("candidate, Alpha base, runtime and route drift produce rooted holds", () => {
+test("candidate, Alpha base and route drift produce rooted holds", () => {
   const base = {
     releaseTrain: releaseTrain(),
     repository: patrolOptions.repository,
@@ -670,7 +670,6 @@ test("candidate, Alpha base, runtime and route drift produce rooted holds", () =
     [{ sourceLockSha: SOURCE_SHA }, "candidate-ref-drift"],
     [{ candidateTreeSha: SOURCE_SHA }, "candidate-tree-drift"],
     [{ alphaBaseSha: SOURCE_SHA }, "alpha-base-drift"],
-    [{ buildchainRuntimeSha: SOURCE_SHA }, "runtime-drift"],
     [{ repository: "kungfu-systems/other" }, "invalid-authority"],
   ]) {
     const result = reconcileActiveReleaseTrain({ ...base, ...overrides });
@@ -678,6 +677,9 @@ test("candidate, Alpha base, runtime and route drift produce rooted holds", () =
     assert.equal(result.hold.code, code);
     assert.match(result.hold.holdRoot, /^sha256:[0-9a-f]{64}$/u);
   }
+  const repaired = reconcileActiveReleaseTrain({ ...base, buildchainRuntimeSha: SOURCE_SHA });
+  assert.notEqual(repaired.status, "held");
+  assert.equal(repaired.train.releaseCut.candidateSha, ACTIVE_SHA);
 });
 
 test("duplicate observations are idempotent and explicit supersession is terminal", () => {
@@ -1346,15 +1348,16 @@ test("GitHub metadata reads retry bounded transient API failures", async () => {
   assert.deepEqual(sleeps, [250]);
 });
 
-test("managed candidate parsing accepts the legacy PR and rejects a target mismatch", () => {
-  const legacy = candidatePullRequest({ sourceSha: SOURCE_SHA });
+test("managed candidate parsing requires the current state marker and rejects a target mismatch", () => {
+  const current = candidatePullRequest({ sourceSha: SOURCE_SHA });
+  assert.throws(() => managedCandidateFromPullRequest({ ...current, body: "Buildchain exact-source channel candidate." }, "alpha/v4/v4.0"), /missing its current authoritative state marker/);
   assert.equal(
-    managedCandidateFromPullRequest(legacy, "alpha/v4/v4.0").sourceSha,
+    managedCandidateFromPullRequest(current, "alpha/v4/v4.0").sourceSha,
     SOURCE_SHA,
   );
   assert.equal(
     managedCandidateFromPullRequest(
-      { ...legacy, base: { ref: "alpha/v5/v5.0" } },
+      { ...current, base: { ref: "alpha/v5/v5.0" } },
       "alpha/v4/v4.0",
     ),
     undefined,
@@ -1362,61 +1365,20 @@ test("managed candidate parsing accepts the legacy PR and rejects a target misma
 });
 
 test("reusable workflow retains the no-publication boundary", () => {
-  const workflowText = fs.readFileSync(
-    path.join(
-      process.cwd(),
-      ".github/workflows/dev-alpha-candidate-patrol.yml",
-    ),
-    "utf8",
-  );
-  assert.match(workflowText, /actions: read/u);
-  assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_DRY_RUN/u);
-  assert.match(
-    workflowText,
-    /BUILDCHAIN_CHANNEL_PATROL_REQUIRE_ACTIVE_TRAIN: "true"/u,
-  );
-  assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_RUNTIME_SHA/u);
-  assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_EXPECTED_CUT_ROOT/u);
-  assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_CUT_CREATED_AT/u);
-  assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_NOW/u);
-  assert.match(
-    workflowText,
-    /ref: \$\{\{ needs\.observe\.outputs\.runtime-sha \}\}/u,
-  );
-  assert.match(workflowText, /candidate-generation:/u);
-  assert.match(workflowText, /candidate-tree-sha:/u);
-  assert.match(workflowText, /drift-root:/u);
-  assert.match(workflowText, /hold-root:/u);
-  assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX/u);
-  assert.match(workflowText, /pull-request-body-prefix-renderer:/u);
-  assert.match(
-    workflowText,
-    /ref: \$\{\{ steps\.observe\.outputs\.selected-sha \}\}/u,
-  );
-  assert.match(workflowText, /persist-credentials: false/u);
-  assert.match(workflowText, /run-candidate-body-prefix-renderer\.mjs/u);
-  assert.match(
-    workflowText,
-    /BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX: \$\{\{ needs\.observe\.outputs\.pull-request-body-prefix \}\}/u,
-  );
-  assert.match(
-    workflowText,
-    /BUILDCHAIN_CHANNEL_PATROL_EXPECTED_SELECTED_SHA: \$\{\{ needs\.observe\.outputs\.selected-sha \}\}/u,
-  );
-  assert.match(
-    workflowText,
-    /BUILDCHAIN_CHANNEL_PATROL_EXPECTED_PRIOR_STATE_ROOT: \$\{\{ needs\.observe\.outputs\.prior-state-root \}\}/u,
-  );
-  assert.match(workflowText, /reactivation-authorized:/u);
-  assert.match(workflowText, /auto-merge:/u);
-  assert.match(workflowText, /merge-method:/u);
-  const observeJob = workflowText.split("\n  settle:")[0];
-  assert.doesNotMatch(observeJob, /secrets\.promotion-token/u);
-  assert.doesNotMatch(observeJob, /BUILDCHAIN_CHANNEL_PATROL_AUTO_MERGE/u);
-  const settleJob = workflowText.split("\n  settle:")[1] || "";
-  assert.doesNotMatch(settleJob, /PR_BODY_PREFIX_RENDERER/u);
-  assert.match(settleJob, /BUILDCHAIN_CHANNEL_PATROL_AUTO_MERGE/u);
-  assert.match(settleJob, /BUILDCHAIN_CHANNEL_PATROL_MERGE_METHOD/u);
-  assert.match(workflowText, /scripts\/dev-alpha-candidate-patrol\.mjs/u);
-  assert.doesNotMatch(workflowText, /npm publish|gh release create|git tag/iu);
+  const file = ".github/workflows/public-ops-alpha-candidate-patrol.yml";
+  const observe = inspectWorkflowJob(file, "observe"), settle = inspectWorkflowJob(file, "settle");
+  assert.equal(observe.job.permissions.contents, "read");
+  assert.equal(settle.job.permissions.contents, "write");
+  assert.deepEqual(settle.job.needs, ["observe", "execution-runtime"]);
+  assert.doesNotMatch(JSON.stringify(observe.job), /secrets.promotion-token/);
+  const observation = observe.steps.find(step => step.id === "observe");
+  const settlement = settle.steps.find(step => step.id === "settle");
+  assert.equal(observation.with["settlement-authorized"], "false");
+  assert.equal(settlement.with["settlement-authorized"], "true");
+  assert.match(settlement.with["observation-json"], /inputs.observation-json/);
+  assert.ok(observe.modules.has("packages/core/governance/candidate/body-renderer.js"));
+  assert.ok(settle.modules.has("packages/core/governance/alpha-candidate/controller.js"));
+  for (const graph of [observe, settle]) assert.doesNotMatch(JSON.stringify(graph.steps), /npm publish|gh release create|git tag/i);
+  for (const field of ["candidate-generation", "candidate-tree-sha", "drift-root", "hold-root"])
+    assert.ok(observe.workflow.on.workflow_call.outputs[field], field);
 });

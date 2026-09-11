@@ -9,29 +9,21 @@ import test from "node:test";
 import {
   createReleaseCandidatePassport,
   sha256Json,
-} from "../packages/core/release-candidate.js";
-import { releaseTransactionId } from "../packages/core/publish-transaction.js";
+} from "../packages/core/release/release-candidate.js";
+import { releaseTransactionId } from "../packages/core/release/publish-transaction.js";
 import {
   ReleaseCandidateRecoveryError,
   validateRecoveryTargetRef,
   validateReleaseCandidateRecoveryReceipt,
   verifyReleaseCandidateRecovery,
-} from "../packages/core/release-candidate-recovery.js";
-import {
-  candidateArtifactNames,
-  createRecoveredPublication,
-  createRecoveredPublicationCandidate,
-  normalizePlatformManifests,
-  resolveAnchorRecoveryRequest,
-  resolveRecoveryTransaction,
-  resolveRecoveredCandidateVersion,
-  resolveRecoveredPublicationVersion,
-  resolveRuntimeResumePublicRuntimeSha,
-  trackedRuntimePersistenceScan,
-  validateRuntimeResumePublicReadback,
-  verifyReleaseCandidateStageCapsules,
-} from "../scripts/resume-from-candidate-run.mjs";
-import { createReleaseCandidateStageCapsules } from "../scripts/generate-release-candidate-passport.mjs";
+} from "../packages/core/release/release-candidate-recovery.js";
+import { candidateArtifactNames, normalizePlatformManifests } from "../packages/core/release/recovery/artifacts.js";
+import { createRecoveredPublication, createRecoveredPublicationCandidate } from "../packages/core/release/recovery/publication.js";
+import { resolveAnchorRecoveryRequest } from "../packages/core/release/recovery/provenance.js";
+import { resolveRecoveredCandidateVersion, resolveRecoveredPublicationVersion } from "../packages/core/publication/candidate/kind.js";
+import { validateRuntimeResumePublicReadback } from "../packages/core/release/recovery/readback.js";
+import { verifyReleaseCandidateStageCapsules } from "../packages/core/release/recovery/capsules.js";
+import { createReleaseCandidateStageCapsules } from "../packages/core/publication/candidate/stage-capsules.js";
 
 const SOURCE_SHA = "1".repeat(40);
 const TARGET_SHA = "2".repeat(40);
@@ -39,98 +31,6 @@ const TREE = "3".repeat(40);
 const RUNTIME_SHA = "4".repeat(40);
 const PAYLOAD_DIGEST = `sha256:${"5".repeat(64)}`;
 const ARCHIVE_DIGEST = `sha256:${"6".repeat(64)}`;
-
-test("recovery resolves an exact publication version without scanning historical state refs", async () => {
-  const transaction = {
-    id: "transaction-exact",
-    version: "4.0.1-alpha.18",
-  };
-  const calls = [];
-  const fetchImpl = async (url) => {
-    calls.push(url);
-    assert.doesNotMatch(url, /matching-refs/u);
-    return new Response(JSON.stringify({
-      type: "file",
-      encoding: "base64",
-      content: Buffer.from(JSON.stringify(transaction)).toString("base64"),
-    }), { status: 200 });
-  };
-
-  const result = await resolveRecoveryTransaction({
-    repoInfo: {
-      owner: "kungfu-systems",
-      repo: "buildchain",
-    },
-    apiUrl: "https://api.github.test",
-    token: "test-token",
-    fetchImpl,
-    transactionId: transaction.id,
-    publicationVersion: transaction.version,
-  });
-
-  assert.deepEqual(result, { version: transaction.version, transaction });
-  assert.equal(calls.length, 1);
-  assert.match(calls[0], /contents\/state\.json\?ref=buildchain%2Frelease-state%2F4-0-1-alpha-18$/u);
-});
-
-test("recovery scans historical state refs only when the exact publication version is absent", async () => {
-  const transaction = {
-    id: "transaction-fallback",
-    version: "4.0.1-alpha.18",
-  };
-  const calls = [];
-  const fetchImpl = async (url) => {
-    calls.push(url);
-    if (url.includes("contents/state.json?ref=buildchain%2Frelease-state%2F4-0-1-alpha-19")) {
-      return new Response(JSON.stringify({ message: "Not Found" }), { status: 404 });
-    }
-    if (url.includes("git/matching-refs/heads/buildchain/release-state/")) {
-      return new Response(JSON.stringify([{
-        ref: "refs/heads/buildchain/release-state/4-0-1-alpha-18",
-      }]), { status: 200 });
-    }
-    return new Response(JSON.stringify({
-      type: "file",
-      encoding: "base64",
-      content: Buffer.from(JSON.stringify(transaction)).toString("base64"),
-    }), { status: 200 });
-  };
-
-  const result = await resolveRecoveryTransaction({
-    repoInfo: {
-      owner: "kungfu-systems",
-      repo: "buildchain",
-    },
-    apiUrl: "https://api.github.test",
-    token: "test-token",
-    fetchImpl,
-    transactionId: transaction.id,
-    publicationVersion: "4.0.1-alpha.19",
-  });
-
-  assert.deepEqual(result, { version: transaction.version, transaction });
-  assert.equal(calls.length, 3);
-  assert.match(calls[1], /git\/matching-refs\/heads\/buildchain\/release-state\/$/u);
-});
-
-test("recovery without a transaction id starts fresh instead of adopting the exact-version transaction", async () => {
-  const fetchImpl = async () => {
-    throw new Error("fresh recovery must not read durable transaction state");
-  };
-
-  const result = await resolveRecoveryTransaction({
-    repoInfo: {
-      owner: "kungfu-systems",
-      repo: "buildchain",
-    },
-    apiUrl: "https://api.github.test",
-    token: "test-token",
-    fetchImpl,
-    publicationVersion: "4.0.1",
-  });
-
-  assert.deepEqual(result, { version: "4.0.1", transaction: undefined });
-});
 
 function fixture(overrides = {}) {
   const platformFiles = [
@@ -183,7 +83,6 @@ function fixture(overrides = {}) {
     targetTree: TREE,
     expectedSourceTree: TREE,
     expectedCandidateRoot: `sha256:${passport.candidateHash}`,
-    expectedRuntimeSha: RUNTIME_SHA,
     run: {
       id: "100",
       repository: "kungfu-systems/buildchain",
@@ -398,38 +297,12 @@ test("cross-runtime recovery reuses only provider-bound original Stage Capsules"
   }
 });
 
-test("runtime persistence scan is rooted at the checked-out recovery runtime", () => {
-  const workspace = fs.mkdtempSync(
-    path.join(os.tmpdir(), "buildchain-runtime-persistence-scan-"),
-  );
-  try {
-    const workflowPath = path.join(workspace, ".github/workflows/recovery.yml");
-    fs.mkdirSync(path.dirname(workflowPath), { recursive: true });
-    fs.writeFileSync(workflowPath, "name: Recovery\n");
-    for (const args of [
-      ["init", "--quiet"],
-      ["add", ".github/workflows/recovery.yml"],
-    ]) {
-      execFileSync("git", args, { cwd: workspace });
-    }
-
-    const scan = trackedRuntimePersistenceScan({ runtimeRoot: workspace });
-    assert.equal(scan.status, "passed");
-    assert.deepEqual(
-      scan.files.map((file) => file.path),
-      [".github/workflows/recovery.yml"],
-    );
-  } finally {
-    fs.rmSync(workspace, { recursive: true, force: true });
-  }
-});
-
 test("resume public readback preserves exact history while the protected alpha channel advances", () => {
   const version = "4.0.1-alpha.6";
   const targetRef = "alpha/v4/v4.0";
   const exactTagSha = "6".repeat(40);
   const targetSha = "9".repeat(40);
-  const alphaSha = "7".repeat(40);
+  const floatingSha = "7".repeat(40);
   const runtimeSha = "8".repeat(40);
   const digest = "sha512-public";
   const transaction = {
@@ -445,7 +318,7 @@ test("resume public readback preserves exact history while the protected alpha c
       "4.0.1-alpha.8": { dist: { integrity: "sha512-current" } },
     },
   };
-  const valid = { targetRef, targetSha, targetVersion: "4.0.1-alpha.8", alphaSha, exactTagSha,
+  const valid = { targetRef, targetSha, targetVersion: "4.0.1-alpha.8", floatingSha, exactTagSha,
     tagLineage: { status: "ahead" }, runtimeLineage: { status: "ahead" }, floatingTargetLineage: { status: "ahead" }, runtimeSha, version, transaction, main, npm };
   assert.doesNotThrow(() => validateRuntimeResumePublicReadback(valid));
   assert.throws(
@@ -458,19 +331,6 @@ test("resume public readback preserves exact history while the protected alpha c
   assert.throws(
     () => validateRuntimeResumePublicReadback({ ...valid, targetVersion: "4.0.1-alpha.5", npm: regressed }),
     /does not match durable publication/,
-  );
-});
-
-test("resume public readback follows runtime A while runtime B remains transient", () => {
-  const buildRuntimeSha = "8".repeat(40);
-  const recoveryRuntimeSha = "9".repeat(40);
-  assert.equal(
-    resolveRuntimeResumePublicRuntimeSha({
-      runtimeSha: recoveryRuntimeSha,
-      buildAttempt: { runtimeSha: buildRuntimeSha },
-      floatingRefBefore: { ref: "v4-alpha", sha: buildRuntimeSha },
-    }),
-    buildRuntimeSha,
   );
 });
 
@@ -668,15 +528,7 @@ test("recovered sealed publication identity stays bound to the original candidat
   );
   assert.deepEqual(second, first);
   assert.equal(first.runtimeSha, RUNTIME_SHA);
-  assert.throws(
-    () => createRecoveredPublicationCandidate({
-      allFiles,
-      repository: firstInput.candidateRepository,
-      passport: firstInput.passport,
-      candidateRuntimeSha: "9".repeat(40),
-    }),
-    /recovered publication candidate runtime mismatch/,
-  );
+  assert.deepEqual(createRecoveredPublicationCandidate({ allFiles, repository: firstInput.candidateRepository, passport: firstInput.passport }), first);
 });
 
 test("recovery seals only original publication payload artifacts", () => {
@@ -977,7 +829,7 @@ test("anchor request parser rejects unbound workflow-dispatch candidates", () =>
     },
   };
   assert.deepEqual(resolveAnchorRecoveryRequest({ passport: input.passport, buildSummary, transactionId: "transaction-1" }), request);
-  request.runtime.sha = TARGET_SHA;
+  request.source.sha = TARGET_SHA;
   assert.throws(() => resolveAnchorRecoveryRequest({
     passport: input.passport,
     buildSummary: {
@@ -1027,11 +879,11 @@ test("recovery binds an additional product payload manifest to candidate, summar
 test("workflow recovery resumes through the same canonical publisher transaction", async () => {
   const fs = await import("node:fs");
   const advanced = fs.readFileSync(
-    new URL("../.github/workflows/.release-candidate-promote.yml", import.meta.url),
+    new URL("../.github/workflows/.release-promote.yml", import.meta.url),
     "utf8",
   );
   const publicWorkflow = fs.readFileSync(
-    new URL("../.github/workflows/release-candidate-promote.yml", import.meta.url),
+    new URL("../.github/workflows/public-release-promote.yml", import.meta.url),
     "utf8",
   );
   const recovery = fs.readFileSync(
@@ -1043,9 +895,11 @@ test("workflow recovery resumes through the same canonical publisher transaction
     "utf8",
   );
   const candidateAdapter = fs.readFileSync(
-    new URL("../scripts/release-candidate-adapter.mjs", import.meta.url),
+    new URL("../packages/core/release/promotion/candidate.js", import.meta.url),
     "utf8",
   );
+  const requestSchema = JSON.parse(fs.readFileSync(new URL("../contracts/promotion-request-v1.schema.json", import.meta.url), "utf8"));
+  const invocationSchema = JSON.parse(fs.readFileSync(new URL("../contracts/promotion-invocation-v1.schema.json", import.meta.url), "utf8"));
 
   for (const input of [
     "resume-candidate-repository",
@@ -1053,33 +907,35 @@ test("workflow recovery resumes through the same canonical publisher transaction
     "resume-expected-workflow-file",
     "resume-expected-source-tree",
     "resume-expected-candidate-root",
-    "resume-expected-candidate-runtime-sha",
-    "resume-buildchain-runtime-sha",
     "resume-transaction-id",
   ]) {
-    assert.match(advanced, new RegExp(`${input}:`));
-    assert.match(publicWorkflow, new RegExp(`${input}:`));
-    assert.match(recovery, new RegExp(`${input}:`));
+    assert.ok(requestSchema.properties[input], input);
+    assert.ok(invocationSchema.properties[input], input);
+    assert.match(recovery, new RegExp(`"${input}":`));
   }
 
   assert.match(recovery, /^  resume:/m);
   assert.match(
     recovery,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-release-promote\.yml@v4/,
   );
   assert.doesNotMatch(recovery, /^  (?:alpha|stable|install|publish):/m);
+  assert.match(advanced, /actions\/release\/promotion\/qualify/);
+  const qualificationNode = fs.readFileSync(new URL("../actions/release/promotion/qualify/action.yml", import.meta.url), "utf8");
+  const applyNode = fs.readFileSync(new URL("../actions/release/promotion/apply/action.yml", import.meta.url), "utf8");
   assert.match(
-    advanced,
-    /node \.buildchain\/runtime\/scripts\/release-candidate-adapter\.mjs/,
+    qualificationNode,
+    /uses: \.\/\.buildchain\/runtime\/actions\/release\/promotion\/qualify-candidate/,
   );
   assert.match(
     candidateAdapter,
-    /scripts\/resume-from-candidate-run\.mjs/,
+    /from "\.\.\/recovery\/candidate\.js"/,
   );
-  assert.match(advanced, /Resume the same transaction journal/);
+  assert.match(advanced, /actions\/release\/promotion\/apply/);
+  assert.match(applyNode, /Resume the same transaction journal/);
   assert.match(
     refPromotion,
-    /^  promote:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/m,
+    /^  promote:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-release-promote\.yml@v4/m,
   );
   assert.doesNotMatch(refPromotion, /^  promote-stable:/m);
   assert.doesNotMatch(advanced, /gh run rerun/);

@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schema/runtime-resume-lineage-v2.schema.json",
+  "title": "Buildchain resumed source, artifact and publication lineage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["lineageRoot", "lineage"],
+  "properties": {
+    "lineageRoot": {
+      "$ref": "#/$defs/root"
+    },
+    "lineage": {
+      "$ref": "#/$defs/lineage"
+    }
+  },
+  "$defs": {
+    "root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "contract",
+        "status",
+        "source",
+        "consumerPolicyReceiptRoot",
+        "attempts",
+        "continuation",
+        "stageCapsules",
+        "finalPublicReadbackRoot",
+        "repository"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 2
+        },
+        "contract": {
+          "const": "buildchain.runtime-resume-lineage/v2"
+        },
+        "status": {
+          "const": "qualified"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "consumerPolicyReceiptRoot": {
+          "$ref": "#/$defs/root"
+        },
+        "attempts": {
+          "$ref": "#/$defs/attempts"
+        },
+        "continuation": {
+          "$ref": "#/$defs/continuation"
+        },
+        "stageCapsules": {
+          "$ref": "#/$defs/stageCapsules"
+        },
+        "finalPublicReadbackRoot": {
+          "$ref": "#/$defs/root"
+        },
+        "repository": {
+          "type": "string",
+          "minLength": 3
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha", "treeSha"],
+      "properties": {
+        "sha": {
+          "$ref": "#/$defs/sha"
+        },
+        "treeSha": {
+          "$ref": "#/$defs/sha"
+        }
+      }
+    },
+    "attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "runtimeSha"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/token"
+        },
+        "runtimeSha": {
+          "type": "string"
+        }
+      }
+    },
+    "attempts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["build", "resume"],
+      "properties": {
+        "build": {
+          "$ref": "#/$defs/attempt"
+        },
+        "resume": {
+          "$ref": "#/$defs/attempt"
+        }
+      }
+    },
+    "continuation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mechanism", "rerunFailedJobs", "resumePlanRoot"],
+      "properties": {
+        "mechanism": {
+          "const": "new-governed-attempt"
+        },
+        "rerunFailedJobs": {
+          "const": false
+        },
+        "resumePlanRoot": {
+          "$ref": "#/$defs/root"
+        }
+      }
+    },
+    "capsule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "capsuleRoot", "identityRoot", "artifactDigest"],
+      "properties": {
+        "platform": {
+          "$ref": "#/$defs/token"
+        },
+        "capsuleRoot": {
+          "$ref": "#/$defs/root"
+        },
+        "identityRoot": {
+          "$ref": "#/$defs/root"
+        },
+        "artifactDigest": {
+          "$ref": "#/$defs/root"
+        }
+      }
+    },
+    "stageCapsules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requiredPlatforms", "reused", "rebuildPlatforms"],
+      "properties": {
+        "requiredPlatforms": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/token"
+          }
+        },
+        "reused": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/capsule"
+          }
+        },
+        "rebuildPlatforms": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/token"
+          }
+        }
+      }
+    }
+  }
+}

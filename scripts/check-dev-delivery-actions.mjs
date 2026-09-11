@@ -2,79 +2,43 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-
-// actionlint resolves local action interfaces but does not lint composite bodies.
-// Validate each owned body's expressions and shell in a workflow with the same
-// string inputs and step-output scope. Never execute the synthesized workflow.
+import YAML from "yaml";
+import { lowerSelfReferencesForLint } from "./workflow-self-reference.mjs";
 const root = process.cwd();
-const contract = JSON.parse(
-  fs.readFileSync(
-    path.join(root, "architecture/dev-delivery-orchestration.json"),
-    "utf8",
-  ),
-);
-const temp = fs.mkdtempSync(
-  path.join(os.tmpdir(), "buildchain-delivery-actionlint-"),
-);
+const contract = JSON.parse(fs.readFileSync(path.join(root, "architecture/dev-delivery-orchestration.json"), "utf8"));
+const temp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-delivery-actionlint-")));
 try {
-  const files = [];
-  for (const node of contract.nodes) {
-    const text = fs.readFileSync(path.join(root, node.action), "utf8");
-    const inputs = text.match(/^inputs:\n([\s\S]*?)(?=^outputs:|^runs:)/m)?.[1];
-    const steps = text.split("  steps:\n")[1];
-    if (!inputs || !steps || !text.includes("  using: composite\n"))
-      throw new Error(`Invalid owned composite: ${node.id}`);
-    const ports = [...inputs.matchAll(/^  ([\w-]+):$/gm)].map((m) => m[1]);
-    if (JSON.stringify(ports) !== JSON.stringify(node.inputs))
-      throw new Error(`Input contract drift: ${node.id}`);
-    const typedInputs = inputs
-      .replace(/^  ([\w-]+):$/gm, "  $1:\n    type: string")
-      .split("\n")
-      .map((line) => (line ? "    " + line : line))
-      .join("\n");
-    const outputsBlock =
-      text.match(/^outputs:\n([\s\S]*?)(?=^runs:)/m)?.[1] || "";
-    const outputEntries = [
-      ...outputsBlock.matchAll(
-        /^  ([\w-]+):\n\s+description:[^\n]*\n\s+value: (.+)$/gm,
-      ),
-    ];
-    if (
-      JSON.stringify(outputEntries.map((m) => m[1])) !==
-      JSON.stringify(node.outputs)
-    )
-      throw new Error(`Output contract drift: ${node.id}`);
-    const outputs = outputEntries.length
-      ? "    outputs:\n" +
-        outputEntries.map((m) => `      ${m[1]}: ${m[2]}\n`).join("")
-      : "";
-    const file = path.join(temp, `${node.id}.yml`);
-    fs.writeFileSync(
-      file,
-      `name: Validate ${node.id} composite\non:\n  workflow_call:\n    inputs:\n${typedInputs}\njobs:\n  node:\n    runs-on: ubuntu-24.04\n${outputs}    steps:\n${steps
-        .split("\n")
-        .map((line) => (line ? "  " + line : line))
-        .join("\n")}`,
-    );
+  const workflows = path.join(temp, ".github/workflows");
+  fs.cpSync(path.join(root, ".github"), path.join(temp, ".github"), { recursive: true });
+  fs.mkdirSync(path.join(temp, ".git")); // actionlint's isolated project boundary, never a runtime checkout.
+  fs.mkdirSync(path.join(temp, ".buildchain"));
+  fs.symlinkSync(path.join(root, "actions"), path.join(temp, "actions"), "junction");
+  const files = fs.readdirSync(workflows).filter(file => /\.ya?ml$/u.test(file)).map(file => path.join(workflows, file));
+  for (const node of contract.nodes) for (const implementation of node.implementations) {
+    const action = YAML.parse(fs.readFileSync(path.join(root, implementation.action), "utf8"));
+    assert.deepEqual(Object.keys(action.inputs || {}), implementation.inputs, `${implementation.action}: input contract drift`);
+    assert.deepEqual(Object.keys(action.outputs || {}), implementation.outputs, `${implementation.action}: output contract drift`);
+    if (action.runs.using === "node24") continue;
+    assert.equal(action.runs.using, "composite");
+    for (const step of action.runs.steps) {
+      assert.ok(step.uses && !step.run && !step.shell && !step.with?.script, `${implementation.action}: composite contains executable logic`);
+    }
+    const inputs = Object.fromEntries(Object.entries(action.inputs || {}).map(([name, input]) => [name, { ...input, type: "string" }]));
+    const outputs = Object.fromEntries(Object.entries(action.outputs || {}).map(([name, output]) => [name, output.value]));
+    const file = path.join(workflows, `lint-composite-${node.id}-${files.length}.yml`);
+    fs.writeFileSync(file, YAML.stringify({ name: `Validate ${node.id} composite`, on: { workflow_call: { inputs } }, jobs: { node: { "runs-on": "ubuntu-24.04", ...(Object.keys(outputs).length ? { outputs } : {}), steps: action.runs.steps } } }));
     files.push(file);
   }
-  const probe = spawnSync("actionlint", ["-version"], { stdio: "ignore" });
-  const command = probe.error?.code === "ENOENT" ? "go" : "actionlint";
-  const prefix =
-    command === "go"
-      ? ["run", "github.com/rhysd/actionlint/cmd/actionlint@v1.7.12"]
-      : [];
-  const result = spawnSync(command, [...prefix, "-color=false", ...files], {
-    stdio: "inherit",
-  });
+  const aliases = new Set(files.flatMap(file => [...fs.readFileSync(file, "utf8").matchAll(/\.\/\.buildchain\/([a-z0-9][a-z0-9-]*)\/actions\//gu)].map(match => match[1])));
+  for (const alias of aliases) fs.symlinkSync(root, path.join(temp, ".buildchain", alias), "junction");
+  for (const file of files) fs.writeFileSync(file, lowerSelfReferencesForLint(fs.readFileSync(file, "utf8")));
+  const version = "1.7.12", probe = spawnSync("actionlint", ["-version"], { encoding: "utf8" });
+  const command = probe.status === 0 && probe.stdout.trim().split(/\s/u)[0].replace(/^v/u, "") === version ? "actionlint" : "go";
+  const prefix = command === "go" ? ["run", `github.com/rhysd/actionlint/cmd/actionlint@v${version}`] : [];
+  const result = spawnSync(command, [...prefix, "-color=false", ...files], { cwd: temp, stdio: "inherit" });
   if (result.error) throw result.error;
-  if (result.signal || result.status !== 0)
-    process.exitCode = result.status || 1;
-  else
-    console.log(
-      `Validated ${files.length} delivery composite bodies and interfaces.`,
-    );
-} finally {
-  fs.rmSync(temp, { recursive: true, force: true });
-}
+  if (result.signal || result.status !== 0) process.exitCode = result.status || 1;
+  else console.log(`Validated ${files.length} source workflows and delivery composite interfaces.`);
+} finally { fs.rmSync(temp, { recursive: true, force: true }); }

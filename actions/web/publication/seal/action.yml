@@ -1,0 +1,22 @@
+name: Seal managed Web publication authority
+description: Seal managed Web publication authority
+inputs:
+  request-json:
+    description: Typed Web workflow request.
+    required: true
+  observations-json:
+    description: Observed workflow results and rooted decisions.
+    required: true
+  token:
+    description: Source tree lookup credential.
+    required: true
+outputs:
+  capability-json:
+    description: capability json
+  capability-digest:
+    description: capability digest
+  candidate-json:
+    description: candidate json
+runs:
+  using: node24
+  main: dist/index.js

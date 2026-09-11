@@ -6,23 +6,23 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { createProductPublicationAdapters } from "../../actions/release-candidate-promote/product-provider-adapters.js";
+import { createProductPublicationAdapters } from "../../packages/core/release/promote-candidate/product-provider-adapters.js";
 import {
   PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
   publicationArtifactCandidateDigest,
-} from "../../packages/core/publication-artifact-candidate.js";
-import { createPublicationSealedBundle } from "../../packages/core/publication-sealed-bundle.js";
+} from "../../packages/core/publication/publication-artifact-candidate.js";
+import { createPublicationSealedBundle } from "../../packages/core/publication/publication-sealed-bundle.js";
 import {
   createReleaseTailTransaction,
   executeReleaseTailTransaction,
-} from "../../packages/core/release-tail-provider-plane.js";
-import { domainContentRoot } from "../../packages/core/canonical-contracts.js";
+} from "../../packages/core/release/release-tail-provider-plane.js";
+import { domainContentRoot } from "../../packages/core/contracts/canonical-contracts.js";
 import {
   createProductPublicationDeclaration,
   createProductPublicationPlan,
   selectProductPublicationIntent,
-} from "../../packages/core/product-publication.js";
-import { compileReleaseTailDeclaration } from "../../packages/core/release-tail-provider-plane.js";
+} from "../../packages/core/release/product-publication.js";
+import { compileReleaseTailDeclaration } from "../../packages/core/release/release-tail-provider-plane.js";
 
 const SOURCE = "a".repeat(40);
 const VERSION_STATE = "b".repeat(40);

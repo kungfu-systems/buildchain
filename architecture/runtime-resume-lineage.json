@@ -1,0 +1,23 @@
+{
+  "schema": "buildchain.runtime-resume-lineage-contract/v2",
+  "entryAuthority": "architecture/runtime-entry.json",
+  "schemaAuthority": "contracts/runtime-resume-lineage-v2.schema.json",
+  "implementation": "packages/core/release/recovery/lineage.js",
+  "fixtureAuthority": "contracts/fixtures/runtime-resume-lineage-v2/scenario.json",
+  "continuation": "new-run-through-same-public-entry",
+  "runtime": "provenance-only",
+  "reuseIdentity": [
+    "source-sha",
+    "source-tree-sha",
+    "platform",
+    "policy-root",
+    "capsule-root",
+    "identity-root",
+    "artifact-digest"
+  ],
+  "reuse": "valid-unaffected-platforms",
+  "missing": "rebuild",
+  "staleOrAmbiguous": "reject",
+  "publicationEffects": "provider-readback-required",
+  "credentialsInEvidence": false
+}

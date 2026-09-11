@@ -1,0 +1,14 @@
+name: Inspect capability request
+description: Read a closed consumer capability request before execution.
+inputs:
+  request-json:
+    description: Versioned capability request.
+    required: true
+outputs:
+  capability-id:
+    description: Requested capability.
+  request-root:
+    description: Canonical request root.
+runs:
+  using: node24
+  main: dist/index.js

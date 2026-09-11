@@ -6,7 +6,7 @@
       "schema": "kungfu-buildchain-v4-release-invocation/v1",
       "publisher": {
         "repository": "kungfu-systems/buildchain",
-        "workflow": ".github/workflows/.release-candidate-promote.yml",
+        "workflow": ".github/workflows/.release-promote.yml",
         "workflowSha": "30cbbc46870871a0eacbe952935ea753e473ff25",
         "job": "apply"
       },
@@ -46,7 +46,7 @@
       "schema": "kungfu-buildchain-v4-release-invocation/v1",
       "publisher": {
         "repository": "kungfu-systems/buildchain",
-        "workflow": ".github/workflows/.release-candidate-promote.yml",
+        "workflow": ".github/workflows/.release-promote.yml",
         "workflowSha": "30cbbc46870871a0eacbe952935ea753e473ff25",
         "job": "apply"
       },
@@ -87,42 +87,58 @@
     {
       "id": "alpha-fresh",
       "invocation": "alpha",
-      "route": { "surface": "alpha", "execution": "fresh" }
+      "route": {
+        "surface": "alpha",
+        "execution": "fresh"
+      }
     },
     {
       "id": "alpha-resume",
       "invocation": "alpha",
-      "route": { "surface": "alpha", "execution": "resume" }
+      "route": {
+        "surface": "alpha",
+        "execution": "resume"
+      }
     },
     {
       "id": "public-alpha",
       "invocation": "alpha",
-      "route": { "surface": "public", "execution": "fresh" }
+      "route": {
+        "surface": "public",
+        "execution": "fresh"
+      }
     },
     {
       "id": "private-alpha",
       "invocation": "alpha",
-      "route": { "surface": "private", "execution": "resume" }
+      "route": {
+        "surface": "private",
+        "execution": "resume"
+      }
     },
     {
       "id": "declarative-alpha",
       "invocation": "alpha",
-      "route": { "surface": "declarative", "execution": "fresh" }
-    },
-    {
-      "id": "legacy-alpha",
-      "invocation": "alpha",
-      "route": { "surface": "legacy-compatible", "execution": "resume" }
+      "route": {
+        "surface": "declarative",
+        "execution": "fresh"
+      }
     },
     {
       "id": "stable-fresh",
       "invocation": "stable",
-      "route": { "surface": "stable", "execution": "fresh" }
+      "route": {
+        "surface": "stable",
+        "execution": "fresh"
+      }
     },
     {
       "id": "stable-resume",
       "invocation": "stable",
-      "route": { "surface": "stable", "execution": "resume" }
+      "route": {
+        "surface": "stable",
+        "execution": "resume"
+      }
     }
   ],
   "equivalenceGroups": [
@@ -131,8 +147,7 @@
       "alpha-resume",
       "public-alpha",
       "private-alpha",
-      "declarative-alpha",
-      "legacy-alpha"
+      "declarative-alpha"
     ],
     ["stable-fresh", "stable-resume"]
   ]

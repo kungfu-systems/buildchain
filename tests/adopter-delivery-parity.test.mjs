@@ -15,20 +15,20 @@ import {
   createGitCommitArtifactProfile,
   createPackageArtifactProfile,
   defineAdopterProtocolDriver,
-} from "../packages/core/adopter-delivery-gate.js";
+} from "../packages/core/adoption/adopter-delivery-gate.js";
 import {
   KFD_ADOPTER_CATEGORY_PROTOCOL_ID,
   KFD_ADOPTER_CATEGORY_PROTOCOL_VERSION,
   createKfdAdopterCategoryProtocolDriver,
   resolvePublishedKfdAdopterCategoryProfiles,
-} from "../packages/core/kfd-adopter-category-driver.js";
+} from "../packages/core/adoption/kfd-adopter-category-driver.js";
 import {
   ADOPTER_DELIVERY_PARITY_PROJECTION_CONTRACT,
   ADOPTER_DELIVERY_PARITY_SOURCE,
   assertAdopterDeliveryParity,
   createAdopterDeliveryParityInput,
   runAdopterDeliveryParity,
-} from "../packages/core/adopter-delivery-parity.js";
+} from "../packages/core/adoption/adopter-delivery-parity.js";
 
 const parityPlan = JSON.parse(
   fs.readFileSync(

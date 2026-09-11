@@ -1,0 +1,33 @@
+name: Reconcile stable candidate lifecycle
+description: Resolve repository policy, qualify the ledger and reconcile the selected release PR.
+inputs:
+  request-json:
+    description: Typed stable candidate request.
+    required: true
+  policy-json:
+    description: Repository governance variable policy.
+    default: "{}"
+  token:
+    description: Promotion credential.
+    required: true
+  approval-token:
+    description: Independent review credential.
+    required: false
+outputs:
+  result-path:
+    description: result path
+  selected:
+    description: selected
+  selected-version:
+    description: selected version
+  selected-sha:
+    description: selected sha
+  stable-version:
+    description: stable version
+  promotion-pr:
+    description: promotion pr
+  artifact-line:
+    description: artifact line
+runs:
+  using: node24
+  main: dist/index.js

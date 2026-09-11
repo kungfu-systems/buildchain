@@ -1,0 +1,15 @@
+name: resolve-public-build
+description: Bind successful public build evidence to the exact published alpha candidate.
+inputs:
+  run-id:
+    description: Explicit run-id.
+    required: true
+  token:
+    description: Explicit token.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js
+outputs:
+  artifact-name:
+    description: Verified artifact-name.

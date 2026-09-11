@@ -40,7 +40,7 @@ const common = [
 function operator(mode, extra = [], env = process.env) {
   return spawnSync(
     "bash",
-    ["scripts/aws-windows-jit-operator.sh", mode, ...common, ...extra],
+    ["packages/core/providers/commands/aws-windows-jit-operator.sh", mode, ...common, ...extra],
     { cwd: root, encoding: "utf8", env },
   );
 }
@@ -84,7 +84,7 @@ test("Windows JIT operator emits one deterministic disabled plan", () => {
     const second = operator("plan", [], env);
     const defaultMode = spawnSync(
       "bash",
-      ["scripts/aws-windows-jit-operator.sh", ...common],
+      ["packages/core/providers/commands/aws-windows-jit-operator.sh", ...common],
       { cwd: root, encoding: "utf8", env },
     );
     assert.equal(first.status, 0, first.stderr);

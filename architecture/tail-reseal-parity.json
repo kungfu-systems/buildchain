@@ -9,13 +9,18 @@
     "tests": "tests/release-candidate-tail-reseal.test.mjs"
   },
   "target": {
-    "branch": "dev/v4/v4.0",
+    "branch": "dev/v4/v4.1",
     "publicReusableWorkflow": "kungfu-systems/buildchain/.github/workflows/public-ops-tail-reseal.yml@v4-alpha",
     "requestSchema": "contracts/v4-tail-reseal-v1.schema.json",
-    "planner": "packages/core/tail-reseal.js",
-    "admission": "packages/core/tail-reseal-github.js",
-    "receipt": "packages/core/tail-reseal-receipt.js",
-    "cli": "buildchain tail-reseal"
+    "planner": "packages/core/release/tail-reseal.js",
+    "admission": "packages/core/release/tail-reseal-github.js",
+    "receipt": "packages/core/release/tail-reseal-receipt.js",
+    "cli": "buildchain tail-reseal",
+    "nodes": {
+      "plan": "actions/release/reseal/plan",
+      "platforms": "actions/release/reseal/platforms",
+      "seal": "actions/release/reseal/seal"
+    }
   },
   "authority": {
     "productionAuthority": "v4",
@@ -44,7 +49,7 @@
       "disposition": "implemented",
       "implementationEvidence": [
         "contracts/v4-tail-reseal-v1.schema.json",
-        "packages/core/tail-reseal-github.js"
+        "packages/core/release/tail-reseal-github.js"
       ],
       "verificationEvidence": [
         "contracts/fixtures/v4-tail-reseal-v1/valid.json",
@@ -56,7 +61,7 @@
       "claim": "A fresh runner downloads retained archives and verifies every manifest and payload byte before any tail effect.",
       "disposition": "implemented",
       "implementationEvidence": [
-        "scripts/tail-reseal.mjs",
+        "packages/core/release/commands/tail-reseal.mjs",
         ".github/workflows/public-ops-tail-reseal.yml"
       ],
       "verificationEvidence": ["tests/tail-reseal.test.mjs"]
@@ -65,7 +70,7 @@
       "id": "TR-04",
       "claim": "Install, build, verify, package and platform-matrix remain explicitly skipped under effect-free Stage Capsule reuse.",
       "disposition": "implemented",
-      "implementationEvidence": ["packages/core/tail-reseal.js"],
+      "implementationEvidence": ["packages/core/release/tail-reseal.js"],
       "verificationEvidence": ["tests/tail-reseal.test.mjs"]
     },
     {
@@ -73,8 +78,8 @@
       "claim": "Only macOS signing-finalization may change bytes; every other platform stays byte-identical and provider-effect-free.",
       "disposition": "implemented",
       "implementationEvidence": [
-        "packages/core/tail-reseal-receipt.js",
-        "scripts/tail-reseal.mjs"
+        "packages/core/release/tail-reseal-receipt.js",
+        "packages/core/release/commands/tail-reseal.mjs"
       ],
       "verificationEvidence": ["tests/tail-reseal.test.mjs"]
     },
@@ -83,7 +88,7 @@
       "claim": "The macOS effect is fenced by exact Warrant lineage, credential authority, release-tail transaction and idempotency key.",
       "disposition": "implemented",
       "implementationEvidence": [
-        "packages/core/tail-reseal.js",
+        "packages/core/release/tail-reseal.js",
         ".github/workflows/public-ops-tail-reseal.yml"
       ],
       "verificationEvidence": ["tests/tail-reseal.test.mjs"]
@@ -93,8 +98,8 @@
       "claim": "Source, platform, archive, manifest, signer, Warrant, credential, retention and prior-failure drift fails closed.",
       "disposition": "implemented",
       "implementationEvidence": [
-        "packages/core/tail-reseal.js",
-        "packages/core/tail-reseal-github.js"
+        "packages/core/release/tail-reseal.js",
+        "packages/core/release/tail-reseal-github.js"
       ],
       "verificationEvidence": ["tests/tail-reseal.test.mjs"]
     },
@@ -102,7 +107,7 @@
       "id": "TR-08",
       "claim": "Expired retention or credential leases invalidate reuse and require a normal candidate rebuild.",
       "disposition": "implemented",
-      "implementationEvidence": ["packages/core/tail-reseal.js"],
+      "implementationEvidence": ["packages/core/release/tail-reseal.js"],
       "verificationEvidence": ["tests/tail-reseal.test.mjs"]
     },
     {
@@ -110,7 +115,7 @@
       "claim": "Successful reseal emits the ordinary v4 Release Candidate Passport with its original floating-consumer policy receipt.",
       "disposition": "implemented",
       "implementationEvidence": [
-        "packages/core/tail-reseal-receipt.js",
+        "packages/core/release/tail-reseal-receipt.js",
         ".github/workflows/public-ops-tail-reseal.yml"
       ],
       "verificationEvidence": ["tests/tail-reseal.test.mjs"]
@@ -131,7 +136,7 @@
       "implementationEvidence": [
         "package.json",
         "bin/buildchain.mjs",
-        "scripts/tail-reseal.mjs",
+        "packages/core/release/commands/tail-reseal.mjs",
         "docs/v4-tail-reseal.md"
       ],
       "verificationEvidence": [
@@ -148,5 +153,5 @@
       "verificationEvidence": []
     }
   ],
-  "matrixRoot": "sha256:f27988a8b5e954ad50eb773e64349559cbfb122d2e180c4845fd940ee1246e97"
+  "matrixRoot": "sha256:1de7fc8c4cab428b34705a939741a24f3e12114d387db9da4ba3fb50cedd3084"
 }

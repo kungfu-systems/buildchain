@@ -102,12 +102,6 @@ pub(super) fn changed_decision(
                 &got.toolchain_roots,
             )?,
         )
-    } else if want.runtime_root != got.runtime_root {
-        change(
-            "rebuild",
-            "runtime-changed",
-            root_cause("runtime-root", &want.runtime_root, &got.runtime_root)?,
-        )
     } else if want.policy_root != got.policy_root {
         change(
             "rebuild",

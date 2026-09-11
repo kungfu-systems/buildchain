@@ -5,7 +5,7 @@ import test from "node:test";
 import {
   BUILDCHAIN_CONTROLLER_EVIDENCE_CONTRACT,
   controllerEvidenceDigest,
-} from "../packages/core/controller-evidence.js";
+} from "../packages/core/observability/controller-evidence.js";
 import {
   PUBLICATION_ADMISSION_CONTRACT,
   CONSUMER_PUBLICATION_DECISION_CONTRACT,
@@ -22,14 +22,14 @@ import {
   publicationGateAggregateBindings,
   verifyPublicationAdmission,
   verifyPublicationQualificationReceipt,
-} from "../packages/core/publication-authority.js";
-import { rebindPublicationGateAggregateForEquivalentTree } from "../packages/core/release-candidate-recovery.js";
+} from "../packages/core/publication/publication-authority.js";
+import { rebindPublicationGateAggregateForEquivalentTree } from "../packages/core/release/release-candidate-recovery.js";
 import {
   evaluateBuildchainReleaseReconciliation,
   evaluatePublicationControlPlaneSnapshot,
   matchesGithubDeploymentPolicy,
-} from "../packages/core/publication-control-plane-audit.js";
-import { sha256Json } from "../packages/core/release-candidate.js";
+} from "../packages/core/publication/publication-control-plane-audit.js";
+import { sha256Json } from "../packages/core/release/release-candidate.js";
 
 const DIGESTS = Object.freeze({
   sourceSha: "1".repeat(40),
@@ -717,7 +717,7 @@ test("control-plane snapshot audit covers all external publication authorities",
 test("control-plane snapshot explicitly qualifies caller-bound npm publishing without an Environment", () => {
   const receipt = evaluatePublicationControlPlaneSnapshot({
     repository: "kungfu-systems/buildchain",
-    workflowPath: ".github/workflows/release-candidate-promote.yml",
+    workflowPath: ".github/workflows/public-release-promote.yml",
     publisherWorkflowPath: ".github/workflows/self-release-promote.yml",
     environment: "none",
     branch: "dev/v2/v2.12",
@@ -740,7 +740,7 @@ test("control-plane snapshot qualifies an exact provider-enforced protected-bran
   const sourceSha = "a".repeat(40);
   const common = {
     repository: "kungfu-systems/buildchain",
-    workflowPath: ".github/workflows/release-candidate-promote.yml",
+    workflowPath: ".github/workflows/public-release-promote.yml",
     publisherWorkflowPath: ".github/workflows/self-release-promote.yml",
     environment: "none",
     branch: "alpha/v2/v2.12",

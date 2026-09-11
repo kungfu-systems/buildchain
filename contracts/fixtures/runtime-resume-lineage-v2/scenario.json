@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 2,
+  "scenario": "runtime-repair-after-late-platform-failure",
+  "sourceSha": "cccccccccccccccccccccccccccccccccccccccc",
+  "sourceTreeSha": "dddddddddddddddddddddddddddddddddddddddd",
+  "buildAttempt": "attempt-build-17",
+  "resumeAttempt": "attempt-resume-18",
+  "buildRuntimeSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "resumeRuntimeSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "requiredPlatforms": ["linux-x64", "macos-arm64", "windows-x64"],
+  "reusedPlatforms": ["linux-x64", "macos-arm64"],
+  "rebuildPlatforms": ["windows-x64"],
+  "rerunFailedJobs": false
+}

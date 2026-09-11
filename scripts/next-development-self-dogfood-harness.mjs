@@ -5,13 +5,13 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { validateNextDevelopmentController } from "../packages/core/next-development-controller.js";
+import { validateNextDevelopmentController } from "../packages/core/release/next-development-controller.js";
 import {
   NEXT_DEVELOPMENT_REQUEST_CONTRACT,
   NEXT_DEVELOPMENT_TRANSITION_CONTRACT,
   materializeNextDevelopmentTransition,
   nextDevelopmentRoot,
-} from "../packages/core/next-development-transition.js";
+} from "../packages/core/release/next-development-transition.js";
 
 const ROOT = /^sha256:[0-9a-f]{64}$/u;
 const SHA = /^[0-9a-f]{40}$/u;

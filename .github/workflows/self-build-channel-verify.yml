@@ -1,0 +1,42 @@
+name: Release - Verify
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    branches:
+      - alpha/*/*
+      - release/*/*
+      - authority/*/*/artifact-signing
+      - publish-gate/major
+permissions:
+  contents: read
+jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+    timeout-minutes: 5
+  verify:
+    name: verify
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Verify channel lineage
+        uses: ./.buildchain/runtime/actions/release/line/verify-lineage
+    needs:
+      - execution-runtime

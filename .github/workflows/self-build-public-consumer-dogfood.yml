@@ -3,17 +3,23 @@ name: V4 Public Consumer Dogfood
 on:
   pull_request:
   workflow_dispatch:
+    inputs:
+      runtime-ref:
+        description: Transient runtime selected by the public entry.
+        type: string
+        default: ""
 
 permissions:
   contents: read
 
 jobs:
   dogfood:
-    uses: kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml@v4-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml@v4
     with:
+      runtime-ref: ${{ inputs.runtime-ref }}
       consumer: buildchain
       node-version: "24"
       go-version: "1.25.x"
       install-artifact-path: node_modules/.modules.yaml
-      build-artifact-path: actions/run-lifecycle/dist/index.js
+      build-artifact-path: actions/build/lifecycle/run/dist/index.js
       verify-artifact-path: dist/site

@@ -1,0 +1,56 @@
+name: Bind admitted promotion invocation
+description: Bind the consumer publication request to source evidence and the prepared runtime.
+inputs:
+  request-json:
+    description: Promotion inputs.
+    required: true
+  selection-json:
+    description: Exact selection.
+    required: true
+outputs:
+  invocation-json:
+    description: Exact normalized component invocation after consumer admission.
+    value: ${{ steps.invocation.outputs.invocation-json }}
+runs:
+  using: composite
+  steps:
+    - name: Check out exact consumer
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ github.repository }}
+        ref: ${{ fromJSON(inputs.request-json).target-sha || github.sha }}
+        path: .buildchain/consumer
+        persist-credentials: false
+    - name: Check out exact caller workflow definition
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ github.repository }}
+        ref: ${{ github.workflow_sha }}
+        path: .buildchain/invocation-source
+        persist-credentials: false
+    - name: Enforce consumer policy
+      id: policy
+      uses: ./.buildchain/runtime/actions/consumer/policy/admit
+      with:
+        directory: .buildchain/consumer
+        source-sha: ${{ fromJSON(inputs.request-json).target-sha || github.sha }}
+        workflow-sha: ${{ fromJSON(inputs.selection-json).router-sha }}
+        workflow: .github/workflows/public-release-promote.yml
+        invocation-directory: .buildchain/invocation-source
+        definition-repository: ${{ fromJSON(inputs.selection-json).repository }}
+        definition-sha: ${{ github.workflow_sha }}
+    - name: Preserve rooted admission
+      if: ${{ always() && steps.policy.outputs.v4-consumer-policy-receipt-path != '' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: v4-consumer-policy-release-candidate-promote-${{ github.sha }}
+        path: .buildchain/consumer/.buildchain/evidence/consumer-policy-receipt.json
+        if-no-files-found: error
+    - name: Bind the complete admitted invocation
+      id: invocation
+      uses: ./.buildchain/runtime/actions/release/promotion/admit-invocation
+      with:
+        request-json: ${{ inputs.request-json }}
+        selection-json: ${{ inputs.selection-json }}
+        consumer-policy-root: ${{ steps.policy.outputs.v4-consumer-policy-receipt-root }}
+        token: ${{ github.token }}

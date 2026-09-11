@@ -1,3 +1,4 @@
+import { inspectWorkflowJob, readWorkflow } from "../scripts/workflow-action-graph.mjs";
 import assert from "node:assert/strict";
 import childProcess from "node:child_process";
 import fs from "node:fs";
@@ -14,8 +15,8 @@ import {
   prepareGitHubArtifactAttestation,
   stageGitHubArtifactAttestationInputs,
   verifyGitHubArtifactAttestationEvidence,
-} from "../packages/core/github-artifact-attestation.js";
-import { createReleasePassport } from "../packages/core/release-passport.js";
+} from "../packages/core/build/github-artifact-attestation.js";
+import { createReleasePassport } from "../packages/core/release/passport/assembly.js";
 
 const SOURCE_SHA = "1".repeat(40);
 const SOURCE_TREE_SHA = "2".repeat(40);
@@ -68,7 +69,7 @@ function fixture() {
     },
     signer: {
       repository: "kungfu-systems/buildchain",
-      workflowPath: ".github/workflows/github-artifact-attestation.yml",
+      workflowPath: ".github/workflows/public-release-artifact-attestation.yml",
       workflowDigest: SIGNER_SHA,
     },
     build: {
@@ -166,7 +167,7 @@ test("final Linux build manifest creates the exact v3 attestation policy", () =>
   const output = path.join(value.root, "created", "github-artifact-attestation-policy.json");
   const result = childProcess.spawnSync(
     process.execPath,
-    ["scripts/create-github-artifact-attestation-policy.mjs"],
+    ["packages/core/governance/commands/create-github-artifact-attestation-policy.mjs"],
     {
       cwd: path.resolve("."),
       encoding: "utf8",
@@ -190,24 +191,14 @@ test("final Linux build manifest creates the exact v3 attestation policy", () =>
 });
 
 test("reusable signer verifies the actual certificate identity before retaining evidence", () => {
-  const workflow = fs.readFileSync(
-    path.resolve(".github/workflows/github-artifact-attestation.yml"),
-    "utf8",
-  );
-  const verifyIndex = workflow.indexOf("gh attestation verify");
-  const finalizeIndex = workflow.indexOf("name: Seal retained attestation evidence");
-  assert.ok(verifyIndex > 0 && verifyIndex < finalizeIndex);
-  for (const flag of [
-    "--repo",
-    "--signer-workflow",
-    "--signer-digest",
-    "--source-digest",
-    "--predicate-type",
-    "--bundle",
-    "--deny-self-hosted-runners",
-  ]) {
-    assert.ok(workflow.includes(flag), `missing exact provider verification flag ${flag}`);
-  }
+  const graph = inspectWorkflowJob(".github/workflows/public-release-artifact-attestation.yml", "attest");
+  const source = graph.modules.get("packages/core/providers/github/artifact-attestation.js");
+  const transaction = graph.modules.get("packages/core/build/github-attestation/transaction.js");
+  assert.ok(transaction.indexOf("verify({") < transaction.indexOf("fs.copyFileSync(bundlePath"));
+  for (const flag of ["--repo", "--signer-workflow", "--signer-digest", "--source-digest", "--predicate-type", "--bundle", "--deny-self-hosted-runners"])
+    assert.ok(source.includes(flag), `missing exact provider verification flag ${flag}`);
+  assert.ok(graph.actions.has("actions/build/artifact/prepare-attestation"));
+  assert.ok(graph.actions.has("actions/build/artifact/seal-attestation"));
 });
 
 test("preparation binds exact subject, original runner manifest, source tree, Buildchain SHA, and Release Passport", () => {

@@ -1,0 +1,45 @@
+name: bootstrap-execute
+description: Execute the bootstrap execute capability within its caller job boundary.
+inputs:
+  needs-admit-outputs-runtime-sha:
+    description: Caller needs.admit.outputs.runtime-sha value.
+    required: true
+  needs-admit-outputs-capability-id:
+    description: Caller needs.admit.outputs.capability-id value.
+    required: true
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  needs-admit-outputs-admission-json:
+    description: Caller needs.admit.outputs.admission-json value.
+    required: true
+  secrets-buildchain-promotion-token:
+    description: Explicit scoped provider credential.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+outputs:
+  result-json:
+    description: result-json node result.
+    value: ${{ steps.execute.outputs.result-json }}
+  result-root:
+    description: result-root node result.
+    value: ${{ steps.execute.outputs.result-root }}
+runs:
+  using: composite
+  steps:
+    - name: Admit source checkout
+      id: source-boundary
+      if: ${{ always() }}
+      uses: ./.buildchain/runtime/actions/build/source/admit
+      with:
+        source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
+    - name: Execute exact admitted candidate
+      id: execute
+      uses: ./.buildchain/runtime/actions/workflow/engine/execute
+      with:
+        request-json: ${{ fromJSON(inputs.request-json).request-json }}
+        admission-json: ${{ fromJSON(inputs.needs-admit-outputs-admission-json) }}
+        token: ${{ github.token }}
+        mutation-token: ${{ inputs.secrets-buildchain-promotion-token }}

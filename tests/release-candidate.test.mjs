@@ -11,29 +11,20 @@ import {
   createReleaseCandidatePassport,
   sha256Json,
   validateReleaseCandidatePassport,
-} from "../packages/core/release-candidate.js";
-import { generateReleaseCandidatePassportCli } from "../scripts/generate-release-candidate-passport.mjs";
-import {
-  generatePublishRequiredArtifacts,
-  githubDownload,
-  readNpmPackageArtifact,
-  resolveReleaseCandidateArtifacts,
-  releaseCandidateDownloadEnabled,
-  releaseCandidateRuntimeSha,
-  selectReleaseAssetPaths,
-  selectMergedChannelPullRequest,
-  selectPayloadArtifacts,
-  selectReleaseCandidateArtifacts,
-  selectReleaseCandidateRun,
-  selectReleaseCandidateRuns,
-  verifyArtifactArchive,
-} from "../scripts/release-candidate-resolver.mjs";
-import { createResolvedPublicationSealedBundle } from "../scripts/publication-candidate-sealer.mjs";
+} from "../packages/core/release/release-candidate.js";
+import { generateReleaseCandidatePassportCli } from "../packages/core/publication/commands/generate-release-candidate-passport.mjs";
+import { generatePublishRequiredArtifacts, readNpmPackageArtifact, selectReleaseAssetPaths, selectPayloadArtifacts } from "../packages/core/release/candidate/payloads.js";
+import { selectReleaseCandidateArtifacts } from "../packages/core/release/candidate/selection.js";
+import { verifyArtifactArchive } from "../packages/core/release/candidate/transport.js";
+import { githubDownload } from "../packages/core/release/candidate/transport.js";
+import { resolveReleaseCandidateArtifacts } from "../packages/core/release/candidate/resolve.js";
+import { releaseCandidateDownloadEnabled, releaseCandidateRuntimeSha, selectMergedChannelPullRequest, selectReleaseCandidateRun, selectReleaseCandidateRuns } from "../packages/core/release/candidate/selection.js";
+import { createResolvedPublicationSealedBundle } from "../packages/core/publication/candidate/sealing.js";
 import {
   buildWorkflowFrictionBody,
   classifyWorkflowFriction,
   selectFrictionClass,
-} from "../scripts/workflow-friction-report.mjs";
+} from "../packages/core/governance/commands/workflow-friction-report.mjs";
 
 const SOURCE_SHA = "1111111111111111111111111111111111111111";
 
@@ -357,7 +348,7 @@ test("release candidate passport binds controller receipts to source and runtime
   passport.controllerReceipts[0].runtimeSha = "5".repeat(40);
   assert.match(
     validateReleaseCandidatePassport({ passport, buildSummary }).errors.join("; "),
-    /runtime SHA mismatch/,
+    /candidate hash mismatch/,
   );
 });
 
@@ -407,11 +398,11 @@ test("release candidate passport derives channel from PR base when publish chann
     buildSummary,
   });
   assert.equal(passport.target.channel, "alpha");
-  const legacyNone = {
+  const tamperedTarget = {
     ...passport,
     target: { ...passport.target, channel: "none" },
   };
-  assert.equal(validateReleaseCandidatePassport({ passport: legacyNone, targetChannel: "alpha" }).ok, true);
+  assert.equal(validateReleaseCandidatePassport({ passport: tamperedTarget, targetChannel: "alpha" }).ok, false);
 });
 
 test("release candidate validation rejects stale source and summary evidence", () => {
@@ -1306,7 +1297,7 @@ test("generateReleaseCandidatePassportCli writes GitHub outputs for workflow reu
       `${JSON.stringify(sampleBuildSummary(), null, 2)}\n`,
     );
     process.env = {
-      ...previousEnv,
+      ...Object.fromEntries(Object.entries(previousEnv).filter(([key]) => !key.startsWith("BUILDCHAIN_") && !key.startsWith("GITHUB_"))),
       GITHUB_REPOSITORY: "kungfu-systems/libnode",
       GITHUB_OUTPUT: path.join(cwd, "outputs.txt"),
     };

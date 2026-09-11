@@ -7,11 +7,11 @@ import {
   createRunnerEvidence,
   linuxCodeBuildPlan,
   verifyLinuxCodeBuildQualification,
-} from "../scripts/aws-runner-burst-core.mjs";
+} from "../packages/core/providers/commands/aws-runner-burst-core.mjs";
 import {
   AWS_CODEBUILD_TOOLCHAIN,
   selectAwsCodeBuildCompiler,
-} from "../scripts/aws-codebuild-toolchain.mjs";
+} from "../packages/core/providers/toolchain/codebuild-policy.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -90,13 +90,13 @@ test("phase verification fails closed on stale telemetry or cloud residue", () =
 
 test("admitted planning precedes dynamic CodeBuild runner selection", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
-  const planner = fs.readFileSync(path.join(root, "scripts/build/plan.mjs"), "utf8");
-  const prepare = fs.readFileSync(path.join(root, "scripts/build/prepare.mjs"), "utf8");
+  const planner = fs.readFileSync(path.join(root, "packages/core/build/plan/resolve.js"), "utf8");
+  const prepare = fs.readFileSync(path.join(root, "packages/core/build/environment/provision.js"), "utf8");
   assert.match(workflow, /build-native:\n\s+needs:\n\s+- plan/u);
-  assert.match(planner, /codebuild-\$\{p.project\}-\$\{plan.run.id\}-\$\{plan.run.attempt\}/u);
-  assert.ok(planner.indexOf('"consumer-policy.mjs"') < planner.indexOf('Object.assign(plan, buildMatrices'));
-  assert.match(prepare, /aws-runner-burst.mjs/u);
-  assert.match(prepare, /aws-codebuild-toolchain.mjs/u);
+  assert.match(fs.readFileSync(path.join(root, "packages/core/build/plan/matrices.js"), "utf8"), /codebuild-\$\{p.project\}-\$\{plan.run.id\}-\$\{plan.run.attempt\}/u);
+  assert.ok(planner.indexOf('plan.admission = await admitBuildSource(') < planner.indexOf('await resolveBuildRunners('));
+  assert.match(prepare, /createRunnerEvidence\(\{/u);
+  assert.match(prepare, /prepareAwsCodeBuildToolchain\(\{/u);
   assert.match(prepare, /aws-native-toolchain.json/u);
 });
 
@@ -139,7 +139,7 @@ test("CodeBuild native toolchain rejects unsupported Linux images", () => {
 
 test("TOML timeout bounds both build jobs and the lifecycle implementation", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
-  const stage = fs.readFileSync(path.join(root, "scripts/build/stage.mjs"), "utf8");
+  const stage = fs.readFileSync(path.join(root, "packages/core/build/plan/lifecycle.js"), "utf8");
   assert.equal((workflow.match(/timeout-minutes: .*build\.timeout_minutes/g) || []).length, 2);
   assert.match(stage, /timeoutMinutes: plan.build.timeout_minutes/u);
 });

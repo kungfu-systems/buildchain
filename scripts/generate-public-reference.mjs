@@ -3,13 +3,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { BUILDCHAIN_USAGE } from "./buildchain-cli-help.mjs";
+import { BUILDCHAIN_USAGE } from "../packages/core/workflow/commands/buildchain-cli-help.mjs";
 import {
-  createCliReference,
   createNodeApiReference,
   renderCliReference,
   renderNodeApiReference,
 } from "./public-reference.mjs";
+import { createCliReference } from "../packages/core/contracts/cli-reference.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 

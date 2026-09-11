@@ -7,15 +7,13 @@ import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import {
   checkWorkflowTaxonomy,
-  currentWorkflowPath,
-  projectWorkflowIdentities,
   readWorkflowTaxonomy,
   renderWorkflowCatalog,
   TAXONOMY_DOC,
   TAXONOMY_PATH,
   workflowPath,
   writeWorkflowSource,
-} from "../scripts/workflow-taxonomy.mjs";
+} from "../packages/core/workflow/workflow-taxonomy.mjs";
 
 const repository = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -32,10 +30,11 @@ function fixture(t) {
     "package.json",
     ".buildchain/buildchain.toml",
     ".github/CODEOWNERS",
-    ...policy.entries.flatMap((entry) => [
-      workflowPath(entry),
-      ...(entry.compatibility ? [entry.compatibility.path] : []),
-    ]),
+    "actions/build/verification/repository/action.yml",
+    "actions/build/verification/qualify-source/action.yml",
+    "packages/core/build/verification/source.js",
+    "packages/core/build/source/lifecycle.js",
+    ...policy.entries.map(workflowPath),
   ];
   for (const file of files) {
     fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
@@ -55,13 +54,10 @@ function rejected(root, pattern) {
   assert.match(result.errors.join("\n"), pattern);
 }
 
-test("the migrated repository has an exhaustive classified inventory and equal aliases", () => {
+test("the repository has exactly one canonical file per declared workflow", () => {
   const result = checkWorkflowTaxonomy(repository);
   assert.equal(result.ok, true, result.errors.join("\n"));
-  assert.equal(
-    result.fileCount,
-    result.canonicalCount + result.compatibilityCount,
-  );
+  assert.equal(result.fileCount, result.canonicalCount);
 });
 
 for (const token of ["v4", "v5", "v12"]) {
@@ -77,41 +73,29 @@ for (const token of ["v4", "v5", "v12"]) {
   });
 }
 
-test("a reviewed historical alias cannot be re-admitted as compatibility", (t) => {
-  const root = fixture(t);
-  editPolicy(root, (policy) => {
-    const entry = policy.entries.find((item) => item.retiredAlias);
-    entry.compatibility = {
-      path: entry.retiredAlias.path,
-      reason: "restore",
-      removalCondition: "later",
-    };
-    delete entry.retiredAlias;
+for (const field of ["compatibility", "migration", "retiredAlias"]) {
+  test(`historical workflow translation is rejected: ${field}`, (t) => {
+    const root = fixture(t);
+    editPolicy(root, (policy) => {
+      policy.entries[0][field] = { path: ".github/workflows/old.yml" };
+    });
+    rejected(root, /not an executable architecture contract/u);
   });
-  rejected(root, /version-prefixed compatibility aliases are retired/);
-});
+}
 
-test("retired alias cannot be regenerated or reused by a consumer", (t) => {
+test("unregistered alias cannot be written or called", (t) => {
   const root = fixture(t);
-  const entry = readWorkflowTaxonomy(root).entries.find(
-    (item) => item.retiredAlias,
-  );
-  const canonical = workflowPath(entry);
-  assert.equal(currentWorkflowPath(root, entry.retiredAlias.path), canonical);
+  const alias = ".github/workflows/old-build.yml";
   assert.throws(
-    () => writeWorkflowSource(root, entry.retiredAlias.path, "stale"),
-    /cannot regenerate/,
+    () => writeWorkflowSource(root, alias, "stale"),
+    /canonical|registered/u,
   );
-  assert.equal(fs.existsSync(path.join(root, entry.retiredAlias.path)), false);
-  const caller = path.join(
-    root,
-    ".github/workflows/self-build-adopter-dogfood.yml",
-  );
+  assert.equal(fs.existsSync(path.join(root, alias)), false);
   fs.appendFileSync(
-    caller,
-    `  stale:\n    uses: kungfu-systems/buildchain/${entry.retiredAlias.path}@v4-alpha\n`,
+    path.join(root, ".github/workflows/self-build-adopter-dogfood.yml"),
+    `  stale:\n    uses: kungfu-systems/buildchain/${alias}@v4-alpha\n`,
   );
-  rejected(root, /retired version-prefixed workflow call/);
+  rejected(root, /undeclared Buildchain workflow/u);
 });
 
 test("canonical public entry cannot bind consumer admission to its retired alias", (t) => {
@@ -120,15 +104,7 @@ test("canonical public entry cannot bind consumer admission to its retired alias
     (item) => item.id === "v4-adopter-delivery",
   );
   const file = path.join(root, workflowPath(entry));
-  fs.writeFileSync(
-    file,
-    fs
-      .readFileSync(file, "utf8")
-      .replace(
-        `BUILDCHAIN_INVOKED_WORKFLOW: ${workflowPath(entry)}`,
-        `BUILDCHAIN_INVOKED_WORKFLOW: ${entry.retiredAlias.path}`,
-      ),
-  );
+  fs.appendFileSync(file, "\nenv:\n  BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/v4-adopter-delivery.yml\n");
   rejected(root, /consumer admission must bind the canonical invoked workflow/);
 });
 
@@ -190,30 +166,16 @@ test("public entry cannot be relabelled self while retaining workflow_call", (t)
   rejected(root, /role and invocation|repository event wrappers/);
 });
 
-test("compatibility cannot invent a wildcard or unreviewed baseline source", (t) => {
-  const root = fixture(t);
-  editPolicy(root, (policy) => {
-    policy.entries[0].compatibility.path = ".github/workflows/*.yml";
-  });
-  rejected(root, /exact migrated path/);
-  editPolicy(root, (policy) => {
-    const entry = policy.entries[0];
-    entry.compatibility.path = ".github/workflows/unapproved.yml";
-    entry.migration.previousPath = entry.compatibility.path;
-  });
-  rejected(root, /reviewed baseline/);
-});
-
-test("editing only a compatibility copy fails even if its YAML remains valid", (t) => {
+test("a second YAML copy cannot silently become another executable surface", (t) => {
   const root = fixture(t);
   const entry = readWorkflowTaxonomy(root).entries.find(
-    (item) => item.compatibility,
+    (item) => item.role === "public",
   );
-  fs.appendFileSync(
-    path.join(root, entry.compatibility.path),
-    "\n# independent implementation drift\n",
+  fs.copyFileSync(
+    path.join(root, workflowPath(entry)),
+    path.join(root, ".github/workflows/old-build.yml"),
   );
-  rejected(root, /compatibility implementation drift/);
+  rejected(root, /unregistered workflow/u);
 });
 
 test("dangling local calls fail; shell strings do not become workflow calls", (t) => {
@@ -273,7 +235,7 @@ test("required queue trigger and independent ownership cannot disappear", (t) =>
     file,
     fs
       .readFileSync(file, "utf8")
-      .replace("  merge_group:\n    types: [checks_requested]\n", ""),
+      .replace(/  merge_group:\n    types:\n      - checks_requested\n/u, ""),
   );
   rejected(root, /lacks merge_group/);
   fs.writeFileSync(path.join(root, ".github/CODEOWNERS"), "* @someone-else\n");
@@ -292,38 +254,6 @@ test("catalog drift fails and regeneration is deterministic", (t) => {
   assert.equal(checkWorkflowTaxonomy(root).ok, true);
 });
 
-test("lane projection conserves every logical job and refuses divergent aliases", (t) => {
-  const root = fixture(t);
-  const policy = readWorkflowTaxonomy(root);
-  const physical = policy.entries
-    .flatMap((entry) => [
-      workflowPath(entry),
-      ...(entry.compatibility ? [entry.compatibility.path] : []),
-    ])
-    .map((file) => ({
-      path: file,
-      text: fs.readFileSync(path.join(root, file), "utf8"),
-    }));
-  const projected = projectWorkflowIdentities(root, physical);
-  assert.equal(projected.length, policy.entries.length);
-  for (const entry of policy.entries) {
-    assert.equal(
-      projected.find(
-        (item) =>
-          item.path === (entry.migration?.previousPath || workflowPath(entry)),
-      ).text,
-      physical.find((item) => item.path === workflowPath(entry)).text,
-    );
-  }
-  const alias = policy.entries.find((entry) => entry.compatibility)
-    .compatibility.path;
-  fs.appendFileSync(path.join(root, alias), "# divergence\n");
-  assert.throws(
-    () => projectWorkflowIdentities(root, physical),
-    /compatibility implementation drift/,
-  );
-});
-
 test("declared lifecycle cannot replace the full check with a passing echo", (t) => {
   const root = fixture(t);
   const file = path.join(root, ".buildchain/buildchain.toml");
@@ -339,23 +269,15 @@ test("declared lifecycle cannot replace the full check with a passing echo", (t)
 test("repository dispatch and handoff parameters cannot retain removed filenames", (t) => {
   const root = fixture(t);
   const file = path.join(root, ".github/workflows/self-ops-dev-delivery.yml");
-  fs.writeFileSync(
-    file,
-    fs
-      .readFileSync(file, "utf8")
-      .replace(
-        "source-workflow-id: self-build-verify.yml",
-        "source-workflow-id: verify.yml",
-      ),
-  );
+  fs.appendFileSync(file, "  invalid-handoff:\n    uses: ./.github/workflows/public-ops-dev-auto-merge.yml\n    with:\n      source-workflow-id: verify.yml\n");
   rejected(root, /dangling repository workflow reference verify.yml/);
 });
 
 test("early workflow source checks can load taxonomy before dependencies are installed", (t) => {
   const root = fixture(t);
   for (const relative of [
-    "scripts/workflow-taxonomy.mjs",
-    "packages/core/workflow-yaml-contract.js",
+    "packages/core/workflow/workflow-taxonomy.mjs",
+    "packages/core/contracts/workflow-yaml-contract.js",
   ]) {
     const target = path.join(root, relative);
     fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -367,7 +289,7 @@ test("early workflow source checks can load taxonomy before dependencies are ins
     [
       "--input-type=module",
       "-e",
-      'import { checkWorkflowTaxonomy } from "./scripts/workflow-taxonomy.mjs"; const result = checkWorkflowTaxonomy(process.cwd(), { integration: false }); if (!result.ok) throw Error(result.errors.join("\\n"));',
+      'import { checkWorkflowTaxonomy } from "./packages/core/workflow/workflow-taxonomy.mjs"; const result = checkWorkflowTaxonomy(process.cwd(), { integration: false }); if (!result.ok) throw Error(result.errors.join("\\n"));',
     ],
     { cwd: root },
   );
@@ -375,11 +297,7 @@ test("early workflow source checks can load taxonomy before dependencies are ins
 
 test("workflow hotspot routes retain the same logical identities as debt metrics", () => {
   const policy = readWorkflowTaxonomy(repository);
-  const identities = new Set(
-    policy.entries.map(
-      (entry) => entry.migration?.previousPath || workflowPath(entry),
-    ),
-  );
+  const identities = new Set(policy.entries.map(workflowPath));
   const debt = JSON.parse(
     fs.readFileSync(
       path.join(repository, "architecture/maintainability-debt.json"),

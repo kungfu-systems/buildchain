@@ -1,0 +1,52 @@
+name: Resolve immutable promotion route
+description: Resolve immutable promotion route.
+inputs:
+  request-json:
+    description: Complete typed promotion request.
+    required: true
+  token:
+    description: Explicit scoped GitHub credential.
+    required: true
+  workflow-sha:
+    description: Exact defining workflow commit.
+    required: true
+  workflow-ref:
+    description: Defining workflow coordinate.
+    required: true
+  workflow-repository:
+    description: Defining workflow repository.
+    required: true
+outputs:
+  repository:
+    description: repository
+  channel:
+    description: channel
+  publication-channel:
+    description: publication channel
+  target-ref:
+    description: target ref
+  router-ref:
+    description: router ref
+  router-sha:
+    description: router sha
+  shell-ref:
+    description: shell ref
+  shell-call-ref:
+    description: shell call ref
+  shell-sha:
+    description: shell sha
+  runtime-ref:
+    description: runtime ref
+  runtime-sha:
+    description: runtime sha
+  override-used:
+    description: override used
+  selection-source:
+    description: selection source
+  reason:
+    description: reason
+  request-json:
+    description: request json
+runs:
+  using: node24
+  main: dist/index.js

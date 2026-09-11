@@ -97,10 +97,10 @@
         "factRoots",
         "supersessionRoots",
         "revocationRoots",
-        "legacyProofRoots",
+        "proofRoots",
         "temporalBundleRoot",
         "facts",
-        "legacyProofs",
+        "proofs",
         "currentCut",
         "temporalBundle",
         "registryRoot"
@@ -131,7 +131,7 @@
           "items": { "$ref": "#/$defs/root" },
           "uniqueItems": true
         },
-        "legacyProofRoots": {
+        "proofRoots": {
           "type": "array",
           "items": { "$ref": "#/$defs/root" },
           "uniqueItems": true
@@ -142,7 +142,7 @@
           "items": { "$ref": "#/$defs/fact" },
           "minItems": 1
         },
-        "legacyProofs": {
+        "proofs": {
           "type": "array",
           "items": { "$ref": "#/$defs/proof" }
         },

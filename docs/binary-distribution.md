@@ -35,7 +35,7 @@ GitHub Release metadata remains deterministic and tag-derived. Exact alpha tags 
 as `v2.6.2-alpha.0` are created or updated with `prerelease=true` and
 `make_latest=false`; exact stable tags such as `v2.6.1` are created or updated
 with `prerelease=false` and `make_latest=true`. The sealed publisher uses
-`scripts/ensure-github-release.mjs` before asset upload instead of relying on
+`packages/core/release/commands/ensure-github-release.mjs` before asset upload instead of relying on
 GitHub's default latest-release heuristic.
 
 Each archive is accompanied by:
@@ -114,7 +114,7 @@ node bin/buildchain.mjs collect github-release \
   --tag v0.0.0-local \
   --assets-dir dist/binary \
   --output-dir .buildchain/release-passport
-node scripts/create-release-bundle.mjs \
+node packages/core/publication/commands/create-release-bundle.mjs \
   --assets-dir dist/binary \
   --passport-dir .buildchain/release-passport \
   --output-dir .buildchain/release-passport \

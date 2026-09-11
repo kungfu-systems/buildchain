@@ -4,218 +4,66 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import {
-  activateExactPnpm,
-  resolveCandidateBuildSummaryPath,
-  resolveCandidateProviderInputs,
-  resolvePublicationTarget,
-  resolvePromotionTarget,
-} from "../actions/release-candidate-promote/index.js";
+import { activateExactPnpm } from "../packages/core/release/promote-candidate/product-provider.js";
 
-import { sha256Json } from "../packages/core/release-candidate.js";
+import { sha256Json } from "../packages/core/release/release-candidate.js";
 
-test("legacy promotion shells recover the standard sealed build summary", () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-promote-"));
-  const passport = path.join(
-    root,
-    "passport",
-    "release-candidate-passport.json",
-  );
-  const summary = path.join(root, "summary", "build-summary.json");
-  fs.mkdirSync(path.dirname(passport), { recursive: true });
-  fs.mkdirSync(path.dirname(summary), { recursive: true });
-  fs.writeFileSync(passport, "{}\n");
-  fs.writeFileSync(summary, "{}\n");
+import { resolveCandidateBuildSummaryPath, resolveCandidateProviderInputs, resolvePublicationTarget } from "../packages/core/release/promote-candidate/evidence-inputs.js";
 
-  assert.equal(
-    resolveCandidateBuildSummaryPath({ candidatePassportPath: passport }),
-    summary,
-  );
-  assert.equal(
-    resolveCandidateBuildSummaryPath({
-      candidatePassportPath: passport,
-      declaredPath: "explicit/build-summary.json",
-    }),
-    "explicit/build-summary.json",
-  );
+test("promotion requires declared evidence paths even when neighboring artifacts exist", () => {
+  const { candidatePassportPath } = recoveredPromotionFixture();
+  assert.throws(() => resolveCandidateBuildSummaryPath({ candidatePassportPath }), /candidate-build-summary-path is required/);
+  assert.equal(resolveCandidateBuildSummaryPath({ declaredPath: "evidence/build-summary.json" }), "evidence/build-summary.json");
+  const input = { artifactKind: "npm", sealedBundleRoot: "payloads", sealedBundleManifest: "sealed.json", requiredArtifactsPath: "required.json", publishPackageMain: "@scope/pkg" };
+  for (const field of ["sealedBundleRoot", "sealedBundleManifest", "requiredArtifactsPath"])
+    assert.throws(() => resolveCandidateProviderInputs({ ...input, [field]: "", candidatePassportPath }), /is required/);
+  assert.equal(resolveCandidateProviderInputs(input).releaseCandidateRecoveryReceiptPath, "");
+  assert.equal(resolveCandidateProviderInputs({ ...input, recoveryReceiptPath: "admitted/receipt.json" }).releaseCandidateRecoveryReceiptPath, "admitted/receipt.json");
 });
 
-test("legacy promotion shells fail closed without the standard summary", () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-promote-"));
-  const passport = path.join(
-    root,
-    "passport",
-    "release-candidate-passport.json",
-  );
-  fs.mkdirSync(path.dirname(passport), { recursive: true });
-  fs.writeFileSync(passport, "{}\n");
-
-  assert.throws(
-    () => resolveCandidateBuildSummaryPath({ candidatePassportPath: passport }),
-    /candidate-build-summary-path is required/,
-  );
-});
-
-test("legacy promotion shells recover standard sealed provider inputs", () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-promote-"));
-  const passport = path.join(
-    root,
-    "passport",
-    "release-candidate-passport.json",
-  );
-  fs.mkdirSync(path.dirname(passport), { recursive: true });
-  fs.mkdirSync(path.join(root, "payloads"));
-  fs.writeFileSync(path.join(root, "sealed-bundle.json"), "{}\n");
-  fs.writeFileSync(
-    path.join(root, "publish-required-artifacts.json"),
-    `${JSON.stringify([{ name: "@kungfu-tech/buildchain", role: "main" }])}\n`,
-  );
-  assert.deepEqual(
-    resolveCandidateProviderInputs({ candidatePassportPath: passport }),
-    {
-      sealedBundleRoot: path.join(root, "payloads"),
-      sealedBundleManifest: path.join(root, "sealed-bundle.json"),
-      requiredArtifactsPath: path.join(root, "publish-required-artifacts.json"),
-      publishPackageMain: "@kungfu-tech/buildchain",
-    },
-  );
-});
-
-test("legacy promotion shells infer the only required npm package", () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-promote-"));
-  const passport = path.join(
-    root,
-    "passport",
-    "release-candidate-passport.json",
-  );
-  fs.mkdirSync(path.dirname(passport), { recursive: true });
-  fs.mkdirSync(path.join(root, "payloads"));
-  fs.writeFileSync(path.join(root, "sealed-bundle.json"), "{}\n");
-  fs.writeFileSync(
-    path.join(root, "publish-required-artifacts.json"),
-    `${JSON.stringify([{ kind: "npm", name: "@kungfu-tech/buildchain", role: "platform", required: true }])}\n`,
-  );
-
-  assert.equal(
-    resolveCandidateProviderInputs({ candidatePassportPath: passport })
-      .publishPackageMain,
-    "@kungfu-tech/buildchain",
-  );
-});
-
-test("custom product promotion needs rooted artifacts without an npm sealed bundle", () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-promote-"));
-  const passport = path.join(
-    root,
-    "passport",
-    "release-candidate-passport.json",
-  );
-  fs.mkdirSync(path.dirname(passport), { recursive: true });
-  fs.writeFileSync(
-    path.join(root, "publish-required-artifacts.json"),
-    `${JSON.stringify([{ kind: "custom", name: "agent-hub-linux-x64", required: true }])}\n`,
-  );
-
-  assert.deepEqual(
-    resolveCandidateProviderInputs({
-      candidatePassportPath: passport,
-      artifactKind: "custom",
-    }),
-    {
-      sealedBundleRoot: "",
-      sealedBundleManifest: "",
-      requiredArtifactsPath: path.join(root, "publish-required-artifacts.json"),
-      publishPackageMain: "",
-    },
-  );
-});
-
-test("candidate recovery passes the rooted sibling receipt to the product provider", () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-promote-"));
-  const passport = path.join(
-    root,
-    "passport",
-    "release-candidate-passport.json",
-  );
-  const recoveryReceipt = path.join(root, "recovery-receipt.json");
-  fs.mkdirSync(path.dirname(passport), { recursive: true });
-  fs.mkdirSync(path.join(root, "payloads"));
-  fs.writeFileSync(path.join(root, "sealed-bundle.json"), "{}\n");
-  fs.writeFileSync(recoveryReceipt, "{}\n");
-  fs.writeFileSync(
-    path.join(root, "publish-required-artifacts.json"),
-    `${JSON.stringify([{ name: "@kungfu-tech/buildchain", role: "main" }])}\n`,
-  );
-
-  assert.equal(
-    resolveCandidateProviderInputs({ candidatePassportPath: passport })
-      .releaseCandidateRecoveryReceiptPath,
-    recoveryReceipt,
-  );
-});
-
-test("legacy promotion shells bind the exact merged PR target", async () => {
-  const candidateSha = "1".repeat(40),
-    mergeSha = "2".repeat(40);
-  const result = await resolvePublicationTarget({
-    octokit: {
-      rest: {
-        pulls: {
-          get: async () => ({
-            data: {
-              merged: true,
-              merge_commit_sha: mergeSha,
-              base: { ref: "alpha/v4/v4.0" },
-            },
-          }),
-        },
-      },
-    },
-    repository: "kungfu-systems/buildchain",
-    candidate: {
-      source: { headSha: candidateSha },
-      pullRequest: { number: "3322", baseRef: "alpha/v4/v4.0" },
-    },
-    sourceSha: candidateSha,
-  });
-  assert.deepEqual(result, {
-    sourceSha: mergeSha,
-    targetRef: "alpha/v4/v4.0",
-    targetSha: mergeSha,
-  });
-});
-
-test("declared publication targets reject partial legacy bindings", async () => {
-  await assert.rejects(
-    resolvePublicationTarget({
-      repository: "kungfu-systems/buildchain",
-      candidate: {},
-      sourceSha: "1".repeat(40),
-      targetRef: "alpha/v4/v4.0",
-    }),
-    /matching target-ref, target-sha, and source-sha/,
-  );
-});
-
-test("legacy promotion shells fail closed on ambiguous build summaries", () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-promote-"));
-  const passport = path.join(
-    root,
-    "passport",
-    "release-candidate-passport.json",
-  );
-  fs.mkdirSync(path.dirname(passport), { recursive: true });
-  fs.writeFileSync(passport, "{}\n");
-  for (const directory of ["summary-a", "summary-b"]) {
-    fs.mkdirSync(path.join(root, directory), { recursive: true });
-    fs.writeFileSync(path.join(root, directory, "build-summary.json"), "{}\n");
+test("sealed artifact metadata selects a unique npm main; ambiguous metadata is rejected", () => {
+  const { recoveryReceiptPath } = recoveredPromotionFixture();
+  const requiredArtifactsPath = path.join(path.dirname(recoveryReceiptPath), "required.json");
+  const input = { sealedBundleRoot: "payloads", sealedBundleManifest: "sealed.json", requiredArtifactsPath };
+  for (const artifact of [{ name: "@scope/pkg", role: "main" }, { name: "@scope/pkg", kind: "npm", required: true }]) {
+    fs.writeFileSync(requiredArtifactsPath, JSON.stringify([artifact]));
+    assert.equal(resolveCandidateProviderInputs(input).publishPackageMain, "@scope/pkg");
   }
-  assert.throws(
-    () => resolveCandidateBuildSummaryPath({ candidatePassportPath: passport }),
-    /ambiguous standard summary artifacts/,
-  );
+  fs.writeFileSync(requiredArtifactsPath, JSON.stringify([{ name: "a", role: "main" }, { name: "b", role: "main" }]));
+  assert.throws(() => resolveCandidateProviderInputs(input), /Unique main package/);
+  assert.deepEqual(resolveCandidateProviderInputs({ artifactKind: "custom", requiredArtifactsPath }), {
+    sealedBundleRoot: "", sealedBundleManifest: "", requiredArtifactsPath,
+    publishPackageMain: "", releaseCandidateRecoveryReceiptPath: "",
+  });
 });
 
+function recoveryRequest() {
+  const { candidate, recoveryReceipt, recoveryReceiptPath } = recoveredPromotionFixture();
+  return { candidate, repository: candidate.repository, channel: "alpha", recoveryReceiptPath,
+    sourceSha: recoveryReceipt.target.sha, targetSha: recoveryReceipt.target.sha,
+    targetRef: recoveryReceipt.target.ref, expectedTransactionId: recoveryReceipt.transaction.identity };
+}
+
+test("promotion validates explicit target and rooted recovery transaction together", () => {
+  const request = recoveryRequest();
+  assert.deepEqual(resolvePublicationTarget(request), { sourceSha: request.targetSha, targetSha: request.targetSha, targetRef: request.targetRef });
+  assert.throws(() => resolvePublicationTarget({ ...request, targetRef: "alpha/v4/v4.1" }), /target ref mismatch/);
+  assert.throws(() => resolvePublicationTarget({ ...request, expectedTransactionId: "drifted" }), /transaction identity mismatch/);
+  assert.throws(() => resolvePublicationTarget({ ...request, sourceSha: request.candidate.source.headSha }), /exact protected target-sha/);
+  assert.throws(() => resolvePublicationTarget({ ...request, recoveryReceiptPath: "" }), /requires recovery-receipt-path/);
+  const receipt = JSON.parse(fs.readFileSync(request.recoveryReceiptPath, "utf8"));
+  receipt.payloadBytes = "changed";
+  fs.writeFileSync(request.recoveryReceiptPath, JSON.stringify(receipt));
+  assert.throws(() => resolvePublicationTarget(request), /Recovery receipt is invalid/);
+});
+
+test("promotion never infers absent target coordinates from recovery evidence or a merged PR", () => {
+  const request = recoveryRequest();
+  for (const field of ["targetRef", "targetSha"])
+    assert.throws(() => resolvePublicationTarget({ ...request, [field]: "", octokit: { rest: { pulls: { get() { assert.fail("No inferred PR lookup"); } } } } }), /target-(ref|sha) is required/);
+  assert.deepEqual(resolvePublicationTarget({ ...request, expectedTransactionId: "", recoveryReceiptPath: "" }),
+    { sourceSha: request.targetSha, targetSha: request.targetSha, targetRef: request.targetRef });
+});
 function recoveredPromotionFixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-promote-"));
   const candidatePassportPath = path.join(
@@ -262,99 +110,8 @@ function recoveredPromotionFixture() {
     path.join(root, "recovery-receipt.json"),
     `${JSON.stringify(recoveryReceipt)}\n`,
   );
-  return { candidatePassportPath, candidate, recoveryReceipt };
+  return { candidatePassportPath, candidate, recoveryReceipt, recoveryReceiptPath: path.join(root, "recovery-receipt.json") };
 }
-
-test("legacy promotion shells recover the protected target from rooted evidence", () => {
-  const { candidatePassportPath, candidate, recoveryReceipt } =
-    recoveredPromotionFixture();
-  assert.deepEqual(
-    resolvePromotionTarget({
-      candidatePassportPath,
-      candidate,
-      repository: candidate.repository,
-      channel: "alpha",
-      sourceSha: candidate.source.headSha,
-    }),
-    {
-      targetRef: recoveryReceipt.target.ref,
-      targetSha: recoveryReceipt.target.sha,
-    },
-  );
-});
-
-test("legacy promotion shells reject a drifted recovered target", () => {
-  const { candidatePassportPath, candidate } = recoveredPromotionFixture();
-  assert.throws(
-    () =>
-      resolvePromotionTarget({
-        candidatePassportPath,
-        candidate,
-        repository: candidate.repository,
-        channel: "alpha",
-        sourceSha: candidate.source.headSha,
-        declaredTargetRef: "alpha/v4/v4.1",
-      }),
-    /target ref mismatch/,
-  );
-});
-
-test("legacy promotion shells bind an expected recovery transaction", () => {
-  const { candidatePassportPath, candidate, recoveryReceipt } =
-    recoveredPromotionFixture();
-  assert.deepEqual(
-    resolvePromotionTarget({
-      candidatePassportPath,
-      candidate,
-      repository: candidate.repository,
-      channel: "alpha",
-      sourceSha: candidate.source.headSha,
-      expectedTransactionId: recoveryReceipt.transaction.identity,
-    }),
-    {
-      targetRef: recoveryReceipt.target.ref,
-      targetSha: recoveryReceipt.target.sha,
-    },
-  );
-  assert.throws(
-    () =>
-      resolvePromotionTarget({
-        candidatePassportPath,
-        candidate,
-        repository: candidate.repository,
-        channel: "alpha",
-        sourceSha: candidate.source.headSha,
-        expectedTransactionId: "transaction-drifted",
-      }),
-    /transaction identity mismatch/,
-  );
-});
-
-test("fresh promotion shells require exact protected source coordinates", () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-promote-"));
-  const candidatePassportPath = path.join(
-    root,
-    "sealed-candidate",
-    "artifacts",
-    "candidate",
-    "release-candidate-passport.json",
-  );
-  const candidate = { source: { headSha: "1".repeat(40) } };
-  fs.mkdirSync(path.dirname(candidatePassportPath), { recursive: true });
-  assert.throws(
-    () =>
-      resolvePromotionTarget({
-        candidatePassportPath,
-        candidate,
-        repository: "kungfu-systems/buildchain",
-        channel: "alpha",
-        sourceSha: candidate.source.headSha,
-        declaredTargetRef: "alpha/v4/v4.0",
-        declaredTargetSha: "3".repeat(40),
-      }),
-    /protected source SHA must equal target-sha/,
-  );
-});
 
 test("provider verification exposes only the pinned pnpm runtime", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-promote-"));

@@ -1,0 +1,17 @@
+name: generate candidate self-dogfood
+description: Admit reviewed candidate coordinates and qualify primary/recovery
+  execution equivalence.
+inputs:
+  coordinates-json:
+    description: coordinates-json self-dogfood evidence.
+    required: true
+outputs:
+  conformance-request:
+    description: conformance-request self-dogfood result.
+  alpha-request:
+    description: alpha-request self-dogfood result.
+  stable-request:
+    description: stable-request self-dogfood result.
+runs:
+  using: node24
+  main: dist/index.js

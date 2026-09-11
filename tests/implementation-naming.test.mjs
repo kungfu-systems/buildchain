@@ -28,14 +28,13 @@ test("implementation naming rejects generation paths and nested declarations", (
   }
 });
 
-test("wire identities and explicit export aliases do not rename implementations", () => {
+test("wire identities stay independent while generation export aliases are rejected", () => {
   assert.deepEqual(
     inspectImplementationName(
       "packages/core/publication.js",
       `
     const PUBLICATION_CONTRACT = "kungfu.buildchain.v4-publication/v1";
     function publish() {}
-    export { publish as publishV4 };
   `,
     ),
     [],
@@ -47,6 +46,10 @@ test("wire identities and explicit export aliases do not rename implementations"
     ),
     [],
   );
+});
+
+test("generation forwarding exports are forbidden", () => {
+  assert.ok(inspectImplementationName("packages/core/publication.js", "export { publish as publishV4 };").length);
 });
 
 test("runtime directories, Rust functions and destructured bindings cannot reintroduce generations", () => {

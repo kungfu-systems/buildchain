@@ -1,0 +1,91 @@
+name: Acquire scoped GitHub credential
+description: Create and revoke an App installation token, with explicit fallback
+  selection and diagnostics.
+inputs:
+  client-id:
+    description: App client ID.
+    default: ""
+  private-key:
+    description: App private key.
+    default: ""
+  fallback-token:
+    description: Explicit scoped fallback credential.
+    default: ""
+  workflow-token:
+    description: Caller workflow credential.
+    default: ""
+  repository:
+    description: One target owner/repository; empty uses the caller repository.
+    default: ""
+  app-id:
+    description: Numeric GitHub App ID; use only when no client ID is supplied.
+    default: ""
+  failure-policy:
+    description: strict rejects incomplete or failed App creation; fallback returns
+      diagnostics.
+    default: fallback
+  organization:
+    description: Explicit organization installation scope; mutually exclusive with
+      repository.
+    default: ""
+  require-token:
+    description: Reject an empty credential selection.
+    default: "false"
+  permission-checks:
+    description: Explicit App installation permission-checks permission.
+    default: ""
+  permission-contents:
+    description: Explicit App installation permission-contents permission.
+    default: ""
+  permission-pull-requests:
+    description: Explicit App installation permission-pull-requests permission.
+    default: ""
+outputs:
+  token:
+    description: Selected masked credential.
+    value: ${{ steps.select.outputs.token }}
+  metadata-json:
+    description: Non-secret token selection evidence.
+    value: ${{ steps.select.outputs.metadata-json }}
+  repository:
+    description: Validated target repository.
+    value: ${{ steps.scope.outputs.repository }}
+runs:
+  using: composite
+  steps:
+    - name: Admit exact GitHub access scope
+      id: scope
+      uses: ./.buildchain/runtime/actions/providers/github/admit-access
+      with:
+        repository: ${{ inputs.repository }}
+        client-configured: ${{ inputs.client-id != '' }}
+        app-id-configured: ${{ inputs.app-id != '' }}
+        private-key-configured: ${{ inputs.private-key != '' }}
+        failure-policy: ${{ inputs.failure-policy }}
+        organization: ${{ inputs.organization }}
+    - name: Create App installation token
+      id: app
+      if: ${{ steps.scope.outputs.requested == 'true' }}
+      uses: actions/create-github-app-token@v3.1.1
+      continue-on-error: true
+      with:
+        client-id: ${{ inputs.client-id }}
+        private-key: ${{ inputs.private-key }}
+        owner: ${{ steps.scope.outputs.owner }}
+        repositories: ${{ steps.scope.outputs.name }}
+        app-id: ${{ inputs.app-id }}
+        permission-checks: ${{ inputs.permission-checks }}
+        permission-contents: ${{ inputs.permission-contents }}
+        permission-pull-requests: ${{ inputs.permission-pull-requests }}
+    - name: Select scoped credential
+      id: select
+      uses: ./.buildchain/runtime/actions/providers/github/select-token
+      with:
+        client-configured: ${{ inputs.client-id != '' || inputs.app-id != '' }}
+        private-key-configured: ${{ inputs.private-key != '' }}
+        app-outcome: ${{ steps.app.outcome }}
+        app-token: ${{ steps.app.outputs.token }}
+        fallback-token: ${{ inputs.fallback-token }}
+        workflow-token: ${{ inputs.workflow-token }}
+        failure-policy: ${{ inputs.failure-policy }}
+        require-token: ${{ inputs.require-token }}

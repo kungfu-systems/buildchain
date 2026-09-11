@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-24
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -37,7 +37,7 @@ Passport have been sealed and uploaded. It downloads those files as data and
 never checks out or executes consumer source.
 
 The attester checks out only
-`actions/github-artifact-attestation` from an exact Buildchain commit. It
+`actions/build/artifact/github-attest` from an exact Buildchain commit. It
 rejects a floating Buildchain ref, a different caller repository, a different
 source SHA, a different workflow run, a non-Linux platform manifest, or a
 subject digest absent from the Release Passport.
@@ -137,9 +137,8 @@ permissions:
 
 jobs:
   promote:
-    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@<exact-buildchain-v3-runtime-sha>
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4
     with:
-      buildchain-ref: <exact-buildchain-v3-runtime-sha>
       github-release: true
       release-passport: true
       github-artifact-attestation-policy-json: .buildchain/release-candidate/payload/<artifact>/policy.json
@@ -147,14 +146,14 @@ jobs:
 ```
 
 Promotion binds the policy into the Passport, stages only digest-matching data,
-calls the exact v3 signer, verifies the provider identity a second time, and
+calls the public signer entry, verifies the provider identity a second time, and
 publishes immutable bundle, predicate, verification, evidence, and receipt
 assets beside the release artifact. A same-name Release asset with different
 bytes is rejected instead of overwritten.
 
 Low-level callers may call the reusable attester directly after their Passport
-job. Both the reusable workflow ref and `buildchain-ref` use the same exact
-40-hex signer-bootstrap commit and fail closed if the provider identity differs:
+job. The public entry selects the execution runtime through the same contract as
+build and release. Provider signer identity and subject digests remain mandatory:
 
 ```yaml
 jobs:
@@ -166,9 +165,8 @@ jobs:
       attestations: write
       contents: read
       id-token: write
-    uses: kungfu-systems/buildchain/.github/workflows/github-artifact-attestation.yml@<exact-signer-bootstrap-sha>
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-artifact-attestation.yml@v4
     with:
-      buildchain-ref: <exact-signer-bootstrap-sha>
       evidence-run-id: ${{ github.run_id }}
       source-sha: ${{ github.sha }}
       subject-artifact-name: linux-release
@@ -191,10 +189,9 @@ custom predicate, and Buildchain evidence root:
 
 The reusable workflow runs that same exact signer/source verification
 immediately after `actions/attest` and before it finalizes or uploads evidence.
-Passing a different `buildchain-ref` than the commit used to invoke the reusable
-workflow therefore fails in the signer job, not only during later consumption.
-The policy additionally retains the distinct Buildchain runtime SHA that
-created the build and release evidence.
+The provider signer commit identifies the workflow that issued the attestation.
+The selected execution runtime is separate provenance and may differ. Subject,
+signer and evidence-root verification does not compare entry and runtime SHAs.
 
 ```bash
 buildchain verify github-artifact-attestation \

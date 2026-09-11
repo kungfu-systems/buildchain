@@ -1,0 +1,18 @@
+name: Verify release line relationship
+description: Verify the source version and exact head/base relationship.
+inputs:
+  directory:
+    description: Consumer checkout.
+    required: true
+outputs:
+  keyword:
+    description: keyword
+  version:
+    description: version
+  head-ref:
+    description: head-ref
+  base-ref:
+    description: base-ref
+runs:
+  using: node24
+  main: dist/index.js

@@ -13,12 +13,12 @@ export {
   runLifecycleStage,
   updateConfiguredVersionStateContents,
   validateBuildchainConfig,
-} from "./buildchain-config.js";
+} from "./consumer/buildchain-config.js";
 
 export {
   ANCHORED_VERSION_MATERIAL_CONTRACT,
   createAnchoredVersionMaterialEvidence,
-} from "./anchored-version-material.js";
+} from "./build/anchored-version-material.js";
 
 export {
   STABLE_CANDIDATE_LEDGER_CONTRACT,
@@ -32,7 +32,7 @@ export {
   selectStableCandidate,
   setStableCandidateHold,
   stableCandidatePromotionRefs,
-} from "./stable-candidate-ledger.js";
+} from "./release/stable-candidate-ledger.js";
 
 export {
   assertPackageManager,
@@ -44,7 +44,7 @@ export {
   getWorkspaceInfo,
   shellJoin,
   validatePackageManagerContract,
-} from "./package-manager.js";
+} from "./build/package-manager.js";
 
 export {
   createReleaseTransaction,
@@ -56,7 +56,7 @@ export {
   transitionReleaseTransaction,
   validatePublishEvidence,
   writeReleaseTransaction,
-} from "./publish-transaction.js";
+} from "./release/publish-transaction.js";
 
 export {
   RELEASE_TAIL_CAPABILITY_REGISTRY,
@@ -79,7 +79,7 @@ export {
   validateReleaseTailEffectPlan,
   validateReleaseTailTransaction,
   writeReleaseTailTransaction,
-} from "./release-tail-provider-plane.js";
+} from "./release/release-tail-provider-plane.js";
 
 export {
   ReleaseTailProviderError,
@@ -89,19 +89,14 @@ export {
   createSignedStaticChannelAdapter,
   createSiteReleaseActivationAdapter,
   githubReleaseAssetsTargetRoot,
-} from "./release-tail-provider-adapters.js";
+} from "./release/release-tail-provider-adapters.js";
 
-export {
-  RELEASE_TAIL_COMPATIBILITY_CONTRACT,
-  RELEASE_TAIL_LEGACY_HOOKS,
-  diagnoseLegacyReleaseTailHooks,
-} from "./release-tail-compatibility.js";
 
 export {
   createPortableDevCachePlan,
   createPortableDevCacheReceipt,
   verifyPortableDevCachePlan,
-} from "./portable-dev-cache.js";
+} from "./build/portable-dev-cache.js";
 
 export {
   BUILDCHAIN_CACHE_EVIDENCE_SET_CONTRACT,
@@ -111,12 +106,12 @@ export {
   createCacheOperationReceipt,
   verifyCacheEvidenceSet,
   verifyCacheOperationReceipt,
-} from "./cache-evidence.js";
+} from "./observability/cache-evidence.js";
 
 export {
   explainReleaseLineDryRun,
   formatReleaseLineDryRun,
-} from "./release-line-dry-run.js";
+} from "./release/release-line-dry-run.js";
 
 export {
   BUILDCHAIN_LOG_EVENT_CONTRACT,
@@ -129,7 +124,7 @@ export {
   redactBuildchainLogAttributes,
   summarizeBuildchainLogEvents,
   verifyBuildchainLogEvents,
-} from "./logging.js";
+} from "./observability/logging.js";
 
 export {
   BUILDCHAIN_CANDIDATE_TIMELINE_CONTRACT,
@@ -137,18 +132,18 @@ export {
   createCandidateTimeline,
   formatCandidateTimelineReport,
   normalizeCandidateTimelineEvent,
-} from "./candidate-timeline.js";
+} from "./observability/candidate-timeline.js";
 
 export {
   CI_LANE_CHANGE_BUDGET_CONTRACT,
   evaluateCiLaneChangeBudget,
-} from "./ci-lane-change-budget.js";
+} from "./governance/ci-lane-change-budget.js";
 
 export {
   CHANNEL_CANDIDATE_DECISION_SCHEMA,
   channelCandidateSourceLockRef,
   decideChannelCandidate,
-} from "./channel-candidate.js";
+} from "./release/channel-candidate.js";
 
 export {
   BUILDCHAIN_ANCHORED_PACKAGE_RELEASE_VALIDATION_CONTRACT,
@@ -180,11 +175,10 @@ export {
   summarizeProcessSamples,
   validateAnchoredPackageRelease,
   writeDiagnosticsArtifact,
-} from "./diagnostics.js";
+} from "./observability/diagnostics.js";
 
 export {
   BUILD_FACTS_GIT_CONTRACT,
-  BUILD_FACTS_LEGACY_KUNGFU_BUILDINFO_CONTRACT,
   BUILD_FACTS_MODULE_CONTRACT,
   BUILD_FACTS_PRODUCT_CONTRACT,
   BUILD_FACTS_VERIFY_CONTRACT,
@@ -194,11 +188,9 @@ export {
   collectGitSourceFacts,
   collectModuleBuildFacts,
   collectVersionSourceFact,
-  createKungfuBuildInfoProjection,
   verifyBuildFacts,
   writeBuildFacts,
-  writeKungfuBuildInfoProjection,
-} from "./build-facts.js";
+} from "./build/build-facts.js";
 
 export {
   FAMILY_RELEASE_EVIDENCE_CONTRACT,
@@ -206,20 +198,20 @@ export {
   createReleaseCandidatePassport,
   sha256Json,
   validateReleaseCandidatePassport,
-} from "./release-candidate.js";
+} from "./release/release-candidate.js";
 
 export {
   RELEASE_CANDIDATE_RECOVERY_CONTRACT,
   ReleaseCandidateRecoveryError,
   recoveryFailure,
   verifyReleaseCandidateRecovery,
-} from "./release-candidate-recovery.js";
+} from "./release/release-candidate-recovery.js";
 
 export {
   PUBLICATION_NPM_PACKAGE_CONTRACT,
   collectPublicationPackageFacts,
   preparePublicationNpmPackage,
-} from "./publication-package.js";
+} from "./publication/publication-package.js";
 
 export {
   PUBLICATION_ADMISSION_CONTRACT,
@@ -246,14 +238,14 @@ export {
   publicationGateAggregateBindings,
   verifyPublicationAdmission,
   verifyPublicationQualificationReceipt,
-} from "./publication-authority.js";
+} from "./publication/publication-authority.js";
 
 export {
   PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
   createPublicationArtifactCandidate,
   publicationArtifactCandidateDigest,
   resolvePublicationCandidateFile,
-} from "./publication-artifact-candidate.js";
+} from "./publication/publication-artifact-candidate.js";
 
 export {
   WEB_SURFACE_PRODUCTION_DECISION_CONTRACT,
@@ -261,14 +253,14 @@ export {
   createWebSurfaceProductionDecision,
   createWebSurfacePublicationCandidate,
   webSurfacePublicationDigest,
-} from "./web-surface-publication-candidate.js";
+} from "./web/web-surface-publication-candidate.js";
 
 export {
   buildchainPublicationAuthorityDescriptors,
   createBuildchainPublicationAuthorityRegistry,
-} from "./buildchain-publication-authority.js";
+} from "./governance/buildchain-publication-authority.js";
 
-export { evaluatePublicationControlPlaneSnapshot } from "./publication-control-plane-audit.js";
+export { evaluatePublicationControlPlaneSnapshot } from "./publication/publication-control-plane-audit.js";
 export {
   BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY,
   BUILDCHAIN_GITHUB_GOVERNANCE_PROTECTED_PATHS,
@@ -290,10 +282,10 @@ export {
   parseCodeowners,
   resolveGithubGovernanceTargetPolicy,
   verifyGithubGovernanceReceipt,
-} from "./github-governance-authority.js";
+} from "./governance/github-governance-authority.js";
 
-export * from "./engineering-housekeeper.js";
-export * from "./engineering-housekeeper-github.js";
+export * from "./governance/engineering-housekeeper.js";
+export * from "./governance/engineering-housekeeper-github.js";
 
 export {
   ARTIFACT_PASSPORT_LOCATOR_CONTRACT,
@@ -302,10 +294,8 @@ export {
   discoverArtifactPassport,
   explainArtifactPassport,
   resolveArtifactSubject,
-  sha512IntegrityBuffer,
-  sha512IntegrityFile,
   verifyArtifactPassport,
-} from "./artifact-passport.js";
+} from "./build/artifact-passport.js";
 
 export {
   ARTIFACT_VERIFICATION_ENVELOPE_CHECK_CONTRACT,
@@ -319,7 +309,7 @@ export {
   sealArtifactVerificationReport,
   validateKfdAdopterReleaseBinding,
   verifyArtifactVerificationEnvelope,
-} from "./artifact-verification-envelope.js";
+} from "./build/artifact-verification-envelope.js";
 
 export {
   ARTIFACT_SIGNING_AUTHORITY_CONTRACT,
@@ -332,7 +322,7 @@ export {
   resolveArtifactSigningProfile,
   validateArtifactSigningReceipt,
   validateArtifactSigningRequest,
-} from "./artifact-signing.js";
+} from "./build/artifact-signing.js";
 
 export {
   ARTIFACT_SIGNING_RESULT_CONTRACT,
@@ -340,13 +330,13 @@ export {
   createArtifactSigningResult,
   validateArtifactSigningResult,
   verifyArtifactSigningResultFiles,
-} from "./artifact-signing-result.js";
+} from "./build/artifact-signing-result.js";
 
 export {
   DETACHED_ARTIFACT_SIGNATURE_CONTRACT,
   signDetachedArtifactRequest,
   verifyDetachedArtifactSignature,
-} from "./detached-artifact-signature.js";
+} from "./build/detached-artifact-signature.js";
 
 export {
   BUILDCHAIN_CONTRACT_LOCK,
@@ -360,7 +350,7 @@ export {
   readBuildchainContractWorld,
   renderBuildchainContractDriftIssueBody,
   sha256Json as sha256BuildchainContractJson,
-} from "./buildchain-contract.js";
+} from "./contracts/buildchain-contract.js";
 
 export {
   BUILDCHAIN_CONTROLLER_AGGREGATE_CONTRACT,
@@ -377,12 +367,12 @@ export {
   validateControllerPlan,
   validateControllerReceipt,
   validateControllerReceiptReference,
-} from "./controller-evidence.js";
+} from "./observability/controller-evidence.js";
 
 export {
   planReleaseLineBootstrap,
   writeReleaseLineBootstrapVersionState,
-} from "./release-line-bootstrap.js";
+} from "./release/release-line-bootstrap.js";
 
 export {
   BUILDCHAIN_JSON_FORMATTING_POLICY,
@@ -401,7 +391,7 @@ export {
   sha256Json as sha256KfdJson,
   validateKfd1ReleaseGateEvidence,
   validateKfd3CollaborationInterfaceReleaseGateEvidence,
-} from "./kfd-gate.js";
+} from "./adoption/kfd-gate.js";
 
 export {
   BUILDCHAIN_AGENT_MANUALS,
@@ -414,7 +404,7 @@ export {
   createBuildchainKfdClaimRegistry,
   createBuildchainKfdSurfaceRegistry,
   createBuildchainPublicClaimDefinitions,
-} from "./buildchain-kfd-claims.js";
+} from "./adoption/buildchain-kfd-claims.js";
 
 export {
   BUILDCHAIN_PUBLIC_SURFACE_AUDIT_CONTRACT,
@@ -425,7 +415,7 @@ export {
   enumerateDocCommandRefs,
   enumerateSitePages,
   enumerateWorkflowInputs,
-} from "./public-surface-audit.js";
+} from "./contracts/public-surface-audit.js";
 
 export {
   PUBLICATION_ARTIFACT_ARCHIVE_CONTRACT,
@@ -435,30 +425,19 @@ export {
   collectPublicationArtifact,
   createPublicationSourceBundle,
   writePublicationArtifact,
-} from "./publication-artifact.js";
+} from "./publication/publication-artifact.js";
 
-export {
-  AGENT_INDEX_CONTRACT,
-  ARTIFACT_EVIDENCE_CONTRACT,
-  IMPACT_LEDGER_CONTRACT,
-  KFD2_RELEASE_TRUST_PASSPORT_CONTRACT,
-  KFD2_TRUST_PROOF_CONTRACT,
-  PRODUCT_MECHANISM_CONTRACT,
-  RELEASE_CHECK_REPORT_CONTRACT,
-  RELEASE_EVIDENCE_ATTACHMENT_CONTRACT,
-  RELEASE_PASSPORT_CONTRACT,
-  collectGitHubReleasePassport,
-  createArtifactEvidence,
-  createReleaseCheckReport,
-  createReleasePassport,
-  explainReleasePassport,
-  makeReleasePassportFixtureAssets,
-  readJsonFromLocation,
-  sha256File,
-  sha256Text,
-  validateKnownReleasePassportContracts,
-  verifyReleasePassport,
-} from "./release-passport.js";
+export { AGENT_INDEX_CONTRACT, ARTIFACT_EVIDENCE_CONTRACT, IMPACT_LEDGER_CONTRACT, KFD2_RELEASE_TRUST_PASSPORT_CONTRACT, KFD2_TRUST_PROOF_CONTRACT, PRODUCT_MECHANISM_CONTRACT, RELEASE_EVIDENCE_ATTACHMENT_CONTRACT } from "./release/passport/identity.js";
+export { RELEASE_CHECK_REPORT_CONTRACT, RELEASE_PASSPORT_CONTRACT } from "./release/release-passport-contract.js";
+export { collectGitHubReleasePassport } from "./release/passport/collection.js";
+export { createArtifactEvidence } from "./release/passport/assembly-artifacts.js";
+export { createReleasePassport } from "./release/passport/assembly.js";
+export { createReleaseCheckReport } from "./release/passport/report.js";
+export { explainReleasePassport, verifyReleasePassport } from "./release/release-passport.js";
+export { makeReleasePassportFixtureAssets, validateKnownReleasePassportContracts } from "./release/passport/fixture.js";
+export { readJsonFromLocation } from "./release/passport/locations.js";
+export { sha256File } from "./release/passport/files.js";
+export { sha256Text } from "./release/passport/json.js";
 
 export {
   GITHUB_ARTIFACT_ATTESTATION_EVIDENCE_CONTRACT,
@@ -477,7 +456,7 @@ export {
   normalizeGitHubArtifactAttestationPolicy,
   prepareGitHubArtifactAttestation,
   verifyGitHubArtifactAttestationEvidence,
-} from "./github-artifact-attestation.js";
+} from "./build/github-artifact-attestation.js";
 
 export {
   KFD_AGENT_HUB_ADOPTION_CONTRACT,
@@ -490,7 +469,7 @@ export {
   initKfdAgentHub,
   inspectKfdAgentHub,
   testKfdAgentHub,
-} from "./kfd-agent-hub.js";
+} from "./adoption/kfd-agent-hub.js";
 
 export {
   KFD_PRODUCT_GATE_CONTRACT,
@@ -502,7 +481,7 @@ export {
   kfdProductGates,
   validateKfdProductGateResult,
   verifyKfdRecord,
-} from "./kfd-product-gates.js";
+} from "./adoption/kfd-product-gates.js";
 
 export {
   RELEASE_PASSPORT_CHECK_MANIFEST_CONTRACT,
@@ -510,7 +489,7 @@ export {
   RELEASE_PASSPORT_SCHEMA_ID,
   createReleasePassportCheckManifest,
   validateReleasePassportSchema,
-} from "./release-passport-contract.js";
+} from "./release/release-passport-contract.js";
 
 export {
   BUILDCHAIN_CONSUMER_ISSUE_CONTRACT,
@@ -530,7 +509,7 @@ export {
   reportWorkflowFrictionIssue,
   truncateUtf8,
   workflowFrictionMarker,
-} from "./issue-reporting.js";
+} from "./governance/issue-reporting.js";
 
 export {
   BADGE_BUNDLE_DEFAULT_CLAIMS,
@@ -550,7 +529,7 @@ export {
   renderReadmeBadgeBlock,
   updateBadgeBundleBlock,
   updateReadmeBadgeBlock,
-} from "./readme-badges.js";
+} from "./web/readme-badges.js";
 
 export {
   HOMEBREW_TAP_CHECK_CONTRACT,
@@ -560,7 +539,7 @@ export {
   collectHomebrewTapFacts,
   renderHomebrewFormula,
   updateHomebrewTap,
-} from "./homebrew.js";
+} from "./build/homebrew.js";
 
 export {
   BUILDCHAIN_CONFIG_PATH,
@@ -601,7 +580,7 @@ export {
   resolveKfd2ProductClaimsRegistryPath,
   resolveKfd3SurfaceRegistryPath,
   resolveReleasePassportPath,
-} from "./buildchain-layout.js";
+} from "./contracts/buildchain-layout.js";
 export {
   KFD2_PRODUCT_CLAIMS_OUTPUT_CONTRACT,
   KFD2_PRODUCT_CLAIMS_REGISTRY_CONTRACT,
@@ -611,7 +590,7 @@ export {
   renderKfd2ProductClaimOutputs,
   validateKfd2ProductClaimsRegistry,
   writeKfd2ProductClaimOutputs,
-} from "./kfd2-product-claims.js";
+} from "./adoption/kfd2-product-claims.js";
 export {
   buildchainKfdClaims,
   collectKfdStatus,
@@ -625,7 +604,7 @@ export {
   normalizeKfdStandardId,
   readKfdSchema,
   schemas,
-} from "./kfd.js";
+} from "./adoption/kfd.js";
 
 export {
   KFD3_CAPABILITY_QUERY_CONTRACT,
@@ -641,12 +620,12 @@ export {
   readKfd3SurfaceRegistry,
   registerKfd3Surfaces,
   writeKfd3SurfaceRegistry,
-} from "./kfd3-surface-register.js";
+} from "./adoption/kfd3-surface-register.js";
 
-export * from "./release-propagation.js";
-export * from "./floating-consumer-policy.js";
-export * from "./runtime-ref-resume-authority.js";
-export * from "./publication-qualification.js";
+export * from "./release/release-propagation.js";
+export * from "./consumer/floating-consumer-policy.js";
+export * from "./release/recovery/lineage.js";
+export * from "./publication/publication-qualification.js";
 
 export {
   RELEASE_ACTIVATION_CONTRACT,
@@ -660,42 +639,31 @@ export {
   rollbackReleaseActivationTransaction,
   validateReleaseActivationReceiptSet,
   validateReleaseActivationTransaction,
-} from "./release-activation-transaction.js";
+} from "./release/release-activation-transaction.js";
 
 export {
   PUBLICATION_REPRODUCIBILITY_RECEIPT_CONTRACT,
   verifyPublicationReproducibility,
-} from "./publication-reproducibility.js";
+} from "./publication/publication-reproducibility.js";
 
 export {
   PUBLICATION_SEALED_BUNDLE_CONTRACT,
   createPublicationSealedBundle,
   verifyPublicationSealedBundle,
-} from "./publication-sealed-bundle.js";
+} from "./publication/publication-sealed-bundle.js";
+
+export { PAPER_ALPHA_PLAN_CONTRACT, PAPER_BUILD_PLAN_CONTRACT, PAPER_MIGRATION_CONTRACT, PAPER_NPM_BOOTSTRAP_CONTRACT, PAPER_PREFLIGHT_CONTRACT, PAPER_RESUME_PLAN_CONTRACT, PAPER_SCAFFOLD_CONTRACT, PAPER_STATE_ORDER, PAPER_STATUS_CONTRACT, PAPER_VISIBILITY_CONTRACT } from "./paper/operations/identity.js";
+export { PAPER_PATHS, resolvePaperRepository } from "./paper/paper-repository.js";
+export { collectPaperPreflight } from "./paper/paper.js";
+export { collectPaperStatus } from "./paper/operations/status.js";
+export { createPaperAlphaPlan, createPaperBuildPlan, createPaperResumePlan } from "./paper/operations/plans.js";
+export { executePaperNpmBootstrap } from "./paper/operations/bootstrap.js";
+export { planPaperMigration, planPaperScaffold, writePaperMigration, writePaperScaffold } from "./paper/operations/scaffold.js"; export * from "./paper/paper-work.js"; export * from "./paper/paper-fleet.js";
 
 export {
-  PAPER_ALPHA_PLAN_CONTRACT,
-  PAPER_BUILD_PLAN_CONTRACT,
-  PAPER_MIGRATION_CONTRACT,
-  PAPER_NPM_BOOTSTRAP_CONTRACT,
-  PAPER_PATHS,
-  PAPER_PREFLIGHT_CONTRACT,
-  PAPER_RESUME_PLAN_CONTRACT,
-  PAPER_SCAFFOLD_CONTRACT,
-  PAPER_STATE_ORDER,
-  PAPER_STATUS_CONTRACT,
-  PAPER_VISIBILITY_CONTRACT,
-  collectPaperPreflight,
-  collectPaperStatus,
-  createPaperAlphaPlan,
-  createPaperBuildPlan,
-  createPaperResumePlan,
-  executePaperNpmBootstrap,
-  planPaperMigration,
-  planPaperScaffold,
-  resolvePaperRepository,
-  writePaperMigration,
-  writePaperScaffold,
-} from "./paper.js"; export * from "./paper-work.js"; export * from "./paper-fleet.js";
+  SURFACE_TIMESTAMP_POLICY_CONTRACT,
+  applySurfaceTimestampPolicy,
+  createSurfaceTimestampPolicy,
+} from "./contracts/surface-manifest.js";
 
-export * from "./public-export-compatibility.js";
+export { sha512IntegrityBuffer, sha512IntegrityFile } from "./build/artifact-integrity.js";

@@ -1,0 +1,57 @@
+name: signing-authority-windows
+description: Execute the signing-authority windows capability within its caller
+  job boundary.
+inputs:
+  timestamp-url:
+    description: Windows signing timestamp service.
+  certificate-sha1:
+    description: Expected Windows certificate fingerprint.
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  certificate-base64:
+    description: Explicit scoped provider credential.
+    required: true
+  certificate-password:
+    description: Explicit scoped provider credential.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+  item-json:
+    description: Declared platform matrix value.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Admit source checkout
+      id: source-boundary
+      if: ${{ always() }}
+      uses: ./.buildchain/runtime/actions/build/source/admit
+      with:
+        source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
+    - uses: ./.buildchain/runtime/actions/runtime/dependencies/install
+      with:
+        directory: .
+        production: "false"
+    - uses: actions/download-artifact@v7.0.0
+      with:
+        name: authority-intake-${{ fromJSON(inputs.request-json).correlation-id }}
+        path: .buildchain/authority-intake
+    - name: Sign and qualify native windows payload
+      uses: ./.buildchain/runtime/actions/build/signing/sign-windows
+      with:
+        request-json: ${{ inputs.request-json }}
+        item-json: ${{ inputs.item-json }}
+        certificate-base64: ${{ inputs.certificate-base64 }}
+        certificate-password: ${{ inputs.certificate-password }}
+        certificate-sha1: ${{ inputs.certificate-sha1 }}
+        timestamp-url: ${{ inputs.timestamp-url }}
+    - uses: actions/upload-artifact@v7.0.1
+      with:
+        name: authority-result-windows-${{ fromJSON(inputs.item-json).slug }}-${{
+          fromJSON(inputs.request-json).correlation-id }}
+        path: .buildchain/provider-results/${{ fromJSON(inputs.item-json).slug }}
+        if-no-files-found: error
+        retention-days: 14
+        compression-level: 0

@@ -1,0 +1,26 @@
+name: Reconcile production release PR
+description: Reuse or create the release intent and persist a diagnostic handoff on every outcome.
+inputs:
+  request-json:
+    description: Typed Web workflow request.
+    required: true
+  token:
+    description: Scoped PR credential.
+    required: false
+  credential-json:
+    description: Non-secret credential selection evidence.
+    required: true
+outputs:
+  release-pr-status:
+    description: release pr status
+  production-release-pr-status:
+    description: production release pr status
+  production-release-pr-url:
+    description: production release pr url
+  production-release-pr:
+    description: production release pr
+  production-release-branch:
+    description: production release branch
+runs:
+  using: node24
+  main: dist/index.js

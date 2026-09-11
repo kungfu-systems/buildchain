@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:b47f6a77d495c01fe2dfa35d3b0f60a36aed428b0e470c9ad41c4ea1384963ff",
+      "digest": "sha256:3912044182ad1a87be183a8b8e2bb277502593fb58d6d087fe321ad9b7296204",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -37,7 +37,7 @@
       "title": "Auditable demo artifact pipeline",
       "path": "docs/auditable-demo.md",
       "plane": "verify",
-      "digest": "sha256:8039e9f759da1a39b6ef908a421b2e573dadb9bfea0aaaf53494eb8a02598cc8",
+      "digest": "sha256:17b0756d1cc1009144219748b31497a12ebd19e79218a7451b2632be19bc9ba8",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -64,7 +64,7 @@
       "title": "Release Passport protocol",
       "path": "docs/release-passport.md",
       "plane": "verify",
-      "digest": "sha256:f87853f9f72b3c365e3f4bc492d78e28441be81f6836a59ac66463adf8e2b4a8",
+      "digest": "sha256:8e671261348c45fb8c88de4edebf47e54b87be92cc00c6297868899b499722a7",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -78,7 +78,7 @@
       "title": "GitHub-native Linux artifact attestation",
       "path": "docs/github-artifact-attestation.md",
       "plane": "verify",
-      "digest": "sha256:51f28b0b01fae4e3f80a7433f6c491d0c795bd091bff64ca1264c5cc0819c545",
+      "digest": "sha256:9274b03fa34152fc4cbe2f34437a570e550fec28274cdf995b4c5c3de40116bf",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -92,7 +92,7 @@
       "title": "Controller evidence contract",
       "path": "docs/controller-evidence.md",
       "plane": "verify",
-      "digest": "sha256:442e1b72e3977af56a8ae5e081ffd89c2f3ebcd9cfd50f07af730344bdf9fb0e",
+      "digest": "sha256:29c6ed804dffa2db6c674e0084138c8c7b3390cc861b37d8fb915d35bdb8275c",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -107,7 +107,7 @@
       "title": "Sealed publication authority",
       "path": "docs/publication-authority.md",
       "plane": "verify",
-      "digest": "sha256:227d20e70604b9f003a9d75364f39e01cb37f6936ac9ac0f0f495fb92afc7da9",
+      "digest": "sha256:ce7d7efaef90e2c50fc45dfa7c6682edc39e20455da68da0c65c529cf33107c9",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -121,7 +121,7 @@
       "title": "GitHub governance authority",
       "path": "docs/github-governance-authority.md",
       "plane": "verify",
-      "digest": "sha256:197ae7a949817f60f46b67b060731df14d0343d9daecd7d6eacfae9a526b6a12",
+      "digest": "sha256:2c820ba98c44dfe4a1fcbf20c7b18a4257dff68bbab90b033523e2f3af78c8d1",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -136,7 +136,7 @@
       "title": "Release Candidate Passport",
       "path": "docs/release-candidate.md",
       "plane": "verify",
-      "digest": "sha256:bf242de8bb97d73ef4489931940844f48223dfd66bf52b046869ca70d2454143",
+      "digest": "sha256:1390cc5e17b0352dcb3ac56c3650ccf7c61429da5feb6b7043cf6160b4576e72",
       "capabilityGroup": "reusable-build",
       "audience": [
         "release-operator",
@@ -165,7 +165,7 @@
       "title": "Next-development transition",
       "path": "docs/next-development-transition.md",
       "plane": "verify",
-      "digest": "sha256:2a3556d2b7dd1e3a27878c2741aa5ae42d628afa5bb94ab62e468d789ddf0806",
+      "digest": "sha256:06aecdf35d4176fca184ee935e53c8e5be1cd73ffa7c9f431ece69cec04a05c5",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "release-operator",
@@ -180,7 +180,7 @@
       "title": "Release propagation",
       "path": "docs/release-propagation.md",
       "plane": "use",
-      "digest": "sha256:6e8417ff70db290ee6197f064ed9b7a7da3770738509fac06161dad05b3fca7f",
+      "digest": "sha256:d3eb1d67cf2025b9f380af3b5a4c5156a9f5ff820d3fac29d206b022346fd3d8",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "release-operator",
@@ -222,7 +222,7 @@
       "title": "Binary distribution contract",
       "path": "docs/binary-distribution.md",
       "plane": "verify",
-      "digest": "sha256:b1611dcf0e6825e53921e4c9d31d1afe16fca81e6868360bfad1902587cd52ef",
+      "digest": "sha256:fe01140ac9ff62da7f9c077df538792a588eb1cb609f997eaf1ce56a7965a982",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -236,7 +236,7 @@
       "title": "Consumer issue reporting",
       "path": "docs/consumer-issue-reporting.md",
       "plane": "use",
-      "digest": "sha256:324342b10e69ca5ce6d04a267fb5fc2a6b52e674f6252eec2121557c5542f729",
+      "digest": "sha256:fb492b70f4a8db14d670cdb1503416439c5a9554048e9eadbccd547769b704f3",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
         "consumer",
@@ -278,7 +278,7 @@
       "title": "Site bundle contract",
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
-      "digest": "sha256:36a4e60e91f500ea1dcdbef97cd0250a2c26562b98d8d3622e8e0f9df2aad23b",
+      "digest": "sha256:8c0b8b9498e2fa956d9ba9652cc65d1f41b18cf4090ddd972ab10452366eb054",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "site",
@@ -292,7 +292,7 @@
       "title": "Migration inventory",
       "path": "docs/migration-inventory.md",
       "plane": "verify",
-      "digest": "sha256:25d896711f4efebffa9a8960b7eb97438d9fd4892aa08bef0339026e83a53bdf",
+      "digest": "sha256:3796f5b306c3402c24257542474a9767bf81d953526b50484798749ad869d041",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -306,7 +306,7 @@
       "title": "Ownership",
       "path": "docs/ownership.md",
       "plane": "why",
-      "digest": "sha256:91a1b59f0f71067c58ffd685a23b29e14a4d6fe33c1a44f8708b7d0512e4baa5",
+      "digest": "sha256:ec711580e467e807f6430a7d37ddbee1b3a6aa979bf93f5f26c85e702753c084",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer"
@@ -333,7 +333,7 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:fc2e0cd3f5718e05101d85f6363cefcd2336609c05dd6626b6a062b44c3a1a0d",
+      "digest": "sha256:2b7f6d3c8df25cd37fe8028690fc2d9cdce80de873341ef815f800c4ace880db",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -347,7 +347,7 @@
       "title": "Generated CLI reference",
       "path": "docs/cli-reference.md",
       "plane": "use",
-      "digest": "sha256:f8c1d64d8087819b6496b21878ad1457ecba52c0b5e74793c35ddb9bd838497c",
+      "digest": "sha256:f9bdeffb0751225c13bf249305c4bfb20d8ab52ca502d0e3d35370b3d2b1e47a",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -362,7 +362,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:db6c29f2af429020990db6b517063ef841c16f97b937e9d7720fdbde561e88e5",
+      "digest": "sha256:ba1b9db61750646d507f086f0f267965a94b6c1276ab6d9f958ca4645b2a5073",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -390,7 +390,7 @@
       "title": "KFD support and KFD-3 surface registration",
       "path": "docs/kfd-support.md",
       "plane": "verify",
-      "digest": "sha256:e13f0e58a1bd4699ce8d443c0d316d37c9db807e03917bb2a5f8ebd11cdd7153",
+      "digest": "sha256:ee42926fe1d00b065f0e17d907773cf0a839e595da79e90097ae29d0f2e266d9",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "agent",
@@ -419,7 +419,7 @@
       "title": "Lifecycle protocol",
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
-      "digest": "sha256:edff8787985801d060efe9c924d80ac1689f5f2305d853f645fe877bab34c207",
+      "digest": "sha256:630bc3b568abe02c35e4e3115c856d609ea3178b92fc071112188e1e47efc035",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -433,7 +433,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:204d96d3a3979726557509695d5e326288dd622c3e901d89c76ad6b3cb30ac62",
+      "digest": "sha256:756f5b9c979b7fb1e379b6427eea1abe177c4d0cf5159e944d4f7e3d9aef4ffb",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -447,7 +447,7 @@
       "title": "V4 public adopter delivery",
       "path": "docs/v4-adopter-delivery.md",
       "plane": "verify",
-      "digest": "sha256:4036bd6c0d744e4a166e463f9b869bcf7db0ce31159fefa15c0d1f8ee36fda4c",
+      "digest": "sha256:f3f34ce4f2b36ac935bc5cd7ef3a7306fc7c8eff85b40b8ebf369ac45bde1635",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -462,7 +462,7 @@
       "title": "Publish transaction",
       "path": "docs/publish-transaction.md",
       "plane": "verify",
-      "digest": "sha256:b1ee27a958bfe2327ec4702f6f288d916b8c7362bcc01c2c59388ffbe61037bf",
+      "digest": "sha256:d2acad45ad98f66202c59d9b46732ccc41694d56a273115b6fc66aff519ad3dd",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator"
@@ -475,7 +475,7 @@
       "title": "Declarative release-tail contract",
       "path": "docs/release-tail-contract.md",
       "plane": "verify",
-      "digest": "sha256:30eeb54eb9fdadc6ff7e26c84572afa84b9778831ebfe581b7969751cd0ca3db",
+      "digest": "sha256:6a24267b121a455051a9e513a86e12bae81e577b1b4fd9236c3f6fca20bac69e",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -490,7 +490,7 @@
       "title": "Declarative release-tail provider plane",
       "path": "docs/release-tail-provider-plane.md",
       "plane": "use",
-      "digest": "sha256:72dd8231f51003c8a0d6532991b908b39de02deb11300e8c63113cd3a9e5cd8e",
+      "digest": "sha256:ee07fcad90540a4ba47531c8e6dd5be6e632676d81957ecb16f9a5891741b1eb",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -505,7 +505,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:4dca8751549a33393a0eb6f7237e1e70e9c586929b1e2792f7b32e9beadef75f",
+      "digest": "sha256:667e120366136e4a9c76dc2cc872f79e7d7e99b5997b7cfbb121b4dc60ef9c1e",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -519,7 +519,7 @@
       "title": "Buildchain v4 compatibility Facts",
       "path": "docs/v4-compatibility-facts.md",
       "plane": "verify",
-      "digest": "sha256:d29c904a17aca0ca3ad4f48a826f530610d77ffca8bde76ef7e5b4c245c2ca47",
+      "digest": "sha256:008e645820fe527b6a40b4e97936ec770ed0496953bc83d27f970d3a6557b9b8",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "developer",
@@ -548,7 +548,7 @@
       "title": "Runtime train validation",
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
-      "digest": "sha256:6f362a7ad276acfe34b2faa74b3e1212c5cdc451f137b65002975e642540fa5b",
+      "digest": "sha256:82680cf3fb71e32639f186d3e3f92f3e57bea3755065937487af794cfdb711fc",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -575,7 +575,7 @@
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "digest": "sha256:484e896746d2f4cca4f9f18d29c14784ec20143c12affc3dbb9ccfbf8f221b55",
+      "digest": "sha256:6409f312df40a989dcbdb6ae41aab5bf419420d3b937b74c85a0ac878e71519c",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "site",

@@ -10,7 +10,7 @@ import {
   resolveArtifactSigningProfile,
   validateArtifactSigningReceipt,
   validateArtifactSigningRequest,
-} from "../packages/core/artifact-signing.js";
+} from "../packages/core/build/artifact-signing.js";
 
 const SOURCE_SHA = "1".repeat(40);
 const TREE_SHA = "2".repeat(40);

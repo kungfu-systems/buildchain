@@ -12,11 +12,11 @@ import {
   finalizeBuildchainContractWorld,
   readBuildchainContractWorld,
   renderBuildchainContractDriftIssueBody,
-} from "../packages/core/buildchain-contract.js";
+} from "../packages/core/contracts/buildchain-contract.js";
 import {
   checkBuildchainContractLock,
   writeBuildchainContractLock,
-} from "../scripts/buildchain-contract-lock.mjs";
+} from "../packages/core/contracts/commands/buildchain-contract-lock.mjs";
 
 function tempDir(name) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `buildchain-contract-${name}-`));
@@ -98,7 +98,7 @@ test("contract compatibility cannot bypass channel binding on unchanged digests"
   assert.match(result.reasons.join("\n"), /runtime v3-alpha is alpha, expected stable/);
 });
 
-test("optional promote action inputs remain compatible with the accepted alpha contract", () => {
+test("historical alpha contract digests receive no implicit compatibility allowance", () => {
   const current = createBuildchainContractWorld({
     root: path.resolve(import.meta.dirname, ".."),
     packageJson: { name: "@kungfu-tech/buildchain", version: "2.14.17-alpha.0" },
@@ -129,9 +129,9 @@ test("optional promote action inputs remain compatible with the accepted alpha c
     runtimeClass: "alpha",
   });
 
-  assert.equal(result.ok, true);
-  assert.equal(result.status, "compatible-drift");
-  assert.doesNotMatch(result.reasons.join("\n"), /promote-buildchain-ref-action/);
+  assert.equal(result.ok, false);
+  assert.equal(result.status, "breaking-drift");
+  assert.match(result.reasons.join("\n"), /promote-buildchain-ref-action/);
 });
 
 test("Buildchain contract lock fails closed on breaking drift", () => {
@@ -257,11 +257,11 @@ test("contract world exposes web-surface floating contract lock gate", () => {
   const surface = contract.surfaces.find((entry) => entry.id === "web-surface");
 
   assert.ok(surface);
-  assert.equal(surface.path, ".github/workflows/.web-surface.yml");
-  assert.match(surface.publicRef, /\.github\/workflows\/\.web-surface\.yml@v2/);
-  assert.match(surface.optionalInputs.join("\n"), /buildchain-contract-lock-path/);
-  assert.match(surface.optionalInputs.join("\n"), /buildchain-contract-compatibility-policy/);
-  assert.match(surface.optionalInputs.join("\n"), /buildchain-contract-drift-issue-mode/);
+  assert.equal(surface.path, ".github/workflows/public-release-web.yml");
+  assert.match(surface.publicRef, /\.github\/workflows\/public-release-web\.yml@v2/);
+  assert.ok(surface.optionalInputs.includes("contract-lock"));
+  assert.ok(surface.optionalInputs.includes("runtime-ref"));
+  assert.doesNotMatch(surface.optionalInputs.join("\n"), /buildchain-contract-/);
   assert.equal(surface.breakingDefaults.breakingDriftPolicy, "fail-closed-before-build");
   assert.match(surface.guarantees.join("\n"), /before caller build/);
   assert.match(surface.guarantees.join("\n"), /breaking contract drift fails closed/);
@@ -293,7 +293,7 @@ test("contract world exposes declarative standalone binary demo consumption", ()
   });
   const surface = contract.surfaces.find((entry) => entry.id === "declarative-auditable-demo");
   assert.ok(surface);
-  assert.equal(surface.path, ".github/workflows/.declarative-auditable-demo.yml");
+  assert.equal(surface.path, ".github/workflows/public-build-demo.yml");
   assert.ok(surface.requiredInputs.includes("binary-artifact-digest"));
   assert.ok(surface.requiredOutputs.includes("publication-pr-url"));
   assert.equal(surface.breakingDefaults.executionBoundary, "exact-binary-network-none-secret-free-60-seconds");

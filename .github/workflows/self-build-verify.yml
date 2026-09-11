@@ -1,22 +1,46 @@
 name: Verify
-
 on:
-  pull_request:
+  pull_request: null
   merge_group:
-    types: [checks_requested]
+    types:
+      - checks_requested
   push:
     branches:
       - dev/v*/v*
       - alpha/v*/v*
       - release/v*/v*
       - publish-gate/major
-      - major-gate
   workflow_dispatch:
-
+    inputs:
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
 permissions:
   contents: read
-
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+    timeout-minutes: 5
   build-backbone:
     name: Build backbone (${{ matrix.platform }})
     strategy:
@@ -39,14 +63,21 @@ jobs:
       - uses: actions/checkout@v7.0.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v6.4.0
+        id: source-checkout
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          node-version: "24"
-      - name: Install exact test runtime dependencies
-        run: corepack pnpm@11.7.0 install --prod --frozen-lockfile --ignore-scripts
-      - name: Exercise candidate lifecycle and artifact boundaries
-        run: node --test tests/build-orchestration.test.mjs tests/build-artifact-pipeline.test.mjs
-  # Projection authority: architecture/platform-stage-checkpoints.json
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+        if: ${{ always() }}
+      - name: Build backbone (${{ matrix.platform }})
+        id: node
+        uses: ./.buildchain/runtime/actions/build/verification/backbone
+        if: ${{ always() }}
+        with:
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+    needs:
+      - execution-runtime
   stage-capsule-checkpoints:
     name: Stage Capsule checkpoint (${{ matrix.platform }})
     strategy:
@@ -64,37 +95,26 @@ jobs:
       - uses: actions/checkout@v7.0.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v6.4.0
+        id: source-checkout
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          node-version: "24"
-      - name: Load the committed Rust/WASM production authority
-        run: node --test tests/domain-wasm.test.mjs
-      - name: Rehearse declared Stage Capsule checkpoint in clean processes
-        run: >-
-          node scripts/platform-stage-checkpoint-rehearsal.mjs rehearse
-          --work-root .buildchain/stage-checkpoint
-          --platform ${{ matrix.platform }}
-          --stage build
-          --recorded-at 2026-08-08T00:00:00.000Z
-      - name: Rehearse deterministic Stage Capsule resume planning
-        run: >-
-          node scripts/stage-capsule-resume-rehearsal.mjs
-          --platform ${{ matrix.platform }}
-      - name: Rehearse bounded v4 macOS tail reseal
-        if: matrix.platform == 'macos-arm64'
-        run: >-
-          node scripts/tail-reseal-macos-rehearsal.mjs
-          --output .buildchain/stage-checkpoint/tail-reseal-macos.json
-      - name: Upload exact Stage Capsule checkpoint evidence
-        uses: actions/upload-artifact@v7.0.1
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+        if: ${{ always() }}
+      - name: Stage Capsule checkpoint (${{ matrix.platform }})
+        id: node
+        uses: ./.buildchain/runtime/actions/build/stage-capsule/verify-checkpoints
         with:
-          name: v4-stage-checkpoint-${{ matrix.platform }}-${{ github.sha }}
-          path: |
-            .buildchain/stage-checkpoint/evidence.json
-            .buildchain/stage-checkpoint/tail-reseal-macos.json
-          if-no-files-found: error
+          matrix-json: ${{ toJSON(matrix) }}
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+        if: ${{ always() }}
+    needs:
+      - execution-runtime
   check:
-    needs: stage-capsule-checkpoints
+    needs:
+      - stage-capsule-checkpoints
+      - execution-runtime
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -103,83 +123,16 @@ jobs:
       - uses: actions/checkout@v7.0.0
         with:
           fetch-depth: 0
-      - name: Checkout Buildchain runtime
-        uses: actions/checkout@v7.0.0
+        id: source-checkout
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.sha }}
-          path: .buildchain/runtime
-          persist-credentials: false
-      - uses: actions/setup-node@v6.4.0
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+        if: ${{ always() }}
+      - name: Execute verify-check
+        id: node
+        uses: ./.buildchain/runtime/actions/build/verification/repository
+        if: ${{ always() }}
         with:
-          node-version: "24"
-      - uses: actions/setup-go@v6.5.0
-        with:
-          go-version: "1.25.x"
-      - name: Install the exact Rust/WASM build toolchain
-        run: >-
-          rustup toolchain install 1.96.0
-          --profile minimal
-          --target wasm32-unknown-unknown
-      - name: Enable package manager shims
-        run: |
-          corepack prepare pnpm@11.7.0 --activate
-          corepack enable
-          pnpm --version
-      - name: Install Buildchain runtime dependencies
-        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
-      - name: Select full source, exact proof, or version-state validation
-        id: source-verification
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: node scripts/source-verification-evidence.mjs plan
-      - name: Record full source verification identity
-        if: ${{ github.event_name == 'merge_group' && steps.source-verification.outputs.decision == 'execute' }}
-        run: node scripts/source-verification-evidence.mjs start
-      - name: Validate declared check lifecycle
-        if: ${{ steps.source-verification.outputs.decision == 'execute' }}
-        run: >-
-          node .buildchain/runtime/bin/buildchain.mjs validate
-          --cwd .
-          --require-version-state
-          --require-lifecycle-stages install,verify
-      - name: Run declared install lifecycle
-        if: ${{ steps.source-verification.outputs.decision == 'execute' }}
-        run: >-
-          node .buildchain/runtime/bin/buildchain.mjs lifecycle run install
-          --cwd .
-          --required
-          --artifact-name buildchain-check-install
-          --manifest-path .buildchain/artifacts/check-install-manifest.json
-          --summary-path .buildchain/artifacts/check-install-summary.json
-      - name: Run declared verify lifecycle (full source tests and generated artifact checks)
-        if: ${{ steps.source-verification.outputs.decision == 'execute' }}
-        run: >-
-          node .buildchain/runtime/bin/buildchain.mjs lifecycle run verify
-          --cwd .
-          --required
-          --artifact-name buildchain-check
-          --manifest-path .buildchain/artifacts/check-manifest.json
-          --summary-path .buildchain/artifacts/check-summary.json
-      - name: Seal successful full source verification evidence
-        if: ${{ github.event_name == 'merge_group' && steps.source-verification.outputs.decision == 'execute' }}
-        run: node scripts/source-verification-evidence.mjs seal
-      - name: Upload immutable source verification proof
-        if: ${{ github.event_name == 'merge_group' && steps.source-verification.outputs.decision == 'execute' }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: source-verification-${{ github.sha }}-${{ github.run_attempt }}
-          path: .buildchain/source-verification/evidence.json
-          include-hidden-files: true
-          if-no-files-found: error
-          retention-days: 1
-      - name: Upload check evidence
-        if: always()
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: buildchain-check
-          path: |
-            .buildchain/artifacts/
-            .buildchain/source-verification/decision.json
-          include-hidden-files: true
-          if-no-files-found: error
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}

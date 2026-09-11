@@ -52,7 +52,7 @@ surface. New publish integrations should use `.build.yml`, `buildchain.toml`,
 Release templates that previously performed direct publishing or deployment are
 now fail-closed when retained for compatibility discovery. They do not call
 legacy publish actions, `npm publish`, or deploy providers directly. Callers must
-migrate to `release-candidate-promote.yml@v3` or a project-owned
+migrate to `public-release-promote.yml@v3` or a project-owned
 `lifecycle.publish` command behind a publish-gate source lock, so floating
 `@v3` consumers cannot bypass source-lock drift protection.
 
@@ -62,7 +62,7 @@ fixes before stable promotion should add `buildchain-channel: auto` plus
 `buildchain-alpha-contract-lock-path` and
 `buildchain-stable-contract-lock-path`. Keep one common promotion declaration;
 do not duplicate alpha and stable jobs or call
-`.release-candidate-promote.yml` directly.
+`.release-promote.yml` directly.
 
 Buildchain also keeps the workflow-file layout transition declarative in
 `.buildchain/promotion-shell-routing.json`. Stable `v2.14.13` contains the hidden
@@ -88,7 +88,7 @@ because the action is part of that retired path.
 | --- | --- |
 | `action-approve` | retired GitHub issue/PR helper; use repository-native GitHub automation |
 | `action-batch-pull-request` | retired PR orchestration helper; not part of the Buildchain reusable contract |
-| `action-bump-version` | replaced by Buildchain release-line scripts and `actions/promote-buildchain-ref` |
+| `action-bump-version` | replaced by Buildchain release-line scripts and `actions/release/promotion/ref` |
 | `action-check-format` | replaced by project-owned `lifecycle.verify` commands |
 | `action-find-dependencies` | retired in workflows v2 or backed by retired Airtable/dependency/collaborator/purge mechanism |
 | `action-generate-download-page` | retired product page generator; model as project-owned lifecycle/deploy work if needed |
@@ -126,9 +126,9 @@ older standalone action repository.
 
 | Buildchain path | Purpose |
 | --- | --- |
-| `actions/promote-buildchain-ref` | governance-closed Buildchain release ref promotion |
-| `actions/run-lifecycle` | lifecycle command execution and deterministic artifact manifest generation |
-| `actions/validate-config` | `buildchain.toml` version-state and lifecycle preflight without executing lifecycle commands |
+| `actions/release/promotion/ref` | governance-closed Buildchain release ref promotion |
+| `actions/build/lifecycle/run` | lifecycle command execution and deterministic artifact manifest generation |
+| `actions/build/lifecycle/validate` | `buildchain.toml` version-state and lifecycle preflight without executing lifecycle commands |
 
 ## Current v3 Refs
 

@@ -1,0 +1,21 @@
+name: Resolve trusted Web production decision
+description: Require a trusted dispatch actor or verified release merge before
+  approving production.
+inputs:
+  request-json:
+    description: Typed public Web request.
+    required: true
+  intent-json:
+    description: Verified production release intent.
+    required: true
+  token:
+    description: Repository permission lookup credential.
+    required: true
+outputs:
+  approved:
+    description: Trusted production approval.
+  decision-json:
+    description: Rooted production decision.
+runs:
+  using: node24
+  main: dist/index.js

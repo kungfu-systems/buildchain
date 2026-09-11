@@ -7,12 +7,10 @@ import test from "node:test";
 import {
   createControllerPlan,
   createControllerReceipt,
-} from "../packages/core/controller-evidence.js";
-import {
-  materializeReuseLifecycleEvidence,
-  sealSourceQualificationProof,
-  verifySourceQualificationReuse,
-} from "../scripts/dev-delivery-source-proof-reuse.mjs";
+} from "../packages/core/observability/controller-evidence.js";
+import { materializeReuseLifecycleEvidence } from "../packages/core/dev-delivery/source-proof/evidence.js";
+import { sealSourceQualificationProof } from "../packages/core/dev-delivery/source-proof/seal.js";
+import { verifySourceQualificationReuse } from "../packages/core/dev-delivery/source-proof/reuse.js";
 
 const RUNTIME_SHA = "b".repeat(40);
 const CONTRACT_DIGEST = `sha256:${"e".repeat(64)}`;
@@ -319,7 +317,7 @@ test("source proof reuse fails closed for base, source, toolchain, policy, depen
         { sourceHead: value.base },
         "producer-controller-receipt-not-qualifying",
       ],
-      [{ runtimeRef: "v3-other" }, "toolchainRoot-changed-or-unknown"],
+      [{ nodeVersion: "26" }, "planRoot-changed-or-unknown"],
       [
         { policyPaths: '[".github/workflows/required.yml","check.mjs"]' },
         "planRoot-changed-or-unknown",

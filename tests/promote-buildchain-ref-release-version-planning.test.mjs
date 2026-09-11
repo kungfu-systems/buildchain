@@ -4,7 +4,7 @@ test("governance maps channel targets to the only legal PR source", () => {
   assert.equal(expectedHeadRefForTarget("alpha/v1/v1.0"), "dev/v1/v1.0");
   assert.equal(expectedHeadRefForTarget("release/v1/v1.0"), "alpha/v1/v1.0");
   assert.equal(expectedHeadRefForTarget("publish-gate/major"), "release/vN/vN.M");
-  assert.equal(expectedHeadRefForTarget("major-gate"), "release/vN/vN.M");
+  assert.throws(() => expectedHeadRefForTarget("major-gate"), /Ref promotion target/);
   assert.deepEqual(parseReleaseLineRef("release/v1/v1.0"), {
     ref: "release/v1/v1.0",
     major: 1,
@@ -378,9 +378,9 @@ test("version verification ignores generated buildchain evidence", () => {
     path.join(cwd, ".buildchain/release-tail/release-transaction.json"),
     "{}\n",
   );
-  fs.mkdirSync(path.join(cwd, ".buildchain/runtime/actions/promote-buildchain-ref"), { recursive: true });
+  fs.mkdirSync(path.join(cwd, ".buildchain/runtime/actions/release/promotion/ref"), { recursive: true });
   fs.writeFileSync(
-    path.join(cwd, ".buildchain/runtime/actions/promote-buildchain-ref/action.yml"),
+    path.join(cwd, ".buildchain/runtime/actions/release/promotion/ref/action.yml"),
     "name: runtime\n",
   );
   fs.mkdirSync(path.join(cwd, ".buildchain/contract-drift"), { recursive: true });
@@ -431,7 +431,7 @@ test("version verification ignores generated buildchain evidence", () => {
   );
 });
 
-test("version verification allows only the exact self-runtime dependency bridge", () => {
+test("version verification rejects untracked dependency bridges", () => {
   const cwd = makeTempWorkspace({ "package.json": { name: "example", version: "1.0.0" } });
   run(["git", "init"], cwd);
   fs.writeFileSync(path.join(cwd, ".git/info/exclude"), "node_modules/\n");
@@ -440,7 +440,7 @@ test("version verification allows only the exact self-runtime dependency bridge"
   const bridge = path.join(cwd, "node_modules");
   fs.mkdirSync(path.join(cwd, ".buildchain/runtime/node_modules"), { recursive: true });
   fs.symlinkSync(path.join(cwd, ".buildchain/runtime/node_modules"), bridge, "junction");
-  assert.doesNotThrow(() => assertAllowedLocalChanges(cwd, ["package.json"]));
+  assert.throws(() => assertAllowedLocalChanges(cwd, ["package.json"]), /\?\? node_modules/);
   fs.unlinkSync(bridge);
   fs.symlinkSync(path.join(cwd, ".buildchain/runtime"), bridge, "junction");
   assert.throws(() => assertAllowedLocalChanges(cwd, ["package.json"]), /\?\? node_modules/);

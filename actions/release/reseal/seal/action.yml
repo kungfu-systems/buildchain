@@ -1,0 +1,52 @@
+name: tail-reseal-seal
+description: Execute the tail-reseal seal capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  runtime-sha:
+    description: runtime sha contract input.
+    required: true
+  request-artifact:
+    description: request artifact contract input.
+    required: true
+  source-sha:
+    description: source sha contract input.
+    required: true
+outputs:
+  release-candidate-passport-json:
+    description: release-candidate-passport-json node result.
+    value: ${{ steps.seal.outputs.release-candidate-passport-json }}
+  tail-reseal-receipt-root:
+    description: tail-reseal-receipt-root node result.
+    value: ${{ steps.seal.outputs.receipt-root }}
+runs:
+  using: composite
+  steps:
+    - name: Download exact tail plan
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name: ${{ inputs.request-artifact }}
+        path: .buildchain/tail-reseal
+    - name: Download platform manifests and readbacks
+      uses: actions/download-artifact@v7.0.0
+      with:
+        pattern: "*-manifest-*"
+        path: .buildchain/tail-reseal/platforms
+    - name: Seal candidate and tail receipt
+      id: seal
+      uses: ./.buildchain/runtime/actions/release/reseal/close
+      with:
+        runtime-sha: ${{ inputs.runtime-sha }}
+    - name: Upload standard candidate and rooted tail evidence
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: v4-tail-reseal-${{ inputs.source-sha }}
+        path: |
+          .buildchain/tail-reseal/admission.json
+          .buildchain/tail-reseal/plan.json
+          .buildchain/tail-reseal/build-summary.json
+          .buildchain/tail-reseal/release-candidate-passport.json
+          .buildchain/tail-reseal/receipt.json
+        if-no-files-found: error
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}

@@ -1,0 +1,6 @@
+name: Dispatch binary publication evidence
+description: Submit one exact completed binary evidence run to the governed
+  publication workflow.
+runs:
+  using: node24
+  main: dist/index.js

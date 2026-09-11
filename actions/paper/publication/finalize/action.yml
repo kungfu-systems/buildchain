@@ -1,0 +1,32 @@
+name: Seal Paper publication controller receipt
+description: Seal Paper publication controller receipt.
+inputs:
+  candidate-json:
+    description: candidate-json
+    required: true
+  publication-json:
+    description: publication-json
+    required: true
+  observations-json:
+    description: observations-json
+    required: true
+  publish-outcome:
+    description: publish-outcome
+    required: true
+  aggregate-outcome:
+    description: aggregate-outcome
+    required: true
+outputs:
+  controller-receipt-json:
+    description: controller-receipt-json
+  controller-receipt-digest:
+    description: controller-receipt-digest
+  controller-receipt-artifact:
+    description: controller-receipt-artifact
+  controller-receipt-status:
+    description: controller-receipt-status
+  controller-receipt-qualifying:
+    description: controller-receipt-qualifying
+runs:
+  using: node24
+  main: dist/index.js

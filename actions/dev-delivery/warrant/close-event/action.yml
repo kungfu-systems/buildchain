@@ -1,0 +1,24 @@
+name: Settle a terminal delivery and wake its exact successor
+description: Settle a terminal delivery and wake its exact successor.
+inputs:
+  runtime-ref:
+    description: Admitted runtime-ref.
+    required: true
+  request-json:
+    description: Admitted request-json.
+    required: true
+  token:
+    description: Admitted token.
+    required: true
+outputs:
+  integration-proof-root:
+    description: Verified integration-proof-root.
+  close-receipt-root:
+    description: Verified close-receipt-root.
+  final-state-root:
+    description: Verified final-state-root.
+  successor-wake-json:
+    description: Verified successor-wake-json.
+runs:
+  using: node24
+  main: dist/index.js

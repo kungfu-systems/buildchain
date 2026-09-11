@@ -151,12 +151,12 @@ call the build-only wrapper directly:
 ```yaml
 jobs:
   publication:
-    uses: kungfu-systems/buildchain/.github/workflows/publication-artifact.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/public-build-publication.yml@v3
     with:
       toolchain-type: config
       verify-command: make check
       artifact-name: observer-declared-timelines
-      buildchain-contract-lock-path: .buildchain/contract-lock.json
+      contract-lock: .buildchain/contract-lock.json
 ```
 
 The build-only workflow:
@@ -212,7 +212,7 @@ on:
 
 jobs:
   paper-release:
-    uses: kungfu-systems/buildchain/.github/workflows/paper-release-sealed.yml@<exact-buildchain-sha>
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-paper.yml@v4
     permissions:
       actions: read
       checks: write
@@ -220,12 +220,11 @@ jobs:
       id-token: write
       issues: write
     with:
-      buildchain-ref: <exact-buildchain-sha>
-      publisher-workflow-path: .github/workflows/paper-release.yml
+      publisher-workflow-path: .github/workflows/public-release-paper.yml
       toolchain-type: config
       verify-command: make check
       artifact-paths: _build/paper-name.pdf
-      buildchain-contract-lock-path: .buildchain/contract-lock.json
+      contract-lock: .buildchain/contract-lock.json
     secrets:
       BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID }}
       BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY }}
@@ -298,12 +297,12 @@ before upload if a declared artifact is missing or if its basename would
 collide with another GitHub Release asset.
 
 For npm Trusted Publishing, register the consumer workflow file that calls this
-preset, for example `.github/workflows/paper-release.yml`, against the declared
+preset, for example `.github/workflows/public-release-paper.yml`, against the declared
 package in npm. The trusted publisher is the consumer repository and workflow
 file; the implementation still runs inside Buildchain's reusable workflow.
 
 Standard paper repositories should not carry local copies of
-`scripts/npm-publish-transaction.mjs`, package-generation scripts, or
+`packages/core/publication/commands/npm-publish-transaction.mjs`, package-generation scripts, or
 promotion/ref-lock YAML. If the default package shape is insufficient, extend
 Buildchain rather than forking the mechanics into each paper repository.
 
