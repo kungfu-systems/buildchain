@@ -13,7 +13,7 @@ ai_provenance:
   model_family: GPT-6
   product: Codex
   generated_at: 2026-09-12
-  visible_context: Stable canary policy, public build artifact validation and regression tests.
+  visible_context: Stable canary policy, symmetric zero-input self-build callers, artifact validation and regression tests.
   invisible_context_boundary: No external consumer changes or completed stable publication is claimed.
 ---
 
@@ -249,8 +249,8 @@ while exact tags and SHAs remain the reproducible audit choice.
 Two independent thin workflows continuously qualify the published channels.
 `self-build-alpha-dogfood.yml` calls `build.yml@v4-alpha` with zero inputs and
 runs the root project's real install, build, and verify lifecycle.
-`self-build-stable-dogfood.yml` calls `build.yml@v4` with only the nested fixture's
-`config-path`, including native and Linux container builds. Project settings
+`self-build-stable-dogfood.yml` calls `build.yml@v4` with zero inputs and runs
+the same root lifecycle on Linux, macOS, and Windows. Project settings
 live in TOML; the selected runtime records its execution SHA and configuration
 root into the build receipts. Separate workflow validation allows each channel
 to advance independently during a breaking producer-first release.
