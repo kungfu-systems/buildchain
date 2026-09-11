@@ -106,9 +106,7 @@ const requiredPaths = [
   "scripts/next-development-self-dogfood-harness.mjs",
   "scripts/generate-next-development-guidance.mjs",
   "packages/core/governance/commands/reconcile-release-governance.mjs",
-  "packages/core/consumer/commands/buildchain-channel-router.mjs",
   "packages/core/release/commands/promotion-channel-router.mjs",
-  "packages/core/release/commands/promotion-identity-resolver.mjs",
   "scripts/generate-channel-promotion-workflow.mjs",
   "scripts/build-standalone-binary.mjs",
   "packages/core/publication/commands/create-release-bundle.mjs",
@@ -317,17 +315,10 @@ const boundedAlphaRecoveryWorkflow = fs.readFileSync(
   "utf8",
 );
 assertPromotionInventory(root);
-const promotionOverrideAuthorization = fs.readFileSync(
-  path.join(root, "packages/core/release/runtime-override-authorization.js"),
-  "utf8",
-);
-if (!promotionOverrideAuthorization.includes("promotion runtime override is only allowed for trusted workflow_dispatch runs")) {
-  throw new Error("promotion runtime override authorization must remain fail closed");
-}
 for (const workflow of [channelBuildWorkflow, reusableBuildWorkflow]) {
   const block = workflow.split("    inputs:\n")[1].split("    secrets:\n")[0];
   const names = [...block.matchAll(/^      ([a-z0-9-]+):$/gm)].map((match) => match[1]);
-  if (JSON.stringify(names) !== '["config-path"]') throw new Error("ordinary build inputs must contain only config-path");
+  if (JSON.stringify(names.sort()) !== JSON.stringify(['config-path','contract-lock','resume-run-id','runtime-ref','runtime-selection'])) throw new Error('build API must expose only the locator and unified runtime entry inputs');
 }
 if ((channelBuildWorkflow.match(/uses: \.\/\.github\/workflows\/\.build\.yml/g) || []).length !== 1) {
   throw new Error("public build facade must invoke its exact backbone once");

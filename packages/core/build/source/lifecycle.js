@@ -5,14 +5,13 @@ import {
   loadBuildchainConfig,
   validateBuildchainConfig,
 } from "../../consumer/buildchain-config.js";
-import { collectPaperPreflight } from "../../paper/paper.js";
-import { resolvePaperBuildchainSha } from "../../paper/paper-agent-entry.js";
+import { collectPaperSourcePolicy } from "../../paper/paper.js";
 import { runLifecycle } from "../lifecycle/transaction.js";
 import { consumerCommandSession } from "../../runtime/consumer-shell.js";
 
 export function admitSourcePaper(
   { cwd, runtimeRoot, runtimeRef },
-  inspect = collectPaperPreflight,
+  inspect = collectPaperSourcePolicy,
 ) {
   const config = loadBuildchainConfig(cwd)?.config;
   const applicable =
@@ -21,16 +20,7 @@ export function admitSourcePaper(
     (config?.project?.type === "publication-artifact" &&
       (!config.publication || config.publication.kind === "paper"));
   if (!applicable) return { applicable: false };
-  if (!runtimeRef)
-    throw new Error("Paper policy requires the selected runtime coordinate");
-  const result = inspect({
-    cwd,
-    buildchainRoot: runtimeRoot,
-    buildchainRef: runtimeRef,
-    buildchainSha: resolvePaperBuildchainSha(runtimeRoot),
-    offline: true,
-    agentEntryMode: "ci",
-  });
+  const result = inspect({ cwd });
   console.log(JSON.stringify(result));
   if (!result.ok)
     throw new Error("Paper agent-entry and acceptance policy did not qualify");

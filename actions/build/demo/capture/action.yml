@@ -28,21 +28,8 @@ runs:
         clean: true
         persist-credentials: false
       id: source
-    - name: Check out exact Buildchain runtime
-      uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
-      with:
-        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
-        ref: ${{ inputs.workflow-sha }}
-        path: .buildchain/runtime
-        clean: true
-        persist-credentials: false
-    - name: Prepare exact Buildchain runtime
-      id: core-node
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Resolve exact same-run binary artifact
-      uses: ./.buildchain/workflow-shell/actions/build/artifact/resolve
+      uses: ./.buildchain/runtime/actions/build/artifact/resolve
       with:
         name: ${{ fromJSON(inputs.request-json).binary-artifact-name }}
         digest: ${{ fromJSON(inputs.request-json).binary-artifact-digest }}

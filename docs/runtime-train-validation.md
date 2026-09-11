@@ -18,44 +18,33 @@ ai_provenance:
 
 # Runtime Train Validation
 
-Ordinary builds use the public `build.yml@v4` or `build.yml@v4-alpha`
-workflow and select all project settings from `buildchain.toml`. The called
-workflow SHA also selects the runtime; there is no second runtime selector.
-See [Reusable Build Surface](reusable-build-surface.md) for configuration,
-zero-input calls and the optional nested-project locator.
+A train repairs the execution runtime without changing the consumer's durable
+public entry. All public workflows, including ordinary builds, use the same
+[Runtime entry contract](runtime-entry.md). The transient runtime parameter
+wins over the consumer lock. Buildchain dogfood follows this same path.
 
-## Alpha qualification
+## Validate a runtime change
 
-Buildchain changes enter the protected development branch after review and
-checks. Publish an alpha through the protected release workflow, then exercise
-that public alpha on the exact consumer source. Record the called workflow SHA,
-source SHA, channel-matching contract lock, configuration root and artifact
-manifests. Promote stable only after the required alpha evidence succeeds.
+1. Commit the candidate with its action bundles, WASM and runtime contract.
+2. Publish the candidate at `train/v4/v4.1/<capability>`.
+3. Dispatch the consumer's existing public entry with `runtime-ref` set to that
+   train. Record the selected runtime, consumer source and resulting evidence.
+4. After checks and independent review, merge into protected Dev and publish
+   the requested Alpha. Qualify the published entry before Stable promotion.
 
-For a breaking build-interface change, publish the producer before changing
-its own public consumers. Retain the callers and locks for the currently
-published interface while creating the first alpha from a successful PR-stage
-candidate. Then migrate the callers and accept the published alpha contract,
-qualify that public interface, and publish the completed alpha and stable.
-This ordering adds no compatibility inputs to the new build workflow.
+Train selection is a trusted non-persistent runtime input. It never grants
+publication or signing authority by itself; those business effects retain their
+provider credentials, capability constraints and readback requirements.
 
-Source checks verify each consumer lock against the immutable source contract
-at its accepted SHA. Hosted consumer admission separately verifies the actual
-called floating workflow; unpublished producer code is not that dependency.
+## Recover a runtime failure
 
-A train branch is a temporary diagnostic pointer, never a release channel or a
-persisted consumer dependency. Ordinary builds do not accept train, SHA or
-`buildchain-ref` inputs. Initialization does not create a runtime pass-through.
+Start a new dispatch through the same public entry with the repaired train.
+For builds, supply `resume-run-id`; for release promotion, preserve the original
+candidate run and transaction in the typed request. The entry prepares runtime
+Y while the task keeps its original source and valid completed evidence.
+A GitHub failed-job rerun does not change its inputs and cannot select a new
+runtime. Do not persist the train into the caller workflow or contract lock.
 
-## Specialized release and recovery
-
-Release and recovery entry points retain their own bounded runtime admission
-contracts. Their runtime override capability does not extend to ordinary builds.
-Follow [Release Flow](release-flow.md) and the particular entry point's contract;
-a diagnostic train does not authorize publication, signing, or floating-ref
-movement. Preserve existing source locks, exact candidate lineage and terminal
-receipts when recovering a release.
-
-The Buildchain self-build callers exercise the public floating channels using
-root or fixture TOML. They do not commit a private runtime selector to qualify
-that channel.
+If the public entry itself is defective, publish and adopt the corrected entry
+and start a full run. Copied consumer recovery packages and alternate recovery
+workflows are not part of the runtime contract.

@@ -20,28 +20,16 @@ runs:
     - name: Admit source checkout
       id: source-boundary
       if: ${{ always() }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      uses: ./.buildchain/runtime/actions/build/source/admit
       with:
         source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
-    - name: Checkout Buildchain runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
-        ref: ${{ fromJSON(inputs.needs-runtime-outputs-runtime-sha) }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - name: Prepare exact Buildchain Node runtime
-      id: core-runtime
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Download web-surface plan
       uses: actions/download-artifact@v7.0.0
       with:
         name: buildchain-web-surface-plans
         path: .buildchain/downloaded-plans
     - name: Configure preview AWS credentials
-      uses: ./.buildchain/workflow-shell/actions/providers/aws/configure
+      uses: ./.buildchain/runtime/actions/providers/aws/configure
       with:
         role: ${{ fromJSON(inputs.request-json).preview-aws-role-arn }}
         region: ${{ fromJSON(inputs.request-json).aws-region }}
@@ -54,15 +42,15 @@ runs:
         channel: cleanup
     - name: Comment preview cleanup
       if: ${{ fromJSON(inputs.request-json).preview-comment }}
-      uses: ./.buildchain/workflow-shell/actions/web/feedback/preview
+      uses: ./.buildchain/runtime/actions/web/feedback/preview
       with:
         cleanup: "true"
         token: ${{ github.token }}
     - name: Report observed deployment
-      id: report
       if: ${{ always() }}
       uses: ./.buildchain/runtime/actions/web/deployment/report
       with:
         request-json: ${{ inputs.request-json }}
         channel: cleanup
-        job-status: ${{ cancelled() && 'cancelled' || failure() && 'failure' || 'success' }}
+        job-status: ${{ job.status == 'cancelled' && 'cancelled' || github.action_status
+          == 'failure' && 'failure' || 'success' }}

@@ -27,8 +27,9 @@ runs:
   using: composite
   steps:
     - name: Require explicit publication capability
-      if: ${{ inputs.update-token == '' || fromJSON(inputs.request-json).materialize-base-ref == '' }}
-      uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
+      if: ${{ inputs.update-token == '' ||
+        fromJSON(inputs.request-json).materialize-base-ref == '' }}
+      uses: ./.buildchain/runtime/actions/workflow/admission/reject
       with:
         reason: DEMO_UPDATE_TOKEN and materialize-base-ref are required for publication
     - name: Check out exact source with bounded update capability
@@ -39,18 +40,6 @@ runs:
         token: ${{ inputs.update-token }}
         persist-credentials: true
         path: source
-    - name: Check out exact Buildchain runtime
-      uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
-      with:
-        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
-        ref: ${{ inputs.workflow-sha }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - name: Prepare exact Buildchain runtime
-      id: core-node
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Download exact capture collection
       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
       with:

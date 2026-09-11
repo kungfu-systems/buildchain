@@ -1,92 +1,116 @@
 name: Buildchain GitHub Artifact Attestation
-
 on:
   workflow_call:
     inputs:
-      buildchain-ref:
-        description: "Exact Buildchain commit that owns this signer workflow and evidence verifier."
-        type: string
-        required: true
       evidence-run-id:
-        description: "Exact successful caller workflow run containing the sealed subject, platform manifest, and Release Passport."
+        description: Exact successful caller workflow run containing the sealed subject, platform manifest,
+          and Release Passport.
         type: string
         required: true
       source-sha:
-        description: "Exact caller source SHA already bound by the build manifest and Release Passport."
+        description: Exact caller source SHA already bound by the build manifest and Release Passport.
         type: string
         required: true
       subject-artifact-name:
-        description: "GitHub Actions artifact containing the exact release subject."
+        description: GitHub Actions artifact containing the exact release subject.
         type: string
         required: true
       subject-relative-path:
-        description: "Safe relative path to the single subject inside subject-artifact-name."
+        description: Safe relative path to the single subject inside subject-artifact-name.
         type: string
         required: true
       platform-manifest-artifact-name:
-        description: "GitHub Actions artifact containing the original build-runner platform manifest."
+        description: GitHub Actions artifact containing the original build-runner platform manifest.
         type: string
         required: true
       platform-manifest-relative-path:
-        description: "Safe relative path to the platform manifest JSON."
+        description: Safe relative path to the platform manifest JSON.
         type: string
         required: true
       release-passport-artifact-name:
-        description: "GitHub Actions artifact containing the pre-attestation Buildchain Release Passport."
+        description: GitHub Actions artifact containing the pre-attestation Buildchain Release Passport.
         type: string
         required: true
       release-passport-relative-path:
-        description: "Safe relative path to buildchain.release.json."
+        description: Safe relative path to buildchain.release.json.
         type: string
-        default: "buildchain.release.json"
+        default: buildchain.release.json
         required: false
       policy-json:
-        description: "Exact buildchain.github-artifact-attestation-policy/v1 JSON already bound by the Release Passport."
+        description: Exact buildchain.github-artifact-attestation-policy/v1 JSON already bound by the
+          Release Passport.
         type: string
         required: true
       evidence-artifact-name:
-        description: "Retained GitHub Actions artifact containing the Sigstore bundle and Buildchain evidence."
+        description: Retained GitHub Actions artifact containing the Sigstore bundle and Buildchain evidence.
         type: string
-        default: "buildchain-github-artifact-attestation-evidence"
+        default: buildchain-github-artifact-attestation-evidence
         required: false
       environment:
-        description: "Caller-repository protected environment governing real release attestations."
+        description: Caller-repository protected environment governing real release attestations.
         type: string
-        default: "buildchain-artifact-attestation"
+        default: buildchain-artifact-attestation
         required: false
       retention-days:
-        description: "Retention for offline attestation evidence."
+        description: Retention for offline attestation evidence.
         type: number
         default: 90
         required: false
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
     outputs:
       attestation-id:
-        description: "GitHub attestation id."
+        description: GitHub attestation id.
         value: ${{ jobs.attest.outputs.attestation-id }}
       attestation-url:
-        description: "GitHub attestation URL."
+        description: GitHub attestation URL.
         value: ${{ jobs.attest.outputs.attestation-url }}
       bundle-digest:
-        description: "SHA-256 of the retained Sigstore bundle."
+        description: SHA-256 of the retained Sigstore bundle.
         value: ${{ jobs.attest.outputs.bundle-digest }}
       evidence-root:
-        description: "Semantic root of buildchain.github-artifact-attestation-evidence/v1."
+        description: Semantic root of buildchain.github-artifact-attestation-evidence/v1.
         value: ${{ jobs.attest.outputs.evidence-root }}
       evidence-artifact-name:
-        description: "Uploaded offline evidence artifact name."
+        description: Uploaded offline evidence artifact name.
         value: ${{ inputs.evidence-artifact-name }}
-
-# actions:read is required to retrieve exact artifacts from evidence-run-id.
-# artifact-metadata:write is required by actions/attest v4 for artifact metadata.
-# The caller must grant the same permission set. No secret or signing key is used.
 permissions:
   actions: read
   artifact-metadata: write
   attestations: write
   contents: read
   id-token: write
-
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   attest:
     name: Attest sealed Linux release artifact
     runs-on: ubuntu-24.04
@@ -103,17 +127,17 @@ jobs:
       bundle-digest: ${{ steps.node.outputs.bundle-digest }}
       evidence-root: ${{ steps.node.outputs.evidence-root }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Attest sealed Linux release artifact
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/signing/attest
+        uses: ./.buildchain/runtime/actions/release/signing/attest
         with:
           definition-sha: ${{ job.workflow_sha }}
-          runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
+          runtime-ref: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
           request-json: ${{ toJSON(inputs) }}
+    needs:
+      - execution-runtime

@@ -4,10 +4,7 @@ import {
   floatingConsumerDocumentRoot,
   verifyFloatingConsumerPolicyCertification,
 } from "./floating-consumer-evidence.js";
-import {
-  verifyRuntimeAuthorizationReceipt,
-  verifyRuntimeResumeLineage,
-} from "./runtime-ref-resume-authority.js";
+import { verifyRuntimeResumeLineage } from "../release/recovery/lineage.js";
 const SHA256_ROOT = /^sha256:[0-9a-f]{64}$/u;
 export function isPromotionRouting(value = undefined) {
   return [
@@ -180,17 +177,6 @@ export function normalizePromotionRouting(value = undefined) {
     if (!String(field || "").trim())
       throw new Error(`release.promotionRouting.${label} is required`);
   }
-  for (const [label, sha] of [
-    ["router.sha", value.router.sha],
-    ["shell.sha", value.shell.sha],
-    ["runtime.resolvedSha", value.runtime.resolvedSha],
-  ]) {
-    if (!/^[0-9a-f]{40}$/i.test(String(sha))) {
-      throw new Error(
-        `release.promotionRouting.${label} must be a 40-character Git SHA`,
-      );
-    }
-  }
   if (!/^sha256:[0-9a-f]{64}$/i.test(String(value.contractLock.digest))) {
     throw new Error(
       "release.promotionRouting.contractLock.digest must be a sha256 digest",
@@ -234,25 +220,11 @@ export function normalizeRuntimeResumeEvidence(value, expected = {}) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error("domainRuntimeResumeEvidence must be a JSON object");
   }
-  const authorizationVerification = verifyRuntimeAuthorizationReceipt({
-    receipt: value.authorization,
-    receiptRoot: value.authorizationRoot,
-    repository: expected.repository,
-    sourceSha: expected.sourceSha,
-    runtimeSha: expected.resumeRuntimeSha,
-    consumerPolicyReceiptRoot: expected.consumerPolicyReceiptRoot,
-  });
-  if (!authorizationVerification.ok) {
-    throw new Error(
-      `v4 runtime authorization invalid: ${authorizationVerification.failures.join(", ")}`,
-    );
-  }
   const lineageVerification = verifyRuntimeResumeLineage({
     lineage: value.lineage,
     lineageRoot: value.lineageRoot,
     repository: expected.repository,
     sourceSha: expected.sourceSha,
-    resumeRuntimeSha: expected.resumeRuntimeSha,
     consumerPolicyReceiptRoot: expected.consumerPolicyReceiptRoot,
   });
   if (!lineageVerification.ok) {
@@ -260,12 +232,7 @@ export function normalizeRuntimeResumeEvidence(value, expected = {}) {
       `v4 runtime resume lineage invalid: ${lineageVerification.failures.join(", ")}`,
     );
   }
-  if (value.lineage?.authorizationRoot !== value.authorizationRoot) {
-    throw new Error("v4 runtime resume lineage authorization root mismatch");
-  }
   return {
-    authorizationRoot: value.authorizationRoot,
-    authorization: structuredClone(value.authorization),
     lineageRoot: value.lineageRoot,
     lineage: structuredClone(value.lineage),
   };

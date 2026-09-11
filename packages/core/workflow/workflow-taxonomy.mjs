@@ -208,13 +208,13 @@ function validateGateIntegration(root, errors) {
       errors.push(`required Verify workflow lacks ${trigger}`);
   }
   const checkJob = verify.match(/^  check:\n([\s\S]*?)(?=^  [\w-]+:|(?![\s\S]))/mu)?.[1] || "";
-  const verifyNode = "./.buildchain/workflow-shell/actions/build/verification/repository";
+  const verifyNode = "./.buildchain/runtime/actions/build/verification/repository";
   const verifyAction = read("actions/build/verification/repository/action.yml");
   const sourceAction = read("actions/build/verification/qualify-source/action.yml");
   const sourceVerification = read("packages/core/build/verification/source.js");
   const sourceLifecycle = read("packages/core/build/source/lifecycle.js");
   if (!parseYamlUses(checkJob).some(call => call.value === verifyNode) ||
-      !parseYamlUses(verifyAction).some(call => call.value === "./actions/build/verification/qualify-source") ||
+      !parseYamlUses(verifyAction).some(call => call.value === "./.buildchain/runtime/actions/build/verification/qualify-source") ||
       !/using: node24/u.test(sourceAction) ||
       !/qualify = qualifySourceLifecycle/u.test(sourceVerification) ||
       !/mode: "verify"/u.test(sourceVerification) ||

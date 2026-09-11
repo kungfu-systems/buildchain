@@ -226,7 +226,7 @@ test("reusable workflow exposes typed evidence outputs and separated job permiss
   const inputs = workflow.on.workflow_call.inputs;
   assert.equal(inputs.mode.default, "report");
   assert.equal(inputs["apply-enabled"].default, false);
-  assert.equal(inputs["buildchain-ref"].default, "");
+  assert.equal(inputs["runtime-ref"].default, "");
   assert.deepEqual(workflow.permissions, {});
   assert.deepEqual(workflow.jobs.plan.permissions, { contents: "read", "pull-requests": "read" });
   for (const id of ["delete-branches", "label-pull-requests"]) assert.equal(workflow.jobs[id].permissions, undefined);
@@ -252,7 +252,7 @@ test("daily, weekly, and monthly callers remain thin reusable workflow policy", 
     assert.match(caller, /schedule:/);
     assert.match(
       caller,
-      /uses: \.\/\.github\/workflows\/public-ops-housekeeping\.yml/,
+      /uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-housekeeping\.yml@v4/,
     );
     assert.match(caller, /mode: report/);
     assert.match(caller, /mode: apply/);
@@ -272,7 +272,7 @@ test("daily, weekly, and monthly callers remain thin reusable workflow policy", 
     );
     assert.match(
       caller,
-      /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| github\.sha \}\}/,
+      /runtime-selection: \$\{\{ needs.execution-runtime.outputs.selection \}\}/,
     );
     assert.doesNotMatch(caller, /target-branch: dev\/v3\/v3\.0/);
     assert.doesNotMatch(caller, /engineering-housekeeper-workflow\.mjs/);

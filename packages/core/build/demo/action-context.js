@@ -1,19 +1,10 @@
 import path from "node:path";
-import { command } from "../../runtime/action-process.mjs";
 import { installationRoot } from "../../runtime/installation-root.js";
 export function demoActionContext(core, env) {
   const runtimeRoot = installationRoot(import.meta.url);
   const workspace = path.resolve(env.GITHUB_WORKSPACE);
-  const sha = core.getInput("runtime-sha", { required: true });
-  if (
-    !/^[a-f0-9]{40}$/u.test(sha) ||
-    command("git", ["-C", runtimeRoot, "rev-parse", "HEAD"], {
-      stdio: "pipe",
-    }).trim() !== sha
-  )
-    throw new Error(
-      "Demo runtime differs from the exact workflow implementation",
-    );
+  const sha = env.BUILDCHAIN_RUNTIME_SHA;
+
   return {
     workspace,
     runtimeRoot,

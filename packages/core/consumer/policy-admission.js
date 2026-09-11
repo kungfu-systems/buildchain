@@ -20,7 +20,6 @@ export function admitCheckedConsumerPolicy({
   alphaLockPath = ".buildchain/alpha-contract-lock.json",
 }) {
   for (const [directory, expected] of [
-    [runtimeRoot, runtimeSha],
     [consumerRoot, consumerSha],
   ]) {
     if (
@@ -70,8 +69,7 @@ export function admitCheckedConsumerPolicyAction(core, env) {
       core.getInput("directory", { required: true }),
     ),
     runtimeSha:
-      core.getInput("runtime-sha") ||
-      core.getInput("workflow-sha", { required: true }),
+      env.BUILDCHAIN_RUNTIME_SHA,
     workflowSha: core.getInput("workflow-sha", { required: true }),
     consumerSha: core.getInput("source-sha") || env.GITHUB_SHA,
     invocationRoot: core.getInput("invocation-directory")

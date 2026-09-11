@@ -211,11 +211,6 @@ export function reconcileActiveReleaseTrain({
       "alpha-base-drift",
       "the Alpha base moved after the Release Cut and requires explicit supersession or repair",
     ],
-    [
-      buildchainRuntimeSha !== cut.buildchainRuntimeSha,
-      "runtime-drift",
-      "the Buildchain runtime moved after the Release Cut and requires explicit supersession or repair",
-    ],
   ];
   const failure = checks.find(([failed]) => failed);
   if (failure) {

@@ -17,8 +17,8 @@ function fixture(t, packageManager = "pnpm@11.7.0") {
 
 test("runtime preparation preserves PATH-selected Node after the caller switches toolchain", t => {
   const action = YAML.parse(fs.readFileSync(new URL("../actions/runtime/environment/prepare/action.yml", import.meta.url), "utf8"));
-  assert.equal(action.runs.steps[0].with["node-version"], "24");
-  assert.equal(action.outputs["node-path"].value, "${{ steps.dependencies.outputs.node-path }}");
+  assert.equal(action.runs.steps.find(step => step.uses.startsWith("actions/setup-node@")).with["node-version"], "24");
+  assert.equal(action.outputs["node-path"].value, "${{ steps.activate.outputs.node-path }}");
   const directory = fixture(t);
   const result = installLockedDependencies({ directory }, (program, args) => {
     if (program === "corepack") return "";

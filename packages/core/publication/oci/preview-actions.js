@@ -1,20 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { releaseAssetClient } from "../../providers/github/release-assets.js";
-import { installationRoot } from "../../runtime/installation-root.js";
-import { sourceSha } from "../../build/standalone/identity.js";
 import { admitComposePreview } from "./preview-admission.js";
 import { applyComposePreview } from "./preview-transaction.js";
 import { createComposePreviewRegistry } from "./preview-registry.js";
 function inputs(core, env) {
-  const sha = core.getInput("workflow-sha", { required: true });
-  if (
-    !/^[0-9a-f]{40}$/.test(sha) ||
-    sourceSha(installationRoot(import.meta.url)) !== sha
-  )
-    throw new Error(
-      "Compose preview runtime differs from its exact called workflow",
-    );
+
   return {
     request: {
       workspace: path.resolve(env.GITHUB_WORKSPACE),

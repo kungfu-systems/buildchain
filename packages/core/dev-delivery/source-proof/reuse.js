@@ -18,11 +18,9 @@ export function verifySourceQualificationReuse(input = {}) {
   const proof = readJson(input.sourceProofPath, "source proof");
   const receipt = readJson(input.controllerReceiptPath, "controller receipt");
   const expectedSourceSha = exactSha(input.sourceHead, "sourceHead");
-  const expectedRuntimeSha = exactSha(input.runtimeSha, "runtimeSha");
   const expectedRepository = required(input.repository, "repository");
   const receiptValidation = validateControllerReceipt(receipt, {
     expectedSourceSha,
-    expectedRuntimeSha,
   });
   if (
     !receiptValidation.ok ||

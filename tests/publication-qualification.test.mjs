@@ -125,8 +125,8 @@ test("Provider Plane and terminal receipt remain in separate permission boundari
     );
   const apply = action("promotion/apply");
   const settle = action("promotion/settle");
-  assert.equal(workflow.jobs.apply.needs, "qualify");
-  assert.deepEqual(workflow.jobs.settle.needs, ["qualify", "apply"]);
+  assert.deepEqual(workflow.jobs.apply.needs, ["qualify", "execution-runtime"]);
+  assert.deepEqual(workflow.jobs.settle.needs, ["qualify", "apply", "execution-runtime"]);
   assert.deepEqual(workflow.jobs.settle.permissions, {
     actions: "read",
     contents: "read",

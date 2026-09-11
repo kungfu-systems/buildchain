@@ -37,7 +37,7 @@ export function resolveStableCandidateQualificationCandidate({
     runtime?.workflowShellRef !== "v4-alpha" ||
     runtime?.class !== "alpha" ||
     runtime?.override !== false ||
-    runtime?.trustDecision !== "workflow-identity"
+    runtime?.trustDecision !== "entry-selection"
   ) {
     throw new Error(
       "public build summary does not bind the exact source run and alpha workflow identity",

@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-08
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-6
   product: Codex
@@ -250,7 +250,7 @@ Two independent thin workflows continuously qualify the published channels.
 runs the root project's real install, build, and verify lifecycle.
 `self-build-stable-dogfood.yml` calls `build.yml@v4` with only the nested fixture's
 `config-path`, including native and Linux container builds. Project settings
-live in TOML; the called workflow binds its exact runtime SHA and configuration
+live in TOML; the selected runtime records its execution SHA and configuration
 root into the build receipts. Separate workflow validation allows each channel
 to advance independently during a breaking producer-first release.
 
@@ -631,12 +631,12 @@ complete interface are bound into `contractRoot`; the receipt additionally
 binds the caller commit/tree and both workflow digests.
 
 ```sh
-node .buildchain/workflow-contract-runtime/packages/core/contracts/commands/workflow-call-contract.mjs check \
+node .buildchain/runtime/packages/core/contracts/commands/workflow-call-contract.mjs check \
   --caller-root . \
   --caller-workflow .github/workflows/self-release-new-version-compat.yml \
   --caller-repository kungfu-systems/example \
   --job promote \
-  --callee-root .buildchain/workflow-contract-runtime \
+  --callee-root .buildchain/runtime \
   --callee-workflow .github/workflows/public-release-promote.yml \
   --callee-repository kungfu-systems/buildchain \
   --trusted-event workflow_dispatch \
@@ -645,11 +645,11 @@ node .buildchain/workflow-contract-runtime/packages/core/contracts/commands/work
   --output .buildchain/workflow-call-receipts/release-new-version.json
 ```
 
-The checkout at `.buildchain/workflow-contract-runtime` must use the same
-40-character SHA written in the caller's `uses:` edge. To accept an intentional
-contract change, first run without `--expected-contract-root`, review the full
-diagnostic and exact coordinates, then replace only the committed root. The
-ordinary PR check runs this command before any candidate or promotion dispatch.
+Use the runtime prepared by the central entry for this offline contract audit.
+The caller persists a floating entry; its resolved API definition is distinct
+from the selected execution runtime. To accept an intentional contract change,
+review the full diagnostic and source coordinates before replacing the committed
+contract root. This audit does not add a runtime-SHA equality gate to execution.
 Local pre-commit rehearsal may add `--allow-dirty`; that result is marked
 `receiptReusable: false` and cannot replace the clean exact-source receipt.
 
@@ -662,7 +662,7 @@ command = "cargo test --workspace --locked"
 ```
 
 Consumers that want Buildchain to own the check wrapper can call
-`.github/workflows/public-build-check.yml@v3`. The wrapper runs the declared
+`.github/workflows/public-build-check.yml@v4`. The wrapper runs the declared
 `lifecycle.install` and `lifecycle.verify` stages and fails the `check` job when
 either declaration is missing or the command exits non-zero.
 

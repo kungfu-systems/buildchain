@@ -259,9 +259,9 @@ test("contract world exposes web-surface floating contract lock gate", () => {
   assert.ok(surface);
   assert.equal(surface.path, ".github/workflows/public-release-web.yml");
   assert.match(surface.publicRef, /\.github\/workflows\/public-release-web\.yml@v2/);
-  assert.match(surface.optionalInputs.join("\n"), /buildchain-contract-lock-path/);
-  assert.match(surface.optionalInputs.join("\n"), /buildchain-contract-compatibility-policy/);
-  assert.match(surface.optionalInputs.join("\n"), /buildchain-contract-drift-issue-mode/);
+  assert.ok(surface.optionalInputs.includes("contract-lock"));
+  assert.ok(surface.optionalInputs.includes("runtime-ref"));
+  assert.doesNotMatch(surface.optionalInputs.join("\n"), /buildchain-contract-/);
   assert.equal(surface.breakingDefaults.breakingDriftPolicy, "fail-closed-before-build");
   assert.match(surface.guarantees.join("\n"), /before caller build/);
   assert.match(surface.guarantees.join("\n"), /breaking contract drift fails closed/);

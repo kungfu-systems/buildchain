@@ -1,9 +1,0 @@
-{
-  "name": "buildchain-consumer-recovery",
-  "private": true,
-  "type": "module",
-  "version": "4.1.0-alpha.0",
-  "engines": {
-    "node": ">=24"
-  }
-}

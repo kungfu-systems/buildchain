@@ -16,8 +16,6 @@ const recoveryFields = [
   "resume-candidate-run-id",
   "resume-expected-source-tree",
   "resume-expected-candidate-root",
-  "resume-expected-candidate-runtime-sha",
-  "resume-buildchain-runtime-sha",
   "resume-transaction-id",
 ];
 
@@ -68,7 +66,7 @@ test("automatic promotion renders a fully typed request without a manual inputs 
     assert.equal(normalized["target-sha"], sourceSha);
     assert.equal(normalized["target-ref"], branch);
     for (const field of recoveryFields) assert.equal(request[field], "", field);
-    assert.equal(request["buildchain-ref"], "");
+    assert.equal(request["buildchain-ref"], undefined);
     assert.equal(request["standalone-binary-distribution"], true);
     assert.equal(request["publish-transaction-override"], false);
     assert.equal(request["dry-run"], false);
@@ -99,10 +97,7 @@ test("candidate recovery preserves explicit identities and typed publication fla
   for (const field of recoveryFields)
     assert.equal(request[field], inputs[field], field);
   assert.equal(request["target-sha"], sourceSha);
-  assert.equal(
-    request["buildchain-ref"],
-    inputs["resume-buildchain-runtime-ref"],
-  );
+  assert.equal(request["buildchain-ref"], undefined);
   assert.equal(request["standalone-binary-distribution"], false);
   assert.equal(request["github-release-payload-patterns"], "*.tgz");
   assert.equal(request["publish-transaction-override"], true);
@@ -120,7 +115,7 @@ test("durable recovery retains the exact workflow runtime and empty optional can
     }),
   );
   normalizePromotionRequest(request);
-  assert.equal(request["buildchain-ref"], workflowSha);
+  assert.equal(request["buildchain-ref"], undefined);
   assert.equal(request["target-sha"], sourceSha);
   assert.equal(request["publish-transaction-override"], true);
   for (const field of recoveryFields) assert.equal(request[field], "", field);
@@ -146,12 +141,7 @@ test("standalone recovery renders omitted optional inputs and preserves evidence
       request["release-passport-v4-runtime-resume-evidence-json"],
       "",
     );
-    assert.equal(
-      request["buildchain-contract-lock-path"],
-      target.startsWith("alpha/")
-        ? ".buildchain/alpha-contract-lock.json"
-        : ".buildchain/contract-lock.json",
-    );
+    assert.equal(request["buildchain-contract-lock-path"], undefined);
     const evidence = JSON.stringify({
       title: 'quoted "value"',
       lines: "one\ntwo",

@@ -17,6 +17,21 @@ on:
         description: Exact unchanged Buildchain consumer SHA
         required: true
         type: string
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      recovery-runtime-ref:
+        description: Transient repaired runtime used through the same public entry.
+        required: false
+        type: string
+        default: ""
 permissions:
   actions: write
   artifact-metadata: write
@@ -32,6 +47,22 @@ permissions:
   security-events: write
   statuses: write
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+    timeout-minutes: 5
   prepare:
     name: Prepare exact candidate requests
     runs-on: ubuntu-24.04
@@ -46,65 +77,83 @@ jobs:
       alpha-request: ${{ steps.node.outputs.alpha-request }}
       stable-request: ${{ steps.node.outputs.stable-request }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Prepare exact candidate requests
         id: node
-        uses: ./.buildchain/workflow-shell/actions/workflow/dogfood/prepare
+        uses: ./.buildchain/runtime/actions/workflow/dogfood/prepare
         with:
           request-json: ${{ toJSON(inputs) }}
+    needs:
+      - execution-runtime
   primary-conformance:
     name: Candidate Bootstrap candidate-engine conformance
-    needs: prepare
+    needs:
+      - prepare
+      - execution-runtime
     if: ${{ needs.prepare.outputs.ready == 'true' }}
-    uses: ./.github/workflows/public-ops-bootstrap.yml
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4
     with:
       request-json: ${{ needs.prepare.outputs.conformance-request }}
+      runtime-ref: ${{ inputs.runtime-ref }}
     secrets: inherit
   recovery-conformance:
     name: Consumer recovery candidate-engine conformance
-    needs: prepare
+    needs:
+      - prepare
+      - execution-runtime
     if: ${{ needs.prepare.outputs.ready == 'true' }}
-    uses: ./.github/workflows/public-ops-bootstrap-recovery.yml
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4
     with:
       request-json: ${{ needs.prepare.outputs.conformance-request }}
+      runtime-ref: ${{ inputs.recovery-runtime-ref }}
     secrets: inherit
   primary-alpha:
     name: Candidate Bootstrap Alpha-shaped rehearsal
-    needs: prepare
+    needs:
+      - prepare
+      - execution-runtime
     if: ${{ needs.prepare.outputs.ready == 'true' }}
-    uses: ./.github/workflows/public-ops-bootstrap.yml
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4
     with:
       request-json: ${{ needs.prepare.outputs.alpha-request }}
+      runtime-ref: ${{ inputs.runtime-ref }}
     secrets: inherit
   recovery-alpha:
     name: Consumer recovery Alpha-shaped rehearsal
-    needs: prepare
+    needs:
+      - prepare
+      - execution-runtime
     if: ${{ needs.prepare.outputs.ready == 'true' }}
-    uses: ./.github/workflows/public-ops-bootstrap-recovery.yml
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4
     with:
       request-json: ${{ needs.prepare.outputs.alpha-request }}
+      runtime-ref: ${{ inputs.recovery-runtime-ref }}
     secrets: inherit
   primary-stable:
     name: Candidate Bootstrap stable-shaped rehearsal
-    needs: prepare
+    needs:
+      - prepare
+      - execution-runtime
     if: ${{ needs.prepare.outputs.ready == 'true' }}
-    uses: ./.github/workflows/public-ops-bootstrap.yml
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4
     with:
       request-json: ${{ needs.prepare.outputs.stable-request }}
+      runtime-ref: ${{ inputs.runtime-ref }}
     secrets: inherit
   recovery-stable:
     name: Consumer recovery stable-shaped rehearsal
-    needs: prepare
+    needs:
+      - prepare
+      - execution-runtime
     if: ${{ needs.prepare.outputs.ready == 'true' }}
-    uses: ./.github/workflows/public-ops-bootstrap-recovery.yml
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4
     with:
       request-json: ${{ needs.prepare.outputs.stable-request }}
+      runtime-ref: ${{ inputs.recovery-runtime-ref }}
     secrets: inherit
   reconcile:
     name: Prove primary and recovery semantic equivalence
@@ -116,21 +165,20 @@ jobs:
       - recovery-alpha
       - primary-stable
       - recovery-stable
+      - execution-runtime
     if: ${{ needs.prepare.outputs.ready == 'true' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Prove primary and recovery semantic equivalence
         id: node
-        uses: ./.buildchain/workflow-shell/actions/workflow/dogfood/reconcile
+        uses: ./.buildchain/runtime/actions/workflow/dogfood/reconcile
         with:
           candidate-sha: ${{ needs.prepare.outputs.candidate-sha }}
           observations-json: ${{ toJSON(needs) }}

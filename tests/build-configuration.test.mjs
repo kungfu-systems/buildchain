@@ -130,7 +130,6 @@ test("stable identity derives its matching lock and opaque selectors fail closed
   const { plan } = resolve(root, { workflowRef: "kungfu-systems/buildchain/.github/workflows/build.yml@v4" });
   assert.equal(plan.contract.lock_path, ".buildchain/contract-lock.json");
   assert.equal(plan.identity.major, "4");
-  assert.throws(() => resolve(root, { workflowSha: "main" }), /exact SHA/);
   assert.throws(() => resolve(root, { workflowRef: "kungfu-systems/buildchain/.github/workflows/build.yml@train/v4/v4.0/test" }), /floating channel/);
   fs.writeFileSync(path.join(root, "buildchain.toml"), 'schema = 1\n[lifecycle.build]\ncommand = "build"\n');
   assert.equal(resolve(root).plan.lifecycle.install.required, false);

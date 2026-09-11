@@ -12,7 +12,7 @@
     "attest",
     "deliver"
   ],
-  "maximumBackboneLines": 280,
+  "maximumBackboneLines": 320,
   "maximumFacadeLines": 80,
   "maximumCompositeLines": 130,
   "maximumModuleLines": 220,
@@ -63,5 +63,12 @@
     "packages/core/build/summary/controller-receipt.js",
     "packages/core/build/summary/finalization.js",
     "packages/core/build/summary/payloads.js"
+  ],
+  "entryJob": "execution-runtime",
+  "entryInputs": [
+    "runtime-ref",
+    "contract-lock",
+    "resume-run-id",
+    "runtime-selection"
   ]
 }

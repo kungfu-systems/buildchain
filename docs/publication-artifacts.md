@@ -156,7 +156,7 @@ jobs:
       toolchain-type: config
       verify-command: make check
       artifact-name: observer-declared-timelines
-      buildchain-contract-lock-path: .buildchain/contract-lock.json
+      contract-lock: .buildchain/contract-lock.json
 ```
 
 The build-only workflow:
@@ -212,7 +212,7 @@ on:
 
 jobs:
   paper-release:
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-paper.yml@<exact-buildchain-sha>
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-paper.yml@v4
     permissions:
       actions: read
       checks: write
@@ -220,12 +220,11 @@ jobs:
       id-token: write
       issues: write
     with:
-      buildchain-ref: <exact-buildchain-sha>
       publisher-workflow-path: .github/workflows/public-release-paper.yml
       toolchain-type: config
       verify-command: make check
       artifact-paths: _build/paper-name.pdf
-      buildchain-contract-lock-path: .buildchain/contract-lock.json
+      contract-lock: .buildchain/contract-lock.json
     secrets:
       BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID }}
       BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY }}

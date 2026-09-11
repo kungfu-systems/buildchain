@@ -8,7 +8,9 @@ runs:
   using: composite
   steps:
     - name: Download exact publication artifact candidate
-      if: ${{ !fromJSON(inputs.request-json).dry-run && fromJSON(inputs.request-json).auto-admission-kind == 'publication-artifact' }}
+      if: ${{ !fromJSON(inputs.request-json).dry-run &&
+        fromJSON(inputs.request-json).auto-admission-kind ==
+        'publication-artifact' }}
       uses: actions/download-artifact@v7.0.0
       with:
         repository: ${{ fromJSON(inputs.request-json).evidence-repository }}
@@ -17,7 +19,9 @@ runs:
         name: ${{ fromJSON(inputs.request-json).evidence-publication-artifact }}
         path: .buildchain/publication-evidence/artifact
     - name: Download exact publication controller receipt
-      if: ${{ !fromJSON(inputs.request-json).dry-run && fromJSON(inputs.request-json).auto-admission-kind == 'publication-artifact' }}
+      if: ${{ !fromJSON(inputs.request-json).dry-run &&
+        fromJSON(inputs.request-json).auto-admission-kind ==
+        'publication-artifact' }}
       uses: actions/download-artifact@v7.0.0
       with:
         repository: ${{ fromJSON(inputs.request-json).evidence-repository }}
@@ -26,7 +30,9 @@ runs:
         name: ${{ fromJSON(inputs.request-json).evidence-controller-artifact }}
         path: .buildchain/publication-evidence/controller
     - name: Download exact binary release evidence bundle
-      if: ${{ !fromJSON(inputs.request-json).dry-run && fromJSON(inputs.request-json).auto-admission-kind == 'binary-release-assets' }}
+      if: ${{ !fromJSON(inputs.request-json).dry-run &&
+        fromJSON(inputs.request-json).auto-admission-kind ==
+        'binary-release-assets' }}
       uses: actions/download-artifact@v7.0.0
       with:
         repository: ${{ fromJSON(inputs.request-json).evidence-repository }}
@@ -35,7 +41,9 @@ runs:
         name: ${{ fromJSON(inputs.request-json).evidence-passport-artifact }}
         path: .buildchain/publication-evidence/binary-passport
     - name: Download exact binary distribution controller receipt
-      if: ${{ !fromJSON(inputs.request-json).dry-run && fromJSON(inputs.request-json).auto-admission-kind == 'binary-release-assets' }}
+      if: ${{ !fromJSON(inputs.request-json).dry-run &&
+        fromJSON(inputs.request-json).auto-admission-kind ==
+        'binary-release-assets' }}
       uses: actions/download-artifact@v7.0.0
       with:
         repository: ${{ fromJSON(inputs.request-json).evidence-repository }}

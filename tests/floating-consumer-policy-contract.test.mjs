@@ -152,10 +152,10 @@ test("bounded recovery is a one-way adapter into the same public publisher", () 
     fs.rmSync(consumerRoot, { recursive: true, force: true });
   }
   assert.match(workflow, /^  workflow_dispatch:/mu);
-  assert.equal(readWorkflow(relative).jobs.resume.uses, "./.github/workflows/public-release-promote.yml");
+  assert.equal(readWorkflow(relative).jobs.resume.uses, "kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4");
   assert.equal(readWorkflow(".github/workflows/public-release-promote.yml").jobs.invoke.uses, "./.github/workflows/.release-promote.yml");
   assert.doesNotMatch(workflow, /^  consumer-admission:/mu);
-  for (const marker of ["resume-candidate-run-id", "resume-buildchain-runtime-sha", "resume-transaction-id"]) {
+  for (const marker of ["resume-candidate-run-id", "resume-transaction-id"]) {
     assert.ok(readWorkflow(relative).jobs.resume.with["request-json"].includes(`"${marker}":`));
   }
   assert.match(workflow, /"publish-transaction-override": true/);
@@ -171,17 +171,17 @@ test("v4 floating policy contract rejects certification without caller lock read
   );
 });
 
-test("fresh promotion binds exact publisher and runtime identities through QUALIFY", () => {
+test("fresh promotion records publisher and selected runtime without secondary admission", () => {
   const graph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "qualify");
   const node = graph.job.steps.find(step => step.id === "node");
   assert.equal(node.with["job-workflow-sha"], "${{ toJSON(job.workflow_sha) }}");
   const qualification = graph.modules.get("packages/core/release/promotion/qualification-action.js");
-  assert.match(qualification, /verifyCheckoutIdentity\([\s\S]*sha: runtimeSha/);
+  assert.doesNotMatch(qualification, /verifyCheckoutIdentity/);
   assert.match(qualification, /"publisher-sha": workflowSha/);
   assert.match(qualification, /"runtime-tree": tree/);
   const candidate = graph.modules.get("packages/core/release/promotion/candidate.js");
-  assert.match(candidate, /authorizationJson: request\["promotion-runtime-authorization-json"\]/);
-  assert.match(candidate, /authorizationRoot: request\["promotion-runtime-authorization-root"\]/);
+  assert.doesNotMatch(candidate, /promotion-runtime-authorization/);
+  assert.equal(graph.job.steps[0].uses, "$/actions/runtime/environment/prepare");
 });
 
 test("v4 floating policy contract rejects an unbound publisher identity", () => {

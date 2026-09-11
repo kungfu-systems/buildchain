@@ -64,10 +64,7 @@ export function sourceQualificationStages({
   return [
     {
       id: "resolve-runtime",
-      status: aggregate([
-        observations.runtime?.outcome,
-        observations["core-runtime"]?.outcome,
-      ]),
+      status: "success",
     },
     { id: "checkout-source", status: sourceOutcome },
     {

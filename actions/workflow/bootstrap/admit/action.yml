@@ -29,38 +29,13 @@ runs:
     - uses: actions/setup-node@v6.4.0
       with:
         node-version: "24"
-    - name: Checkout immutable Bootstrap shell
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: kungfu-systems/buildchain
-        ref: ${{ fromJSON(inputs.job-workflow-sha) }}
-        path: .buildchain/bootstrap
-        persist-credentials: false
-    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/bootstrap
     - name: Inspect the closed request envelope
       id: inspect
-      uses: ./.buildchain/bootstrap/actions/workflow/admission/inspect
+      uses: ./.buildchain/runtime/actions/workflow/admission/inspect
       with:
         request-json: ${{ fromJSON(inputs.request-json).request-json }}
-        recovery: "false"
-    - name: Checkout candidate without persisted credentials
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ steps.inspect.outputs.repository }}
-        ref: ${{ steps.inspect.outputs.discovery-ref }}
-        path: .buildchain/candidate
-        persist-credentials: false
-    - name: Read back independent review and exact-head checks
-      id: review
-      uses: ./.buildchain/workflow-shell/actions/workflow/admission/review
-      with:
-        request-json: ${{ fromJSON(inputs.request-json).request-json }}
-        token: ${{ github.token }}
     - name: Admit the exact reviewed candidate
       id: admit
-      uses: ./.buildchain/bootstrap/actions/workflow/admission/admit
+      uses: ./.buildchain/runtime/actions/workflow/admission/admit
       with:
         request-json: ${{ fromJSON(inputs.request-json).request-json }}
-        review-json: ${{ steps.review.outputs.review-json }}

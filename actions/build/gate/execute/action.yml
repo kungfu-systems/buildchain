@@ -1,6 +1,10 @@
 name: gate-profile-run-gates
 description: Execute the gate-profile run-gates capability within its caller job boundary.
 inputs:
+  cache-reference-repository-template:
+    description: Workflow checkout reference fallback.
+  cache-mirror-url-template:
+    description: Workflow checkout mirror fallback.
   request-json:
     description: Typed public workflow request.
     required: true
@@ -22,64 +26,53 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Prepare defining workflow bootstrap
-      id: bootstrap-runtime
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/workflow-shell
     - name: Checkout locked consumer source
-      uses: ./.buildchain/workflow-shell/actions/providers/source/checkout
+      uses: ./.buildchain/runtime/actions/providers/source/checkout
       with:
         sha: ${{ inputs.source-sha }}
         ref: ${{ fromJSON(inputs.request-json).source-ref || github.ref }}
-        directory: source
         cache-mode: ${{ fromJSON(inputs.request-json).checkout-cache-mode }}
-        mirror-url-template:
-          ${{ fromJSON(inputs.request-json).checkout-cache-mirror-url-template ||
-          vars.BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE }}
-        reference-repository-template:
-          ${{ fromJSON(inputs.request-json).checkout-cache-reference-repository-template ||
-          vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
+        mirror-url-template: ${{
+          fromJSON(inputs.request-json).checkout-cache-mirror-url-template ||
+          inputs.cache-mirror-url-template }}
+        reference-repository-template: ${{
+          fromJSON(inputs.request-json).checkout-cache-reference-repository-template
+          || inputs.cache-reference-repository-template }}
         fallback: ${{ fromJSON(inputs.request-json).checkout-cache-fallback }}
         cache-timeout-seconds: ${{ fromJSON(inputs.request-json).checkout-cache-timeout-seconds }}
-        github-timeout-seconds: ${{ fromJSON(inputs.request-json).checkout-cache-github-timeout-seconds }}
+        github-timeout-seconds: ${{
+          fromJSON(inputs.request-json).checkout-cache-github-timeout-seconds }}
         fetch-attempts: ${{ fromJSON(inputs.request-json).checkout-cache-fetch-attempts }}
-        diagnostics-path: .buildchain/diagnostics/source-checkout.json
         token: ${{ github.token }}
         repository: ${{ github.repository }}
         reset-working-tree: ${{ runner.os == 'Windows' }}
     - name: Checkout Buildchain runtime
-      uses: ./.buildchain/workflow-shell/actions/providers/source/checkout
+      uses: ./.buildchain/runtime/actions/providers/source/checkout
       with:
-        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+        repository: kungfu-systems/buildchain
         sha: ${{ inputs.runtime-sha }}
         ref: ${{ inputs.runtime-ref }}
         directory: .buildchain/runtime
         cache-mode: ${{ fromJSON(inputs.request-json).checkout-cache-mode }}
-        mirror-url-template:
-          ${{ fromJSON(inputs.request-json).checkout-cache-mirror-url-template ||
-          vars.BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE }}
-        reference-repository-template:
-          ${{ fromJSON(inputs.request-json).checkout-cache-reference-repository-template ||
-          vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
+        mirror-url-template: ${{
+          fromJSON(inputs.request-json).checkout-cache-mirror-url-template ||
+          inputs.cache-mirror-url-template }}
+        reference-repository-template: ${{
+          fromJSON(inputs.request-json).checkout-cache-reference-repository-template
+          || inputs.cache-reference-repository-template }}
         fallback: ${{ fromJSON(inputs.request-json).checkout-cache-fallback }}
         cache-timeout-seconds: ${{ fromJSON(inputs.request-json).checkout-cache-timeout-seconds }}
-        github-timeout-seconds: ${{ fromJSON(inputs.request-json).checkout-cache-github-timeout-seconds }}
+        github-timeout-seconds: ${{
+          fromJSON(inputs.request-json).checkout-cache-github-timeout-seconds }}
         fetch-attempts: ${{ fromJSON(inputs.request-json).checkout-cache-fetch-attempts }}
         diagnostics-path: .buildchain/diagnostics/runtime-checkout.json
         token: ${{ github.token }}
-    - name: Prepare exact Buildchain Node runtime
-      id: core-runtime
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Upload locked checkout diagnostics
       if: ${{ always() }}
       uses: actions/upload-artifact@v7.0.1
       with:
-        name:
-          ${{ fromJSON(inputs.request-json).artifact-name }}-checkout-${{ fromJSON(inputs.matrix-json).gate.id }}-${{
-          inputs.source-sha }}
+        name: ${{ fromJSON(inputs.request-json).artifact-name }}-checkout-${{
+          fromJSON(inputs.matrix-json).gate.id }}-${{ inputs.source-sha }}
         path: .buildchain/diagnostics/*-checkout.json
         if-no-files-found: warn
         retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
@@ -89,20 +82,24 @@ runs:
       with:
         node-version: ${{ fromJSON(inputs.request-json).node-version }}
     - name: Expose runner user toolchains
-      uses: ./.buildchain/workflow-shell/actions/runtime/toolchain/user-paths
+      uses: ./.buildchain/runtime/actions/runtime/toolchain/user-paths
     - name: Setup Rust toolchain on Windows
-      if: ${{ contains(fromJSON(inputs.matrix-json).gate.capabilities, 'rust') && runner.os == 'Windows' }}
+      if: ${{ contains(fromJSON(inputs.matrix-json).gate.capabilities, 'rust') &&
+        runner.os == 'Windows' }}
       uses: ./.buildchain/runtime/actions/runtime/toolchain/windows-rust
       with:
         toolchain: ${{ fromJSON(inputs.request-json).rust-toolchain }}
         dist-server: ${{ fromJSON(inputs.request-json).rustup-dist-server }}
         update-root: ${{ fromJSON(inputs.request-json).rustup-update-root }}
     - name: Setup Rust toolchain
-      if: ${{ contains(fromJSON(inputs.matrix-json).gate.capabilities, 'rust') && runner.os != 'Windows' }}
+      if: ${{ contains(fromJSON(inputs.matrix-json).gate.capabilities, 'rust') &&
+        runner.os != 'Windows' }}
       uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
       env:
-        RUSTUP_DIST_SERVER: ${{ fromJSON(inputs.request-json).rustup-dist-server || 'https://static.rust-lang.org' }}
-        RUSTUP_UPDATE_ROOT: ${{ fromJSON(inputs.request-json).rustup-update-root || 'https://static.rust-lang.org/rustup' }}
+        RUSTUP_DIST_SERVER: ${{ fromJSON(inputs.request-json).rustup-dist-server ||
+          'https://static.rust-lang.org' }}
+        RUSTUP_UPDATE_ROOT: ${{ fromJSON(inputs.request-json).rustup-update-root ||
+          'https://static.rust-lang.org/rustup' }}
       with:
         toolchain: ${{ fromJSON(inputs.request-json).rust-toolchain }}
     - name: Download locked Gate plan
@@ -121,15 +118,14 @@ runs:
       if: ${{ always() }}
       uses: actions/upload-artifact@v7.0.1
       with:
-        name:
-          ${{ fromJSON(inputs.request-json).artifact-name }}-receipt-${{ fromJSON(inputs.matrix-json).gate.id }}-${{
-          inputs.source-sha }}
+        name: ${{ fromJSON(inputs.request-json).artifact-name }}-receipt-${{
+          fromJSON(inputs.matrix-json).gate.id }}-${{ inputs.source-sha }}
         path: .buildchain/gates/executions/${{ fromJSON(inputs.matrix-json).gate.id }}
         if-no-files-found: error
         retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
         overwrite: true
     - name: Enforce Shifu Gate qualification
       if: ${{ steps.gate.outcome != 'success' }}
-      uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
+      uses: ./.buildchain/runtime/actions/workflow/admission/reject
       with:
         reason: Enforce Shifu Gate qualification failed

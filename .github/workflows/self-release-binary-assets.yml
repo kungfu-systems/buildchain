@@ -2,9 +2,6 @@ name: Binary Release Assets
 on:
   workflow_dispatch:
     inputs:
-      buildchain-ref:
-        description: Exact Buildchain SHA containing the sealed verifier.
-        required: true
       evidence-run-id:
         description: Successful Binary Distribution run id.
         required: true
@@ -15,37 +12,64 @@ on:
         description: JSON array of already consumed admission nonces.
         required: true
         default: "[]"
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
 permissions:
   contents: read
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+    timeout-minutes: 5
   resolve:
     name: Resolve exact binary publication transaction
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     outputs:
-      buildchain-ref: ${{ steps.node.outputs.buildchain-ref }}
       evidence-run-id: ${{ steps.node.outputs.evidence-run-id }}
       release-tag: ${{ steps.node.outputs.release-tag }}
       source-sha: ${{ steps.node.outputs.source-sha }}
       target-ref: ${{ steps.node.outputs.target-ref }}
       publication-version: ${{ steps.node.outputs.publication-version }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Resolve exact binary publication transaction
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/binary/coordinates
+        uses: ./.buildchain/runtime/actions/release/binary/coordinates
         with:
           request-json: ${{ toJSON(inputs) }}
           token: ${{ github.token }}
+    needs:
+      - execution-runtime
   publish:
-    needs: resolve
+    needs:
+      - resolve
+      - execution-runtime
     uses: ./.github/workflows/.release-binary-assets.yml
     permissions:
       actions: read
@@ -54,8 +78,6 @@ jobs:
       pull-requests: read
     secrets: inherit
     with:
-      buildchain-repository: kungfu-systems/buildchain
-      buildchain-ref: ${{ needs.resolve.outputs.buildchain-ref }}
       evidence-run-id: ${{ needs.resolve.outputs.evidence-run-id }}
       release-tag: ${{ needs.resolve.outputs.release-tag }}
       source-sha: ${{ needs.resolve.outputs.source-sha }}
@@ -63,3 +85,4 @@ jobs:
       publication-version: ${{ needs.resolve.outputs.publication-version }}
       auto-admission: true
       publication-used-nonces-json: ${{ inputs.publication-used-nonces-json || '[]' }}
+      runtime-selection: ${{ needs.execution-runtime.outputs.selection }}

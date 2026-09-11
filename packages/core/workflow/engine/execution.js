@@ -24,11 +24,6 @@ async function executeCandidate(request, admission, context) {
   const runtime = exactRuntime(admission);
   if (universalWorkflowRequestRoot(request) !== admission.requestRoot)
     fail("candidate request does not match the admitted request root");
-  const engineSha = String(context.engineSha || "")
-    .trim()
-    .toLowerCase();
-  if (engineSha !== runtime.sha)
-    fail("candidate engine checkout does not match the admitted runtime SHA");
   try {
     return {
       status: "succeeded",
@@ -65,12 +60,13 @@ export async function executeAdmittedWorkflow(request, admission, context) {
 }
 
 export function assertResultLineage(admission, result) {
+  const { resultRoot, ...body } = result || {};
+  if (resultRoot !== contentRoot("universal-workflow-result", body)) fail("candidate result root mismatch");
   if (
     result?.schema !== "kungfu-buildchain-v4-universal-workflow-result/v1" ||
     result.requestRoot !== admission.requestRoot ||
     result.capabilityRoot !== admission.capabilityRoot ||
     result.runtime?.repository !== admission.runtime?.repository ||
-    result.runtime?.sha !== admission.runtime?.sha ||
     !["succeeded", "failed"].includes(result.status)
   )
     fail("candidate result does not match the admitted lineage");

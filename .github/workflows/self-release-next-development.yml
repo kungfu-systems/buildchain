@@ -11,6 +11,20 @@ concurrency:
   group: next-development-review-${{ github.event.workflow_run.head_sha }}
   cancel-in-progress: false
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+    timeout-minutes: 5
   review:
     if: |-
       ${{ github.event.workflow_run.conclusion == 'success' &&
@@ -27,26 +41,26 @@ jobs:
     env:
       VERIFY_RUN_ID: ${{ github.event.workflow_run.id }}
     steps:
-      - name: Checkout protected default branch runtime
+      - name: Checkout protected default branch source
         uses: actions/checkout@v7.0.0
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Execute next-development-review
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/next-development/review
+        uses: ./.buildchain/runtime/actions/release/next-development/review
         with:
           secrets-buildchain-approval-token: ${{ secrets.BUILDCHAIN_APPROVAL_TOKEN }}
           secrets-buildchain-promotion-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
         if: ${{ always() }}
+    needs:
+      - execution-runtime

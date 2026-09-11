@@ -12,11 +12,7 @@
         "path": ".github/workflows/public-build-check.yml"
       },
       "inputs": {
-        "buildchain-ref": {
-          "classification": "included",
-          "source": "workflow-call-input"
-        },
-        "buildchain-repository": {
+        "contract-lock": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -29,6 +25,14 @@
           "source": "workflow-call-input"
         },
         "require-version-state": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "runtime-ref": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "runtime-selection": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -94,7 +98,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:25fcc6b11e90a837bfc42a0eb7eaaf35eb17d6bc2a183a7e3d8d69a26fd9dbc6"
+      "digest": "sha256:3f2f0e2f9f8a21ea3db046cb477f2534711de29745e3f40be959eef398a2e692"
     },
     {
       "schemaVersion": 1,
@@ -132,6 +136,22 @@
         },
         "config-path": {
           "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "contract-lock": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "resume-run-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "runtime-ref": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "runtime-selection": {
+          "classification": "included",
           "source": "workflow-call-input"
         },
         "configuration-root": {
@@ -184,7 +204,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:4a6897900f70c1353ea8b6fb3379186d50a4f221d3c000f91436d6785d34d876"
+      "digest": "sha256:849a51ff18efbc2bf4668cd6ba6e08004caf5fc01de4676eade0f917d24c5fd1"
     },
     {
       "schemaVersion": 1,
@@ -201,14 +221,6 @@
           "source": "workflow-call-input"
         },
         "artifact-retention-days": {
-          "classification": "included",
-          "source": "workflow-call-input"
-        },
-        "buildchain-ref": {
-          "classification": "included",
-          "source": "workflow-call-input"
-        },
-        "buildchain-repository": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -242,6 +254,10 @@
         },
         "checkout-cache-timeout-seconds": {
           "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "contract-lock": {
+          "classification": "included",
           "source": "workflow-call-input"
         },
         "gate-command-json": {
@@ -282,6 +298,14 @@
         },
         "runner-preset": {
           "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "runtime-ref": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "runtime-selection": {
+          "classification": "included",
           "source": "workflow-call-input"
         },
         "rust-toolchain": {
@@ -341,7 +365,7 @@
         ]
       },
       "semanticBoundary": "References the Shifu aggregate digest and status without copying project Gate identifiers or Gate policy.",
-      "digest": "sha256:73b51ef36d39740f72d0e71f521a411dbcbccc149fa4b34e97fa863be6300bde"
+      "digest": "sha256:83fb2f980409ff9eb7091fc675b1f1ecd471d335945d8fa6003357f0af709dd5"
     },
     {
       "schemaVersion": 1,
@@ -365,31 +389,7 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
-        "buildchain-contract-compatibility-policy": {
-          "classification": "included",
-          "source": "workflow-call-input"
-        },
-        "buildchain-contract-drift-issue-mode": {
-          "classification": "included",
-          "source": "workflow-call-input"
-        },
-        "buildchain-contract-expected-channel": {
-          "classification": "included",
-          "source": "workflow-call-input"
-        },
-        "buildchain-contract-expected-major": {
-          "classification": "included",
-          "source": "workflow-call-input"
-        },
-        "buildchain-contract-lock-path": {
-          "classification": "digest-only",
-          "source": "workflow-call-input"
-        },
-        "buildchain-ref": {
-          "classification": "included",
-          "source": "workflow-call-input"
-        },
-        "buildchain-repository": {
+        "contract-lock": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -505,6 +505,14 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "runtime-ref": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "runtime-selection": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "staging-apply": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -569,7 +577,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:f203ed816826d4da70d1538c26301ff56389c0f46b0df4e896bf05bce9b6b047"
+      "digest": "sha256:8818db80d272797d84488cd5db915014edf0081b78afa8a52561f54e0deee908"
     },
     {
       "schemaVersion": 1,
@@ -601,28 +609,12 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
-        "buildchain-contract-compatibility-policy": {
-          "classification": "included",
-          "source": "workflow-call-input"
-        },
-        "buildchain-contract-drift-issue-mode": {
-          "classification": "included",
-          "source": "workflow-call-input"
-        },
-        "buildchain-contract-lock-path": {
-          "classification": "digest-only",
-          "source": "workflow-call-input"
-        },
-        "buildchain-ref": {
-          "classification": "included",
-          "source": "workflow-call-input"
-        },
-        "buildchain-repository": {
-          "classification": "included",
-          "source": "workflow-call-input"
-        },
         "buildchain-stable-contract-lock-path": {
           "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "contract-lock": {
+          "classification": "included",
           "source": "workflow-call-input"
         },
         "node-version": {
@@ -638,6 +630,14 @@
           "source": "workflow-call-input"
         },
         "publish-dist-tag": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "runtime-ref": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "runtime-selection": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -708,7 +708,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:7d36457df757062d7dbcc08cff600ec12f76e7177e15916a6d32dd1440dfa2ac"
+      "digest": "sha256:8807dfdad8dc0ae15b51616049804b8a44936d37e364d209e099f680385d81af"
     },
     {
       "schemaVersion": 1,
@@ -752,15 +752,7 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
-        "buildchain-contract-lock-path": {
-          "classification": "digest-only",
-          "source": "workflow-call-input"
-        },
-        "buildchain-ref": {
-          "classification": "included",
-          "source": "workflow-call-input"
-        },
-        "buildchain-repository": {
+        "contract-lock": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -801,6 +793,14 @@
           "source": "workflow-call-input"
         },
         "required-status-check": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "runtime-ref": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "runtime-selection": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -877,7 +877,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:a15783c73506eab77c388bd3bbfc7d9c7948cd8f8ce2c05b433f8f1be0dbe781"
+      "digest": "sha256:f98dae8ad9a494e651690ac128cf4b1b4a6df55cfb255ecca24dae60d0d205fa"
     },
     {
       "schemaVersion": 1,
@@ -929,8 +929,20 @@
           "classification": "redacted",
           "source": "workflow-call-secret"
         },
+        "contract-lock": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "request-json": {
           "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "runtime-ref": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "runtime-selection": {
+          "classification": "included",
           "source": "workflow-call-input"
         }
       },
@@ -975,7 +987,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:4ac0eaf0f2cddf04deef9d4264667a9258c30a394eea3709201cbeabc433f044"
+      "digest": "sha256:699a18f875d395d830bb07c511ec7e6e9dff1ac97a057004a0e58c51d065ce19"
     },
     {
       "schemaVersion": 1,
@@ -995,11 +1007,7 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
-        "buildchain-ref": {
-          "classification": "included",
-          "source": "workflow-call-input"
-        },
-        "buildchain-repository": {
+        "contract-lock": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -1056,6 +1064,14 @@
           "source": "workflow-call-secret"
         },
         "refresh-managed-readme-badges": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "runtime-ref": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "runtime-selection": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -1119,7 +1135,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:6752a7a6973aa8edb28fb7abf1c1629d686933995851dc60b5e460fb9551f9b9"
+      "digest": "sha256:bf6c18f33642654314281e4f1aaf49c16d3a8e765e62c7162ad53beaef630c76"
     },
     {
       "schemaVersion": 1,
@@ -1168,5 +1184,5 @@
       "digest": "sha256:2e6bee5214be76d3f2b8088e23f3a61a79124696f2d69ec3cc86d793d2306ead"
     }
   ],
-  "digest": "sha256:311b1b2bf86bafcac88628749d7ef47e051c6bb1a43afdd89f9ea82ed75dc89d"
+  "digest": "sha256:f3a2670f026d44ad84d482668ef5ee2a447a4f80f986c96986d61977272bdccd"
 }

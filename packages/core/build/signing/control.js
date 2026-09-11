@@ -191,11 +191,6 @@ export function assertArtifactSigningControllerReceipt({
       "authority run ID",
     ],
     [
-      result.authority.runtimeSha,
-      finalDelegation.authority.runtimeSha,
-      "authority runtime SHA",
-    ],
-    [
       result.authority.resultArtifact,
       finalDelegation.authority.resultArtifact,
       "authority result artifact",

@@ -9,30 +9,58 @@ on:
       tag:
         description: Exact v4 release tag; dispatch this workflow at the same tag.
         required: true
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
 permissions:
   contents: read
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+    timeout-minutes: 5
   preflight:
     name: Binary distribution preflight
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Binary distribution preflight
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/binary/preflight
+        uses: ./.buildchain/runtime/actions/build/binary/preflight
         with:
           request-json: ${{ toJSON(inputs) }}
+    needs:
+      - execution-runtime
   binary:
     name: Build ${{ matrix.platform }}
-    needs: preflight
+    needs:
+      - preflight
+      - execution-runtime
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
@@ -57,17 +85,15 @@ jobs:
           persist-credentials: false
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Build ${{ matrix.platform }}
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/binary/build
+        uses: ./.buildchain/runtime/actions/build/binary/build
         with:
           matrix-json: ${{ toJSON(matrix) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
@@ -78,6 +104,7 @@ jobs:
     needs:
       - preflight
       - binary
+      - execution-runtime
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -91,24 +118,24 @@ jobs:
           persist-credentials: false
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Collect release passport
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/binary/passport
+        uses: ./.buildchain/runtime/actions/build/binary/passport
         with:
           request-json: ${{ toJSON(inputs) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
         if: ${{ always() }}
   dispatch-publication:
     name: Dispatch sealed binary asset publication
-    needs: passport
+    needs:
+      - passport
+      - execution-runtime
     runs-on: ubuntu-24.04
     permissions:
       actions: write
@@ -117,13 +144,11 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
     steps:
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
       - name: Dispatch sealed binary asset publication
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/binary/dispatch-publication
+        uses: ./.buildchain/runtime/actions/build/binary/dispatch-publication

@@ -5,7 +5,7 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import test from "node:test";
 import { evaluateWorkflowCallContract } from "../packages/core/contracts/workflow-call-contract.js";
-import { parseReusableWorkflowInterface } from "../packages/core/contracts/workflow-yaml-contract.js";
+import { parseReusableWorkflowInterface, parseWorkflowDocument } from "../packages/core/contracts/workflow-yaml-contract.js";
 import { checkWorkflowCall } from "../packages/core/contracts/commands/workflow-call-contract.mjs";
 
 const SHA = "a".repeat(40);
@@ -254,4 +254,22 @@ test("consumer command verifies clean exact checkouts and marks dirty runs diagn
     () => checkWorkflowCall({ ...options, allowDirty: true }),
     /callee checkout is dirty/,
   );
+});
+
+test("folded workflow expressions retain complete parameter and secret bindings", () => {
+  const parsed = parseWorkflowDocument(`jobs:
+  build:
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4
+    with:
+      runtime-ref: \${{ inputs.runtime-ref ||
+        '' }}
+      config-path: buildchain.toml
+    secrets:
+      token: \${{ secrets.CUSTOM_TOKEN ||
+        github.token }}
+`);
+  const call = parsed.callJobs[0];
+  assert.deepEqual(call.with["runtime-ref"], {kind: "expression", value: "${{ inputs.runtime-ref || '' }}"});
+  assert.deepEqual(call.with["config-path"], {kind: "string", value: "buildchain.toml"});
+  assert.deepEqual(call.secrets.token, {kind: "expression", value: "${{ secrets.CUSTOM_TOKEN || github.token }}"});
 });

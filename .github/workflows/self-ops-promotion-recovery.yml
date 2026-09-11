@@ -22,24 +22,22 @@ on:
         description: Exact Git tree recorded for the sealed candidate
       resume-expected-candidate-root:
         description: Optional exact candidate root
-      resume-expected-candidate-runtime-sha:
-        description: Exact Buildchain runtime SHA recorded by the candidate
-      resume-buildchain-runtime-ref:
-        description: Approved v4 channel, train, or authority ref containing the fresh recovery runtime
-        required: true
-      resume-buildchain-runtime-sha:
-        description: Exact commit resolved from the fresh recovery runtime ref
-        required: true
       resume-transaction-id:
-        description: Exact durable publication transaction identity; required only when resuming a sealed candidate
+        description: Exact durable publication transaction identity; required only when resuming a sealed
+          candidate
       release-passport-v4-runtime-resume-evidence-json:
         description: Optional precomputed runtime A+B Stage Capsule resume evidence JSON
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
 permissions:
   contents: read
 jobs:
   resume:
     name: Adapt recovery inputs into the canonical v4 publisher
-    uses: ./.github/workflows/public-release-promote.yml
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4
     permissions:
       actions: write
       artifact-metadata: write
@@ -51,13 +49,9 @@ jobs:
       pull-requests: write
     secrets: inherit
     with:
-      request-json: |-
+      request-json: >-
         {
           "schema": "buildchain.promotion-request/v1",
-          "buildchain-repository": "kungfu-systems/buildchain",
-          "buildchain-ref": ${{ toJSON(inputs['resume-buildchain-runtime-ref']) }},
-          "buildchain-channel": "auto",
-          "buildchain-contract-lock-path": ${{ toJSON(startsWith(inputs['target-ref'], 'alpha/') && '.buildchain/alpha-contract-lock.json' || '.buildchain/contract-lock.json') }},
           "target-ref": ${{ toJSON(inputs['target-ref']) }},
           "target-sha": ${{ toJSON(inputs.sha) }},
           "package-manager": "pnpm",
@@ -70,8 +64,6 @@ jobs:
           "resume-expected-workflow-name": "Build Surface Fixture",
           "resume-expected-source-tree": ${{ toJSON(inputs['resume-expected-source-tree'] || '') }},
           "resume-expected-candidate-root": ${{ toJSON(inputs['resume-expected-candidate-root'] || '') }},
-          "resume-expected-candidate-runtime-sha": ${{ toJSON(inputs['resume-expected-candidate-runtime-sha'] || '') }},
-          "resume-buildchain-runtime-sha": ${{ toJSON(inputs['resume-buildchain-runtime-sha']) }},
           "resume-transaction-id": ${{ toJSON(inputs['resume-transaction-id'] || '') }},
           "artifact-patterns": "buildchain-package-*",
           "required-artifact-count": 0,
@@ -92,3 +84,4 @@ jobs:
           "publication-package-name": "@kungfu-tech/buildchain",
           "dry-run": ${{ toJSON(inputs['dry-run']) }}
         }
+      runtime-ref: ${{ inputs.runtime-ref }}

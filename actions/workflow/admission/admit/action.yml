@@ -5,9 +5,6 @@ inputs:
   request-json:
     description: request-json exact workflow authority input.
     required: true
-  review-json:
-    description: review-json exact workflow authority input.
-    required: true
 outputs:
   runtime-sha:
     description: runtime-sha rooted workflow evidence.

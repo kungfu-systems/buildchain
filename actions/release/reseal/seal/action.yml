@@ -23,16 +23,6 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Checkout exact Buildchain tail runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: kungfu-systems/buildchain
-        ref: ${{ inputs.runtime-sha }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Download exact tail plan
       uses: actions/download-artifact@v7.0.0
       with:

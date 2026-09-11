@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-07-31
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -50,7 +50,7 @@ bound by the manifest digest but excluded from the product-byte set because it c
 be finalized after the lifecycle scan. The verifier also compares the PR evidence tree to the
 admitted post-merge source commit tree. It rejects an unknown
 workflow, stale or replayed nonce, runner downgrade, control-plane drift,
-source/runtime mismatch, and artifact substitution. A successful result is a
+source mismatch, and artifact substitution. A successful result is a
 scoped capability receipt, not a bearer credential.
 
 ## Runner and control-plane evidence

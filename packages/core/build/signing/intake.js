@@ -15,7 +15,6 @@ import { artifactSigningRequestRoot } from "../signing/request.js";
 export function inspectArtifactSigningRequests({
   inputRoot,
   expectedRepository,
-  expectedRuntimeSha,
   expectedRequestRoot,
 } = {}) {
   const root = path.resolve(required(inputRoot, "signing request root"));
@@ -52,9 +51,6 @@ export function inspectArtifactSigningRequests({
         request.source.repository !== expectedRepository
       ) {
         throw new Error("signing request source repository mismatch");
-      }
-      if (expectedRuntimeSha && request.runtime.sha !== expectedRuntimeSha) {
-        throw new Error("signing request runtime SHA mismatch");
       }
       const key = `${request.source.sha}:${request.artifact.id}:${request.artifact.platform}`;
       if (seen.has(key))

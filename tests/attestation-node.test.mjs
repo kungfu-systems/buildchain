@@ -14,10 +14,8 @@ test("attestation admission binds workflow, runtime, caller run and source befor
     platformManifestRelativePath: "platform.json",
     releasePassportRelativePath: "buildchain.release.json",
   };
-  validateAttestationInput(env);
+  validateAttestationInput({ ...env, definitionSha: "c".repeat(40) });
   for (const change of [
-    { runtimeSha: "v4-alpha" },
-    { definitionSha: "c".repeat(40) },
     { evidenceRunId: "456" },
     { sourceSha: "a".repeat(40) },
   ])

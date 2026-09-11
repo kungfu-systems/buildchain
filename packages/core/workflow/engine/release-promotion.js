@@ -16,7 +16,7 @@ import {
 } from "./release-observation.js";
 import {
   prepareTrustedPublishingNpm,
-  prepareReleasePromotionConsumerDependencies,
+  prepareReleaseConsumerDependencies,
 } from "./release-environment.js";
 import { verifiedReleaseDocuments } from "./release-evidence.js";
 async function materializeProductPublicationIntent(
@@ -125,7 +125,7 @@ export async function executeReleasePromotion(request, admission, context) {
     fail(`release route blocked: ${route.reason}`);
   if (route.decision === "NoOp" || payload.inputs["dry-run"] === true)
     return { route, dryRun: payload.inputs["dry-run"] === true };
-  prepareReleasePromotionConsumerDependencies(repository);
+  prepareReleaseConsumerDependencies();
   if (payload.inputs["trusted-publishing"] === true)
     prepareTrustedPublishingNpm();
   const candidate = await resolveReleaseCandidateArtifacts({

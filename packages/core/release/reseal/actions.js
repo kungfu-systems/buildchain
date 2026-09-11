@@ -1,28 +1,9 @@
 import path from "node:path";
 import { getOctokit } from "@actions/github";
-import { command } from "../../runtime/action-process.mjs";
-import { installationRoot } from "../../runtime/installation-root.js";
-import { exactWorkflowRuntime } from "../../runtime/workflow-runtime.js";
 import { admitTailResealPlan } from "./plan.js";
 import { finalizeResealPlatform } from "./finalize-platform.js";
 import { sealTailReseal } from "./seal.js";
 import { tailPlanOutputs } from "./outputs.js";
-function runtime(core) {
-  const sha = exactWorkflowRuntime(
-    core.getInput("runtime-sha", { required: true }),
-  );
-  if (
-    command(
-      "git",
-      ["-C", installationRoot(import.meta.url), "rev-parse", "HEAD"],
-      { stdio: "pipe" },
-    ).trim() !== sha
-  )
-    throw new Error(
-      "Tail action runtime differs from admitted immutable commit",
-    );
-  return sha;
-}
 export async function admitTailResealPlanAction(core, env) {
   const request = JSON.parse(core.getInput("request-json", { required: true }));
   const result = await admitTailResealPlan(
@@ -30,7 +11,7 @@ export async function admitTailResealPlanAction(core, env) {
       request: JSON.parse(request["request-json"]),
       receipt: JSON.parse(request["consumer-policy-receipt-json"]),
       workspace: path.resolve(env.GITHUB_WORKSPACE),
-      runtimeSha: runtime(core),
+      runtimeSha: env.BUILDCHAIN_RUNTIME_SHA,
       sourceSha: env.GITHUB_SHA,
       repository: env.GITHUB_REPOSITORY,
     },
@@ -49,7 +30,7 @@ export async function admitTailResealPlanAction(core, env) {
 export function finalizeResealPlatformAction(core, env) {
   return finalizeResealPlatform({
     workspace: path.resolve(env.GITHUB_WORKSPACE),
-    runtimeSha: runtime(core),
+    runtimeSha: env.BUILDCHAIN_RUNTIME_SHA,
     platformId: core.getInput("platform", { required: true }),
     finalizationCommand: core.getInput("finalization-command"),
     signingToken: core.getInput("signing-token"),
@@ -61,7 +42,7 @@ export function finalizeResealPlatformAction(core, env) {
 export function sealTailResealAction(core, env) {
   const { passport, receipt } = sealTailReseal({
     workspace: path.resolve(env.GITHUB_WORKSPACE),
-    runtimeSha: runtime(core),
+    runtimeSha: env.BUILDCHAIN_RUNTIME_SHA,
     sourceSha: env.GITHUB_SHA,
     sourceRef: env.GITHUB_REF,
     repository: env.GITHUB_REPOSITORY,

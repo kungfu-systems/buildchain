@@ -39,10 +39,16 @@ export async function resolveBuildPlan(request, providers) {
     execFileSync("git", ["-C", sourceRoot, ...args], {
       encoding: "utf8",
     }).trim();
+  plan.entry = { ref: workflow.ref, sha: workflow.sha };
+  if (request.runtime) {
+    plan.identity.sha = request.runtime.sha;
+    plan.runtime = request.runtime;
+  }
   if (git("rev-parse", "HEAD") !== plan.source.sha)
     throw new Error("Checked out source differs from invocation");
   plan.source.tree_sha = git("rev-parse", "HEAD^{tree}");
   plan.run = { ...run };
+  if (request.recovery) plan.recovery = request.recovery;
   plan.admission = await admitBuildSource(
     { plan, sourceRoot, runtimeRoot, workspace, workflow },
     providers,
@@ -64,7 +70,7 @@ export async function resolveBuildPlan(request, providers) {
     inputBoundary: "strict",
     source: { repository: run.repository, sha: plan.source.sha },
     runtime: {
-      ref: plan.identity.ref,
+      ref: plan.runtime?.ref || plan.identity.ref,
       sha: plan.identity.sha,
       contractDigest: plan.admission.contract_digest,
     },

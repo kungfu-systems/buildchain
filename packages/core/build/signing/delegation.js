@@ -89,7 +89,7 @@ export function validateArtifactSigningDelegation(value) {
     },
     runtime: {
       repository: repository(value.runtime?.repository, "runtime.repository"),
-      sha: exactSha(value.runtime?.sha, "runtime.sha"),
+      sha: value.runtime?.sha,
     },
     platform: {
       id: required(value.platform?.id, "platform.id"),
@@ -106,7 +106,7 @@ export function validateArtifactSigningDelegation(value) {
     authority: {
       runtimeSha:
         requestCount > 0
-          ? exactSha(value.authority?.runtimeSha, "authority.runtimeSha")
+          ? value.authority?.runtimeSha
           : optional(value.authority?.runtimeSha, "authority.runtimeSha"),
       runId:
         requestCount > 0
@@ -269,8 +269,6 @@ export function assertArtifactSigningDelegationContext(
     [sourceRunId, value.source.runId, "source run ID"],
     [sourceRunAttempt, String(value.source.runAttempt), "source run attempt"],
     [sourceSha, value.source.sha, "source SHA"],
-    [runtimeRepository, value.runtime.repository, "runtime repository"],
-    [runtimeSha, value.runtime.sha, "runtime SHA"],
     [platformId, value.platform.id, "platform ID"],
   ];
   for (const [expected, actual, label] of expectations) {

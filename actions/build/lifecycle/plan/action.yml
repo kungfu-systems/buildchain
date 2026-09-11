@@ -1,5 +1,6 @@
 name: resolve-build-plan
-description: Admit source and runtime, resolve TOML and produce the complete rooted build plan.
+description: Admit source and runtime, resolve TOML and produce the complete
+  rooted build plan.
 inputs:
   config-path:
     description: Optional project TOML locator
@@ -18,14 +19,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Setup control runtime
-      uses: actions/setup-node@v6.4.0
-      with:
-        node-version: "24"
-    - name: Install exact runtime dependencies
-      uses: ./.buildchain/runtime/actions/runtime/dependencies/install
-      with:
-        directory: .buildchain/runtime
     - name: Resolve admitted build plan
       id: plan
       uses: ./.buildchain/runtime/actions/build/plan/resolve

@@ -4,7 +4,6 @@ import crypto from "node:crypto";
 import {
   sourceCoordinates,
   validateNativeContract,
-  validateRuntimeSelector,
 } from "./coordinates.js";
 import {
   verifyProjectCutReplayProof,
@@ -31,13 +30,13 @@ export function admitDeliveryRequest(input, defaultBranch) {
       deliveryClass: input["delivery-class"],
       environmentRoot: input["environment-root"],
     });
-  validateRuntimeSelector({ runtimeRef: input["buildchain-ref"] });
   return target;
 }
 export async function qualifyDeliverySource(
   {
     workspace,
     runtimeSha,
+    runtimeRef,
     request,
     repository,
     branch,
@@ -61,8 +60,8 @@ export async function qualifyDeliverySource(
     writeJson(path.join(workspace, ".buildchain/dev-delivery", name), value);
   const runtime = {
     schema: "kungfu.buildchain.dev-delivery-runtime-selection/v1",
-    repository: request["buildchain-repository"],
-    selector: request["buildchain-ref"],
+    repository: "kungfu-systems/buildchain",
+    selector: runtimeRef,
     resolvedSha: runtimeSha,
   };
   writeEvidence("runtime-selection.json", runtime);

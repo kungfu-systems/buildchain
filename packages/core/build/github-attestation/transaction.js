@@ -41,7 +41,6 @@ export function sealAttestation(
   verify = verifyArtifactAttestationSigner,
 ) {
   if (
-    preparation.policy.signer.workflowDigest !== runtimeSha ||
     preparation.policy.caller.sourceSha !== sourceSha ||
     preparation.policy.caller.repository !== workflow.repository
   )
@@ -52,7 +51,7 @@ export function sealAttestation(
   verify({
     subjectPath: preparation.subjectPath,
     repository: workflow.repository,
-    runtimeSha,
+    signerDigest: preparation.policy.signer.workflowDigest,
     sourceSha,
     predicateType: preparation.predicateType,
     bundlePath,

@@ -3,7 +3,7 @@ import { assert, assertOrder, readComposite, readRepoText, test, workflowJob } f
 test("signing and attestation retain isolated credentials and final-byte checks", () => {
   const sign = workflowJob("sign");
   assert.match(sign, /environment:/u);
-  assert.match(sign, /matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_CERTIFICATE/u);
+  assert.match(sign, /matrix.platform.kind == 'credential' &&\s+secrets.BUILDCHAIN_MACOS_CERTIFICATE/u);
   const action = readComposite("build/artifact/sign");
   assert.match(action, /inputs.kind == 'credential'/u);
   assert.match(action, /inputs.kind == 'artifact'/u);

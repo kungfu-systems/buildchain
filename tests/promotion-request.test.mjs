@@ -23,24 +23,26 @@ test("promotion request applies every declared default without coercing typed fi
 test("binding produces one current invocation and roots router, publisher, runtime and source lock", () => {
   const invocation = bindPromotionInvocation(request, selection);
   assert.equal(invocation.schema, "buildchain.promotion-invocation/v1");
-  assert.equal(invocation["buildchain-ref"], sha);
+  assert.equal(invocation["promotion-runtime-sha"], sha);
   assert.equal(invocation["promotion-shell-sha"], sha);
   assert.equal(invocation["promotion-contract-lock-digest"], root);
   assert.equal(invocation["promotion-override-used"], false);
   assert.equal(invocation["target-ref"], selection["target-ref"]);
   assert.equal(Object.hasOwn(invocation, "buildchain-channel"), false);
-  for (const change of [{ "shell-sha": "c".repeat(40) }, { "runtime-sha": "v4-alpha" }, { "contract-lock-digest": "unknown" }, { "override-used": "true" }, { "override-used": "" }])
+  for (const change of [{ "contract-lock-digest": "unknown" }, { "override-used": "" }])
     assert.throws(() => bindPromotionInvocation(request, { ...selection, ...change }));
 });
-test("transient runtime selection requires its independently rooted authorization", () => {
-  const invocation = bindPromotionInvocation(request, { ...selection, "override-used": "true" }, { "runtime-authorization-json": '{"receipt":{}}', "runtime-authorization-root": root });
+test("an entry-selected train runtime needs no second authorization or entry SHA equality", () => {
+  const invocation = bindPromotionInvocation(request, { ...selection, "runtime-sha": "c".repeat(40), "runtime-ref": "train/v4/v4.1/repair", "override-used": "true" });
+  assert.equal(invocation["promotion-runtime-sha"], "c".repeat(40));
   assert.equal(invocation["promotion-override-used"], true);
-  assert.equal(invocation["promotion-runtime-authorization-root"], root);
+  assert.equal(Object.hasOwn(invocation, "promotion-runtime-authorization-root"), false);
+  assert.deepEqual(verifyPromotionInvocation(invocation), invocation);
 });
-
-test("component invocation rejects missing normalization and another publisher SHA", () => {
+test("component invocation retains closed typed normalization and source lock integrity", () => {
   const invocation = bindPromotionInvocation(request, selection);
-  assert.deepEqual(verifyPromotionInvocation(invocation, sha), invocation);
-  assert.throws(() => verifyPromotionInvocation({ schema: invocation.schema }, sha), /all normalized fields/);
-  assert.throws(() => verifyPromotionInvocation(invocation, "c".repeat(40)), /defining workflow/);
+  assert.deepEqual(verifyPromotionInvocation(invocation), invocation);
+  assert.throws(() => verifyPromotionInvocation({ schema: invocation.schema }), /all normalized fields/);
+  assert.throws(() => verifyPromotionInvocation({ ...invocation, "promotion-contract-lock-digest": "unrooted" }), /lock root/);
+  assert.throws(() => verifyPromotionInvocation({ ...invocation, "dry-run": "false" }), /boolean/);
 });

@@ -1,7 +1,6 @@
 name: propagation-plan
-description:
-  Prepare the selected runtime, plan the release graph, then capture Work against the
-  checked out downstream branch.
+description: Prepare the selected runtime, plan the release graph, then capture
+  Work against the checked out downstream branch.
 inputs:
   runtime-ref:
     description: Selected runtime ref with the caller precedence preserved.
@@ -18,19 +17,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Checkout Buildchain runtime
-      id: runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ inputs.runtime-repository }}
-        ref: ${{ inputs.runtime-ref }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - name: Prepare exact Buildchain runtime
-      id: core-node
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Resolve release graph and controller
       id: resolve
       uses: ./.buildchain/runtime/actions/release/propagation/resolve
@@ -41,7 +27,8 @@ runs:
       if: ${{ always() && steps.resolve.outputs.controller-plan-digest != '' }}
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: ${{ format('buildchain-release-propagation-controller-plan-{0}', github.sha) }}
+        name: ${{ format('buildchain-release-propagation-controller-plan-{0}',
+          github.sha) }}
         path: .buildchain/controller/plan.json
         if-no-files-found: error
     - name: Checkout downstream repository
@@ -57,12 +44,9 @@ runs:
       with:
         request-json: ${{ inputs.request-json }}
 outputs:
-  runtime-ready:
-    description: Runtime closure preparation succeeded.
-    value: ${{ steps.core-node.outcome == 'success' }}
   node-path:
     description: Prepared consumer Node executable.
-    value: ${{ steps.core-node.outputs.node-path }}
+    value: ${{ env.BUILDCHAIN_NODE_PATH }}
   execute:
     description: Captured Work authorizes execution.
     value: ${{ steps.capture.outputs.execute }}
@@ -77,4 +61,5 @@ outputs:
     value: ${{ steps.resolve.outputs.propagation-key }}
   propagation-work-artifact:
     description: Captured Work artifact.
-    value: ${{ format('buildchain-release-propagation-work-{0}', steps.resolve.outputs.propagation-key) }}
+    value: ${{ format('buildchain-release-propagation-work-{0}',
+      steps.resolve.outputs.propagation-key) }}

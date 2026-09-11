@@ -5,10 +5,10 @@ on:
       - buildchain-dev-delivery-wake
   workflow_dispatch:
     inputs:
-      buildchain-ref:
-        description: "Buildchain runtime selector: v4, v4-alpha, or a trusted train/v4/v4.0/<capability>"
+      runtime-ref:
+        description: "Buildchain runtime selector: v4, v4-alpha, or a trusted train/v4/v4.1/<capability>"
         required: false
-        default: v4-alpha
+        default: ""
       target-branch:
         description: Protected dev/vN/vN.M branch
         required: true
@@ -95,7 +95,7 @@ jobs:
   deliver:
     uses: kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@v4-alpha
     with:
-      buildchain-ref: ${{ inputs.buildchain-ref || 'v4-alpha' }}
+      runtime-ref: ${{ inputs.runtime-ref || '' }}
       target-branch: ${{ github.event.client_payload.candidate.targetBranch || inputs.target-branch }}
       expected-pr-number: ${{ github.event.client_payload.candidate.pullRequestNumber || inputs.expected-pr-number }}
       expected-head-sha: ${{ github.event.client_payload.candidate.sourceHead || inputs.expected-head-sha }}

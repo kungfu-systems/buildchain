@@ -4,13 +4,12 @@ export function assertPlan(plan) {
   if (plan.schema !== "buildchain.build-plan/v1" || root !== rootOf(body))
     throw new Error("Build plan root mismatch");
   for (const sha of [
-    plan.identity.sha,
     plan.source.sha,
     plan.source.tree_sha,
   ]) {
     if (!/^[a-f0-9]{40}$/u.test(sha))
       throw new Error(
-        "Build plan requires exact source, tree and runtime identities",
+        "Build plan requires exact source and tree identities",
       );
   }
   if (
@@ -28,7 +27,6 @@ export function bindBuildPlan({
   run,
   platformId = "",
   workspace,
-  runtimeSha,
 }) {
   assertPlan(plan);
   if (
@@ -37,8 +35,6 @@ export function bindBuildPlan({
     plan.run.attempt !== run.attempt
   )
     throw new Error("Build plan belongs to another run");
-  if (runtimeSha !== plan.identity.sha)
-    throw new Error("Executing runtime differs from the build plan");
   const platform = platformId
     ? plan.platforms.find((item) => item.id === platformId)
     : null;

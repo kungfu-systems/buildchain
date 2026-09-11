@@ -17,8 +17,6 @@ export async function finalizeResealPlatform({
   const request = normalizeTailResealRequest(
     readJson(path.join(directory, "request.json")),
   );
-  if (request.runtime.sha !== runtimeSha)
-    throw new Error("Reseal platform runtime differs from admitted request");
   let readback = verifyTailResealPlatform({
     request,
     platformId,

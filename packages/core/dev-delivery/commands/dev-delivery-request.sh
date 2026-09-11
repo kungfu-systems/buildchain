@@ -49,15 +49,8 @@ jq -e --arg repository "$repository" '
 base="$(jq -r .baseRefName <<<"$pr")"
 source_head="$(jq -r .headRefOid <<<"$pr")"
 runtime_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
-runtime_sha="$(git -C "$runtime_root" rev-parse 'HEAD^{commit}')"
-workflow_ref="$base"
-if [ "$repository" = kungfu-systems/buildchain ]; then
-  [ "$runtime_sha" = "$source_head" ] || {
-    echo "buildchain dev deliver: source-owned workflow and runtime must match the exact PR head" >&2
-    exit 1
-  }
-  workflow_ref="$(jq -er '.headRefName | select(type == "string" and length > 0)' <<<"$pr")"
-fi
+runtime_ref="${BUILDCHAIN_RUNTIME_REF:-}"
+workflow_ref="$(jq -er '.headRefName | select(type == "string" and length > 0)' <<<"$pr")"
 
 run_id="$(jq -r '[.statusCheckRollup[] | select(.workflowName == "Verify" and .conclusion == "SUCCESS") | .detailsUrl | capture("/runs/(?<id>[0-9]+)").id] | unique | last // empty' <<<"$pr")"
 [ -n "$run_id" ] || { echo "buildchain dev deliver: no successful Verify run covers the PR head" >&2; exit 1; }
@@ -91,8 +84,7 @@ required_contexts="$(jq '[.statusCheckRollup[] | select(.conclusion == "SUCCESS"
 
 predicates="$(node "$runtime_root/packages/core/dev-delivery/commands/dev-delivery-source-proof-reuse.mjs" predicates \
   --cwd "$PWD" --repository "$repository" --branch "$base" --qualified-base "$qualified_base" \
-  --source-head "$source_head" --runtime-ref "$runtime_sha" --runtime-sha "$runtime_sha" \
-  --contract-digest "$runtime_sha" --node-version "${BUILDCHAIN_NODE_VERSION:-24}" \
+  --source-head "$source_head" --node-version "${BUILDCHAIN_NODE_VERSION:-24}" \
   --policy-paths-json "$policy_paths" --closure-paths-json "$existing_paths" \
   --dependency-paths-json "$dependency_paths" --required-contexts-json "$required_contexts")"
 
@@ -132,10 +124,10 @@ if [ -n "$github_token" ]; then
 
 fi
 workflow="self-ops-dev-delivery.yml"
-payload="$(jq --arg ref "$workflow_ref" --arg base "$base" --arg runtime "$runtime_sha" --arg number "$number" \
+payload="$(jq --arg ref "$workflow_ref" --arg base "$base" --arg runtime "$runtime_ref" --arg number "$number" \
   --arg head "$source_head" --arg roots "$(jq -cn --arg root "$source_root" '{sourceRoot:$root}')" \
   --arg run "$run_id" '. as $proof | {ref:$ref,inputs:{
-    "buildchain-ref":$runtime,"target-branch":$base,"expected-pr-number":$number,
+    "runtime-ref":$runtime,"target-branch":$base,"expected-pr-number":$number,
     "expected-head-sha":$head,"native-roots-json":$roots,"source-workflow-run-id":$run,
     "source-identity-root":$proof.sourceIdentityRoot,
     "source-patch-root":$proof.sourcePatchRoot,"plan-root":$proof.planRoot,

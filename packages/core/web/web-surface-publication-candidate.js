@@ -89,7 +89,7 @@ export function createWebSurfacePublicationCandidate({
   const normalizedRepository = requiredString(repository, "repository");
   const normalizedSourceSha = normalizeGitSha(sourceSha, "sourceSha");
   const normalizedSourceTreeSha = normalizeGitSha(sourceTreeSha, "sourceTreeSha");
-  const normalizedRuntimeSha = normalizeGitSha(runtimeSha, "runtimeSha");
+  const normalizedRuntimeSha = runtimeSha;
   if (plan?.contract !== "kungfu-buildchain-web-surface-deploy-plan") {
     throw new Error("web-surface publication plan contract mismatch");
   }
@@ -103,9 +103,6 @@ export function createWebSurfacePublicationCandidate({
   if (normalizeDigest(plan.manifest?.artifactHash, "plan.manifest.artifactHash") !== artifactHash) {
     throw new Error("web-surface publication plan artifact hash mismatch");
   }
-  if (plan.manifest?.runtimeId && String(plan.manifest.runtimeId).toLowerCase() !== normalizedRuntimeSha) {
-    throw new Error("web-surface publication plan runtime SHA mismatch");
-  }
   const canonicalPlanDigest = crypto
     .createHash("sha256")
     .update(`${JSON.stringify(plan, null, 2)}\n`)
@@ -115,7 +112,7 @@ export function createWebSurfacePublicationCandidate({
   }
   const controllerValidation = validateControllerReceipt(controllerReceipt, {
     expectedSourceSha: normalizedSourceSha,
-    expectedRuntimeSha: normalizedRuntimeSha,
+
   });
   if (!controllerValidation.ok || !controllerValidation.qualifying) {
     throw new Error(`web-surface publication controller receipt did not qualify: ${controllerValidation.issues.join("; ")}`);

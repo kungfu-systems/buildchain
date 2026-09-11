@@ -3,7 +3,7 @@ import fs from "node:fs";
 import test from "node:test";
 import { parse as parseYaml } from "yaml";
 import { admitUniversalWorkflow, selectFinalizedProductPublicationVersion, selectRecoveredProductPublicationVersion, productStateVersion, universalWorkflowAdmissionRoot } from "../packages/core/workflow/universal-workflow-bootstrap.js";
-import { sha, policy, request, reviewEvidence, consumerObservation } from "./universal-workflow-harness.mjs";
+import { sha, policy, request, runtime, consumerObservation } from "./universal-workflow-harness.mjs";
 
 test("real universal promotion materializes one rooted product intent before APPLY", () => {
   const engine = fs.readFileSync(
@@ -210,7 +210,7 @@ test("production admission rejects contract-only false success", () => {
   const policyValue = JSON.parse(
     fs.readFileSync(
       new URL(
-        "../architecture/universal-workflow-train-admission.json",
+        "../architecture/universal-workflow-capability-policy.json",
         import.meta.url,
       ),
       "utf8",
@@ -223,16 +223,14 @@ test("production admission rejects contract-only false success", () => {
   const requestValue = request(policyValue);
   requestValue.capability.id = "workflow-contract";
   requestValue.capability.contractRoots = policyValue.contractRoots;
-  requestValue.candidate.admissionRoot =
-    universalWorkflowAdmissionRoot(policyValue);
   assert.throws(
     () =>
       admitUniversalWorkflow({
         ...consumerObservation(),
         request: requestValue,
         policy: policyValue,
-        observedRefSha: sha("1"),
-        reviewEvidence: reviewEvidence(),
+
+
         now: "2026-08-30T12:00:00.000Z",
       }),
     { code: "capability-not-admitted" },
@@ -248,8 +246,10 @@ test("Bootstrap preserves caller permissions and retains evidence in its termina
     workflow.slice(0, workflow.indexOf("\njobs:")),
     /^permissions:/mu,
   );
-  assert.doesNotMatch(workflow, /^    permissions:/mu);
   const topology = parseYaml(workflow);
+  for (const [name, job] of Object.entries(topology.jobs)) {
+    if (name !== "execution-runtime") assert.equal(job.permissions, undefined);
+  }
   assert.ok(
     topology.jobs.settle.steps.some((step) =>
       step.uses?.endsWith("/actions/workflow/bootstrap/settle"),
@@ -269,5 +269,5 @@ test("Bootstrap preserves caller permissions and retains evidence in its termina
   );
   assert.equal(upload.with["if-no-files-found"], "error");
   assert.ok(upload.with.path.includes(".buildchain/terminal-receipt.json"));
-  assert.ok(upload.with.path.includes(".buildchain/backflow.json"));
+  assert.ok(!upload.with.path.includes(".buildchain/backflow.json"));
 });

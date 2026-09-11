@@ -74,7 +74,7 @@ command = "node --version"
 `);
   fs.writeFileSync(path.join(cwd, "scripts/generate.mjs"), `import fs from "node:fs";
 fs.writeFileSync("dist/site/kfd-claims.json", JSON.stringify({version: process.env.BUILDCHAIN_VERSION}) + "\\n");
-if (fs.existsSync(".buildchain/runtime/reject-unrelated")) fs.writeFileSync("source.txt", "unexpected change\\n");
+if (fs.existsSync(".buildchain/reconciliation/reject-unrelated")) fs.writeFileSync("source.txt", "unexpected change\\n");
 `);
   git("init", "-q");
   git("add", ".");
@@ -108,7 +108,10 @@ if (fs.existsSync(".buildchain/runtime/reject-unrelated")) fs.writeFileSync("sou
   assert.equal(JSON.parse(fs.readFileSync(path.join(snapshot.cwd, "package.json"))).version, "4.0.3-alpha.1");
   assert.equal(git("status", "--porcelain", "--untracked-files=all"), before);
   assert.equal(git("rev-parse", "HEAD"), callerHead);
-  fs.writeFileSync(path.join(snapshot.cwd, ".buildchain/runtime/reject-unrelated"), "");
+  assert.equal(fs.existsSync(path.join(snapshot.cwd, ".buildchain/runtime")), false);
+  assert.equal(fs.lstatSync(path.join(snapshot.cwd, "node_modules")).isSymbolicLink(), false);
+  fs.mkdirSync(path.join(snapshot.cwd, ".buildchain/reconciliation"), { recursive: true });
+  fs.writeFileSync(path.join(snapshot.cwd, ".buildchain/reconciliation/reject-unrelated"), "");
   assert.throws(() => localVersionFiles(snapshot.cwd, intent), /Unexpected version changes:.*source\.txt/u);
   assert.equal(fs.readFileSync(path.join(cwd, "source.txt"), "utf8"), "caller dirty work\n");
 });

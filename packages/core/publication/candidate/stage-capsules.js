@@ -8,7 +8,7 @@ import {
   stageCapsuleRoot,
   validateStageCapsule,
 } from "../../build/stage-capsule.js";
-import { runtimeResumeDocumentRoot } from "../../consumer/runtime-ref-resume-authority.js";
+import { runtimeResumeDocumentRoot } from "../../release/recovery/lineage.js";
 import { createDomainPublicationQualificationReceipt } from "../publication-qualification.js";
 
 const readJsonFile = (file) => JSON.parse(fs.readFileSync(file, "utf8"));

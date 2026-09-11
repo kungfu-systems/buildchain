@@ -16,21 +16,11 @@ import { importArtifactSigningResults } from "../packages/core/build/signing/imp
 import { materializeArtifactSigningRequest } from "../packages/core/build/signing/materialize.js";
 import { verifyArtifactSigningResults } from "../packages/core/build/signing/verify-results.js";
 
-const FORMAL_AUTHORITY_REF = "authority/v4/v4.1/artifact-signing";
-
-test("exact runtime pins dispatch through the formal protected authority ref", () => {
-  assert.equal(
-    resolveAuthorityDispatchRef("4".repeat(40)),
-    FORMAL_AUTHORITY_REF,
-  );
-  assert.equal(
-    resolveAuthorityDispatchRef(FORMAL_AUTHORITY_REF),
-    FORMAL_AUTHORITY_REF,
-  );
-  assert.equal(resolveAuthorityDispatchRef("v4"), FORMAL_AUTHORITY_REF);
-  for (const retired of ["v3", "v4.0", "authority/v3/v3.0/artifact-signing"])
-    assert.throws(() => resolveAuthorityDispatchRef(retired), /current protected authority/);
-  assert.equal(resolveAuthorityDispatchRef("v4-alpha"), FORMAL_AUTHORITY_REF);
+test("signing dispatch uses a public entry and leaves runtime selection to its input", () => {
+  assert.equal(resolveAuthorityDispatchRef(), "v4");
+  for (const entry of ["v4", "v4-alpha"]) assert.equal(resolveAuthorityDispatchRef(entry), entry);
+  for (const invalid of ["v3", "4".repeat(40), "train/v4/v4.1/repair", "authority/v4/v4.1/artifact-signing"])
+    assert.throws(() => resolveAuthorityDispatchRef(invalid), /public floating channel/);
 });
 
 function digest(value) {
@@ -182,7 +172,6 @@ test("authority intake routes native profiles without accepting source substitut
     const matrices = inspectArtifactSigningRequests({
       inputRoot: value.input,
       expectedRepository: "kungfu-systems/sample-consumer",
-      expectedRuntimeSha: "3".repeat(40),
     });
     assert.equal(matrices.windows.length, 1);
     assert.equal(matrices.macos.length, 0);
@@ -217,7 +206,6 @@ test("authority intake carries sealed JIT profile intent into the macOS matrix",
     const matrices = inspectArtifactSigningRequests({
       inputRoot: value.input,
       expectedRepository: "kungfu-systems/sample-consumer",
-      expectedRuntimeSha: "3".repeat(40),
     });
     assert.equal(matrices.macos.length, 1);
     assert.equal(matrices.macos[0].entitlementsProfile, "jit-executable-v1");
@@ -462,10 +450,11 @@ test("native authority binds and projects a notarized app release payload", () =
 
 test("Buildchain authority owns native credentials and performs provider verification", () => {
   const root = path.resolve(import.meta.dirname, "..");
-  const workflow = fs.readFileSync(
+  const workflowText = fs.readFileSync(
     path.join(root, ".github/workflows/public-release-signing-authority.yml"),
     "utf8",
   );
+  const workflow = workflowText.replace(/\n\s+/g, " ");
   const macosAction = fs.readFileSync(
     path.join(root, "actions/release/signing/macos/action.yml"),
     "utf8",
@@ -504,21 +493,22 @@ test("Buildchain authority owns native credentials and performs provider verific
     /group: artifact-signing-\$\{\{ inputs\.source-repository \}\}-\$\{\{ inputs\.source-run-id \}\}-\$\{\{ inputs\.source-run-attempt \}\}-\$\{\{ inputs\.correlation-id \}\}/,
   );
   assert.match(
-    workflow,
+    workflowText,
     /macos:[\s\S]*?strategy:\n\s+fail-fast: false[\s\S]*?matrix:\n\s+request: \$\{\{ fromJSON\(needs\.intake\.outputs\.macos-matrix\) \}\}/,
   );
   assert.match(
     deliveryAction,
-    /uses: \.\/actions\/build\/signing\/qualify-delivery/,
+    /uses: \.\/\.buildchain\/runtime\/actions\/build\/signing\/qualify-delivery/,
   );
-  assert.match(releaseVerify, /authority\/\*\/\*\/artifact-signing/);
+  assert.match(workflow, /runtime-ref:/);
   assert.match(
     reusableDocs,
-    new RegExp(FORMAL_AUTHORITY_REF.replaceAll("/", "\\/")),
+    /public-release-signing-authority\.yml@v4/,
   );
   assert.match(workflow, /secrets\.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64/);
   assert.match(workflow, /secrets\.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64/);
-  assert.match(macosAction, /vars\.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID/);
+  assert.match(workflow, /team-id: \$\{\{ vars\.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID \}\}/);
+  assert.match(macosAction, /expected-team-id: \$\{\{ inputs\.team-id \}\}/);
   assert.doesNotMatch(workflow, /secrets\.BUILDCHAIN_APPLE_/);
   assert.match(workflow, /secrets\.BUILDCHAIN_WINDOWS_CERTIFICATE_PFX_BASE64/);
   assert.match(macos, /-T \/usr\/bin\/codesign -T \/usr\/bin\/security/);
@@ -531,12 +521,12 @@ test("Buildchain authority owns native credentials and performs provider verific
   assert.match(nativeProvider, /BUILDCHAIN_ARTIFACT_KIND: artifact.kind/);
   assert.match(nativeProvider, /BUILDCHAIN_ENTITLEMENTS_PROFILE:\s*signature.entitlementsProfile/);
   assert.match(nativeProvider, /BUILDCHAIN_ENTITLEMENTS_PATHS: \(signature.entitlementsPaths/);
-  assert.match(macosAction, /uses: \.\/actions\/build\/signing\/sign-macos/);
+  assert.match(macosAction, /uses: \.\/\.buildchain\/runtime\/actions\/build\/signing\/sign-macos/);
   assert.match(macos, /--entitlements-profile "\$\{entitlements_profile\}"/);
   assert.match(macos, /--entitlements-paths "\$\{entitlements_paths\}"/);
   assert.match(
     macosAction,
-    /Developer ID sign, notarize, and staple Apple application[\s\S]*uses: \.\/actions\/build\/credential\/macos-island/,
+    /Developer ID sign, notarize, and staple Apple application[\s\S]*uses: \.\/\.buildchain\/runtime\/actions\/build\/credential\/macos-island/,
   );
   assert.match(macos, /codesign --verify --strict/);
   assert.match(macos, /notarytool submit/);

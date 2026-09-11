@@ -6,15 +6,16 @@ runs:
     - name: Admit source checkout
       id: source-boundary
       if: ${{ always() }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      uses: ./.buildchain/runtime/actions/build/source/admit
       with:
         source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
     - name: Prepare candidate test dependencies
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
+      uses: ./.buildchain/runtime/actions/runtime/dependencies/install
       with:
         directory: .
+        production: "false"
     - name: Qualify source lifecycle and artifact boundaries
-      uses: ./actions/build/verification/qualify-backbone
+      uses: ./.buildchain/runtime/actions/build/verification/qualify-backbone
 inputs:
   source-checkout-outcome:
     description: Actual preceding source checkout outcome.

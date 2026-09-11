@@ -88,53 +88,57 @@ outputs:
     value: success
   promotion-outcome:
     description: promotion-outcome node result.
-    value: ${{ steps.publication-settlement.outputs.status == 'complete' && 'success' || 'failure' }}
+    value: ${{ steps.publication-settlement.outputs.status == 'complete' &&
+      'success' || 'failure' }}
   finalization-needed:
     description: finalization-needed node result.
     value: ${{ steps.publication-settlement.outputs.status != 'complete' }}
   release-tail-transaction-state:
     description: release-tail-transaction-state node result.
-    value: ${{ steps.provider.outputs.transaction-state || steps.resume.outputs.transaction-state }}
+    value: ${{ steps.provider.outputs.transaction-state ||
+      steps.resume.outputs.transaction-state }}
   release-tail-declaration-root:
     description: release-tail-declaration-root node result.
-    value: ${{ steps.provider.outputs.declaration-root || steps.resume.outputs.declaration-root }}
+    value: ${{ steps.provider.outputs.declaration-root ||
+      steps.resume.outputs.declaration-root }}
   release-tail-transaction-root:
     description: release-tail-transaction-root node result.
-    value: ${{ steps.provider.outputs.transaction-root || steps.resume.outputs.transaction-root }}
+    value: ${{ steps.provider.outputs.transaction-root ||
+      steps.resume.outputs.transaction-root }}
   release-tail-state-root:
     description: release-tail-state-root node result.
     value: ${{ steps.provider.outputs.state-root || steps.resume.outputs.state-root }}
   release-tail-receipt-roots-json:
     description: release-tail-receipt-roots-json node result.
-    value: ${{ steps.provider.outputs.receipt-roots-json || steps.resume.outputs.receipt-roots-json }}
+    value: ${{ steps.provider.outputs.receipt-roots-json ||
+      steps.resume.outputs.receipt-roots-json }}
   release-invocation-root:
     description: release-invocation-root node result.
-    value: ${{ steps.provider.outputs.release-invocation-root || steps.resume.outputs.release-invocation-root }}
+    value: ${{ steps.provider.outputs.release-invocation-root ||
+      steps.resume.outputs.release-invocation-root }}
   release-transaction-root:
     description: release-transaction-root node result.
-    value: ${{ steps.provider.outputs.release-transaction-root || steps.resume.outputs.release-transaction-root }}
+    value: ${{ steps.provider.outputs.release-transaction-root ||
+      steps.resume.outputs.release-transaction-root }}
   release-receipt-root:
     description: release-receipt-root node result.
-    value: ${{ steps.publication-settlement.outputs.receipt-root || steps.provider.outputs.release-receipt-root || steps.resume.outputs.release-receipt-root }}
+    value: ${{ steps.publication-settlement.outputs.receipt-root ||
+      steps.provider.outputs.release-receipt-root ||
+      steps.resume.outputs.release-receipt-root }}
 runs:
   using: composite
   steps:
     - name: Admit source checkout
       id: source-boundary
       if: ${{ always() }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      uses: ./.buildchain/runtime/actions/build/source/admit
       with:
         source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
-    - name: Prepare the admitted provider closure
-      uses: ./.buildchain/workflow-shell/actions/runtime/closure/prepare-provider
-      with:
-        repository: kungfu-systems/buildchain
-        sha: ${{ fromJSON(inputs.needs-qualify-outputs-runtime-sha) }}
-        tree: ${{ fromJSON(inputs.needs-qualify-outputs-runtime-tree) }}
     - name: Restore the rooted QUALIFY cut
       uses: actions/download-artifact@v7.0.0
       with:
-        name: buildchain-v4-release-qualify-${{ fromJSON(inputs.needs-qualify-outputs-requested-sha) }}
+        name: buildchain-v4-release-qualify-${{
+          fromJSON(inputs.needs-qualify-outputs-requested-sha) }}
         path: .buildchain/release-candidate
     - name: Execute Provider Plane
       id: provider
@@ -151,13 +155,18 @@ runs:
         target-sha: ${{ fromJSON(inputs.needs-qualify-outputs-requested-sha) }}
         recovery-receipt-path: ${{ fromJSON(inputs.needs-qualify-outputs-recovery-receipt-path) }}
         candidate-passport-path: ${{ fromJSON(inputs.needs-qualify-outputs-candidate-passport-path) }}
-        candidate-build-summary-path: ${{ fromJSON(inputs.needs-qualify-outputs-candidate-build-summary-path) }}
+        candidate-build-summary-path: ${{
+          fromJSON(inputs.needs-qualify-outputs-candidate-build-summary-path) }}
         stage-capsules-path: ${{ fromJSON(inputs.needs-qualify-outputs-stage-capsules-path) }}
-        publication-qualification-path: ${{ fromJSON(inputs.needs-qualify-outputs-publication-qualification-path) }}
+        publication-qualification-path: ${{
+          fromJSON(inputs.needs-qualify-outputs-publication-qualification-path)
+          }}
         sealed-bundle-root: ${{ fromJSON(inputs.needs-qualify-outputs-sealed-bundle-root) }}
         sealed-bundle-manifest: ${{ fromJSON(inputs.needs-qualify-outputs-sealed-bundle-manifest) }}
         required-artifacts-path: ${{ fromJSON(inputs.needs-qualify-outputs-required-artifacts-path) }}
-        product-publication-intent-path: ${{ fromJSON(inputs.needs-qualify-outputs-product-publication-intent-path) }}
+        product-publication-intent-path: ${{
+          fromJSON(inputs.needs-qualify-outputs-product-publication-intent-path)
+          }}
         publisher-workflow-sha: ${{ fromJSON(inputs.needs-qualify-outputs-publisher-sha) }}
         runtime-commit: ${{ fromJSON(inputs.needs-qualify-outputs-runtime-sha) }}
         runtime-tree: ${{ fromJSON(inputs.needs-qualify-outputs-runtime-tree) }}
@@ -167,17 +176,20 @@ runs:
         publish-package-set-order: ${{ fromJSON(inputs.request-json).publish-package-set-order }}
         publish-package-main: ${{ fromJSON(inputs.request-json).publish-package-main }}
         publish-artifact-kind: ${{ fromJSON(inputs.request-json).publish-artifact-kind }}
-        publish-auth: ${{ fromJSON(inputs.request-json).trusted-publishing && 'trusted-publishing' || 'npm-token' }}
+        publish-auth: ${{ fromJSON(inputs.request-json).trusted-publishing &&
+          'trusted-publishing' || 'npm-token' }}
         publish-rematerialize-on-resume: ${{ fromJSON(inputs.request-json).publish-rematerialize-on-resume }}
         publish-transaction-override: ${{ fromJSON(inputs.request-json).publish-transaction-override }}
         resume-transaction-id: ${{ fromJSON(inputs.request-json).resume-transaction-id }}
         artifact-paths: ${{ fromJSON(inputs.needs-qualify-outputs-release-artifact-paths) }}
         state-path: .buildchain/release-tail/state.json
         failure-after-capability: ${{ fromJSON(inputs.request-json).provider-failure-after-capability }}
-      continue-on-error: ${{ fromJSON(inputs.request-json).provider-failure-after-capability != '' }}
+      continue-on-error: ${{
+        fromJSON(inputs.request-json).provider-failure-after-capability != '' }}
     - name: Resume the same transaction journal
       id: resume
-      if: ${{ steps.provider.outcome == 'failure' && fromJSON(inputs.request-json).provider-failure-after-capability != '' }}
+      if: ${{ steps.provider.outcome == 'failure' &&
+        fromJSON(inputs.request-json).provider-failure-after-capability != '' }}
       uses: ./.buildchain/runtime/actions/release/promotion/candidate
       with:
         token: ${{ github.token }}
@@ -191,13 +203,18 @@ runs:
         target-sha: ${{ fromJSON(inputs.needs-qualify-outputs-requested-sha) }}
         recovery-receipt-path: ${{ fromJSON(inputs.needs-qualify-outputs-recovery-receipt-path) }}
         candidate-passport-path: ${{ fromJSON(inputs.needs-qualify-outputs-candidate-passport-path) }}
-        candidate-build-summary-path: ${{ fromJSON(inputs.needs-qualify-outputs-candidate-build-summary-path) }}
+        candidate-build-summary-path: ${{
+          fromJSON(inputs.needs-qualify-outputs-candidate-build-summary-path) }}
         stage-capsules-path: ${{ fromJSON(inputs.needs-qualify-outputs-stage-capsules-path) }}
-        publication-qualification-path: ${{ fromJSON(inputs.needs-qualify-outputs-publication-qualification-path) }}
+        publication-qualification-path: ${{
+          fromJSON(inputs.needs-qualify-outputs-publication-qualification-path)
+          }}
         sealed-bundle-root: ${{ fromJSON(inputs.needs-qualify-outputs-sealed-bundle-root) }}
         sealed-bundle-manifest: ${{ fromJSON(inputs.needs-qualify-outputs-sealed-bundle-manifest) }}
         required-artifacts-path: ${{ fromJSON(inputs.needs-qualify-outputs-required-artifacts-path) }}
-        product-publication-intent-path: ${{ fromJSON(inputs.needs-qualify-outputs-product-publication-intent-path) }}
+        product-publication-intent-path: ${{
+          fromJSON(inputs.needs-qualify-outputs-product-publication-intent-path)
+          }}
         publisher-workflow-sha: ${{ fromJSON(inputs.needs-qualify-outputs-publisher-sha) }}
         runtime-commit: ${{ fromJSON(inputs.needs-qualify-outputs-runtime-sha) }}
         runtime-tree: ${{ fromJSON(inputs.needs-qualify-outputs-runtime-tree) }}
@@ -207,7 +224,8 @@ runs:
         publish-package-set-order: ${{ fromJSON(inputs.request-json).publish-package-set-order }}
         publish-package-main: ${{ fromJSON(inputs.request-json).publish-package-main }}
         publish-artifact-kind: ${{ fromJSON(inputs.request-json).publish-artifact-kind }}
-        publish-auth: ${{ fromJSON(inputs.request-json).trusted-publishing && 'trusted-publishing' || 'npm-token' }}
+        publish-auth: ${{ fromJSON(inputs.request-json).trusted-publishing &&
+          'trusted-publishing' || 'npm-token' }}
         publish-rematerialize-on-resume: ${{ fromJSON(inputs.request-json).publish-rematerialize-on-resume }}
         publish-transaction-override: ${{ fromJSON(inputs.request-json).publish-transaction-override }}
         resume-transaction-id: ${{ fromJSON(inputs.request-json).resume-transaction-id }}
@@ -216,18 +234,21 @@ runs:
         failure-after-capability: ${{ fromJSON(inputs.request-json).provider-failure-after-capability }}
     - name: Retain completed publication independently of next-development
       id: publication-settlement
-      if: ${{ always() && hashFiles('.buildchain/release-tail/release-receipt.json') != '' }}
+      if: ${{ always() && hashFiles('.buildchain/release-tail/release-receipt.json')
+        != '' }}
       uses: ./.buildchain/runtime/actions/publication/settlement/retain
       with:
         candidate-sha: ${{ fromJSON(inputs.needs-qualify-outputs-requested-sha) }}
         runtime-sha: ${{ fromJSON(inputs.needs-qualify-outputs-runtime-sha) }}
         token: ${{ github.token }}
-        apply-outcome: ${{ (steps.resume.outcome == 'success' || steps.resume.outcome == 'failure') && steps.resume.outcome || steps.provider.outcome }}
+        apply-outcome: ${{ (steps.resume.outcome == 'success' || steps.resume.outcome ==
+          'failure') && steps.resume.outcome || steps.provider.outcome }}
     - name: Retain canonical APPLY and ReleaseReceipt evidence
       if: ${{ always() }}
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: buildchain-v4-release-apply-${{ fromJSON(inputs.needs-qualify-outputs-requested-sha) }}
+        name: buildchain-v4-release-apply-${{
+          fromJSON(inputs.needs-qualify-outputs-requested-sha) }}
         path: |
           .buildchain/release-candidate/
           .buildchain/release-passport/

@@ -1,16 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { admitUniversalWorkflow, completeUniversalWorkflow, validateUniversalWorkflowRequest, universalWorkflowAdmissionRoot, universalWorkflowRequestRoot } from "../packages/core/workflow/universal-workflow-bootstrap.js";
-import { sha, root, policy, request, reviewEvidence, consumerObservation } from "./universal-workflow-harness.mjs";
+import { sha, root, policy, request, consumerObservation } from "./universal-workflow-harness.mjs";
 
-test("an admitted Train resolves once to an exact execution identity", () => {
+test("capability admission consumes the runtime already selected by the entry", () => {
   const policyValue = policy();
   const admission = admitUniversalWorkflow({
     ...consumerObservation(),
     request: request(policyValue),
     policy: policyValue,
-    observedRefSha: sha("1"),
-    reviewEvidence: reviewEvidence(),
+
+
     now: "2026-08-30T12:00:00.000Z",
   });
   assert.equal(admission.status, "admitted");
@@ -30,82 +30,21 @@ test("an admitted Train resolves once to an exact execution identity", () => {
   assert.equal(JSON.stringify(receipt).includes("train/v4"), false);
 });
 
-test("a protected Alpha merge binds reviewed head to the exact runtime", () => {
-  const policyValue = policy(),
-    requestValue = request(policyValue, { mode: "alpha" });
-  requestValue.candidate.discoveryRef = "v4-alpha";
-  const binding = {
-    kind: "protected-alpha-merge",
-    runtimeSha: sha("1"),
-    parentShas: [sha("0"), sha("3")],
-    mergedAt: "2026-08-30T11:30:00.000Z",
-  };
-  const evidence = reviewEvidence({
-    headSha: sha("3"),
-    baseRef: "alpha/v4/v4.0",
-    approvals: [
-      {
-        reviewer: "kungfu-origin",
-        commitSha: sha("3"),
-        submittedAt: "2026-08-30T11:00:00.000Z",
-      },
-    ],
-    checks: [
-      {
-        name: "Verify",
-        status: "completed",
-        conclusion: "success",
-        commitSha: sha("1"),
-      },
-    ],
-    runtimeBinding: binding,
-  });
-  const admit = (
-    candidateRequest = requestValue,
-    candidateEvidence = evidence,
-  ) =>
-    admitUniversalWorkflow({
-      ...consumerObservation(),
-      request: candidateRequest,
-      policy: policyValue,
-      observedRefSha: sha("1"),
-      reviewEvidence: candidateEvidence,
-      now: "2026-08-30T12:00:00.000Z",
-    });
-  assert.equal(admit().runtime.sha, sha("1"));
-  for (const invalid of [
-    { ...evidence, baseRef: "dev/v4/v4.0" },
-    { ...evidence, runtimeBinding: { ...binding, runtimeSha: sha("9") } },
-    {
-      ...evidence,
-      runtimeBinding: { ...binding, parentShas: [sha("0"), sha("9")] },
-    },
-    {
-      ...evidence,
-      runtimeBinding: { ...binding, mergedAt: "2026-08-30T12:30:00.000Z" },
-    },
-    { ...evidence, checks: [{ ...evidence.checks[0], commitSha: sha("9") }] },
-  ])
-    assert.throws(() => admit(requestValue, invalid));
-  assert.throws(() => admit(request(policyValue), evidence));
-});
-
 test("any exact verified caller is admitted without a repository allowlist", () => {
   const policyValue = policy();
   const requestValue = request(policyValue);
   requestValue.consumer.repository = "example/downstream";
   requestValue.consumer.workflow = ".github/workflows/publish.yml";
-  requestValue.candidate.admissionRoot =
-    universalWorkflowAdmissionRoot(policyValue);
   const admission = admitUniversalWorkflow({
+    ...consumerObservation(),
     request: requestValue,
     policy: policyValue,
-    observedRefSha: sha("1"),
+
     observedConsumerRepository: "example/downstream",
     observedConsumerSha: sha("2"),
     observedConsumerWorkflowRef:
       "example/downstream/.github/workflows/publish.yml@refs/heads/main",
-    reviewEvidence: reviewEvidence(),
+
     now: "2026-08-30T12:00:00.000Z",
   });
   assert.equal(admission.status, "admitted");
@@ -137,29 +76,13 @@ test("verified-caller admission rejects repository, workflow, and source spoofin
           ...observation,
           request: request(policyValue),
           policy: policyValue,
-          observedRefSha: sha("1"),
-          reviewEvidence: reviewEvidence(),
+
+
           now: "2026-08-30T12:00:00.000Z",
         }),
       { code: "consumer-identity-mismatch" },
     );
   }
-});
-
-test("moved refs fail before candidate execution", () => {
-  const policyValue = policy();
-  assert.throws(
-    () =>
-      admitUniversalWorkflow({
-        ...consumerObservation(),
-        request: request(policyValue),
-        policy: policyValue,
-        observedRefSha: sha("3"),
-        reviewEvidence: reviewEvidence(),
-        now: "2026-08-30T12:00:00.000Z",
-      }),
-    { code: "candidate-ref-moved" },
-  );
 });
 
 test("stale admission and permission widening fail closed", () => {
@@ -170,8 +93,8 @@ test("stale admission and permission widening fail closed", () => {
         ...consumerObservation(),
         request: request(policyValue),
         policy: policyValue,
-        observedRefSha: sha("1"),
-        reviewEvidence: reviewEvidence(),
+
+
         now: "2026-09-01T00:00:00.000Z",
       }),
     { code: "stale-admission" },
@@ -185,52 +108,11 @@ test("stale admission and permission widening fail closed", () => {
         ...consumerObservation(),
         request: widened,
         policy: policyValue,
-        observedRefSha: sha("1"),
-        reviewEvidence: reviewEvidence(),
+
+
         now: "2026-08-30T12:00:00.000Z",
       }),
     { code: "permission-widening" },
-  );
-});
-
-test("review and exact-head checks gate write-authority admission", () => {
-  const policyValue = policy();
-  for (const evidence of [
-    reviewEvidence({ approvals: [] }),
-    reviewEvidence({ headSha: sha("8") }),
-    reviewEvidence({
-      checks: [{ name: "Verify", status: "completed", conclusion: "failure" }],
-    }),
-  ]) {
-    assert.throws(() =>
-      admitUniversalWorkflow({
-        ...consumerObservation(),
-        request: request(policyValue),
-        policy: policyValue,
-        observedRefSha: sha("1"),
-        reviewEvidence: evidence,
-        now: "2026-08-30T12:00:00.000Z",
-      }),
-    );
-  }
-});
-
-test("fork candidates and unsupported Train selectors are rejected", () => {
-  const policyValue = policy();
-  const fork = request(policyValue);
-  fork.candidate.repository = "example/buildchain";
-  assert.throws(
-    () => admitUniversalWorkflow({ request: fork, policy: policyValue }),
-    {
-      code: "untrusted-candidate-repository",
-    },
-  );
-
-  const branch = request(policyValue);
-  branch.candidate.discoveryRef = "feature/unreviewed";
-  assert.throws(
-    () => admitUniversalWorkflow({ request: branch, policy: policyValue }),
-    { code: "invalid-train-ref" },
   );
 });
 

@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-10
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-10
+  generated_at: 2026-09-11
   visible_context: Repository contribution rules and implementation naming and release transition changes.
   invisible_context_boundary: No private credentials or unpublished external release state.
 ---
@@ -151,11 +151,10 @@ release/vX/vX.Y -> publish-gate/major
   required checks, ready/block labels, same-repository heads, approvals,
   branch prefixes, max merges, and dry-run are all declared inputs.
 - Ordinary build callers use `build.yml@v4` or `build.yml@v4-alpha` with
-  project settings in `buildchain.toml`. They have no runtime override input.
-  Validate the implementation and exact contract before merging into protected
-  Dev, publish Alpha, then qualify the public Alpha build before Stable.
-  Specialized release/recovery train admission follows its own bounded
-  contract in `docs/runtime-train-validation.md`.
+  project settings in `buildchain.toml`. Every public workflow uses the central
+  runtime entry: transient `runtime-ref`, contract lock, then entry default.
+  Validate the implementation before protected Dev, publish Alpha, and qualify
+  the published consumer entry. See `docs/runtime-entry.md`.
 - Merging into `alpha/*`, `release/*`, or `publish-gate/major` expresses a
   release intent. Buildchain promotion then creates version-state commits,
   exact tags, floating tags, npm publish evidence, and next-alpha state.

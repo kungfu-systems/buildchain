@@ -2,16 +2,6 @@ name: Buildchain Check
 on:
   workflow_call:
     inputs:
-      buildchain-repository:
-        description: Buildchain runtime repository
-        default: kungfu-systems/buildchain
-        type: string
-        required: false
-      buildchain-ref:
-        description: Optional explicit runtime ref. Empty binds the defining workflow SHA.
-        default: ""
-        type: string
-        required: false
       working-directory:
         description: Repository directory containing buildchain.toml
         default: .
@@ -62,6 +52,21 @@ on:
         default: "[]"
         type: string
         required: false
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
     outputs:
       controller-plan-artifact:
         description: Uploaded source-check controller plan artifact name
@@ -104,6 +109,23 @@ permissions:
   contents: read
   pull-requests: read
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
   check:
     name: check
     runs-on: ubuntu-24.04
@@ -125,24 +147,26 @@ jobs:
         id: source
         uses: actions/checkout@v7.0.0
         with:
-          ref: ${{ inputs.mode == 'source' && inputs.source-proof-reuse && github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
-          fetch-depth: ${{ inputs.mode == 'source' && (!inputs.source-proof-reuse || github.event_name == 'pull_request') && '0' || '1' }}
+          ref: ${{ inputs.mode == 'source' && inputs.source-proof-reuse && github.event_name == 'pull_request'
+            && github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: ${{ inputs.mode == 'source' && (!inputs.source-proof-reuse || github.event_name ==
+            'pull_request') && '0' || '1' }}
           persist-credentials: false
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: check
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/source/qualify
+        uses: ./.buildchain/runtime/actions/build/source/qualify
         with:
-          runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
-          runtime-repository: ${{ inputs.buildchain-repository || job.workflow_repository }}
+          runtime-ref: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
+          runtime-repository: kungfu-systems/buildchain
           request-json: ${{ toJSON(inputs) }}
           steps-source-outcome: ${{ toJSON(steps.source.outcome) }}
           source-checkout-outcome: ${{ steps.source.outcome }}
         if: ${{ always() }}
+    needs:
+      - execution-runtime

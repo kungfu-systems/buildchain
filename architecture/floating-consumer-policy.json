@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-v4-floating-consumer-policy/v1",
-  "policyVersion": "2026-09-09",
+  "policyVersion": "2026-09-11",
   "scope": {
     "repository": "kungfu-systems/buildchain",
     "majorLine": "v4",
@@ -22,8 +22,8 @@
       "selector": "v4-alpha",
       "path": ".buildchain/alpha-contract-lock.json"
     },
-    "selectedLockMustBindResolvedWorkflowShell": true,
-    "bothRootsRequiredInReceipt": true
+    "bothRootsRequiredInReceipt": true,
+    "runtimeSelectionOwner": "actions/runtime/selection/resolve"
   },
   "sourcePolicy": {
     "directExactSha": "deny",
@@ -33,22 +33,13 @@
     "nestedCompositeIndirection": "deny",
     "unknownSyntax": "deny",
     "missingCallerCheckout": "deny",
-    "repositoryLocalInvocation": {
-      "repository": "kungfu-systems/buildchain",
-      "workflow": ".github/workflows/public-release-promote.yml",
-      "exactDefinitionCommitRequired": true,
-      "committedSourceContentRequired": true,
-      "dualContractLocksRequired": true,
-      "executionAuthority": "same-commit-public-definition",
-      "publishedCompatibilityAllowance": false
-    }
+    "repositoryLocalInvocation": "deny"
   },
   "runtimeEscapeBoundary": {
     "persistedSelectorOverride": false,
     "trustedNonPersistentInput": true,
-    "requiresSeparateAuthority": true,
-    "requiresReadback": true,
-    "receiptReuse": false
+    "selectionOwner": "actions/runtime/selection/resolve",
+    "downstreamRuntimeAuthorization": false
   },
   "receipt": {
     "schema": "contracts/v4-floating-consumer-policy-receipt-v1.schema.json",
@@ -65,8 +56,7 @@
       "policy-version",
       "policy-root",
       "scanner-root",
-      "source-scan-root",
-      "source-owned-workflow-definition"
+      "source-scan-root"
     ]
   },
   "enforcement": {

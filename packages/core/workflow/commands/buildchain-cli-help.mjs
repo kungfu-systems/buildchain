@@ -267,7 +267,7 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain paper alpha [--cwd <dir>] [--source-ref <ref>] [--target-ref <ref>]
                           [--execute] [--json]
   buildchain paper status [--cwd <dir>] [--json]
-  buildchain paper resume [--cwd <dir>] [--buildchain-ref <ref>] [--execute] [--json]
+  buildchain paper resume [--cwd <dir>] [--runtime-ref <ref>] [--execute] [--json]
   buildchain release-propagation <plan|write-lock|work|entry|pickup> ...
   buildchain badges readme [--cwd <dir>] [--readme <path>] [--check] [--write] [--json]
   buildchain badges bundle [--cwd <dir>] [--readme <path>] [--claims <csv>] [--check] [--write] [--json]

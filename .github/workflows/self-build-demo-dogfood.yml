@@ -24,6 +24,16 @@ on:
         required: true
         default: dev/v4/v4.1
         type: string
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
 permissions:
   actions: read
   contents: read
@@ -31,6 +41,22 @@ concurrency:
   group: buildchain-declarative-demo-dogfood-${{ github.ref }}
   cancel-in-progress: false
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+    timeout-minutes: 5
   exact-binary:
     name: Build exact standalone Buildchain binary
     runs-on: ubuntu-24.04
@@ -44,28 +70,30 @@ jobs:
         with:
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Build exact standalone Buildchain binary
         id: node
-        uses: ./.buildchain/workflow-shell/actions/build/demo/qualify-binary
+        uses: ./.buildchain/runtime/actions/build/demo/qualify-binary
         if: ${{ always() }}
         with:
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+    needs:
+      - execution-runtime
   dogfood:
     name: Recursively consume declarative demo platform
-    needs: exact-binary
+    needs:
+      - exact-binary
+      - execution-runtime
     permissions:
       actions: read
       contents: write
       pull-requests: write
-    uses: ./.github/workflows/public-build-demo.yml
+    uses: kungfu-systems/buildchain/.github/workflows/public-build-demo.yml@v4
     with:
       source-ref: ${{ github.sha }}
       binary-artifact-name: ${{ needs.exact-binary.outputs.artifact-name }}
@@ -77,5 +105,6 @@ jobs:
       materialize: ${{ github.event_name != 'workflow_dispatch' || inputs.materialize }}
       materialize-base-ref: ${{ github.event_name == 'workflow_dispatch' && inputs.base-ref || 'dev/v4/v4.1' }}
       artifact-retention-days: 14
+      runtime-selection: ${{ needs.execution-runtime.outputs.selection }}
     secrets:
       DEMO_UPDATE_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}

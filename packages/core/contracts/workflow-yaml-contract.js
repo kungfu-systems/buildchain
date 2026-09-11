@@ -33,7 +33,17 @@ function unquote(value) {
 }
 
 function blockValue(lines, entry) {
-  if (!/^[>|][+-]?$/.test(entry.value)) return entry.value;
+  if (!/^[>|][+-]?$/.test(entry.value)) {
+    if (!entry.value) return entry.value;
+    const fragments = [entry.value];
+    for (let index = entry.line + 1; index < lines.length; index += 1) {
+      const line = lines[index];
+      if (line.trim() && indentation(line) <= entry.indent) break;
+      if (!line.trim() || line.trim().startsWith("#")) continue;
+      fragments.push(stripComment(line.trim()));
+    }
+    return fragments.join(" ");
+  }
   const values = [];
   for (let index = entry.line + 1; index < lines.length; index += 1) {
     const line = lines[index];

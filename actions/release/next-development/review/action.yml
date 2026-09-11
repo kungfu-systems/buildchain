@@ -16,26 +16,26 @@ runs:
     - name: Admit source checkout
       id: source-boundary
       if: ${{ always() }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      uses: ./.buildchain/runtime/actions/build/source/admit
       with:
         source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
     - uses: actions/setup-node@v6.4.0
       with:
         node-version: "24"
     - name: Install protected verification dependencies
-      uses: ./.buildchain/workflow-shell/actions/runtime/dependencies/install
+      uses: ./.buildchain/runtime/actions/runtime/dependencies/install
       with:
         directory: .
         production: "true"
         ignore-scripts: "true"
     - name: Qualify exact protected source and completed publication
       id: qualify
-      uses: ./actions/release/next-development/qualify
+      uses: ./.buildchain/runtime/actions/release/next-development/qualify
       with:
         token: ${{ github.token }}
     - name: Approve exact transition and enter protected queue
       id: review
-      uses: ./actions/release/next-development/complete-review
+      uses: ./.buildchain/runtime/actions/release/next-development/complete-review
       with:
         token: ${{ github.token }}
         approval-token: ${{ inputs.secrets-buildchain-approval-token }}

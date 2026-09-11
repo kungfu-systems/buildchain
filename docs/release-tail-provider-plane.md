@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-08-07
+last_reviewed: 2026-09-11
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -55,9 +55,8 @@ jobs:
   release-tail:
     permissions:
       contents: write
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-tail.yml@<exact-buildchain-sha>
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-tail.yml@v4
     with:
-      buildchain-ref: <exact-buildchain-sha>
       declaration-path: .buildchain/release-tail/declaration.json
       provider-bindings-path: .buildchain/release-tail/provider-bindings.json
       execute: true

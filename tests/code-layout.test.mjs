@@ -252,8 +252,10 @@ test("JSON request fields remain closed through nested composite delegation", (t
     ]),
     "actions/build/fixture/inner/action.yml": action([
       {
-        run: "true",
-        env: { RUNTIME: "${{ fromJSON(inputs.request-json).runtime }}" },
+        uses: "actions/setup-node@v6",
+        with: {
+          "node-version": "${{ fromJSON(inputs.request-json).runtime }}",
+        },
       },
     ]),
   });
@@ -264,9 +266,10 @@ test("JSON request fields remain closed through nested composite delegation", (t
     path.join(root, "actions/build/fixture/inner/action.yml"),
     action([
       {
-        run: "true",
-        env: {
-          RUNTIME: "${{ fromJSON(inputs.request-json).retired-runtime }}",
+        uses: "actions/setup-node@v6",
+        with: {
+          "node-version":
+            "${{ fromJSON(inputs.request-json).retired-runtime }}",
         },
       },
     ]),
@@ -281,7 +284,7 @@ test("composite boundary gate rejects stale job status and lost failed-checkout 
     await import("../scripts/check-code-layout.mjs");
   const action = "actions/build/fixture/execute/action.yml";
   const root = fixture(t, {
-    [action]: `runs:\n  using: composite\n  steps:\n    - id: source-boundary\n      if: \${{ always() }}\n      uses: ./.buildchain/workflow-shell/actions/build/source/admit\n      with:\n        source-checkout-outcome: \${{ inputs.source-checkout-outcome }}\n`,
+    [action]: `runs:\n  using: composite\n  steps:\n    - id: source-boundary\n      if: \${{ always() }}\n      uses: ./.buildchain/runtime/actions/build/source/admit\n      with:\n        source-checkout-outcome: \${{ inputs.source-checkout-outcome }}\n`,
   });
   const steps = [
     { id: "source", uses: "actions/checkout@v7" },
@@ -292,7 +295,7 @@ test("composite boundary gate rejects stale job status and lost failed-checkout 
     },
     {
       id: "node",
-      uses: "./.buildchain/workflow-shell/actions/build/fixture/execute",
+      uses: "./.buildchain/runtime/actions/build/fixture/execute",
       if: "${{ always() }}",
       with: { "source-checkout-outcome": "${{ steps.source.outcome }}" },
     },

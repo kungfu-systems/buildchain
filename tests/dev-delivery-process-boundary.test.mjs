@@ -438,31 +438,12 @@ test("credentialless seal binds fresh hosted context without provider jobs or ca
   assert.equal(Object.hasOwn(result.sealer, "jobId"), false);
 });
 
-test("runtime admission accepts immutable SHA evidence but rejects non-v4 selectors", () => {
+test("native transfers retain runtime provenance without selecting it again", () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "runtime-selector-"));
-  transferFixture(directory, { runtimeSelector: RUNTIME_SHA });
-  const transfer = transferFixture(directory);
-  for (const selector of ["v3", "train/v4/v4.1/nope"]) {
-    assert.throws(
-      () =>
-        createNativeExecutionTransfer({
-          ...transfer,
-          directory,
-          files: transfer.files.map((entry) => entry.path),
-          runtime: { ...transfer.runtime, selector },
-        }),
-      /runtime selector must be an exact immutable SHA/u,
-      selector,
-    );
+  for (const runtimeSelector of [RUNTIME_SHA, "train/v4/v4.1/repair"]) {
+    const transfer = transferFixture(directory, {runtimeSelector});
+    assert.doesNotThrow(() => verifyNativeExecutionTransfer(transfer, {directory}));
   }
-  assert.throws(
-    () =>
-      verifyNativeExecutionTransfer(transfer, {
-        directory,
-        expected: { "runtime.resolvedSha": "e".repeat(40) },
-      }),
-    /runtime\.resolvedSha mismatch/u,
-  );
 });
 
 test("missing, incomplete, and corrupt native transfers fail closed", () => {

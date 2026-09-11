@@ -268,7 +268,7 @@ export function createArtifactSigningRequest({
         runtime.repository || "kungfu-systems/buildchain",
         "runtime repository",
       ),
-      sha: exactSourceSha(runtime.sha, "runtime SHA"),
+      sha: runtime.sha,
     },
     artifact: {
       id: nonEmptyString(artifact.id || artifact.path, "artifact id"),
@@ -398,10 +398,7 @@ export function createArtifactSigningReceipt({
     authority: {
       contract: ARTIFACT_SIGNING_AUTHORITY_CONTRACT,
       id: nonEmptyString(authority.id || request.authority.id, "authority id"),
-      runtimeSha: exactSourceSha(
-        authority.runtimeSha || request.runtime.sha,
-        "authority runtime SHA",
-      ),
+      runtimeSha: authority.runtimeSha || request.runtime.sha,
     },
     signature: { ...request.signature },
     ...(status === "passed"
@@ -443,17 +440,14 @@ export function validateArtifactSigningReceipt(receipt, { request } = {}) {
     }
     if (receipt.digest !== documentDigest(receipt))
       issues.push("receipt digest mismatch");
+
     if (request) {
       const requestCheck = validateArtifactSigningRequest(request);
       if (!requestCheck.ok) issues.push(...requestCheck.issues);
       if (receipt.requestDigest !== request.digest)
         issues.push("receipt request digest mismatch");
-      if (stableJson(receipt.signature) !== stableJson(request.signature)) {
+      if (stableJson(receipt.signature) !== stableJson(request.signature))
         issues.push("receipt signature policy mismatch");
-      }
-      if (receipt.authority?.runtimeSha !== request.runtime.sha) {
-        issues.push("receipt authority runtime mismatch");
-      }
     }
     if (receipt.status === "passed") {
       exactDigest(receipt.result?.artifactDigest, "result artifact digest");

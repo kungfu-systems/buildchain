@@ -1,5 +1,6 @@
 name: Configure scoped AWS role
-description: Require an explicit role before exchanging the job OIDC token for scoped AWS credentials.
+description: Require an explicit role before exchanging the job OIDC token for
+  scoped AWS credentials.
 inputs:
   role:
     description: Explicit role ARN.
@@ -15,7 +16,7 @@ runs:
   steps:
     - name: Require declared role
       if: ${{ inputs.role == '' }}
-      uses: ./.buildchain/workflow-shell/actions/workflow/admission/reject
+      uses: ./.buildchain/runtime/actions/workflow/admission/reject
       with:
         reason: A declared AWS role is required before credential acquisition
     - name: Configure role credentials

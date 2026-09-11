@@ -31,16 +31,39 @@ on:
         description: Consumer-generated non-secret correlation identifier
         required: true
         type: string
-      expected-runtime-sha:
-        description: Exact Buildchain runtime SHA embedded in every request
-        required: true
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
         type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
 permissions:
   contents: read
 concurrency:
-  group: artifact-signing-${{ inputs.source-repository }}-${{ inputs.source-run-id }}-${{ inputs.source-run-attempt }}-${{ inputs.correlation-id }}
+  group: artifact-signing-${{ inputs.source-repository }}-${{ inputs.source-run-id }}-${{
+    inputs.source-run-attempt }}-${{ inputs.correlation-id }}
   cancel-in-progress: false
 jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+    timeout-minutes: 5
   intake:
     name: Admit immutable signing requests
     runs-on: ubuntu-24.04
@@ -49,32 +72,34 @@ jobs:
       macos-matrix: ${{ steps.node.outputs.macos-matrix }}
       windows-matrix: ${{ steps.node.outputs.windows-matrix }}
     steps:
-      - name: Checkout exact Buildchain authority runtime
+      - name: Checkout signing entry source
         uses: actions/checkout@v7.0.0
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Admit immutable signing requests
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/signing/intake
+        uses: ./.buildchain/runtime/actions/release/signing/intake
         with:
           authority-token: ${{ secrets.BUILDCHAIN_AUTHORITY_TOKEN }}
           promotion-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
           request-json: ${{ toJSON(inputs) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
         if: ${{ always() }}
+    needs:
+      - execution-runtime
   detached:
     name: Detached signature ${{ matrix.request.id }}
-    needs: intake
+    needs:
+      - intake
+      - execution-runtime
     if: ${{ needs.intake.outputs.detached-matrix != '[]' }}
     strategy:
       fail-fast: false
@@ -88,26 +113,27 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Detached signature ${{ matrix.request.id }}
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/signing/detached
+        uses: ./.buildchain/runtime/actions/release/signing/detached
         with:
           request-json: ${{ toJSON(inputs) }}
           item-json: ${{ toJSON(matrix.request) }}
           private-key-base64: ${{ secrets.BUILDCHAIN_DETACHED_PRIVATE_KEY_PKCS8_BASE64 }}
+          key-id: ${{ vars.BUILDCHAIN_DETACHED_KEY_ID }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
         if: ${{ always() }}
   macos:
     name: Developer ID ${{ matrix.request.id }}
-    needs: intake
+    needs:
+      - intake
+      - execution-runtime
     if: ${{ needs.intake.outputs.macos-matrix != '[]' }}
     strategy:
       fail-fast: false
@@ -121,22 +147,22 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Developer ID ${{ matrix.request.id }}
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/signing/macos
+        uses: ./.buildchain/runtime/actions/release/signing/macos
         with:
           request-json: ${{ toJSON(inputs) }}
           item-json: ${{ toJSON(matrix.request) }}
           certificate-base64: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64 }}
           certificate-password: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD }}
+          certificate-sha1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
+          team-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID }}
           notary-key-base64: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64 }}
           notary-key-id: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_ID }}
           notary-issuer: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_ISSUER }}
@@ -144,7 +170,9 @@ jobs:
         if: ${{ always() }}
   windows:
     name: Authenticode ${{ matrix.request.id }}
-    needs: intake
+    needs:
+      - intake
+      - execution-runtime
     if: ${{ needs.intake.outputs.windows-matrix != '[]' }}
     strategy:
       fail-fast: false
@@ -158,22 +186,22 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Authenticode ${{ matrix.request.id }}
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/signing/windows
+        uses: ./.buildchain/runtime/actions/release/signing/windows
         with:
           request-json: ${{ toJSON(inputs) }}
           item-json: ${{ toJSON(matrix.request) }}
           certificate-base64: ${{ secrets.BUILDCHAIN_WINDOWS_CERTIFICATE_PFX_BASE64 }}
           certificate-password: ${{ secrets.BUILDCHAIN_WINDOWS_CERTIFICATE_PASSWORD }}
+          certificate-sha1: ${{ vars.BUILDCHAIN_WINDOWS_CERTIFICATE_SHA1 }}
+          timestamp-url: ${{ vars.BUILDCHAIN_WINDOWS_TIMESTAMP_URL }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}
         if: ${{ always() }}
   deliver:
@@ -183,7 +211,10 @@ jobs:
       - detached
       - macos
       - windows
-    if: ${{ always() && needs.intake.result == 'success' && (needs.detached.result == 'success' || needs.detached.result == 'skipped') && (needs.macos.result == 'success' || needs.macos.result == 'skipped') && (needs.windows.result == 'success' || needs.windows.result == 'skipped') }}
+      - execution-runtime
+    if: ${{ always() && needs.intake.result == 'success' && (needs.detached.result == 'success' ||
+      needs.detached.result == 'skipped') && (needs.macos.result == 'success' || needs.macos.result
+      == 'skipped') && (needs.windows.result == 'success' || needs.windows.result == 'skipped') }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7.0.0
@@ -191,17 +222,15 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
         id: source-checkout
-      - name: Check out workflow implementation
-        uses: actions/checkout@v7.0.0
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
         with:
-          repository: ${{ job.workflow_repository }}
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
         if: ${{ always() }}
       - name: Publish immutable signed result set
         id: node
-        uses: ./.buildchain/workflow-shell/actions/release/signing/deliver
+        uses: ./.buildchain/runtime/actions/release/signing/deliver
         with:
           request-json: ${{ toJSON(inputs) }}
           source-checkout-outcome: ${{ steps.source-checkout.outcome }}

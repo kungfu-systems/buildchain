@@ -28,24 +28,12 @@ runs:
     - name: Admit source checkout
       id: source-boundary
       if: ${{ always() }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      uses: ./.buildchain/runtime/actions/build/source/admit
       with:
         source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
-    - name: Checkout exact admitted Buildchain runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
-        ref: ${{ fromJSON(inputs.candidate-plan-json).runtime-sha }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - name: Prepare exact admitted Buildchain runtime
-      id: core-node
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Acquire narrow generated-write authority
       id: credential
-      uses: ./.buildchain/workflow-shell/actions/providers/github/token
+      uses: ./.buildchain/runtime/actions/providers/github/token
       with:
         client-id: ${{ inputs.app-client-id }}
         private-key: ${{ inputs.app-private-key }}

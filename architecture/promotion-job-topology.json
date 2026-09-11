@@ -1,6 +1,30 @@
 {
+  "execution-runtime": {
+    "runs-on": "ubuntu-24.04",
+    "permissions": {
+      "contents": "read"
+    },
+    "outputs": {
+      "selection": "${{ steps.select.outputs.selection }}"
+    },
+    "steps": [
+      {
+        "id": "select",
+        "uses": "$/actions/runtime/selection/resolve",
+        "with": {
+          "runtime-ref": "${{ inputs.runtime-ref }}",
+          "contract-lock": "${{ inputs.contract-lock }}",
+          "workflow-ref": "${{ job.workflow_ref }}",
+          "workflow-sha": "${{ job.workflow_sha }}",
+          "token": "${{ github.token }}",
+          "selection": "${{ inputs.runtime-selection }}"
+        }
+      }
+    ],
+    "timeout-minutes": 5
+  },
   "resolve-promotion": {
-    "name": "Resolve promotion workflow shell and runtime",
+    "name": "Bind publication intent to the selected runtime",
     "runs-on": "ubuntu-24.04",
     "permissions": {
       "contents": "read"
@@ -26,19 +50,17 @@
     },
     "steps": [
       {
-        "name": "Load the exact workflow implementation",
-        "uses": "actions/checkout@v7.0.0",
+        "name": "Prepare selected execution runtime",
+        "uses": "$/actions/runtime/environment/prepare",
         "with": {
-          "repository": "${{ job.workflow_repository }}",
-          "ref": "${{ job.workflow_sha }}",
-          "path": ".buildchain/workflow-shell",
-          "persist-credentials": false
+          "selection": "${{ needs.execution-runtime.outputs.selection }}",
+          "token": "${{ github.token }}"
         }
       },
       {
         "name": "Resolve and bind promotion identities",
         "id": "node",
-        "uses": "./.buildchain/workflow-shell/actions/release/promotion/resolve",
+        "uses": "./.buildchain/runtime/actions/release/promotion/resolve",
         "with": {
           "request-json": "${{ inputs.request-json }}",
           "workflow-sha": "${{ job.workflow_sha }}",
@@ -46,35 +68,32 @@
           "workflow-repository": "${{ job.workflow_repository }}"
         }
       }
-    ]
+    ],
+    "needs": ["execution-runtime"]
   },
   "consumer-admission": {
     "name": "Admit v4 floating consumer policy",
-    "needs": "resolve-promotion",
+    "needs": ["resolve-promotion", "execution-runtime"],
     "runs-on": "ubuntu-24.04",
     "permissions": {
       "contents": "read"
     },
     "outputs": {
-      "runtime-authorization-json": "${{ steps.node.outputs.runtime-authorization-json }}",
-      "runtime-authorization-root": "${{ steps.node.outputs.runtime-authorization-root }}",
       "invocation-json": "${{ steps.node.outputs.invocation-json }}"
     },
     "steps": [
       {
-        "name": "Load the exact workflow implementation",
-        "uses": "actions/checkout@v7.0.0",
+        "name": "Prepare selected execution runtime",
+        "uses": "$/actions/runtime/environment/prepare",
         "with": {
-          "repository": "${{ job.workflow_repository }}",
-          "ref": "${{ job.workflow_sha }}",
-          "path": ".buildchain/workflow-shell",
-          "persist-credentials": false
+          "selection": "${{ needs.execution-runtime.outputs.selection }}",
+          "token": "${{ github.token }}"
         }
       },
       {
-        "name": "Admit consumer and authorize runtime",
+        "name": "Admit consumer publication request",
         "id": "node",
-        "uses": "./.buildchain/workflow-shell/actions/release/promotion/admit",
+        "uses": "./.buildchain/runtime/actions/release/promotion/admit",
         "with": {
           "request-json": "${{ needs.resolve-promotion.outputs.request-json }}",
           "selection-json": "${{ toJSON(needs.resolve-promotion.outputs) }}"

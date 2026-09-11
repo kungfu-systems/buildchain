@@ -1869,7 +1869,7 @@ test("standalone binary builder resolves Windows package manager shims", () => {
 
 test("standalone binary runs public CLI without imported script entrypoint side effects", { timeout: 180_000, skip: !fs.readFileSync(process.execPath).includes(Buffer.from("NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2")) }, () => {
   const outputDir = tempDir("standalone-entrypoint");
-  const version = "3.0.2-alpha.entry-guard";
+  const version = "4.1.0-alpha.entry-guard";
   execFileSync(process.execPath, [
     path.join(root, "scripts", "build-standalone-binary.mjs"),
     "--version",
@@ -1913,7 +1913,7 @@ test("standalone binary runs public CLI without imported script entrypoint side 
     ),
   );
   assert.equal(scaffold.ok, true);
-  assert.equal(scaffold.written.length, 18);
+  assert.equal(scaffold.written.length, 19);
   assert.equal(
     fs.readFileSync(path.join(paperCwd, "pnpm-workspace.yaml"), "utf8"),
     `minimumReleaseAgeExclude:\n  - '@kungfu-tech/buildchain@${version}'\n`,
@@ -1935,7 +1935,7 @@ test("standalone binary runs public CLI without imported script entrypoint side 
   );
   assert.equal(preflight.localReady, true);
   assert.equal(
-    preflight.checks.find((entry) => entry.id === "runtime.exact-source").status,
+    preflight.checks.find((entry) => entry.id === "provisioning.authority").status,
     "pass",
   );
 });

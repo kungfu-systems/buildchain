@@ -77,7 +77,7 @@ test("missing platforms, source drift and inferred recovery fail closed", () => 
   );
 
   const driftBody = structuredClone(reports[2]);
-  driftBody.sourceBinding.runtimeSha = "f".repeat(40);
+  driftBody.sourceBinding.consumerSha = "f".repeat(40);
   delete driftBody.schemaVersion;
   delete driftBody.contract;
   delete driftBody.reportRoot;

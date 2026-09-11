@@ -11,6 +11,7 @@ paths:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/build.yml:
     ignore:
       - property "workflow_ref" is not defined in object type
@@ -24,10 +25,12 @@ paths:
     ignore:
       - property "workflow_sha" is not defined in object type
       - property "workflow_repository" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/public-build-demo.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/.build-gate-profile.yml:
     ignore:
       - property "workflow_ref" is not defined in object type
@@ -52,6 +55,7 @@ paths:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/public-build-publication.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
@@ -71,155 +75,198 @@ paths:
     ignore:
       - property "workflow_sha" is not defined in object type
       - property "workflow_repository" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/public-release-oci-compose-preview.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/public-ops-dev-auto-merge.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/public-ops-warrant-close.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/.ops-git-sync.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/self-ops-governance-audit.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/self-build-channel-verify.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/public-ops-patrol.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/public-ops-alpha-candidate-patrol.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/public-ops-stable-candidate-patrol.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/public-ops-dev-qualification-patrol.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/public-ops-housekeeping.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/public-ops-release-governance.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/public-ops-warrant-cancel.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/self-ops-merge-queue.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/self-ops-runner-smoke.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/self-release-npm-dry-run.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/self-build-stable-candidate-qualification.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/public-release-artifact-attestation.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/self-build-demo-dogfood.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/self-build-demo-media-qualification.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/public-ops-bootstrap-recovery.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/.release-binary-assets.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/public-release-signing-authority.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/self-release-next-development.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/self-ops-housekeeping-daily.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/self-ops-housekeeping-weekly.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/self-ops-housekeeping-monthly.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/self-release-promote.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/self-build-fixture.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/self-release-binary-assets.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/self-release-line-open.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/self-build-verify.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/public-build-check.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/self-build-binary-distribution.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/public-ops-observed-evidence.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/.release-authority.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/public-release-propagation.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
       - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
   .github/workflows/self-ops-bootstrap-dogfood.yml:
     ignore:
       - property "workflow_repository" is not defined in object type
+      - property "workflow_sha" is not defined in object type
+      - property "workflow_ref" is not defined in object type
+  .github/workflows/public-release-tail.yml:
+    ignore:
+      - property "workflow_ref" is not defined in object type
       - property "workflow_sha" is not defined in object type

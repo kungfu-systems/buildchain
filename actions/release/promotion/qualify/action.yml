@@ -96,20 +96,10 @@ runs:
       with:
         node-version: "24"
     - name: Validate the complete invocation before runtime checkout
-      uses: ./.buildchain/workflow-shell/actions/release/promotion/inspect-invocation
+      uses: ./.buildchain/runtime/actions/release/promotion/inspect-invocation
       with:
         request-json: ${{ inputs.request-json }}
         workflow-sha: ${{ fromJSON(inputs.job-workflow-sha) }}
-    - name: Checkout the selected runtime for read-only qualification
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ inputs.runtime-repository }}
-        ref: ${{ inputs.runtime-ref }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Qualify the sealed candidate and exact publication intent
       id: qualification
       uses: ./.buildchain/runtime/actions/release/promotion/qualify-candidate
@@ -121,7 +111,8 @@ runs:
       if: ${{ steps.qualification.outputs.action == 'promote' }}
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: buildchain-v4-release-qualify-${{ steps.qualification.outputs.requested-sha }}
+        name: buildchain-v4-release-qualify-${{
+          steps.qualification.outputs.requested-sha }}
         path: .buildchain/release-candidate/
         include-hidden-files: true
         if-no-files-found: error

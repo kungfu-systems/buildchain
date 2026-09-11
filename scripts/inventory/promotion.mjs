@@ -15,13 +15,14 @@ export function assertPromotionInventory(root) {
       read(".github/workflows/.release-promote.yml"),
     ),
   );
-  assert.deepEqual(Object.keys(api.on.workflow_call.inputs), ["request-json"]);
+  assert.deepEqual(Object.keys(api.on.workflow_call.inputs), ["request-json", "runtime-ref", "contract-lock", "runtime-selection"]);
   assert.equal(
     api.jobs.invoke.uses,
     "./.github/workflows/.release-promote.yml",
   );
   assert.deepEqual(api.jobs.invoke.with, {
     "request-json": "${{ needs.consumer-admission.outputs.invocation-json }}",
+    "runtime-selection": "${{ needs.execution-runtime.outputs.selection }}",
   });
   const request = JSON.parse(
     read("contracts/promotion-request-v1.schema.json"),
@@ -41,10 +42,11 @@ export function assertPromotionInventory(root) {
   ]) {
     const caller = YAML.parse(read(`.github/workflows/${file}.yml`));
     const calls = Object.values(caller.jobs).filter(
-      (job) => job.uses === `./${publicPath}`,
+      (job) => job.uses === `kungfu-systems/buildchain/${publicPath}@v4`,
     );
     assert.equal(calls.length, 1, file);
-    assert.deepEqual(Object.keys(calls[0].with), ["request-json"]);
+    assert.ok(calls[0].with["request-json"]);
+    assert.ok(Object.keys(calls[0].with).every(key => ["request-json", "runtime-ref", "contract-lock", "runtime-selection"].includes(key)));
   }
   const component = ".github/workflows/.release-promote.yml";
   const expected = {

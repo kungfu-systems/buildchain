@@ -28,8 +28,7 @@ outputs:
     value: ${{ steps.plan.outputs.controller-plan-digest }}
   controller-receipt-artifact:
     description: controller-receipt-artifact node result.
-    value: buildchain-check-controller-receipt-${{
-      steps.plan.outputs.source-sha }}
+    value: buildchain-check-controller-receipt-${{ steps.plan.outputs.source-sha }}
   controller-receipt-json:
     description: controller-receipt-json node result.
     value: ${{ steps.receipt.outputs.controller-receipt-json }}
@@ -62,22 +61,9 @@ runs:
     - name: Admit source checkout
       id: source-boundary
       if: ${{ always() }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      uses: ./.buildchain/runtime/actions/build/source/admit
       with:
         source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
-    - name: Checkout Buildchain runtime
-      id: runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ inputs.runtime-repository }}
-        ref: ${{ inputs.runtime-ref }}
-        path: .buildchain/runtime
-        persist-credentials: false
-    - name: Prepare exact Buildchain runtime
-      id: core-runtime
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Initialize exact source qualification
       id: plan
       uses: ./.buildchain/runtime/actions/build/source/initialize
@@ -87,13 +73,12 @@ runs:
     - name: Upload source-check controller plan
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: buildchain-check-controller-plan-${{ steps.plan.outputs.source-sha
-          }}
+        name: buildchain-check-controller-plan-${{ steps.plan.outputs.source-sha }}
         path: .buildchain/controller/plan.json
         if-no-files-found: error
     - name: Evaluate accepted source proof
       id: source-proof
-      uses: ./.buildchain/workflow-shell/actions/build/source/proof
+      uses: ./.buildchain/runtime/actions/build/source/proof
       with:
         request-json: ${{ inputs.request-json }}
         runtime-ref: ${{ inputs.runtime-ref }}
@@ -101,7 +86,7 @@ runs:
     - name: Execute declared check lifecycle
       id: lifecycle-check
       if: ${{ steps.source-proof.outputs.verify-reuse != 'true' }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/check-lifecycle
+      uses: ./.buildchain/runtime/actions/build/source/check-lifecycle
       with:
         request-json: ${{ inputs.request-json }}
         runtime-ref: ${{ inputs.runtime-ref }}
@@ -127,8 +112,7 @@ runs:
       if: ${{ steps.receipt.outputs.proof-root != '' }}
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: buildchain-source-qualification-proof-${{
-          steps.plan.outputs.source-sha }}
+        name: buildchain-source-qualification-proof-${{ steps.plan.outputs.source-sha }}
         path: .buildchain/source-proof/
         if-no-files-found: error
         retention-days: 14
@@ -136,7 +120,6 @@ runs:
       if: ${{ always() && steps.receipt.outputs.controller-receipt-digest != '' }}
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: buildchain-check-controller-receipt-${{
-          steps.plan.outputs.source-sha }}
+        name: buildchain-check-controller-receipt-${{ steps.plan.outputs.source-sha }}
         path: .buildchain/controller/receipt.json
         if-no-files-found: error

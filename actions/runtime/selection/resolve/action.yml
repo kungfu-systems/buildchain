@@ -1,0 +1,53 @@
+name: Select the execution runtime
+description: Resolve one entry-owned runtime selection for all jobs in an execution.
+inputs:
+  selection:
+    description: Already selected runtime from the entry job.
+    default: ""
+  runtime-ref:
+    description: Transient runtime channel, train or exact revision.
+    default: ""
+  workflow-sha:
+    description: Defining entry commit, used only as the default execution version.
+    default: ""
+  workflow-ref:
+    description: Defining entry reference, used to locate the consumer channel lock.
+    default: ""
+  contract-lock:
+    description: Optional consumer contract lock path.
+    default: ""
+  source-repository:
+    description: Consumer repository containing the lock.
+    default: ""
+  source-sha:
+    description: Consumer source containing the lock.
+    default: ""
+  token:
+    description: Consumer read and runtime-selection admission credential.
+    required: true
+  resume-run-id:
+    description: Completed unsuccessful execution to recover; source stays fixed.
+    required: false
+    default: ""
+outputs:
+  selection:
+    description: Selected runtime identity for all subsequent jobs.
+  repository:
+    description: Runtime repository.
+  sha:
+    description: Resolved execution commit.
+  ref:
+    description: Selected execution runtime ref.
+  class:
+    description: Selected execution runtime class.
+  origin:
+    description: Selected execution runtime origin.
+  override:
+    description: Selected execution runtime override.
+  source-sha:
+    description: Selected consumer source for this execution.
+  source-ref:
+    description: Selected consumer source for this execution.
+runs:
+  using: node24
+  main: dist/index.js

@@ -166,7 +166,7 @@ test("candidate payload evidence rejects unsafe artifact names, traversal and es
       /escapes/,
     );
   }));
-test("capability binding requires explicit qualification and exact runtime/version/predicate", () => {
+test("capability binding requires explicit qualification and exact version/predicate", () => {
   const env = {
     autoAdmissionKind: "release-candidate",
     publicationVersion: "4.1.0-alpha.0",
@@ -187,10 +187,7 @@ test("capability binding requires explicit qualification and exact runtime/versi
       ),
     /must declare/,
   );
-  assert.throws(
-    () => validateCapabilityBinding(value, env, "b".repeat(40)),
-    /runtime checkout mismatch/,
-  );
+  assert.doesNotThrow(() => validateCapabilityBinding({...value, runtimeSha: "b".repeat(40)}, env));
   assert.throws(
     () => validateCapabilityBinding({ ...value, version: "4.0.0" }, env, sha),
     /version mismatch/,
@@ -216,17 +213,15 @@ test("capability binding requires explicit qualification and exact runtime/versi
     /predicate binding/,
   );
 });
-test("wrong authority checkout is rejected before GitHub evidence requests", async () => {
+test("authority verifies source evidence independently of selected runtime", async () => {
   let requests = 0;
   await assert.rejects(
-    verifySealedAdmission({ request: { buildchainRef: sha }, runtimeRoot: "fixture", admission: { repository: "acme/project", sourceSha: sha } }, {
-      verifyCheckout: () => { throw new Error("runtime checkout mismatch"); },
-      tree: async () => { requests++; throw new Error("unexpected request"); },
-    }),
-    /runtime checkout mismatch/,
-  );
-  assert.equal(requests, 0);
+    verifySealedAdmission({request: {buildchainRef: "b".repeat(40)}, runtimeRoot: "fixture", admission: {repository: "acme/project", sourceSha: sha}}, {
+      tree: async ({sourceSha}) => {requests++; assert.equal(sourceSha, sha); throw new Error("source unavailable");},
+    }), /source unavailable/);
+  assert.equal(requests, 1);
 });
+
 test("dry-run has no publication authority and never invokes verification", () =>
  workspace(async root => {
   const outputs = await qualifyPublicationAuthority({ request: { dryRun: true }, workspace: root }, () => { throw new Error("dry-run attempted authority verification"); });
@@ -250,14 +245,9 @@ test("publication authority exposes five phase nodes with original least-privile
   const admit = YAML.parse(
     fs.readFileSync("actions/publication/authority/admit/action.yml", "utf8"),
   );
-  assert.ok(
-    admit.runs.steps.findIndex(
-      (s) => s.uses?.endsWith("/authority/inspect-request"),
-    ) <
-      admit.runs.steps.findIndex(
-        (s) => s.name === "Checkout exact Buildchain authority runtime",
-      ),
-  );
+  assert.equal(w.jobs.verify.steps[0].uses, "$/actions/runtime/environment/prepare");
+  assert.ok(admit.runs.steps.some(s => s.uses?.endsWith("/authority/inspect-request")));
+  assert.ok(admit.runs.steps.every(s => !s.uses?.startsWith("actions/checkout@")));
   const candidate = YAML.parse(
     fs.readFileSync(
       "actions/publication/authority/candidate-evidence/action.yml",
@@ -265,7 +255,7 @@ test("publication authority exposes five phase nodes with original least-privile
     ),
   );
   const gate = candidate.runs.steps.find((s) => s.id === "consumer-gate");
-  assert.equal(gate.uses, "./.buildchain/authority-runtime/actions/publication/authority/qualify-consumer-gate");
+  assert.equal(gate.uses, "./.buildchain/runtime/actions/publication/authority/qualify-consumer-gate");
   for (const name of ["admit", "candidate-evidence", "artifact-evidence", "verify"]) {
    const action = YAML.parse(fs.readFileSync(`actions/publication/authority/${name}/action.yml`, "utf8"));
    assert.ok(action.runs.steps.every(step => step.uses && !step.run && !step.shell));

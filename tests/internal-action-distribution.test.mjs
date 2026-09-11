@@ -13,7 +13,7 @@ function installation(t, action, workflowBound = false) {
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const source = path.join(root, "source");
   fs.mkdirSync(source);
-  const runtime = path.join(source, ".buildchain/workflow-shell");
+  const runtime = path.join(source, ".buildchain/runtime");
   const entry = workflowBound
     ? path.join(runtime, `actions/${action}/dist/index.js`)
     : path.join(root, "entry.mjs");
@@ -98,21 +98,11 @@ test("distributed source admission runs without source modules or installed depe
   assert.equal(fs.readFileSync(f.output, "utf8"), "");
 });
 
-test("distributed runtime admission preserves defining workflow identity without querying the provider", (t) => {
-  const f = installation(t, "runtime/selection/admit"),
-    sha = "b".repeat(40);
-  const result = f.run({
-    purpose: "publication",
-    repository: "fixture/runtime",
-    "workflow-sha": sha,
-    "workflow-ref": "fixture/runtime/.github/workflows/public.yml@v4-alpha",
-    token: "non-secret-test-token",
-  });
-  assert.equal(result.status, 0, result.stderr + result.stdout);
-  const output = fs.readFileSync(f.output, "utf8");
-  assert.ok(output.includes(sha));
-  assert.ok(!output.includes("a".repeat(40)));
-  assert.match(output, /workflow-definition/);
+test("distributed runtime entry rejects unsafe lock input before provider access", (t) => {
+  const f = installation(t, "runtime/selection/resolve");
+  const result = f.run({"contract-lock":"../outside.json", "workflow-sha":"b".repeat(40), "workflow-ref":"kungfu-systems/buildchain/.github/workflows/build.yml@v4",token:"test"});
+  assert.equal(result.status,1,result.stderr+result.stdout);
+  assert.match(result.stdout,/Contract lock path must be relative/);
 });
 
 test("distributed release-line dry run reads a clean source and cannot mutate it", (t) => {
@@ -137,7 +127,7 @@ test("distributed release-line dry run reads a clean source and cannot mutate it
     execFileSync("git", args, { cwd: f.source, stdio: "pipe" });
   fs.appendFileSync(
     path.join(f.source, ".git/info/exclude"),
-    "\n.buildchain/workflow-shell/\n",
+    "\n.buildchain/runtime/\n",
   );
   const result = f.run({
     "workflow-sha": f.workflowSha,

@@ -1,36 +1,8 @@
-import { readOnlyJson } from "./files.js";
-import { readPublicResumeState } from "./readback.js";
-import { resolveRuntimeResumePublicRuntimeSha } from "./readback.js";
 import fs from "node:fs";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
-import { authorizeRuntimeSelection } from "../../consumer/runtime-ref-resume-authority.js";
-import { createRuntimeResumeLineage } from "../../consumer/runtime-ref-resume-authority.js";
-import { scanRuntimeSelectorPersistence } from "../../consumer/runtime-ref-resume-authority.js";
-import { runtimeResumeDocumentRoot } from "../../consumer/runtime-ref-resume-authority.js";
-import { verifyRuntimeAuthorizationReceipt } from "../../consumer/runtime-ref-resume-authority.js";
+import { readPublicResumeState } from "./readback.js";
+import { createRuntimeResumeLineage, runtimeResumeDocumentRoot } from "./lineage.js";
 import { splitRepository } from "../candidate/selection.js";
-import { installationRoot } from "../../runtime/installation-root.js";
-export function trackedRuntimePersistenceScan({
-  runtimeRoot = installationRoot(import.meta.url),
-} = {}) {
-  const paths = execFileSync(
-    "git",
-    [
-      "-C",
-      runtimeRoot,
-      "ls-files",
-      ".github/workflows",
-      "actions",
-      ".buildchain",
-    ],
-    { encoding: "utf8" },
-  )
-    .split(/\r?\n/)
-    .filter((entry) => /\.(?:json|toml|ya?ml)$/u.test(entry));
-  return scanRuntimeSelectorPersistence({ root: runtimeRoot, paths });
-}
-
 export function prepareRuntimeResumeEvidence({
   repoInfo,
   targetRef,
@@ -41,61 +13,9 @@ export function prepareRuntimeResumeEvidence({
   stageCapsules,
   recovery,
   outputDir,
-  runtimeRoot,
   recoveryRunId,
   recoveryRunAttempt,
-  authorizationPath,
-  authorizationJson,
-  authorizationRoot,
 }) {
-  const delegatedRaw = String(authorizationJson || "").trim();
-  const delegatedRoot = String(authorizationRoot || "").trim();
-  const authorizationFileExists =
-    authorizationPath && fs.existsSync(authorizationPath);
-  if (!authorizationFileExists && (!delegatedRaw || !delegatedRoot))
-    throw new Error(
-      "cross-runtime recovery requires a fresh runtime authorization receipt",
-    );
-  const delegated = authorizationFileExists
-    ? readOnlyJson(
-        [{ absolutePath: authorizationPath }],
-        "runtime authorization",
-      )
-    : JSON.parse(delegatedRaw);
-  if (!authorizationFileExists && delegated.receiptRoot !== delegatedRoot)
-    throw new Error(
-      "fresh recovery runtime authorization handoff root mismatch",
-    );
-  const delegatedVerification = verifyRuntimeAuthorizationReceipt({
-    receipt: delegated.receipt,
-    receiptRoot: delegated.receiptRoot,
-    repository: repoInfo.fullName,
-    runtimeSha,
-  });
-  if (!delegatedVerification.ok) {
-    throw new Error(
-      `fresh recovery runtime authorization rejected: ${delegatedVerification.failures.join(", ")}`,
-    );
-  }
-  const policy = passport.consumerPolicy.receipt;
-  const authorization = authorizeRuntimeSelection({
-    repository: repoInfo.fullName,
-    eventName: "workflow_dispatch",
-    mode: "resume",
-    actor: delegated.receipt.actor.login,
-    actorPermission: delegated.receipt.actor.permission,
-    reason: `resume sealed candidate run ${passport.workflow.runId} from a tree-equivalent protected source`,
-    authorizedAt: new Date().toISOString(),
-    sourceSha: sidecar.source.sha,
-    sourceTreeSha: sidecar.source.treeSha,
-    requestedRef: delegated.receipt.request.ref,
-    resolvedRuntimeSha: runtimeSha,
-    approvedRefReadbacks: delegated.receipt.runtime.reachableFrom,
-    stableContractLockRoot: policy.contractLocks.stable.root,
-    alphaContractLockRoot: policy.contractLocks.alpha.root,
-    consumerPolicyReceiptRoot: sidecar.consumerPolicyReceiptRoot,
-    persistenceScan: trackedRuntimePersistenceScan({ runtimeRoot }),
-  });
   const planBody = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-v4-runtime-resume-plan/v1",
@@ -115,8 +35,6 @@ export function prepareRuntimeResumeEvidence({
     targetRef,
     runtimeSha,
     version,
-    authorization: authorization.receipt,
-    authorizationRoot: authorization.receiptRoot,
     buildAttempt: sidecar.buildAttempt,
     resumeAttempt: {
       id: `github-run:${recoveryRunId}:attempt:${recoveryRunAttempt}`,
@@ -127,10 +45,7 @@ export function prepareRuntimeResumeEvidence({
     requiredPlatforms: stageCapsules.map((entry) => entry.platform),
     stageCapsules,
     resumePlanRoot: plan.root,
-    floatingRefBefore: {
-      ref: "v4-alpha",
-      sha: sidecar.buildAttempt.runtimeSha,
-    },
+
   };
   const material = {
     ...materialBody,
@@ -183,7 +98,6 @@ export async function finalizeRuntimeResumeEvidence({
   const readback = await readPublicResumeState({
     repoInfo,
     targetRef,
-    runtimeSha: resolveRuntimeResumePublicRuntimeSha(material),
     version,
     transaction,
     token,
@@ -191,8 +105,7 @@ export async function finalizeRuntimeResumeEvidence({
     fetchImpl,
   });
   const resumed = createRuntimeResumeLineage({
-    authorization: material.authorization,
-    authorizationRoot: material.authorizationRoot,
+    repository: material.repository,
     buildAttempt: material.buildAttempt,
     resumeAttempt: material.resumeAttempt,
     source: material.source,
@@ -201,12 +114,8 @@ export async function finalizeRuntimeResumeEvidence({
     stageCapsules: material.stageCapsules,
     resumePlanRoot: material.resumePlanRoot,
     finalPublicReadbackRoot: readback.root,
-    floatingRefBefore: material.floatingRefBefore,
-    floatingRefAfter: { ref: "v4-alpha", sha: readback.refs.floating.sha },
   });
   const evidence = {
-    authorization: material.authorization,
-    authorizationRoot: material.authorizationRoot,
     lineage: resumed.lineage,
     lineageRoot: resumed.lineageRoot,
   };

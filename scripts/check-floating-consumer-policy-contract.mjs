@@ -52,7 +52,7 @@ function assertOrdered(relative, markers) {
 export function assertPromotionCertificationWiring(source) {
   const workflow = YAML.parse(source);
   const node = workflow?.jobs?.qualify?.steps?.find((step) => step.id === "node");
-  if (node?.uses !== "./.buildchain/workflow-shell/actions/release/promotion/qualify" ||
+  if (node?.uses !== "./.buildchain/runtime/actions/release/promotion/qualify" ||
       node.with?.["request-json"] !== "${{ inputs.request-json }}" ||
       node.with?.["job-workflow-sha"] !== "${{ toJSON(job.workflow_sha) }}")
     fail("promotion certification is missing its exact owned node and typed request binding");
@@ -101,12 +101,12 @@ export function checkFloatingConsumerPolicyContract() {
     fail("architecture policy contract is missing");
   }
   if (
-    policy.contractLocks?.selectedLockMustBindResolvedWorkflowShell !== true
+    policy.contractLocks?.runtimeSelectionOwner !== "actions/runtime/selection/resolve"
   ) {
-    fail("contract lock must bind the visible workflow shell");
+    fail("contract lock selection must belong to the unified entry");
   }
   assertPersistedSelectors();
-  assertOrdered("packages/core/build/plan/admission.js", ["const policy = scanConsumerPolicy(", "validatePackageManagerContract({", "const lock = inspectRuntimeContract({", "assertRuntimeContractAccepted(lock)"]);
+  assertOrdered("packages/core/build/plan/admission.js", ["const policy = scanConsumerPolicy(", "validatePackageManagerContract({"]);
   const buildWorkflow = read(".github/workflows/.build.yml");
   const planner = read("packages/core/build/plan/admission.js");
   if (!planner.includes("expectedInvocationChannel: plan.identity.channel") ||
@@ -114,7 +114,7 @@ export function checkFloatingConsumerPolicyContract() {
       !buildWorkflow.includes("actions/build/lifecycle/plan")) fail("build planning must bind called workflow and channel admission");
   assertTrustGatedJobs(buildWorkflow, ["build-native", "build-container", "sign", "attest", "deliver"]);
   assertOrdered("actions/publication/candidate/plan/action.yml", [
-    "ref: ${{ inputs.runtime-sha }}", "Prepare exact publication runtime", "Enforce v4 floating consumer policy", "Resolve controller identities",
+    "Admit source checkout", "Enforce v4 floating consumer policy", "Resolve controller identities",
   ]);
   const publication = YAML.parse(read(".github/workflows/public-build-publication.yml"));
   if (!Object.values(publication.jobs).some((job) => job.steps?.some((step) => step.uses?.endsWith("/actions/publication/candidate/plan"))))
@@ -122,7 +122,7 @@ export function checkFloatingConsumerPolicyContract() {
   const stageCanary = read(".github/workflows/public-build-stage-capsule-canary.yml");
   if (
     !stageCanary.includes("consumer-admission:") ||
-    !stageCanary.includes("needs: consumer-admission")
+    !jobDependsOn(stageCanary, "qualify", "consumer-admission")
   ) {
     fail(
       "Stage Capsule qualification is not transitively gated by consumer admission",

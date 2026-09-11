@@ -157,7 +157,6 @@ export function createTailResealReceipt({
     );
   if (
     passport.contract !== "kungfu-buildchain-release-candidate-passport" ||
-    passport.buildchain?.sha !== normalized.runtime.sha ||
     passport.consumerPolicy?.receiptRoot !==
       normalized.runtime.consumerPolicyReceiptRoot
   )

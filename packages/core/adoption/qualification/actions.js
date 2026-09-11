@@ -17,7 +17,7 @@ function coordinates(core, env) {
   return {
     runtimeRoot: installationRoot(import.meta.url),
     consumerRoot: path.join(env.GITHUB_WORKSPACE, ".buildchain/consumer"),
-    runtimeSha: core.getInput("workflow-sha", { required: true }),
+    runtimeSha: env.BUILDCHAIN_RUNTIME_SHA,
   };
 }
 export function selectAdopterAction(core, env) {
@@ -25,7 +25,7 @@ export function selectAdopterAction(core, env) {
     request: request(core),
     repository: env.GITHUB_REPOSITORY,
     sourceSha: env.GITHUB_SHA,
-    runtimeSha: core.getInput("workflow-sha", { required: true }),
+    runtimeSha: env.BUILDCHAIN_RUNTIME_SHA,
   });
   for (const [key, value] of Object.entries(selected))
     core.setOutput(key, value);
@@ -46,9 +46,7 @@ export function admitAdopterPolicyAction(core, env) {
     inputPath: input["input-path"],
     invocationSourcePath:
       input["invocation-source-path"] ||
-      (env.GITHUB_REPOSITORY === "kungfu-systems/buildchain"
-        ? ".github/workflows/self-build-adopter-dogfood.yml"
-        : ""),
+      env.GITHUB_WORKFLOW_REF?.split("@")[0].slice(env.GITHUB_REPOSITORY.length + 1),
   });
   for (const [key, value] of Object.entries(
     consumerPolicyOutputs(result, output),

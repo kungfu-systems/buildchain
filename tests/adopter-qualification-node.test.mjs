@@ -16,10 +16,14 @@ test('adopter files reject traversal and symlink substitution',t=>{
  fs.mkdirSync(path.join(directory,'consumer'));fs.writeFileSync(path.join(directory,'outside.json'),'{}');fs.symlinkSync(path.join(directory,'outside.json'),path.join(directory,'consumer/input.json'));
  for(const name of ['../outside.json','input.json'])assert.throws(()=>adopterInputFile(path.join(directory,'consumer'),name),/relative|escapes/);
 });
-test('adopter checks both immutable runtime and admitted consumer',()=>{
- const env={runtimeRoot:'/workspace/runtime',consumerRoot:'/workspace/consumer',runtimeSha:sha,consumerSha:sha};let calls=0;
- assert.throws(()=>verifyAdopterCheckouts(env,()=>++calls===1?sha:'c'.repeat(40)),/drifted/);assert.equal(calls,2);
+test('adopter verifies consumer checkout without rechecking the prepared runtime',()=>{
+ const context={runtimeRoot:'/workspace/runtime',consumerRoot:'/workspace/consumer',runtimeSha:'b'.repeat(40),consumerSha:sha};
+ let calls=0;
+ verifyAdopterCheckouts(context,(_cmd,args)=>{calls++;assert.equal(args[1],context.consumerRoot);return sha;});
+ assert.equal(calls,1);
+ assert.throws(()=>verifyAdopterCheckouts(context,()=> 'c'.repeat(40)),/drifted/);
 });
+
 function report(platform,change={}){
  return createCrossPlatformAdopterReport({platform,consumer:'demo',sourceBinding:{runtimeSha:sha,consumerSha:sha,inputRoot:root,...change},execution:{initialRun:{status:'passed',readbackRoot:root},tamperFailure:{status:'failed-as-required',exitCode:1},retryRun:{status:'passed',readbackRoot:root},terminalVerify:{status:'passed',readbackRoot:root},neutralDriver:{id:'ledger-specification-driver',status:'passed',kfdDependencyPresent:false}},authority:{productionWrites:false,providerEffects:false,releaseEffects:false,stablePublication:false}});
 }

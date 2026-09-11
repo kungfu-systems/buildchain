@@ -366,7 +366,6 @@ export function createRunBoundDmg({
 function acceptedAssemblyBinding(binding, request, expectedExecution) {
   return (
     binding?.sourceSha === request.source.sha &&
-    binding?.runtimeSha === request.runtime.sha &&
     binding?.requestDigest === request.digest &&
     binding?.unsignedArchiveDigest === request.artifact.transport.digest &&
     binding?.runId === expectedExecution.runId &&
@@ -427,7 +426,6 @@ export function acceptedMacosCredentialEvidence(
     evidence.source?.repository === request.source.repository &&
     evidence.source?.sha === request.source.sha &&
     evidence.source?.treeSha === request.source.treeSha &&
-    evidence.buildchain?.runtimeSha === request.runtime.sha &&
     evidence.input?.requestDigest === request.digest &&
     evidence.app?.architecture === request.artifact.arch &&
     evidence.execution?.runId === expectedExecution.runId &&

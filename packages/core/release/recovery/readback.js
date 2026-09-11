@@ -1,23 +1,22 @@
 import path from "node:path";
 import { compareSemver } from "../../publication/candidate/registry-hydration.js";
 import { githubJson } from "./../candidate/transport.js";
-import { runtimeResumeDocumentRoot } from "../../consumer/runtime-ref-resume-authority.js";
+import { runtimeResumeDocumentRoot } from "./lineage.js";
 export function validateRuntimeResumePublicReadback({
   targetRef,
   targetSha,
   targetVersion,
-  alphaSha,
+  floatingSha,
   exactTagSha,
   tagLineage,
-  runtimeLineage,
   floatingTargetLineage,
-  runtimeSha,
   version,
   transaction,
   main,
   npm,
 }) {
-  const channelVersion = npm["dist-tags"]?.alpha;
+  const distTag = version.includes("-") ? "alpha" : "latest";
+  const channelVersion = npm["dist-tags"]?.[distTag];
   let channelDidNotRegress = false;
   try {
     channelDidNotRegress = compareSemver(channelVersion, version) >= 0;
@@ -29,18 +28,16 @@ export function validateRuntimeResumePublicReadback({
     transaction?.version !== version ||
     exactTagSha !== transaction?.source_sha ||
     !["ahead", "identical"].includes(tagLineage?.status) ||
-    !["ahead", "identical"].includes(runtimeLineage?.status) ||
     !["ahead", "identical"].includes(floatingTargetLineage?.status) ||
-    !alphaSha ||
+    !floatingSha ||
     !targetSha ||
-    !runtimeSha ||
     channelVersion !== targetVersion ||
     !channelDidNotRegress ||
     !npm.versions?.[channelVersion]?.dist?.integrity ||
     npm.versions?.[version]?.dist?.integrity !== main.digest
   ) {
     throw new Error(
-      "cross-runtime final public readback does not match durable publication bytes and runtime",
+      "cross-runtime final public readback does not match durable publication bytes",
     );
   }
 }
@@ -48,7 +45,6 @@ export function validateRuntimeResumePublicReadback({
 export async function readPublicResumeState({
   repoInfo,
   targetRef,
-  runtimeSha,
   version,
   transaction,
   token,
@@ -73,9 +69,11 @@ export async function readPublicResumeState({
     );
   const packageUrl = `https://registry.npmjs.org/${encodeURIComponent(main.name)}`;
   const exactTag = transaction.exact_tag || `v${version}`;
-  const [targetSha, alphaSha, exactTagSha, npmResponse] = await Promise.all([
+  const floatingRef = `v${version.split(".")[0]}${version.includes("-") ? "-alpha" : ""}`;
+  const distTag = version.includes("-") ? "alpha" : "latest";
+  const [targetSha, floatingSha, exactTagSha, npmResponse] = await Promise.all([
     readRef(`heads/${targetRef}`),
-    readRef("tags/v4-alpha"),
+    readRef(`tags/${floatingRef}`),
     readRef(`tags/${exactTag}`),
     fetchImpl(packageUrl),
   ]);
@@ -85,7 +83,7 @@ export async function readPublicResumeState({
     );
   }
   const npm = await npmResponse.json();
-  const [tagLineage, runtimeLineage, floatingTargetLineage, targetPackageFile] =
+  const [tagLineage, floatingTargetLineage, targetPackageFile] =
     await Promise.all([
       githubJson({
         apiUrl,
@@ -97,13 +95,7 @@ export async function readPublicResumeState({
         apiUrl,
         token,
         fetchImpl,
-        path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${runtimeSha}...${alphaSha}`,
-      }),
-      githubJson({
-        apiUrl,
-        token,
-        fetchImpl,
-        path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${alphaSha}...${targetSha}`,
+        path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${floatingSha}...${targetSha}`,
       }),
       githubJson({
         apiUrl,
@@ -130,13 +122,11 @@ export async function readPublicResumeState({
     targetRef,
     targetSha,
     targetVersion,
-    alphaSha,
+    floatingSha,
     exactTagSha,
     tagLineage,
-    runtimeLineage,
-    floatingTargetLineage,
-    runtimeSha,
-    version,
+      floatingTargetLineage,
+      version,
     transaction,
     main,
     npm,
@@ -149,21 +139,18 @@ export async function readPublicResumeState({
     version,
     refs: {
       target: { ref: targetRef, sha: targetSha },
-      floating: { ref: "v4-alpha", sha: alphaSha },
+      floating: { ref: floatingRef, sha: floatingSha },
       exactTag: { ref: exactTag, sha: exactTagSha },
     },
     npm: {
       package: main.name,
       version,
-      distTag: "alpha",
+      distTag,
       integrity: npm.versions[version].dist.integrity,
       targetVersion,
-      distTagVersion: npm["dist-tags"].alpha,
-      distTagIntegrity: npm.versions[npm["dist-tags"].alpha].dist.integrity,
+      distTagVersion: npm["dist-tags"][distTag],
+      distTagIntegrity: npm.versions[npm["dist-tags"][distTag]].dist.integrity,
     },
   };
   return { ...body, root: runtimeResumeDocumentRoot(body) };
 }
-
-export const resolveRuntimeResumePublicRuntimeSha = (material) =>
-  material?.buildAttempt?.runtimeSha || "";

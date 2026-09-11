@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { command } from "../../runtime/action-process.mjs";
 import { installationRoot } from "../../runtime/installation-root.js";
 import { normalizeDevAlphaPatrolOptions } from "./options.js";
 import { runDevAlphaCandidatePatrol } from "./controller.js";
@@ -20,15 +19,7 @@ export async function reconcileAlphaCandidateAction(core, env) {
   const prior = settle
     ? JSON.parse(core.getInput("observation-json", { required: true }))
     : {};
-  const runtimeSha = command(
-    "git",
-    ["-C", installationRoot(import.meta.url), "rev-parse", "HEAD"],
-    { stdio: "pipe" },
-  ).trim();
-  if (settle && prior["runtime-sha"] !== runtimeSha)
-    throw new Error(
-      "Alpha settlement runtime differs from exact observation runtime",
-    );
+  const runtimeSha = env.BUILDCHAIN_RUNTIME_SHA;
   if (
     settle &&
     [

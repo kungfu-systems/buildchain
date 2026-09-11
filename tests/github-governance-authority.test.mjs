@@ -1,6 +1,9 @@
 import { inspectWorkflowJob, readWorkflow } from "../scripts/workflow-action-graph.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { collectGovernanceEvidence } from "../packages/core/governance/audit/transactions.js";
 import test from "node:test";
 
 import {
@@ -22,7 +25,7 @@ import {
   verifyGithubGovernanceReceipt,
 } from "../packages/core/governance/github-governance-authority.js";
 import {
-  resolveVerifierSourceRevision,
+  readVerifierSourceRevision,
   selectGithubGovernanceRepositories,
 } from "../packages/core/governance/audit/identity.js";
 import {
@@ -300,18 +303,11 @@ test("qualifying receipt binds policy, ownership, effective rules, authority, an
       expectedRepository: "kungfu-systems/buildchain",
       expectedTargetRef: "dev/v3/v3.0",
       expectedPolicyRoot: BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY.policyRoot,
-      expectedVerifierSourceRevision: "0123456789abcdef0123456789abcdef01234567",
       now: "2026-07-24T01:10:00Z",
     }),
     receipt,
   );
-  assert.throws(
-    () => verifyGithubGovernanceReceipt(receipt, {
-      expectedVerifierSourceRevision: "ffffffffffffffffffffffffffffffffffffffff",
-      now: "2026-07-24T01:10:00Z",
-    }),
-    /verifier source revision mismatch/,
-  );
+
 });
 
 test("development admin authority fails least privilege even when branch policy is green", () => {
@@ -1084,37 +1080,25 @@ test("tampering and stale receipts are rejected", () => {
   );
 });
 
-test("auditor source identity must equal the exact verifier checkout", () => {
+test("standalone auditor records source provenance without checkout comparisons", () => {
   const head = "0123456789abcdef0123456789abcdef01234567";
-  const cleanRun = (_command, args) => args.includes("rev-parse")
-    ? { status: 0, stdout: `${head}\n` }
-    : { status: 0, stdout: "" };
-  assert.equal(resolveVerifierSourceRevision("/verifier", head, cleanRun), head);
-  assert.throws(
-    () => resolveVerifierSourceRevision(
-      "/verifier",
-      "ffffffffffffffffffffffffffffffffffffffff",
-      cleanRun,
-    ),
-    /does not match the current checkout/,
-  );
-  assert.throws(
-    () => resolveVerifierSourceRevision(
-      "/verifier",
-      head,
-      (_command, args) => args.includes("rev-parse")
-        ? { status: 0, stdout: `${head}\n` }
-        : { status: 1, stdout: "" },
-    ),
-    /contains tracked drift/,
-  );
+  const calls = [];
+  const run = (_command, args) => {
+    calls.push(args);
+    return { status: 0, stdout: `${head}\n` };
+  };
+  assert.equal(readVerifierSourceRevision("/verifier", run), head);
+  assert.deepEqual(calls, [["-C", "/verifier", "rev-parse", "HEAD"]]);
 });
 
 test("publication authority recollects live App-authenticated governance instead of trusting input JSON", () => {
   const graph = inspectWorkflowJob(".github/workflows/.release-authority.yml", "verify");
   const mint = graph.steps.find(step => step.id === "governance-auditor");
   assert.match(mint.uses, /actions\/create-github-app-token@/);
-  assert.match(mint.if, /KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY != ''/);
+  assert.match(mint.if, /inputs.auditor-private-key != ''/);
+  const admission = graph.job.steps.find(step => step.id === "authority-admit");
+  assert.equal(admission.with["auditor-private-key"], "${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}");
+  assert.equal(mint.with["private-key"], "${{ inputs.auditor-private-key }}");
   assert.equal(mint["continue-on-error"], true);
   const audit = graph.steps.find(step => step.name === "Collect and verify exact live GitHub governance authority");
   assert.match(audit.with.token, /steps.governance-auditor.outputs.token.*inputs.governance-read-token.*github.token/);
@@ -1130,4 +1114,20 @@ test("publication authority recollects live App-authenticated governance instead
     assert.ok(authorities.length, name);
     for (const job of authorities) assert.deepEqual(job.permissions, graph.job.permissions);
   }
+});
+
+test("hosted audit records the selected runtime independently of consumer source", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-governance-"));
+  const runtimeSha = "b".repeat(40);
+  try {
+    const { result } = collectGovernanceEvidence({
+      organization: "kungfu-systems", repository: "kungfu-systems/buildchain",
+      targetRef: "dev/v4/v4.1", sourceSha: "a".repeat(40), runtimeSha, workspace,
+    }, (request) => {
+      assert.equal(request.verifierSourceRevision, runtimeSha);
+      assert.equal(request.root, undefined);
+      return { inventory: { qualifyingCount: 1, nonQualifyingCount: 0 }, auditRoot: `sha256:${"c".repeat(64)}` };
+    });
+    assert.deepEqual(JSON.parse(fs.readFileSync(path.join(workspace, "github-governance-audit.json"))), result);
+  } finally { fs.rmSync(workspace, { recursive: true, force: true }); }
 });

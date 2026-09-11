@@ -74,11 +74,12 @@ test("real lifecycle artifacts survive transfer and isolated finalization; provi
     objects.set(item.id, item);
     return { id: item.id, digest };
   });
-  t.mock.method(artifact, "listArtifacts", async () => ({ artifacts: [...objects.values()] }));
+  // SDK upload returns bare hex; provider listing and download comparison use sha256-prefixed digests.
+  t.mock.method(artifact, "listArtifacts", async () => ({ artifacts: [...objects.values()].map(item => ({ ...item, digest: `sha256:${item.digest}` })) }));
   t.mock.method(artifact, "downloadArtifact", async (id, options) => {
     const item = objects.get(id);
     assert.ok(item, `unknown immutable artifact ${id}`);
-    assert.equal(options.expectedHash, item.digest);
+    assert.equal(options.expectedHash, `sha256:${item.digest}`);
     for (const entry of item.entries) {
       const file = path.join(options.path, entry.path);
       fs.mkdirSync(path.dirname(file), { recursive: true });

@@ -51,7 +51,7 @@ export function validatePaperProvisioningAuthority(cwd) {
   }
   if (
     !GIT_SHA_PATTERN.test(String(value.runtime?.resolvedSha || "")) ||
-    (!floating && value.runtime?.ref !== value.runtime?.resolvedSha) ||
+    !floating ||
     value.admission?.acceptedRef !== value.runtime?.ref ||
     value.admission?.acceptedSha !== value.runtime?.resolvedSha
   ) {

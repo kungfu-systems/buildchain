@@ -1,5 +1,5 @@
-name: admit-promotion
-description: Admit the consumer and issue an explicitly authorized transient runtime receipt.
+name: Bind admitted promotion invocation
+description: Bind the consumer publication request to source evidence and the prepared runtime.
 inputs:
   request-json:
     description: Promotion inputs.
@@ -8,22 +8,12 @@ inputs:
     description: Exact selection.
     required: true
 outputs:
-  runtime-authorization-json:
-    description: runtime-authorization-json result.
-    value: ${{ steps.invocation.outputs.runtime-authorization-json }}
-  runtime-authorization-root:
-    description: runtime-authorization-root result.
-    value: ${{ steps.invocation.outputs.runtime-authorization-root }}
   invocation-json:
     description: Exact normalized component invocation after consumer admission.
     value: ${{ steps.invocation.outputs.invocation-json }}
 runs:
   using: composite
   steps:
-    - name: Prepare exact core runtime
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/workflow-shell
     - name: Check out exact consumer
       uses: actions/checkout@v7.0.0
       with:
@@ -38,32 +28,17 @@ runs:
         ref: ${{ github.workflow_sha }}
         path: .buildchain/invocation-source
         persist-credentials: false
-    - name: Check out exact policy runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
-        ref: ${{ fromJSON(inputs.selection-json).router-sha }}
-        path: .buildchain/policy-runtime
-        persist-credentials: false
-    - name: Prepare selected policy runtime
-      uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/policy-runtime
     - name: Enforce consumer policy
       id: policy
-      uses: ./.buildchain/policy-runtime/actions/consumer/policy/admit
+      uses: ./.buildchain/runtime/actions/consumer/policy/admit
       with:
         directory: .buildchain/consumer
         source-sha: ${{ fromJSON(inputs.request-json).target-sha || github.sha }}
-        runtime-sha: ${{ fromJSON(inputs.selection-json).router-sha }}
         workflow-sha: ${{ fromJSON(inputs.selection-json).router-sha }}
         workflow: .github/workflows/public-release-promote.yml
         invocation-directory: .buildchain/invocation-source
         definition-repository: ${{ fromJSON(inputs.selection-json).repository }}
         definition-sha: ${{ github.workflow_sha }}
-        expected-channel: ${{ fromJSON(inputs.selection-json).channel }}
-        stable-lock-path: ${{ fromJSON(inputs.request-json).buildchain-stable-contract-lock-path }}
-        alpha-lock-path: ${{ fromJSON(inputs.request-json).buildchain-alpha-contract-lock-path }}
     - name: Preserve rooted admission
       if: ${{ always() && steps.policy.outputs.v4-consumer-policy-receipt-path != '' }}
       uses: actions/upload-artifact@v7.0.1
@@ -71,18 +46,11 @@ runs:
         name: v4-consumer-policy-release-candidate-promote-${{ github.sha }}
         path: .buildchain/consumer/.buildchain/evidence/consumer-policy-receipt.json
         if-no-files-found: error
-    - name: Authorize and bind the complete admitted invocation
+    - name: Bind the complete admitted invocation
       id: invocation
-      uses: ./.buildchain/policy-runtime/actions/release/promotion/admit-invocation
+      uses: ./.buildchain/runtime/actions/release/promotion/admit-invocation
       with:
         request-json: ${{ inputs.request-json }}
         selection-json: ${{ inputs.selection-json }}
         consumer-policy-root: ${{ steps.policy.outputs.v4-consumer-policy-receipt-root }}
         token: ${{ github.token }}
-    - name: Preserve runtime authorization
-      if: ${{ fromJSON(inputs.selection-json).override-used == 'true' }}
-      uses: actions/upload-artifact@v7.0.1
-      with:
-        name: v4-runtime-authorization-release-candidate-promote-${{ github.run_id }}
-        path: .buildchain/consumer/.buildchain/evidence/runtime-authorization.json
-        if-no-files-found: error

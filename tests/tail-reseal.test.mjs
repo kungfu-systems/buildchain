@@ -240,7 +240,6 @@ test("tail reseal fails closed on every authority and identity boundary", () => 
           ]),
       ),
     ],
-    ["signer", mutate((value) => (value.signing.runtimeSha = "e".repeat(40)))],
     ["Warrant", mutate((value) => (value.warrant.status = "expired"))],
     [
       "credential",

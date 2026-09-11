@@ -16,27 +16,16 @@ runs:
     - name: Admit source checkout
       id: source-boundary
       if: ${{ always() }}
-      uses: ./.buildchain/workflow-shell/actions/build/source/admit
+      uses: ./.buildchain/runtime/actions/build/source/admit
       with:
         source-checkout-outcome: ${{ inputs.source-checkout-outcome }}
     - uses: actions/setup-node@v6.4.0
       with:
         node-version: "24"
-    - name: Checkout the admitted publication runtime
-      uses: actions/checkout@v7.0.0
-      with:
-        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
-        ref: ${{ fromJSON(inputs.request-json).buildchain-ref }}
-        path: .buildchain/runtime
-        persist-credentials: false
     - name: Verify source and runtime coordinates
-      uses: ./.buildchain/workflow-shell/actions/build/source/verify-checkouts
+      uses: ./.buildchain/runtime/actions/build/source/verify-checkouts
       with:
-        runtime-sha: ${{ fromJSON(inputs.request-json).buildchain-ref }}
         source-sha: ${{ fromJSON(inputs.request-json).source-sha }}
-    - uses: ./.buildchain/workflow-shell/actions/runtime/environment/prepare
-      with:
-        directory: .buildchain/runtime
     - name: Download binary evidence
       uses: actions/download-artifact@v7.0.0
       with:
@@ -55,7 +44,7 @@ runs:
     - name: Publish qualified immutable binary assets
       uses: ./.buildchain/runtime/actions/publication/binary/publish
       with:
-        runtime-sha: ${{ fromJSON(inputs.request-json).buildchain-ref }}
+        runtime-sha: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
         source-sha: ${{ fromJSON(inputs.request-json).source-sha }}
         tag: ${{ fromJSON(inputs.request-json).release-tag }}
         capability-json: ${{ inputs.capability-json }}
@@ -63,7 +52,8 @@ runs:
     - name: Retain binary publication readback
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: binary-publication-readback-${{ fromJSON(inputs.request-json).release-tag }}
+        name: binary-publication-readback-${{ fromJSON(inputs.request-json).release-tag
+          }}
         path: .buildchain/binary-publication/readback.json
         include-hidden-files: true
         if-no-files-found: error

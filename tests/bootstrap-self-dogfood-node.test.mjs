@@ -110,18 +110,18 @@ test("self-dogfood rejects foreign heads, changed bases and malformed caller coo
     /exact immutable/,
   );
 });
-test("self-dogfood uses the current public workflow without a published channel and executes candidate only after review", () => {
+test("self-dogfood uses one public entry for primary and repaired runtime after review", () => {
   const w = YAML.parse(
     fs.readFileSync(".github/workflows/self-ops-bootstrap-dogfood.yml", "utf8"),
   );
   for (const channel of ["conformance", "alpha", "stable"]) {
     assert.equal(
       w.jobs[`primary-${channel}`].uses,
-      "./.github/workflows/public-ops-bootstrap.yml",
+      "kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4",
     );
     assert.equal(
       w.jobs[`recovery-${channel}`].uses,
-      "./.github/workflows/public-ops-bootstrap-recovery.yml",
+      "kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4",
     );
   }
   const action = YAML.parse(
@@ -138,7 +138,7 @@ test("self-dogfood uses the current public workflow without a published channel 
   assert.match(generator.if, /steps.readiness.outputs.ready == 'true'/);
   assert.match(
     generator.uses,
-    /\.buildchain\/candidate\/actions\/workflow\/dogfood\/generate/,
+    /\.buildchain\/runtime\/actions\/workflow\/dogfood\/generate/,
   );
   assert.equal(
     action.outputs.ready.value,

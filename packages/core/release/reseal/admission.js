@@ -6,8 +6,6 @@ export function verifyTailPolicyBindings({
   runtimeSha,
   sourceSha,
 }) {
-  if (request.runtime.sha !== runtimeSha)
-    throw new Error("Tail runtime differs from job.workflow_sha");
   if (request.source.sha !== sourceSha)
     throw new Error("Tail source differs from the fresh workflow source");
   const result = verifyFloatingConsumerPolicyReceipt({

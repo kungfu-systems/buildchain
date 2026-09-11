@@ -17,9 +17,9 @@ function bindings() {
   request.runtime.consumerPolicyReceiptRoot = receiptRoot;
   return { request, receipt, sourceSha: request.source.sha, runtimeSha: request.runtime.sha };
 }
-test("tail policy admission binds source, runtime and the existing rooted consumer receipt", () => {
+test("tail policy admission binds source and rooted evidence without runtime re-admission", () => {
   assert.doesNotThrow(() => verifyTailPolicyBindings(bindings()));
-  for (const key of ["sourceSha", "runtimeSha"]) {
+  for (const key of ["sourceSha"]) {
     const input = bindings(); input[key] = input[key] === "a".repeat(40) ? "b".repeat(40) : "a".repeat(40);
     assert.throws(() => verifyTailPolicyBindings(input), /differs/);
   }

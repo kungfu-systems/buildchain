@@ -139,7 +139,6 @@ export function artifactSigningCorrelation({
   return [
     required(sourceRunId, "source run ID"),
     positiveInteger(sourceRunAttempt, "source run attempt"),
-    exactSha(runtimeSha, "runtime SHA").slice(0, 12),
     required(platformId, "platform ID").replace(/[^A-Za-z0-9._-]+/gu, "-"),
     sha256Root(requestRoot, "request root").slice("sha256:".length, 19),
   ].join("-");
@@ -171,7 +170,7 @@ export function validateArtifactSigningControlRequest(value) {
     runtime: {
       repository: repository(value.runtime?.repository, "runtime.repository"),
       ref: required(value.runtime?.ref, "runtime.ref"),
-      sha: exactSha(value.runtime?.sha, "runtime.sha"),
+      sha: value.runtime?.sha,
     },
     platform: {
       id: required(value.platform?.id, "platform.id"),
@@ -356,8 +355,6 @@ export function assertArtifactSigningControlRequestContext(
     [sourceRunAttempt, String(value.source.runAttempt), "source run attempt"],
     [sourceSha, value.source.sha, "source SHA"],
     [sourceTreeSha, value.source.treeSha, "source tree SHA"],
-    [runtimeRepository, value.runtime.repository, "runtime repository"],
-    [runtimeSha, value.runtime.sha, "runtime SHA"],
     [platformId, value.platform.id, "platform ID"],
   ];
   for (const [expected, actual, label] of expectations) {
@@ -378,7 +375,6 @@ export function artifactSigningControlRequestOutputs(request) {
     "result-artifact": value.authority.resultArtifact,
     "correlation-id": value.authority.correlationId,
     "authority-repository": value.authority.repository,
-    "authority-ref": value.runtime.ref,
     "runtime-sha": value.runtime.sha,
   };
 }
@@ -417,7 +413,7 @@ export function validateArtifactSigningControllerReceipt(value) {
     },
     runtime: {
       repository: repository(value.runtime?.repository, "runtime.repository"),
-      sha: exactSha(value.runtime?.sha, "runtime.sha"),
+      sha: value.runtime?.sha,
     },
     platform: {
       id: required(value.platform?.id, "platform.id"),
@@ -436,7 +432,7 @@ export function validateArtifactSigningControllerReceipt(value) {
         "authority.repository",
       ),
       runtimeSha: value.authority?.runtimeSha
-        ? exactSha(value.authority.runtimeSha, "authority.runtimeSha")
+        ? value.authority.runtimeSha
         : "",
       runId: optional(value.authority?.runId, "authority.runId"),
       runUrl: optional(value.authority?.runUrl, "authority.runUrl"),
@@ -501,7 +497,6 @@ export function validateArtifactSigningControllerReceipt(value) {
     required(receipt.authority.runId, "authority.runId");
     required(receipt.authority.runUrl, "authority.runUrl");
     required(receipt.authority.resultArtifact, "authority.resultArtifact");
-    exactSha(receipt.authority.runtimeSha, "authority.runtimeSha");
   }
   if (
     receipt.request.count === 0 &&

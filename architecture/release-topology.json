@@ -85,28 +85,11 @@
       "packages/core/release/settle/action.js"
     ],
     "runtimeSelectors": [
-      ".github/workflows/.release-promote.yml",
-      ".github/workflows/public-release-promote.yml",
-      ".github/workflows/self-ops-promotion-recovery.yml",
-      ".github/workflows/self-release-promote.yml",
-      "packages/core/build/commands/aggregate-build-summary.mjs",
-      "packages/core/build/commands/artifact-signing-controller.mjs",
-      "packages/core/build/plan/environment.js",
-      "packages/core/consumer/runtime-ref-resume-authority.js",
-      "packages/core/consumer/runtime-selector-persistence.js",
-      "packages/core/contracts/buildchain-contract.js",
-      "packages/core/contracts/commands/buildchain-contract-lock.mjs",
-      "packages/core/paper/cli/dispatch.mjs",
-      "packages/core/publication/commands/generate-release-candidate-passport.mjs",
-      "packages/core/release/commands/release-candidate-resolver.mjs",
-      "packages/core/release/commands/resume-from-candidate-run.mjs",
-      "packages/core/release/promotion-request.js",
-      "packages/core/release/promotion/candidate.js",
-      "packages/core/release/promotion/qualification-action.js",
-      "packages/core/release/promotion/routing.js",
-      "packages/core/release/recovery/runtime.js",
-      "packages/core/release/runtime-override-authorization.js",
-      "scripts/generate-channel-promotion-workflow.mjs"
+      "packages/core/runtime/entry/actions.js",
+      "packages/core/runtime/entry/activation.js",
+      "packages/core/runtime/entry/github.js",
+      "packages/core/runtime/entry/recovery.js",
+      "packages/core/runtime/entry/selection.js"
     ],
     "runtimeEngines": ["packages/core/release/promote-candidate/action.js"],
     "terminalProjections": [
@@ -134,16 +117,11 @@
         "packages/core/build/build-configuration.js",
         "packages/core/build/github-artifact-attestation.js",
         "packages/core/build/package-manager.js",
-        "packages/core/build/standalone/identity.js",
         "packages/core/consumer/buildchain-channel-identity.js",
         "packages/core/consumer/buildchain-config.js",
         "packages/core/consumer/floating-consumer-evidence.js",
         "packages/core/consumer/floating-consumer-policy.js",
         "packages/core/consumer/floating-consumer-release-passport.js",
-        "packages/core/consumer/invocation-selector.js",
-        "packages/core/consumer/runtime-ref-resume-authority.js",
-        "packages/core/consumer/runtime-selector-persistence.js",
-        "packages/core/consumer/workflow-definition-authority.js",
         "packages/core/contracts/action-inventory.js",
         "packages/core/contracts/buildchain-contract.js",
         "packages/core/contracts/buildchain-layout.js",
@@ -233,6 +211,7 @@
         "packages/core/release/promote-candidate/transaction.js",
         "packages/core/release/protected-publication-source.js",
         "packages/core/release/publish-transaction.js",
+        "packages/core/release/recovery/lineage.js",
         "packages/core/release/release-candidate-recovery.js",
         "packages/core/release/release-candidate.js",
         "packages/core/release/release-invocation.js",
@@ -252,13 +231,13 @@
         "packages/core/runtime/spawn-command.js",
         "packages/core/web/web-surface-publication-candidate.js"
       ],
-      "root": "sha256:b5384e938df8bae003a3f01c419c31c3713b6e0d8409e305485604dba055dd1e"
+      "root": "sha256:5e4bc19b8e377bde5257297f15ac8376fbe8a7fc23ce8f5f897cf25130b4ae2d"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/runtime/domain-wasm.js",
       "metadata": "packages/core/runtime/domain-wasm-artifact.js",
       "artifact": "packages/core/runtime/buildchain-domain.wasm",
-      "artifactRoot": "sha256:d1b4a91dfb0bee972b0460fc22d784840226b9bc116de44c823f6d504465aebb",
+      "artifactRoot": "sha256:504e23c9241f43611813f0fbd213b7a694946328b00e23d22f6ba678e7b0c841",
       "distributedArtifacts": [
         "actions/release/promotion/ref/dist/buildchain-domain.wasm",
         "actions/release/tail/settle/dist/buildchain-domain.wasm",
@@ -338,6 +317,7 @@
         "triggers": ["workflow_call"],
         "jobs": [
           "apply|runner|-|inherited|inherited|artifactDownload,artifactUpload,jobOutput|contents-write,oidc-write,promotion-runtime",
+          "execution-runtime|runner|-|read|-|jobOutput|-",
           "qualify|runner|-|read|-|artifactUpload,jobOutput|-",
           "settle|runner|-|read|-|artifactDownload,artifactUpload,jobOutput|-"
         ],
@@ -348,6 +328,7 @@
         "triggers": ["workflow_call"],
         "jobs": [
           "consumer-admission|runner|-|read|-|artifactUpload,jobOutput|-",
+          "execution-runtime|runner|-|read|-|jobOutput|-",
           "invoke|reusable-call|./.github/workflows/.release-promote.yml|-|-|-|-",
           "resolve-promotion|runner|-|read|-|jobOutput|-"
         ],
@@ -357,34 +338,41 @@
         "path": ".github/workflows/self-ops-promotion-recovery.yml",
         "triggers": ["workflow_dispatch"],
         "jobs": [
-          "resume|reusable-call|./.github/workflows/public-release-promote.yml|write|write|-|contents-write,oidc-write"
+          "resume|reusable-call|kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4|write|write|-|contents-write,oidc-write"
         ],
-        "reusableEdges": ["./.github/workflows/public-release-promote.yml"]
+        "reusableEdges": [
+          "kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4"
+        ]
       },
       {
         "path": ".github/workflows/self-release-promote.yml",
         "triggers": ["workflow_dispatch", "workflow_run"],
         "jobs": [
           "classify-workflow-run|runner|-|read|-|jobOutput|-",
-          "promote|reusable-call|./.github/workflows/public-release-promote.yml|write|write|-|contents-write,oidc-write",
+          "execution-runtime|runner|-|read|-|jobOutput|-",
+          "promote|reusable-call|kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4|write|write|-|contents-write,oidc-write",
           "reject-invalid-candidate-recovery|runner|-|read|-|-|-",
           "reject-invalid-durable-recovery|runner|-|read|-|-|-",
           "reject-manual-apply|runner|-|read|-|-|-"
         ],
-        "reusableEdges": ["./.github/workflows/public-release-promote.yml"]
+        "reusableEdges": [
+          "kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4"
+        ]
       },
       {
         "path": ".github/workflows/self-release-tail-dogfood.yml",
         "triggers": ["workflow_dispatch"],
         "jobs": [
-          "publish|reusable-call|./.github/workflows/public-release-promote.yml|write|write|-|contents-write,oidc-write"
+          "publish|reusable-call|kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4|write|write|-|contents-write,oidc-write"
         ],
-        "reusableEdges": ["./.github/workflows/public-release-promote.yml"]
+        "reusableEdges": [
+          "kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4"
+        ]
       }
     ],
     "metrics": {
       "workflowCount": 34,
-      "jobCount": 73,
+      "jobCount": 95,
       "reusableEdgeCount": 20,
       "mutationRelevantNodeCount": 61,
       "contentsWriteJobCount": 22,
@@ -417,6 +405,7 @@
           "path": ".github/workflows/public-release-oci-compose-preview.yml",
           "triggers": ["workflow_call"],
           "jobs": [
+            "execution-runtime|runner|-|read|-|jobOutput|-",
             "promote|runner|-|write|-|artifactDownload,artifactUpload|contents-write"
           ],
           "reusableEdges": []
@@ -424,7 +413,7 @@
       ],
       "metrics": {
         "workflowCount": 1,
-        "jobCount": 1,
+        "jobCount": 2,
         "reusableEdgeCount": 0,
         "mutationRelevantNodeCount": 1,
         "contentsWriteJobCount": 1,

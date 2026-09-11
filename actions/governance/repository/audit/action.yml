@@ -1,5 +1,6 @@
 name: Audit GitHub governance
-description: Collect managed-zone authority, retain sanitized receipts, and enforce qualification.
+description: Collect managed-zone authority, retain sanitized receipts, and
+  enforce qualification.
 inputs:
   auditor-app-id:
     description: Bounded governance auditor application ID.
@@ -16,14 +17,14 @@ runs:
     - uses: actions/setup-node@v6
       with:
         node-version: "24"
-    - uses: ./.buildchain/workflow-shell/actions/runtime/dependencies/install
+    - uses: ./.buildchain/runtime/actions/runtime/dependencies/install
       with:
         directory: .
         production: "false"
         ignore-scripts: "false"
     - name: Acquire bounded governance audit credential
       id: credential
-      uses: ./.buildchain/workflow-shell/actions/providers/github/token
+      uses: ./.buildchain/runtime/actions/providers/github/token
       with:
         app-id: ${{ inputs.auditor-app-id }}
         private-key: ${{ inputs.auditor-private-key }}
@@ -32,7 +33,7 @@ runs:
         workflow-token: ${{ github.token }}
     - name: Collect sanitized managed-zone governance receipts
       id: summary
-      uses: ./.buildchain/workflow-shell/actions/governance/repository/collect-audit
+      uses: ./.buildchain/runtime/actions/governance/repository/collect-audit
       with:
         token: ${{ steps.credential.outputs.token }}
     - name: Upload sanitized immutable audit
@@ -43,7 +44,7 @@ runs:
         if-no-files-found: error
         retention-days: 30
     - name: Report and enforce governance qualification
-      uses: ./.buildchain/workflow-shell/actions/governance/repository/finalize-audit
+      uses: ./.buildchain/runtime/actions/governance/repository/finalize-audit
       with:
         credential-json: ${{ steps.credential.outputs.metadata-json }}
         token: ${{ github.token }}

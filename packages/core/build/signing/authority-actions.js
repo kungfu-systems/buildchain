@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import { installationRoot } from "../../runtime/installation-root.js";
-import { verifyCheckoutIdentity } from "../../runtime/checkout-identity.js";
 import { inspectArtifactSigningRequests } from "./intake.js";
 import { signDetachedArtifactRequests } from "./detached.js";
 import { finalizeNativeArtifactSigningResult } from "./native-result.js";
@@ -14,15 +13,8 @@ const get = (core, name) => core.getInput(name, { required: true });
 function context(core, env, needsItem = false) {
   const workspace = path.resolve(env.GITHUB_WORKSPACE),
     runtimeRoot = installationRoot(import.meta.url);
-  if (fs.realpathSync(workspace) !== fs.realpathSync(runtimeRoot))
-    throw new Error(
-      "Signing authority must execute its checked-out source implementation",
-    );
-  verifyCheckoutIdentity({
-    directory: runtimeRoot,
-    sha: env.GITHUB_SHA,
-    label: "Signing authority source",
-  });
+
+
   const request = JSON.parse(get(core, "request-json")),
     item = needsItem ? JSON.parse(get(core, "item-json")) : undefined;
   if (item && item.slug !== safeSigningId(item.id))
@@ -52,7 +44,6 @@ export function admitSigningRequestsAction(core, env) {
   const matrices = inspectArtifactSigningRequests({
     inputRoot: requestRoot,
     expectedRepository: request["source-repository"],
-    expectedRuntimeSha: request["expected-runtime-sha"],
     expectedRequestRoot: request["expected-request-root"],
   });
   for (const [key, value] of Object.entries(matrices))

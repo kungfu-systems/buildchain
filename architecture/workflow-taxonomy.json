@@ -634,17 +634,6 @@
       "rationale": "Universal Bootstrap Train-First Self-Dogfood: owned ops self workflow with one canonical implementation."
     },
     {
-      "id": "universal-bootstrap-recovery",
-      "role": "public",
-      "category": "ops",
-      "purpose": "bootstrap-recovery",
-      "summary": "Universal Buildchain Bootstrap Recovery",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "reusable",
-      "rationale": "Universal Buildchain Bootstrap Recovery: owned ops public workflow with one canonical implementation."
-    },
-    {
       "id": "v4-adopter-delivery",
       "role": "public",
       "category": "build",

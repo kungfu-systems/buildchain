@@ -8,8 +8,7 @@ export function collectGovernanceEvidence(
     organization,
     repository,
     targetRef,
-    sourceSha,
-    runtimeRoot,
+    runtimeSha,
     workspace,
     token,
   },
@@ -19,8 +18,7 @@ export function collectGovernanceEvidence(
     organization,
     repository,
     targetRef,
-    verifierSourceRevision: sourceSha,
-    root: runtimeRoot,
+    verifierSourceRevision: runtimeSha,
     token,
   });
   const { qualifyingCount, nonQualifyingCount } = result.inventory;

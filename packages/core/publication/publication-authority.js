@@ -502,7 +502,7 @@ function validatePublicationEvidence(publicationEvidence, admission) {
     const controllerReceipt = evidence.controllerReceipt;
     const controllerValidation = validateControllerReceipt(controllerReceipt, {
       expectedSourceSha: admission.sourceSha,
-      expectedRuntimeSha: admission.runtimeSha,
+
     });
     if (!controllerValidation.ok || !controllerValidation.qualifying) {
       throw new Error(`binary distribution controller receipt did not qualify: ${controllerValidation.issues.join("; ")}`);
@@ -662,7 +662,7 @@ function validatePublicationEvidence(publicationEvidence, admission) {
   const controllerReceipt = publicationEvidence.controllerReceipt;
   const controllerValidation = validateControllerReceipt(controllerReceipt, {
     expectedSourceSha: passport.source?.headSha || "",
-    expectedRuntimeSha: passport.buildchain?.sha || "",
+
   });
   if (!controllerValidation.ok || !controllerValidation.qualifying) {
     throw new Error(`controller receipt did not qualify: ${controllerValidation.issues.join("; ")}`);
