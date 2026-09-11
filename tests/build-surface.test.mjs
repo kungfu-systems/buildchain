@@ -469,7 +469,7 @@ test("sealed publication authority verifier is independent and credential-free",
   const verifier = graph.steps.find(step => step.name === "Verify sealed admission or retain a non-authorizing dry-run result");
   for (const key of ["request-json", "admission-bundle-json", "consumer-gate-json", "token"])
     assert.ok(verifier.with[key], key);
-  assert.match(verification, /runtimeSha: request.buildchainRef/);
+  assert.match(verification, /runtimeSha: request.runtimeSha/);
   assert.match(verification, /usedNonces,/);
 });
 

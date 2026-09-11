@@ -53,7 +53,7 @@ export async function assemblePublicationAdmission(
     repository: request.evidenceRepository,
     sourceSha: request.sourceSha,
     sourceTreeSha,
-    runtimeSha: request.buildchainRef,
+    runtimeSha: request.runtimeSha,
     publicationVersion: request.publicationVersion,
   });
   const bundle = sealManagedPublicationAdmission({

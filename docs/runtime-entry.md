@@ -114,3 +114,9 @@ binary packaging read consumer source from the workspace while executing selecte
 runtime code. Directory equality is not an admission rule; source SHA and artifact
 containment checks still apply. The architecture gate parses business JavaScript
 and rejects direct or aliased runtime/source directory equality comparisons.
+
+Publication authority adapters take runtime repository and revision provenance
+from the prepared entry selection. Consumer requests provide source, artifact
+and effect authority; they do not supply or readmit a Buildchain SHA. Governance
+and sealed publication evidence retain the selected runtime as provenance while
+validating their own source, policy and provider bindings.
