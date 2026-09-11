@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 30,
+  "generation": 31,
   "fencingCounter": 10,
   "policy": {
     "agingSeconds": 900,
@@ -5255,8 +5255,43 @@
         "tests/runtime-source-boundaries.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.1",
+      "pullRequestNumber": 3703,
+      "sourceRoot": "sha256:c20cf82dad5abe9dfe86fe507606500b4024f95e48c62bb0037ef4011d17f3a0",
+      "sourceIdentityRoot": "sha256:e1323914b3bc0417205e097183111862bf421a044301b6fe186d6eb136f8d953",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:87c4713690204dbc22ca93cb70c46087c59ba4d4f42b6f0836c0edde52ee205f",
+      "sourceHead": "5780da24d703d9f293175a8e0e0f8108ef632189",
+      "sourcePatchRoot": "sha256:4272cf04e19548867c7d3ed472e41670353cfe029f622a7639fdd4c841b6373e",
+      "sourceProofRoot": "sha256:68824826d10fcddc58032db8b6c428ed0f0e46078823c33c985eea61a5d10c69",
+      "planRoot": "sha256:bf6cf25b273ef2cf61ec5148af857d4ba3acea781ce57bdb8db40168503cddf2",
+      "closureRoot": "sha256:9ea75924f1079419361710eaf362f2d86c29b7b5ed406af67fd00ee81c98ace6",
+      "dependencyRoot": "sha256:3cf9b4e702ca2031f874a4c852fad14a28375c6d2a3ca0d69bcb215775436ab3",
+      "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
+      "sourceWorkflowRunId": 34587058857,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-11T10:15:25.982Z",
+      "updatedAt": "2026-09-11T10:15:25.982Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".buildchain/alpha-contract-lock.json",
+        ".buildchain/contract-lock.json",
+        "actions/release/next-development/qualify/dist/index.js",
+        "actions/release/promotion/candidate/dist/index.js",
+        "actions/release/promotion/ref/dist/index.js",
+        "actions/workflow/engine/execute/dist/index.js",
+        "packages/core/release/version-state.js",
+        "tests/version-generator-dependencies.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-11T09:15:29.042Z",
-  "stateRoot": "sha256:7585551f1f30a18dcc4774b21356538db6313f42e66bd5c44af26d49f43b9912"
+  "updatedAt": "2026-09-11T10:15:25.982Z",
+  "stateRoot": "sha256:d2de3ddb3e570f7f9b25cfe1edbe472e1d87631194c210cb82cb5b3ec3098e55"
 }
