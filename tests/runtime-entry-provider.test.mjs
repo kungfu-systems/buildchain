@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { runtimeEntryProvider } from "../packages/core/runtime/entry/github.js";
 
-function provider(permission, calls = []) {
+function provider(permission, calls = [], context = {}) {
   return runtimeEntryProvider(
     {
       rest: {
@@ -26,6 +26,7 @@ function provider(permission, calls = []) {
       sourceRepository: "consumer/project",
       sourceSha: "a".repeat(40),
       actor: "maintainer",
+      ...context,
     },
   );
 }
@@ -39,6 +40,44 @@ test("runtime override authorizes the consumer actor exactly at the entry", asyn
     assert.deepEqual(calls, [
       { owner: "consumer", repo: "project", username: "maintainer" },
     ]);
+  }
+});
+test("GitHub-authorized dispatch accepts users and installation actors without a collaborator lookup", async () => {
+  for (const actor of [
+    "maintainer",
+    "github-actions[bot]",
+    "release-installation[bot]",
+  ]) {
+    const calls = [];
+    await provider("none", calls, {
+      actor,
+      eventName: "workflow_dispatch",
+    }).authorize({
+      origin: "runtime-parameter",
+    });
+    assert.deepEqual(calls, []);
+  }
+});
+test("other events retain override authorization for every actor, including bots", async () => {
+  for (const eventName of [
+    "pull_request",
+    "workflow_run",
+    "push",
+    "repository_dispatch",
+    undefined,
+  ]) {
+    for (const actor of ["reader", "github-actions[bot]"]) {
+      const calls = [];
+      await assert.rejects(
+        provider("read", calls, { actor, eventName }).authorize({
+          origin: "runtime-parameter",
+        }),
+        /write permission/u,
+      );
+      assert.deepEqual(calls, [
+        { owner: "consumer", repo: "project", username: actor },
+      ]);
+    }
   }
 });
 test("read-only and unknown actors cannot select execution code", async () => {
