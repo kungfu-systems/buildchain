@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 87,
+  "generation": 88,
   "fencingCounter": 29,
   "policy": {
     "agingSeconds": 900,
@@ -6246,8 +6246,43 @@
         "tests/universal-workflow-publication.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.1",
+      "pullRequestNumber": 3750,
+      "sourceRoot": "sha256:bca7a0d0dd533cc8a3f1f913613e6207507b7a09466939e5d0b7549db8d67914",
+      "sourceIdentityRoot": "sha256:5ad17406c8bcd117c42048c6b745f074795665519928ec7bfb5c78fe1a71b977",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:d8869e2b2d5bdcce5b7295de151026022fe17dbcf7aef7be849e70cf66115d27",
+      "sourceHead": "d9777a33828e9f8e896ef247acae736ea9f8935f",
+      "sourcePatchRoot": "sha256:497d53d1b6b7f57734c1823c1f2921d61cfbf14b6eff0df48b2ead7fecf4e1a9",
+      "sourceProofRoot": "sha256:07ebe1e7e9e14cab65aeb9328807200ef45a29ca46b74eb39cd66fdf73a1e2c4",
+      "planRoot": "sha256:69e75fdfc113ce14aa363c3a111574baaea7b79ad575ec3091eba35aecd9a31d",
+      "closureRoot": "sha256:de86db1873e1d6e31b42e9241dfe0335d6c8837284cc4f99325443336a2a0c6c",
+      "dependencyRoot": "sha256:092384cc1b603810943e51f1cde6a702c58545d18be5bcb7da51ffccf24ab85f",
+      "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
+      "sourceWorkflowRunId": 34677503313,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-12T06:24:21.394Z",
+      "updatedAt": "2026-09-12T06:24:21.394Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".github/workflows/self-release-promote.yml",
+        "CONTRIBUTING.md",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/page-registry.json",
+        "dist/site/public-surface-audit.json",
+        "docs/release-discussions.md",
+        "tests/promotion-workflow-request.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-12T05:45:44.877Z",
-  "stateRoot": "sha256:6c0855daa35550db561f3ca3395754d3028d6cbc0c9c67f889c79df850578c49"
+  "updatedAt": "2026-09-12T06:24:21.394Z",
+  "stateRoot": "sha256:35b3b3f7e8eb99d158420f2df641e83733697139a79dd96a8222c8c2801d209e"
 }
