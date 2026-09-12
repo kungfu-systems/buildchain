@@ -44,7 +44,7 @@ export async function qualifyDeliverySource(
   },
   dependencies = {},
 ) {
-  await guardPipelineAdmission(request, { repository, token });
+  const pipeline = await guardPipelineAdmission(request, { repository, token });
   const outputs = {
     "runtime-sha": runtimeSha,
     "qualify-outcome": "skipped",
@@ -145,7 +145,12 @@ export async function qualifyDeliverySource(
   if (!affectedPaths.length)
     affectedPaths = await (dependencies.derivePaths || deriveSourcePaths)(
       source,
-      { token, apiUrl, environment },
+      {
+        token,
+        apiUrl,
+        environment,
+        qualifiedBase: pipeline?.history.at(-1).generation.baseCommit,
+      },
     );
   const receiptRoot = qualification.result.receiptRoot;
   if (!/^sha256:[0-9a-f]{64}$/u.test(receiptRoot || ""))

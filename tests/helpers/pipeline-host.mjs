@@ -113,6 +113,7 @@ export function pipelineHostFixture() {
       "pipeline-attempt": current.identity.id,
       "expected-head-sha": current.generation.source.commit,
     }),
+    productArchive: () => archive,
     materialStore: (session) =>
       pipelineMaterials(archive, {
         repository: f.intent.repository,

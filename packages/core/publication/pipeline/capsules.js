@@ -1,3 +1,4 @@
+import { publicationArtifactProducer } from "./build-segments.js";
 import { recordDigest } from "../../release/discussion/envelope.js";
 import {
   STAGE_CAPSULE_CONTRACT,
@@ -35,6 +36,10 @@ export function pipelineProductCapsules({
       throw new Error(
         "Product Capsule requires a live provider retention promise",
       );
+    const producer = publicationArtifactProducer(
+      qualified.build,
+      artifact.providerArtifactId,
+    );
     const identity = {
       schema: STAGE_CAPSULE_IDENTITY_CONTRACT,
       sourceRoot: recordDigest(qualified.source),
@@ -42,9 +47,11 @@ export function pipelineProductCapsules({
       platformRoot: recordDigest({ platform: artifact.platform }),
       stage: "verify",
       toolchainRoots: [],
-      runtimeRoot: recordDigest(plan.runtime),
+      runtimeRoot: recordDigest(producer.plan?.runtime || plan.runtime),
       policyRoot: plan.contractRoot,
-      declaredInputs: [{ name: "publication-plan", root: plan.root }],
+      declaredInputs: [
+        { name: "publication-plan", root: producer.plan?.root || plan.root },
+      ],
       transformationRoot: recordDigest({
         source: qualified.source,
         product: artifact.product,

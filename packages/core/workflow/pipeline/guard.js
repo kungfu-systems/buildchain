@@ -9,6 +9,7 @@ import { githubPipelinePolicy } from "../../providers/github/pipeline-policy.js"
 import { getOctokit } from "@actions/github";
 import { discussionMaterials } from "../../providers/github/discussions/materials.js";
 import { pipelineMaterials } from "./materials.js";
+import { guardPipelineBuild } from "./guard-build.js";
 
 async function assertRetainedRequest(input, connection, observed) {
   const current = observed.history.at(-1);
@@ -38,6 +39,7 @@ async function assertRetainedRequest(input, connection, observed) {
     runId: Number(process.env.GITHUB_RUN_ID),
     runAttempt: Number(process.env.GITHUB_RUN_ATTEMPT),
   });
+  return material;
 }
 
 export function validatePipelineExecutionRequest(
@@ -70,7 +72,7 @@ export function validatePipelineExecutionRequest(
 export async function guardPipelineAdmission(input, connection) {
   const observed = await guardPipelineDelivery(input, connection);
   if (!observed) return null;
-  await assertRetainedRequest(input, connection, observed);
+  const material = await assertRetainedRequest(input, connection, observed);
   const request = githubJsonClient({
     token: connection.token,
     userAgent: "buildchain-pipeline-admission",
@@ -103,7 +105,13 @@ export async function guardPipelineAdmission(input, connection) {
     throw new Error(
       "Pipeline protected review or required checks changed before delivery effect",
     );
-  return observed;
+  await guardPipelineBuild(input, observed, {
+    material,
+    source,
+    request,
+    repository: connection.repository,
+  });
+  return guardPipelineDelivery(input, connection);
 }
 
 export async function guardPipelineDelivery(input, connection, lookup) {

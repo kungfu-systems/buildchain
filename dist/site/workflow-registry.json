@@ -258,6 +258,43 @@
       "nonDuplicationRationale": "Canonical workflow owns one declared API or orchestration responsibility."
     },
     {
+      "id": ".ops-pipeline-execute",
+      "path": ".github/workflows/.ops-pipeline-execute.yml",
+      "reusable": true,
+      "inputs": [
+        "attempt",
+        "context",
+        "matrix",
+        "operation",
+        "request",
+        "runtime-selection"
+      ],
+      "inputCount": 6,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "taxonomy": {
+        "id": ".pipeline-execute",
+        "role": "component",
+        "category": "ops",
+        "purpose": "pipeline-execute",
+        "status": "active",
+        "canonicalPath": ".github/workflows/.ops-pipeline-execute.yml",
+        "compatibilityAlias": false
+      },
+      "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "Canonical workflow owns one declared API or orchestration responsibility."
+    },
+    {
       "id": ".release-authority",
       "path": ".github/workflows/.release-authority.yml",
       "reusable": true,
@@ -1387,6 +1424,39 @@
         "purpose": "pipeline",
         "status": "active",
         "canonicalPath": ".github/workflows/public-ops-pipeline.yml",
+        "compatibilityAlias": false
+      },
+      "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "Canonical workflow owns one declared API or orchestration responsibility."
+    },
+    {
+      "id": "public-ops-recover",
+      "path": ".github/workflows/public-ops-recover.yml",
+      "reusable": true,
+      "inputs": [
+        "attempt",
+        "runtime-ref"
+      ],
+      "inputCount": 2,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "taxonomy": {
+        "id": "recover",
+        "role": "public",
+        "category": "ops",
+        "purpose": "recover",
+        "status": "active",
+        "canonicalPath": ".github/workflows/public-ops-recover.yml",
         "compatibilityAlias": false
       },
       "surface": "repository-workflow",
@@ -8112,6 +8182,7 @@
       "inputs": [
         "contract-lock",
         "pipeline-attempt",
+        "recovery-attempt",
         "resume-run-id",
         "runtime-ref",
         "selection",
@@ -8121,7 +8192,7 @@
         "workflow-ref",
         "workflow-sha"
       ],
-      "inputCount": 10,
+      "inputCount": 11,
       "capabilityGroup": "api-cli-reference",
       "status": "active",
       "owner": "buildchain-actions",
@@ -8938,6 +9009,26 @@
         "token"
       ],
       "inputCount": 2,
+      "capabilityGroup": "api-cli-reference",
+      "status": "active",
+      "owner": "buildchain-actions",
+      "maturity": "stable",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
+    },
+    {
+      "apiRole": "implementation",
+      "id": "workflow/pipeline/recover",
+      "path": "actions/workflow/pipeline/recover/action.yml",
+      "inputs": [
+        "attempt",
+        "definition-sha",
+        "token"
+      ],
+      "inputCount": 3,
       "capabilityGroup": "api-cli-reference",
       "status": "active",
       "owner": "buildchain-actions",

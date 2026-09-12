@@ -8,14 +8,18 @@ import { pipelineProductCapsules } from "./capsules.js";
 import { retainPipelineProducts } from "./sealed-products.js";
 import { preparePipelineSigning, verifyPipelineSigning } from "./signing.js";
 import { pipelineReleaseDocuments } from "./documents.js";
+import { downloadRecoveryPublicationBuild } from "./recovery-build-download.js";
+import { prepareRecoveredSigning } from "./recovery-signing.js";
 
 export async function preparePipelineQualification(context, host, directory) {
   const { journal, archive } = await publicationContext(context, host);
+  if (context.recovery?.mode === "prepared")
+    return prepareRecoveredSigning(context, host, journal, archive, directory);
   const products = githubPipelinePublicationArtifacts(host);
-  const { build, bundles } = await products.download(
-    context,
-    path.join(directory, "products"),
-  );
+  const productDirectory = path.join(directory, "products");
+  const { build, bundles } = context.recovery?.build
+    ? await downloadRecoveryPublicationBuild(context, host, productDirectory)
+    : await products.download(context, productDirectory);
   const { plan, materialization } = context;
   const qualified = qualifyPipelineProducts({
     plan,

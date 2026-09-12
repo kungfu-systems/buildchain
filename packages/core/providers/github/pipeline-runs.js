@@ -1,6 +1,6 @@
 import { providerWriter } from "../../workflow/attempt/identity.js";
 import { recordDigest } from "../../release/discussion/envelope.js";
-import { PIPELINE_ENTRY } from "../../consumer/contract/entries.js";
+import { pipelineRunEntry, readPipelineCaller } from "./pipeline-run-entry.js";
 
 function uniqueJob(jobs, name) {
   const matches = jobs.filter(
@@ -64,17 +64,15 @@ export function githubPipelineRuns(request, repository) {
         "repository_dispatch",
         "pull_request_review",
         "merge_group",
+        "workflow_dispatch",
       ].includes(run.event) ||
       (["pull_request", "merge_group"].includes(run.event) &&
         run.head_sha !== source.commit) ||
       source.repository !== repository
     )
       throw new Error("Build provider run does not match admitted PR source");
-    const entries = (run.referenced_workflows || []).filter((entry) =>
-      entry.path?.startsWith(`kungfu-systems/buildchain/${PIPELINE_ENTRY}@`),
-    );
-    if (entries.length !== 1 || !/^[0-9a-f]{40}$/u.test(entries[0].sha || ""))
-      throw new Error("Build provider run has no exact pipeline entry");
+    const entry = pipelineRunEntry(run);
+    await readPipelineCaller(run, source.configPath, request, repository);
     if (
       !Array.isArray(platforms) ||
       !platforms.length ||
@@ -108,7 +106,7 @@ export function githubPipelineRuns(request, repository) {
       source,
       runId,
       runAttempt,
-      entry: entries[0],
+      entry: entry.definition,
       jobs: selected,
       outcome: selected.every((job) => job.conclusion === "success")
         ? "success"

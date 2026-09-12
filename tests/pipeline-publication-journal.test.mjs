@@ -1,86 +1,18 @@
+import { publicationFixture } from "./helpers/pipeline-publication-session.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
-import { pipelineHostFixture } from "./helpers/pipeline-host.mjs";
-import { openPipelineSession } from "../packages/core/workflow/pipeline/session.js";
 import { preparePipelinePublication } from "../packages/core/publication/pipeline/prepare.js";
 import { publicationContext } from "../packages/core/publication/pipeline/context.js";
-
-async function publicationFixture() {
-  const f = pipelineHostFixture();
-  f.admission.route = f.admission.plan.channels[1];
-  f.admission.live.targetBranch = f.admission.route.to;
-  const session = await openPipelineSession(
-    { admission: f.admission, ...f.host },
-    f.host,
-  );
-  for (const phase of ["admission", "build", "review", "merge"])
-    await session.progress.progress({
-      attempt: session.observed.attempt,
-      phase,
-      state: "success",
-      eventKey: `fixture:${phase}`,
-    });
-  const publisher = "2".repeat(40),
-    merge = { ...f.f.source, commit: "f".repeat(40), tree: "1".repeat(40) };
-  const pkg = Buffer.from(
-    JSON.stringify({ name: "@example/product", version: "1.0.0-alpha.1" }),
-  );
-  const blob = createHash("sha1")
-    .update(`blob ${pkg.length}\0`)
-    .update(pkg)
-    .digest("hex");
-  const complete = new Set();
-  f.host.runId = 200;
-  f.host.writer = { ...f.host.writer, runId: "200", jobId: "21" };
-  f.host.runs.read = async (id) => ({
-    run: {
-      id,
-      status: complete.has(id) ? "completed" : "in_progress",
-      referenced_workflows: [
-        {
-          path: "kungfu-systems/buildchain/.github/workflows/.release-pipeline-products.yml@v4",
-          sha: publisher,
-        },
-      ],
-    },
-    jobs: [],
-  });
-  f.host.integration = { observe: async () => ({ mergeCommit: merge.commit }) };
-  f.host.source.source = async (commit) => ({
-    identity: commit === merge.commit ? merge : f.f.source,
-    plan: f.admission.plan,
-  });
-  f.host.request = async (url) => {
-    if (url.endsWith(`/git/commits/${f.host.runtime.sha}`))
-      return { sha: f.host.runtime.sha, tree: { sha: "3".repeat(40) } };
-    if (url.endsWith(`/git/commits/${merge.commit}`))
-      return {
-        sha: merge.commit,
-        tree: { sha: merge.tree },
-        committer: { date: "2026-09-13T00:00:00Z" },
-      };
-    if (url.endsWith(`/git/trees/${merge.tree}?recursive=1`))
-      return {
-        sha: merge.tree,
-        truncated: false,
-        tree: [
-          { path: "package.json", sha: blob, type: "blob", mode: "100644" },
-        ],
-      };
-    if (url.endsWith(`/git/blobs/${blob}`))
-      return {
-        sha: blob,
-        encoding: "base64",
-        content: pkg.toString("base64"),
-        size: pkg.length,
-      };
-    if (url.includes("/git/ref/tags/")) return undefined;
-    throw new Error(`Unexpected publication provider path: ${url}`);
-  };
-  f.host.productArchive = () => ({});
-  return { f, publisher, merge, complete, attempt: session.observed.attempt };
-}
+import { pipelinePublicationJournal } from "../packages/core/publication/pipeline/journal.js";
+import { readRecoveryPublicationMaterials } from "../packages/core/publication/pipeline/recovery-materials.js";
+import { importRecoveredPublication } from "../packages/core/publication/pipeline/recovery-import.js";
+import { publicationImportedValues } from "../packages/core/publication/pipeline/imported-materials.js";
+import {
+  selectRecoveryAttempt,
+  openRecoveryAttempt,
+} from "../packages/core/workflow/pipeline/recovery-session.js";
+import { planPipelineRecovery } from "../packages/core/workflow/pipeline/recovery-plan.js";
+import { recordDigest } from "../packages/core/release/discussion/envelope.js";
 
 test("publication freezes the real protected source and defining publisher, and fences duplicate/late workers across jobs", async () => {
   const { f, publisher, merge, complete, attempt } = await publicationFixture();
@@ -128,5 +60,100 @@ test("publication freezes the real protected source and defining publisher, and 
   await assert.rejects(
     preparePipelinePublication(attempt, "9".repeat(40), secondHost),
     /exact hosted/,
+  );
+});
+
+test("recovery adopts original materials and the derived publisher/source in one immutable journal append", async () => {
+  const { f, publisher, attempt } = await publicationFixture();
+  const first = await preparePipelinePublication(attempt, publisher, f.host);
+  const old = (await publicationContext(first.context, f.host)).session;
+  await old.progress.progress({
+    attempt,
+    phase: "publish",
+    state: "failure",
+    eventKey: "signing-interrupted",
+  });
+  old.observed = await old.journal.read();
+  const materials = await readRecoveryPublicationMaterials(old, f.host);
+  const publication = { mode: "build", materials };
+  f.host.runId = 300;
+  f.host.writer = { ...f.host.writer, runId: "300", jobId: "99" };
+  const entry = {
+    repository: "kungfu-systems/buildchain",
+    workflow: ".github/workflows/public-ops-recover.yml",
+    sha: "9".repeat(40),
+  };
+  const selected = await selectRecoveryAttempt(attempt, f.host, entry);
+  const evidence = { publication };
+  const plan = planPipelineRecovery({
+    observed: selected.observed,
+    runtime: f.host.runtime,
+    entry,
+    evidenceRoot: recordDigest(evidence),
+    nodes: selected.intent.expectedNodes.map((phase) => ({
+      phase,
+      operation: "reconcile",
+      reason: "Reobserve each original result",
+      evidenceRoots: [],
+    })),
+  });
+  const session = await openRecoveryAttempt(selected, plan, f.host, evidence);
+  for (const phase of ["admission", "build", "review", "merge"])
+    await session.progress.progress({
+      attempt: session.observed.attempt,
+      phase,
+      state: "success",
+      eventKey: `recovered:${phase}`,
+    });
+  const journal = pipelinePublicationJournal(session, f.host);
+  const execution = {
+    attempt: session.observed.attempt,
+    runtime: first.context.plan.runtime,
+    publisher: { ...first.context.plan.publisher, workflowSha: entry.sha },
+  };
+  const before = f.snapshot().records.length;
+  await importRecoveredPublication(
+    publication,
+    execution,
+    plan.root,
+    journal,
+    "publish",
+  );
+  assert.equal(f.snapshot().records.length, before + 1);
+  const imported = await journal.materials("publication/plan/");
+  const source = await journal.materials("publication/materialization/");
+  assert.equal(imported.length, 1);
+  assert.equal(source.length, 1);
+  assert.notEqual(imported[0].root, first.context.plan.root);
+  assert.equal(source[0].planRoot, imported[0].root);
+  assert.deepEqual(source[0].source, first.context.materialization.source);
+  assert.deepEqual(await journal.materials("publication/predecessor-plan/"), [
+    first.context.plan,
+  ]);
+  await importRecoveredPublication(
+    publication,
+    execution,
+    plan.root,
+    journal,
+    "publish",
+  );
+  assert.equal(f.snapshot().records.length, before + 1);
+  session.observed = await session.journal.read();
+  const recovered = await readRecoveryPublicationMaterials(session, f.host);
+  assert(
+    recovered.some(
+      (item) =>
+        item.id.startsWith("publication/plan/") && item.memberId === item.id,
+    ),
+  );
+  const container = await f.host
+    .materialStore(session)
+    .read(recovered[0].reference);
+  assert.equal(publicationImportedValues(container).length, recovered.length);
+  const tampered = structuredClone(container);
+  tampered.values[0].value = { changed: true };
+  assert.throws(
+    () => publicationImportedValues(tampered),
+    /immutable material bundle/,
   );
 });

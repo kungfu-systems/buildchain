@@ -48,6 +48,7 @@ Register ownership before adding a workflow. `pnpm run check:workflows` validate
 | [public-ops-patrol-weekly.yml](../.github/workflows/public-ops-patrol-weekly.yml) | ops | reusable | active | Buildchain Patrol Weekly |
 | [public-ops-patrol.yml](../.github/workflows/public-ops-patrol.yml) | ops | reusable | active | Buildchain Patrol |
 | [public-ops-pipeline.yml](../.github/workflows/public-ops-pipeline.yml) | ops | reusable | active | Buildchain pipeline |
+| [public-ops-recover.yml](../.github/workflows/public-ops-recover.yml) | ops | reusable | active | Buildchain recovery |
 | [public-ops-release-governance.yml](../.github/workflows/public-ops-release-governance.yml) | ops | reusable | active | Release Governance Reconcile |
 | [public-ops-stable-candidate-patrol.yml](../.github/workflows/public-ops-stable-candidate-patrol.yml) | ops | reusable | active | Buildchain Stable Candidate Patrol |
 | [public-ops-tail-reseal.yml](../.github/workflows/public-ops-tail-reseal.yml) | ops | reusable | active | V4 Retained Candidate Tail Reseal |
@@ -71,6 +72,7 @@ Register ownership before adding a workflow. `pnpm run check:workflows` validate
 | [.build.yml](../.github/workflows/.build.yml) | build | reusable | active | Buildchain Build |
 | [.ops-git-sync.yml](../.github/workflows/.ops-git-sync.yml) | ops | reusable | active | sync remote git |
 | [.ops-pipeline-delivery.yml](../.github/workflows/.ops-pipeline-delivery.yml) | ops | reusable | active | Internal pipeline delivery |
+| [.ops-pipeline-execute.yml](../.github/workflows/.ops-pipeline-execute.yml) | ops | reusable | active | Internal pipeline execution |
 | [.release-authority.yml](../.github/workflows/.release-authority.yml) | release | reusable | active | Buildchain Sealed Publication Authority |
 | [.release-binary-assets.yml](../.github/workflows/.release-binary-assets.yml) | release | reusable | active | Buildchain Binary Release Assets |
 | [.release-pipeline-products.yml](../.github/workflows/.release-pipeline-products.yml) | release | reusable | active | Internal pipeline product publication |

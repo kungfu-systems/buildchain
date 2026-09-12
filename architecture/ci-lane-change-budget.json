@@ -2616,7 +2616,7 @@
       }
     },
     {
-      "laneId": ".github/workflows/public-ops-pipeline.yml#build",
+      "laneId": ".github/workflows/.ops-pipeline-execute.yml#build",
       "authorityClass": "merge-critical-required",
       "triggerClass": "reusable",
       "concurrencyPolicy": {
@@ -2633,7 +2633,7 @@
       }
     },
     {
-      "laneId": ".github/workflows/public-ops-pipeline.yml#record-build",
+      "laneId": ".github/workflows/.ops-pipeline-execute.yml#record-build",
       "authorityClass": "merge-critical-required",
       "triggerClass": "reusable",
       "concurrencyPolicy": {
@@ -2650,7 +2650,7 @@
       }
     },
     {
-      "laneId": ".github/workflows/public-ops-pipeline.yml#delivery",
+      "laneId": ".github/workflows/.ops-pipeline-execute.yml#delivery",
       "authorityClass": "merge-critical-admission",
       "triggerClass": "reusable",
       "concurrencyPolicy": {
@@ -2667,7 +2667,7 @@
       }
     },
     {
-      "laneId": ".github/workflows/public-ops-pipeline.yml#record-delivery",
+      "laneId": ".github/workflows/.ops-pipeline-execute.yml#record-delivery",
       "authorityClass": "evidence",
       "triggerClass": "reusable",
       "concurrencyPolicy": {
@@ -2769,7 +2769,7 @@
       }
     },
     {
-      "laneId": ".github/workflows/public-ops-pipeline.yml#publication",
+      "laneId": ".github/workflows/.ops-pipeline-execute.yml#publication",
       "authorityClass": "governed-delegation",
       "triggerClass": "reusable",
       "concurrencyPolicy": {
@@ -2783,6 +2783,74 @@
         "metric": "declared product publication and retained follow-ups",
         "expectedContributionSeconds": 23100,
         "rationale": "Post-merge product publication serializes provider writers per repository. At most five declared hosted platforms each have a sixty-minute build limit; independent signing and publisher jobs have explicit timeouts. These are conservative bounds, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/public-ops-recover.yml#runtime",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "minimal pipeline bounded hosted execution",
+        "expectedContributionSeconds": 300,
+        "rationale": "Owned runtime, metadata or product job boundary. Product matrix uses only declared platforms; native Warrant transfer waits for exact provider terminality. This is a conservative timeout budget, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/public-ops-recover.yml#control",
+      "authorityClass": "merge-critical-admission",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 20,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": true,
+        "metric": "minimal pipeline bounded hosted execution",
+        "expectedContributionSeconds": 1200,
+        "rationale": "Owned runtime, metadata or product job boundary. Product matrix uses only declared platforms; native Warrant transfer waits for exact provider terminality. This is a conservative timeout budget, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/public-ops-pipeline.yml#execute",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 825,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "shared normal or recovery execution timeout bound",
+        "expectedContributionSeconds": 49500,
+        "rationale": "Delegates to the same isolated product, native delivery and publication jobs. Recovery schedules only qualified missing work; this inherited conservative timeout sum is not measured latency or a new parallel lane family."
+      }
+    },
+    {
+      "laneId": ".github/workflows/public-ops-recover.yml#execute",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 825,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "shared normal or recovery execution timeout bound",
+        "expectedContributionSeconds": 49500,
+        "rationale": "Delegates to the same isolated product, native delivery and publication jobs. Recovery schedules only qualified missing work; this inherited conservative timeout sum is not measured latency or a new parallel lane family."
       }
     }
   ],

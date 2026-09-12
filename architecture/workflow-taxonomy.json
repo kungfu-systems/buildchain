@@ -775,6 +775,28 @@
       "status": "active",
       "invocation": "reusable",
       "rationale": "Separate product execution, qualification/signing, canonical APPLY and protected follow-ups without consumer orchestration."
+    },
+    {
+      "id": "recover",
+      "role": "public",
+      "category": "ops",
+      "purpose": "recover",
+      "summary": "Buildchain recovery",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "rationale": "Recover one exact attempt with an optional repaired runtime through the same internal product and delivery jobs."
+    },
+    {
+      "id": ".pipeline-execute",
+      "role": "component",
+      "category": "ops",
+      "purpose": "pipeline-execute",
+      "summary": "Internal pipeline execution",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "rationale": "Share credentialless product execution and protected delivery between normal and recovery public entries."
     }
   ]
 }

@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { githubPipelinePolicy } from "../packages/core/providers/github/pipeline-policy.js";
 import { identities } from "./helpers/business-attempt.mjs";
+import { recordDigest } from "../packages/core/release/discussion/envelope.js";
 
 function fixture() {
   const f = identities();
@@ -51,6 +52,7 @@ function fixture() {
     ref: { branchProtectionRule: null },
     mergeQueue: null,
   };
+  const ref = { sha: f.generation.baseCommit };
   const request = async (url, options) => {
     if (url === "/graphql") {
       if (options.body.variables.ref)
@@ -62,8 +64,7 @@ function fixture() {
     if (url.includes("/reviews?")) return reviews;
     if (url.includes("/check-runs?")) return { check_runs: checks };
     if (url.includes("/statuses?")) return [];
-    if (url.includes("/git/ref/"))
-      return { object: { sha: f.generation.baseCommit } };
+    if (url.includes("/git/ref/")) return { object: { sha: ref.sha } };
     throw new Error(url);
   };
   const observe = () =>
@@ -78,6 +79,8 @@ function fixture() {
     checks,
     branchPolicy,
     observe,
+    request,
+    ref,
     reads: () => reads,
   };
 }
@@ -93,6 +96,43 @@ test("protected review needs independent exact-source approvals and provider-enf
   assert.equal((await f.observe()).review, false);
   f.rules.splice(1, 1);
   await assert.rejects(f.observe(), /enforce declared/);
+});
+
+test("merged recovery requalifies the protected head from exact integration evidence without weakening normal base fencing", async () => {
+  const f = fixture();
+  f.ref.sha = "9".repeat(40);
+  await assert.rejects(f.observe(), /changed during readback/);
+  const body = {
+    schema: "buildchain.pipeline-integration-readback/v1",
+    repository: f.current.intent.repository,
+    sourceHead: f.current.generation.source.commit,
+    branch: f.current.intent.source.targetBranch,
+    pullRequest: f.current.intent.source.pullRequest,
+    protectedHead: f.ref.sha,
+  };
+  const integration = { ...body, root: recordDigest(body) };
+  const api = githubPipelinePolicy(f.request, f.current.intent.repository);
+  const result = await api.observeMerged(
+    f.current,
+    { minimum_approvals: 2 },
+    integration,
+  );
+  assert.equal(result.review, true);
+  assert.equal(result.integratedHead, f.ref.sha);
+  assert.equal(result.baseCommit, f.current.generation.baseCommit);
+  await assert.rejects(
+    api.observeMerged(
+      f.current,
+      { minimum_approvals: 2 },
+      { ...integration, protectedHead: "8".repeat(40) },
+    ),
+    /exact protected integration/,
+  );
+  f.ref.sha = "7".repeat(40);
+  await assert.rejects(
+    api.observeMerged(f.current, { minimum_approvals: 2 }, integration),
+    /changed during readback/,
+  );
 });
 
 test("classic review and check protection uses readable GraphQL metadata without an administrative REST request", async () => {

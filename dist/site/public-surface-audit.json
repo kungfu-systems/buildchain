@@ -4,8 +4,8 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 70,
-    "actionCount": 279,
+    "workflowCount": 72,
+    "actionCount": 280,
     "sitePageCount": 94,
     "docCommandRefCount": 1036,
     "failureCount": 0
@@ -759,6 +759,24 @@
         "outputCount": 0
       },
       {
+        "id": ".ops-pipeline-execute",
+        "path": ".github/workflows/.ops-pipeline-execute.yml",
+        "reusable": true,
+        "inputs": [
+          "attempt",
+          "context",
+          "matrix",
+          "operation",
+          "request",
+          "runtime-selection"
+        ],
+        "inputCount": 6,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
         "id": ".release-authority",
         "path": ".github/workflows/.release-authority.yml",
         "reusable": true,
@@ -1497,6 +1515,20 @@
           "config-path"
         ],
         "inputCount": 1,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "public-ops-recover",
+        "path": ".github/workflows/public-ops-recover.yml",
+        "reusable": true,
+        "inputs": [
+          "attempt",
+          "runtime-ref"
+        ],
+        "inputCount": 2,
         "secrets": [],
         "secretCount": 0,
         "outputs": [],
@@ -5026,6 +5058,7 @@
         "inputs": [
           "contract-lock",
           "pipeline-attempt",
+          "recovery-attempt",
           "resume-run-id",
           "runtime-ref",
           "selection",
@@ -5035,7 +5068,7 @@
           "workflow-ref",
           "workflow-sha"
         ],
-        "inputCount": 10
+        "inputCount": 11
       },
       {
         "id": "runtime/toolchain/user-paths",
@@ -5442,6 +5475,16 @@
           "token"
         ],
         "inputCount": 2
+      },
+      {
+        "id": "workflow/pipeline/recover",
+        "path": "actions/workflow/pipeline/recover/action.yml",
+        "inputs": [
+          "attempt",
+          "definition-sha",
+          "token"
+        ],
+        "inputCount": 3
       },
       {
         "id": "workflow/pipeline/wake",
@@ -11028,8 +11071,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e43fdb0289df88871f3f0febbe04dcb9311a252a2b1df9b3a83a2d10c9d4a70f",
-    "workflowRegistryDigest": "9d83e66aabf82b463702b804ccb1f959e1333727ed6c80a96165116ea54c22d5",
-    "pageRegistryDigest": "7dee020680c053826d660a4728c5325e8ac01164dc0bf7a48309c7ad40c23e05"
+    "workflowRegistryDigest": "1a7df19b7f6fb4f7955bd2cfd1cc2a4e938d80f32e2ab2bca45f7bed29aed104",
+    "pageRegistryDigest": "1ed4d2d9e29138620c27644ab92954ccc0d564ffd4c4b426a759a76724a54d4f"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -95,6 +95,23 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/.ops-pipeline-execute.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "channel-ref",
+        "github-release",
+        "npm-publish"
+      ],
+      "credentialMode": "trusted-publishing",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/.release-pipeline-products.yml",
+      "environment": "none",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/.release-authority.yml",
       "authorityClass": "evidence-publication",
       "publicationCapable": false,
@@ -331,6 +348,23 @@
     },
     {
       "workflowPath": ".github/workflows/public-ops-pipeline.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "channel-ref",
+        "github-release",
+        "npm-publish"
+      ],
+      "credentialMode": "trusted-publishing",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/.release-pipeline-products.yml",
+      "environment": "none",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/public-ops-recover.yml",
       "authorityClass": "product-publication",
       "publicationCapable": true,
       "capabilityIds": [
@@ -847,6 +881,14 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/.ops-pipeline-execute.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/.release-authority.yml",
       "signals": [],
       "classified": true
@@ -978,6 +1020,14 @@
     },
     {
       "path": ".github/workflows/public-ops-pipeline.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/public-ops-recover.yml",
       "signals": [
         "write-permission",
         "oidc"
@@ -1277,5 +1327,5 @@
       "classified": true
     }
   ],
-  "registryDigest": "1cb5f1cb86a1b1014b27dd342ede4e219399317f9cf094b2fb5a37158e124ddf"
+  "registryDigest": "6dda3a3bc77be67600fe57c42cd6abe3d05744a6b3f3a49719b1a0395cba75b8"
 }

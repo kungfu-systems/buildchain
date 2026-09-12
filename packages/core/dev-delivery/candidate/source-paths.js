@@ -52,7 +52,7 @@ export function pathsAtQualifiedSource(directory, qualifiedBase, source) {
 
 export async function deriveSourcePaths(
   source,
-  { token, apiUrl, environment = process.env },
+  { token, apiUrl, environment = process.env, qualifiedBase },
   provider = new GitHubTwoPhaseClient({
     repository: source.repository,
     token,
@@ -65,10 +65,18 @@ export async function deriveSourcePaths(
       /^[1-9]\d*$/u.test(String(source.sourceWorkflowRunId || "")),
     "Exact source run coordinates are required",
   );
-  const run = await provider.request(
-    `/repos/${source.repository}/actions/runs/${source.sourceWorkflowRunId}`,
+  if (qualifiedBase === undefined) {
+    const run = await provider.request(
+      `/repos/${source.repository}/actions/runs/${source.sourceWorkflowRunId}`,
+    );
+    qualifiedBase = qualifiedRunBase(run, source);
+  }
+  // The internal pipeline guard already requalifies the source run and immutable
+  // generation. Zero-delta recovery still verifies the full source identity below.
+  requireValue(
+    /^[0-9a-f]{40}$/u.test(qualifiedBase || ""),
+    "Exact qualified source base is required",
   );
-  const qualifiedBase = qualifiedRunBase(run, source);
   const directory = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-source-paths-"),
   );

@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import { consumerWorkflows } from "../packages/core/consumer/contract/entries.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -10,7 +12,32 @@ function fixture(change = () => {}) {
     root: `sha256:${"a".repeat(64)}`,
     outputs: [{ platform: "linux-x64" }, { platform: "windows-x64" }],
   };
-  const run = { id: 8, head_sha: "b".repeat(40), run_attempt: 2 };
+  const run = {
+    id: 8,
+    head_sha: "b".repeat(40),
+    run_attempt: 2,
+    repository: { full_name: "example/product" },
+    head_repository: { full_name: "example/product" },
+    event: "repository_dispatch",
+    path: ".github/workflows/buildchain.yml",
+    referenced_workflows: [
+      {
+        path: "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4",
+        sha: "a".repeat(40),
+      },
+    ],
+  };
+  const bytes = Buffer.from(consumerWorkflows()[run.path]);
+  const caller = {
+    type: "file",
+    encoding: "base64",
+    size: bytes.length,
+    content: bytes.toString("base64"),
+    sha: createHash("sha1")
+      .update(`blob ${bytes.length}\0`)
+      .update(bytes)
+      .digest("hex"),
+  };
   const jobs = plan.outputs.map(({ platform }, index) => ({
     id: index + 1,
     name: `Products / Build publication (${platform})`,
@@ -32,10 +59,13 @@ function fixture(change = () => {}) {
   const provider = githubPipelinePublicationArtifacts({
     repository: "example/product",
     token: "test",
-    request: async () => ({
-      artifacts: state.artifacts,
-      total_count: state.total_count,
-    }),
+    request: async (url) =>
+      url.includes("/contents/")
+        ? caller
+        : {
+            artifacts: state.artifacts,
+            total_count: state.total_count,
+          },
     runs: {
       read: async () => {
         reads++;
@@ -52,7 +82,12 @@ function fixture(change = () => {}) {
     reads: () => reads,
     context: {
       plan,
-      materialization: { source: { commit: "d".repeat(40) } },
+      materialization: {
+        source: {
+          commit: "d".repeat(40),
+          configPath: ".buildchain/buildchain.toml",
+        },
+      },
       runId: 8,
       runAttempt: 2,
     },

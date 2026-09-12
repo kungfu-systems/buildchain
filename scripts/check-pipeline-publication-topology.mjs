@@ -10,6 +10,8 @@ export function assertPipelinePublicationTopology(
   assert.deepEqual(pipeline.workflowPaths, [
     ".github/workflows/.release-pipeline-products.yml",
     ".github/workflows/public-ops-pipeline.yml",
+    ".github/workflows/public-ops-recover.yml",
+    ".github/workflows/.ops-pipeline-execute.yml",
   ]);
   const pipelineTopology = discoverReleaseTopology(
     pipeline.workflowPaths,

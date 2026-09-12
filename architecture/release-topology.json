@@ -10,6 +10,7 @@
   "closedWorld": {
     "workflowPaths": [
       ".github/workflows/.build.yml",
+      ".github/workflows/.ops-pipeline-execute.yml",
       ".github/workflows/.release-authority.yml",
       ".github/workflows/.release-binary-assets.yml",
       ".github/workflows/.release-pipeline-products.yml",
@@ -20,6 +21,7 @@
       ".github/workflows/public-ops-dev-auto-merge.yml",
       ".github/workflows/public-ops-observed-evidence.yml",
       ".github/workflows/public-ops-pipeline.yml",
+      ".github/workflows/public-ops-recover.yml",
       ".github/workflows/public-ops-stable-candidate-patrol.yml",
       ".github/workflows/public-release-artifact-attestation.yml",
       ".github/workflows/public-release-oci-compose-preview.yml",
@@ -90,15 +92,18 @@
     "runtimeSelectors": [
       "packages/core/runtime/entry/actions.js",
       "packages/core/runtime/entry/activation.js",
+      "packages/core/runtime/entry/attempt.js",
       "packages/core/runtime/entry/github.js",
       "packages/core/runtime/entry/recovery.js",
-      "packages/core/runtime/entry/selection.js"
+      "packages/core/runtime/entry/selection.js",
+      "packages/core/runtime/entry/source.js"
     ],
     "runtimeEngines": ["packages/core/release/promote-candidate/action.js"],
     "terminalProjections": [
       "actions/release/promotion/apply/action.yml",
       "actions/release/promotion/settle/action.yml",
       "packages/core/publication/pipeline/apply.js",
+      "packages/core/publication/pipeline/recovery-admission.js",
       "packages/core/publication/settlement/transaction.js",
       "packages/core/release/promote-candidate/provider-settlement.js",
       "packages/core/release/release-invocation.js",
@@ -142,6 +147,12 @@
         "packages/core/contracts/public-surface-cli.js",
         "packages/core/contracts/workflow-yaml-contract.js",
         "packages/core/dev-delivery/admission/github-client.js",
+        "packages/core/dev-delivery/delivery-warrant-fixture-runner.js",
+        "packages/core/dev-delivery/delivery-warrant-read-candidate.js",
+        "packages/core/dev-delivery/delivery-warrant-semantic-diff-gate.js",
+        "packages/core/dev-delivery/delivery-warrant-shadow-adapter.js",
+        "packages/core/dev-delivery/dev-delivery-authority-candidate.js",
+        "packages/core/dev-delivery/dev-delivery-authority-state.js",
         "packages/core/dev-delivery/dev-delivery-candidate-identity.js",
         "packages/core/dev-delivery/dev-delivery-common.js",
         "packages/core/dev-delivery/dev-delivery-contract-surface.js",
@@ -160,11 +171,17 @@
         "packages/core/dev-delivery/dev-delivery-warrant.js",
         "packages/core/dev-delivery/dev-delivery-writer-protocol-transition.js",
         "packages/core/dev-delivery/native/execution.js",
+        "packages/core/dev-delivery/warrant/observation.js",
+        "packages/core/dev-delivery/warrant/persistence.js",
+        "packages/core/dev-delivery/warrant/service.js",
+        "packages/core/dev-delivery/warrant/transitions.js",
+        "packages/core/dev-delivery/warrant/values.js",
         "packages/core/governance/buildchain-compatibility-authority.js",
         "packages/core/governance/buildchain-compatibility-fact.js",
         "packages/core/governance/buildchain-compatibility-facts.json",
         "packages/core/governance/buildchain-compatibility-proof.js",
         "packages/core/observability/controller-evidence.js",
+        "packages/core/providers/dev-delivery/store.js",
         "packages/core/providers/github-cli-api.js",
         "packages/core/providers/github/attempt-index.js",
         "packages/core/providers/github/attempt-journal.js",
@@ -177,6 +194,7 @@
         "packages/core/providers/github/pipeline-product-payload.js",
         "packages/core/providers/github/pipeline-product-release.js",
         "packages/core/providers/github/pipeline-publication-artifacts.js",
+        "packages/core/providers/github/pipeline-run-entry.js",
         "packages/core/providers/github/pipeline-runs.js",
         "packages/core/providers/github/pipeline-source.js",
         "packages/core/providers/github/pipeline-version.js",
@@ -202,6 +220,7 @@
         "packages/core/publication/oci/preview-values.js",
         "packages/core/publication/pipeline/actions.js",
         "packages/core/publication/pipeline/apply.js",
+        "packages/core/publication/pipeline/build-segments.js",
         "packages/core/publication/pipeline/capsules.js",
         "packages/core/publication/pipeline/context.js",
         "packages/core/publication/pipeline/development-anchor.js",
@@ -213,6 +232,7 @@
         "packages/core/publication/pipeline/documents.js",
         "packages/core/publication/pipeline/effects.js",
         "packages/core/publication/pipeline/files.js",
+        "packages/core/publication/pipeline/imported-materials.js",
         "packages/core/publication/pipeline/journal.js",
         "packages/core/publication/pipeline/next-development.js",
         "packages/core/publication/pipeline/pack.js",
@@ -221,6 +241,19 @@
         "packages/core/publication/pipeline/prepare.js",
         "packages/core/publication/pipeline/qualification.js",
         "packages/core/publication/pipeline/qualify.js",
+        "packages/core/publication/pipeline/recovery-admission.js",
+        "packages/core/publication/pipeline/recovery-build-download.js",
+        "packages/core/publication/pipeline/recovery-build-plan.js",
+        "packages/core/publication/pipeline/recovery-build-readback.js",
+        "packages/core/publication/pipeline/recovery-capsules.js",
+        "packages/core/publication/pipeline/recovery-import.js",
+        "packages/core/publication/pipeline/recovery-inspection.js",
+        "packages/core/publication/pipeline/recovery-materials.js",
+        "packages/core/publication/pipeline/recovery-plan.js",
+        "packages/core/publication/pipeline/recovery-prepare.js",
+        "packages/core/publication/pipeline/recovery-qualification.js",
+        "packages/core/publication/pipeline/recovery-readback.js",
+        "packages/core/publication/pipeline/recovery-signing.js",
         "packages/core/publication/pipeline/sealed-products.js",
         "packages/core/publication/pipeline/settle.js",
         "packages/core/publication/pipeline/signing.js",
@@ -329,8 +362,10 @@
         "packages/core/workflow/attempt/reader.js",
         "packages/core/workflow/attempt/records.js",
         "packages/core/workflow/pipeline/build-evidence.js",
+        "packages/core/workflow/pipeline/build-qualification.js",
         "packages/core/workflow/pipeline/build.js",
         "packages/core/workflow/pipeline/channel-control.js",
+        "packages/core/workflow/pipeline/delivery-observation.js",
         "packages/core/workflow/pipeline/events.js",
         "packages/core/workflow/pipeline/fence.js",
         "packages/core/workflow/pipeline/group-control.js",
@@ -342,11 +377,19 @@
         "packages/core/workflow/pipeline/progress.js",
         "packages/core/workflow/pipeline/projection.js",
         "packages/core/workflow/pipeline/reconcile.js",
+        "packages/core/workflow/pipeline/recovery-integration.js",
+        "packages/core/workflow/pipeline/recovery-merge-proof.js",
+        "packages/core/workflow/pipeline/recovery-ownership-settlement.js",
+        "packages/core/workflow/pipeline/recovery-ownership.js",
+        "packages/core/workflow/pipeline/recovery-plan.js",
+        "packages/core/workflow/pipeline/recovery-runtime.js",
+        "packages/core/workflow/pipeline/recovery-session.js",
         "packages/core/workflow/pipeline/session.js",
         "packages/core/workflow/pipeline/settlement.js",
-        "packages/core/workflow/pipeline/wake.js"
+        "packages/core/workflow/pipeline/wake.js",
+        "packages/core/workflow/pipeline/web-status.js"
       ],
-      "root": "sha256:6b45a7bccfb5144ba58296ae4268de446b11c0b5b65c443f9c27f914fea9b786"
+      "root": "sha256:c043e16d6f8995cbecbdaa3d24466b47c9624bee0b7227c0e1842f37138b2508"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/runtime/domain-wasm.js",
@@ -486,12 +529,12 @@
       }
     ],
     "metrics": {
-      "workflowCount": 36,
-      "jobCount": 107,
-      "reusableEdgeCount": 22,
-      "mutationRelevantNodeCount": 70,
-      "contentsWriteJobCount": 31,
-      "oidcWriteJobCount": 23
+      "workflowCount": 38,
+      "jobCount": 111,
+      "reusableEdgeCount": 24,
+      "mutationRelevantNodeCount": 73,
+      "contentsWriteJobCount": 34,
+      "oidcWriteJobCount": 25
     },
     "semanticMetrics": {
       "workflowCount": 5,
@@ -545,16 +588,18 @@
   "pipelinePublicationScope": {
     "workflowPaths": [
       ".github/workflows/.release-pipeline-products.yml",
-      ".github/workflows/public-ops-pipeline.yml"
+      ".github/workflows/public-ops-pipeline.yml",
+      ".github/workflows/public-ops-recover.yml",
+      ".github/workflows/.ops-pipeline-execute.yml"
     ],
     "authority": "retained-protected-source-qualified-sealed-products-and-live-provider-readback",
     "maximumMetrics": {
-      "workflowCount": 2,
-      "jobCount": 12,
-      "reusableEdgeCount": 2,
-      "mutationRelevantNodeCount": 9,
-      "contentsWriteJobCount": 9,
-      "oidcWriteJobCount": 4
+      "workflowCount": 4,
+      "jobCount": 16,
+      "reusableEdgeCount": 4,
+      "mutationRelevantNodeCount": 12,
+      "contentsWriteJobCount": 12,
+      "oidcWriteJobCount": 6
     },
     "observedTopology": {
       "jobRecordFields": [
@@ -583,13 +628,31 @@
           "path": ".github/workflows/public-ops-pipeline.yml",
           "triggers": ["workflow_call"],
           "jobs": [
-            "build|runner|-|read|-|-|-",
             "control|runner|-|write|-|jobOutput|contents-write",
+            "execute|reusable-call|./.github/workflows/.ops-pipeline-execute.yml|write|write|-|contents-write,oidc-write",
+            "runtime|runner|-|read|-|jobOutput|-"
+          ],
+          "reusableEdges": ["./.github/workflows/.ops-pipeline-execute.yml"]
+        },
+        {
+          "path": ".github/workflows/public-ops-recover.yml",
+          "triggers": ["workflow_call"],
+          "jobs": [
+            "control|runner|-|write|-|jobOutput|contents-write",
+            "execute|reusable-call|./.github/workflows/.ops-pipeline-execute.yml|write|write|-|contents-write,oidc-write",
+            "runtime|runner|-|read|-|jobOutput|-"
+          ],
+          "reusableEdges": ["./.github/workflows/.ops-pipeline-execute.yml"]
+        },
+        {
+          "path": ".github/workflows/.ops-pipeline-execute.yml",
+          "triggers": ["workflow_call"],
+          "jobs": [
+            "build|runner|-|read|-|-|-",
             "delivery|reusable-call|./.github/workflows/.ops-pipeline-delivery.yml|write|-|-|contents-write",
             "publication|reusable-call|./.github/workflows/.release-pipeline-products.yml|write|write|-|contents-write,oidc-write",
             "record-build|runner|-|write|-|-|contents-write",
-            "record-delivery|runner|-|write|-|-|contents-write",
-            "runtime|runner|-|read|-|jobOutput|-"
+            "record-delivery|runner|-|write|-|-|contents-write"
           ],
           "reusableEdges": [
             "./.github/workflows/.ops-pipeline-delivery.yml",
@@ -598,17 +661,17 @@
         }
       ],
       "metrics": {
-        "workflowCount": 2,
-        "jobCount": 12,
-        "reusableEdgeCount": 2,
-        "mutationRelevantNodeCount": 9,
-        "contentsWriteJobCount": 9,
-        "oidcWriteJobCount": 4
+        "workflowCount": 4,
+        "jobCount": 16,
+        "reusableEdgeCount": 4,
+        "mutationRelevantNodeCount": 12,
+        "contentsWriteJobCount": 12,
+        "oidcWriteJobCount": 6
       },
       "semanticMetrics": {
-        "workflowCount": 2,
-        "mutationRelevantNodeCount": 9,
-        "contentsWriteJobCount": 7,
+        "workflowCount": 4,
+        "mutationRelevantNodeCount": 12,
+        "contentsWriteJobCount": 8,
         "oidcWriteJobCount": 3
       }
     }
