@@ -225,6 +225,13 @@
     "packages/core/build/verification/runner.js",
     "packages/core/build/verification/source.js",
     "packages/core/consumer/cli/infrastructure.mjs",
+    "packages/core/consumer/contract/entries.js",
+    "packages/core/consumer/contract/examples.js",
+    "packages/core/consumer/contract/identity.js",
+    "packages/core/consumer/contract/inspection.js",
+    "packages/core/consumer/contract/plan.js",
+    "packages/core/consumer/contract/products.js",
+    "packages/core/consumer/contract/shape.js",
     "packages/core/consumer/policy-admission.js",
     "packages/core/consumer/policy-scan.js",
     "packages/core/consumer/runtime-selector-persistence.js",
@@ -837,6 +844,7 @@
     "scripts/check-runtime-entry.mjs",
     "scripts/check-universal-workflow-bootstrap.mjs",
     "scripts/generate-agent-change-map.mjs",
+    "scripts/generate-minimal-consumer-contract.mjs",
     "scripts/maintainability-domain-metrics.mjs",
     "scripts/maintainability-governance.mjs",
     "scripts/maintainability-metrics.mjs",
@@ -878,6 +886,11 @@
       "id": "v4-rust-domain-sources",
       "owner": "Buildchain architecture maintainers",
       "paths": ["crates"]
+    },
+    {
+      "id": "minimal-consumer-examples",
+      "owner": "Buildchain consumer contract maintainers",
+      "paths": ["templates/minimal-consumer"]
     }
   ],
   "ownershipExclusions": [],
@@ -2936,6 +2949,30 @@
       "validationCommands": [
         "node --test tests/release-discussion*.test.mjs",
         "node scripts/build-release-discussion-reader.mjs --check"
+      ]
+    },
+    {
+      "id": "minimal-consumer-contract",
+      "owner": "Buildchain consumer contract maintainers",
+      "implementation": [
+        "packages/core/consumer/contract/entries.js",
+        "packages/core/consumer/contract/examples.js",
+        "packages/core/consumer/contract/identity.js",
+        "packages/core/consumer/contract/inspection.js",
+        "packages/core/consumer/contract/plan.js",
+        "packages/core/consumer/contract/products.js",
+        "packages/core/consumer/contract/shape.js",
+        "scripts/generate-minimal-consumer-contract.mjs"
+      ],
+      "tests": ["tests/minimal-consumer-contract.test.mjs"],
+      "contracts": ["architecture/decisions/0005-minimal-consumer-contract.md"],
+      "generatedOutputs": [
+        "architecture/minimal-consumer-migration.json",
+        "templates/minimal-consumer"
+      ],
+      "validationCommands": [
+        "node --test tests/minimal-consumer-contract.test.mjs",
+        "node scripts/generate-minimal-consumer-contract.mjs --check"
       ]
     }
   ]

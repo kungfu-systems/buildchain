@@ -1006,6 +1006,39 @@ Owner: Buildchain architecture maintainers
 
 - `node --test tests/internal-architecture.test.mjs tests/maintainability.test.mjs tests/maintainability-governance.test.mjs`
 
+## minimal-consumer-contract
+
+Owner: Buildchain consumer contract maintainers
+
+### Implementation
+
+- `packages/core/consumer/contract/entries.js`
+- `packages/core/consumer/contract/examples.js`
+- `packages/core/consumer/contract/identity.js`
+- `packages/core/consumer/contract/inspection.js`
+- `packages/core/consumer/contract/plan.js`
+- `packages/core/consumer/contract/products.js`
+- `packages/core/consumer/contract/shape.js`
+- `scripts/generate-minimal-consumer-contract.mjs`
+
+### Contracts
+
+- `architecture/decisions/0005-minimal-consumer-contract.md`
+
+### Tests
+
+- `tests/minimal-consumer-contract.test.mjs`
+
+### Generated outputs
+
+- `architecture/minimal-consumer-migration.json`
+- `templates/minimal-consumer`
+
+### Minimal validation
+
+- `node --test tests/minimal-consumer-contract.test.mjs`
+- `node scripts/generate-minimal-consumer-contract.mjs --check`
+
 ## npm-publication-transaction
 
 Owner: Buildchain npm publication transaction maintainers
