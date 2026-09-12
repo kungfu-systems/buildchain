@@ -102,7 +102,6 @@ export function discussionMaterials({ octokit, repository, intentId }) {
             data: bytes,
             headers: {
               "content-type": "application/octet-stream",
-              "content-length": bytes.length,
             },
           })
         ).data;

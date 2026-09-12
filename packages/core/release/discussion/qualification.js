@@ -79,6 +79,12 @@ export async function executeReleaseDiscussion(request, _admission, context) {
         store: journal.store,
         octokit: context.octokit,
       });
+      const probe = await retained.checkpoint("transport", {
+        schema: "buildchain.material-qualification/v1",
+        value: payload.key,
+      });
+      if ((await retained.readCheckpoint(probe)).value !== payload.key)
+        throw new Error("Small material qualification readback mismatch");
       const reader = await retained.materials.put(
         fs.readFileSync(
           path.join(context.runtimeRoot, "dist/readers/release-discussion.cjs"),

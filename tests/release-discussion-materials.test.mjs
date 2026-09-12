@@ -273,3 +273,36 @@ test("material failure exposes bounded provider classification without credentia
       error.code === "discussion-material-put-HttpError-422-POST-invalid",
   );
 });
+
+test("Octokit transfers raw material bytes with automatically calculated HTTP length", async () => {
+  const { getOctokit } = await import("@actions/github");
+  const { createServer } = await import("node:http");
+  const bytes = Buffer.alloc(40960, 123);
+  const server = createServer(async (request, response) => {
+    const chunks = [];
+    for await (const chunk of request) chunks.push(chunk);
+    assert.deepEqual(Buffer.concat(chunks), bytes);
+    assert.equal(Number(request.headers["content-length"]), bytes.length);
+    response.writeHead(201, { "content-type": "application/json" });
+    response.end("{}");
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  try {
+    const client = getOctokit("test-credential", {
+      request: {
+        fetch: (_url, options) =>
+          fetch(`http://127.0.0.1:${server.address().port}/assets`, options),
+      },
+    });
+    await client.rest.repos.uploadReleaseAsset({
+      owner: "example",
+      repo: "consumer",
+      release_id: 1,
+      name: "material",
+      data: bytes,
+      headers: { "content-type": "application/octet-stream" },
+    });
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
