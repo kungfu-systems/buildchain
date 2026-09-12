@@ -27,7 +27,7 @@ import {
 
 test("real npm, native archive and PDF products are packed through one declared contract", async (t) => {
   const root = fs.mkdtempSync(
-    path.join(os.tmpdir(), "pipeline-publication-pack-"),
+    path.join(fs.realpathSync(os.tmpdir()), "pipeline-publication-pack-"),
   );
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   for (const type of ["npm", "binary", "paper"]) {
@@ -170,7 +170,7 @@ test("real npm, native archive and PDF products are packed through one declared 
 
 test("publication rejects symlinks and paths outside the product", (t) => {
   const root = fs.mkdtempSync(
-    path.join(os.tmpdir(), "pipeline-publication-path-"),
+    path.join(fs.realpathSync(os.tmpdir()), "pipeline-publication-path-"),
   );
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   fs.writeFileSync(path.join(root, "target"), "owned");

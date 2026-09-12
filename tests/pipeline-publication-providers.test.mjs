@@ -14,7 +14,7 @@ import {
 
 test("npm publisher executes only the exact sealed tarball and excludes product commands and unrelated credentials", async (t) => {
   const directory = fs.mkdtempSync(
-    path.join(os.tmpdir(), "pipeline-npm-provider-"),
+    path.join(fs.realpathSync(os.tmpdir()), "pipeline-npm-provider-"),
   );
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   fs.writeFileSync(path.join(directory, "sealed.tgz"), "sealed test payload");
@@ -96,7 +96,7 @@ test("npm publisher executes only the exact sealed tarball and excludes product 
 
 test("GitHub publication reconciles lost tag/release/asset responses and refuses historical byte conflicts", async (t) => {
   const directory = fs.mkdtempSync(
-    path.join(os.tmpdir(), "pipeline-release-provider-"),
+    path.join(fs.realpathSync(os.tmpdir()), "pipeline-release-provider-"),
   );
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   fs.writeFileSync(path.join(directory, "product.pdf"), "%PDF-1.7\n%%EOF\n");
