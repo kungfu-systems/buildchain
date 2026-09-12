@@ -3,9 +3,14 @@ import { deliveryActionContext } from "../native/action-context.js";
 import { admissionPolicyRequest } from "../admission/request.js";
 import { runAdmissionTransaction } from "../admission/transaction.js";
 import { enforceLanding } from "./completion.js";
+import { guardPipelineAdmission } from "../../workflow/pipeline/guard.js";
 export async function admitLandingAction(core, env) {
   const context = deliveryActionContext(core, env);
   const request = JSON.parse(core.getInput("request-json", { required: true }));
+  await guardPipelineAdmission(request, {
+    repository: env.GITHUB_REPOSITORY,
+    token: core.getInput("token", { required: true }),
+  });
   const result = await runAdmissionTransaction(
     {
       ...admissionPolicyRequest(request, {

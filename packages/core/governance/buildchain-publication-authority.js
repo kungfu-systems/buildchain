@@ -39,6 +39,8 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/public-ops-warrant-cancel.yml", "governance-write"],
   [".github/workflows/self-ops-merge-queue.yml", "governance-write"],
   [".github/workflows/public-ops-dev-auto-merge.yml", "governance-write"],
+  [".github/workflows/public-ops-pipeline.yml", "governance-write"],
+  [".github/workflows/.ops-pipeline-delivery.yml", "governance-write"],
   [".github/workflows/self-ops-housekeeping-daily.yml", "governance-write"],
   [".github/workflows/self-ops-housekeeping-monthly.yml", "governance-write"],
   [".github/workflows/self-ops-housekeeping-weekly.yml", "governance-write"],

@@ -1,6 +1,7 @@
 import { resolveRecoverySource } from "./recovery.js";
 import { getOctokit } from "@actions/github";
 import { runtimeEntryProvider } from "./github.js";
+import { pipelineRuntimeSource } from "../../workflow/pipeline/runtime-source.js";
 import {
   preparedRuntimeSelection,
   selectExecutionRuntime,
@@ -21,6 +22,13 @@ export async function selectExecutionRuntimeAction(
     sha: core.getInput("source-sha") || env.GITHUB_SHA,
     ref: env.GITHUB_REF,
   };
+  const pipelineAttempt = core.getInput("pipeline-attempt");
+  if (pipelineAttempt)
+    source = await pipelineRuntimeSource(
+      pipelineAttempt,
+      source.repository,
+      core.getInput("token", { required: true }),
+    );
   const resumeRunId = core.getInput("resume-run-id");
   if (resumeRunId) {
     const reader = providerFactory(github, {

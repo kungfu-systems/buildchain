@@ -1,0 +1,12 @@
+name: Wake the exact admitted business attempt.
+description: Wake the exact admitted business attempt.
+inputs:
+  attempt:
+    description: "Exact business selector."
+    required: true
+  token:
+    description: "Scoped provider credential."
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

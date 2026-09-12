@@ -225,6 +225,39 @@
       "nonDuplicationRationale": "Canonical workflow owns one declared API or orchestration responsibility."
     },
     {
+      "id": ".ops-pipeline-delivery",
+      "path": ".github/workflows/.ops-pipeline-delivery.yml",
+      "reusable": true,
+      "inputs": [
+        "request",
+        "runtime-selection"
+      ],
+      "inputCount": 2,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "taxonomy": {
+        "id": ".pipeline-delivery",
+        "role": "component",
+        "category": "ops",
+        "purpose": "pipeline-delivery",
+        "status": "active",
+        "canonicalPath": ".github/workflows/.ops-pipeline-delivery.yml",
+        "compatibilityAlias": false
+      },
+      "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "Canonical workflow owns one declared API or orchestration responsibility."
+    },
+    {
       "id": ".release-authority",
       "path": ".github/workflows/.release-authority.yml",
       "reusable": true,
@@ -873,7 +906,9 @@
         "native-command",
         "native-command-root",
         "native-heartbeat-seconds",
+        "native-platform",
         "native-proof-json",
+        "pipeline-attempt",
         "plan-root",
         "project-cut-proof-json",
         "queue-admission-context",
@@ -893,7 +928,7 @@
         "toolchain-root",
         "warrant-lease-seconds"
       ],
-      "inputCount": 42,
+      "inputCount": 44,
       "secrets": [
         "github-token"
       ],
@@ -1287,6 +1322,38 @@
       },
       "surface": "repository-patrol",
       "capabilityGroup": "governance-versioning",
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "Canonical workflow owns one declared API or orchestration responsibility."
+    },
+    {
+      "id": "public-ops-pipeline",
+      "path": ".github/workflows/public-ops-pipeline.yml",
+      "reusable": true,
+      "inputs": [
+        "config-path"
+      ],
+      "inputCount": 1,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "taxonomy": {
+        "id": "pipeline",
+        "role": "public",
+        "category": "ops",
+        "purpose": "pipeline",
+        "status": "active",
+        "canonicalPath": ".github/workflows/public-ops-pipeline.yml",
+        "compatibilityAlias": false
+      },
+      "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active",
       "owner": "buildchain-workflows",
       "maturity": "active",
@@ -4920,10 +4987,11 @@
         "branch",
         "heartbeat-seconds",
         "lease-seconds",
+        "pipeline-attempt",
         "runtime-sha",
         "token"
       ],
-      "inputCount": 5,
+      "inputCount": 6,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",
@@ -7870,6 +7938,7 @@
       "path": "actions/runtime/selection/resolve/action.yml",
       "inputs": [
         "contract-lock",
+        "pipeline-attempt",
         "resume-run-id",
         "runtime-ref",
         "selection",
@@ -7879,7 +7948,7 @@
         "workflow-ref",
         "workflow-sha"
       ],
-      "inputCount": 9,
+      "inputCount": 10,
       "capabilityGroup": "api-cli-reference",
       "status": "active",
       "owner": "buildchain-actions",
@@ -8639,6 +8708,82 @@
         "untrusted-policy"
       ],
       "inputCount": 3,
+      "capabilityGroup": "api-cli-reference",
+      "status": "active",
+      "owner": "buildchain-actions",
+      "maturity": "stable",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
+    },
+    {
+      "apiRole": "implementation",
+      "id": "workflow/pipeline/build",
+      "path": "actions/workflow/pipeline/build/action.yml",
+      "inputs": [
+        "context",
+        "platform"
+      ],
+      "inputCount": 2,
+      "capabilityGroup": "api-cli-reference",
+      "status": "active",
+      "owner": "buildchain-actions",
+      "maturity": "stable",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
+    },
+    {
+      "apiRole": "implementation",
+      "id": "workflow/pipeline/control",
+      "path": "actions/workflow/pipeline/control/action.yml",
+      "inputs": [
+        "config-path",
+        "token"
+      ],
+      "inputCount": 2,
+      "capabilityGroup": "api-cli-reference",
+      "status": "active",
+      "owner": "buildchain-actions",
+      "maturity": "stable",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
+    },
+    {
+      "apiRole": "implementation",
+      "id": "workflow/pipeline/record-build",
+      "path": "actions/workflow/pipeline/record-build/action.yml",
+      "inputs": [
+        "context",
+        "token"
+      ],
+      "inputCount": 2,
+      "capabilityGroup": "api-cli-reference",
+      "status": "active",
+      "owner": "buildchain-actions",
+      "maturity": "stable",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
+    },
+    {
+      "apiRole": "implementation",
+      "id": "workflow/pipeline/wake",
+      "path": "actions/workflow/pipeline/wake/action.yml",
+      "inputs": [
+        "attempt",
+        "token"
+      ],
+      "inputCount": 2,
       "capabilityGroup": "api-cli-reference",
       "status": "active",
       "owner": "buildchain-actions",

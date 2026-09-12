@@ -2245,7 +2245,8 @@
     ".github/workflows/public-release-promote.yml",
     ".github/workflows/self-build-verify.yml",
     ".github/workflows/self-release-promote.yml",
-    ".github/workflows/.release-binary-assets.yml"
+    ".github/workflows/.release-binary-assets.yml",
+    ".github/workflows/public-ops-dev-auto-merge.yml"
   ],
   "burnDownSlices": [
     {

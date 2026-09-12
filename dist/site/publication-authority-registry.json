@@ -82,6 +82,19 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/.ops-pipeline-delivery.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/.ops-pipeline-delivery.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/.release-authority.yml",
       "authorityClass": "evidence-publication",
       "publicationCapable": false,
@@ -294,6 +307,19 @@
       "credentialMode": "none",
       "publisherWorkflowMode": "fixed",
       "publisherWorkflowPath": ".github/workflows/public-ops-patrol.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/public-ops-pipeline.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/public-ops-pipeline.yml",
       "environment": "",
       "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
@@ -793,6 +819,13 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/.ops-pipeline-delivery.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/.release-authority.yml",
       "signals": [],
       "classified": true
@@ -909,6 +942,13 @@
     },
     {
       "path": ".github/workflows/public-ops-patrol.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/public-ops-pipeline.yml",
       "signals": [
         "write-permission"
       ],
@@ -1207,5 +1247,5 @@
       "classified": true
     }
   ],
-  "registryDigest": "536dca8dab8dd8e28018a6fd9ac023d0d116e0fdb612ecda870a0a2225a3f77b"
+  "registryDigest": "22c8f512f8467c3c314b1010b475c3e0ac3104b1a0396a33890c24bbd04a728f"
 }

@@ -73,7 +73,6 @@ export function consumerWorkflows(channel = "v4", configPath = CONFIG_PATH) {
       : `    with:\n      config-path: ${configPath}\n`;
   const events = Object.entries(PIPELINE_EVENTS)
     .map(([name, types]) => {
-      if (name === "repository_dispatch") return "  repository_dispatch:\n";
       return types.length
         ? `  ${name}:\n    types: [${types.join(", ")}]\n`
         : `  ${name}:\n`;

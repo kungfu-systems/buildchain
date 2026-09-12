@@ -1,6 +1,9 @@
 name: Select the execution runtime
 description: Resolve one entry-owned runtime selection for all jobs in an execution.
 inputs:
+  pipeline-attempt:
+    description: Internal exact business selector for a normal pipeline wake.
+    default: ""
   selection:
     description: Already selected runtime from the entry job.
     default: ""

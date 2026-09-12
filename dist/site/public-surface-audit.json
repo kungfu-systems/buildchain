@@ -4,8 +4,8 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 67,
-    "actionCount": 268,
+    "workflowCount": 69,
+    "actionCount": 272,
     "sitePageCount": 94,
     "docCommandRefCount": 1036,
     "failureCount": 0
@@ -745,6 +745,20 @@
         "outputCount": 0
       },
       {
+        "id": ".ops-pipeline-delivery",
+        "path": ".github/workflows/.ops-pipeline-delivery.yml",
+        "reusable": true,
+        "inputs": [
+          "request",
+          "runtime-selection"
+        ],
+        "inputCount": 2,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
         "id": ".release-authority",
         "path": ".github/workflows/.release-authority.yml",
         "reusable": true,
@@ -1184,7 +1198,9 @@
           "native-command",
           "native-command-root",
           "native-heartbeat-seconds",
+          "native-platform",
           "native-proof-json",
+          "pipeline-attempt",
           "plan-root",
           "project-cut-proof-json",
           "queue-admission-context",
@@ -1204,7 +1220,7 @@
           "toolchain-root",
           "warrant-lease-seconds"
         ],
-        "inputCount": 42,
+        "inputCount": 44,
         "secrets": [
           "github-token"
         ],
@@ -1454,6 +1470,19 @@
           "skipped-count"
         ],
         "outputCount": 5
+      },
+      {
+        "id": "public-ops-pipeline",
+        "path": ".github/workflows/public-ops-pipeline.yml",
+        "reusable": true,
+        "inputs": [
+          "config-path"
+        ],
+        "inputCount": 1,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
       },
       {
         "id": "public-ops-release-governance",
@@ -3301,10 +3330,11 @@
           "branch",
           "heartbeat-seconds",
           "lease-seconds",
+          "pipeline-attempt",
           "runtime-sha",
           "token"
         ],
-        "inputCount": 5
+        "inputCount": 6
       },
       {
         "id": "dev-delivery/native/qualify-proof",
@@ -4911,6 +4941,7 @@
         "path": "actions/runtime/selection/resolve/action.yml",
         "inputs": [
           "contract-lock",
+          "pipeline-attempt",
           "resume-run-id",
           "runtime-ref",
           "selection",
@@ -4920,7 +4951,7 @@
           "workflow-ref",
           "workflow-sha"
         ],
-        "inputCount": 9
+        "inputCount": 10
       },
       {
         "id": "runtime/toolchain/user-paths",
@@ -5300,6 +5331,42 @@
           "untrusted-policy"
         ],
         "inputCount": 3
+      },
+      {
+        "id": "workflow/pipeline/build",
+        "path": "actions/workflow/pipeline/build/action.yml",
+        "inputs": [
+          "context",
+          "platform"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "workflow/pipeline/control",
+        "path": "actions/workflow/pipeline/control/action.yml",
+        "inputs": [
+          "config-path",
+          "token"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "workflow/pipeline/record-build",
+        "path": "actions/workflow/pipeline/record-build/action.yml",
+        "inputs": [
+          "context",
+          "token"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "workflow/pipeline/wake",
+        "path": "actions/workflow/pipeline/wake/action.yml",
+        "inputs": [
+          "attempt",
+          "token"
+        ],
+        "inputCount": 2
       },
       {
         "id": "workflow/settlement/seal",
@@ -10877,8 +10944,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e43fdb0289df88871f3f0febbe04dcb9311a252a2b1df9b3a83a2d10c9d4a70f",
-    "workflowRegistryDigest": "71ef3b9d9e1d71408eab066162f88f9a9a849550e34e3c023057498824d3052c",
-    "pageRegistryDigest": "56222fb3665c9bcd626a301d809db80ac8f8cb42b2a15b98d32241708f26b398"
+    "workflowRegistryDigest": "398be3f92d3b72a6533304f7f8ceae3224a8d7d5144001ea43038aa55029f8a0",
+    "pageRegistryDigest": "94bbee30d8b5beb77fef6364dbbadaa4ef454b179927f8287bc8e64068413ba2"
   },
   "comparison": {
     "missingCliRegistry": [],

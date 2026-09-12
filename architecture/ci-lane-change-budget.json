@@ -2563,6 +2563,125 @@
         "expectedContributionSeconds": 0,
         "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
       }
+    },
+    {
+      "laneId": ".github/workflows/.ops-pipeline-delivery.yml#delivery",
+      "authorityClass": "merge-critical-admission",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 360,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": true,
+        "metric": "minimal pipeline bounded hosted execution",
+        "expectedContributionSeconds": 21600,
+        "rationale": "Owned runtime, metadata or product job boundary. Product matrix uses only declared platforms; native Warrant transfer waits for exact provider terminality. This is a conservative timeout budget, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/public-ops-pipeline.yml#runtime",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "minimal pipeline bounded hosted execution",
+        "expectedContributionSeconds": 300,
+        "rationale": "Owned runtime, metadata or product job boundary. Product matrix uses only declared platforms; native Warrant transfer waits for exact provider terminality. This is a conservative timeout budget, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/public-ops-pipeline.yml#control",
+      "authorityClass": "merge-critical-admission",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 20,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": true,
+        "metric": "minimal pipeline bounded hosted execution",
+        "expectedContributionSeconds": 1200,
+        "rationale": "Owned runtime, metadata or product job boundary. Product matrix uses only declared platforms; native Warrant transfer waits for exact provider terminality. This is a conservative timeout budget, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/public-ops-pipeline.yml#build",
+      "authorityClass": "merge-critical-required",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 60,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": true,
+        "metric": "minimal pipeline bounded hosted execution",
+        "expectedContributionSeconds": 3600,
+        "rationale": "Owned runtime, metadata or product job boundary. Product matrix uses only declared platforms; native Warrant transfer waits for exact provider terminality. This is a conservative timeout budget, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/public-ops-pipeline.yml#record-build",
+      "authorityClass": "merge-critical-required",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 15,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": true,
+        "metric": "minimal pipeline bounded hosted execution",
+        "expectedContributionSeconds": 900,
+        "rationale": "Owned runtime, metadata or product job boundary. Product matrix uses only declared platforms; native Warrant transfer waits for exact provider terminality. This is a conservative timeout budget, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/public-ops-pipeline.yml#delivery",
+      "authorityClass": "merge-critical-admission",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 360,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": true,
+        "metric": "minimal pipeline bounded hosted execution",
+        "expectedContributionSeconds": 21600,
+        "rationale": "Owned runtime, metadata or product job boundary. Product matrix uses only declared platforms; native Warrant transfer waits for exact provider terminality. This is a conservative timeout budget, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/public-ops-pipeline.yml#record-delivery",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "minimal pipeline bounded hosted execution",
+        "expectedContributionSeconds": 300,
+        "rationale": "Owned runtime, metadata or product job boundary. Product matrix uses only declared platforms; native Warrant transfer waits for exact provider terminality. This is a conservative timeout budget, not measured latency."
+      }
     }
   ],
   "declarationFamilies": [
