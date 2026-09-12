@@ -83,10 +83,18 @@ export async function publishWithDiscussion(
       discussionId: journal.session.discussion.id,
     }),
   );
+  const publicReaderPath = path.join(
+    path.dirname(locatorPath),
+    "release-discussion.cjs",
+  );
+  fs.writeFileSync(
+    publicReaderPath,
+    await retained.publicationReader(fs.readFileSync(readerFile)),
+  );
   const execution = {
     ...request,
     discussionCheckpoint: retained.checkpoint,
-    discussionReaderPath: readerFile,
+    discussionReaderPath: publicReaderPath,
     discussionLocatorPath: locatorPath,
     retainRecoveryMaterials: async () =>
       retained.checkpoint(

@@ -91,7 +91,8 @@ Each runtime distributes the standalone `dist/readers/release-discussion.cjs`.
 The same pure reader is available as the versioned Node API
 `@kungfu-tech/buildchain/release-discussion-reader`. Records carry the standalone
 reader byte digest. The recovery archive retains the exact reader bytes and the public
-release includes the reader asset. The standalone reader accepts captured JSON
+release includes the first retained reader asset. Recovery preserves those public
+bytes while retaining each later writer's decoder in the archive. The standalone reader accepts captured JSON
 on standard input and emits a projection and a small
 `buildchain.release-handoff/v1` document. It performs no provider effects.
 

@@ -6,7 +6,7 @@ import { executeReleaseDiscussion } from "../packages/core/release/discussion/qu
 function provider() {
   let discussion;
   const comments = [];
-  const author = { login: "github-actions[bot]", id: "BOT" };
+  const author = { __typename: "Bot", login: "github-actions", id: "BOT" };
   const page = (nodes) => ({
     nodes,
     pageInfo: { hasNextPage: false, endCursor: null },
@@ -215,6 +215,14 @@ test("independent binary workflow joins intent and a late result stays on the su
     runtime,
     writer: "200:1:binary",
   };
+  fake.discussion.author.__typename = "User";
+  await assert.rejects(
+    observeBinaryDistribution(options, async () =>
+      assert.fail("untrusted author reached provider effects"),
+    ),
+    /intent does not match/,
+  );
+  fake.discussion.author.__typename = "Bot";
   let next;
   await observeBinaryDistribution(options, async () => {
     next = await openReleaseSession({

@@ -1,7 +1,7 @@
 const fields =
-  "id number url body author { login ... on Node { id } } lastEditedAt repository { nameWithOwner }";
+  "id number url body author { __typename login ... on Node { id } } lastEditedAt repository { nameWithOwner }";
 const commentFields =
-  "id url body author { login ... on Node { id } } lastEditedAt";
+  "id url body author { __typename login ... on Node { id } } lastEditedAt";
 
 export function discussionTransport(graphql) {
   async function request(query, variables) {

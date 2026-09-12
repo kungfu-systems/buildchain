@@ -51,7 +51,25 @@ export function releaseCheckpoints({ session, store, octokit }) {
       throw new Error("Recovery checkpoint root differs from its record");
     return value;
   }
-  return { checkpoint, readCheckpoint, materials };
+  async function publicationReader(currentBytes) {
+    const observed = await store.read(session);
+    const first = observed.records
+      .filter(
+        (record) =>
+          record.kind === "checkpoint" && record.node === "qualification",
+      )
+      .sort(
+        (a, b) =>
+          observed.attempts.indexOf(a.attempt) -
+            observed.attempts.indexOf(b.attempt) || a.sequence - b.sequence,
+      )[0];
+    if (!first) return currentBytes;
+    const manifest = await readCheckpoint(first);
+    if (manifest.schema !== "buildchain.release-recovery-material/v1")
+      throw new Error("Unsupported retained publication reader manifest");
+    return materials.read(manifest.reader);
+  }
+  return { checkpoint, readCheckpoint, materials, publicationReader };
 }
 
 function assertNoSymlink(file, base) {

@@ -26,7 +26,8 @@ export async function recoverDiscussionCandidate({
   const intent = decodeRecord(discussion.body);
   if (
     intent?.repository !== repository ||
-    discussion.author?.login !== "github-actions[bot]"
+    discussion.author?.__typename !== "Bot" ||
+    discussion.author.login !== "github-actions"
   )
     throw new Error(
       "Recovery requires the consumer workflow's original Discussion",

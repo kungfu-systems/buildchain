@@ -30,7 +30,8 @@ export async function observeBinaryDistribution(
   if (
     intent?.id !== locator.intent ||
     intent.repository !== repository ||
-    discussion.author?.login !== "github-actions[bot]"
+    discussion.author?.__typename !== "Bot" ||
+    discussion.author.login !== "github-actions"
   )
     throw new Error(
       "Binary transaction intent does not match the consumer workflow",

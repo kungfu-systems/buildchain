@@ -8,6 +8,7 @@ import {
   materialDigest,
 } from "../packages/core/providers/github/discussions/materials.js";
 import {
+  releaseCheckpoints,
   restoreRecoveryMaterials,
   retainRecoveryMaterials,
 } from "../packages/core/release/discussion/checkpoints.js";
@@ -203,4 +204,50 @@ test("restoration preflights the complete inventory and retries identical retain
     restoreRecoveryMaterials(manifest, base, materials),
     /outside the retained inventory/,
   );
+});
+
+test("runtime recovery preserves the first public reader while retaining each writer decoder", async () => {
+  const { createIntent } =
+    await import("../packages/core/release/discussion/envelope.js");
+  const fake = materialProvider();
+  const runtime = {
+    repository: "example/buildchain",
+    sha: "a".repeat(40),
+    readerDigest: `sha256:${"b".repeat(64)}`,
+  };
+  const intent = createIntent({
+    repository: "example/consumer",
+    key: "1.0.0",
+    source: { version: "1.0.0" },
+    runtime,
+    expectedNodes: ["qualification"],
+  });
+  const records = [],
+    attempts = ["100:1", "200:1"];
+  const session = { intent, runtime, attempt: attempts[0], predecessor: "" };
+  const store = {
+    read: async () => ({ records, attempts }),
+    append: async (_session, record) => records.push(record),
+  };
+  const retained = releaseCheckpoints({
+    session,
+    store,
+    octokit: fake.octokit,
+  });
+  const original = Buffer.from("original decoder"),
+    repaired = Buffer.from("repaired decoder");
+  assert.deepEqual(await retained.publicationReader(original), original);
+  await retained.checkpoint("qualification", {
+    schema: "buildchain.release-recovery-material/v1",
+    reader: await retained.materials.put(original),
+  });
+  session.attempt = attempts[1];
+  session.predecessor = attempts[0];
+  await retained.checkpoint("qualification", {
+    schema: "buildchain.release-recovery-material/v1",
+    reader: await retained.materials.put(repaired),
+  });
+  records.reverse();
+  assert.deepEqual(await retained.publicationReader(repaired), original);
+  assert.equal(records.length, 2);
 });
