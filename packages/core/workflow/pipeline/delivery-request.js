@@ -5,10 +5,12 @@ import { createNativeCommandContract } from "../../dev-delivery/dev-delivery-war
 import { withPipelineSourceObjects } from "../../providers/github/pipeline-checkout.js";
 import { pipelinePlatforms } from "./platforms.js";
 import { pipelineCandidateRoot } from "./reconcile.js";
+import { consumerWorkflows } from "../../consumer/contract/entries.js";
+import { pipelineRunEntry } from "../../providers/github/pipeline-run-entry.js";
 import {
-  consumerWorkflows,
-  PIPELINE_ENTRY,
-} from "../../consumer/contract/entries.js";
+  PIPELINE_BUILD_QUALIFICATION,
+  qualifyPipelineBuild,
+} from "./build-qualification.js";
 
 const quote = (value) => `'${value.replaceAll("'", "'\\''")}'`;
 
@@ -22,19 +24,32 @@ export function qualifyPipelineSourceRun(run, current, build) {
     run.id < 1 ||
     run.status !== "completed" ||
     run.conclusion !== "success" ||
-    !["pull_request", "repository_dispatch", "pull_request_review"].includes(
-      run.event,
-    ) ||
+    ![
+      "pull_request",
+      "repository_dispatch",
+      "pull_request_review",
+      "workflow_dispatch",
+    ].includes(run.event) ||
     run.repository?.full_name !== current.intent.repository ||
     (run.event === "pull_request" && run.head_sha !== source.commit) ||
-    run.path?.split("@")[0] !== ".github/workflows/buildchain.yml" ||
     (run.event === "pull_request" &&
       pull?.base?.sha !== current.generation.baseCommit)
   )
     throw new Error(
       "Pipeline source run does not qualify the exact PR generation",
     );
-  if (run.event !== "pull_request") {
+  if (build?.schema === PIPELINE_BUILD_QUALIFICATION) {
+    const verified = qualifyPipelineBuild({ ...build, source });
+    if (
+      recordDigest(verified) !== recordDigest(build) ||
+      build.runId !== run.id ||
+      build.runAttempt !== run.run_attempt ||
+      build.outcome !== "success"
+    )
+      throw new Error(
+        "Recovered source run does not bind complete independently qualified product segments",
+      );
+  } else if (run.event !== "pull_request") {
     const { root, ...body } = build || {};
     if (
       root !== recordDigest(body) ||
@@ -53,15 +68,7 @@ export function qualifyPipelineSourceRun(run, current, build) {
 }
 
 function pipelineEntry(run) {
-  const entries = (run.referenced_workflows || []).filter((workflow) =>
-    workflow.path?.startsWith(`kungfu-systems/buildchain/${PIPELINE_ENTRY}@`),
-  );
-  if (entries.length !== 1 || !/^[0-9a-f]{40}$/u.test(entries[0].sha || ""))
-    throw new Error("Pipeline build did not execute one exact published entry");
-  const channel = entries[0].path.split("@").at(-1);
-  if (!["v4", "v4-alpha"].includes(channel))
-    throw new Error("Pipeline caller did not select a public floating channel");
-  return channel;
+  return pipelineRunEntry(run).channel;
 }
 
 function predicateInput(directory, current, run) {

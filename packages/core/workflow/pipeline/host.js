@@ -20,6 +20,8 @@ import { controlPipelineChannel } from "./channel-control.js";
 import { settlePipeline } from "./settlement.js";
 import { pipelineProjection } from "./projection.js";
 import { resumePipelineNotifications } from "./notifications.js";
+import { projectPipelineStatus } from "./web-status.js";
+import { inspectRecoveryPublication } from "../../publication/pipeline/recovery-inspection.js";
 
 export async function pipelineHost(core, env, jobName) {
   const token = core.getInput("token", { required: true });
@@ -70,8 +72,14 @@ export async function pipelineHost(core, env, jobName) {
       controlPipelineChannel(session, admission, inputs, host),
     settle: (session, fresh, delivery) =>
       settlePipeline(session, fresh, delivery, host),
-    project: pipelineProjection(github.graphql),
+    project: (session) =>
+      projectPipelineStatus(session, {
+        project: pipelineProjection(github.graphql),
+        core,
+      }),
     notifyTerminal: (session) => resumePipelineNotifications(session, host),
+    recoverPublication: (session, admitted) =>
+      inspectRecoveryPublication(session, admitted, host),
     materialStore: (session) =>
       pipelineMaterials(
         discussionMaterials({

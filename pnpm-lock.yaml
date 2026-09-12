@@ -1574,6 +1574,15 @@ importers:
         specifier: 6.0.1
         version: 6.0.1
 
+  actions/workflow/pipeline/recover:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
   actions/workflow/pipeline/wake:
     dependencies:
       '@actions/core':

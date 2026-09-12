@@ -21,11 +21,11 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "7076852fe1b8e247508e9ac8b683d04fd0a7fcf6152a08bcbc9ba9988b9df737",
+    "sha256": "6e2ae1986c4fe734fddd9b5d9f78ac94f0caa89d9c084cb7fe4f120b402a4758",
     "summary": {
       "cliCommandCount": 117,
-      "workflowCount": 70,
-      "actionCount": 279,
+      "workflowCount": 72,
+      "actionCount": 280,
       "sitePageCount": 94,
       "docCommandRefCount": 1036,
       "failureCount": 0
@@ -246,11 +246,11 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "7076852fe1b8e247508e9ac8b683d04fd0a7fcf6152a08bcbc9ba9988b9df737",
+      "sha256": "6e2ae1986c4fe734fddd9b5d9f78ac94f0caa89d9c084cb7fe4f120b402a4758",
       "summary": {
         "cliCommandCount": 117,
-        "workflowCount": 70,
-        "actionCount": 279,
+        "workflowCount": 72,
+        "actionCount": 280,
         "sitePageCount": 94,
         "docCommandRefCount": 1036,
         "failureCount": 0
@@ -3882,6 +3882,27 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:.ops-pipeline-execute",
+          "name": "workflow:.ops-pipeline-execute",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/.ops-pipeline-execute.yml",
+          "evidencePath": ".github/workflows/.ops-pipeline-execute.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 6,
+          "inputs": [
+            "attempt",
+            "context",
+            "matrix",
+            "operation",
+            "request",
+            "runtime-selection"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:.release-authority",
           "name": "workflow:.release-authority",
           "kind": "workflow",
@@ -4468,6 +4489,23 @@
           "inputCount": 1,
           "inputs": [
             "config-path"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:public-ops-recover",
+          "name": "workflow:public-ops-recover",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/public-ops-recover.yml",
+          "evidencePath": ".github/workflows/public-ops-recover.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "attempt",
+            "runtime-ref"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -9842,10 +9880,11 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 10,
+          "inputCount": 11,
           "inputs": [
             "contract-lock",
             "pipeline-attempt",
+            "recovery-attempt",
             "resume-run-id",
             "runtime-ref",
             "selection",
@@ -10587,6 +10626,24 @@
           "inputCount": 2,
           "inputs": [
             "context",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:workflow/pipeline/recover",
+          "name": "action:workflow/pipeline/recover",
+          "kind": "action",
+          "sourcePath": "actions/workflow/pipeline/recover/action.yml",
+          "evidencePath": "actions/workflow/pipeline/recover/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 3,
+          "inputs": [
+            "attempt",
+            "definition-sha",
             "token"
           ],
           "reverseAuditSource": "actions/*/action.yml"
@@ -11924,6 +11981,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 747
+    "publicSurfaceCount": 750
   }
 }

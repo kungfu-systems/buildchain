@@ -8,6 +8,10 @@ const TERMINAL = new Set([
 ]);
 const wait = (reason) => ({ operation: "wait", reason });
 
+export function terminalPipelineCandidate(candidate) {
+  return Boolean(candidate && TERMINAL.has(candidate.status));
+}
+
 export function pipelineCandidateRoot(current) {
   if (
     !current.identity?.id ||

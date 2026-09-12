@@ -1,5 +1,9 @@
 import { recordDigest } from "../../release/discussion/envelope.js";
 import { assertPipelineExecution } from "../../workflow/pipeline/fence.js";
+import {
+  PUBLICATION_IMPORT,
+  publicationImportedValues,
+} from "./imported-materials.js";
 
 export function pipelinePublicationJournal(session, host) {
   const initial = session.observed;
@@ -38,13 +42,30 @@ export function pipelinePublicationJournal(session, host) {
     const references = observed.history
       .at(-1)
       .events.flatMap((event) => event.payload.materials)
-      .filter((reference) => reference.id.startsWith(prefix));
+      .filter(
+        (reference) =>
+          reference.id.startsWith(prefix) ||
+          reference.id.startsWith("publication/recovery-import/"),
+      );
     const unique = [
       ...new Map(
         references.map((reference) => [reference.digest, reference]),
       ).values(),
     ];
-    return Promise.all(unique.map((reference) => store.read(reference)));
+    const values = [];
+    for (const reference of unique) {
+      const value = await store.read(reference);
+      if (value.schema === PUBLICATION_IMPORT)
+        values.push(
+          ...publicationImportedValues(value)
+            .filter((item) => item.id.startsWith(prefix))
+            .map((item) => item.value),
+        );
+      else if (reference.id.startsWith(prefix)) values.push(value);
+    }
+    return [
+      ...new Map(values.map((value) => [recordDigest(value), value])).values(),
+    ];
   }
   async function record(
     id,
@@ -52,6 +73,24 @@ export function pipelinePublicationJournal(session, host) {
     { phase = "publish", state = "running", expectedHead } = {},
   ) {
     const root = recordDigest(value);
+    const observed = await session.journal.read();
+    const eventKey = `publication:${id}:${root}`;
+    const prior = observed.history
+      .at(-1)
+      .events.find((event) => event.payload.eventKey === eventKey);
+    if (prior) {
+      if (
+        observed.attempt !== initial.attempt ||
+        prior.node !== phase ||
+        prior.payload.state !== state ||
+        prior.payload.materials.length !== 1 ||
+        recordDigest(await store.read(prior.payload.materials[0])) !== root
+      )
+        throw new Error(
+          "Publication retry changed its immutable recorded result",
+        );
+      return value;
+    }
     const reference = await store.retain(
       `${id}/${root.slice(7)}`,
       value,
@@ -61,7 +100,7 @@ export function pipelinePublicationJournal(session, host) {
       attempt: initial.attempt,
       phase,
       state,
-      eventKey: `publication:${id}:${root}`,
+      eventKey,
       materials: [reference],
       ...(expectedHead !== undefined ? { expectedHead } : {}),
     });

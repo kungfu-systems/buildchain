@@ -220,6 +220,11 @@ export async function cancellationFixture({ active = false } = {}) {
     };
   };
   return {
+    materialStore: (session) =>
+      pipelineMaterials(archive, {
+        repository: session.intent.repository,
+        attempt: session.observed.history.at(-1).identity,
+      }),
     journal,
     live,
     observe,

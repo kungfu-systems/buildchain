@@ -4,6 +4,7 @@ import { beginPipelineBuild } from "./build-control.js";
 import { controlPipelineDelivery } from "./delivery-control.js";
 import { githubPipelineEvents } from "../../providers/github/pipeline-events.js";
 import { pipelinePlatforms } from "./platforms.js";
+import { recordDigest } from "../../release/discussion/envelope.js";
 
 async function groupBuild(event, inputs, host) {
   const queue = await host.queue.getMergeQueueState(event.branch);
@@ -58,6 +59,18 @@ export async function controlPipeline(name, payload, inputs, host) {
   if (!selected)
     return { operation: "wait", reason: "no-admitted-pipeline-intent" };
   const { session, admission } = selected;
+  const current = session.observed.history.at(-1);
+  if (
+    current.identity.requestKey.startsWith("recover:") &&
+    recordDigest(current.events[0].runtime) !== recordDigest(host.runtime)
+  ) {
+    await host.wake(current.identity.id);
+    return {
+      operation: "wait",
+      reason: "admitted-recovery-runtime-continuation-required",
+      attempt: current.identity.id,
+    };
+  }
   if (
     ["failure", "cancelled", "superseded", "complete"].includes(
       session.observed.status,

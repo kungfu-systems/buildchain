@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import artifact from "@actions/artifact";
 import { recordDigest } from "../../release/discussion/envelope.js";
+import { readPipelineCaller } from "./pipeline-run-entry.js";
 import { publicationPath } from "../../publication/pipeline/files.js";
 
 export const pipelinePublicationArtifactName = (plan, platform) =>
@@ -32,12 +33,25 @@ export function githubPipelinePublicationArtifacts({
       );
     return result;
   }
-  async function buildReadback(context) {
+  async function buildReadback(context, selectedPlatforms) {
     const { plan, materialization, runId, runAttempt } = context;
     const { run, jobs } = await runs.read(runId, runAttempt);
-    const platforms = [
+    await readPipelineCaller(
+      run,
+      materialization.source.configPath,
+      request,
+      repository,
+    );
+    const declared = [
       ...new Set(plan.outputs.map(({ platform }) => platform)),
     ].sort();
+    const platforms = selectedPlatforms || declared;
+    if (
+      !platforms.length ||
+      new Set(platforms).size !== platforms.length ||
+      platforms.some((platform) => !declared.includes(platform))
+    )
+      throw new Error("Publication subset must name unique declared platforms");
     const selected = platforms.map((platform) => {
       const name = `Build publication (${platform})`;
       const matches = jobs.filter(
@@ -107,8 +121,8 @@ export function githubPipelinePublicationArtifacts({
     };
     return { build: { ...body, root: recordDigest(body) }, assets };
   }
-  async function download(context, workspace) {
-    const { build, assets } = await buildReadback(context);
+  async function download(context, workspace, selectedPlatforms) {
+    const { build, assets } = await buildReadback(context, selectedPlatforms);
     const [repositoryOwner, repositoryName] = repository.split("/");
     const bundles = [];
     for (const asset of assets) {

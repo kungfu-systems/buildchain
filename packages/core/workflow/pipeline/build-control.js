@@ -2,7 +2,7 @@ import { recordDigest } from "../../release/discussion/envelope.js";
 import { object } from "../../consumer/contract/shape.js";
 import { pipelinePlatforms } from "./platforms.js";
 import { resumePipelineSession } from "./session.js";
-import { publishPipelineBuildCheck } from "./build-evidence.js";
+import { retainPipelineBuildResult } from "./build-result.js";
 
 export async function beginPipelineBuild(session, admission, host) {
   const observed = await session.journal.read();
@@ -136,34 +136,5 @@ export async function recordPipelineBuild(context, host) {
     context.source,
     context.platforms.map((platform) => platform.platform),
   );
-  const reference = await host
-    .materialStore(session)
-    .retain(
-      `build/provider-${context.runId}-${context.runAttempt}`,
-      readback,
-      "provider-readback",
-    );
-  await session.progress.progress({
-    attempt: context.attempt,
-    phase: "build",
-    state: readback.outcome === "success" ? "success" : "failure",
-    eventKey: `build-result:${context.runId}:${context.runAttempt}`,
-    reason: readback.outcome === "success" ? "" : "product-build-failed",
-    materials: [reference],
-  });
-  await host.project(session);
-  await publishPipelineBuildCheck(
-    context,
-    readback,
-    host.request,
-    host.repository,
-  );
-  try {
-    await host.wake(context.attempt);
-    return { outcome: readback.outcome, wakePending: false };
-  } catch {
-    // The source build remains qualified if only notification failed. Its
-    // durable result is reobserved on the next PR event or exact attempt wake.
-    return { outcome: readback.outcome, wakePending: true };
-  }
+  return retainPipelineBuildResult(context, readback, session, host);
 }

@@ -182,6 +182,9 @@ test("GitHub publication reconciles lost tag/release/asset responses and refuses
     directory,
   });
   const effects = pipelinePublicationEffects({ plan, qualified, documents });
+  for (const effect of effects)
+    assert.equal((await provider.observe(effect)).state, "absent");
+  assert.deepEqual(writes, []);
   const input = {
     effects,
     transactionRoot: documents.transaction.transactionRoot,

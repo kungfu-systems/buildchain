@@ -4,6 +4,15 @@ import { pipelinePlatforms } from "../../workflow/pipeline/platforms.js";
 import { githubPipelineVersion } from "../../providers/github/pipeline-version.js";
 import { createPipelinePublicationPlan } from "./source-plan.js";
 import { pipelinePublicationJournal } from "./journal.js";
+import { prepareRecoveredPublication } from "./recovery-prepare.js";
+
+function publicationNextOperation(phase, existing, recovery) {
+  if (phase !== "publish") return "settle";
+  if (existing.length) return "apply";
+  if (recovery?.mode === "prepared" || recovery?.build?.scheduled.length === 0)
+    return "qualify";
+  return "build";
+}
 
 export async function preparePipelinePublication(attempt, publisherSha, host) {
   const { run: execution } = await host.runs.read(host.runId, host.runAttempt);
@@ -61,6 +70,13 @@ export async function preparePipelinePublication(attempt, publisherSha, host) {
     expectedHead: observed.head,
   });
   await journal.fence();
+  const recovery = await prepareRecoveredPublication(
+    session,
+    publisherSha,
+    host,
+    journal,
+    phase,
+  );
   const plans = await journal.materials("publication/plan/");
   if (plans.length > 1)
     throw new Error("Publication has conflicting retained plans");
@@ -76,8 +92,9 @@ export async function preparePipelinePublication(attempt, publisherSha, host) {
     await journal.record("publication/plan", plan);
   }
   if (
-    plan.publisher.workflowSha !== publisherSha ||
-    plan.runtime.commit !== host.runtime.sha
+    !recovery &&
+    (plan.publisher.workflowSha !== publisherSha ||
+      plan.runtime.commit !== host.runtime.sha)
   )
     throw new Error(
       "Publication resume requires its retained publisher and runtime; use typed recovery for upgrades",
@@ -118,14 +135,17 @@ export async function preparePipelinePublication(attempt, publisherSha, host) {
     generation: observed.generation,
     plan,
     materialization,
-    platforms: pipelinePlatforms(admitted.plan),
+    platforms: pipelinePlatforms(admitted.plan).filter(
+      ({ platform }) =>
+        !recovery?.build || recovery.build.scheduled.includes(platform),
+    ),
     runId: host.runId,
     runAttempt: host.runAttempt,
+    ...(recovery ? { recovery } : {}),
   };
   await journal.record("publication/context", context, { phase });
   return {
-    operation:
-      phase !== "publish" ? "settle" : existing.length ? "apply" : "build",
+    operation: publicationNextOperation(phase, existing, recovery),
     context,
   };
 }

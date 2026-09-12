@@ -142,7 +142,7 @@ export function githubPipelinePolicy(request, repository) {
       throw new Error("Protected PR policy identity is unavailable");
     return pr;
   }
-  async function observe(current, policy) {
+  async function observe(current, policy, integratedHead) {
     const { source, baseCommit } = current.generation;
     const number = current.intent.source.pullRequest,
       branch = current.intent.source.targetBranch;
@@ -170,7 +170,7 @@ export function githubPipelinePolicy(request, repository) {
     const ref = await request(`${base}/git/ref/heads/${branch}`);
     if (
       recordDigest(pr) !== recordDigest(again) ||
-      ref.object?.sha !== baseCommit
+      ref.object?.sha !== (integratedHead || baseCommit)
     )
       throw new Error("Protected policy changed during readback");
     const body = {
@@ -186,8 +186,28 @@ export function githubPipelinePolicy(request, repository) {
       contexts,
       review: !pr.isDraft && approved(pr, reviews, policy.minimum_approvals),
       checksPassing: checksPass(contexts, checks, statuses),
+      ...(integratedHead ? { integratedHead } : {}),
     };
     return { ...body, root: recordDigest(body) };
   }
-  return { observe };
+  async function observeMerged(current, policy, integration) {
+    const { root, ...body } = integration;
+    if (
+      root !== recordDigest(body) ||
+      body.schema !== "buildchain.pipeline-integration-readback/v1" ||
+      body.repository !== repository ||
+      body.sourceHead !== current.generation.source.commit ||
+      body.branch !== current.intent.source.targetBranch ||
+      body.pullRequest !== current.intent.source.pullRequest ||
+      !/^[0-9a-f]{40}$/u.test(body.protectedHead || "")
+    )
+      throw new Error(
+        "Merged review qualification requires exact protected integration evidence",
+      );
+    return observe(current, policy, body.protectedHead);
+  }
+  return {
+    observe: (current, policy) => observe(current, policy),
+    observeMerged,
+  };
 }

@@ -73,7 +73,7 @@ jobs:
   qualify:
     name: Qualify and sign products
     needs: [prepare, build]
-    if: needs.prepare.outputs.operation == 'build'
+    if: always() && (needs.prepare.outputs.operation == 'qualify' || (needs.prepare.outputs.operation == 'build' && needs.build.result == 'success'))
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:

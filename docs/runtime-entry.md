@@ -8,12 +8,12 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-13
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-11
-  visible_context: Explicit user-approved runtime selection, recovery and alpha publication requirements.
+  generated_at: 2026-09-13
+  visible_context: Source-bound attempt recovery implementation, published entry contract and local failure-path tests.
   invisible_context_boundary: This contract does not claim implementation or hosted qualification is complete.
 ---
 
@@ -40,7 +40,9 @@ Switching runtimes does not automatically qualify all previous results for reuse
 Neither the persisted caller nor its contract lock needs a train rewrite.
 
 An entry failure is repaired by publishing and adopting a corrected entry and
-starting a complete run. Recovering an invalid entry is not a runtime feature.
+starting a new provider run through the corrected floating entry. The caller files
+remain unchanged. A usable recovery entry can still recover the exact existing
+attempt; an entry failure before admission has no attempt to recover.
 Buildchain self-dogfood uses exactly the same consumer contract and has no
 repository-specific execution or recovery route.
 
@@ -54,7 +56,45 @@ single preparation ownership, different entry/runtime execution, train recovery,
 platform and multi-job qualification, and validation of the published consumer
 entry. A source test or a successful package import alone is insufficient.
 
-## Consumer build and recovery
+## Minimal pipeline recovery
+
+The minimal contract has one normal event caller and one manual recovery caller,
+plus `.buildchain/buildchain.toml`. Both callers are maintained by Buildchain's
+consumer setup; product differences do not require additional recovery workflows.
+The repository implementation alone does not prove the entry has been published
+or qualified in a clean consumer.
+
+The workflow summary identifies the current attempt, its source PR, completed
+steps and remaining work. Follow **Recover this attempt**, choose **Run workflow**,
+and paste the exact attempt. Leave `runtime-ref` empty for an ordinary retry;
+supply a repaired runtime only when needed. The public recovery entry accepts no
+other recovery selectors. It derives configuration, producer runs, artifacts and
+transaction coordinates from the canonical attempt history.
+
+Recovery opens a new attempt with an explicit predecessor. Successful platform
+jobs and their actual retained artifacts are independently requalified; only
+missing platforms or explicitly incompatible stage implementations are rebuilt.
+A signing failure can requalify the original sealed bytes under the repaired
+publisher. Partial publication preserves its original signed transaction and
+completed effects, reads providers again, and authorizes only remaining effects.
+Missing, expired or conflicting evidence stops with a diagnosis; it does not
+silently trigger a complete rebuild or replace published bytes.
+
+A repeated request for the same predecessor and repair selects the same successor.
+If that recovery was interrupted, select the successor shown in the summary for
+the next recovery. An active predecessor must first finish or be cancelled using
+its ordinary GitHub execution link. A changed or superseded source cannot reuse
+an old attempt as authority for the current PR. Completed publication remains
+recorded even when distribution or the next development version still needs work.
+Cancellation stops remaining work and cannot undo published results.
+
+Once admitted, ordinary wake events continue with the recovered attempt's exact
+runtime, even when the consumer lock still names the original runtime. A further
+runtime change requires another explicit recovery. An entry repair is distributed
+through the existing `@v4` or `@v4-alpha` entry; consumers do not maintain backup
+scripts, patch a job definition, or add a different recovery workflow family.
+
+## Advanced build component recovery
 
 ```yaml
 on:

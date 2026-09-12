@@ -51,95 +51,23 @@ jobs:
         with:
           config-path: ${{ inputs.config-path }}
           token: ${{ github.token }}
-  build:
-    name: Build product (${{ matrix.platform }})
+  execute:
     needs: [runtime, control]
-    if: needs.control.outputs.operation == 'build'
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJSON(needs.control.outputs.matrix) }}
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 60
-    permissions:
-      contents: read
-    steps:
-      - uses: $/actions/runtime/environment/prepare
-        with:
-          selection: ${{ needs.runtime.outputs.selection }}
-          token: ${{ github.token }}
-      - uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ fromJSON(needs.control.outputs.context).source.repository }}
-          ref: ${{ fromJSON(needs.control.outputs.context).source.commit }}
-          path: .buildchain/product
-          persist-credentials: false
-      - uses: ./.buildchain/runtime/actions/workflow/pipeline/build
-        with:
-          context: ${{ needs.control.outputs.context }}
-          platform: ${{ matrix.platform }}
-  record-build:
-    name: Record product build
-    needs: [runtime, control, build]
-    if: always() && needs.control.outputs.operation == 'build'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    permissions:
-      actions: write
-      checks: write
-      contents: write
-      discussions: write
-    steps:
-      - uses: $/actions/runtime/environment/prepare
-        with:
-          selection: ${{ needs.runtime.outputs.selection }}
-          token: ${{ github.token }}
-      - uses: ./.buildchain/runtime/actions/workflow/pipeline/record-build
-        with:
-          context: ${{ needs.control.outputs.context }}
-          token: ${{ github.token }}
-  delivery:
-    needs: [runtime, control]
-    if: needs.control.outputs.operation == 'deliver'
-    uses: ./.github/workflows/.ops-pipeline-delivery.yml
+    uses: ./.github/workflows/.ops-pipeline-execute.yml
     with:
+      operation: ${{ needs.control.outputs.operation }}
+      runtime-selection: ${{ needs.runtime.outputs.selection }}
+      context: ${{ needs.control.outputs.context }}
+      matrix: ${{ needs.control.outputs.matrix }}
       request: ${{ needs.control.outputs.request }}
-      runtime-selection: ${{ needs.runtime.outputs.selection }}
-    permissions:
-      actions: write
-      checks: read
-      contents: write
-      pull-requests: write
-      statuses: write
-  record-delivery:
-    name: Record delivery attempt
-    needs: [runtime, control, delivery]
-    if: always() && needs.control.outputs.operation == 'deliver'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    permissions:
-      actions: write
-      contents: write
-    steps:
-      - uses: $/actions/runtime/environment/prepare
-        with:
-          selection: ${{ needs.runtime.outputs.selection }}
-          token: ${{ github.token }}
-      - uses: ./.buildchain/runtime/actions/workflow/pipeline/wake
-        with:
-          attempt: ${{ needs.control.outputs.attempt }}
-          token: ${{ github.token }}
-  publication:
-    needs: [runtime, control]
-    if: needs.control.outputs.operation == 'publish'
-    uses: ./.github/workflows/.release-pipeline-products.yml
-    with:
       attempt: ${{ needs.control.outputs.attempt }}
-      runtime-selection: ${{ needs.runtime.outputs.selection }}
     secrets: inherit
     permissions:
       actions: write
+      attestations: write
+      checks: write
       contents: write
       discussions: write
       id-token: write
-      attestations: write
       pull-requests: write
+      statuses: write

@@ -2732,15 +2732,62 @@
       ],
       "calls": [
         {
-          "id": "delivery",
-          "uses": "./.github/workflows/.ops-pipeline-delivery.yml",
-          "inputs": ["request", "runtime-selection"],
+          "id": "execute",
+          "uses": "./.github/workflows/.ops-pipeline-execute.yml",
+          "inputs": [
+            "attempt",
+            "context",
+            "matrix",
+            "operation",
+            "request",
+            "runtime-selection"
+          ],
           "destination": "internal.workflow-composition"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/public-ops-recover.yml",
+      "role": "public",
+      "events": ["workflow_call"],
+      "secrets": [],
+      "outputs": [],
+      "destination": "internal-component.behind-pipeline-or-recovery",
+      "interfaces": [
+        {
+          "trigger": "workflow_call",
+          "name": "attempt",
+          "definition": {
+            "description": "Exact Buildchain attempt to recover.",
+            "type": "string",
+            "required": true
+          },
+          "destination": "attempt.material-index"
         },
         {
-          "id": "publication",
-          "uses": "./.github/workflows/.release-pipeline-products.yml",
-          "inputs": ["attempt", "runtime-selection"],
+          "trigger": "workflow_call",
+          "name": "runtime-ref",
+          "definition": {
+            "description": "Optional repaired runtime.",
+            "type": "string",
+            "required": false,
+            "default": ""
+          },
+          "destination": "recovery-entry.runtime-ref"
+        }
+      ],
+      "calls": [
+        {
+          "id": "execute",
+          "uses": "./.github/workflows/.ops-pipeline-execute.yml",
+          "inputs": [
+            "attempt",
+            "context",
+            "matrix",
+            "operation",
+            "request",
+            "runtime-selection"
+          ],
           "destination": "internal.workflow-composition"
         }
       ]

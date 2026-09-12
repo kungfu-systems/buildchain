@@ -43,6 +43,7 @@ export function githubPipelineProductRelease({
   }
   async function release(create = false) {
     const observedTag = await tag();
+    if (observedTag.state === "absent" && !create) return null;
     if (observedTag.commit !== qualified.source.commit)
       throw new Error("Release requires the exact immutable publication tag");
     let value = await findRelease();

@@ -1,3 +1,8 @@
+import {
+  PUBLICATION_BUILD_AGGREGATE,
+  publicationArtifactProducer,
+  verifyPublicationBuildAggregate,
+} from "./build-segments.js";
 import { recordDigest } from "../../release/discussion/envelope.js";
 import { createDomainPublicationQualificationReceipt } from "../publication-qualification.js";
 import { verifyPipelinePublicationPlan } from "./plan.js";
@@ -14,7 +19,7 @@ function productDescriptor(artifact) {
   return descriptor;
 }
 
-function inspectArtifacts(directory, manifest, plan) {
+export function inspectPipelinePublicationArtifacts(directory, manifest, plan) {
   verifyPipelineProductFiles(directory, manifest);
   for (const artifact of manifest.artifacts) {
     if (artifact.kind === "npm-package") {
@@ -49,12 +54,22 @@ export function qualifyPipelineProducts({
   now = new Date(),
 }) {
   verifyPipelinePublicationPlan(plan);
+  if (build.schema === PUBLICATION_BUILD_AGGREGATE)
+    verifyPublicationBuildAggregate(build, {
+      plan,
+      materialization: { source },
+      runId: build.runId,
+      runAttempt: build.runAttempt,
+    });
   const { root: buildRoot, ...buildBody } = build;
   if (
     buildRoot !== recordDigest(buildBody) ||
     !Number.isSafeInteger(build.runId) ||
     build.runId < 1 ||
-    build.schema !== "buildchain.pipeline-publication-build-readback/v1" ||
+    ![
+      "buildchain.pipeline-publication-build-readback/v1",
+      PUBLICATION_BUILD_AGGREGATE,
+    ].includes(build.schema) ||
     build.outcome !== "success" ||
     build.planRoot !== plan.root ||
     recordDigest(build.source) !== recordDigest(source)
@@ -86,17 +101,18 @@ export function qualifyPipelineProducts({
   const descriptors = [],
     artifacts = [];
   for (const { directory, manifest, providerArtifact } of bundles) {
+    const producer = publicationArtifactProducer(build, providerArtifact.id);
     if (
-      manifest.planRoot !== plan.root ||
+      manifest.planRoot !== producer.build.planRoot ||
       recordDigest(manifest.source) !== recordDigest(source) ||
       !build.artifactIds.includes(providerArtifact.id) ||
       providerArtifact.expired ||
-      providerArtifact.workflow_run?.id !== build.runId
+      providerArtifact.workflow_run?.id !== producer.build.runId
     )
       throw new Error(
         "Publication artifact is not bound to the exact admitted source run",
       );
-    inspectArtifacts(directory, manifest, plan);
+    inspectPipelinePublicationArtifacts(directory, manifest, plan);
     descriptors.push(...manifest.artifacts.map(productDescriptor));
     artifacts.push(
       ...manifest.artifacts.map((artifact) => ({

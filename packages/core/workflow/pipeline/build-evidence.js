@@ -1,4 +1,9 @@
 import { recordDigest } from "../../release/discussion/envelope.js";
+import {
+  PIPELINE_BUILD_QUALIFICATION,
+  verifyPipelineBuildQualification,
+} from "./build-qualification.js";
+import { pipelinePlatforms } from "./platforms.js";
 
 // The archive reference is already validated against the current attempt. A
 // build result is still re-read from the provider before it can admit delivery.
@@ -7,8 +12,10 @@ export async function pipelineBuildEvidence(session, host) {
   const current = observed.history.at(-1);
   const phase = current.phases.build;
   if (phase?.payload.state !== "success") return null;
-  const references = phase.payload.materials.filter((material) =>
-    material.id.startsWith("build/provider-"),
+  const references = phase.payload.materials.filter(
+    (material) =>
+      material.id.startsWith("build/provider-") ||
+      material.id.startsWith("build/qualified-"),
   );
   if (references.length !== 1)
     throw new Error("Pipeline build requires one retained provider receipt");
@@ -16,16 +23,33 @@ export async function pipelineBuildEvidence(session, host) {
   let { run } = await host.runs.read(retained.runId, retained.runAttempt);
   if (run.status !== "completed" && run.id !== host.runId)
     run = await host.runs.completed(retained.runId, retained.runAttempt);
-  const verified = await host.runs.build(
-    retained.runId,
-    retained.runAttempt,
-    current.generation.source,
-    retained.jobs.map(
-      (job) => job.name.match(/Build product \(([^)]+)\)$/u)?.[1],
-    ),
-  );
-  if (recordDigest(verified) !== recordDigest(retained))
-    throw new Error("Retained product build provider result changed");
+  if (retained.schema === PIPELINE_BUILD_QUALIFICATION) {
+    const source = await host.source.source(
+      current.generation.source.commit,
+      current.generation.source.configPath,
+    );
+    if (
+      recordDigest(source.identity) !== recordDigest(current.generation.source)
+    )
+      throw new Error("Recovered build source changed during qualification");
+    await verifyPipelineBuildQualification(
+      retained,
+      source.identity,
+      pipelinePlatforms(source.plan).map(({ platform }) => platform),
+      host.runs,
+    );
+  } else {
+    const verified = await host.runs.build(
+      retained.runId,
+      retained.runAttempt,
+      current.generation.source,
+      retained.jobs.map(
+        (job) => job.name.match(/Build product \(([^)]+)\)$/u)?.[1],
+      ),
+    );
+    if (recordDigest(verified) !== recordDigest(retained))
+      throw new Error("Retained product build provider result changed");
+  }
   return {
     run,
     readback: retained,

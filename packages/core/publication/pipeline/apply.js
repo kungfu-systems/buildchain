@@ -15,12 +15,21 @@ import { pipelineReleaseDocuments } from "./documents.js";
 import { writeImmutablePublicationFile } from "./files.js";
 import { verifyPipelineSigning } from "./signing.js";
 import { pipelinePublicationEffects, applyPipelineEffects } from "./effects.js";
+import { observeRecoveryPublicationEffects } from "./recovery-readback.js";
+import {
+  createRecoveryPublicationAdmission,
+  verifyRecoveryPublicationAdmission,
+} from "./recovery-admission.js";
 
 export async function applyPipelinePublication(
   context,
   host,
   directory,
   environment,
+  {
+    verifySigning = verifyPipelineSigning,
+    npmProvider = pipelineNpmProvider,
+  } = {},
 ) {
   const { journal, archive } = await publicationContext(context, host);
   const retained = await uniquePublicationMaterial(
@@ -29,6 +38,9 @@ export async function applyPipelinePublication(
   );
   const { plan, materialization } = context;
   const { qualified, capsules, sealed } = retained;
+  const evaluatedAt = context.recovery?.preserveTransaction
+    ? qualified.qualification.issuedAt
+    : undefined;
   const products = await restorePipelineProducts(
     archive,
     qualified,
@@ -39,13 +51,14 @@ export async function applyPipelinePublication(
     path.join(directory, "attestation.json"),
     await archive.read(retained.bundle),
   );
-  const signing = verifyPipelineSigning({
+  const signing = verifySigning({
     plan,
     materialization,
     qualified,
     bundlePath,
     directory: path.join(directory, "signing-readback"),
     token: host.token,
+    evaluatedAt,
   });
   const documents = pipelineReleaseDocuments({
     plan,
@@ -53,6 +66,7 @@ export async function applyPipelinePublication(
     qualified,
     capsules,
     signing,
+    evaluatedAt,
   });
   if (
     recordDigest(documents) !== recordDigest(retained.documents) ||
@@ -61,7 +75,7 @@ export async function applyPipelinePublication(
     throw new Error(
       "Retained release documents changed during publisher admission",
     );
-  const npm = pipelineNpmProvider({
+  const npm = npmProvider({
     directory: products,
     artifacts: qualified.artifacts,
     environment,
@@ -101,12 +115,38 @@ export async function applyPipelinePublication(
     documents,
     evidence: evidence.map(({ bytes, ...asset }) => asset),
   });
+  const receipts = await journal.materials("publication/effect/");
+  let fence = journal.fence;
+  if (context.recovery?.preserveTransaction) {
+    const readback = await observeRecoveryPublicationEffects({
+      effects,
+      receipts,
+      retained,
+      provider,
+      fence,
+    });
+    const input = {
+      context,
+      retained,
+      execution: context.recovery.execution,
+      readback,
+    };
+    const admission = createRecoveryPublicationAdmission(input);
+    await journal.record("publication/recovery-authorization", {
+      admission,
+      readback,
+    });
+    fence = async () => {
+      await journal.fence();
+      verifyRecoveryPublicationAdmission(admission, input);
+    };
+  }
   const results = await applyPipelineEffects({
     effects,
     transactionRoot: documents.transaction.transactionRoot,
-    receipts: await journal.materials("publication/effect/"),
+    receipts,
     provider,
-    fence: journal.fence,
+    fence,
     retain: (receipt) => journal.record("publication/effect", receipt),
   });
   const receipt = createReleaseReceipt({
@@ -120,11 +160,23 @@ export async function applyPipelinePublication(
   });
   // This is publication success only. Distribution and next-development remain
   // separate mandatory nodes of the same business attempt.
-  const complete = {
+  let complete = {
     schema: "buildchain.pipeline-publication-complete/v1",
     release: receipt,
     completedAt: new Date().toISOString(),
   };
+  const originals = await journal.materials(
+    "publication/predecessor-complete/",
+  );
+  if (
+    originals.length > 1 ||
+    (originals.length &&
+      recordDigest(originals[0].release) !== recordDigest(receipt))
+  )
+    throw new Error(
+      "Recovery cannot replace the original completed publication receipt",
+    );
+  if (originals.length) complete = originals[0];
   await journal.record("publication/complete", complete, { state: "success" });
   return complete;
 }

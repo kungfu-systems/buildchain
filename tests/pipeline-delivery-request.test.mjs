@@ -152,11 +152,11 @@ test("internal delivery request derives real Git predicates and executes the own
         { ...run, path: ".github/workflows/unrelated.yml" },
         current,
       ),
-    /exact PR generation/,
+    /trusted published consumer workflow/,
   );
   assert.throws(
     () =>
       qualifyPipelineSourceRun({ ...run, referenced_workflows: [] }, current),
-    /exact published entry/,
+    /unique exact pipeline or recovery entry/,
   );
 });

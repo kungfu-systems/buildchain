@@ -1,3 +1,4 @@
+import { pipelineActionOutputs } from "./action-output.js";
 import fs from "node:fs";
 import path from "node:path";
 import { normalInputs } from "../../consumer/contract/entries.js";
@@ -5,6 +6,10 @@ import { pipelineHost } from "./host.js";
 import { controlPipeline } from "./controller.js";
 import { buildPipelineSource } from "./build.js";
 import { recordPipelineBuild } from "./build-control.js";
+import {
+  RECOVERY_BUILD_CONTEXT,
+  recordRecoveryBuild,
+} from "./recovery-build-control.js";
 
 export async function controlPipelineAction(core, env) {
   const { configPath } = normalInputs({
@@ -17,15 +22,7 @@ export async function controlPipelineAction(core, env) {
     { "config-path": configPath },
     host,
   );
-  core.setOutput("operation", result.operation);
-  core.setOutput("context", JSON.stringify(result.context || {}));
-  core.setOutput(
-    "matrix",
-    JSON.stringify({ include: result.context?.platforms || [] }),
-  );
-  core.setOutput("request", JSON.stringify(result.request || {}));
-  core.setOutput("attempt", result.attempt || result.context?.attempt || "");
-  core.info(result.reason || result.operation);
+  pipelineActionOutputs(core, result);
 }
 
 export async function buildPipelineAction(core, env) {
@@ -46,7 +43,10 @@ export async function recordPipelineBuildAction(core, env) {
   const context = JSON.parse(core.getInput("context", { required: true }));
   if (context.schema === "buildchain.pipeline-group-build-context/v1")
     return host.groupRecord(context);
-  const result = await recordPipelineBuild(context, host);
+  const result =
+    context.schema === RECOVERY_BUILD_CONTEXT
+      ? await recordRecoveryBuild(context, host)
+      : await recordPipelineBuild(context, host);
   if (result.outcome !== "success")
     throw new Error("Product build did not succeed");
   core.info(
