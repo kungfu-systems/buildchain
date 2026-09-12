@@ -439,6 +439,38 @@ Owner: Buildchain build signing transactions maintainers
 
 - `node --test tests/signing-authority-transactions.test.mjs tests/native-artifact-signing-authority.test.mjs`
 
+## business-attempt-journal
+
+Owner: Buildchain pipeline maintainers
+
+### Implementation
+
+- `packages/core/workflow/attempt/identity.js`
+- `packages/core/workflow/attempt/materials.js`
+- `packages/core/workflow/attempt/reader-entry.js`
+- `packages/core/workflow/attempt/reader.js`
+- `packages/core/workflow/attempt/records.js`
+- `packages/core/workflow/attempt/store.js`
+
+### Contracts
+
+- `architecture/decisions/0006-business-attempt-journal.md`
+
+### Tests
+
+- `tests/business-attempt-materials.test.mjs`
+- `tests/business-attempt-store.test.mjs`
+- `tests/business-attempt.test.mjs`
+
+### Generated outputs
+
+- `dist/readers/business-attempt.cjs`
+
+### Minimal validation
+
+- `node --test tests/business-attempt*.test.mjs`
+- `node scripts/build-release-discussion-reader.mjs --check`
+
 ## cli-capability-adapters
 
 Owner: Buildchain CLI maintainers
