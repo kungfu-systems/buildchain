@@ -52,14 +52,16 @@ and [Discussions API guide](https://docs.github.com/en/graphql/guides/using-the-
 
 ## Records and concurrency
 
-The body is not a mutable global status document. Workflows append bounded JSON
-envelopes in comments. Each record contains an intent ID, workflow attempt,
+The body is not a mutable global status document. New intents declare `organization: attempt-threads/v1`. Each attempt owns exactly
+one top-level root comment; node events, checkpoints and diagnostics are appended
+as replies using that root comment ID. Workflows append bounded JSON envelopes
+with readable context and evidence links. Each record contains an intent ID, workflow attempt,
 predecessor, semantic node, sequence, status, payload schema, and the selected
 runtime's exact repository and revision. These are provenance; downstream nodes
 do not compare the runtime revision with the workflow entry revision.
 
 Node owners serialize their own sequences. Different node owners append
-independent comments. Recovery explicitly selects the predecessor in the same
+independent replies under the same attempt root. Recovery explicitly selects the predecessor in the same
 Discussion. A late result from an older attempt remains history; it cannot
 complete or overwrite the recovering attempt. Success requires every declared
 node, including nodes whose records have not appeared. Reusing completed work
@@ -71,11 +73,46 @@ Initialization scans complete repository category pages, reuses the matching
 intent, and refuses duplicate owners. A mutation whose response was lost is read
 back before another write. If its outcome remains unknown, execution stops with
 an explicit diagnosis. `clientMutationId` is not used as an idempotency guarantee.
+The attempt owner creates the root before dispatching independent node writers.
+Root creation is serialized and response-loss recovery reads it back. Different
+roots for one attempt, nested roots and events attached to the wrong attempt are
+rejected. Root and reply connections are both completely paginated; individual
+page and total byte bounds fail closed. Community conversation is ignored.
+
 Exact IDs carry the transaction through execution; search indexing is not an
 execution dependency. Pagination limits fail closed instead of silently hiding
 records. Only records from the original workflow writer are authoritative;
 ordinary community replies are excluded and edited transaction records are
 reported as integrity failures.
+
+## Human-readable information hub
+
+The Discussion body declares the release intent and expected nodes. Each root
+links its workflow execution, selected runtime and predecessor attempt. Replies
+name the semantic node, distinguish checkpoint sequence from execution status,
+and expose bounded details. An independent binary workflow links its own run but
+replies to the release attempt it observed before starting; a late completion
+cannot migrate into a successor attempt.
+
+Checkpoint replies include downloadable JSON attachments with file names, media
+types, byte counts and SHA-256 digests. On node failures, the same thread receives
+JSON diagnostics and a text `.log` containing the recorded event timeline and
+bounded failure classification. Raw exceptions, environment variables and HTTP
+credentials are not copied into diagnostics. Complete execution logs remain
+linked through their Actions runs. Qualification also exercises JSON/log downloads.
+
+Automation uploads these files through the documented GitHub Release asset API
+and embeds the provider's download links in the owning comment. This does not
+use GitHub's browser-only drag-and-drop upload implementation. The existing draft
+material archive is private to users with the required repository access; a
+public Discussion does not make draft attachments publicly downloadable. Download
+links require that permission and files remain outside the source Git database.
+
+Root comments and event replies are immutable execution facts. The latest state
+is computed from records, not from an overwritten status summary. Historical flat
+intents remain readable as historical data; all new writes use an attempt root
+and replies, and new intents enforce that organization. No historical Discussion
+body or comment is rewritten to change its layout.
 
 ## Recovery bytes and historical readers
 
@@ -111,8 +148,10 @@ same Discussion. It neither rewrites X's records nor changes the release intent.
 ## Ownership
 
 `actions/release/transaction/{open,record,inspect}` are reusable Node adapters.
-`packages/core/release/discussion` owns envelopes, projections, sessions and
-recovery contracts. `packages/core/providers/github/discussions` owns GitHub
+`packages/core/release/discussion` owns envelopes, pure state projections, sessions, thread organization,
+presentation, declared evidence and recovery contracts. `threads.js` checks
+provider placement; `presentation.js` renders contextual Markdown; `evidence.js`
+builds bounded attachment descriptors and diagnostic reports. `packages/core/providers/github/discussions` owns GitHub
 transport and immutable material IO. The existing public promotion workflow
 owns job boundaries; the Rust publication state machine still owns publication
 decisions and provider-effect ordering.

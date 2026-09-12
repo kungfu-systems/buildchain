@@ -40,8 +40,10 @@ export async function publishWithDiscussion(
     observe = () => {},
   },
 ) {
+  let retained;
   const journal = await openReleaseSession({
     graphql: octokit.graphql,
+    onFailure: (node, error) => retained.diagnostics(node, error.code),
     repository: request.repository,
     key: request.version,
     source: { version: request.version },
@@ -54,7 +56,7 @@ export async function publishWithDiscussion(
       request["publish-transaction-override"],
     ),
   });
-  const retained = releaseCheckpoints({
+  retained = releaseCheckpoints({
     session: journal.session,
     store: journal.store,
     octokit,

@@ -1,3 +1,4 @@
+import { releaseCheckpoints } from "./checkpoints.js";
 import { discussionTransport } from "../../providers/github/discussions/transport.js";
 import { releaseDiscussionStore } from "./store.js";
 import { createProgress, decodeRecord } from "./envelope.js";
@@ -46,6 +47,12 @@ export async function observeBinaryDistribution(
   const attemptRecord = state.records.find(
     (record) => record.attempt === state.attempt,
   );
+  Object.assign(session, {
+    attempt: state.attempt,
+    predecessor: attemptRecord.predecessor,
+    runtime,
+    writer,
+  });
   const sequence =
     Math.max(
       -1,
@@ -82,6 +89,10 @@ export async function observeBinaryDistribution(
       await record("failure", 1, {
         code: String(error.code || "execution-failed"),
       });
+      await releaseCheckpoints({ session, store, octokit }).diagnostics(
+        "binary-distribution",
+        error.code,
+      );
     } catch (recordError) {
       error.discussionRecordingError = recordError.message;
     }

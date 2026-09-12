@@ -94,6 +94,7 @@ export function createIntent({
     id: recordDigest(identity),
     ...identity,
     expectedNodes,
+    organization: "attempt-threads/v1",
     runtime,
     source,
   };

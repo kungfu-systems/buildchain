@@ -42,12 +42,28 @@ function provider() {
         id: String(comments.length + 1),
         body: variables.input.body,
         author,
+        url: `https://github.com/example/consumer/discussions/1#discussioncomment-${comments.length + 1}`,
+        replyTo: variables.input.replyToId
+          ? { id: variables.input.replyToId }
+          : null,
       };
       comments.push(comment);
       return { addDiscussionComment: { comment } };
     }
     if (query.includes("comments(first"))
-      return { node: { comments: page(comments) } };
+      return {
+        node: {
+          comments: page(comments.filter((comment) => !comment.replyTo)),
+        },
+      };
+    if (query.includes("replies(first"))
+      return {
+        node: {
+          replies: page(
+            comments.filter((comment) => comment.replyTo?.id === variables.id),
+          ),
+        },
+      };
     if (query.includes("discussions(first"))
       return {
         repository: { discussions: page(discussion ? [discussion] : []) },
