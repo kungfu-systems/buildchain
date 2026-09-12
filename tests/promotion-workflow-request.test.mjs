@@ -175,3 +175,72 @@ test("promotion contract still rejects null and incorrectly typed recovery field
       /resume-candidate-run-id must be string/,
     );
 });
+
+function jobEnabled(job, context) {
+  const functions = [
+    {
+      name: "always",
+      minArgs: 0,
+      maxArgs: 0,
+      call: () => new data.BooleanData(true),
+    },
+  ];
+  const expression = promotion.jobs[job].if.trim().slice(3, -2);
+  const values = { needs: {}, ...context };
+  const parsed = new Parser(
+    new Lexer(expression).lex().tokens,
+    Object.keys(values),
+    functions,
+  ).parse();
+  return (
+    new Evaluator(
+      parsed,
+      JSON.parse(JSON.stringify(values), data.reviver),
+      new Map(functions.map((entry) => [entry.name, entry])),
+    )
+      .evaluate()
+      .coerceString() === "true"
+  );
+}
+
+test("exact manual alpha source starts a fresh admitted publication without partial-release recovery", () => {
+  const context = manualContext(promotion, {
+    sha: sourceSha,
+    "dry-run": "false",
+    "runtime-ref": runtimeSha,
+  });
+  assert.equal(jobEnabled("promote", context), true);
+  assert.equal(jobEnabled("reject-manual-apply", context), false);
+  const request = normalizePromotionRequest(
+    renderRequest(promotion, "promote", context),
+  );
+  assert.equal(request["target-sha"], sourceSha);
+  assert.equal(request["publish-transaction-override"], false);
+  assert.equal(request["publication-auto-admission"], true);
+  assert.equal(request["standalone-binary-distribution"], true);
+  assert.equal(request["dry-run"], false);
+});
+
+test("manual apply rejects a missing source and does not admit stable publication", () => {
+  for (const inputs of [
+    { "dry-run": "false" },
+    { "dry-run": "false", sha: sourceSha, "target-ref": "release/v4/v4.1" },
+  ]) {
+    const context = manualContext(promotion, inputs);
+    assert.equal(jobEnabled("promote", context), false);
+    assert.equal(jobEnabled("reject-manual-apply", context), true);
+  }
+  const recoveryContext = manualContext(promotion, {
+    sha: sourceSha,
+    "dry-run": "false",
+    "recover-durable-transaction": true,
+  });
+  assert.equal(jobEnabled("promote", recoveryContext), true);
+  assert.equal(jobEnabled("reject-manual-apply", recoveryContext), false);
+  assert.equal(
+    renderRequest(promotion, "promote", recoveryContext)[
+      "publish-transaction-override"
+    ],
+    true,
+  );
+});

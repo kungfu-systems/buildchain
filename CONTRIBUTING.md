@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-12
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-11
+  generated_at: 2026-09-12
   visible_context: Repository contribution rules and implementation naming and release transition changes.
   invisible_context_boundary: No private credentials or unpublished external release state.
 ---
@@ -158,8 +158,11 @@ release/vX/vX.Y -> publish-gate/major
 - Merging into `alpha/*`, `release/*`, or `publish-gate/major` expresses a
   release intent. Buildchain promotion then creates version-state commits,
   exact tags, floating tags, npm publish evidence, and next-alpha state.
-- Manual promotion dispatch is dry-run only; non-dry-run promotion follows a
-  successful protected workflow path.
+- Manual alpha publication requires an explicit protected source SHA and passes
+  the same source qualification and fresh hosted admission as automatic publication.
+  Use `runtime-ref` to select the execution runtime. Set recovery inputs only when
+  resuming an existing transaction; a first publication leaves them empty. Stable
+  publication continues through the protected automatic channel path.
 
 See [`docs/release-governance.md`](docs/release-governance.md),
 [`docs/release-flow.md`](docs/release-flow.md), and
