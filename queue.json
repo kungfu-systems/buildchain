@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 98,
+  "generation": 99,
   "fencingCounter": 33,
   "policy": {
     "agingSeconds": 900,
@@ -12,51 +12,7 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": {
-    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "ready",
-    "repository": "kungfu-systems/buildchain",
-    "protectedBase": "dev/v4/v4.1",
-    "candidateId": "sha256:f7623ad8f790c954810f5ad98ad9307438534dad364003b77a217e7576560223",
-    "pullRequestNumber": 3763,
-    "sourceHead": "ced32c68741448eb42a5835c6f49b8d3d0f5a6fd",
-    "sourceRoot": "sha256:91df23a874ddaebf46b4b7e9e7d6df7ada089be828bc3d5b5f50e1b3dbd8b8e9",
-    "sourceIdentityRoot": "sha256:e970f7fbd8804ea71c8f9724a026b81631ba271a2cdc4c63764c8134701d95c0",
-    "sourcePatchRoot": "sha256:5ab1a1407ce2d2ee7aa2468f7f2789a4cd99623fc4270183a09e02e30b5bd164",
-    "sourceProofRoot": "sha256:76349253dc88c4e7a9970deef482e20199c36c6052bb2eea6d8980d7fdded8e7",
-    "planRoot": "sha256:552f72dadc45cff2f08f2c5fc7b829403b26456d76e1e6dc7465a1e46e54834d",
-    "closureRoot": "sha256:f534a5d2d4ffd34606d455b126d7c74dd305d5ef37077d2914b706d94e8ca145",
-    "dependencyRoot": "sha256:82b151362b5a7c702c53fdf750b10ecb9ac1e99ac1b53a2acf7456dc9a8cda79",
-    "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
-    "affectedPaths": [
-      "architecture/agent-change-map.md",
-      "architecture/decisions/0006-business-attempt-journal.md",
-      "architecture/internal-capabilities.json",
-      "architecture/maintainability-policy.json",
-      "dist/readers/business-attempt.cjs",
-      "packages/core/workflow/attempt/identity.js",
-      "packages/core/workflow/attempt/materials.js",
-      "packages/core/workflow/attempt/reader-entry.js",
-      "packages/core/workflow/attempt/reader.js",
-      "packages/core/workflow/attempt/records.js",
-      "packages/core/workflow/attempt/store.js",
-      "scripts/build-release-discussion-reader.mjs",
-      "tests/business-attempt-materials.test.mjs",
-      "tests/business-attempt-store.test.mjs",
-      "tests/business-attempt.test.mjs",
-      "tests/helpers/business-attempt.mjs"
-    ],
-    "shardEvidenceRoots": [],
-    "sourceWorkflowRunId": 34698654797,
-    "deliveryClass": "non-native-fast",
-    "priority": "ordinary",
-    "generation": 33,
-    "expectedOldStateRoot": "sha256:eb2794313d0c6348732881540f89de00724522280ca8575478e0a7ce23e1f199",
-    "issuedAt": "2026-09-12T14:24:08.935Z",
-    "expiresAt": "2026-09-12T15:24:08.935Z",
-    "fencingToken": "sha256:4f901098e05317d6aee582b3273abd48a5b52c38f6d0870adb3661ab9726a5e1",
-    "nextAction": "Replay on the exact current dev base, prove required checks, then enqueue the unchanged PR head."
-  },
+  "activeWarrant": null,
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -6498,11 +6454,19 @@
       "sourceWorkflowRunId": 34698654797,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-12T14:24:05.317Z",
-      "updatedAt": "2026-09-12T14:24:08.935Z",
+      "updatedAt": "2026-09-12T14:37:49.872Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "selected",
-      "terminal": null,
+      "status": "merged",
+      "terminal": {
+        "outcome": "merged",
+        "reason": "Protected merge and successful exact merge-group checks read back at c69618e3e2c5fc6be261d23564a2780602191163",
+        "evidenceRoot": "sha256:fdd0d44a32ddac9d29709b4131d3daca5df9d030ffd1f15507e23d320b0839aa",
+        "closedAt": "2026-09-12T14:37:49.872Z",
+        "fencingToken": "sha256:4f901098e05317d6aee582b3273abd48a5b52c38f6d0870adb3661ab9726a5e1",
+        "leaseGeneration": 33,
+        "successorWake": null
+      },
       "affectedPaths": [
         "architecture/agent-change-map.md",
         "architecture/decisions/0006-business-attempt-journal.md",
@@ -6524,6 +6488,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-12T14:24:08.935Z",
-  "stateRoot": "sha256:aa56cc3b0f7c7dfbf4a1b7c2ce5fa7ae2253819da796c96a5ec0f5e47df16c37"
+  "updatedAt": "2026-09-12T14:37:49.872Z",
+  "stateRoot": "sha256:3098e0cea3ba70babecc24b695cc059459a8488a8b5a1800b3c26dc261070814"
 }
