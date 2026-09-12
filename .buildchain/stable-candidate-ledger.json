@@ -6,7 +6,7 @@
   "hold": {
     "enabled": false,
     "reason": "",
-    "updatedAt": "2026-09-12T00:32:47.851Z"
+    "updatedAt": "2026-09-12T21:06:26.176Z"
   },
   "candidates": [
     {
@@ -304,9 +304,77 @@
         "stableSha": "b76388c9a5a82d956edac123d08a72945424a84e",
         "promotedAt": "2026-09-11T23:49:57.000Z"
       }
+    },
+    {
+      "version": "4.1.3-alpha.0",
+      "stableVersion": "4.1.3",
+      "sha": "8fa54e157b67e5758b8b35c9e7b0d479227794bc",
+      "tag": "v4.1.3-alpha.0",
+      "publishedAt": "2026-09-12T06:48:23.000Z",
+      "state": "soaking",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-09-12T21:06:26.176Z",
+        "soakStartedAt": "",
+        "soakElapsedSeconds": 0,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-09-12T06:48:23.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v4.1.3-alpha.0"
+          },
+          {
+            "id": "status:buildchain-canary/buildchain-zero-input",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          }
+        ]
+      },
+      "decision": {
+        "reason": "checks-incomplete",
+        "updatedAt": "2026-09-12T21:06:26.176Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "4.1.3-alpha.1",
+      "stableVersion": "4.1.3",
+      "sha": "17e927dbbeee4f1858785674f2db6f81aca6107f",
+      "tag": "v4.1.3-alpha.1",
+      "publishedAt": "2026-09-12T10:25:05.000Z",
+      "state": "soaking",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-09-12T21:06:26.176Z",
+        "soakStartedAt": "",
+        "soakElapsedSeconds": 0,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-09-12T10:25:05.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v4.1.3-alpha.1"
+          },
+          {
+            "id": "status:buildchain-canary/buildchain-zero-input",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          }
+        ]
+      },
+      "decision": {
+        "reason": "checks-incomplete",
+        "updatedAt": "2026-09-12T21:06:26.176Z",
+        "actor": "buildchain-patrol"
+      }
     }
   ],
-  "updatedAt": "2026-09-11T23:49:57.000Z",
+  "updatedAt": "2026-09-12T21:06:26.176Z",
   "stableReleases": [
     {
       "version": "4.1.2",
