@@ -68,31 +68,32 @@ export async function executeReleaseDiscussion(request, _admission, context) {
     discussionId: payload.discussionId || "",
     predecessor: payload.predecessor || "",
   });
-  if (payload.verifyMaterials === true) {
-    if (request.capability.permissions?.contents !== "write")
-      throw new Error(
-        "Material qualification requires declared contents: write",
+  await journal.observe("transport", async () => {
+    if (payload.verifyMaterials === true) {
+      if (request.capability.permissions?.contents !== "write")
+        throw new Error(
+          "Material qualification requires declared contents: write",
+        );
+      const retained = releaseCheckpoints({
+        session: journal.session,
+        store: journal.store,
+        octokit: context.octokit,
+      });
+      const reader = await retained.materials.put(
+        fs.readFileSync(
+          path.join(context.runtimeRoot, "dist/readers/release-discussion.cjs"),
+        ),
       );
-    const retained = releaseCheckpoints({
-      session: journal.session,
-      store: journal.store,
-      octokit: context.octokit,
-    });
-    const reader = await retained.materials.put(
-      fs.readFileSync(
-        path.join(context.runtimeRoot, "dist/readers/release-discussion.cjs"),
-      ),
-    );
-    const checkpoint = await retained.checkpoint("transport", {
-      schema: "buildchain.material-qualification/v1",
-      reader,
-      value: payload.key,
-    });
-    const readback = await retained.readCheckpoint(checkpoint);
-    if (readback.value !== payload.key)
-      throw new Error("Material qualification readback mismatch");
-  }
-  await journal.record("transport", "success");
+      const checkpoint = await retained.checkpoint("transport", {
+        schema: "buildchain.material-qualification/v1",
+        reader,
+        value: payload.key,
+      });
+      const readback = await retained.readCheckpoint(checkpoint);
+      if (readback.value !== payload.key)
+        throw new Error("Material qualification readback mismatch");
+    }
+  });
   await journal.record("recovery", payload.outcome);
   const state = await journal.read();
   if (payload.outcome === "failure")

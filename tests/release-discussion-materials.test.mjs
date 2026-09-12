@@ -251,3 +251,25 @@ test("runtime recovery preserves the first public reader while retaining each wr
   assert.deepEqual(await retained.publicationReader(repaired), original);
   assert.equal(records.length, 2);
 });
+
+test("material failure exposes bounded provider classification without credential details", async () => {
+  const fake = materialProvider();
+  fake.octokit.rest.repos.uploadReleaseAsset = async () => {
+    throw Object.assign(new Error("secret request details must not escape"), {
+      name: "HttpError",
+      status: 422,
+      request: { method: "POST", headers: { authorization: "secret" } },
+      response: { data: { errors: [{ code: "invalid" }] } },
+    });
+  };
+  const store = discussionMaterials({
+    octokit: fake.octokit,
+    repository: "example/consumer",
+    intentId: `sha256:${"a".repeat(64)}`,
+  });
+  await assert.rejects(
+    store.put(Buffer.from("material")),
+    (error) =>
+      error.code === "discussion-material-put-HttpError-422-POST-invalid",
+  );
+});

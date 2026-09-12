@@ -118,5 +118,30 @@ export function discussionMaterials({ octokit, repository, intentId }) {
     await read(handle);
     return handle;
   }
-  return { put, read };
+  async function diagnose(operation, effect) {
+    try {
+      return await effect();
+    } catch (error) {
+      let cause = error;
+      for (let depth = 0; depth < 4 && cause.cause; depth++)
+        cause = cause.cause;
+      const details = [
+        operation,
+        cause.name,
+        cause.status,
+        cause.request?.method,
+        cause.response?.data?.errors?.[0]?.code,
+        cause.code,
+      ].filter(Boolean);
+      error.code = `discussion-material-${details
+        .join("-")
+        .replace(/[^a-zA-Z0-9-]/gu, "-")
+        .slice(0, 140)}`;
+      throw error;
+    }
+  }
+  return {
+    put: (bytes) => diagnose("put", () => put(bytes)),
+    read: (handle) => diagnose("read", () => read(handle)),
+  };
 }
