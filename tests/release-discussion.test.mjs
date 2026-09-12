@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
@@ -264,10 +265,9 @@ test("checkpoint observations never substitute for successful semantic nodes", (
 
 test("published historical reader operates under Node permission restrictions", async () => {
   const { spawnSync } = await import("node:child_process");
-  const file = new URL(
-    "../dist/readers/release-discussion.cjs",
-    import.meta.url,
-  ).pathname;
+  const file = fileURLToPath(
+    new URL("../dist/readers/release-discussion.cjs", import.meta.url),
+  );
   const records = intent.expectedNodes.map((node) => progress(node, "success"));
   const result = spawnSync(
     process.execPath,
