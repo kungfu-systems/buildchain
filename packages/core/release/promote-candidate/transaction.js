@@ -20,14 +20,17 @@ export async function promoteReleaseCandidate(
     observeNode = (_node, effect) => effect(),
   },
 ) {
-  const context = await observeNode("qualification", () =>
-    prepareCandidatePublication(request, {
+  const context = await observeNode("qualification", async () => {
+    const prepared = await prepareCandidatePublication(request, {
       octokit,
       mutationOctokit,
       actor,
       runId,
-    }),
-  );
+    });
+    if (request.retainRecoveryMaterials)
+      await request.retainRecoveryMaterials();
+    return prepared;
+  });
   const {
     repository,
     sourceSha,
@@ -39,7 +42,6 @@ export async function promoteReleaseCandidate(
     documents,
     sourceBinding,
   } = context;
-  if (request.retainRecoveryMaterials) await request.retainRecoveryMaterials();
   activateExactPnpm();
   const settlement = await applyAndSettle({
     request,

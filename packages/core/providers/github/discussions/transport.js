@@ -1,11 +1,25 @@
 const fields =
-  "id number url body author { login id } lastEditedAt repository { nameWithOwner }";
-const commentFields = "id url body author { login id } lastEditedAt";
+  "id number url body author { login ... on Node { id } } lastEditedAt repository { nameWithOwner }";
+const commentFields =
+  "id url body author { login ... on Node { id } } lastEditedAt";
 
 export function discussionTransport(graphql) {
+  async function request(query, variables) {
+    try {
+      return await graphql(query, variables);
+    } catch (error) {
+      const code =
+        error.errors?.[0]?.extensions?.code ||
+        error.errors?.[0]?.type ||
+        error.status ||
+        "unknown";
+      error.code = `discussion-provider-${String(code).replace(/[^a-zA-Z0-9-]/gu, "-")}`;
+      throw error;
+    }
+  }
   async function repository(repository) {
     const [owner, name] = repository.split("/");
-    const result = await graphql(
+    const result = await request(
       `
         query ($owner: String!, $name: String!) {
           viewer {
@@ -35,14 +49,14 @@ export function discussionTransport(graphql) {
   }
   async function list(repository, categoryId, after = null) {
     const [owner, name] = repository.split("/");
-    const result = await graphql(
+    const result = await request(
       `query($owner:String!,$name:String!,$category:ID!,$after:String){repository(owner:$owner,name:$name){discussions(first:100,after:$after,categoryId:$category,orderBy:{field:CREATED_AT,direction:ASC}){nodes{${fields}} pageInfo{hasNextPage endCursor}}}}`,
       { owner, name, category: categoryId, after },
     );
     return result.repository.discussions;
   }
   async function get(id) {
-    const result = await graphql(
+    const result = await request(
       `query($id:ID!){node(id:$id){... on Discussion{${fields}}}}`,
       { id },
     );
@@ -51,7 +65,7 @@ export function discussionTransport(graphql) {
     return result.node;
   }
   async function comments(id, after = null) {
-    const result = await graphql(
+    const result = await request(
       `query($id:ID!,$after:String){node(id:$id){... on Discussion{comments(first:100,after:$after){nodes{${commentFields}} pageInfo{hasNextPage endCursor}}}}}`,
       { id, after },
     );
@@ -60,14 +74,14 @@ export function discussionTransport(graphql) {
     return result.node.comments;
   }
   async function create({ repositoryId, categoryId, title, body }) {
-    const result = await graphql(
+    const result = await request(
       `mutation($input:CreateDiscussionInput!){createDiscussion(input:$input){discussion{${fields}}}}`,
       { input: { repositoryId, categoryId, title, body } },
     );
     return result.createDiscussion.discussion;
   }
   async function append(id, body) {
-    const result = await graphql(
+    const result = await request(
       `mutation($input:AddDiscussionCommentInput!){addDiscussionComment(input:$input){comment{${commentFields}}}}`,
       { input: { discussionId: id, body } },
     );

@@ -238,3 +238,40 @@ test("independent binary workflow joins intent and a late result stays on the su
   );
   assert.equal((await next.read()).status, "complete");
 });
+
+test("release recovery inherits the immutable node graph instead of a new caller default", async () => {
+  const { publicationNodes } =
+    await import("../packages/core/release/discussion/publication.js");
+  const { openReleaseSession } =
+    await import("../packages/core/release/discussion/session.js");
+  const fake = provider();
+  const runtime = {
+    repository: "kungfu-systems/buildchain",
+    sha: "a".repeat(40),
+    readerDigest: `sha256:${"b".repeat(64)}`,
+  };
+  const expectedNodes = ["qualification", "publication", "binary-distribution"];
+  await openReleaseSession({
+    graphql: fake.graphql,
+    repository: "example/consumer",
+    key: "4.1.3-alpha.0",
+    source: { version: "4.1.3-alpha.0" },
+    expectedNodes,
+    runtime,
+    attempt: "100:1",
+  });
+  const request = {
+    repository: "example/consumer",
+    version: "4.1.3-alpha.0",
+    "resume-discussion-id": fake.discussion.id,
+    "standalone-binary-distribution": false,
+  };
+  assert.deepEqual(
+    await publicationNodes(request, fake.graphql),
+    expectedNodes,
+  );
+  await assert.rejects(
+    publicationNodes({ ...request, version: "4.1.4-alpha.0" }, fake.graphql),
+    /cannot change the release intent/,
+  );
+});

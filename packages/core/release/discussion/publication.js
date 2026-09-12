@@ -1,8 +1,30 @@
+import { decodeRecord } from "./envelope.js";
+import { discussionTransport } from "../../providers/github/discussions/transport.js";
 import path from "node:path";
 import fs from "node:fs";
 import { openReleaseSession, RELEASE_NODES } from "./session.js";
 import { releaseCheckpoints, retainRecoveryMaterials } from "./checkpoints.js";
 import { promoteReleaseCandidate } from "../promote-candidate/transaction.js";
+
+export async function publicationNodes(request, graphql) {
+  if (!request["resume-discussion-id"])
+    return [
+      ...RELEASE_NODES,
+      ...(request["standalone-binary-distribution"]
+        ? ["binary-distribution"]
+        : []),
+    ];
+  const discussion = await discussionTransport(graphql).get(
+    request["resume-discussion-id"],
+  );
+  const intent = decodeRecord(discussion.body);
+  if (
+    intent?.repository !== request.repository ||
+    intent.key !== request.version
+  )
+    throw new Error("Discussion recovery cannot change the release intent");
+  return intent.expectedNodes;
+}
 
 export async function publishWithDiscussion(
   request,
@@ -23,12 +45,7 @@ export async function publishWithDiscussion(
     repository: request.repository,
     key: request.version,
     source: { version: request.version },
-    expectedNodes: [
-      ...RELEASE_NODES,
-      ...(request["standalone-binary-distribution"]
-        ? ["binary-distribution"]
-        : []),
-    ],
+    expectedNodes: await publicationNodes(request, octokit.graphql),
     runtime,
     attempt,
     discussionId: request["resume-discussion-id"],
