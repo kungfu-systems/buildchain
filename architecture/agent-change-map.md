@@ -134,6 +134,7 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - `.github/workflows/public-release-promote.yml`
 - `.github/workflows/self-build-verify.yml`
 - `.github/workflows/self-release-promote.yml`
+- `.github/workflows/.release-binary-assets.yml`
 
 ## action-process-runtime
 
@@ -1628,6 +1629,45 @@ Owner: Buildchain publication promotion transaction maintainers
 ### Minimal validation
 
 - `node --test tests/release-candidate-promote.test.mjs tests/product-publication-topology.test.mjs tests/publication-settlement.test.mjs`
+
+## release-discussion-transactions
+
+Owner: Buildchain release maintainers
+
+### Implementation
+
+- `packages/core/release/discussion/actions.js`
+- `packages/core/release/discussion/binary.js`
+- `packages/core/release/discussion/checkpoints.js`
+- `packages/core/release/discussion/envelope.js`
+- `packages/core/release/discussion/publication.js`
+- `packages/core/release/discussion/qualification.js`
+- `packages/core/release/discussion/reader-entry.js`
+- `packages/core/release/discussion/reader.js`
+- `packages/core/release/discussion/recovery.js`
+- `packages/core/release/discussion/session.js`
+- `packages/core/release/discussion/store.js`
+- `packages/core/providers/github/discussions/materials.js`
+- `packages/core/providers/github/discussions/transport.js`
+
+### Contracts
+
+- `contracts/release-discussion-v1.schema.json`
+
+### Tests
+
+- `tests/release-discussion-materials.test.mjs`
+- `tests/release-discussion-session.test.mjs`
+- `tests/release-discussion.test.mjs`
+
+### Generated outputs
+
+- `dist/readers/release-discussion.cjs`
+
+### Minimal validation
+
+- `node --test tests/release-discussion*.test.mjs`
+- `node scripts/build-release-discussion-reader.mjs --check`
 
 ## release-line-bootstrap
 

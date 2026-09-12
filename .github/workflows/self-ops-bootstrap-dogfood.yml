@@ -5,6 +5,11 @@ on:
       - dev/v4/v4.1
   workflow_dispatch:
     inputs:
+      request-json:
+        description: Optional typed request passed through the public Bootstrap API.
+        required: false
+        default: ""
+        type: string
       candidate-sha:
         description: Exact candidate SHA
         required: true
@@ -38,6 +43,7 @@ permissions:
   attestations: write
   checks: write
   contents: write
+  discussions: write
   deployments: write
   id-token: write
   issues: write
@@ -64,6 +70,7 @@ jobs:
           token: ${{ github.token }}
     timeout-minutes: 5
   prepare:
+    if: ${{ !inputs.request-json }}
     name: Prepare exact candidate requests
     runs-on: ubuntu-24.04
     permissions:
@@ -94,10 +101,10 @@ jobs:
     needs:
       - prepare
       - execution-runtime
-    if: ${{ needs.prepare.outputs.ready == 'true' }}
+    if: ${{ always() && needs.execution-runtime.result == 'success' && (inputs.request-json != '' || needs.prepare.outputs.ready == 'true') }}
     uses: kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4
     with:
-      request-json: ${{ needs.prepare.outputs.conformance-request }}
+      request-json: ${{ inputs.request-json || needs.prepare.outputs.conformance-request }}
       runtime-ref: ${{ inputs.runtime-ref }}
     secrets: inherit
   recovery-conformance:

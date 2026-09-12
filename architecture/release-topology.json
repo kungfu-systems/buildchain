@@ -138,6 +138,8 @@
         "packages/core/governance/buildchain-compatibility-proof.js",
         "packages/core/observability/controller-evidence.js",
         "packages/core/providers/github-cli-api.js",
+        "packages/core/providers/github/discussions/materials.js",
+        "packages/core/providers/github/discussions/transport.js",
         "packages/core/providers/github/graphql-errors.js",
         "packages/core/providers/github/release-assets.js",
         "packages/core/publication/binary/action.js",
@@ -161,6 +163,13 @@
         "packages/core/publication/settlement/actions.js",
         "packages/core/publication/settlement/transaction.js",
         "packages/core/release/commands/ensure-github-release.mjs",
+        "packages/core/release/discussion/binary.js",
+        "packages/core/release/discussion/checkpoints.js",
+        "packages/core/release/discussion/envelope.js",
+        "packages/core/release/discussion/publication.js",
+        "packages/core/release/discussion/reader.js",
+        "packages/core/release/discussion/session.js",
+        "packages/core/release/discussion/store.js",
         "packages/core/release/github-provider-plane.js",
         "packages/core/release/github-release.js",
         "packages/core/release/next-development-transition.js",
@@ -202,6 +211,7 @@
         "packages/core/release/promote-candidate/oci-provider.js",
         "packages/core/release/promote-candidate/oci-registry-client.js",
         "packages/core/release/promote-candidate/outputs.js",
+        "packages/core/release/promote-candidate/preparation.js",
         "packages/core/release/promote-candidate/product-finalization-wait.js",
         "packages/core/release/promote-candidate/product-provider-adapters.js",
         "packages/core/release/promote-candidate/product-provider-github-adapters.js",
@@ -233,7 +243,7 @@
         "packages/core/runtime/spawn-command.js",
         "packages/core/web/web-surface-publication-candidate.js"
       ],
-      "root": "sha256:a701181b0e2081033458262c1c2355c4716b416c25a11f4e330aa83c59e265a0"
+      "root": "sha256:876e54a9240478ecd3bfa2b3cc386529e04bc818ca15844b9047832c9a9c4898"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/runtime/domain-wasm.js",

@@ -85,6 +85,9 @@ jobs:
     needs:
       - execution-runtime
   execute:
+    concurrency:
+      group: buildchain-release-promotion-${{ github.repository }}
+      cancel-in-progress: false
     name: Execute exact admitted candidate
     needs:
       - admit

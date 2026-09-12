@@ -19444,6 +19444,64 @@
       ]
     },
     {
+      "id": "packages/core/release/discussion/reader.js#discussionStatus",
+      "name": "discussionStatus",
+      "kind": "function",
+      "signature": "function discussionStatus(state)",
+      "parameters": [
+        {
+          "name": "state",
+          "signature": "state"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release/discussion/reader.js",
+        "line": 151
+      },
+      "example": "import { discussionStatus } from \"@kungfu-tech/buildchain/release-discussion-reader\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release/discussion/reader.js#readReleaseDiscussion",
+      "name": "readReleaseDiscussion",
+      "kind": "function",
+      "signature": "function readReleaseDiscussion({ body, records })",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ body, records }"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release/discussion/reader.js",
+        "line": 11
+      },
+      "example": "import { readReleaseDiscussion } from \"@kungfu-tech/buildchain/release-discussion-reader\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/release/next-development-controller.js#createNextDevelopmentController",
       "name": "createNextDevelopmentController",
       "kind": "function",
@@ -30009,6 +30067,30 @@
       "deprecationReplacement": "",
       "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/release-discussion-reader",
+      "export": "./release-discussion-reader",
+      "target": "./packages/core/release/discussion/reader.js",
+      "digest": "sha256:ffda31a96dfb4f5515e0e1099ec34300e79327f3f23b83b211a9b0747c760720",
+      "summary": "Standalone historical decoder for append-only release Discussion intent, attempt lineage and recovery handoff.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 2,
+      "symbolIds": [
+        "packages/core/release/discussion/reader.js#discussionStatus",
+        "packages/core/release/discussion/reader.js#readReleaseDiscussion"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     }
   ],
   "docs": [
@@ -30020,7 +30102,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:ba1b9db61750646d507f086f0f267965a94b6c1276ab6d9f958ca4645b2a5073"
+      "digest": "sha256:b37478c7c5f6a4c09a89bb7f4dfe70c3ebcfa4cae21f25e09d16f499bf526afb"
     },
     {
       "id": "build-facts",

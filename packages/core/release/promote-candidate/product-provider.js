@@ -159,7 +159,10 @@ export async function applyProductPublication(request, plan) {
   });
   transaction = await executeReleaseTailTransaction(transaction, {
     adapters: runtime.adapters,
-    checkpoint: (next) => writeReleaseTailTransaction(statePath, next),
+    checkpoint: async (next) => {
+      writeReleaseTailTransaction(statePath, next);
+      if (request.discussionCheckpoint) await request.discussionCheckpoint("publication", next);
+    },
   });
   writeReleaseTailTransaction(statePath, transaction);
   const releaseSha = await runtime.resolveReleaseSha();

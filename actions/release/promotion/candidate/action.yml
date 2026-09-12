@@ -2,6 +2,12 @@ name: "Promote a v4 declarative release candidate"
 author: "Keren Dong"
 description: "Validate sealed candidate evidence and execute one rooted product publication and Release Tail Provider Plane"
 inputs:
+  standalone-binary-distribution:
+    description: Include binary distribution in this release intent.
+    default: "false"
+  resume-discussion-id:
+    description: Existing consumer release intent Discussion ID.
+    required: false
   token:
     {
       required: true,
@@ -119,6 +125,10 @@ inputs:
       description: "Dogfood-only deterministic failure injection after a checkpointed capability",
     }
 outputs:
+  discussion-id:
+    description: Durable release intent Discussion ID.
+  discussion-url:
+    description: Durable release intent Discussion URL.
   release-passport-path:
     { description: "Buildchain-aggregated Release Passport" }
   release-passport-root: { description: "Release Passport content root" }

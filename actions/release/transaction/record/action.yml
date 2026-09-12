@@ -1,0 +1,27 @@
+name: Release transaction record
+description: Initialize release intent, append independently owned progress and inspect one durable Discussion across workflow recovery.
+inputs:
+  token:
+    description: Consumer repository token with discussions permission.
+    required: true
+  session-json:
+    description: Initialized release Discussion session.
+    required: true
+  node:
+    description: Declared semantic node.
+    required: true
+  status:
+    description: Running, success, failure or cancelled.
+    required: true
+  sequence:
+    description: Monotonic sequence within this node and attempt.
+    required: true
+  payload-json:
+    description: Bounded non-secret node evidence.
+    required: false
+outputs:
+  record-id:
+    description: Release transaction record-id.
+runs:
+  using: node24
+  main: dist/index.js
