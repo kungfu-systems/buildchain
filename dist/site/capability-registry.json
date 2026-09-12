@@ -15,7 +15,7 @@
       "maturity": "stable",
       "counts": {
         "manualCount": 4,
-        "pageCount": 26,
+        "pageCount": 27,
         "cliCommandCount": 9,
         "nodeApiCount": 0,
         "workflowCount": 0,
@@ -51,9 +51,9 @@
         "manualCount": 7,
         "pageCount": 8,
         "cliCommandCount": 27,
-        "nodeApiCount": 23,
+        "nodeApiCount": 24,
         "workflowCount": 0,
-        "actionCount": 94
+        "actionCount": 97
       },
       "manuals": [
         "docs/release-passport.md",

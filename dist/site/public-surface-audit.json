@@ -5,8 +5,8 @@
   "summary": {
     "cliCommandCount": 117,
     "workflowCount": 67,
-    "actionCount": 265,
-    "sitePageCount": 93,
+    "actionCount": 268,
+    "sitePageCount": 94,
     "docCommandRefCount": 1036,
     "failureCount": 0
   },
@@ -864,6 +864,8 @@
           "controller-receipt-digest",
           "controller-receipt-json",
           "controller-receipt-status",
+          "discussion-id",
+          "discussion-url",
           "github-artifact-attestation-evidence-root",
           "github-artifact-attestation-id",
           "github-artifact-attestation-publication-receipt-digest",
@@ -888,7 +890,7 @@
           "release-tail-transaction-state",
           "release-transaction-root"
         ],
-        "outputCount": 31
+        "outputCount": 33
       },
       {
         "id": "build",
@@ -1740,6 +1742,8 @@
           "controller-receipt-digest",
           "controller-receipt-json",
           "controller-receipt-status",
+          "discussion-id",
+          "discussion-url",
           "github-artifact-attestation-evidence-root",
           "github-artifact-attestation-id",
           "github-artifact-attestation-publication-receipt-digest",
@@ -1775,7 +1779,7 @@
           "release-tail-transaction-state",
           "release-transaction-root"
         ],
-        "outputCount": 43
+        "outputCount": 45
       },
       {
         "id": "public-release-propagation",
@@ -4435,6 +4439,7 @@
           "repository",
           "required-artifacts-path",
           "required-status-check",
+          "resume-discussion-id",
           "resume-transaction-id",
           "runtime-commit",
           "runtime-tree",
@@ -4442,12 +4447,13 @@
           "sealed-bundle-root",
           "source-sha",
           "stage-capsules-path",
+          "standalone-binary-distribution",
           "state-path",
           "target-ref",
           "target-sha",
           "token"
         ],
-        "inputCount": 32
+        "inputCount": 34
       },
       {
         "id": "release/promotion/classify",
@@ -4836,6 +4842,42 @@
           "state-path"
         ],
         "inputCount": 11
+      },
+      {
+        "id": "release/transaction/inspect",
+        "path": "actions/release/transaction/inspect/action.yml",
+        "inputs": [
+          "session-json",
+          "token"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "release/transaction/open",
+        "path": "actions/release/transaction/open/action.yml",
+        "inputs": [
+          "discussion-id",
+          "dry-run",
+          "expected-nodes-json",
+          "intent-key",
+          "predecessor",
+          "source-json",
+          "token"
+        ],
+        "inputCount": 7
+      },
+      {
+        "id": "release/transaction/record",
+        "path": "actions/release/transaction/record/action.yml",
+        "inputs": [
+          "node",
+          "payload-json",
+          "sequence",
+          "session-json",
+          "status",
+          "token"
+        ],
+        "inputCount": 6
       },
       {
         "id": "runtime/dependencies/install",
@@ -5516,6 +5558,10 @@
       },
       {
         "id": "manual:release-candidate",
+        "category": "manual"
+      },
+      {
+        "id": "manual:release-discussions",
         "category": "manual"
       },
       {
@@ -10831,8 +10877,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e43fdb0289df88871f3f0febbe04dcb9311a252a2b1df9b3a83a2d10c9d4a70f",
-    "workflowRegistryDigest": "7b4d79ca3a3c8875ad0c5b05166880f5cb97713f8388e0cf8ec9fed8d170850d",
-    "pageRegistryDigest": "db7e6d4ea151259ee3cfc863d9f928d77db783548788771097a94f148d5f9a0a"
+    "workflowRegistryDigest": "cb8d12101109a846a0aeba5c5bf82078df437118e3cccbe9ab0d173112a6f88a",
+    "pageRegistryDigest": "67e89b8d65cae0ccdd44c07aa759dc9b92f38b0311f0808127a565ff7ccc4eb9"
   },
   "comparison": {
     "missingCliRegistry": [],

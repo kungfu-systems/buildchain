@@ -49,13 +49,17 @@ export function normalizePromotionRequest(value, kind = "request") {
       throw new Error(`Unsupported promotion ${kind} schema`);
     result[key] = input;
   }
+  if (
+    result["resume-discussion-id"] &&
+    (result["resume-candidate-run-id"] || result["resume-transaction-id"])
+  )
+    throw new Error(
+      "Discussion recovery cannot be combined with candidate-run or transaction-id recovery",
+    );
   return result;
 }
 
-export function bindPromotionInvocation(
-  requestValue,
-  selection,
-) {
+export function bindPromotionInvocation(requestValue, selection) {
   const request = normalizePromotionRequest(requestValue);
   const projected = Object.fromEntries(
     Object.entries(request).filter(([key]) =>

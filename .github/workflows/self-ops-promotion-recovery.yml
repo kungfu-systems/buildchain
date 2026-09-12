@@ -22,6 +22,10 @@ on:
         description: Exact Git tree recorded for the sealed candidate
       resume-expected-candidate-root:
         description: Optional exact candidate root
+      resume-discussion-id:
+        description: Existing release Discussion ID whose retained materials will be recovered.
+        type: string
+        default: ""
       resume-transaction-id:
         description: Exact durable publication transaction identity; required only when resuming a sealed
           candidate
@@ -44,6 +48,7 @@ jobs:
       attestations: write
       checks: write
       contents: write
+      discussions: write
       id-token: write
       issues: write
       pull-requests: write
@@ -64,6 +69,7 @@ jobs:
           "resume-expected-workflow-name": "Build Surface Fixture",
           "resume-expected-source-tree": ${{ toJSON(inputs['resume-expected-source-tree'] || '') }},
           "resume-expected-candidate-root": ${{ toJSON(inputs['resume-expected-candidate-root'] || '') }},
+          "resume-discussion-id": ${{ toJSON(inputs['resume-discussion-id'] || '') }},
           "resume-transaction-id": ${{ toJSON(inputs['resume-transaction-id'] || '') }},
           "artifact-patterns": "buildchain-package-*",
           "required-artifact-count": 0,

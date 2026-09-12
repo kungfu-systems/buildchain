@@ -100,7 +100,7 @@ test("binary checksums cover sorted files once and replace the prior manifest at
     );
   }
 });
-test("binary publication retains protected environment and only immutable asset upload", () => {
+test("binary publication retains its protected environment and journals immutable asset upload", () => {
   const load = (file) =>
     YAML.parse(fs.readFileSync(new URL(`../${file}`, import.meta.url), "utf8"));
   const workflow = load(".github/workflows/.release-binary-assets.yml");
@@ -109,6 +109,7 @@ test("binary publication retains protected environment and only immutable asset 
   assert.deepEqual(workflow.jobs.publish.permissions, {
     actions: "read",
     contents: "write",
+    discussions: "write",
   });
   const action = load("actions/release/binary/publish/action.yml");
   assert.ok(

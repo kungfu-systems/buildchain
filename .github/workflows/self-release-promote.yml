@@ -73,6 +73,10 @@ on:
         description: Optional exact sha256 Release Candidate root
         required: false
         default: ""
+      resume-discussion-id:
+        description: Existing release Discussion ID whose retained materials will be recovered.
+        type: string
+        default: ""
       resume-transaction-id:
         description: Optional existing durable transaction identity
         required: false
@@ -228,6 +232,7 @@ jobs:
       attestations: write
       checks: write
       contents: write
+      discussions: write
       id-token: write
       issues: write
       pull-requests: write
@@ -248,6 +253,7 @@ jobs:
           "resume-expected-workflow-name": "Build Surface Fixture",
           "resume-expected-source-tree": ${{ toJSON(inputs['resume-expected-source-tree'] || '') }},
           "resume-expected-candidate-root": ${{ toJSON(inputs['resume-expected-candidate-root'] || '') }},
+          "resume-discussion-id": ${{ toJSON(inputs['resume-discussion-id'] || '') }},
           "resume-transaction-id": ${{ toJSON(inputs['resume-transaction-id'] || '') }},
           "artifact-patterns": "buildchain-package-*",
           "publish-rematerialize-on-resume": true,

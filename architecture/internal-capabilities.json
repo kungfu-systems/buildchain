@@ -459,6 +459,8 @@
     "packages/core/providers/github-token.js",
     "packages/core/providers/github/artifact-attestation.js",
     "packages/core/providers/github/commits.js",
+    "packages/core/providers/github/discussions/materials.js",
+    "packages/core/providers/github/discussions/transport.js",
     "packages/core/providers/github/json-client.js",
     "packages/core/providers/github/product-publication.js",
     "packages/core/providers/github/publication-control-plane.js",
@@ -566,6 +568,17 @@
     "packages/core/release/commands/release-propagation.mjs",
     "packages/core/release/commands/release-tail.mjs",
     "packages/core/release/commands/tail-reseal.mjs",
+    "packages/core/release/discussion/actions.js",
+    "packages/core/release/discussion/binary.js",
+    "packages/core/release/discussion/checkpoints.js",
+    "packages/core/release/discussion/envelope.js",
+    "packages/core/release/discussion/publication.js",
+    "packages/core/release/discussion/qualification.js",
+    "packages/core/release/discussion/reader-entry.js",
+    "packages/core/release/discussion/reader.js",
+    "packages/core/release/discussion/recovery.js",
+    "packages/core/release/discussion/session.js",
+    "packages/core/release/discussion/store.js",
     "packages/core/release/line/action.js",
     "packages/core/release/line/governance.js",
     "packages/core/release/line/plan.js",
@@ -828,6 +841,11 @@
     "scripts/tail-reseal-macos-rehearsal.mjs"
   ],
   "ownershipRules": [
+    {
+      "id": "historical-release-readers",
+      "owner": "Buildchain release maintainers",
+      "paths": ["dist/readers"]
+    },
     {
       "id": "action-runtime-sources",
       "owner": "Buildchain action maintainers",
@@ -2880,6 +2898,37 @@
       "generatedOutputs": [],
       "validationCommands": [
         "node --test tests/build-runtime-recovery.test.mjs"
+      ]
+    },
+    {
+      "id": "release-discussion-transactions",
+      "owner": "Buildchain release maintainers",
+      "implementation": [
+        "packages/core/release/discussion/actions.js",
+        "packages/core/release/discussion/binary.js",
+        "packages/core/release/discussion/checkpoints.js",
+        "packages/core/release/discussion/envelope.js",
+        "packages/core/release/discussion/publication.js",
+        "packages/core/release/discussion/qualification.js",
+        "packages/core/release/discussion/reader-entry.js",
+        "packages/core/release/discussion/reader.js",
+        "packages/core/release/discussion/recovery.js",
+        "packages/core/release/discussion/session.js",
+        "packages/core/release/discussion/store.js",
+        "packages/core/providers/github/discussions/materials.js",
+        "packages/core/providers/github/discussions/transport.js"
+      ],
+      "tests": [
+        "tests/release-discussion-materials.test.mjs",
+        "tests/release-discussion-session.test.mjs",
+        "tests/release-discussion.test.mjs"
+      ],
+      "contracts": ["contracts/release-discussion-v1.schema.json"],
+      "publicSurfaces": ["./release-discussion-reader"],
+      "generatedOutputs": ["dist/readers/release-discussion.cjs"],
+      "validationCommands": [
+        "node --test tests/release-discussion*.test.mjs",
+        "node scripts/build-release-discussion-reader.mjs --check"
       ]
     }
   ]

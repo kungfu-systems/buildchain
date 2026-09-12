@@ -52,6 +52,7 @@ function isTestFile(file) {
 function isGeneratedFile(file) {
   return (
     GENERATED_PATTERN.test(file) ||
+    /^dist\/readers\/[^/]+\.cjs$/u.test(file) ||
     file.startsWith("templates/bootstrap-recovery/")
   );
 }

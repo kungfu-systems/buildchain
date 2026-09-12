@@ -75,6 +75,7 @@ jobs:
       actions: read
       checks: read
       contents: write
+      discussions: write
       pull-requests: read
     secrets: inherit
     with:

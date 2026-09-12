@@ -32,5 +32,5 @@ export function assertBinaryInventory(root) {
   assert.equal(effect["continue-on-error"], undefined);
   const transaction = publish.modules.get("packages/core/publication/binary/transaction.js");
   assert.match(transaction, /validateBinaryCapability\([\s\S]*await client.publish\(/, "Binary effects must follow capability admission");
-  assert.match(publish.modules.get("packages/core/publication/binary/action.js"), /verifyCheckoutIdentity\([\s\S]*await publishBinaryAssets\(/);
+  assert.match(publish.modules.get("packages/core/publication/binary/action.js"), /verifyCheckoutIdentity\([\s\S]*await observeBinaryDistribution\([\s\S]*publishBinaryAssets\(/);
 }

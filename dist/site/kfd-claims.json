@@ -14,19 +14,19 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:b1088f1c224329b16cd23c285bc69334aa1ee102e5b44d5c09aaf156d76821b6",
+    "compatibilityDigest": "sha256:14368a3f99f38a8c9c1e053f7ec3651766e3535237f4c551cc75417cf7ef97b3",
     "majorLine": "v4"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "e453a2527b18099d2cf824b45eedca370f093cf436500cdef262bc58d3f2af4a",
+    "sha256": "9ca559d61190cb56633312714bc4535b860db91a7d564c1847ab54b589babb4d",
     "summary": {
       "cliCommandCount": 117,
       "workflowCount": 67,
-      "actionCount": 265,
-      "sitePageCount": 93,
+      "actionCount": 268,
+      "sitePageCount": 94,
       "docCommandRefCount": 1036,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "e453a2527b18099d2cf824b45eedca370f093cf436500cdef262bc58d3f2af4a",
+      "sha256": "9ca559d61190cb56633312714bc4535b860db91a7d564c1847ab54b589babb4d",
       "summary": {
         "cliCommandCount": 117,
         "workflowCount": 67,
-        "actionCount": 265,
-        "sitePageCount": 93,
+        "actionCount": 268,
+        "sitePageCount": 94,
         "docCommandRefCount": 1036,
         "failureCount": 0
       },
@@ -2107,6 +2107,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./cross-platform-adopter-qualification"
+        },
+        {
+          "id": "export:./release-discussion-reader",
+          "name": "@kungfu-tech/buildchain/release-discussion-reader",
+          "kind": "package-export",
+          "sourcePath": "packages/core/release/discussion/reader.js",
+          "evidencePath": "packages/core/release/discussion/reader.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./release-discussion-reader"
         }
       ],
       "siteConsumptionContracts": [
@@ -8883,7 +8895,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 32,
+          "inputCount": 34,
           "inputs": [
             "artifact-paths",
             "candidate-build-summary-path",
@@ -8906,6 +8918,7 @@
             "repository",
             "required-artifacts-path",
             "required-status-check",
+            "resume-discussion-id",
             "resume-transaction-id",
             "runtime-commit",
             "runtime-tree",
@@ -8913,6 +8926,7 @@
             "sealed-bundle-root",
             "source-sha",
             "stage-capsules-path",
+            "standalone-binary-distribution",
             "state-path",
             "target-ref",
             "target-sha",
@@ -9529,6 +9543,66 @@
             "rehearsal-evidence-path",
             "rehearsal-mode",
             "state-path"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:release/transaction/inspect",
+          "name": "action:release/transaction/inspect",
+          "kind": "action",
+          "sourcePath": "actions/release/transaction/inspect/action.yml",
+          "evidencePath": "actions/release/transaction/inspect/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "session-json",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:release/transaction/open",
+          "name": "action:release/transaction/open",
+          "kind": "action",
+          "sourcePath": "actions/release/transaction/open/action.yml",
+          "evidencePath": "actions/release/transaction/open/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 7,
+          "inputs": [
+            "discussion-id",
+            "dry-run",
+            "expected-nodes-json",
+            "intent-key",
+            "predecessor",
+            "source-json",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:release/transaction/record",
+          "name": "action:release/transaction/record",
+          "kind": "action",
+          "sourcePath": "actions/release/transaction/record/action.yml",
+          "evidencePath": "actions/release/transaction/record/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 6,
+          "inputs": [
+            "node",
+            "payload-json",
+            "sequence",
+            "session-json",
+            "status",
+            "token"
           ],
           "reverseAuditSource": "actions/*/action.yml"
         },
@@ -11052,6 +11126,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:release-discussions",
+          "name": "site-page:manual:release-discussions",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:release-flow",
           "name": "site-page:manual:release-flow",
           "kind": "site-page",
@@ -11594,6 +11680,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 728
+    "publicSurfaceCount": 733
   }
 }

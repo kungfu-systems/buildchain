@@ -119,7 +119,8 @@
       "./publication-rehearsal": "./packages/core/publication/publication-rehearsal.js",
       "./publication-qualification": "./packages/core/publication/publication-qualification.js",
       "./adopter-delivery": "./packages/core/adoption/adopter-delivery.js",
-      "./cross-platform-adopter-qualification": "./packages/core/adoption/cross-platform-adopter-qualification.js"
+      "./cross-platform-adopter-qualification": "./packages/core/adoption/cross-platform-adopter-qualification.js",
+      "./release-discussion-reader": "./packages/core/release/discussion/reader.js"
     }
   },
   "repository": "https://github.com/kungfu-systems/buildchain",

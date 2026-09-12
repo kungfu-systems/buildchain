@@ -47,7 +47,11 @@
       "packages/core/workflow/engine/release-promotion.js",
       "packages/core/workflow/settlement/actions.js",
       "packages/core/workflow/universal-self-dogfood.js",
-      "packages/core/workflow/universal-workflow-bootstrap.js"
+      "packages/core/workflow/universal-workflow-bootstrap.js",
+      "packages/core/release/discussion/qualification.js",
+      "packages/core/release/discussion/store.js",
+      "packages/core/release/discussion/envelope.js",
+      "packages/core/release/discussion/reader.js"
     ],
     "runtimeEntry": "architecture/runtime-entry.json",
     "runtimeRecovery": "same-public-entry-with-transient-runtime",
@@ -73,6 +77,12 @@
       "execution": "exact-candidate-canonical-projection",
       "payloadSchema": "kungfu-buildchain-v4-release-invocation/v1",
       "providerEffects": false
+    },
+    {
+      "id": "release-discussion",
+      "execution": "consumer-discussion-transport",
+      "payloadSchema": "buildchain.release-discussion-request/v1",
+      "providerEffects": true
     }
   ],
   "complexityBudget": {
@@ -98,7 +108,8 @@
     "pages": "write",
     "pull-requests": "write",
     "security-events": "write",
-    "statuses": "write"
+    "statuses": "write",
+    "discussions": "write"
   },
   "inventoryWorkflows": [
     ".github/workflows/.build-demo-adapter.yml",
