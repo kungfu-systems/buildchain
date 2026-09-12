@@ -112,8 +112,7 @@ jobs:
     timeout-minutes: 5
   reject-manual-apply:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] != 'true' &&
-      inputs['recover-durable-transaction'] != true && inputs['resume-candidate-run-id'] == '' && inputs['resume-discussion-id'] == '' &&
-      inputs['publication-admission-json'] == '' }}
+      (inputs.sha == '' || !startsWith(inputs['target-ref'], 'alpha/')) }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -126,8 +125,8 @@ jobs:
       - name: Reject manual apply
         uses: ./.buildchain/runtime/actions/workflow/admission/reject
         with:
-          reason: Manual apply requires a fresh sealed publication admission. Provide admission, runner,
-            control-plane audit, expected bindings, and used nonces JSON.
+          reason: Manual alpha publication requires an exact protected source SHA. The canonical publisher
+            independently qualifies the source and obtains fresh hosted publication admission.
     needs:
       - execution-runtime
   reject-invalid-durable-recovery:
@@ -212,7 +211,6 @@ jobs:
           (
           github.event_name == 'workflow_dispatch' &&
           startsWith(inputs['target-ref'], 'alpha/') &&
-          (inputs['resume-candidate-run-id'] != '' || inputs['resume-discussion-id'] != '' || inputs['recover-durable-transaction'] == true) &&
           inputs.sha != ''
           ) ||
           (

@@ -123,6 +123,15 @@ Bootstrap dogfood caller accepts this request through its manual
 `request-json` input, preserving the same public entry and central
 runtime preparation as other consumers.
 
+## First publication with a selected runtime
+
+For Buildchain self-publication, dispatch `self-release-promote.yml` with the exact
+protected alpha `sha`, its `target-ref`, `dry-run: "false"`, and the desired
+`runtime-ref`. Leave recovery selectors empty for a first publication. The public
+publisher still verifies the protected source and obtains fresh hosted admission.
+`recover-durable-transaction` is reserved for an existing partial publication;
+it is not required merely because the selected runtime differs from the entry.
+
 ## Resume by Discussion
 
 Pass `resume-discussion-id` in the public promotion request and select the repaired
