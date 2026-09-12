@@ -88,7 +88,10 @@ them and keep untrusted builds separate from qualification and provider writes.
 Fork events must never receive repository write credentials or inherited secrets.
 
 The generated contract lock binds the contract version, entry SHA, selected
-runtime SHA and source identity. Entry and runtime may differ. A normal run
+runtime SHA and configuration byte digest. It does not bind the consuming Git
+commit: committing a tracked lock must not invalidate that same lock. Exact
+source commit/tree identity is bound separately for each execution attempt.
+Entry and runtime may differ. A normal run
 uses its admitted lock; recovery may select a repaired runtime once through
 the central entry. Downstream nodes do not compare Buildchain SHAs. A changed
 contract requires an explicit reviewed config/lock upgrade; schema mismatch

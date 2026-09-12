@@ -47,19 +47,19 @@ export function bindConsumerSource(source, configBytes) {
   };
 }
 
-export function consumerContractLock({ entry, runtime, source }) {
+export function consumerContractLock({ entry, runtime, configDigest }) {
   for (const [name, value] of Object.entries({ entry, runtime })) {
     object(value, ["repository", "sha"], [], name);
     if (value.repository !== "kungfu-systems/buildchain")
       throw new Error(`${name}: untrusted Buildchain repository`);
     text(value.sha, `${name}.sha`, /^[0-9a-f]{40}$/u);
   }
-  text(source, "source", /^sha256:[0-9a-f]{64}$/u);
+  text(configDigest, "configDigest", /^sha256:[0-9a-f]{64}$/u);
   return {
     schema: "buildchain.consumer-contract-lock/v2",
     contract: CONSUMER_CONTRACT,
     entry: { ...entry },
     runtime: { ...runtime },
-    source,
+    configDigest,
   };
 }

@@ -137,9 +137,33 @@ test("compiler records commands as data and binds original bytes to the exact co
   const lock = consumerContractLock({
     entry: { repository: "kungfu-systems/buildchain", sha: "c".repeat(40) },
     runtime: { repository: "kungfu-systems/buildchain", sha: "d".repeat(40) },
-    source: result.identityDigest,
+    configDigest: result.identity.configDigest,
   });
   assert.notEqual(lock.entry.sha, lock.runtime.sha);
+  const laterSource = bindConsumerSource(
+    { ...source, commit: "e".repeat(40) },
+    bytes,
+  );
+  assert.notEqual(result.identityDigest, laterSource.identityDigest);
+  assert.deepEqual(
+    consumerContractLock({
+      entry: lock.entry,
+      runtime: lock.runtime,
+      configDigest: laterSource.identity.configDigest,
+    }),
+    lock,
+  );
+  const changed = bindConsumerSource(
+    {
+      ...source,
+      configBlob: createHash("sha1")
+        .update(`blob ${Buffer.byteLength(bytes + "\n")}\0`)
+        .update(bytes + "\n")
+        .digest("hex"),
+    },
+    bytes + "\n",
+  );
+  assert.notEqual(changed.identity.configDigest, lock.configDigest);
 });
 
 test("full consumer tree inspection rejects scripts and extra workflow wiring", () => {
