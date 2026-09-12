@@ -23,6 +23,10 @@ export function readReleaseDiscussion({ body, records }) {
     new Set(intent.expectedNodes).size !== intent.expectedNodes.length
   )
     throw new Error("Missing or duplicate expected nodes");
+  if (intent.organization && intent.organization !== "attempt-threads/v1")
+    throw new Error(
+      "Discussion organization requires its historical runtime reader",
+    );
   const attempts = groupAttempts(validateRecords(intent, records));
   if (!attempts.size)
     return {
@@ -156,6 +160,11 @@ export function discussionStatus(state) {
     status: state.status,
     attempt: state.attempt || "",
     attempts: state.attempts,
+    threads: [...(state.roots || new Map())].map(([attempt, comment]) => ({
+      attempt,
+      commentId: comment.id,
+      url: comment.url,
+    })),
     missingNodes: state.missingNodes,
     handoff: state.handoff || null,
     nodes: Object.fromEntries(

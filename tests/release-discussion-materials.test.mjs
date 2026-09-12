@@ -36,7 +36,13 @@ function materialProvider() {
         "archive creation must not require workflow-write permission on a candidate commit",
       );
       calls.push("create");
-      release = { id: 1, draft: input.draft, tag_name: input.tag_name };
+      release = {
+        id: 1,
+        draft: input.draft,
+        tag_name: input.tag_name,
+        html_url:
+          "https://github.com/example/consumer/releases/tag/untagged-materials",
+      };
       if (loseCreate) throw new Error("lost create response");
       return { data: release };
     },
@@ -49,6 +55,7 @@ function materialProvider() {
         id: assets.length + 1,
         name: input.name,
         bytes: input.data,
+        browser_download_url: `https://github.com/example/consumer/releases/download/untagged-materials/${input.name}`,
       };
       assets.push(asset);
       if (loseUpload) throw new Error("lost response");
@@ -305,4 +312,52 @@ test("Octokit transfers raw material bytes with automatically calculated HTTP le
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
+});
+
+test("diagnostics attach a byte-verified JSON report and text log to the owning checkpoint", async () => {
+  const fake = materialProvider();
+  const runtime = {
+    repository: "example/buildchain",
+    sha: "a".repeat(40),
+    readerDigest: `sha256:${"b".repeat(64)}`,
+  };
+  const { createIntent } =
+    await import("../packages/core/release/discussion/envelope.js");
+  const intent = createIntent({
+    repository: "example/consumer",
+    key: "1.0.0",
+    expectedNodes: ["publication"],
+    source: {},
+    runtime,
+  });
+  const records = [];
+  const session = { intent, runtime, attempt: "100:1", predecessor: "" };
+  const store = {
+    read: async () => ({ records }),
+    append: async (_session, record) => records.push(record),
+  };
+  const retained = releaseCheckpoints({
+    session,
+    store,
+    octokit: fake.octokit,
+  });
+  const result = await retained.diagnostics("publication", "publish-failed");
+  assert.equal(records.length, 1);
+  assert.equal(result.kind, "checkpoint");
+  assert.equal(result.attempt, session.attempt);
+  assert.deepEqual(
+    result.payload.attachments.map((a) => a.mediaType),
+    ["application/json", "text/plain"],
+  );
+  for (const attachment of result.payload.attachments) {
+    assert.match(
+      attachment.downloadUrl,
+      /^https:\/\/github.com\/example\/consumer\/releases\/download\//,
+    );
+    assert.equal(
+      materialDigest(await retained.materials.read(attachment)),
+      attachment.digest,
+    );
+  }
+  assert.equal((await retained.readCheckpoint(result)).code, "publish-failed");
 });

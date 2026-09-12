@@ -1,3 +1,5 @@
+import { readDiscussionThreads, eventParent } from "./threads.js";
+import { renderIntent, renderEvent } from "./presentation.js";
 import { collectDiscussionPages } from "../../providers/github/discussions/transport.js";
 import {
   canonicalJson,
@@ -95,11 +97,10 @@ export function releaseDiscussionStore(
         discussion = await transport.create({
           repositoryId: repository.id,
           categoryId: selected[0].id,
-          title: `Buildchain release: ${intent.key}`,
-          body: encodeRecord(
-            intent,
-            `Release transaction for ${intent.key}. Expected nodes: ${intent.expectedNodes.join(", ")}.`,
-          ),
+          title: intent.source?.qualification
+            ? `Buildchain qualification: ${intent.source.qualification}`
+            : `Buildchain release: ${intent.key}`,
+          body: encodeRecord(intent, renderIntent(intent)),
         });
       } catch (error) {
         discussion = await observeAfterUnknown(find, error);
@@ -110,39 +111,30 @@ export function releaseDiscussionStore(
   }
   async function read(session) {
     const discussion = await transport.get(session.discussion.id);
-    assertDiscussion(discussion, session.intent, session.writerId);
-    const comments = await collectDiscussionPages((after) =>
-      transport.comments(discussion.id, after),
+    const intent = assertDiscussion(
+      discussion,
+      session.intent,
+      session.writerId,
     );
-    const trusted = comments.filter(
-      (comment) => comment.author?.id === session.writerId,
-    );
-    if (
-      trusted.some(
-        (comment) => comment.lastEditedAt && decodeRecord(comment.body),
-      )
-    )
-      throw new Error(
-        "A transaction record was edited; historical facts are no longer intact",
-      );
-    const records = trusted
-      .map((comment) => decodeRecord(comment.body))
-      .filter(Boolean);
+    const threads = await readDiscussionThreads(transport, {
+      ...session,
+      intent,
+      discussion,
+    });
     return {
       discussion,
-      comments: trusted,
-      records,
-      ...readReleaseDiscussion({ body: discussion.body, records }),
+      ...threads,
+      ...readReleaseDiscussion({
+        body: discussion.body,
+        records: threads.records,
+      }),
     };
   }
   async function append(session, record) {
     if (session.dryRun) return { dryRun: true };
-    const body = encodeRecord(
-      record,
-      `${record.node}: ${record.status} (attempt ${record.attempt})`,
-    );
+    let observed;
     const find = async () => {
-      const observed = await read(session);
+      observed = await read(session);
       const existing = observed.comments.find(
         (comment) => decodeRecord(comment.body)?.id === record.id,
       );
@@ -155,8 +147,13 @@ export function releaseDiscussionStore(
     };
     const existing = await find();
     if (existing) return existing;
+    const parent = eventParent(observed, record);
+    const body = encodeRecord(
+      record,
+      renderEvent(record, session.intent, observed),
+    );
     try {
-      await transport.append(session.discussion.id, body);
+      await transport.append(session.discussion.id, body, parent);
     } catch (error) {
       return observeAfterUnknown(find, error);
     }

@@ -19463,7 +19463,7 @@
       ],
       "source": {
         "path": "packages/core/release/discussion/reader.js",
-        "line": 151
+        "line": 155
       },
       "example": "import { discussionStatus } from \"@kungfu-tech/buildchain/release-discussion-reader\";",
       "maturity": "stable",
@@ -30072,7 +30072,7 @@
       "specifier": "@kungfu-tech/buildchain/release-discussion-reader",
       "export": "./release-discussion-reader",
       "target": "./packages/core/release/discussion/reader.js",
-      "digest": "sha256:ffda31a96dfb4f5515e0e1099ec34300e79327f3f23b83b211a9b0747c760720",
+      "digest": "sha256:da8d3bfc6ba04130df6e894fc28ef4786eae322d8db874f87080429aab382b81",
       "summary": "Standalone historical decoder for append-only release Discussion intent, attempt lineage and recovery handoff.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -30102,7 +30102,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:b37478c7c5f6a4c09a89bb7f4dfe70c3ebcfa4cae21f25e09d16f499bf526afb"
+      "digest": "sha256:0fc24661217d58302858cca49a5f11d49c894fc720f6735e11da2dba50300c91"
     },
     {
       "id": "build-facts",

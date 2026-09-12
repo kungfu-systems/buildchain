@@ -166,10 +166,13 @@
         "packages/core/release/discussion/binary.js",
         "packages/core/release/discussion/checkpoints.js",
         "packages/core/release/discussion/envelope.js",
+        "packages/core/release/discussion/evidence.js",
+        "packages/core/release/discussion/presentation.js",
         "packages/core/release/discussion/publication.js",
         "packages/core/release/discussion/reader.js",
         "packages/core/release/discussion/session.js",
         "packages/core/release/discussion/store.js",
+        "packages/core/release/discussion/threads.js",
         "packages/core/release/github-provider-plane.js",
         "packages/core/release/github-release.js",
         "packages/core/release/next-development-transition.js",
@@ -243,7 +246,7 @@
         "packages/core/runtime/spawn-command.js",
         "packages/core/web/web-surface-publication-candidate.js"
       ],
-      "root": "sha256:876e54a9240478ecd3bfa2b3cc386529e04bc818ca15844b9047832c9a9c4898"
+      "root": "sha256:8c53933d9b9a475bd4961ff64db457ae3043e6e941c8d6c3624c06a0d22392b7"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/runtime/domain-wasm.js",

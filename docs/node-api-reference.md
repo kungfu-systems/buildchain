@@ -2714,5 +2714,5 @@ Target: `./packages/core/release/discussion/reader.js`. Public symbols: 2.
 
 | Symbol | Kind and signature | Parameters | Return | Errors | Side effects | Example | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `discussionStatus` | function: function discussionStatus(state) | state | unknown | Errors from called operations may propagate; no narrower throw contract is declared in source. | none-detected-by-static-source-scan | `import { discussionStatus } from "@kungfu-tech/buildchain/release-discussion-reader";` | `packages/core/release/discussion/reader.js:151` |
+| `discussionStatus` | function: function discussionStatus(state) | state | unknown | Errors from called operations may propagate; no narrower throw contract is declared in source. | none-detected-by-static-source-scan | `import { discussionStatus } from "@kungfu-tech/buildchain/release-discussion-reader";` | `packages/core/release/discussion/reader.js:155` |
 | `readReleaseDiscussion` | function: function readReleaseDiscussion({ body, records }) | { body, records } | unknown | May throw an Error on rejected input or failed operations; follow the linked source contract. | none-detected-by-static-source-scan | `import { readReleaseDiscussion } from "@kungfu-tech/buildchain/release-discussion-reader";` | `packages/core/release/discussion/reader.js:11` |

@@ -79,6 +79,7 @@ export async function executeReleaseDiscussion(request, _admission, context) {
         store: journal.store,
         octokit: context.octokit,
       });
+      await retained.diagnostics("transport", "qualification-probe");
       const probe = await retained.checkpoint("transport", {
         schema: "buildchain.material-qualification/v1",
         value: payload.key,

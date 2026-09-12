@@ -86,6 +86,10 @@ function readReleaseDiscussion({ body, records }) {
     throw new Error("Release intent identity mismatch");
   if (!Array.isArray(intent.expectedNodes) || !intent.expectedNodes.length || new Set(intent.expectedNodes).size !== intent.expectedNodes.length)
     throw new Error("Missing or duplicate expected nodes");
+  if (intent.organization && intent.organization !== "attempt-threads/v1")
+    throw new Error(
+      "Discussion organization requires its historical runtime reader"
+    );
   const attempts = groupAttempts(validateRecords(intent, records));
   if (!attempts.size)
     return {
