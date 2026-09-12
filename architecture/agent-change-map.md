@@ -1636,10 +1636,14 @@ Owner: Buildchain release maintainers
 
 ### Implementation
 
+- `packages/core/providers/github/discussions/materials.js`
+- `packages/core/providers/github/discussions/transport.js`
 - `packages/core/release/discussion/actions.js`
 - `packages/core/release/discussion/binary.js`
 - `packages/core/release/discussion/checkpoints.js`
 - `packages/core/release/discussion/envelope.js`
+- `packages/core/release/discussion/evidence.js`
+- `packages/core/release/discussion/presentation.js`
 - `packages/core/release/discussion/publication.js`
 - `packages/core/release/discussion/qualification.js`
 - `packages/core/release/discussion/reader-entry.js`
@@ -1647,8 +1651,7 @@ Owner: Buildchain release maintainers
 - `packages/core/release/discussion/recovery.js`
 - `packages/core/release/discussion/session.js`
 - `packages/core/release/discussion/store.js`
-- `packages/core/providers/github/discussions/materials.js`
-- `packages/core/providers/github/discussions/transport.js`
+- `packages/core/release/discussion/threads.js`
 
 ### Contracts
 
@@ -1658,6 +1661,7 @@ Owner: Buildchain release maintainers
 
 - `tests/release-discussion-materials.test.mjs`
 - `tests/release-discussion-session.test.mjs`
+- `tests/release-discussion-threads.test.mjs`
 - `tests/release-discussion.test.mjs`
 
 ### Generated outputs

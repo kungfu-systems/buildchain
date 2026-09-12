@@ -1,3 +1,8 @@
+import {
+  retainAttachment,
+  diagnosticReport,
+  diagnosticLog,
+} from "./evidence.js";
 import fs from "node:fs";
 import path from "node:path";
 import { createProgress, recordDigest } from "./envelope.js";
@@ -10,7 +15,11 @@ export function releaseCheckpoints({ session, store, octokit }) {
     repository: session.intent.repository,
     intentId: session.intent.id,
   });
-  async function checkpoint(node, value) {
+  async function checkpoint(
+    node,
+    value,
+    { attachments = [], label = value.schema || "Recovery checkpoint" } = {},
+  ) {
     const observed = await store.read(session);
     const records = observed.records.filter(
       (record) =>
@@ -21,20 +30,29 @@ export function releaseCheckpoints({ session, store, octokit }) {
     const root = recordDigest(value);
     const duplicate = records.find((record) => record.payload.root === root);
     if (duplicate) return duplicate;
-    const handle = await materials.put(Buffer.from(JSON.stringify(value)));
+    const sequence =
+      Math.max(-1, ...records.map((record) => record.sequence)) + 1;
+    const handle = await retainAttachment(materials, {
+      name: `${node}-checkpoint-${sequence}.json`,
+      mediaType: "application/json",
+      bytes: Buffer.from(JSON.stringify(value, null, 2) + "\n"),
+    });
     const record = createProgress({
       intent: session.intent,
       runtime: session.runtime,
       attempt: session.attempt,
+      writer: session.writer || session.attempt,
       predecessor: session.predecessor,
       kind: "checkpoint",
       node,
       status: "running",
-      sequence: Math.max(-1, ...records.map((record) => record.sequence)) + 1,
+      sequence,
       payload: {
         schema: "buildchain.release-checkpoint/v1",
         root,
         material: handle,
+        label,
+        attachments: [handle, ...attachments],
       },
     });
     await store.append(session, record);
@@ -69,7 +87,30 @@ export function releaseCheckpoints({ session, store, octokit }) {
       throw new Error("Unsupported retained publication reader manifest");
     return materials.read(manifest.reader);
   }
-  return { checkpoint, readCheckpoint, materials, publicationReader };
+  async function diagnostics(node, code) {
+    const report = diagnosticReport(
+      session,
+      await store.read(session),
+      node,
+      code,
+    );
+    const log = await retainAttachment(materials, {
+      name: `${node}-diagnostics.log`,
+      mediaType: "text/plain",
+      bytes: diagnosticLog(report),
+    });
+    return checkpoint(node, report, {
+      attachments: [log],
+      label: `Execution diagnostics: ${report.code}`,
+    });
+  }
+  return {
+    checkpoint,
+    readCheckpoint,
+    materials,
+    publicationReader,
+    diagnostics,
+  };
 }
 
 function assertNoSymlink(file, base) {

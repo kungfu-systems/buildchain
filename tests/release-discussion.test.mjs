@@ -148,7 +148,10 @@ function provider() {
       return discussions.find((record) => record.id === id);
     },
     async comments() {
-      return page(comments);
+      return page(comments.filter((comment) => !comment.replyTo));
+    },
+    async replies(id) {
+      return page(comments.filter((comment) => comment.replyTo?.id === id));
     },
     async create({ body }) {
       writes++;
@@ -163,10 +166,11 @@ function provider() {
       if (loseCreate) throw new Error("lost create response");
       return record;
     },
-    async append(id, body) {
+    async append(id, body, replyToId) {
       writes++;
       const record = {
         id: `comment-${comments.length}`,
+        replyTo: replyToId ? { id: replyToId } : null,
         body,
         author: { id: "bot" },
       };
@@ -196,12 +200,13 @@ test("lost provider responses read back instead of repeating writes", async () =
     sleep: async () => {},
   });
   const session = await store.initialize({ intent });
+  await store.append(session, progress("attempt", "running"));
   const event = progress("qualify", "success");
   await store.append(session, event);
   await store.append(session, event);
   const repeated = await store.initialize({ intent });
   assert.equal(repeated.discussion.id, session.discussion.id);
-  assert.equal(fake.writes, 2);
+  assert.equal(fake.writes, 3);
 });
 
 test("preview has no provider calls or writes", async () => {

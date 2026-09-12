@@ -1,7 +1,7 @@
 const fields =
   "id number url body author { __typename login ... on Node { id } } lastEditedAt repository { nameWithOwner }";
 const commentFields =
-  "id url body author { __typename login ... on Node { id } } lastEditedAt";
+  "id url body author { __typename login ... on Node { id } } lastEditedAt replyTo { id }";
 
 export function discussionTransport(graphql) {
   async function request(query, variables) {
@@ -66,12 +66,21 @@ export function discussionTransport(graphql) {
   }
   async function comments(id, after = null) {
     const result = await request(
-      `query($id:ID!,$after:String){node(id:$id){... on Discussion{comments(first:100,after:$after){nodes{${commentFields}} pageInfo{hasNextPage endCursor}}}}}`,
+      `query($id:ID!,$after:String){node(id:$id){... on Discussion{comments(first:100,after:$after){nodes{${commentFields} replies{totalCount}} pageInfo{hasNextPage endCursor}}}}}`,
       { id, after },
     );
     if (!result.node?.comments)
       throw new Error("Release Discussion comments are unavailable");
     return result.node.comments;
+  }
+  async function replies(id, after = null) {
+    const result = await request(
+      `query($id:ID!,$after:String){node(id:$id){... on DiscussionComment{replies(first:100,after:$after){nodes{${commentFields}} pageInfo{hasNextPage endCursor}}}}}`,
+      { id, after },
+    );
+    if (!result.node?.replies)
+      throw new Error("Release Discussion replies are unavailable");
+    return result.node.replies;
   }
   async function create({ repositoryId, categoryId, title, body }) {
     const result = await request(
@@ -80,14 +89,16 @@ export function discussionTransport(graphql) {
     );
     return result.createDiscussion.discussion;
   }
-  async function append(id, body) {
+  async function append(id, body, replyToId = null) {
     const result = await request(
       `mutation($input:AddDiscussionCommentInput!){addDiscussionComment(input:$input){comment{${commentFields}}}}`,
-      { input: { discussionId: id, body } },
+      {
+        input: { discussionId: id, body, ...(replyToId ? { replyToId } : {}) },
+      },
     );
     return result.addDiscussionComment.comment;
   }
-  return { repository, list, get, comments, create, append };
+  return { repository, list, get, comments, replies, create, append };
 }
 
 export async function collectDiscussionPages(readPage, limit = 100) {

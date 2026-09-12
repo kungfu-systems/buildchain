@@ -39,6 +39,7 @@ export async function openReleaseSession({
   dryRun = false,
   recover = false,
   expectedNodes = RELEASE_NODES,
+  onFailure = async () => {},
 }) {
   const intent = createIntent({
     repository,
@@ -101,6 +102,7 @@ export async function openReleaseSession({
           { code: String(error.code || "execution-failed") },
           1,
         );
+        await onFailure(node, error);
       } catch (recordError) {
         error.discussionRecordingError = recordError.message;
       }

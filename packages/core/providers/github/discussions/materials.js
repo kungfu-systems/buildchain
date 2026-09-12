@@ -72,11 +72,13 @@ export function discussionMaterials({ octokit, repository, intentId }) {
       );
     return bytes;
   }
-  async function put(bytes) {
+  async function put(bytes, descriptor = {}) {
+    const extension =
+      descriptor.name?.match(/\.([a-zA-Z0-9]{1,8})$/u)?.[1] || "";
     if (bytes.length > 256 * 1024 * 1024)
       throw new Error("Transaction material exceeds the supported file bound");
     const digest = materialDigest(bytes),
-      name = digest.replace(":", "-");
+      name = digest.replace(":", "-") + (extension ? `.${extension}` : "");
     const release = await archive();
     const find = async () => {
       const assets = await octokit.paginate(repos.listReleaseAssets, {
@@ -101,7 +103,8 @@ export function discussionMaterials({ octokit, repository, intentId }) {
             name,
             data: bytes,
             headers: {
-              "content-type": "application/octet-stream",
+              "content-type":
+                descriptor.mediaType || "application/octet-stream",
             },
           })
         ).data;
@@ -113,7 +116,15 @@ export function discussionMaterials({ octokit, repository, intentId }) {
           });
       }
     }
-    const handle = { id: asset.id, digest, size: bytes.length };
+    const handle = {
+      id: asset.id,
+      digest,
+      size: bytes.length,
+      ...(asset.browser_download_url
+        ? { downloadUrl: asset.browser_download_url }
+        : {}),
+      ...(release.html_url ? { archiveUrl: release.html_url } : {}),
+    };
     await read(handle);
     return handle;
   }
@@ -140,7 +151,7 @@ export function discussionMaterials({ octokit, repository, intentId }) {
     }
   }
   return {
-    put: (bytes) => diagnose("put", () => put(bytes)),
+    put: (bytes, descriptor) => diagnose("put", () => put(bytes, descriptor)),
     read: (handle) => diagnose("read", () => read(handle)),
   };
 }

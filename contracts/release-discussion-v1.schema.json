@@ -41,6 +41,9 @@
         },
         "source": {
           "type": "object"
+        },
+        "organization": {
+          "const": "attempt-threads/v1"
         }
       },
       "additionalProperties": false
