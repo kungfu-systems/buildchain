@@ -58,7 +58,6 @@ export async function publishWithDiscussion(
     session: journal.session,
     store: journal.store,
     octokit,
-    sourceSha: request["source-sha"],
   });
   const readerFile = path.join(
     runtimeRoot,

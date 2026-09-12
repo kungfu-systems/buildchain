@@ -6,24 +6,29 @@ export function materialDigest(bytes) {
 
 // Draft release assets retain immutable recovery bytes outside the source Git
 // object database. Only the Discussion record selects a committed manifest.
-export function discussionMaterials({
-  octokit,
-  repository,
-  intentId,
-  sourceSha,
-}) {
+export function discussionMaterials({ octokit, repository, intentId }) {
   const [owner, repo] = repository.split("/");
   const tag = `buildchain-records/${intentId.replace("sha256:", "")}`;
   const repos = octokit.rest.repos;
+  let retainedArchive;
   async function findArchive() {
-    try {
-      return (await repos.getReleaseByTag({ owner, repo, tag })).data;
-    } catch (error) {
-      if (error.status === 404) return undefined;
-      throw error;
-    }
+    let pages = 0;
+    const releases = await octokit.paginate(
+      repos.listReleases,
+      { owner, repo, per_page: 100 },
+      (response) => {
+        if (++pages > 100)
+          throw new Error("Material archive pagination exceeded its bound");
+        return response.data.filter((release) => release.tag_name === tag);
+      },
+    );
+    const matches = releases.filter((release) => release.tag_name === tag);
+    if (matches.length > 1)
+      throw new Error("Ambiguous transaction material archive");
+    return matches[0];
   }
   async function archive() {
+    if (retainedArchive) return retainedArchive;
     let release = await findArchive();
     if (!release) {
       try {
@@ -32,7 +37,8 @@ export function discussionMaterials({
             owner,
             repo,
             tag_name: tag,
-            target_commitish: sourceSha,
+            // Storage archives use the repository default; candidate identity is
+            // retained in the material manifest, never in a storage Git ref.
             name: `Buildchain transaction materials ${intentId}`,
             body: "Immutable recovery material. The associated Discussion owns transaction state.",
             draft: true,
@@ -49,6 +55,7 @@ export function discussionMaterials({
     }
     if (!release.draft || release.tag_name !== tag)
       throw new Error("Transaction material archive identity mismatch");
+    retainedArchive = release;
     return release;
   }
   async function read(handle) {

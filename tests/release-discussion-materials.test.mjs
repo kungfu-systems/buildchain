@@ -15,16 +15,28 @@ import {
 function materialProvider() {
   let release;
   const assets = [];
-  let loseUpload = false;
+  let loseUpload = false,
+    loseCreate = false,
+    duplicates = 0;
   const calls = [];
   const repos = {
     async getReleaseByTag() {
-      if (!release) throw Object.assign(new Error("missing"), { status: 404 });
-      return { data: release };
+      throw new Error("Draft archives are not published tag releases");
+    },
+    async listReleases() {
+      return {
+        data: release ? [release, ...Array(duplicates).fill(release)] : [],
+      };
     },
     async createRelease(input) {
+      assert.equal(
+        Object.hasOwn(input, "target_commitish"),
+        false,
+        "archive creation must not require workflow-write permission on a candidate commit",
+      );
       calls.push("create");
       release = { id: 1, draft: input.draft, tag_name: input.tag_name };
+      if (loseCreate) throw new Error("lost create response");
       return { data: release };
     },
     async listReleaseAssets() {
@@ -53,6 +65,12 @@ function materialProvider() {
     octokit,
     assets,
     calls,
+    duplicateArchive() {
+      duplicates++;
+    },
+    loseCreateResponse() {
+      loseCreate = true;
+    },
     loseResponse() {
       loseUpload = true;
     },
@@ -62,17 +80,26 @@ function materialProvider() {
 test("material upload is content-addressed, read-back verified and response-loss safe", async () => {
   const fake = materialProvider();
   fake.loseResponse();
+  fake.loseCreateResponse();
   const store = discussionMaterials({
     octokit: fake.octokit,
     repository: "example/consumer",
     intentId: `sha256:${"a".repeat(64)}`,
-    sourceSha: "b".repeat(40),
   });
   const bytes = Buffer.from("immutable sealed bytes");
   const handle = await store.put(bytes);
   assert.deepEqual(await store.put(bytes), handle);
   assert.deepEqual(fake.calls, ["create", "upload"]);
   assert.deepEqual(await store.read(handle), bytes);
+  fake.duplicateArchive();
+  await assert.rejects(
+    discussionMaterials({
+      octokit: fake.octokit,
+      repository: "example/consumer",
+      intentId: `sha256:${"a".repeat(64)}`,
+    }).put(Buffer.from("new material")),
+    /Ambiguous transaction material archive/,
+  );
   fake.assets[0].bytes = Buffer.from("modified");
   await assert.rejects(store.read(handle), /integrity verification/);
 });

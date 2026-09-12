@@ -77,7 +77,6 @@ export async function executeReleaseDiscussion(request, _admission, context) {
       session: journal.session,
       store: journal.store,
       octokit: context.octokit,
-      sourceSha: request.consumer.sourceSha,
     });
     const reader = await retained.materials.put(
       fs.readFileSync(

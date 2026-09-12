@@ -4,12 +4,11 @@ import { createProgress, recordDigest } from "./envelope.js";
 import { materialDigest } from "../../providers/github/discussions/materials.js";
 import { discussionMaterials } from "../../providers/github/discussions/materials.js";
 
-export function releaseCheckpoints({ session, store, octokit, sourceSha }) {
+export function releaseCheckpoints({ session, store, octokit }) {
   const materials = discussionMaterials({
     octokit,
     repository: session.intent.repository,
     intentId: session.intent.id,
-    sourceSha,
   });
   async function checkpoint(node, value) {
     const observed = await store.read(session);
