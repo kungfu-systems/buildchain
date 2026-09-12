@@ -1,7 +1,9 @@
 import { wakePipelineCandidate } from "./wake.js";
 import { pipelineCandidate } from "./reconcile.js";
+import { notifyPipelineParent } from "./parent-notification.js";
 
 export async function resumePipelineNotifications(session, host) {
+  await notifyPipelineParent(session, host);
   const observed = await session.journal.read();
   const current = { ...observed.history.at(-1), intent: session.intent };
   const terminal = Object.values(current.phases).filter((phase) =>

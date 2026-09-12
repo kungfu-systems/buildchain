@@ -93,3 +93,11 @@ test("product verification exit failure and tracked drift never produce success"
   );
   await assert.rejects(buildPipelineSource(request), /tracked modifications/);
 });
+
+test("a successful product command cannot change tracked source after admission", async (t) => {
+  const request = checkout(
+    t,
+    "import fs from 'node:fs'; fs.appendFileSync('src/build.mjs', '// unexpected tracked mutation');\n",
+  );
+  await assert.rejects(buildPipelineSource(request), /tracked modifications/);
+});

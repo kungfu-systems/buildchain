@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
+import { assertPipelinePublicationTopology } from "./check-pipeline-publication-topology.mjs";
 import { inspectWorkflowJob, readWorkflow } from "./workflow-action-graph.mjs";
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -28,6 +29,7 @@ const PRIVILEGED_ENTRYPOINTS = [
   "packages/core/release/next-development/actions.js",
   "packages/core/publication/oci/preview-actions.js",
   "packages/core/publication/settlement/actions.js",
+  "packages/core/publication/pipeline/actions.js",
 ];
 
 export function localModuleSpecifiers(source) {
@@ -150,7 +152,9 @@ export function discoverReleaseAuthorityClosure() {
     [".js", ".mjs", ".cjs"],
     /(?:release-tail-provider-(?:adapters|plane)|create(?:GitHubReleaseAssets|SignedStaticChannel|SiteReleaseActivation|ReleasedEvidence)Adapter)/u,
   );
-  const runtimeSelectors = productionFiles("packages/core/runtime/entry", [".js"]).sort();
+  const runtimeSelectors = productionFiles("packages/core/runtime/entry", [
+    ".js",
+  ]).sort();
   const terminalProjections = matchingProductionFiles(
     [".github/workflows", "actions", "packages/core", "scripts"],
     [".yml", ".yaml", ".js", ".mjs", ".cjs"],
@@ -523,6 +527,7 @@ export function checkReleaseTopology() {
   assert.equal(ledger.contract, "kungfu-buildchain-v4-release-topology/v1");
   assertClosedWorld(ledger.closedWorld.workflowPaths);
   assertAuthorityClosure(ledger);
+  assertPipelinePublicationTopology(ledger, discoverReleaseTopology, root);
   const preview = ledger.postPublicationScope;
   assert.deepEqual(preview.workflowPaths, [
     ".github/workflows/public-release-oci-compose-preview.yml",

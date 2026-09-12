@@ -123,6 +123,23 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/.release-pipeline-products.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "channel-ref",
+        "github-release",
+        "npm-publish"
+      ],
+      "credentialMode": "trusted-publishing",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/.release-pipeline-products.yml",
+      "environment": "none",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/.release-promote.yml",
       "authorityClass": "product-publication",
       "publicationCapable": true,
@@ -314,15 +331,19 @@
     },
     {
       "workflowPath": ".github/workflows/public-ops-pipeline.yml",
-      "authorityClass": "governance-write",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "channel-ref",
+        "github-release",
+        "npm-publish"
+      ],
+      "credentialMode": "trusted-publishing",
       "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/public-ops-pipeline.yml",
-      "environment": "",
+      "publisherWorkflowPath": ".github/workflows/.release-pipeline-products.yml",
+      "environment": "none",
       "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
+      "runnerPolicy": "qualified-measured",
       "notes": ""
     },
     {
@@ -839,6 +860,14 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/.release-pipeline-products.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/.release-promote.yml",
       "signals": [],
       "classified": true
@@ -950,7 +979,8 @@
     {
       "path": ".github/workflows/public-ops-pipeline.yml",
       "signals": [
-        "write-permission"
+        "write-permission",
+        "oidc"
       ],
       "classified": true
     },
@@ -1247,5 +1277,5 @@
       "classified": true
     }
   ],
-  "registryDigest": "22c8f512f8467c3c314b1010b475c3e0ac3104b1a0396a33890c24bbd04a728f"
+  "registryDigest": "1cb5f1cb86a1b1014b27dd342ede4e219399317f9cf094b2fb5a37158e124ddf"
 }

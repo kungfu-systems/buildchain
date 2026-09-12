@@ -24,6 +24,14 @@ async function channelMerge(session, admission, host) {
     const integration = await host.integration.observe(current);
     await record(session, "merge", "success", integration, host);
   }
+  if (host.terminalOnly) {
+    await host.wake(observed.attempt);
+    return {
+      operation: "wait",
+      reason: "publication-requires-a-normal-dispatch",
+      attempt: observed.attempt,
+    };
+  }
   // Product publication is a separate typed domain stage. This operation keeps
   // the business attempt open until its published byte/readback receipts exist.
   return {

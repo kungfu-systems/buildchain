@@ -1,3 +1,4 @@
+import { readNpmPackResult } from "../../../publication/npm/pack-result.js";
 import { npmPublishTransaction } from "../../../publication/npm/transaction.js";
 import { npmPublicationEnvironment } from "../../../publication/npm/environment.js";
 import {
@@ -15,10 +16,21 @@ import {
   updateVersionStateContents,
 } from "../../version-state.js";
 import { publishTransactionEnvironment } from "./transaction-context.js";
-export function runPublishCommand({ cwd, command, provider, loadedConfig, env }) {
+export function runPublishCommand({
+  cwd,
+  command,
+  provider,
+  loadedConfig,
+  env,
+}) {
   if (provider) {
-    if (provider.kind !== "npm" || !provider.directory || command) throw new Error("Invalid or ambiguous declarative publication provider");
-    npmPublishTransaction({ cwd: path.resolve(cwd, provider.directory), publication: npmPublicationEnvironment(env), env: { ...process.env, ...env } });
+    if (provider.kind !== "npm" || !provider.directory || command)
+      throw new Error("Invalid or ambiguous declarative publication provider");
+    npmPublishTransaction({
+      cwd: path.resolve(cwd, provider.directory),
+      publication: npmPublicationEnvironment(env),
+      env: { ...process.env, ...env },
+    });
     return "provider:npm";
   }
   const lifecyclePublish = getLifecycleStage(loadedConfig, "publish");
@@ -64,7 +76,7 @@ export function rematerializedNpmPackEnvironment({
     path.join(os.tmpdir(), "buildchain-rematerialized-npm-"),
   );
   try {
-    const packed = JSON.parse(
+    const result = readNpmPackResult(
       execNpmSync(
         [
           "pack",
@@ -82,7 +94,6 @@ export function rematerializedNpmPackEnvironment({
         },
       ),
     );
-    const result = Array.isArray(packed) ? packed[0] : packed;
     if (!result?.filename)
       throw new Error("rematerialized npm pack did not return a filename");
     if (result.name !== pkg.name || result.version !== version) {

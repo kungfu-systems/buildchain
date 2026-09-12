@@ -1,0 +1,15 @@
+name: Pipeline product seal-qualification
+description: Execute the internal seal-qualification product node.
+inputs:
+  context:
+    description: Internal source-bound publication context.
+    required: true
+  token:
+    description: Scoped provider credential.
+    required: true
+  bundle-path:
+    description: GitHub attestation bundle from the isolated signer.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

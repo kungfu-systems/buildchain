@@ -4,8 +4,8 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 69,
-    "actionCount": 272,
+    "workflowCount": 70,
+    "actionCount": 279,
     "sitePageCount": 94,
     "docCommandRefCount": 1036,
     "failureCount": 0
@@ -842,6 +842,24 @@
         "inputCount": 16,
         "secrets": [],
         "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": ".release-pipeline-products",
+        "path": ".github/workflows/.release-pipeline-products.yml",
+        "reusable": true,
+        "inputs": [
+          "attempt",
+          "runtime-selection"
+        ],
+        "inputCount": 2,
+        "secrets": [
+          "BUILDCHAIN_APP_PRIVATE_KEY",
+          "BUILDCHAIN_AUTOMATION_TOKEN",
+          "BUILDCHAIN_NPM_TOKEN"
+        ],
+        "secretCount": 3,
         "outputs": [],
         "outputCount": 0
       },
@@ -4247,6 +4265,72 @@
           "workflow-sha"
         ],
         "inputCount": 2
+      },
+      {
+        "id": "publication/pipeline/apply",
+        "path": "actions/publication/pipeline/apply/action.yml",
+        "inputs": [
+          "context",
+          "token"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "publication/pipeline/build",
+        "path": "actions/publication/pipeline/build/action.yml",
+        "inputs": [
+          "context",
+          "platform"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "publication/pipeline/prepare",
+        "path": "actions/publication/pipeline/prepare/action.yml",
+        "inputs": [
+          "attempt",
+          "definition-sha",
+          "token"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "publication/pipeline/prepare-qualification",
+        "path": "actions/publication/pipeline/prepare-qualification/action.yml",
+        "inputs": [
+          "context",
+          "token"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "publication/pipeline/qualify",
+        "path": "actions/publication/pipeline/qualify/action.yml",
+        "inputs": [
+          "context",
+          "token"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "publication/pipeline/seal-qualification",
+        "path": "actions/publication/pipeline/seal-qualification/action.yml",
+        "inputs": [
+          "bundle-path",
+          "context",
+          "token"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "publication/pipeline/settle",
+        "path": "actions/publication/pipeline/settle/action.yml",
+        "inputs": [
+          "context",
+          "pr-token",
+          "token"
+        ],
+        "inputCount": 3
       },
       {
         "id": "publication/settlement/retain",
@@ -10944,8 +11028,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e43fdb0289df88871f3f0febbe04dcb9311a252a2b1df9b3a83a2d10c9d4a70f",
-    "workflowRegistryDigest": "398be3f92d3b72a6533304f7f8ceae3224a8d7d5144001ea43038aa55029f8a0",
-    "pageRegistryDigest": "94bbee30d8b5beb77fef6364dbbadaa4ef454b179927f8287bc8e64068413ba2"
+    "workflowRegistryDigest": "9d83e66aabf82b463702b804ccb1f959e1333727ed6c80a96165116ea54c22d5",
+    "pageRegistryDigest": "7dee020680c053826d660a4728c5325e8ac01164dc0bf7a48309c7ad40c23e05"
   },
   "comparison": {
     "missingCliRegistry": [],

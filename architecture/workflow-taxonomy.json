@@ -764,6 +764,17 @@
       "status": "active",
       "invocation": "reusable",
       "rationale": "Internal pipeline delivery: owned normal pipeline and internal credential boundaries."
+    },
+    {
+      "id": ".pipeline-products",
+      "role": "component",
+      "category": "release",
+      "purpose": "pipeline-products",
+      "summary": "Internal pipeline product publication",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "rationale": "Separate product execution, qualification/signing, canonical APPLY and protected follow-ups without consumer orchestration."
     }
   ]
 }

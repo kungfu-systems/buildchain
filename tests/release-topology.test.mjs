@@ -373,12 +373,12 @@ test("Rust and JavaScript produce byte-identical ReleaseInvocation root DAGs", (
 test("the topology ledger exactly freezes all current release jobs and authority signals", () => {
   const topology = checkReleaseTopology();
   assert.deepEqual(topology.metrics, {
-    workflowCount: 34,
-    jobCount: 95,
-    reusableEdgeCount: 20,
-    mutationRelevantNodeCount: 61,
-    contentsWriteJobCount: 22,
-    oidcWriteJobCount: 19,
+    workflowCount: 36,
+    jobCount: 107,
+    reusableEdgeCount: 22,
+    mutationRelevantNodeCount: 70,
+    contentsWriteJobCount: 31,
+    oidcWriteJobCount: 23,
   });
   assert.deepEqual(topology.semanticMetrics, {
     workflowCount: 5,
@@ -419,6 +419,7 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
       "packages/core/release/next-development/actions.js",
       "packages/core/publication/oci/preview-actions.js",
       "packages/core/publication/settlement/actions.js",
+      "packages/core/publication/pipeline/actions.js",
     ],
   );
   assert.match(
@@ -431,10 +432,11 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
     ),
   );
   assert.deepEqual(
-    topologyLedger.authorityClosure.excludedRefPromotionModules.filter((relative) =>
-      topologyLedger.authorityClosure.privilegedExecutableClosure.modules.includes(
-        relative,
-      ),
+    topologyLedger.authorityClosure.excludedRefPromotionModules.filter(
+      (relative) =>
+        topologyLedger.authorityClosure.privilegedExecutableClosure.modules.includes(
+          relative,
+        ),
     ),
     [],
   );
@@ -442,11 +444,24 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
     [canonical, publicWrapper, recovery].join("\n"),
     /legacy-promote|v4-declarative-promote/u,
   );
-  const graph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "apply");
+  const graph = inspectWorkflowJob(
+    ".github/workflows/.release-promote.yml",
+    "apply",
+  );
   assert.ok(graph.actions.has("actions/release/promotion/candidate"));
-  assert.equal(graph.job.steps.find(step => step.id === "node").with["needs-qualify-outputs-requested-sha"], "${{ toJSON(needs.qualify.outputs.requested-sha) }}");
-  for (const step of graph.steps.filter(step => step.uses?.endsWith("/actions/release/promotion/candidate")))
-    assert.equal(step.with["source-sha"], "${{ fromJSON(inputs.needs-qualify-outputs-requested-sha) }}");
+  assert.equal(
+    graph.job.steps.find((step) => step.id === "node").with[
+      "needs-qualify-outputs-requested-sha"
+    ],
+    "${{ toJSON(needs.qualify.outputs.requested-sha) }}",
+  );
+  for (const step of graph.steps.filter((step) =>
+    step.uses?.endsWith("/actions/release/promotion/candidate"),
+  ))
+    assert.equal(
+      step.with["source-sha"],
+      "${{ fromJSON(inputs.needs-qualify-outputs-requested-sha) }}",
+    );
   assert.match(
     publicWrapper,
     /uses: \.\/\.github\/workflows\/\.release-promote\.yml/u,

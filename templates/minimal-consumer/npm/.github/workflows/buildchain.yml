@@ -19,6 +19,7 @@ jobs:
     secrets: inherit
     permissions:
       actions: write
+      attestations: write
       checks: write
       contents: write
       discussions: write

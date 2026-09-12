@@ -128,3 +128,18 @@ jobs:
         with:
           attempt: ${{ needs.control.outputs.attempt }}
           token: ${{ github.token }}
+  publication:
+    needs: [runtime, control]
+    if: needs.control.outputs.operation == 'publish'
+    uses: ./.github/workflows/.release-pipeline-products.yml
+    with:
+      attempt: ${{ needs.control.outputs.attempt }}
+      runtime-selection: ${{ needs.runtime.outputs.selection }}
+    secrets: inherit
+    permissions:
+      actions: write
+      contents: write
+      discussions: write
+      id-token: write
+      attestations: write
+      pull-requests: write

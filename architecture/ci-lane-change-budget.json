@@ -2682,6 +2682,108 @@
         "expectedContributionSeconds": 300,
         "rationale": "Owned runtime, metadata or product job boundary. Product matrix uses only declared platforms; native Warrant transfer waits for exact provider terminality. This is a conservative timeout budget, not measured latency."
       }
+    },
+    {
+      "laneId": ".github/workflows/.release-pipeline-products.yml#prepare",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 15,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "declared product publication and retained follow-ups",
+        "expectedContributionSeconds": 900,
+        "rationale": "Post-merge product publication serializes provider writers per repository. At most five declared hosted platforms each have a sixty-minute build limit; independent signing and publisher jobs have explicit timeouts. These are conservative bounds, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-pipeline-products.yml#build",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 300,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "declared product publication and retained follow-ups",
+        "expectedContributionSeconds": 18000,
+        "rationale": "Post-merge product publication serializes provider writers per repository. At most five declared hosted platforms each have a sixty-minute build limit; independent signing and publisher jobs have explicit timeouts. These are conservative bounds, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-pipeline-products.yml#qualify",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 20,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "declared product publication and retained follow-ups",
+        "expectedContributionSeconds": 1200,
+        "rationale": "Post-merge product publication serializes provider writers per repository. At most five declared hosted platforms each have a sixty-minute build limit; independent signing and publisher jobs have explicit timeouts. These are conservative bounds, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-pipeline-products.yml#apply",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 30,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "declared product publication and retained follow-ups",
+        "expectedContributionSeconds": 1800,
+        "rationale": "Post-merge product publication serializes provider writers per repository. At most five declared hosted platforms each have a sixty-minute build limit; independent signing and publisher jobs have explicit timeouts. These are conservative bounds, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-pipeline-products.yml#settle",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 20,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "declared product publication and retained follow-ups",
+        "expectedContributionSeconds": 1200,
+        "rationale": "Post-merge product publication serializes provider writers per repository. At most five declared hosted platforms each have a sixty-minute build limit; independent signing and publisher jobs have explicit timeouts. These are conservative bounds, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/public-ops-pipeline.yml#publication",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 385,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "declared product publication and retained follow-ups",
+        "expectedContributionSeconds": 23100,
+        "rationale": "Post-merge product publication serializes provider writers per repository. At most five declared hosted platforms each have a sixty-minute build limit; independent signing and publisher jobs have explicit timeouts. These are conservative bounds, not measured latency."
+      }
     }
   ],
   "declarationFamilies": [

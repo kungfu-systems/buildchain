@@ -7,6 +7,9 @@ self-hosted-runner:
     - linux-x64
 config-variables: null
 paths:
+  .github/workflows/.release-pipeline-products.yml:
+    ignore:
+      - property "workflow_sha" is not defined in object type
   .github/workflows/public-ops-pipeline.yml:
     ignore:
       - property "workflow_sha" is not defined in object type
