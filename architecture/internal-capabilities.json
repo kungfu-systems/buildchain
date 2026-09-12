@@ -816,6 +816,12 @@
     "packages/core/workflow/admission/actions.js",
     "packages/core/workflow/admission/recovery.js",
     "packages/core/workflow/admission/transactions.js",
+    "packages/core/workflow/attempt/identity.js",
+    "packages/core/workflow/attempt/materials.js",
+    "packages/core/workflow/attempt/reader-entry.js",
+    "packages/core/workflow/attempt/reader.js",
+    "packages/core/workflow/attempt/records.js",
+    "packages/core/workflow/attempt/store.js",
     "packages/core/workflow/cli/main.mjs",
     "packages/core/workflow/cli/process.mjs",
     "packages/core/workflow/commands/buildchain-cli-help.mjs",
@@ -2973,6 +2979,29 @@
       "validationCommands": [
         "node --test tests/minimal-consumer-contract.test.mjs",
         "node scripts/generate-minimal-consumer-contract.mjs --check"
+      ]
+    },
+    {
+      "id": "business-attempt-journal",
+      "owner": "Buildchain pipeline maintainers",
+      "implementation": [
+        "packages/core/workflow/attempt/identity.js",
+        "packages/core/workflow/attempt/materials.js",
+        "packages/core/workflow/attempt/reader-entry.js",
+        "packages/core/workflow/attempt/reader.js",
+        "packages/core/workflow/attempt/records.js",
+        "packages/core/workflow/attempt/store.js"
+      ],
+      "tests": [
+        "tests/business-attempt-materials.test.mjs",
+        "tests/business-attempt-store.test.mjs",
+        "tests/business-attempt.test.mjs"
+      ],
+      "contracts": ["architecture/decisions/0006-business-attempt-journal.md"],
+      "generatedOutputs": ["dist/readers/business-attempt.cjs"],
+      "validationCommands": [
+        "node --test tests/business-attempt*.test.mjs",
+        "node scripts/build-release-discussion-reader.mjs --check"
       ]
     }
   ]
