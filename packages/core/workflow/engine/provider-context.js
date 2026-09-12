@@ -7,6 +7,8 @@ export function providerExecutionContext({ token, mutationToken, env }) {
     apiUrl,
     actor: env.GITHUB_ACTOR,
     runId: env.GITHUB_RUN_ID,
+    runAttempt: env.GITHUB_RUN_ATTEMPT,
+    runtimeSelection: env.BUILDCHAIN_RUNTIME_SELECTION,
     octokit: token ? getOctokit(token, { baseUrl: apiUrl }) : undefined,
     mutationOctokit:
       mutationToken || token

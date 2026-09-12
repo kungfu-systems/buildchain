@@ -21,6 +21,8 @@ crates/*/target/
 dist/*
 !dist/site/
 !dist/site/**
+!dist/readers/
+!dist/readers/**
 !actions/*/*/dist/
 !actions/*/*/dist/index.js
 !actions/*/*/dist/buildchain-domain.wasm

@@ -346,6 +346,10 @@
     },
     "release": {
       "groups": {
+        "transaction": {
+          "responsibility": "Initialize release intent, append independently owned progress and inspect one durable Discussion across workflow recovery.",
+          "operations": ["open", "record", "inspect"]
+        },
         "binary": {
           "responsibility": "Resolve coordinates and publish admitted binary assets.",
           "operations": ["coordinates", "publish"]

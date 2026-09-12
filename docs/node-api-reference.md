@@ -2707,3 +2707,12 @@ Target: `./packages/core/adoption/cross-platform-adopter-qualification.js`. Publ
 | `CROSS_PLATFORM_NEUTRAL_DRIVER` | constant: const CROSS_PLATFORM_NEUTRAL_DRIVER | none | value | Import does not declare a throw contract. | none-on-import | `import { CROSS_PLATFORM_NEUTRAL_DRIVER } from "@kungfu-tech/buildchain/cross-platform-adopter-qualification";` | `packages/core/adoption/cross-platform-adopter-qualification.js:12` |
 | `qualifyCrossPlatformAdopters` | function: function qualifyCrossPlatformAdopters({ reports, consumers }) | { reports, consumers } | unknown | Errors from called operations may propagate; no narrower throw contract is declared in source. | may-write-or-invoke-external-actions | `import { qualifyCrossPlatformAdopters } from "@kungfu-tech/buildchain/cross-platform-adopter-qualification";` | `packages/core/adoption/cross-platform-adopter-qualification.js:143` |
 | `validateCrossPlatformAdopterReport` | function: function validateCrossPlatformAdopterReport(report) | report | unknown | Errors from called operations may propagate; no narrower throw contract is declared in source. | none-detected-by-static-source-scan | `import { validateCrossPlatformAdopterReport } from "@kungfu-tech/buildchain/cross-platform-adopter-qualification";` | `packages/core/adoption/cross-platform-adopter-qualification.js:97` |
+
+## `@kungfu-tech/buildchain/release-discussion-reader`
+
+Target: `./packages/core/release/discussion/reader.js`. Public symbols: 2.
+
+| Symbol | Kind and signature | Parameters | Return | Errors | Side effects | Example | Source |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `discussionStatus` | function: function discussionStatus(state) | state | unknown | Errors from called operations may propagate; no narrower throw contract is declared in source. | none-detected-by-static-source-scan | `import { discussionStatus } from "@kungfu-tech/buildchain/release-discussion-reader";` | `packages/core/release/discussion/reader.js:151` |
+| `readReleaseDiscussion` | function: function readReleaseDiscussion({ body, records }) | { body, records } | unknown | May throw an Error on rejected input or failed operations; follow the linked source contract. | none-detected-by-static-source-scan | `import { readReleaseDiscussion } from "@kungfu-tech/buildchain/release-discussion-reader";` | `packages/core/release/discussion/reader.js:11` |

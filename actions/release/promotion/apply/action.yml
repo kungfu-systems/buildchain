@@ -71,6 +71,12 @@ inputs:
     description: Actual preceding source checkout outcome.
     required: true
 outputs:
+  discussion-id:
+    description: Durable release intent Discussion ID.
+    value: ${{ steps.provider.outputs.discussion-id || steps.resume.outputs.discussion-id }}
+  discussion-url:
+    description: Durable release intent Discussion URL.
+    value: ${{ steps.provider.outputs.discussion-url || steps.resume.outputs.discussion-url }}
   promoted-sha:
     description: promoted-sha node result.
     value: ${{ fromJSON(inputs.needs-qualify-outputs-requested-sha) }}
@@ -144,6 +150,8 @@ runs:
       id: provider
       uses: ./.buildchain/runtime/actions/release/promotion/candidate
       with:
+        standalone-binary-distribution: ${{ fromJSON(inputs.request-json).standalone-binary-distribution }}
+        resume-discussion-id: ${{ fromJSON(inputs.request-json).resume-discussion-id }}
         token: ${{ github.token }}
         mutation-token: ${{ inputs.secrets-buildchain-promotion-token || github.token }}
         repository: ${{ github.repository }}
@@ -192,6 +200,8 @@ runs:
         fromJSON(inputs.request-json).provider-failure-after-capability != '' }}
       uses: ./.buildchain/runtime/actions/release/promotion/candidate
       with:
+        standalone-binary-distribution: ${{ fromJSON(inputs.request-json).standalone-binary-distribution }}
+        resume-discussion-id: ${{ steps.provider.outputs.discussion-id || fromJSON(inputs.request-json).resume-discussion-id }}
         token: ${{ github.token }}
         mutation-token: ${{ inputs.secrets-buildchain-promotion-token || github.token }}
         repository: ${{ github.repository }}

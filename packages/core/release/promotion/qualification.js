@@ -24,6 +24,7 @@ export async function qualifyPromotion(
       requestedChannel: request.channel,
       dryRun: request["dry-run"],
       resume: Boolean(
+        request["resume-discussion-id"] ||
         request["resume-candidate-run-id"] ||
         request["publish-transaction-override"],
       ),
@@ -46,8 +47,10 @@ export async function qualifyPromotion(
     );
   const candidateVersion = qualified.candidateVersion || qualified.version,
     publicationVersion = qualified.publicationVersion || qualified.version;
-  const recoveredVersion =
-    request["publish-transaction-override"] || request["resume-transaction-id"]
+  const recoveredVersion = request["resume-discussion-id"]
+    ? publicationVersion
+    : request["publish-transaction-override"] ||
+        request["resume-transaction-id"]
       ? await recoverVersion(
           {
             requestedSha: intent["requested-sha"],

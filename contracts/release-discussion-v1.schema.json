@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Buildchain release Discussion envelope",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "schema",
+        "id",
+        "repository",
+        "key",
+        "expectedNodes",
+        "runtime",
+        "source"
+      ],
+      "properties": {
+        "schema": {
+          "const": "buildchain.release-discussion/v1"
+        },
+        "id": {
+          "$ref": "#/$defs/root"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expectedNodes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          }
+        },
+        "runtime": {
+          "$ref": "#/$defs/runtime"
+        },
+        "source": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "schema",
+        "id",
+        "intent",
+        "attempt",
+        "predecessor",
+        "runtime",
+        "payloadSchema",
+        "node",
+        "status",
+        "sequence",
+        "payload",
+        "kind",
+        "writer"
+      ],
+      "properties": {
+        "schema": {
+          "const": "buildchain.discussion-record/v1"
+        },
+        "id": {
+          "$ref": "#/$defs/root"
+        },
+        "intent": {
+          "$ref": "#/$defs/root"
+        },
+        "attempt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "writer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "predecessor": {
+          "type": "string"
+        },
+        "runtime": {
+          "$ref": "#/$defs/runtime"
+        },
+        "payloadSchema": {
+          "const": "buildchain.release-progress/v1"
+        },
+        "node": {
+          "type": "string"
+        },
+        "status": {
+          "enum": ["running", "success", "failure", "cancelled"]
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "kind": {
+          "enum": ["progress", "checkpoint"]
+        },
+        "payload": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "$defs": {
+    "root": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "runtime": {
+      "type": "object",
+      "required": ["repository", "sha", "readerDigest"],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+        },
+        "sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "readerDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "readerPath": {
+          "const": "dist/readers/release-discussion.cjs"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
