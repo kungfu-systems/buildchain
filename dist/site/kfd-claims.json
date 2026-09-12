@@ -21,11 +21,11 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "0e29fa8be43cf5a02de6e24632b231b7e9b462e2d101102bd1d5e22def19468b",
+    "sha256": "1516dfec481fe7781ea49caafec6e623cf5b14b5930f712574988a486cdd5b32",
     "summary": {
       "cliCommandCount": 117,
-      "workflowCount": 67,
-      "actionCount": 268,
+      "workflowCount": 69,
+      "actionCount": 272,
       "sitePageCount": 94,
       "docCommandRefCount": 1036,
       "failureCount": 0
@@ -246,11 +246,11 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "0e29fa8be43cf5a02de6e24632b231b7e9b462e2d101102bd1d5e22def19468b",
+      "sha256": "1516dfec481fe7781ea49caafec6e623cf5b14b5930f712574988a486cdd5b32",
       "summary": {
         "cliCommandCount": 117,
-        "workflowCount": 67,
-        "actionCount": 268,
+        "workflowCount": 69,
+        "actionCount": 272,
         "sitePageCount": 94,
         "docCommandRefCount": 1036,
         "failureCount": 0
@@ -3865,6 +3865,23 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:.ops-pipeline-delivery",
+          "name": "workflow:.ops-pipeline-delivery",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/.ops-pipeline-delivery.yml",
+          "evidencePath": ".github/workflows/.ops-pipeline-delivery.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "request",
+            "runtime-selection"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:.release-authority",
           "name": "workflow:.release-authority",
           "kind": "workflow",
@@ -4186,7 +4203,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 42,
+          "inputCount": 44,
           "inputs": [
             "active-lease-context",
             "affected-paths-json",
@@ -4211,7 +4228,9 @@
             "native-command",
             "native-command-root",
             "native-heartbeat-seconds",
+            "native-platform",
             "native-proof-json",
+            "pipeline-attempt",
             "plan-root",
             "project-cut-proof-json",
             "queue-admission-context",
@@ -4416,6 +4435,22 @@
             "runtime-selection",
             "same-repository-only",
             "target-branch"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:public-ops-pipeline",
+          "name": "workflow:public-ops-pipeline",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/public-ops-pipeline.yml",
+          "evidencePath": ".github/workflows/public-ops-pipeline.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 1,
+          "inputs": [
+            "config-path"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -6983,11 +7018,12 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 5,
+          "inputCount": 6,
           "inputs": [
             "branch",
             "heartbeat-seconds",
             "lease-seconds",
+            "pipeline-attempt",
             "runtime-sha",
             "token"
           ],
@@ -9667,9 +9703,10 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 9,
+          "inputCount": 10,
           "inputs": [
             "contract-lock",
+            "pipeline-attempt",
             "resume-run-id",
             "runtime-ref",
             "selection",
@@ -10361,6 +10398,74 @@
             "head-repository",
             "require-trusted",
             "untrusted-policy"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:workflow/pipeline/build",
+          "name": "action:workflow/pipeline/build",
+          "kind": "action",
+          "sourcePath": "actions/workflow/pipeline/build/action.yml",
+          "evidencePath": "actions/workflow/pipeline/build/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "context",
+            "platform"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:workflow/pipeline/control",
+          "name": "action:workflow/pipeline/control",
+          "kind": "action",
+          "sourcePath": "actions/workflow/pipeline/control/action.yml",
+          "evidencePath": "actions/workflow/pipeline/control/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "config-path",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:workflow/pipeline/record-build",
+          "name": "action:workflow/pipeline/record-build",
+          "kind": "action",
+          "sourcePath": "actions/workflow/pipeline/record-build/action.yml",
+          "evidencePath": "actions/workflow/pipeline/record-build/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "context",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:workflow/pipeline/wake",
+          "name": "action:workflow/pipeline/wake",
+          "kind": "action",
+          "sourcePath": "actions/workflow/pipeline/wake/action.yml",
+          "evidencePath": "actions/workflow/pipeline/wake/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "attempt",
+            "token"
           ],
           "reverseAuditSource": "actions/*/action.yml"
         },
@@ -11680,6 +11785,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 733
+    "publicSurfaceCount": 739
   }
 }

@@ -1,0 +1,130 @@
+name: Buildchain pipeline
+on:
+  workflow_call:
+    inputs:
+      config-path:
+        description: Product and protected channel contract.
+        type: string
+        required: false
+        default: .buildchain/buildchain.toml
+permissions:
+  contents: read
+jobs:
+  runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          source-sha: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha || github.sha }}
+          pipeline-attempt: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.attempt || '' }}
+          token: ${{ github.token }}
+  control:
+    name: Buildchain pipeline controller
+    needs: runtime
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      actions: write
+      checks: read
+      contents: write
+      discussions: write
+      pull-requests: write
+    outputs:
+      operation: ${{ steps.control.outputs.operation }}
+      context: ${{ steps.control.outputs.context }}
+      matrix: ${{ steps.control.outputs.matrix }}
+      request: ${{ steps.control.outputs.request }}
+      attempt: ${{ steps.control.outputs.attempt }}
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - id: control
+        uses: ./.buildchain/runtime/actions/workflow/pipeline/control
+        with:
+          config-path: ${{ inputs.config-path }}
+          token: ${{ github.token }}
+  build:
+    name: Build product (${{ matrix.platform }})
+    needs: [runtime, control]
+    if: needs.control.outputs.operation == 'build'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.control.outputs.matrix) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ fromJSON(needs.control.outputs.context).source.repository }}
+          ref: ${{ fromJSON(needs.control.outputs.context).source.commit }}
+          path: .buildchain/product
+          persist-credentials: false
+      - uses: ./.buildchain/runtime/actions/workflow/pipeline/build
+        with:
+          context: ${{ needs.control.outputs.context }}
+          platform: ${{ matrix.platform }}
+  record-build:
+    name: Record product build
+    needs: [runtime, control, build]
+    if: always() && needs.control.outputs.operation == 'build'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: write
+      checks: write
+      contents: write
+      discussions: write
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - uses: ./.buildchain/runtime/actions/workflow/pipeline/record-build
+        with:
+          context: ${{ needs.control.outputs.context }}
+          token: ${{ github.token }}
+  delivery:
+    needs: [runtime, control]
+    if: needs.control.outputs.operation == 'deliver'
+    uses: ./.github/workflows/.ops-pipeline-delivery.yml
+    with:
+      request: ${{ needs.control.outputs.request }}
+      runtime-selection: ${{ needs.runtime.outputs.selection }}
+    permissions:
+      actions: write
+      checks: read
+      contents: write
+      pull-requests: write
+      statuses: write
+  record-delivery:
+    name: Record delivery attempt
+    needs: [runtime, control, delivery]
+    if: always() && needs.control.outputs.operation == 'deliver'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: write
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - uses: ./.buildchain/runtime/actions/workflow/pipeline/wake
+        with:
+          attempt: ${{ needs.control.outputs.attempt }}
+          token: ${{ github.token }}

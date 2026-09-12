@@ -742,6 +742,28 @@
       "status": "active",
       "invocation": "repository",
       "rationale": "Verify exact release PR lineage without retired prebuild, dependency discovery, version mutation or approval adapters."
+    },
+    {
+      "id": "pipeline",
+      "role": "public",
+      "category": "ops",
+      "purpose": "pipeline",
+      "summary": "Buildchain pipeline",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "rationale": "Buildchain pipeline: owned normal pipeline and internal credential boundaries."
+    },
+    {
+      "id": ".pipeline-delivery",
+      "role": "component",
+      "category": "ops",
+      "purpose": "pipeline-delivery",
+      "summary": "Internal pipeline delivery",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "rationale": "Internal pipeline delivery: owned normal pipeline and internal credential boundaries."
     }
   ]
 }

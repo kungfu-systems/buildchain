@@ -1205,6 +1205,28 @@
       "interfaces": [
         {
           "trigger": "workflow_call",
+          "name": "native-platform",
+          "definition": {
+            "description": "Declared platform for independent native verification.",
+            "type": "string",
+            "required": false,
+            "default": "linux-x64"
+          },
+          "destination": "internal.plan-derived-input"
+        },
+        {
+          "trigger": "workflow_call",
+          "name": "pipeline-attempt",
+          "definition": {
+            "description": "Internally selected business attempt when invoked by the normal pipeline.",
+            "type": "string",
+            "required": false,
+            "default": ""
+          },
+          "destination": "attempt.material-index"
+        },
+        {
+          "trigger": "workflow_call",
           "name": "target-branch",
           "definition": {
             "description": "Protected dev branch to merge ready PRs into",
@@ -2687,6 +2709,35 @@
         }
       ],
       "calls": []
+    },
+    {
+      "path": ".github/workflows/public-ops-pipeline.yml",
+      "role": "public",
+      "events": ["workflow_call"],
+      "secrets": [],
+      "outputs": [],
+      "destination": "internal-component.behind-pipeline-or-recovery",
+      "interfaces": [
+        {
+          "trigger": "workflow_call",
+          "name": "config-path",
+          "definition": {
+            "description": "Product and protected channel contract.",
+            "type": "string",
+            "required": false,
+            "default": ".buildchain/buildchain.toml"
+          },
+          "destination": "normal-entry.config-path"
+        }
+      ],
+      "calls": [
+        {
+          "id": "delivery",
+          "uses": "./.github/workflows/.ops-pipeline-delivery.yml",
+          "inputs": ["request", "runtime-selection"],
+          "destination": "internal.workflow-composition"
+        }
+      ]
     },
     {
       "path": ".github/workflows/public-ops-release-governance.yml",

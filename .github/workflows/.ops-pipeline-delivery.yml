@@ -1,0 +1,50 @@
+name: Internal pipeline delivery
+on:
+  workflow_call:
+    inputs:
+      request:
+        type: string
+        required: true
+      runtime-selection:
+        type: string
+        required: true
+permissions:
+  actions: write
+  checks: read
+  contents: write
+  pull-requests: write
+  statuses: write
+jobs:
+  delivery:
+    uses: ./.github/workflows/public-ops-dev-auto-merge.yml
+    with:
+      runtime-selection: ${{ inputs.runtime-selection }}
+      target-branch: ${{ fromJSON(inputs.request)['target-branch'] }}
+      expected-pr-number: ${{ fromJSON(inputs.request)['expected-pr-number'] }}
+      expected-head-sha: ${{ fromJSON(inputs.request)['expected-head-sha'] }}
+      source-workflow-run-id: ${{ fromJSON(inputs.request)['source-workflow-run-id'] }}
+      pipeline-attempt: ${{ fromJSON(inputs.request)['pipeline-attempt'] }}
+      delivery-warrant-mode: ${{ fromJSON(inputs.request)['delivery-warrant-mode'] }}
+      delivery-class: ${{ fromJSON(inputs.request)['delivery-class'] }}
+      source-root: ${{ fromJSON(inputs.request)['source-root'] }}
+      source-identity-root: ${{ fromJSON(inputs.request)['source-identity-root'] }}
+      source-patch-root: ${{ fromJSON(inputs.request)['source-patch-root'] }}
+      plan-root: ${{ fromJSON(inputs.request)['plan-root'] }}
+      closure-root: ${{ fromJSON(inputs.request)['closure-root'] }}
+      dependency-root: ${{ fromJSON(inputs.request)['dependency-root'] }}
+      toolchain-root: ${{ fromJSON(inputs.request)['toolchain-root'] }}
+      environment-root: ${{ fromJSON(inputs.request)['environment-root'] }}
+      native-command: ${{ fromJSON(inputs.request)['native-command'] }}
+      native-platform: ${{ fromJSON(inputs.request)['native-platform'] }}
+      native-command-root: ${{ fromJSON(inputs.request)['native-command-root'] }}
+      affected-paths-json: ${{ fromJSON(inputs.request)['affected-paths-json'] }}
+      shard-evidence-roots-json: ${{ fromJSON(inputs.request)['shard-evidence-roots-json'] }}
+      required-status-checks: ${{ fromJSON(inputs.request)['required-status-checks'] }}
+      ready-label: ${{ fromJSON(inputs.request)['ready-label'] }}
+      landing-mode: ${{ fromJSON(inputs.request)['landing-mode'] }}
+      queue-admission-context: ${{ fromJSON(inputs.request)['queue-admission-context'] }}
+      active-lease-context: ${{ fromJSON(inputs.request)['active-lease-context'] }}
+      require-approval: ${{ fromJSON(inputs.request)['require-approval'] }}
+      same-repository-only: ${{ fromJSON(inputs.request)['same-repository-only'] }}
+      max-merges: ${{ fromJSON(inputs.request)['max-merges'] }}
+      dry-run: ${{ fromJSON(inputs.request)['dry-run'] }}

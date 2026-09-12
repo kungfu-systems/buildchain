@@ -1,10 +1,7 @@
 import path from "node:path";
 import fs from "node:fs";
 import crypto from "node:crypto";
-import {
-  sourceCoordinates,
-  validateNativeContract,
-} from "./coordinates.js";
+import { sourceCoordinates, validateNativeContract } from "./coordinates.js";
 import {
   verifyProjectCutReplayProof,
   createSourceQualificationProof,
@@ -16,6 +13,7 @@ import { assertBranchUnlocked } from "../../providers/dev-delivery/protection.js
 import { deriveSourcePaths } from "./source-paths.js";
 import { admissionPolicyRequest } from "../admission/request.js";
 import { runAdmissionTransaction } from "../admission/transaction.js";
+import { guardPipelineAdmission } from "../../workflow/pipeline/guard.js";
 export function admitDeliveryRequest(input, defaultBranch) {
   const target = sourceCoordinates({
     branch: input["target-branch"],
@@ -46,6 +44,7 @@ export async function qualifyDeliverySource(
   },
   dependencies = {},
 ) {
+  await guardPipelineAdmission(request, { repository, token });
   const outputs = {
     "runtime-sha": runtimeSha,
     "qualify-outcome": "skipped",

@@ -135,6 +135,7 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - `.github/workflows/self-build-verify.yml`
 - `.github/workflows/self-release-promote.yml`
 - `.github/workflows/.release-binary-assets.yml`
+- `.github/workflows/public-ops-dev-auto-merge.yml`
 
 ## action-process-runtime
 
@@ -1070,6 +1071,86 @@ Owner: Buildchain consumer contract maintainers
 
 - `node --test tests/minimal-consumer-contract.test.mjs`
 - `node scripts/generate-minimal-consumer-contract.mjs --check`
+
+## minimal-consumer-pipeline
+
+Owner: Buildchain pipeline maintainers
+
+### Implementation
+
+- `packages/core/providers/github/attempt-index.js`
+- `packages/core/providers/github/attempt-journal.js`
+- `packages/core/providers/github/pipeline-checkout.js`
+- `packages/core/providers/github/pipeline-events.js`
+- `packages/core/providers/github/pipeline-integration.js`
+- `packages/core/providers/github/pipeline-policy.js`
+- `packages/core/providers/github/pipeline-runs.js`
+- `packages/core/providers/github/pipeline-source.js`
+- `packages/core/providers/github/pipeline-worker.js`
+- `packages/core/workflow/attempt/journal.js`
+- `packages/core/workflow/commands/pipeline-build.mjs`
+- `packages/core/workflow/pipeline/actions.js`
+- `packages/core/workflow/pipeline/build-control.js`
+- `packages/core/workflow/pipeline/build-evidence.js`
+- `packages/core/workflow/pipeline/build.js`
+- `packages/core/workflow/pipeline/cancellation.js`
+- `packages/core/workflow/pipeline/channel-control.js`
+- `packages/core/workflow/pipeline/controller.js`
+- `packages/core/workflow/pipeline/delivery-control.js`
+- `packages/core/workflow/pipeline/delivery-observation.js`
+- `packages/core/workflow/pipeline/delivery-request.js`
+- `packages/core/workflow/pipeline/events.js`
+- `packages/core/workflow/pipeline/fence.js`
+- `packages/core/workflow/pipeline/group-control.js`
+- `packages/core/workflow/pipeline/guard.js`
+- `packages/core/workflow/pipeline/host.js`
+- `packages/core/workflow/pipeline/materials.js`
+- `packages/core/workflow/pipeline/notifications.js`
+- `packages/core/workflow/pipeline/platforms.js`
+- `packages/core/workflow/pipeline/progress.js`
+- `packages/core/workflow/pipeline/projection.js`
+- `packages/core/workflow/pipeline/reconcile.js`
+- `packages/core/workflow/pipeline/runtime-source.js`
+- `packages/core/workflow/pipeline/selection.js`
+- `packages/core/workflow/pipeline/session.js`
+- `packages/core/workflow/pipeline/settlement.js`
+- `packages/core/workflow/pipeline/wake.js`
+
+### Contracts
+
+- `architecture/decisions/0007-hosted-pipeline-controller.md`
+
+### Tests
+
+- `tests/business-attempt-journal.test.mjs`
+- `tests/github-attempt-journal.test.mjs`
+- `tests/pipeline-build.test.mjs`
+- `tests/pipeline-cancellation.test.mjs`
+- `tests/pipeline-channel.test.mjs`
+- `tests/pipeline-controller.test.mjs`
+- `tests/pipeline-delivery-request.test.mjs`
+- `tests/pipeline-events.test.mjs`
+- `tests/pipeline-fence.test.mjs`
+- `tests/pipeline-guard.test.mjs`
+- `tests/pipeline-index.test.mjs`
+- `tests/pipeline-integration.test.mjs`
+- `tests/pipeline-policy.test.mjs`
+- `tests/pipeline-progress.test.mjs`
+- `tests/pipeline-projection.test.mjs`
+- `tests/pipeline-reconcile.test.mjs`
+- `tests/pipeline-runs.test.mjs`
+- `tests/pipeline-runtime.test.mjs`
+- `tests/pipeline-settlement.test.mjs`
+- `tests/pipeline-source.test.mjs`
+- `tests/pipeline-worker.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/pipeline-*.test.mjs tests/business-attempt-journal.test.mjs tests/github-attempt-journal.test.mjs`
 
 ## npm-publication-transaction
 

@@ -516,6 +516,10 @@
         "settlement": {
           "responsibility": "Seal candidate terminal evidence and reconcile successful protected backflow.",
           "operations": ["seal"]
+        },
+        "pipeline": {
+          "responsibility": "Reconcile source-bound business attempts through protected delivery and product verification.",
+          "operations": ["control", "build", "record-build", "wake"]
         }
       }
     },

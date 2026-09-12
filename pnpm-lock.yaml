@@ -1493,6 +1493,42 @@ importers:
         specifier: 6.0.1
         version: 6.0.1
 
+  actions/workflow/pipeline/build:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
+  actions/workflow/pipeline/control:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
+  actions/workflow/pipeline/record-build:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
+  actions/workflow/pipeline/wake:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
   actions/workflow/settlement/seal:
     dependencies:
       '@actions/core':

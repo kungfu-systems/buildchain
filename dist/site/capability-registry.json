@@ -298,8 +298,8 @@
         "pageCount": 13,
         "cliCommandCount": 0,
         "nodeApiCount": 2,
-        "workflowCount": 55,
-        "actionCount": 26
+        "workflowCount": 57,
+        "actionCount": 30
       },
       "manuals": [
         "docs/cli.md",

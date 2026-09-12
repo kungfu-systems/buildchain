@@ -6,7 +6,12 @@ export function materialDigest(bytes) {
 
 // Draft release assets retain immutable recovery bytes outside the source Git
 // object database. Only the Discussion record selects a committed manifest.
-export function discussionMaterials({ octokit, repository, intentId }) {
+export function discussionMaterials({
+  octokit,
+  repository,
+  intentId,
+  authorityDescription = "The associated Discussion owns transaction state.",
+}) {
   const [owner, repo] = repository.split("/");
   const tag = `buildchain-records/${intentId.replace("sha256:", "")}`;
   const repos = octokit.rest.repos;
@@ -40,7 +45,7 @@ export function discussionMaterials({ octokit, repository, intentId }) {
             // Storage archives use the repository default; candidate identity is
             // retained in the material manifest, never in a storage Git ref.
             name: `Buildchain transaction materials ${intentId}`,
-            body: "Immutable recovery material. The associated Discussion owns transaction state.",
+            body: `Immutable recovery material. ${authorityDescription}`,
             draft: true,
             prerelease: true,
           })

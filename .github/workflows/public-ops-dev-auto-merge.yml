@@ -2,6 +2,16 @@ name: Dev PR Auto Merge
 on:
   workflow_call:
     inputs:
+      native-platform:
+        description: Declared platform for independent native verification.
+        type: string
+        required: false
+        default: linux-x64
+      pipeline-attempt:
+        description: Internally selected business attempt when invoked by the normal pipeline.
+        type: string
+        required: false
+        default: ""
       target-branch:
         description: Protected dev branch to merge ready PRs into
         default: ""
@@ -48,7 +58,8 @@ on:
         type: string
         required: false
       project-cut-proof-json:
-        description: Optional exact rooted Project Cut replay proof required when GitHub reports the PR
+        description:
+          Optional exact rooted Project Cut replay proof required when GitHub reports the PR
           behind the current protected base
         default: ""
         type: string
@@ -74,13 +85,15 @@ on:
         type: string
         required: false
       environment-root:
-        description: Exact native execution environment contract root; required for required native
+        description:
+          Exact native execution environment contract root; required for required native
           qualification
         default: ""
         type: string
         required: false
       affected-paths-json:
-        description: JSON array of covered paths; an empty array reconstructs paths from the exact
+        description:
+          JSON array of covered paths; an empty array reconstructs paths from the exact
           successful source workflow run
         default: "[]"
         type: string
@@ -96,13 +109,15 @@ on:
         type: string
         required: false
       native-command:
-        description: Native qualification command run after provisional Warrant selection when proof reuse
+        description:
+          Native qualification command run after provisional Warrant selection when proof reuse
           is unavailable
         default: ""
         type: string
         required: false
       native-command-root:
-        description: Optional exact root of native-command; when supplied it must match before admission or
+        description:
+          Optional exact root of native-command; when supplied it must match before admission or
           spawn
         default: ""
         type: string
@@ -138,13 +153,15 @@ on:
         type: string
         required: false
       queue-admission-context:
-        description: Exact-head status written and read back before native queue admission; required in
+        description:
+          Exact-head status written and read back before native queue admission; required in
           Warrant mode
         default: ""
         type: string
         required: false
       active-lease-context:
-        description: Exact-head lease status written and read back as pending before enqueue; required in
+        description:
+          Exact-head lease status written and read back as pending before enqueue; required in
           Warrant mode
         default: ""
         type: string
@@ -276,7 +293,8 @@ on:
         description: Content root of the cross-job native proof and state transfer
         value: ${{ jobs.merge-dev-prs.outputs.native-execution-transfer-root }}
       provider-finalizer-boundary-root:
-        description: Live provider readback root proving pairwise-distinct hosted native, seal, and
+        description:
+          Live provider readback root proving pairwise-distinct hosted native, seal, and
           finalizer domains
         value: ${{ jobs.merge-dev-prs.outputs.provider-finalizer-boundary-root }}
       provider-heartbeat-receipt-root:
@@ -289,7 +307,8 @@ permissions:
   checks: read
   statuses: write
 concurrency:
-  group: buildchain-dev-pr-admission-${{ github.repository }}-${{ inputs.target-branch ||
+  group:
+    buildchain-dev-pr-admission-${{ github.repository }}-${{ inputs.target-branch ||
     github.ref_name }}-${{ inputs.expected-pr-number || github.run_id }}
   cancel-in-progress: false
 jobs:
@@ -309,6 +328,7 @@ jobs:
           workflow-sha: ${{ job.workflow_sha }}
           token: ${{ github.token }}
           selection: ${{ inputs.runtime-selection }}
+          pipeline-attempt: ${{ inputs.pipeline-attempt }}
     timeout-minutes: 5
   admission:
     name: Reserve exact delivery candidate
@@ -329,7 +349,8 @@ jobs:
       handoff-required: ${{ steps.reserve.outputs.warrant-handoff-required }}
       handoff-dispatched: ${{ steps.reserve.outputs.warrant-handoff-dispatched }}
       already-qualified: ${{ steps.reserve.outputs.warrant-already-qualified }}
-      run-native: ${{ inputs.delivery-warrant-mode == 'required' && steps.reserve.outputs.warrant-outcome
+      run-native:
+        ${{ inputs.delivery-warrant-mode == 'required' && steps.reserve.outputs.warrant-outcome
         == 'success' && steps.reserve.outputs.warrant-handoff-required != 'true' &&
         steps.reserve.outputs.warrant-already-qualified != 'true' }}
     steps:
@@ -365,7 +386,7 @@ jobs:
       - admission
       - execution-runtime
     if: ${{ (needs.admission.outputs.run-native == 'true') }}
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON('{"linux-x64":"ubuntu-24.04","linux-arm64":"ubuntu-24.04-arm","macos-arm64":"macos-15","macos-x64":"macos-15-intel","windows-x64":"windows-2025"}')[inputs.native-platform] }}
     permissions:
       contents: read
     steps:
@@ -386,7 +407,8 @@ jobs:
       - admission
       - native-execution
       - execution-runtime
-    if: ${{ (always() && needs.admission.result == 'success' && needs.admission.outputs.run-native ==
+    if:
+      ${{ (always() && needs.admission.result == 'success' && needs.admission.outputs.run-native ==
       'true') }}
     runs-on: ubuntu-24.04
     permissions:
@@ -440,7 +462,8 @@ jobs:
       - seal-native-execution
       - delivery-heartbeat
       - execution-runtime
-    if: ${{ (always() && needs.admission.result == 'success' && needs.admission.outputs.handoff-required
+    if:
+      ${{ (always() && needs.admission.result == 'success' && needs.admission.outputs.handoff-required
       != 'true') }}
     runs-on: ubuntu-24.04
     permissions:
@@ -463,11 +486,14 @@ jobs:
       warrant-state-root: ${{ needs.admission.outputs.warrant-state-root }}
       warrant-state-commit: ${{ needs.admission.outputs.warrant-state-commit }}
       project-cut-proof-root: ${{ needs.admission.outputs.project-cut-proof-root }}
-      native-proof-root: ${{ steps.qualify.outputs.native-final-native-proof-root ||
+      native-proof-root:
+        ${{ steps.qualify.outputs.native-final-native-proof-root ||
         needs.admission.outputs.native-proof-root }}
-      native-reuse-decision-root: ${{ steps.qualify.outputs.native-final-decision-root ||
+      native-reuse-decision-root:
+        ${{ steps.qualify.outputs.native-final-decision-root ||
         needs.admission.outputs.native-reuse-decision-root }}
-      qualified-warrant-receipt-root: ${{ steps.qualify.outputs.native-final-qualification-receipt-root ||
+      qualified-warrant-receipt-root:
+        ${{ steps.qualify.outputs.native-final-qualification-receipt-root ||
         needs.admission.outputs.qualified-warrant-receipt-root }}
       native-execution-transfer-root: ${{ steps.qualify.outputs.boundary-transfer-root }}
       provider-finalizer-boundary-root: ${{ steps.qualify.outputs.boundary-root }}
