@@ -341,6 +341,18 @@
         "settlement": {
           "responsibility": "Retain immutable publication completion and verify its terminal receipt independently.",
           "operations": ["retain", "verify"]
+        },
+        "pipeline": {
+          "responsibility": "Prepare, independently qualify, publish and settle declared products inside one business attempt.",
+          "operations": [
+            "prepare",
+            "build",
+            "qualify",
+            "prepare-qualification",
+            "seal-qualification",
+            "apply",
+            "settle"
+          ]
         }
       }
     },

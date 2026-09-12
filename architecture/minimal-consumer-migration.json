@@ -2736,6 +2736,12 @@
           "uses": "./.github/workflows/.ops-pipeline-delivery.yml",
           "inputs": ["request", "runtime-selection"],
           "destination": "internal.workflow-composition"
+        },
+        {
+          "id": "publication",
+          "uses": "./.github/workflows/.release-pipeline-products.yml",
+          "inputs": ["attempt", "runtime-selection"],
+          "destination": "internal.workflow-composition"
         }
       ]
     },

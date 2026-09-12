@@ -136,6 +136,7 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - `.github/workflows/self-release-promote.yml`
 - `.github/workflows/.release-binary-assets.yml`
 - `.github/workflows/public-ops-dev-auto-merge.yml`
+- `tests/release-topology.test.mjs`
 
 ## action-process-runtime
 

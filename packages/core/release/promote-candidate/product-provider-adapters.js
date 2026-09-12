@@ -1,3 +1,5 @@
+import { parseNpmView } from "../../publication/npm/registry.js";
+import { readNpmPackResult } from "../../publication/npm/pack-result.js";
 import { createOciPublicationAdapter } from "./oci-provider.js";
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -306,8 +308,7 @@ function createPackedPackage(context) {
         { cwd: context.cwd, encoding: "utf8" },
         "npm pack",
       );
-      const payload = JSON.parse(String(result.stdout || "[]"));
-      const pack = Array.isArray(payload) ? payload[0] : payload;
+      const pack = readNpmPackResult(String(result.stdout || "[]"));
       if (
         pack?.name !== context.intent.packageName ||
         pack?.version !== context.intent.version ||
@@ -363,7 +364,7 @@ async function npmReadback(context, packedPackage, effect) {
         "npm-readback-failed",
       );
     }
-    const integrity = JSON.parse(String(result.stdout || '""'));
+    const { integrity } = parseNpmView(result.stdout);
     if (integrity !== expected.integrity) return conflict("npm-integrity-conflict");
     return observed(effect, {
       kind: "npm-package",

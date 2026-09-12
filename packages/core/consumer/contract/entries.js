@@ -59,7 +59,7 @@ export function admitEvent(name, action = "") {
 }
 
 function call(entry, channel, extra = "") {
-  return `permissions:\n  contents: read\njobs:\n  buildchain:\n    uses: kungfu-systems/buildchain/${entry}@${channel}\n${extra}    secrets: inherit\n    permissions:\n      actions: write\n      checks: write\n      contents: write\n      discussions: write\n      id-token: write\n      pull-requests: write\n      statuses: write\n`;
+  return `permissions:\n  contents: read\njobs:\n  buildchain:\n    uses: kungfu-systems/buildchain/${entry}@${channel}\n${extra}    secrets: inherit\n    permissions:\n      actions: write\n      attestations: write\n      checks: write\n      contents: write\n      discussions: write\n      id-token: write\n      pull-requests: write\n      statuses: write\n`;
 }
 
 // Product-independent source of the two caller bytes. Public entry publication

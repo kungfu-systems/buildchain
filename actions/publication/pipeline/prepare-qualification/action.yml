@@ -1,0 +1,19 @@
+name: Pipeline product prepare-qualification
+description: Execute the internal prepare-qualification product node.
+inputs:
+  context:
+    description: Internal source-bound publication context.
+    required: true
+  token:
+    description: Scoped provider credential.
+    required: true
+outputs:
+  subject-path:
+    description: Internal subject-path result.
+  predicate-path:
+    description: Internal predicate-path result.
+  predicate-type:
+    description: Internal predicate-type result.
+runs:
+  using: node24
+  main: dist/index.js

@@ -1,0 +1,147 @@
+name: Internal pipeline product publication
+on:
+  workflow_call:
+    inputs:
+      attempt:
+        type: string
+        required: true
+      runtime-selection:
+        type: string
+        required: true
+    secrets:
+      BUILDCHAIN_APP_PRIVATE_KEY:
+        required: false
+      BUILDCHAIN_AUTOMATION_TOKEN:
+        required: false
+      BUILDCHAIN_NPM_TOKEN:
+        required: false
+permissions:
+  contents: read
+concurrency:
+  group: buildchain-product-publication-${{ github.repository }}
+  cancel-in-progress: false
+jobs:
+  prepare:
+    name: Prepare publication
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: read
+    outputs:
+      operation: ${{ steps.prepare.outputs.operation }}
+      context: ${{ steps.prepare.outputs.context }}
+      matrix: ${{ steps.prepare.outputs.matrix }}
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ inputs.runtime-selection }}
+          token: ${{ github.token }}
+      - id: prepare
+        uses: ./.buildchain/runtime/actions/publication/pipeline/prepare
+        with:
+          attempt: ${{ inputs.attempt }}
+          definition-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+  build:
+    name: Build publication (${{ matrix.platform }})
+    needs: prepare
+    if: needs.prepare.outputs.operation == 'build'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ inputs.runtime-selection }}
+          token: ${{ github.token }}
+      - uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ fromJSON(needs.prepare.outputs.context).materialization.source.repository }}
+          ref: ${{ fromJSON(needs.prepare.outputs.context).materialization.source.commit }}
+          path: .buildchain/product
+          persist-credentials: false
+      - uses: ./.buildchain/runtime/actions/publication/pipeline/build
+        with:
+          context: ${{ needs.prepare.outputs.context }}
+          platform: ${{ matrix.platform }}
+  qualify:
+    name: Qualify and sign products
+    needs: [prepare, build]
+    if: needs.prepare.outputs.operation == 'build'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ inputs.runtime-selection }}
+          token: ${{ github.token }}
+      - uses: ./.buildchain/runtime/actions/publication/pipeline/qualify
+        with:
+          context: ${{ needs.prepare.outputs.context }}
+          token: ${{ github.token }}
+  apply:
+    name: Apply qualified publication
+    needs: [prepare, qualify]
+    if: always() && (needs.prepare.outputs.operation == 'apply' || needs.qualify.result == 'success')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: write
+      id-token: write
+      attestations: read
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ inputs.runtime-selection }}
+          token: ${{ github.token }}
+      - uses: ./.buildchain/runtime/actions/publication/pipeline/apply
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.BUILDCHAIN_NPM_TOKEN }}
+        with:
+          context: ${{ needs.prepare.outputs.context }}
+          token: ${{ github.token }}
+  settle:
+    name: Settle product follow-ups
+    needs: [prepare, apply]
+    if: always() && (needs.prepare.outputs.operation == 'settle' || needs.apply.result == 'success')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      actions: write
+      contents: write
+      discussions: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ inputs.runtime-selection }}
+          token: ${{ github.token }}
+      - id: credential
+        uses: ./.buildchain/runtime/actions/providers/github/token
+        with:
+          client-id: ${{ vars.BUILDCHAIN_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BUILDCHAIN_APP_PRIVATE_KEY }}
+          fallback-token: ${{ secrets.BUILDCHAIN_AUTOMATION_TOKEN }}
+          failure-policy: strict
+          permission-contents: write
+          permission-pull-requests: write
+      - uses: ./.buildchain/runtime/actions/publication/pipeline/settle
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.BUILDCHAIN_NPM_TOKEN }}
+        with:
+          context: ${{ needs.prepare.outputs.context }}
+          token: ${{ github.token }}
+          pr-token: ${{ steps.credential.outputs.token }}

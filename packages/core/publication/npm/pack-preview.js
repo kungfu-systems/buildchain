@@ -1,6 +1,6 @@
+import { readNpmPackResult } from "./pack-result.js";
 export function summarizePackPreview(stdout) {
-  const parsed = JSON.parse(stdout);
-  const pack = Array.isArray(parsed) ? parsed[0] : parsed;
+  const pack = readNpmPackResult(stdout);
   const files = Array.isArray(pack?.files) ? pack.files : [];
   const bin = files.find((file) => file.path === "bin/buildchain.mjs");
   const fileEntries = files.map((file) => ({

@@ -1,0 +1,22 @@
+name: Pipeline product prepare
+description: Execute the internal prepare product node.
+inputs:
+  attempt:
+    description: Exact current business attempt.
+    required: true
+  definition-sha:
+    description: Exact defining publisher workflow SHA.
+    required: true
+  token:
+    description: Scoped provider credential.
+    required: true
+outputs:
+  operation:
+    description: Internal operation result.
+  context:
+    description: Internal context result.
+  matrix:
+    description: Internal matrix result.
+runs:
+  using: node24
+  main: dist/index.js

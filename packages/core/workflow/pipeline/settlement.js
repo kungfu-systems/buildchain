@@ -119,6 +119,7 @@ export async function settlePipeline(session, fresh, delivery, host) {
     eventKey: `merged:${result.receiptRoot}`,
     materials: [reference, receipt],
   });
+  await host.notifyTerminal?.(session);
   const successor = result.receipt.successorWake;
   if (successor) {
     const next = await host.provider.lookup(

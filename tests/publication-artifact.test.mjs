@@ -44,7 +44,7 @@ test("publication registry hydration records npm integrity and extracts only reg
       if (command === "npm" && args[0] === "view") return '["0.1.0-alpha.1","0.1.0-alpha.2","0.1.0-alpha.3"]';
       if (command === "npm" && args[0] === "pack") {
         const version = args[1].split("@").at(-1);
-        return JSON.stringify([{ filename: `${version}.tgz`, integrity: `sha512-${version}` }]);
+        return JSON.stringify([{ name: args[1].slice(0, args[1].lastIndexOf("@")), version, filename: `${version}.tgz`, integrity: `sha512-${version}` }]);
       }
       if (command === "tar" && args[0] === "-tzf") return "package/.buildchain/publication/publication-registry.json";
       if (command === "tar" && args[0] === "-xOzf") return '{"contract":"fixture"}';

@@ -33,7 +33,9 @@ function sourceCheckout(cwd, expected) {
   if (recordDigest(identity) !== recordDigest(expected))
     throw new Error("Build TOML changed after source admission");
   if (git("status", "--porcelain", "--untracked-files=no"))
-    throw new Error("Build source has tracked modifications before execution");
+    throw new Error(
+      "Build source has tracked modifications at its verification boundary",
+    );
   return plan;
 }
 
@@ -59,6 +61,7 @@ export async function buildPipelineSource(
     { cwd, plan, platform, environment },
     session,
   );
+  inspect(cwd, source);
   return {
     schema: "buildchain.pipeline-build-observation/v1",
     source,

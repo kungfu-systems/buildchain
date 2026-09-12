@@ -73,6 +73,7 @@ Register ownership before adding a workflow. `pnpm run check:workflows` validate
 | [.ops-pipeline-delivery.yml](../.github/workflows/.ops-pipeline-delivery.yml) | ops | reusable | active | Internal pipeline delivery |
 | [.release-authority.yml](../.github/workflows/.release-authority.yml) | release | reusable | active | Buildchain Sealed Publication Authority |
 | [.release-binary-assets.yml](../.github/workflows/.release-binary-assets.yml) | release | reusable | active | Buildchain Binary Release Assets |
+| [.release-pipeline-products.yml](../.github/workflows/.release-pipeline-products.yml) | release | reusable | active | Internal pipeline product publication |
 | [.release-promote.yml](../.github/workflows/.release-promote.yml) | release | reusable | active | Release Candidate Promote Advanced |
 
 ## self

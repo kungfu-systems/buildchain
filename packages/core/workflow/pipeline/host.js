@@ -49,6 +49,7 @@ export async function pipelineHost(core, env, jobName) {
   const host = {
     repository,
     token,
+    github,
     selection,
     runtime,
     runtimeRoot,
@@ -82,6 +83,14 @@ export async function pipelineHost(core, env, jobName) {
         }),
         { repository, attempt: session.observed.history.at(-1).identity },
       ),
+    productArchive: (session) =>
+      discussionMaterials({
+        octokit: github,
+        repository,
+        intentId: session.intent.id,
+        authorityDescription:
+          "The canonical Buildchain intent Git journal owns transaction state.",
+      }),
     wake: async (attempt) => {
       await index.resolve(attempt);
       await request(`/repos/${repository}/dispatches`, {
