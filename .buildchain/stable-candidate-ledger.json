@@ -6,7 +6,7 @@
   "hold": {
     "enabled": false,
     "reason": "",
-    "updatedAt": "2026-09-11T23:07:30.165Z"
+    "updatedAt": "2026-09-12T00:32:47.851Z"
   },
   "candidates": [
     {
@@ -264,12 +264,12 @@
       "sha": "26cc06d64278cc0ddf3b844148b88ef386c21926",
       "tag": "v4.1.2-alpha.0",
       "publishedAt": "2026-09-11T22:11:16.000Z",
-      "state": "soaking",
+      "state": "promoted",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-09-11T23:07:30.165Z",
-        "soakStartedAt": "2026-09-11T23:01:18.000Z",
-        "soakElapsedSeconds": 372,
+        "observedAt": "2026-09-12T00:32:47.851Z",
+        "soakStartedAt": "2026-09-12T00:30:18.000Z",
+        "soakElapsedSeconds": 149,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -281,15 +281,15 @@
           {
             "id": "status:buildchain-canary/buildchain-zero-input",
             "status": "pass",
-            "completedAt": "2026-09-11T23:01:18.000Z",
-            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/34655201548"
+            "completedAt": "2026-09-12T00:30:18.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/34660837199"
           }
         ]
       },
       "decision": {
-        "reason": "human-release-now",
-        "actor": "human",
-        "updatedAt": "2026-09-11T23:07:30.165Z"
+        "reason": "promoted",
+        "actor": "",
+        "updatedAt": "2026-09-11T23:49:57.000Z"
       },
       "promotionRequest": {
         "stableTag": "v4.1.2",
@@ -298,11 +298,22 @@
         "pullRequestUrl": "https://github.com/kungfu-systems/buildchain/pull/3741",
         "requestedAt": "2026-09-11T23:07:30.165Z",
         "authority": "human"
+      },
+      "promotion": {
+        "stableTag": "v4.1.2",
+        "stableSha": "b76388c9a5a82d956edac123d08a72945424a84e",
+        "promotedAt": "2026-09-11T23:49:57.000Z"
       }
     }
   ],
-  "updatedAt": "2026-09-11T23:07:30.165Z",
+  "updatedAt": "2026-09-11T23:49:57.000Z",
   "stableReleases": [
+    {
+      "version": "4.1.2",
+      "tag": "v4.1.2",
+      "publishedAt": "2026-09-11T23:49:57Z",
+      "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v4.1.2"
+    },
     {
       "version": "4.1.1",
       "tag": "v4.1.1",
