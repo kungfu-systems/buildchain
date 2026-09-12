@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 96,
+  "generation": 97,
   "fencingCounter": 32,
   "policy": {
     "agingSeconds": 900,
@@ -6435,8 +6435,51 @@
         "tests/minimal-consumer-contract.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.1",
+      "pullRequestNumber": 3763,
+      "sourceRoot": "sha256:91df23a874ddaebf46b4b7e9e7d6df7ada089be828bc3d5b5f50e1b3dbd8b8e9",
+      "sourceIdentityRoot": "sha256:e970f7fbd8804ea71c8f9724a026b81631ba271a2cdc4c63764c8134701d95c0",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:f7623ad8f790c954810f5ad98ad9307438534dad364003b77a217e7576560223",
+      "sourceHead": "ced32c68741448eb42a5835c6f49b8d3d0f5a6fd",
+      "sourcePatchRoot": "sha256:5ab1a1407ce2d2ee7aa2468f7f2789a4cd99623fc4270183a09e02e30b5bd164",
+      "sourceProofRoot": "sha256:76349253dc88c4e7a9970deef482e20199c36c6052bb2eea6d8980d7fdded8e7",
+      "planRoot": "sha256:552f72dadc45cff2f08f2c5fc7b829403b26456d76e1e6dc7465a1e46e54834d",
+      "closureRoot": "sha256:f534a5d2d4ffd34606d455b126d7c74dd305d5ef37077d2914b706d94e8ca145",
+      "dependencyRoot": "sha256:82b151362b5a7c702c53fdf750b10ecb9ac1e99ac1b53a2acf7456dc9a8cda79",
+      "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
+      "sourceWorkflowRunId": 34698654797,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-12T14:24:05.317Z",
+      "updatedAt": "2026-09-12T14:24:05.317Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "architecture/agent-change-map.md",
+        "architecture/decisions/0006-business-attempt-journal.md",
+        "architecture/internal-capabilities.json",
+        "architecture/maintainability-policy.json",
+        "dist/readers/business-attempt.cjs",
+        "packages/core/workflow/attempt/identity.js",
+        "packages/core/workflow/attempt/materials.js",
+        "packages/core/workflow/attempt/reader-entry.js",
+        "packages/core/workflow/attempt/reader.js",
+        "packages/core/workflow/attempt/records.js",
+        "packages/core/workflow/attempt/store.js",
+        "scripts/build-release-discussion-reader.mjs",
+        "tests/business-attempt-materials.test.mjs",
+        "tests/business-attempt-store.test.mjs",
+        "tests/business-attempt.test.mjs",
+        "tests/helpers/business-attempt.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-12T13:15:49.675Z",
-  "stateRoot": "sha256:911b71f4258944b1c13a227b2ef575b87dca2cc06dc9214348d0ee942be71b87"
+  "updatedAt": "2026-09-12T14:24:05.317Z",
+  "stateRoot": "sha256:eb2794313d0c6348732881540f89de00724522280ca8575478e0a7ce23e1f199"
 }
