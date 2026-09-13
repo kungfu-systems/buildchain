@@ -26,7 +26,7 @@ const result = verifyStageCapsuleCheckpoints({
 });
 if (platform === "linux-x64") {
   // Same immutable image and backbone tests as the retired container CI lane.
-  // The container receives source bytes, never provider credentials or a socket.
+  // Supply the selected Node as the hosted container runner did; no credentials.
   const image =
     "ghcr.io/kungfu-systems/build-images/kungfu-verify@sha256:11f0ba64267ce88174a4f73a9bf833ff4e9c59cd16ec3d08a6432a06c2be6fb1";
   execFileSync(
@@ -39,6 +39,10 @@ if (platform === "linux-x64") {
       "--security-opt=no-new-privileges",
       "--mount",
       `type=bind,source=${path.resolve(workspace)},target=/source,readonly`,
+      "--mount",
+      `type=bind,source=${process.execPath},target=/toolchain/node,readonly`,
+      "--env",
+      "PATH=/toolchain:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
       "--workdir",
       "/source",
       image,
