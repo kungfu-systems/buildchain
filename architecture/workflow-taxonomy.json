@@ -797,6 +797,17 @@
       "status": "active",
       "invocation": "reusable",
       "rationale": "Share credentialless product execution and protected delivery between normal and recovery public entries."
+    },
+    {
+      "id": ".pipeline-version",
+      "role": "component",
+      "category": "release",
+      "purpose": "pipeline-version",
+      "summary": "Internal pipeline version preparation",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "rationale": "Regenerate declared version material in credentialless product jobs and independently qualify it before publication or protected next-development Git writes."
     }
   ]
 }

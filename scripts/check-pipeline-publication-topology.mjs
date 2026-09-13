@@ -12,6 +12,7 @@ export function assertPipelinePublicationTopology(
     ".github/workflows/public-ops-pipeline.yml",
     ".github/workflows/public-ops-recover.yml",
     ".github/workflows/.ops-pipeline-execute.yml",
+    ".github/workflows/.release-pipeline-version.yml",
   ]);
   const pipelineTopology = discoverReleaseTopology(
     pipeline.workflowPaths,
@@ -33,4 +34,15 @@ export function assertPipelinePublicationTopology(
         module,
       ),
     );
+  const version = ".github/workflows/.release-pipeline-version.yml";
+  assert.ok(
+    inspectWorkflowJob(version, "build", root).modules.has(
+      "packages/core/publication/pipeline/version-build.js",
+    ),
+  );
+  assert.ok(
+    inspectWorkflowJob(version, "materialize", root).modules.has(
+      "packages/core/publication/pipeline/version-context.js",
+    ),
+  );
 }

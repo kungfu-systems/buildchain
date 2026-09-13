@@ -76,6 +76,7 @@ Register ownership before adding a workflow. `pnpm run check:workflows` validate
 | [.release-authority.yml](../.github/workflows/.release-authority.yml) | release | reusable | active | Buildchain Sealed Publication Authority |
 | [.release-binary-assets.yml](../.github/workflows/.release-binary-assets.yml) | release | reusable | active | Buildchain Binary Release Assets |
 | [.release-pipeline-products.yml](../.github/workflows/.release-pipeline-products.yml) | release | reusable | active | Internal pipeline product publication |
+| [.release-pipeline-version.yml](../.github/workflows/.release-pipeline-version.yml) | release | reusable | active | Internal pipeline version preparation |
 | [.release-promote.yml](../.github/workflows/.release-promote.yml) | release | reusable | active | Release Candidate Promote Advanced |
 
 ## self

@@ -53,7 +53,7 @@
         "cliCommandCount": 27,
         "nodeApiCount": 24,
         "workflowCount": 0,
-        "actionCount": 104
+        "actionCount": 107
       },
       "manuals": [
         "docs/release-passport.md",
@@ -298,7 +298,7 @@
         "pageCount": 13,
         "cliCommandCount": 0,
         "nodeApiCount": 2,
-        "workflowCount": 60,
+        "workflowCount": 61,
         "actionCount": 31
       },
       "manuals": [

@@ -184,8 +184,19 @@ export function evaluateStableReleaseGate({
     "version-bound impact declares a summary and at least one surface",
     { summary: string(impact?.summary), surfaceIds: surfaceImpacts.map((entry) => string(entry?.id)).filter(Boolean) },
   ));
+  checks.push(check(
+    string(impact?.release?.version) === candidateTag.replace(/^v/, ""),
+    "stable.impact_version",
+    "product impact belongs to the exact candidate version",
+    { expectedVersion: candidateTag.replace(/^v/, ""), observedVersion: string(impact?.release?.version) },
+  ));
 
   const canaryById = new Map(canaries.map((canary) => [string(canary?.id), canary]));
+  checks.push(check(
+    canaryById.size === canaries.length,
+    "canary.evidence_inventory",
+    "each canary has one unambiguous observation",
+  ));
   const canaryCompletionTimes = [];
   for (const required of policy.requiredCanaries) {
     const evidence = canaryById.get(required.id);

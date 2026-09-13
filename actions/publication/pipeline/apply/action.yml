@@ -7,6 +7,9 @@ inputs:
   token:
     description: Scoped provider credential.
     required: true
+outputs:
+  stable-wait:
+    description: Retained time-only stable qualification recheck before provider effects.
 runs:
   using: node24
   main: dist/index.js

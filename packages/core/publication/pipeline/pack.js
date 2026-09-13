@@ -101,7 +101,13 @@ export function packPipelineProducts({
         ? packageArtifact(directory, staging, item, plan.version, environment)
         : inspectPipelineFileArtifact(directory, item);
     const observed = publicationFile(packed.file);
-    const name = `${item.product}-${platform}-${item.artifact}${packed.suffix}`;
+    const name =
+      item.filename ||
+      `${item.product}-${platform}-${item.artifact}${packed.suffix}`;
+    if (!name.endsWith(packed.suffix))
+      throw new Error(
+        "Declared publication filename does not match the actual artifact format",
+      );
     writeImmutablePublicationFile(
       path.join(output, "payloads", name),
       observed.bytes,

@@ -7,6 +7,9 @@ inputs:
   token:
     description: "Scoped provider credential."
     required: true
+  stable-wait:
+    description: "Internal retained time-only publication recheck."
+    required: false
 runs:
   using: node24
   main: dist/index.js

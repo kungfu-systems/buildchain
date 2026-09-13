@@ -11,7 +11,12 @@ import {
   readLogPath,
   noopLogger,
 } from "./logging.js";
-import { platformTriple, copyNodeBinary, sourceSha } from "./identity.js";
+import {
+  platformTriple,
+  copyNodeBinary,
+  sourceSha,
+  packageVersion,
+} from "./identity.js";
 import { bundleCli, postjectArgs } from "./bundle.js";
 import { run } from "./process.js";
 function prepareStandaloneExecutable({
@@ -124,6 +129,7 @@ export function buildStandaloneBinary({
   nodePath = process.execPath,
   nodeVersion = process.version,
 } = {}) {
+  version ||= packageVersion(cwd);
   const resolvedOutputDir = path.resolve(cwd, outputDir);
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-sea-"));
   try {

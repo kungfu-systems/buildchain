@@ -46,6 +46,7 @@ export async function nextPipelineDevelopment(context, host, journal) {
       transition,
       adapter,
     );
+    if (selected.versionContext) return selected;
   }
   const pr = await host.request(
     `/repos/${host.repository}/pulls/${selected.number}`,

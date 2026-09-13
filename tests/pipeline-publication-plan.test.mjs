@@ -7,6 +7,8 @@ import {
   pipelineExpectedProducts,
   verifyPipelinePublicationPlan,
 } from "../packages/core/publication/pipeline/plan.js";
+import { assertPipelineStableQualification } from "../packages/core/publication/pipeline/stable.js";
+import { applyPipelinePublication } from "../packages/core/publication/pipeline/apply.js";
 import {
   readPipelineVersion,
   materializePipelineVersion,
@@ -50,6 +52,11 @@ test("one publication plan covers npm, archive and PDF declarations without prod
   const request = input();
   request.contract.products[0].platforms.push("windows-x64");
   assert.equal(pipelineExpectedProducts(request.contract).length, 2);
+  request.contract.products[0].artifacts[0].filename = "same-package.tgz";
+  assert.throws(
+    () => pipelineExpectedProducts(request.contract),
+    /filenames must be unique/,
+  );
 });
 
 test("Rust version selection retains alpha and materializes stable; anchored authority cannot be inferred", () => {
@@ -61,6 +68,55 @@ test("Rust version selection retains alpha and materializes stable; anchored aut
   assert.throws(() => planPipelinePublication(request), /Anchored publication/);
   request.version = "1.0.0";
   assert.equal(planPipelinePublication(request).version, "1.0.0");
+});
+
+test("publication retains the exact stable policy independently of later configuration mutation", () => {
+  const request = input();
+  request.contract.stable = compileConsumerPlan(
+    fs.readFileSync(".buildchain/minimal-consumer.toml", "utf8"),
+  ).stable;
+  const plan = planPipelinePublication(request);
+  assert.deepEqual(plan.stablePolicy, request.contract.stable);
+  request.contract.stable.minimum_soak_seconds = 0;
+  assert.equal(plan.stablePolicy.minimum_soak_seconds, 3600);
+  assert.throws(
+    () =>
+      verifyPipelinePublicationPlan({
+        ...plan,
+        stablePolicy: request.contract.stable,
+      }),
+    /retained root/,
+  );
+  const { stablePolicy, ...removed } = plan;
+  assert.throws(() => verifyPipelinePublicationPlan(removed), /retained root/);
+});
+
+test("Alpha stays available and an unadmitted context cannot read stable provider data", async () => {
+  const request = input();
+  request.contract.stable = compileConsumerPlan(
+    fs.readFileSync(".buildchain/minimal-consumer.toml", "utf8"),
+  ).stable;
+  const alpha = planPipelinePublication(request);
+  assert.equal(await assertPipelineStableQualification(alpha), null);
+  const stable = planPipelinePublication({
+    ...request,
+    route: request.contract.channels[2],
+  });
+  let accessed = false;
+  const host = new Proxy(
+    {},
+    {
+      get() {
+        accessed = true;
+        throw new Error("unexpected provider access");
+      },
+    },
+  );
+  await assert.rejects(
+    applyPipelinePublication({ plan: stable }, host),
+    /Publication context is not from this exact provider execution/,
+  );
+  assert.equal(accessed, false);
 });
 
 test("version materialization touches only declared existing fields and rejects drift and dangerous keys", () => {

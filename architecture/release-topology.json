@@ -14,6 +14,7 @@
       ".github/workflows/.release-authority.yml",
       ".github/workflows/.release-binary-assets.yml",
       ".github/workflows/.release-pipeline-products.yml",
+      ".github/workflows/.release-pipeline-version.yml",
       ".github/workflows/.release-promote.yml",
       ".github/workflows/build.yml",
       ".github/workflows/public-build-demo.yml",
@@ -116,7 +117,8 @@
         "packages/core/release/next-development/actions.js",
         "packages/core/publication/oci/preview-actions.js",
         "packages/core/publication/settlement/actions.js",
-        "packages/core/publication/pipeline/actions.js"
+        "packages/core/publication/pipeline/actions.js",
+        "packages/core/publication/pipeline/version-actions.js"
       ],
       "modules": [
         "packages/core/adoption/kfd-adopter-manifest.js",
@@ -134,6 +136,7 @@
         "packages/core/consumer/contract/identity.js",
         "packages/core/consumer/contract/plan.js",
         "packages/core/consumer/contract/products.js",
+        "packages/core/consumer/contract/reader.js",
         "packages/core/consumer/contract/shape.js",
         "packages/core/consumer/floating-consumer-evidence.js",
         "packages/core/consumer/floating-consumer-policy.js",
@@ -189,14 +192,19 @@
         "packages/core/providers/github/discussions/transport.js",
         "packages/core/providers/github/graphql-errors.js",
         "packages/core/providers/github/json-client.js",
+        "packages/core/providers/github/pipeline-entry-runs.js",
         "packages/core/providers/github/pipeline-integration.js",
         "packages/core/providers/github/pipeline-policy.js",
         "packages/core/providers/github/pipeline-product-payload.js",
         "packages/core/providers/github/pipeline-product-release.js",
         "packages/core/providers/github/pipeline-publication-artifacts.js",
+        "packages/core/providers/github/pipeline-release-evidence.js",
         "packages/core/providers/github/pipeline-run-entry.js",
         "packages/core/providers/github/pipeline-runs.js",
         "packages/core/providers/github/pipeline-source.js",
+        "packages/core/providers/github/pipeline-stable-source.js",
+        "packages/core/providers/github/pipeline-version-artifacts.js",
+        "packages/core/providers/github/pipeline-version-readback.js",
         "packages/core/providers/github/pipeline-version.js",
         "packages/core/providers/github/pipeline-worker.js",
         "packages/core/providers/github/release-assets.js",
@@ -258,7 +266,19 @@
         "packages/core/publication/pipeline/settle.js",
         "packages/core/publication/pipeline/signing.js",
         "packages/core/publication/pipeline/source-plan.js",
+        "packages/core/publication/pipeline/stable-entry.js",
+        "packages/core/publication/pipeline/stable-products.js",
+        "packages/core/publication/pipeline/stable-wait.js",
+        "packages/core/publication/pipeline/stable.js",
+        "packages/core/publication/pipeline/version-actions.js",
+        "packages/core/publication/pipeline/version-build.js",
+        "packages/core/publication/pipeline/version-context.js",
+        "packages/core/publication/pipeline/version-material.js",
+        "packages/core/publication/pipeline/version-preparation.js",
+        "packages/core/publication/pipeline/version-regeneration.js",
+        "packages/core/publication/pipeline/version-source-guard.js",
         "packages/core/publication/pipeline/version.js",
+        "packages/core/publication/pipeline/worker.js",
         "packages/core/publication/publication-artifact-candidate.js",
         "packages/core/publication/publication-authority.js",
         "packages/core/publication/publication-development.js",
@@ -345,6 +365,7 @@
         "packages/core/release/release-tail-provider-plane.js",
         "packages/core/release/release-train.js",
         "packages/core/release/reuse-complete-release.js",
+        "packages/core/release/stable-release-gate.js",
         "packages/core/release/version-state.js",
         "packages/core/release/version-state/verification.js",
         "packages/core/runtime/action-process.mjs",
@@ -389,7 +410,7 @@
         "packages/core/workflow/pipeline/wake.js",
         "packages/core/workflow/pipeline/web-status.js"
       ],
-      "root": "sha256:c043e16d6f8995cbecbdaa3d24466b47c9624bee0b7227c0e1842f37138b2508"
+      "root": "sha256:5d735b6117bdc114550e736cec02b396e51a3cc284d59d704e906ae8aaceb7c1"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/runtime/domain-wasm.js",
@@ -529,11 +550,11 @@
       }
     ],
     "metrics": {
-      "workflowCount": 38,
-      "jobCount": 111,
-      "reusableEdgeCount": 24,
-      "mutationRelevantNodeCount": 73,
-      "contentsWriteJobCount": 34,
+      "workflowCount": 39,
+      "jobCount": 116,
+      "reusableEdgeCount": 26,
+      "mutationRelevantNodeCount": 77,
+      "contentsWriteJobCount": 38,
       "oidcWriteJobCount": 25
     },
     "semanticMetrics": {
@@ -590,15 +611,16 @@
       ".github/workflows/.release-pipeline-products.yml",
       ".github/workflows/public-ops-pipeline.yml",
       ".github/workflows/public-ops-recover.yml",
-      ".github/workflows/.ops-pipeline-execute.yml"
+      ".github/workflows/.ops-pipeline-execute.yml",
+      ".github/workflows/.release-pipeline-version.yml"
     ],
     "authority": "retained-protected-source-qualified-sealed-products-and-live-provider-readback",
     "maximumMetrics": {
-      "workflowCount": 4,
-      "jobCount": 16,
-      "reusableEdgeCount": 4,
-      "mutationRelevantNodeCount": 12,
-      "contentsWriteJobCount": 12,
+      "workflowCount": 5,
+      "jobCount": 21,
+      "reusableEdgeCount": 6,
+      "mutationRelevantNodeCount": 16,
+      "contentsWriteJobCount": 16,
       "oidcWriteJobCount": 6
     },
     "observedTopology": {
@@ -616,13 +638,18 @@
           "path": ".github/workflows/.release-pipeline-products.yml",
           "triggers": ["workflow_call"],
           "jobs": [
-            "apply|runner|-|write|write|-|contents-write,oidc-write",
+            "apply|runner|-|write|write|jobOutput|contents-write,oidc-write",
             "build|runner|-|read|-|-|-",
+            "development|reusable-call|./.github/workflows/.release-pipeline-version.yml|write|-|-|contents-write",
+            "materialize|reusable-call|./.github/workflows/.release-pipeline-version.yml|write|-|-|contents-write",
             "prepare|runner|-|write|-|jobOutput|contents-write",
             "qualify|runner|-|write|write|-|contents-write,oidc-write",
-            "settle|runner|-|write|write|-|contents-write,oidc-write"
+            "settle|runner|-|write|write|jobOutput|contents-write,oidc-write"
           ],
-          "reusableEdges": []
+          "reusableEdges": [
+            "./.github/workflows/.release-pipeline-version.yml",
+            "./.github/workflows/.release-pipeline-version.yml"
+          ]
         },
         {
           "path": ".github/workflows/public-ops-pipeline.yml",
@@ -652,26 +679,36 @@
             "delivery|reusable-call|./.github/workflows/.ops-pipeline-delivery.yml|write|-|-|contents-write",
             "publication|reusable-call|./.github/workflows/.release-pipeline-products.yml|write|write|-|contents-write,oidc-write",
             "record-build|runner|-|write|-|-|contents-write",
-            "record-delivery|runner|-|write|-|-|contents-write"
+            "record-delivery|runner|-|write|-|-|contents-write",
+            "stable-recheck|runner|-|write|-|-|contents-write"
           ],
           "reusableEdges": [
             "./.github/workflows/.ops-pipeline-delivery.yml",
             "./.github/workflows/.release-pipeline-products.yml"
           ]
+        },
+        {
+          "path": ".github/workflows/.release-pipeline-version.yml",
+          "triggers": ["workflow_call"],
+          "jobs": [
+            "build|runner|-|read|-|-|-",
+            "materialize|runner|-|write|-|jobOutput|contents-write"
+          ],
+          "reusableEdges": []
         }
       ],
       "metrics": {
-        "workflowCount": 4,
-        "jobCount": 16,
-        "reusableEdgeCount": 4,
-        "mutationRelevantNodeCount": 12,
-        "contentsWriteJobCount": 12,
+        "workflowCount": 5,
+        "jobCount": 21,
+        "reusableEdgeCount": 6,
+        "mutationRelevantNodeCount": 16,
+        "contentsWriteJobCount": 16,
         "oidcWriteJobCount": 6
       },
       "semanticMetrics": {
-        "workflowCount": 4,
-        "mutationRelevantNodeCount": 12,
-        "contentsWriteJobCount": 8,
+        "workflowCount": 5,
+        "mutationRelevantNodeCount": 16,
+        "contentsWriteJobCount": 10,
         "oidcWriteJobCount": 3
       }
     }

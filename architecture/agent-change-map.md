@@ -1052,6 +1052,7 @@ Owner: Buildchain consumer contract maintainers
 - `packages/core/consumer/contract/inspection.js`
 - `packages/core/consumer/contract/plan.js`
 - `packages/core/consumer/contract/products.js`
+- `packages/core/consumer/contract/reader.js`
 - `packages/core/consumer/contract/shape.js`
 - `scripts/generate-minimal-consumer-contract.mjs`
 
@@ -1062,6 +1063,7 @@ Owner: Buildchain consumer contract maintainers
 ### Tests
 
 - `tests/minimal-consumer-contract.test.mjs`
+- `tests/consumer-product-config.test.mjs`
 
 ### Generated outputs
 
@@ -1088,6 +1090,8 @@ Owner: Buildchain pipeline maintainers
 - `packages/core/providers/github/pipeline-run-entry.js`
 - `packages/core/providers/github/pipeline-runs.js`
 - `packages/core/providers/github/pipeline-source.js`
+- `packages/core/providers/github/pipeline-version-artifacts.js`
+- `packages/core/providers/github/pipeline-version-readback.js`
 - `packages/core/providers/github/pipeline-worker.js`
 - `packages/core/publication/pipeline/actions.js`
 - `packages/core/publication/pipeline/apply.js`
@@ -1129,7 +1133,15 @@ Owner: Buildchain pipeline maintainers
 - `packages/core/publication/pipeline/settle.js`
 - `packages/core/publication/pipeline/signing.js`
 - `packages/core/publication/pipeline/source-plan.js`
+- `packages/core/publication/pipeline/version-actions.js`
+- `packages/core/publication/pipeline/version-build.js`
+- `packages/core/publication/pipeline/version-context.js`
+- `packages/core/publication/pipeline/version-material.js`
+- `packages/core/publication/pipeline/version-preparation.js`
+- `packages/core/publication/pipeline/version-regeneration.js`
+- `packages/core/publication/pipeline/version-source-guard.js`
 - `packages/core/publication/pipeline/version.js`
+- `packages/core/publication/pipeline/worker.js`
 - `packages/core/workflow/attempt/journal.js`
 - `packages/core/workflow/commands/pipeline-build.mjs`
 - `packages/core/workflow/pipeline/action-output.js`
@@ -1183,6 +1195,7 @@ Owner: Buildchain pipeline maintainers
 ### Contracts
 
 - `architecture/decisions/0007-hosted-pipeline-controller.md`
+- `architecture/decisions/0009-pipeline-version-preparation.md`
 
 ### Tests
 
@@ -1229,6 +1242,10 @@ Owner: Buildchain pipeline maintainers
 - `tests/pipeline-runtime.test.mjs`
 - `tests/pipeline-settlement.test.mjs`
 - `tests/pipeline-source.test.mjs`
+- `tests/pipeline-version-artifacts.test.mjs`
+- `tests/pipeline-version-build.test.mjs`
+- `tests/pipeline-version-context.test.mjs`
+- `tests/pipeline-version-regeneration.test.mjs`
 - `tests/pipeline-web-status.test.mjs`
 - `tests/pipeline-worker.test.mjs`
 
