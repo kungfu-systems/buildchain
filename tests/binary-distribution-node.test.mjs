@@ -82,13 +82,23 @@ test("binary checksums retain span success and failure evidence without a shell 
     "release-passport.checksums.error",
   ]);
 });
-test("binary product publication isolates builds and retains qualified evidence", () => {
-  const workflow = YAML.parse(fs.readFileSync(".github/workflows/.release-pipeline-products.yml", "utf8"));
-  assert.equal(workflow.on.workflow_dispatch, undefined);
-  assert.deepEqual(workflow.jobs.build.permissions, { contents: "read" });
-  assert.equal(workflow.jobs.apply.permissions.contents, "write");
-  assert.equal(workflow.jobs.apply.permissions["id-token"], "write");
-  assert.ok(workflow.jobs.apply.needs.includes("qualify"));
+test("binary workflow has one current settlement path and preserves the dispatch authority boundary", () => {
+  const workflow = YAML.parse(
+    fs.readFileSync(
+      ".github/workflows/self-build-binary-distribution.yml",
+      "utf8",
+    ),
+  );
+  assert.equal(
+    workflow.on.workflow_dispatch.inputs["upload-release"],
+    undefined,
+  );
+  assert.deepEqual(workflow.jobs.binary.needs, ["preflight", "execution-runtime"]);
+  assert.deepEqual(workflow.jobs.passport.permissions, { contents: "read" });
+  assert.equal(
+    workflow.jobs["dispatch-publication"].permissions.actions,
+    "write",
+  );
   const passport = YAML.parse(
     fs.readFileSync(
       "actions/build/binary/passport/action.yml",

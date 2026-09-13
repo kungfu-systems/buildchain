@@ -143,7 +143,7 @@ output(
   await format(
     JSON.stringify({
       schema: "buildchain.consumer-migration/v1",
-      stage: "self-cutover-in-progress; final-release-qualification-pending",
+      stage: "contract-defined; execution-entry-not-yet-published",
       workflows: workflowInventory(),
       consumerSources: consumerSourceInventory(),
     }),

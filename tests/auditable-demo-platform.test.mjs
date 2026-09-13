@@ -598,7 +598,9 @@ test("reusable builds run transport simulation within verify before shared uploa
   assert.match(stage, /stage === "verify"[\s\S]*runTransportSmoke\(/u);
 });
 
-test("binary demo action retains the reviewed setup-node action commit", () => {
+test("recursive dogfood resolves the reviewed setup-node action commit", () => {
+  const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/self-build-demo-dogfood.yml"), "utf8");
+  assert.match(workflow, /actions\/build\/demo\/qualify-binary/u);
   const node = fs.readFileSync(path.join(ROOT, "actions/build/demo/qualify-binary/action.yml"), "utf8");
   assert.match(
     node,

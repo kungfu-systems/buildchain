@@ -108,6 +108,7 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - tests: `tests/release-propagation.test.mjs`
 - tests: `tests/web-surface.test.mjs`
 - workflows: `.github/workflows/public-release-web.yml`
+- workflows: `.github/workflows/self-ops-bootstrap-dogfood.yml`
 
 ### Current top twenty maintenance hotspots
 
@@ -120,6 +121,7 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - `tests/dev-delivery-minimal-request.test.mjs`
 - `tests/build-configuration.test.mjs`
 - `.github/workflows/build.yml`
+- `.github/workflows/self-build-fixture.yml`
 - `scripts/generate-channel-promotion-workflow.mjs`
 - `tests/github-governance-authority.test.mjs`
 - `tests/maintainability.test.mjs`
@@ -130,13 +132,17 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - `.github/workflows/public-build-stage-capsule-canary.yml`
 - `.github/workflows/public-release-oci-compose-preview.yml`
 - `.github/workflows/public-release-promote.yml`
+- `.github/workflows/self-build-verify.yml`
+- `.github/workflows/self-release-promote.yml`
 - `.github/workflows/.release-binary-assets.yml`
 - `.github/workflows/public-ops-dev-auto-merge.yml`
 - `tests/release-topology.test.mjs`
 - `scripts/check-release-topology.mjs`
-- `packages/core/governance/buildchain-publication-authority.js`
-- `scripts/check-universal-workflow-bootstrap.mjs`
 - `packages/core/providers/github/discussions/materials.js`
+- `.github/workflows/self-build-alpha-dogfood.yml`
+- `.github/workflows/self-build-binary-distribution.yml`
+- `.github/workflows/self-ops-bootstrap-dogfood.yml`
+- `packages/core/governance/buildchain-publication-authority.js`
 
 ## action-process-runtime
 
@@ -2532,6 +2538,7 @@ Owner: Buildchain adopter delivery maintainers
 - `contracts/fixtures/v4-adopter-delivery-v1/gate-unknown-selector.json`
 - `contracts/fixtures/v4-adopter-delivery-v1/offline-vectors.json`
 - `.github/workflows/public-build-adopter-qualification.yml`
+- `.github/workflows/self-build-adopter-dogfood.yml`
 - `docs/v4-adopter-delivery.md`
 
 ### Tests
@@ -2754,6 +2761,7 @@ Owner: Buildchain protected delivery maintainers
 - `contracts/dev-delivery-authority-v2.schema.json`
 - `dist/site/schemas/dev-delivery-authority-v2.schema.json`
 - `.github/workflows/public-ops-dev-auto-merge.yml`
+- `.github/workflows/self-ops-dev-delivery.yml`
 - `templates/native-dev-delivery.yml`
 - `docs/dev-delivery-warrant.md`
 - `docs/dev-delivery-qualification-landing-adr.md`
@@ -2794,6 +2802,7 @@ Owner: Buildchain publication rehearsal maintainers
 
 - `architecture/publication-rehearsal-parity.json`
 - `contracts/v4-publication-rehearsal-capsule-v1.schema.json`
+- `.github/workflows/self-release-rehearsal-dogfood.yml`
 - `docs/v4-publication-rehearsal.md`
 
 ### Tests
@@ -2824,6 +2833,7 @@ Owner: Buildchain workflow maintainers
 - `architecture/universal-workflow-fault-campaign.json`
 - `architecture/universal-workflow-capability-policy.json`
 - `.github/workflows/public-ops-bootstrap.yml`
+- `.github/workflows/self-ops-bootstrap-dogfood.yml`
 
 ### Tests
 

@@ -1,11 +1,11 @@
 import { recordDigest } from "../../release/discussion/envelope.js";
 
 const QUERY = `query PipelinePolicy($owner:String!,$name:String!,$number:Int!){repository(owner:$owner,name:$name){pullRequest(number:$number){id number headRefOid baseRefName isDraft reviewDecision author{login}}}}`;
-const BRANCH_QUERY = `query PipelineBranchPolicy($owner:String!,$name:String!,$branch:String!,$ref:String!){repository(owner:$owner,name:$name){ref(qualifiedName:$ref){branchProtectionRule{requiresApprovingReviews requiredApprovingReviewCount requiresCodeOwnerReviews requiresStatusChecks requiredStatusChecks{context app{databaseId}}}}mergeQueue(branch:$branch){id}}}`;
+const BRANCH_QUERY = `query PipelineBranchPolicy($owner:String!,$name:String!,$branch:String!,$ref:String!){repository(owner:$owner,name:$name){ref(qualifiedName:$ref){refUpdateRule{requiredApprovingReviewCount requiresCodeOwnerReviews requiredStatusCheckContexts}}mergeQueue(branch:$branch){id}}}`;
 
 async function classicPolicy(request, owner, name, branch) {
-  // REST /branches/:branch/protection requires Administration:read. Ordinary
-  // workflow credentials instead read effective rules and GraphQL metadata.
+  // Read viewer-enforced rules and the ordinary Contents:read branch projection.
+  // Administrative branchProtectionRule and /protection queries are not needed.
   const result = await request("/graphql", {
     method: "POST",
     body: {
@@ -14,23 +14,50 @@ async function classicPolicy(request, owner, name, branch) {
     },
   });
   const repository = result.data?.repository;
-  if (!repository) throw new Error("Protected branch metadata is unavailable");
-  const rule = repository.ref?.branchProtectionRule;
+  if (!repository?.ref)
+    throw new Error("Protected branch metadata is unavailable");
+  const rule = repository.ref.refUpdateRule;
+  const observed = await request(
+    `/repos/${owner}/${name}/branches/${encodeURIComponent(branch)}`,
+  );
+  const status = observed.protection?.required_status_checks;
+  const contexts = status?.contexts;
+  const checks = status?.checks;
+  if (
+    observed.name !== branch ||
+    !Array.isArray(contexts) ||
+    !Array.isArray(checks) ||
+    checks.some(
+      (check) =>
+        typeof check.context !== "string" ||
+        !check.context ||
+        !Object.hasOwn(check, "app_id") ||
+        !(
+          check.app_id === null ||
+          check.app_id === -1 ||
+          (Number.isSafeInteger(check.app_id) && check.app_id > 0)
+        ),
+    ) ||
+    contexts.some(
+      (context) => !checks.some((check) => check.context === context),
+    ) ||
+    checks.some((check) => !contexts.includes(check.context)) ||
+    (rule?.requiredStatusCheckContexts || []).some(
+      (context) => !contexts.includes(context),
+    )
+  )
+    throw new Error("Protected branch check identity metadata is incomplete");
   return {
     required_merge_queue: Boolean(repository.mergeQueue?.id),
-    required_pull_request_reviews: rule?.requiresApprovingReviews
-      ? {
-          require_code_owner_reviews: rule.requiresCodeOwnerReviews,
-          required_approving_review_count: rule.requiredApprovingReviewCount,
-        }
-      : null,
+    required_pull_request_reviews:
+      rule?.requiredApprovingReviewCount > 0
+        ? {
+            require_code_owner_reviews: rule.requiresCodeOwnerReviews,
+            required_approving_review_count: rule.requiredApprovingReviewCount,
+          }
+        : null,
     required_status_checks: {
-      checks: rule?.requiresStatusChecks
-        ? (rule.requiredStatusChecks || []).map((check) => ({
-            context: check.context,
-            app_id: check.app?.databaseId || null,
-          }))
-        : [],
+      checks,
     },
   };
 }

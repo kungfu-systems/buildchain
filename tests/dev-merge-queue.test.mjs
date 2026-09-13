@@ -1,4 +1,3 @@
-import { compileConsumerPlan } from "../packages/core/consumer/contract/plan.js";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -207,9 +206,21 @@ bypass_users = ["release-owner"]`, async (cwd) => {
   });
 });
 
-test("self product plan requires review and provider merge queue without consumer bypass configuration", () => {
-  const plan = compileConsumerPlan(fs.readFileSync(path.join(REPOSITORY_ROOT, ".buildchain/buildchain.toml"), "utf8"));
-  assert.deepEqual(plan.review, { minimum_approvals: 1, code_owners: true, merge_queue: true });
+test("repository dev merge queue controller declares no bypass actors", async () => {
+  const resolution = await resolveConfiguredDevMergeQueuePolicy({
+    api: {
+      request() {
+        throw new Error("enabled repository policy must not require provider discovery");
+      },
+    },
+    repository: "kungfu-systems/buildchain",
+    branch: "dev/v2/v2.14",
+    cwd: REPOSITORY_ROOT,
+  });
+  assert.equal(resolution.mode, "enabled");
+  assert.deepEqual(resolution.policy.bypassApps, []);
+  assert.deepEqual(resolution.policy.bypassUsers, []);
+  assert.deepEqual(resolution.policy.bypassTeams, []);
 });
 
 test("configured merge queue inherit mode copies the active dev ruleset policy", async () => {

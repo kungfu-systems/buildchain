@@ -24,6 +24,12 @@ test("lawful channel PR uses protected queue and hands exact merge to the distin
   const inputs = { "config-path": f.f.source.configPath };
   const control = () =>
     controlPipelineChannel(session, f.admission, inputs, f.host);
+  const qualify = f.host.qualifyChannel;
+  f.host.qualifyChannel = async () => {
+    throw new Error("invalid source version lane");
+  };
+  await assert.rejects(control(), /invalid source version lane/);
+  f.host.qualifyChannel = qualify;
   assert.equal((await control()).operation, "build");
   const context = await beginPipelineBuild(session, f.admission, f.host);
   f.build(context);

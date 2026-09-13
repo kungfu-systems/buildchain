@@ -46,6 +46,7 @@ function registry() {
       { id: "release-candidate-promote", path: ".github/workflows/public-release-promote.yml", inputs: ["channel"] },
       { id: ".release-candidate-promote", path: ".github/workflows/.release-promote.yml", inputs: ["channel"] },
       { id: "release-propagation", path: ".github/workflows/public-release-propagation.yml", inputs: ["graph-json"] },
+      { id: "binary-distribution", path: ".github/workflows/self-build-binary-distribution.yml", inputs: [] },
     ],
   });
 }
@@ -84,6 +85,7 @@ test("controller registry freezes the first project-independent public inventory
     "paper-release",
     "release-candidate-promotion",
     "release-propagation",
+    "binary-distribution",
   ]);
   assert.equal(descriptor().inputs["working-directory"].classification, "digest-only");
   assert.equal(descriptor().inputs["build-command"].classification, "digest-only");
@@ -363,9 +365,9 @@ test("controller registry names current executable workflow paths without reloca
   const workflows = JSON.parse(fs.readFileSync(path.join(root, "dist/site/workflow-registry.json"), "utf8")).workflows;
   const controllers = createControllerRegistry({ workflows }).controllers;
   assert.equal(controllers.find((entry) => entry.id === "build-lifecycle").workflow.path, ".github/workflows/.build.yml");
-  assert.equal(controllers.some((entry) => entry.id === "binary-distribution"), false);
-  assert.equal(fs.existsSync(path.join(root, ".github/workflows/self-build-binary-distribution.yml")), false);
-  // The removed standalone producer must not be rebound to a different workflow
-  // whose stages do not emit its controller-receipt contract.
-  assert.equal(controllers.some((entry) => entry.workflow.path === ".github/workflows/.release-pipeline-products.yml"), false);
+  const binary = controllers.find((entry) => entry.id === "binary-distribution");
+  assert.equal(binary.workflow.path, ".github/workflows/self-build-binary-distribution.yml");
+  assert.equal(binary.workflow.contractPath, undefined);
+  assert.ok(fs.existsSync(path.join(root, binary.workflow.path)));
+  assert.equal(fs.existsSync(path.join(root, ".github/workflows/binary-distribution.yml")), false);
 });

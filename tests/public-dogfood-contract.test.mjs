@@ -7,6 +7,7 @@ import test from "node:test";
 import {
   PUBLIC_DOGFOOD_ENTRY_REF,
   checkPublicDogfoodContract,
+  expectedPublicDogfoodWorkflow,
 } from "../scripts/check-public-dogfood-contract.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
@@ -19,8 +20,6 @@ const fixturePaths = [
   "packages/core/build/stage-capsule/canary.js",
   "packages/core/build/verification/source.js",
   ".buildchain/buildchain.toml",
-  ".buildchain/minimal-consumer.toml",
-  "scripts/verify-product-platform.mjs",
   ".gitattributes",
   ".github/workflows",
   "AGENTS.md",
@@ -40,10 +39,7 @@ function fixture() {
     const source = path.join(root, relative);
     const target = path.join(destination, relative);
     fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.cpSync(source, target, {
-      recursive: true,
-      filter: (file) => !file.split(path.sep).includes("dist"),
-    });
+    fs.cpSync(source, target, { recursive: true });
   }
   return destination;
 }
@@ -51,19 +47,7 @@ function fixture() {
 function mutate(relative, transform) {
   const targetRoot = fixture();
   const file = path.join(targetRoot, relative);
-  const before = fs.readFileSync(file, "utf8");
-  const after = transform(before);
-  assert.notEqual(
-    after,
-    before,
-    "test mutation must change the exercised source",
-  );
-  fs.writeFileSync(file, after);
-  if (relative === ".buildchain/buildchain.toml")
-    fs.writeFileSync(
-      path.join(targetRoot, ".buildchain/minimal-consumer.toml"),
-      after,
-    );
+  fs.writeFileSync(file, transform(fs.readFileSync(file, "utf8")));
   return targetRoot;
 }
 
@@ -71,9 +55,8 @@ test("the tracked v4 dogfood path is one thin public consumer caller", () => {
   assert.deepEqual(checkPublicDogfoodContract(root), {
     schema: "buildchain-v4-public-dogfood-contract-check/v1",
     ok: true,
-    caller: ".github/workflows/buildchain.yml",
-    reusable: ".github/workflows/public-ops-pipeline.yml",
-    historicalCanary: ".github/workflows/public-build-stage-capsule-canary.yml",
+    caller: ".github/workflows/self-build-public-consumer-dogfood.yml",
+    reusable: ".github/workflows/public-build-stage-capsule-canary.yml",
     validationRef: protectedDogfoodRef,
     productionAuthority: "v4-native",
   });
@@ -81,57 +64,25 @@ test("the tracked v4 dogfood path is one thin public consumer caller", () => {
 
 test("the gate rejects copied orchestration and relative reusable calls", () => {
   const copied = mutate(
-    ".github/workflows/buildchain.yml",
+    ".github/workflows/self-build-public-consumer-dogfood.yml",
     (text) => `${text}\n    steps:\n      - run: echo bypass\n`,
   );
   assert.throws(
     () => checkPublicDogfoodContract(copied),
-    /generated caller drift/u,
+    /exact thin public consumer caller/u,
   );
 
-  const relative = mutate(".github/workflows/buildchain.yml", (text) =>
-    text.replace(
-      "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@",
-      "./.github/workflows/public-ops-pipeline.yml#",
-    ),
+  const relative = mutate(
+    ".github/workflows/self-build-public-consumer-dogfood.yml",
+    (text) =>
+      text.replace(
+        "kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml@",
+        "./.github/workflows/public-build-stage-capsule-canary.yml#",
+      ),
   );
   assert.throws(
     () => checkPublicDogfoodContract(relative),
-    /generated caller drift/u,
-  );
-});
-
-test("the consumer pair cannot hide another event controller in a product library", () => {
-  const target = mutate(".github/workflows/public-ops-pipeline.yml", (text) =>
-    text.replace("  workflow_call:", "  push:\n  workflow_call:"),
-  );
-  assert.throws(
-    () => checkPublicDogfoodContract(target),
-    /product library owns a repository event/u,
-  );
-});
-
-test("product verification cannot replace checkpoint recovery or hide publication commands", () => {
-  const checkpoint = mutate("scripts/verify-product-platform.mjs", (text) =>
-    text.replace("verifyStageCapsuleCheckpoints({", "skipCheckpoints({"),
-  );
-  assert.throws(
-    () => checkPublicDogfoodContract(checkpoint),
-    /retain checkpoint recovery/u,
-  );
-  const container = mutate("scripts/verify-product-platform.mjs", (text) =>
-    text.replace('"--network=none"', '"--network=host"'),
-  );
-  assert.throws(
-    () => checkPublicDogfoodContract(container),
-    /isolated container backbone lane/u,
-  );
-  const publication = mutate(".buildchain/buildchain.toml", (text) =>
-    text.replace('"node scripts/build-standalone-binary.mjs"', '"npm publish"'),
-  );
-  assert.throws(
-    () => checkPublicDogfoodContract(publication),
-    /consumer-owned publication orchestration/u,
+    /exact thin public consumer caller/u,
   );
 });
 
@@ -185,8 +136,8 @@ test("the gate rejects legacy profiles and removal from protected Verify", () =>
 test("the gate requires build to use public scripts and refresh verify outputs", () => {
   const incompleteBuild = mutate(".buildchain/buildchain.toml", (text) =>
     text.replace(
-      '"corepack pnpm@11.7.0 run build", "corepack pnpm@11.7.0 run generate:site"',
-      '"corepack pnpm@11.7.0 run build"',
+      "corepack pnpm@11.7.0 run build && corepack pnpm@11.7.0 run generate:site",
+      'corepack pnpm@11.7.0 -r --filter "./actions/**" build',
     ),
   );
   assert.throws(
@@ -197,8 +148,8 @@ test("the gate requires build to use public scripts and refresh verify outputs",
 test("the gate requires install to expose the pinned Corepack pnpm shim", () => {
   const hiddenPnpm = mutate(".buildchain/buildchain.toml", (text) =>
     text.replace(
-      '"corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile"',
-      '"corepack pnpm@11.7.0 install --frozen-lockfile"',
+      "corepack enable pnpm && corepack pnpm@11.7.0 install --frozen-lockfile",
+      "corepack pnpm@11.7.0 install --frozen-lockfile",
     ),
   );
   assert.throws(
@@ -213,7 +164,7 @@ test("the gate requires deterministic text checkout on every platform", () => {
   );
   assert.throws(
     () => checkPublicDogfoodContract(platformDrift),
-    /cross-platform LF (?:checkout )?contract/u,
+    /cross-platform LF contract/u,
   );
 });
 

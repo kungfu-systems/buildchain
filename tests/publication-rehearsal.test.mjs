@@ -1,4 +1,3 @@
-import { publicationRehearsalWorkflow } from "../packages/core/publication/publication-rehearsal-projection.js";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import crypto from "node:crypto";
@@ -647,22 +646,28 @@ test("CLI and config expose the same effect-disabled rehearsal projection", () =
   assert.match(cli, /simulate or replay/u);
 });
 
-test("generated rehearsal consumer resolves the public contract without publication authority", () => {
+test("repo-local prepublication dogfood resolves the current reusable and exact runtime", () => {
   const workflow = fs.readFileSync(
     path.join(repositoryRoot, ".github/workflows/public-release-tail.yml"),
     "utf8",
   );
-  const dogfood = publicationRehearsalWorkflow("v4");
+  const dogfood = fs.readFileSync(
+    path.join(
+      repositoryRoot,
+      ".github/workflows/self-release-rehearsal-dogfood.yml",
+    ),
+    "utf8",
+  );
   const caller = parseWorkflowDocument(dogfood);
   const callee = parseWorkflowDocument(workflow);
-  assert.deepEqual(caller.triggers, ["workflow_dispatch"]);
+  assert.deepEqual(caller.triggers, ["pull_request", "workflow_dispatch"]);
   assert.equal(caller.callJobs.length, 1);
   const [call] = caller.callJobs;
   assert.equal(call.uses, "kungfu-systems/buildchain/.github/workflows/public-release-tail.yml@v4");
   assert.equal(call.with["buildchain-ref"], undefined);
   assert.equal(call.with["rehearsal-mode"].value, "simulate");
-  assert.equal(call.with.execute, undefined);
-  assert.equal(caller.interface.permissions.contents, "read");
+  assert.deepEqual(call.with.execute, { kind: "boolean", value: false });
+  assert.equal(call.permissions.contents, "read");
   assert.deepEqual(callee.interface.permissions, {});
 
   const declared = new Map(
@@ -689,6 +694,22 @@ test("generated rehearsal consumer resolves the public contract without publicat
       "./.buildchain/runtime/actions/release/tail/settle",
     ),
   );
+  const durableExternalCaller = fs.readFileSync(
+    path.join(
+      repositoryRoot,
+      ".github/workflows/self-build-public-consumer-dogfood.yml",
+    ),
+    "utf8",
+  );
+  assert.ok(
+    parseYamlUses(durableExternalCaller).some((entry) =>
+      entry.value.endsWith(
+        "/.github/workflows/public-build-stage-capsule-canary.yml@v4",
+      ),
+    ),
+    "external public consumers retain the floating v4 selector",
+  );
+
   const providerPlaneDoc = fs.readFileSync(
     path.join(repositoryRoot, "docs/release-tail-provider-plane.md"),
     "utf8",

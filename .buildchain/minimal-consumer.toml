@@ -1,13 +1,14 @@
-# Product build and verification plan for the published minimal consumer entry.
+# Prepared product contract for the protected consumer migration.
+# Inactive until the published entry and single-writer cutover are qualified.
 schema = 2
 
 [[products]]
 id = "buildchain"
 type = "npm"
 platforms = [ "linux-x64" ]
-install = [ "node scripts/prepare-product-toolchain.mjs", "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
+install = [ "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
 build = [ "corepack pnpm@11.7.0 run build", "corepack pnpm@11.7.0 run generate:site" ]
-verify = [ "corepack pnpm@11.7.0 run check", "node scripts/verify-product-platform.mjs" ]
+verify = [ "corepack pnpm@11.7.0 run check" ]
 
 [[products.artifacts]]
 id = "package"
@@ -23,7 +24,7 @@ artifacts = [ "package" ]
 id = "buildchain-linux"
 type = "binary"
 platforms = [ "linux-x64" ]
-install = [ "node scripts/prepare-product-toolchain.mjs", "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile" ]
+install = [ "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile" ]
 build = [ "node scripts/build-standalone-binary.mjs" ]
 verify = [ "node scripts/verify-standalone-product.mjs" ]
 
@@ -41,9 +42,9 @@ artifacts = [ "binary" ]
 id = "buildchain-macos"
 type = "binary"
 platforms = [ "macos-arm64" ]
-install = [ "brew install go", "node scripts/prepare-product-toolchain.mjs", "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
+install = [ "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
 build = [ "corepack pnpm@11.7.0 run build", "corepack pnpm@11.7.0 run generate:site", "node scripts/build-standalone-binary.mjs" ]
-verify = [ "corepack pnpm@11.7.0 run check", "node scripts/verify-product-platform.mjs", "node scripts/verify-standalone-product.mjs" ]
+verify = [ "corepack pnpm@11.7.0 run check", "node scripts/verify-standalone-product.mjs" ]
 
 [[products.artifacts]]
 id = "binary"
@@ -59,9 +60,9 @@ artifacts = [ "binary" ]
 id = "buildchain-windows"
 type = "binary"
 platforms = [ "windows-x64" ]
-install = [ "node scripts/prepare-product-toolchain.mjs", "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
+install = [ "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
 build = [ "corepack pnpm@11.7.0 run build", "corepack pnpm@11.7.0 run generate:site", "node scripts/build-standalone-binary.mjs" ]
-verify = [ "corepack pnpm@11.7.0 run check", "node scripts/verify-product-platform.mjs", "node scripts/verify-standalone-product.mjs" ]
+verify = [ "corepack pnpm@11.7.0 run check", "node scripts/verify-standalone-product.mjs" ]
 
 [[products.artifacts]]
 id = "binary"

@@ -17,6 +17,7 @@ import { GitHubClient } from "../../dev-delivery/admission/github-client.js";
 import { githubPipelineIntegration } from "../../providers/github/pipeline-integration.js";
 import { recordPipelineGroup } from "./group-control.js";
 import { controlPipelineChannel } from "./channel-control.js";
+import { qualifyPipelineChannelSource } from "./channel-source.js";
 import { settlePipeline } from "./settlement.js";
 import { pipelineProjection } from "./projection.js";
 import { resumePipelineNotifications } from "./notifications.js";
@@ -88,6 +89,8 @@ export async function pipelineHost(core, env, jobName) {
     groupRecord: (context) => recordPipelineGroup(context, host),
     channel: (session, admission, inputs) =>
       controlPipelineChannel(session, admission, inputs, host),
+    qualifyChannel: (source, branch) =>
+      qualifyPipelineChannelSource(source, branch, host),
     settle: (session, fresh, delivery) =>
       settlePipeline(session, fresh, delivery, host),
     project: (session) =>

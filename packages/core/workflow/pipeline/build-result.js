@@ -37,6 +37,14 @@ export async function retainPipelineBuildResult(
   session,
   host,
 ) {
+  if (
+    readback.outcome === "success" &&
+    session.intent.expectedNodes.includes("publish")
+  )
+    await host.qualifyChannel(
+      context.source,
+      session.intent.source.targetBranch,
+    );
   const reference = await resultReference(context, readback, session, host);
   await session.progress.progress({
     attempt: context.attempt,

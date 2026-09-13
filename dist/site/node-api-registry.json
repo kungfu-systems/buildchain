@@ -841,7 +841,7 @@
       ],
       "source": {
         "path": "packages/core/adoption/buildchain-kfd-claims.js",
-        "line": 532
+        "line": 530
       },
       "example": "import { createBuildchainKfd1Witness } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -928,7 +928,7 @@
       ],
       "source": {
         "path": "packages/core/adoption/buildchain-kfd-claims.js",
-        "line": 584
+        "line": 583
       },
       "example": "import { createBuildchainKfd3PrebuildWitness } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -957,7 +957,7 @@
       ],
       "source": {
         "path": "packages/core/adoption/buildchain-kfd-claims.js",
-        "line": 512
+        "line": 510
       },
       "example": "import { createBuildchainKfdClaimRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -986,7 +986,7 @@
       ],
       "source": {
         "path": "packages/core/adoption/buildchain-kfd-claims.js",
-        "line": 413
+        "line": 411
       },
       "example": "import { createBuildchainKfdSurfaceRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1010,7 +1010,7 @@
       ],
       "source": {
         "path": "packages/core/adoption/buildchain-kfd-claims.js",
-        "line": 228
+        "line": 226
       },
       "example": "import { createBuildchainPublicClaimDefinitions } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12184,7 +12184,7 @@
       ],
       "source": {
         "path": "packages/core/governance/buildchain-publication-authority.js",
-        "line": 50
+        "line": 71
       },
       "example": "import { buildchainPublicationAuthorityDescriptors } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12213,7 +12213,7 @@
       ],
       "source": {
         "path": "packages/core/governance/buildchain-publication-authority.js",
-        "line": 89
+        "line": 110
       },
       "example": "import { createBuildchainPublicationAuthorityRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12773,7 +12773,7 @@
       ],
       "source": {
         "path": "packages/core/governance/github-governance-authority.js",
-        "line": 1360
+        "line": 1359
       },
       "example": "import { BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12797,7 +12797,7 @@
       ],
       "source": {
         "path": "packages/core/governance/github-governance-authority.js",
-        "line": 1362
+        "line": 1361
       },
       "example": "import { BUILDCHAIN_GITHUB_GOVERNANCE_PROTECTED_PATHS } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14290,7 +14290,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 438
+        "line": 446
       },
       "example": "import { aggregateControllerReceipts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14415,7 +14415,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 137
+        "line": 145
       },
       "example": "import { controllerEvidenceDigest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14444,7 +14444,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 277
+        "line": 285
       },
       "example": "import { createControllerPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14473,7 +14473,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 353
+        "line": 361
       },
       "example": "import { createControllerReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14502,7 +14502,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 480
+        "line": 488
       },
       "example": "import { createControllerReceiptReference } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14531,7 +14531,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 183
+        "line": 191
       },
       "example": "import { createControllerRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14560,7 +14560,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 519
+        "line": 527
       },
       "example": "import { normalizeControllerReceiptReferences } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14589,7 +14589,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 315
+        "line": 323
       },
       "example": "import { validateControllerPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14622,7 +14622,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 413
+        "line": 421
       },
       "example": "import { validateControllerReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14655,7 +14655,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 494
+        "line": 502
       },
       "example": "import { validateControllerReceiptReference } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -27972,7 +27972,7 @@
       "specifier": "@kungfu-tech/buildchain/controller-evidence",
       "export": "./controller-evidence",
       "target": "./packages/core/observability/controller-evidence.js",
-      "digest": "sha256:a5962561d88b70284116c4877e1598d7cbd3e3fcda92eb8f1225dfe84890094b",
+      "digest": "sha256:81d609cbb09d542498235b08e8d0a09ed677d365a928b5b6399c8d00893ff5cf",
       "summary": "Project-independent controller descriptors, source/runtime-bound plans, receipts, aggregates, and validation APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -29127,7 +29127,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/governance/buildchain-publication-authority.js",
-      "digest": "sha256:3913adeed87ec92822a912d2a54fb5623fc7bdf0fe0bd40956b6e5588f98bd6e",
+      "digest": "sha256:57b7a0922c57daa5647a6e6439d36d62d80ec3a21050073330ff0c81df84ae24",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -29151,7 +29151,7 @@
       "specifier": "@kungfu-tech/buildchain/github-governance-authority",
       "export": "./github-governance-authority",
       "target": "./packages/core/governance/github-governance-authority.js",
-      "digest": "sha256:47a6a89126c626722761ed6e682e0c16a3bbd851463d24fbcc7082f1edc948d9",
+      "digest": "sha256:78a4a33e1791d97de21d31f24d1aaf1e10a9cc17090c25f025c9d48e66b1bd61",
       "summary": "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -29780,7 +29780,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/adoption/buildchain-kfd-claims.js",
-      "digest": "sha256:42da36e3dd17fc034b3d1f05b4115b0feeb484953dad197915ade993e936cc79",
+      "digest": "sha256:6655f2c6a891f3c62a5577aee2b1ecff6e40dbc4ba5f2f566a0db8326e4e5967",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -30102,7 +30102,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:176c523f579e4b2221f2e323c35d4a5a803d522b8e4f9eeb252a25481688c09a"
+      "digest": "sha256:a7135f86b2c74078eed1b6fd920629addce974140d7f18a7cdc86c21c8fd7f8d"
     },
     {
       "id": "build-facts",

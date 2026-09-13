@@ -54,21 +54,6 @@ const CODEOWNERS = `* @kungfu-origin
 /.github/workflows/self-ops-governance-audit.yml @kungfu-origin
 `;
 
-const EXPECTED_PULL_REQUEST_POLICY = {
-  allowed_merge_methods: ["merge", "squash", "rebase"],
-  dismiss_stale_reviews_on_push: true,
-  dismissal_restriction: {
-    allowed_actors: [],
-    enabled: false,
-  },
-  require_code_owner_review: true,
-  require_last_push_approval: true,
-  require_extra_approval_for_unattributed_changes: true,
-  required_approving_review_count: 1,
-  required_review_thread_resolution: true,
-  required_reviewers: [],
-};
-
 function classicProtection() {
   return {
     required_status_checks: {
@@ -900,7 +885,19 @@ test("ruleset policy rollout compiles the exact target descriptor with rollback"
   assert.deepEqual(plan.operations[0].body.bypass_actors, []);
   assert.deepEqual(
     plan.operations[0].body.rules.find((rule) => rule.type === "pull_request").parameters,
-    EXPECTED_PULL_REQUEST_POLICY,
+    {
+      allowed_merge_methods: ["merge", "squash", "rebase"],
+      dismiss_stale_reviews_on_push: true,
+      dismissal_restriction: {
+        allowed_actors: [],
+        enabled: false,
+      },
+      require_code_owner_review: true,
+      require_last_push_approval: true,
+      required_approving_review_count: 1,
+      required_review_thread_resolution: true,
+      required_reviewers: [],
+    },
   );
   assert.deepEqual(
     plan.operations[0].body.rules
@@ -962,7 +959,19 @@ test("ruleset policy rollout compiles the exact target descriptor with rollback"
   assert.deepEqual(
     canonicalPlan.operations[0].body.rules
       .find((rule) => rule.type === "pull_request").parameters,
-    EXPECTED_PULL_REQUEST_POLICY,
+    {
+      allowed_merge_methods: ["merge", "squash", "rebase"],
+      dismiss_stale_reviews_on_push: true,
+      dismissal_restriction: {
+        allowed_actors: [],
+        enabled: false,
+      },
+      require_code_owner_review: true,
+      require_last_push_approval: true,
+      required_approving_review_count: 1,
+      required_review_thread_resolution: true,
+      required_reviewers: [],
+    },
   );
   assert.deepEqual(
     canonicalPlan.operations[0].body.rules

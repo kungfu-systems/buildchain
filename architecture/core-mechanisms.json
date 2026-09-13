@@ -417,7 +417,8 @@
         "export:./release-candidate",
         "export:./release-train",
         "cli:candidate",
-        "workflow:public-release-promote"
+        "workflow:public-release-promote",
+        "workflow:self-build-stable-candidate-qualification"
       ],
       "sourcePaths": [
         "packages/core/release/release-candidate.js",
@@ -491,7 +492,8 @@
       ],
       "publicSurfaces": [
         "export:./release-candidate-recovery",
-        "cli:release-transaction"
+        "cli:release-transaction",
+        "workflow:self-ops-promotion-recovery"
       ],
       "sourcePaths": [
         "packages/core/release/release-candidate-recovery.js",
@@ -541,7 +543,8 @@
       ],
       "publicSurfaces": [
         "export:./stable-candidate-ledger",
-        "workflow:public-ops-stable-candidate-patrol"
+        "workflow:public-ops-stable-candidate-patrol",
+        "workflow:self-ops-stable-candidate-patrol"
       ],
       "sourcePaths": [
         "packages/core/release/stable-candidate-ledger.js",

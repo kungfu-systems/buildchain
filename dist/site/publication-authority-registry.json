@@ -200,40 +200,6 @@
       "notes": ""
     },
     {
-      "workflowPath": ".github/workflows/buildchain-recover.yml",
-      "authorityClass": "product-publication",
-      "publicationCapable": true,
-      "capabilityIds": [
-        "channel-ref",
-        "github-release",
-        "npm-publish"
-      ],
-      "credentialMode": "trusted-publishing",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/.release-pipeline-products.yml",
-      "environment": "none",
-      "environmentMode": "fixed",
-      "runnerPolicy": "qualified-measured",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/buildchain.yml",
-      "authorityClass": "product-publication",
-      "publicationCapable": true,
-      "capabilityIds": [
-        "channel-ref",
-        "github-release",
-        "npm-publish"
-      ],
-      "credentialMode": "trusted-publishing",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/.release-pipeline-products.yml",
-      "environment": "none",
-      "environmentMode": "fixed",
-      "runnerPolicy": "qualified-measured",
-      "notes": ""
-    },
-    {
       "workflowPath": ".github/workflows/public-build-demo.yml",
       "authorityClass": "governance-write",
       "publicationCapable": false,
@@ -587,6 +553,312 @@
       "environmentMode": "caller-bound",
       "runnerPolicy": "qualified-measured",
       "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-build-alpha-dogfood.yml",
+      "authorityClass": "non-publication-oidc",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-build-alpha-dogfood.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-build-binary-distribution.yml",
+      "authorityClass": "evidence-publication",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-build-binary-distribution.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-build-demo-dogfood.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-build-demo-dogfood.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-build-fixture.yml",
+      "authorityClass": "non-publication-oidc",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-build-fixture.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-build-release-verify-compat.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-build-release-verify-compat.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-build-stable-dogfood.yml",
+      "authorityClass": "non-publication-oidc",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-build-stable-dogfood.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-ops-bootstrap-dogfood.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "universal-candidate-execution"
+      ],
+      "credentialMode": "caller-secrets",
+      "publisherWorkflowMode": "caller-bound",
+      "publisherWorkflowPath": ".github/workflows/self-ops-bootstrap-dogfood.yml",
+      "environment": "none",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-ops-dev-delivery.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-ops-dev-delivery.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-ops-governance-audit.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-ops-governance-audit.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-ops-housekeeping-daily.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-ops-housekeeping-daily.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-ops-housekeeping-monthly.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-ops-housekeeping-monthly.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-ops-housekeeping-weekly.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-ops-housekeeping-weekly.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-ops-merge-queue.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-ops-merge-queue.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-ops-patrol-daily.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-ops-patrol-daily.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-ops-patrol-monthly.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-ops-patrol-monthly.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-ops-patrol-weekly.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-ops-patrol-weekly.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-ops-promotion-recovery.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-ops-promotion-recovery.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-ops-stable-candidate-patrol.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-ops-stable-candidate-patrol.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-release-binary-assets.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-release-binary-assets.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-release-line-open.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-release-line-open.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-release-npm-dry-run.yml",
+      "authorityClass": "dry-run-only",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-release-npm-dry-run.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-release-promote.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-release-promote.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/self-release-tail-dogfood.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "artifact.publish",
+        "release.activate",
+        "released-evidence.synthesize",
+        "signed-channel.commit"
+      ],
+      "credentialMode": "caller-secrets",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-release-tail-dogfood.yml",
+      "environment": "none",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
     }
   ],
   "workflowFacts": [
@@ -664,22 +936,6 @@
     },
     {
       "path": ".github/workflows/build.yml",
-      "signals": [
-        "write-permission",
-        "oidc"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/buildchain-recover.yml",
-      "signals": [
-        "write-permission",
-        "oidc"
-      ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/buildchain.yml",
       "signals": [
         "write-permission",
         "oidc"
@@ -885,7 +1141,211 @@
         "environment"
       ],
       "classified": true
+    },
+    {
+      "path": ".github/workflows/self-build-adopter-dogfood.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/self-build-alpha-dogfood.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-build-binary-distribution.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-build-channel-verify.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/self-build-demo-dogfood.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-build-demo-media-qualification.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/self-build-fixture.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-build-public-consumer-dogfood.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/self-build-stable-candidate-qualification.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/self-build-stable-dogfood.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-build-verify.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/self-ops-bootstrap-dogfood.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-ops-dev-delivery.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-ops-governance-audit.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-ops-housekeeping-daily.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-ops-housekeeping-monthly.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-ops-housekeeping-weekly.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-ops-merge-queue.yml",
+      "signals": [],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-ops-patrol-daily.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-ops-patrol-monthly.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-ops-patrol-weekly.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-ops-promotion-recovery.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-ops-runner-smoke.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/self-ops-stable-candidate-patrol.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-release-binary-assets.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-release-line-open.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-release-next-development.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/self-release-npm-dry-run.yml",
+      "signals": [
+        "npm-publish"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-release-promote.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/self-release-rehearsal-dogfood.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/self-release-tail-dogfood.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
     }
   ],
-  "registryDigest": "f4dde5fb7ed1779b121df1cac64b534ebd87d9bfab3db1c441e547953d0bfac5"
+  "registryDigest": "d60fb7e737c15cb032be4a8d2da05f9dad52a715707da3a04015d4e2d1da2574"
 }

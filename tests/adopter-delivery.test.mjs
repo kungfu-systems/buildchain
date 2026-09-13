@@ -94,7 +94,7 @@ test("public driver run and exact readback are deterministic and fail closed", (
   );
 });
 
-test("adopter CLI remains callable while self uses the ordinary pipeline", () => {
+test("CLI and public self-dogfood workflow expose the same public boundary", () => {
   const completed = spawnSync(
     process.execPath,
     [
@@ -110,12 +110,12 @@ test("adopter CLI remains callable while self uses the ordinary pipeline", () =>
   assert.equal(JSON.parse(completed.stdout).gateResult.status, "passed");
 
   const caller = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain.yml"),
+    path.join(root, ".github/workflows/self-build-adopter-dogfood.yml"),
     "utf8",
   );
   assert.match(
     caller,
-    /kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-pipeline\.yml@v4-alpha/,
+    /kungfu-systems\/buildchain\/\.github\/workflows\/public-build-adopter-qualification\.yml@v4/,
   );
   assert.doesNotMatch(caller, /(?:uses:\s*\.\/|runs-on:|steps:|BUILDCHAIN_)/);
 });

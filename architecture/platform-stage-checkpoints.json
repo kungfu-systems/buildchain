@@ -28,12 +28,7 @@
     {
       "id": "checkout-input",
       "inputs": ["source-tree"],
-      "outputs": [
-        {
-          "name": "source-layout",
-          "path": "source/layout.json"
-        }
-      ],
+      "outputs": [{ "name": "source-layout", "path": "source/layout.json" }],
       "environment": [],
       "toolchains": ["git"],
       "providerEffects": false
@@ -42,10 +37,7 @@
       "id": "install",
       "inputs": ["lockfile", "source-tree"],
       "outputs": [
-        {
-          "name": "dependency-layout",
-          "path": "install/dependencies.json"
-        }
+        { "name": "dependency-layout", "path": "install/dependencies.json" }
       ],
       "environment": ["package-manager"],
       "toolchains": ["node"],
@@ -54,12 +46,7 @@
     {
       "id": "build",
       "inputs": ["dependency-layout", "source-tree"],
-      "outputs": [
-        {
-          "name": "build-output",
-          "path": "build/output.bin"
-        }
-      ],
+      "outputs": [{ "name": "build-output", "path": "build/output.bin" }],
       "environment": ["build-profile"],
       "toolchains": ["node"],
       "providerEffects": false
@@ -68,10 +55,7 @@
       "id": "verify",
       "inputs": ["build-output", "source-tree"],
       "outputs": [
-        {
-          "name": "verification-report",
-          "path": "verify/report.json"
-        }
+        { "name": "verification-report", "path": "verify/report.json" }
       ],
       "environment": ["verification-profile"],
       "toolchains": ["node"],
@@ -80,12 +64,7 @@
     {
       "id": "package",
       "inputs": ["build-output", "source-tree", "verification-report"],
-      "outputs": [
-        {
-          "name": "package-archive",
-          "path": "package/archive.bin"
-        }
-      ],
+      "outputs": [{ "name": "package-archive", "path": "package/archive.bin" }],
       "environment": ["package-profile"],
       "toolchains": ["node"],
       "providerEffects": false
@@ -94,10 +73,7 @@
       "id": "signing-preparation",
       "inputs": ["package-archive", "source-tree"],
       "outputs": [
-        {
-          "name": "signing-request",
-          "path": "signing/request.json"
-        }
+        { "name": "signing-request", "path": "signing/request.json" }
       ],
       "environment": ["signing-profile"],
       "toolchains": ["node"],
@@ -105,7 +81,7 @@
     }
   ],
   "projections": {
-    "protectedWorkflow": ".github/workflows/buildchain.yml",
+    "protectedWorkflow": ".github/workflows/self-build-verify.yml",
     "generatedTemplate": "packages/core/adoption/commands/init-repo.mjs",
     "agentGuidance": "AGENTS.md",
     "manual": "docs/v4-stage-capsule.md"

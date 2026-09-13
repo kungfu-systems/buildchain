@@ -4,7 +4,7 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 44,
+    "workflowCount": 73,
     "actionCount": 283,
     "sitePageCount": 94,
     "docCommandRefCount": 1036,
@@ -996,28 +996,6 @@
           "result"
         ],
         "outputCount": 3
-      },
-      {
-        "id": "buildchain-recover",
-        "path": ".github/workflows/buildchain-recover.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "buildchain",
-        "path": ".github/workflows/buildchain.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
       },
       {
         "id": "public-build-adopter-qualification",
@@ -2074,6 +2052,347 @@
           "web-surface-urls-json"
         ],
         "outputCount": 23
+      },
+      {
+        "id": "self-build-adopter-dogfood",
+        "path": ".github/workflows/self-build-adopter-dogfood.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-build-alpha-dogfood",
+        "path": ".github/workflows/self-build-alpha-dogfood.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-build-binary-distribution",
+        "path": ".github/workflows/self-build-binary-distribution.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-build-channel-verify",
+        "path": ".github/workflows/self-build-channel-verify.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-build-demo-dogfood",
+        "path": ".github/workflows/self-build-demo-dogfood.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-build-demo-media-qualification",
+        "path": ".github/workflows/self-build-demo-media-qualification.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-build-fixture",
+        "path": ".github/workflows/self-build-fixture.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-build-public-consumer-dogfood",
+        "path": ".github/workflows/self-build-public-consumer-dogfood.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-build-stable-candidate-qualification",
+        "path": ".github/workflows/self-build-stable-candidate-qualification.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-build-stable-dogfood",
+        "path": ".github/workflows/self-build-stable-dogfood.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-build-verify",
+        "path": ".github/workflows/self-build-verify.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-ops-bootstrap-dogfood",
+        "path": ".github/workflows/self-ops-bootstrap-dogfood.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-ops-dev-delivery",
+        "path": ".github/workflows/self-ops-dev-delivery.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-ops-governance-audit",
+        "path": ".github/workflows/self-ops-governance-audit.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-ops-housekeeping-daily",
+        "path": ".github/workflows/self-ops-housekeeping-daily.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-ops-housekeeping-monthly",
+        "path": ".github/workflows/self-ops-housekeeping-monthly.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-ops-housekeeping-weekly",
+        "path": ".github/workflows/self-ops-housekeeping-weekly.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-ops-merge-queue",
+        "path": ".github/workflows/self-ops-merge-queue.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-ops-patrol-daily",
+        "path": ".github/workflows/self-ops-patrol-daily.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-ops-patrol-monthly",
+        "path": ".github/workflows/self-ops-patrol-monthly.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-ops-patrol-weekly",
+        "path": ".github/workflows/self-ops-patrol-weekly.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-ops-promotion-recovery",
+        "path": ".github/workflows/self-ops-promotion-recovery.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-ops-runner-smoke",
+        "path": ".github/workflows/self-ops-runner-smoke.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-ops-stable-candidate-patrol",
+        "path": ".github/workflows/self-ops-stable-candidate-patrol.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-release-binary-assets",
+        "path": ".github/workflows/self-release-binary-assets.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-release-line-open",
+        "path": ".github/workflows/self-release-line-open.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-release-next-development",
+        "path": ".github/workflows/self-release-next-development.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-release-npm-dry-run",
+        "path": ".github/workflows/self-release-npm-dry-run.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-release-promote",
+        "path": ".github/workflows/self-release-promote.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-release-rehearsal-dogfood",
+        "path": ".github/workflows/self-release-rehearsal-dogfood.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-release-tail-dogfood",
+        "path": ".github/workflows/self-release-tail-dogfood.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
       }
     ],
     "actionInputs": [
@@ -10809,8 +11128,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e43fdb0289df88871f3f0febbe04dcb9311a252a2b1df9b3a83a2d10c9d4a70f",
-    "workflowRegistryDigest": "9980d8c93573a5db850579c884282c0e4b7724c293d8b536fee8de822c79a6f8",
-    "pageRegistryDigest": "9611de5f1b26f1a32106a8bd87a0facac7e6bb5b9d7eda38705fb9fb56a7a327"
+    "workflowRegistryDigest": "4e97a606f26351e0f946b4f455edb7017b54b6d16bb362d7ca91bf690a289666",
+    "pageRegistryDigest": "71e5bb99567bf82b2c896da95f83197b58fad84e35ef54f5e9e4dc0cc3b7e465"
   },
   "comparison": {
     "missingCliRegistry": [],

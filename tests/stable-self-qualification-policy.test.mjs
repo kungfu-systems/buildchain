@@ -1,18 +1,21 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { compileConsumerPlan } from "../packages/core/consumer/contract/plan.js";
+import {
+  getStableReleasePolicy,
+  loadBuildchainConfig,
+} from "../packages/core/consumer/buildchain-config.js";
 import { loadStableReleasePolicy } from "../packages/core/release/stable-release-gate.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 
-test("self stable plan preserves soak, interval and published-entry requirements", () => {
-  const policy = compileConsumerPlan(fs.readFileSync(path.join(root, ".buildchain/buildchain.toml"), "utf8")).stable;
-  assert.equal(policy.minimum_soak_seconds, 3600);
-  assert.equal(policy.minimum_interval_seconds, 86400);
-  assert.equal(policy.require_published_entry, true);
-  // The retained legacy policy is the migration baseline, not a new-entry receipt.
+test("self stable policy consumes the current public zero-input qualification", () => {
+  const patrol = getStableReleasePolicy(loadBuildchainConfig(root));
+  assert.deepEqual(patrol.requiredChecks, [
+    "alpha-release",
+    "status:buildchain-canary/buildchain-zero-input",
+  ]);
+  assert.equal(patrol.minimumSoakSeconds, 3600);
   const gate = loadStableReleasePolicy({
     cwd: root,
     input: ".buildchain/stable-release-policy.json",
