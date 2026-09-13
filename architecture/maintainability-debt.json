@@ -2247,7 +2247,8 @@
     ".github/workflows/self-release-promote.yml",
     ".github/workflows/.release-binary-assets.yml",
     ".github/workflows/public-ops-dev-auto-merge.yml",
-    "tests/release-topology.test.mjs"
+    "tests/release-topology.test.mjs",
+    "scripts/check-release-topology.mjs"
   ],
   "burnDownSlices": [
     {
