@@ -41,6 +41,15 @@ The source TOML, managed runtime locks and workflow authority cannot be generate
 as version material. Paths are literal, regular UTF-8 files with bounded size;
 symlink and submodule sources are not qualified by this preparation implementation.
 
+The ordinary product build also compares every tracked file directly with its
+admitted Git blob before and after executing commands. Index flags, local clean
+filters and ignored executable-mode changes cannot make altered bytes qualify.
+Tracked symbolic links retain their exact target bytes; parent directories
+cannot become links. Source checkout transformations must preserve the admitted
+bytes (Buildchain declares LF checkout in `.gitattributes`); unresolved submodules
+are rejected. This strengthens both the initial version-preparation source check
+and ordinary build qualification without granting product commands credentials.
+
 A separate job checks the original published caller, exact reusable definitions,
 provider run and retry, every successful platform job, and immutable artifact
 digests before reading results. The retained preparation and actual source
