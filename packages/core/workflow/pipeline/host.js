@@ -48,6 +48,24 @@ export async function pipelineHost(core, env, jobName) {
   const writer = await runs.writer(runId, runAttempt, jobName);
   const source = githubPipelineSource(request, repository);
   const [owner, repo] = repository.split("/");
+  const archives = new Map();
+  function archive(session) {
+    if (!archives.has(session.intent.id))
+      archives.set(
+        session.intent.id,
+        discussionMaterials({
+          octokit: github,
+          repository,
+          intentId: session.intent.id,
+          // Storage is partitioned by verified provider job, not attempt authority.
+          // Journal references still select exact immutable asset IDs and digests.
+          partition: `${writer.runId}-${writer.runAttempt}-${writer.jobId}`,
+          authorityDescription:
+            "The canonical Buildchain intent Git journal owns transaction state.",
+        }),
+      );
+    return archives.get(session.intent.id);
+  }
   const host = {
     repository,
     token,
@@ -81,24 +99,11 @@ export async function pipelineHost(core, env, jobName) {
     recoverPublication: (session, admitted) =>
       inspectRecoveryPublication(session, admitted, host),
     materialStore: (session) =>
-      pipelineMaterials(
-        discussionMaterials({
-          octokit: github,
-          repository,
-          intentId: session.intent.id,
-          authorityDescription:
-            "The canonical Buildchain intent Git journal owns transaction state.",
-        }),
-        { repository, attempt: session.observed.history.at(-1).identity },
-      ),
-    productArchive: (session) =>
-      discussionMaterials({
-        octokit: github,
+      pipelineMaterials(archive(session), {
         repository,
-        intentId: session.intent.id,
-        authorityDescription:
-          "The canonical Buildchain intent Git journal owns transaction state.",
+        attempt: session.observed.history.at(-1).identity,
       }),
+    productArchive: archive,
     wake: async (attempt) => {
       await index.resolve(attempt);
       await request(`/repos/${repository}/dispatches`, {

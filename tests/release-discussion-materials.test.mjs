@@ -14,7 +14,7 @@ import {
 } from "../packages/core/release/discussion/checkpoints.js";
 
 function materialProvider() {
-  let release;
+  const releases = [];
   const assets = [];
   let loseUpload = false,
     loseCreate = false,
@@ -26,7 +26,7 @@ function materialProvider() {
     },
     async listReleases() {
       return {
-        data: release ? [release, ...Array(duplicates).fill(release)] : [],
+        data: [...releases, ...Array(duplicates).fill(releases[0])],
       };
     },
     async createRelease(input) {
@@ -36,23 +36,25 @@ function materialProvider() {
         "archive creation must not require workflow-write permission on a candidate commit",
       );
       calls.push("create");
-      release = {
-        id: 1,
+      const release = {
+        id: releases.length + 1,
         draft: input.draft,
         tag_name: input.tag_name,
         html_url:
           "https://github.com/example/consumer/releases/tag/untagged-materials",
       };
+      releases.push(release);
       if (loseCreate) throw new Error("lost create response");
       return { data: release };
     },
-    async listReleaseAssets() {
-      return { data: assets };
+    async listReleaseAssets({ release_id }) {
+      return { data: assets.filter((asset) => asset.releaseId === release_id) };
     },
     async uploadReleaseAsset(input) {
       calls.push("upload");
       const asset = {
         id: assets.length + 1,
+        releaseId: input.release_id,
         name: input.name,
         bytes: input.data,
         browser_download_url: `https://github.com/example/consumer/releases/download/untagged-materials/${input.name}`,
@@ -72,6 +74,7 @@ function materialProvider() {
   return {
     octokit,
     assets,
+    releases,
     calls,
     duplicateArchive() {
       duplicates++;
@@ -110,6 +113,31 @@ test("material upload is content-addressed, read-back verified and response-loss
   );
   fake.assets[0].bytes = Buffer.from("modified");
   await assert.rejects(store.read(handle), /integrity verification/);
+});
+
+test("concurrent writer archives preserve exact legacy and partitioned material handles", async () => {
+  const fake = materialProvider();
+  const options = { octokit: fake.octokit, repository: "example/consumer",
+    intentId: `sha256:${"a".repeat(64)}` };
+  const legacy = discussionMaterials(options);
+  const original = await legacy.put(Buffer.from("retained legacy bytes"));
+  fake.duplicateArchive();
+  const writers = ["100-1-201", "100-1-202"].map(partition =>
+    discussionMaterials({ ...options, partition }));
+  const bytes = [Buffer.from("writer one"), Buffer.from("writer two")];
+  const handles = await Promise.all(writers.map((store, i) => store.put(bytes[i])));
+  assert.equal(fake.releases.length, 3);
+  assert.equal(new Set(fake.releases.map(release => release.tag_name)).size, 3);
+  const recovered = discussionMaterials({ ...options, partition: "101-1-203" });
+  for (const [i, handle] of handles.entries())
+    assert.deepEqual(await recovered.read(handle), bytes[i]);
+  assert.deepEqual(await recovered.read(original), Buffer.from("retained legacy bytes"));
+  await Promise.all([recovered.put(Buffer.from("receipt")), recovered.put(Buffer.from("artifact"))]);
+  assert.equal(fake.releases.length, 4, "one writer shares one archive creation");
+  for (const partition of ["../100", "100-0-203", "100-1-203/other"])
+    assert.throws(() => discussionMaterials({ ...options, partition }), /writer partition/);
+  fake.assets[0].bytes = Buffer.from("tampered");
+  await assert.rejects(recovered.read(original), /integrity verification/);
 });
 
 test("recovery rejects escaping paths and symlink destinations before writing", async (t) => {

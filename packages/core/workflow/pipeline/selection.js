@@ -10,8 +10,12 @@ async function successorSelection(
   inputs,
   host,
 ) {
+  const failedBuild =
+    session.observed.status === "failure" &&
+    session.observed.phases.build?.payload.state === "failure";
   if (
-    !["superseded", "cancelled"].includes(session.observed.status) ||
+    (!failedBuild &&
+      !["superseded", "cancelled"].includes(session.observed.status)) ||
     event.terminalOnly ||
     admission.live.state !== "open" ||
     admission.live.targetBranch !== session.intent.source.targetBranch
@@ -27,9 +31,10 @@ async function successorSelection(
       .id !== session.observed.generation;
   if (
     !changed &&
-    !["reopened", "enqueued", "ready_for_review", "labeled"].includes(
-      payload.action,
-    )
+    (failedBuild ||
+      !["reopened", "enqueued", "ready_for_review", "labeled"].includes(
+        payload.action,
+      ))
   )
     return { session, admission };
   await host.notifyTerminal?.(session);

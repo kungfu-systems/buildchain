@@ -136,6 +136,7 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - `scripts/check-release-topology.mjs`
 - `packages/core/governance/buildchain-publication-authority.js`
 - `scripts/check-universal-workflow-bootstrap.mjs`
+- `packages/core/providers/github/discussions/materials.js`
 
 ## action-process-runtime
 

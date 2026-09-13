@@ -5126,6 +5126,7 @@
       "destination": "closed-toml-plan",
       "commandReferences": [
         "scripts/build-standalone-binary.mjs",
+        "scripts/prepare-product-toolchain.mjs",
         "scripts/verify-product-platform.mjs",
         "scripts/verify-standalone-product.mjs"
       ]
@@ -5142,6 +5143,7 @@
       "destination": "closed-toml-plan",
       "commandReferences": [
         "scripts/build-standalone-binary.mjs",
+        "scripts/prepare-product-toolchain.mjs",
         "scripts/verify-product-platform.mjs",
         "scripts/verify-standalone-product.mjs"
       ]

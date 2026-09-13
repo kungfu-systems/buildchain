@@ -5,7 +5,7 @@ schema = 2
 id = "buildchain"
 type = "npm"
 platforms = [ "linux-x64" ]
-install = [ "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
+install = [ "node scripts/prepare-product-toolchain.mjs", "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
 build = [ "corepack pnpm@11.7.0 run build", "corepack pnpm@11.7.0 run generate:site" ]
 verify = [ "corepack pnpm@11.7.0 run check", "node scripts/verify-product-platform.mjs" ]
 
@@ -23,7 +23,7 @@ artifacts = [ "package" ]
 id = "buildchain-linux"
 type = "binary"
 platforms = [ "linux-x64" ]
-install = [ "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile" ]
+install = [ "node scripts/prepare-product-toolchain.mjs", "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile" ]
 build = [ "node scripts/build-standalone-binary.mjs" ]
 verify = [ "node scripts/verify-standalone-product.mjs" ]
 
@@ -41,7 +41,7 @@ artifacts = [ "binary" ]
 id = "buildchain-macos"
 type = "binary"
 platforms = [ "macos-arm64" ]
-install = [ "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
+install = [ "brew install go", "node scripts/prepare-product-toolchain.mjs", "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
 build = [ "corepack pnpm@11.7.0 run build", "corepack pnpm@11.7.0 run generate:site", "node scripts/build-standalone-binary.mjs" ]
 verify = [ "corepack pnpm@11.7.0 run check", "node scripts/verify-product-platform.mjs", "node scripts/verify-standalone-product.mjs" ]
 
@@ -59,7 +59,7 @@ artifacts = [ "binary" ]
 id = "buildchain-windows"
 type = "binary"
 platforms = [ "windows-x64" ]
-install = [ "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
+install = [ "node scripts/prepare-product-toolchain.mjs", "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
 build = [ "corepack pnpm@11.7.0 run build", "corepack pnpm@11.7.0 run generate:site", "node scripts/build-standalone-binary.mjs" ]
 verify = [ "corepack pnpm@11.7.0 run check", "node scripts/verify-product-platform.mjs", "node scripts/verify-standalone-product.mjs" ]
 

@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { pipelineHostFixture } from "./helpers/pipeline-host.mjs";
 import { recordPipelineBuild } from "../packages/core/workflow/pipeline/build-control.js";
+import { resumePipelineSession } from "../packages/core/workflow/pipeline/session.js";
 import { pipelineRuntimeSource } from "../packages/core/workflow/pipeline/runtime-source.js";
 
 test("normal controller binds product build, independently records it, and waits for real review before delivery", async () => {
@@ -82,4 +83,39 @@ test("duplicate normal events do not start a second live product execution", asy
     "existing-build-execution-retained",
   );
   assert.equal(f.observed().head, before);
+});
+
+test("a failed product build retains its history and admits a changed source without retrying unchanged bytes", async () => {
+  const f = pipelineHostFixture();
+  const first = await f.event();
+  const session = await resumePipelineSession(
+    { ...f.host, attempt: first.context.attempt },
+    f.host,
+  );
+  await session.progress.progress({
+    attempt: first.context.attempt,
+    phase: "build",
+    state: "failure",
+    reason: "missing-product-toolchain",
+    eventKey: "build-failed",
+  });
+  f.complete();
+  const failed = JSON.stringify(f.observed().history[0]);
+  for (const action of ["labeled", "reopened", "synchronize"]) {
+    assert.equal((await f.event(action)).reason, "attempt-failure");
+    assert.equal(f.observed().attempt, first.context.attempt);
+  }
+  f.admission.live.source = {
+    ...f.admission.live.source,
+    commit: "9".repeat(40),
+  };
+  f.admission.live.observedHead = f.admission.live.source.commit;
+  assert.equal(
+    (await f.event("synchronize")).reason,
+    "source-generation-runtime-selection-required",
+  );
+  assert.notEqual(f.observed().attempt, first.context.attempt);
+  assert.equal(JSON.stringify(f.observed().history[0]), failed);
+  f.host.selection.source.sha = f.admission.live.source.commit;
+  assert.equal((await f.wake()).operation, "build");
 });
