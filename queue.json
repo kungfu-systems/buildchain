@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 114,
+  "generation": 115,
   "fencingCounter": 38,
   "policy": {
     "agingSeconds": 900,
@@ -7327,7 +7327,37 @@
         "closedAt": "2026-09-13T12:34:54.114Z",
         "fencingToken": "sha256:8f78df5f7a1618e55f112dce5e00ef2de20ee34e82d3831e9722da4cf92f8eb4",
         "leaseGeneration": 38,
-        "successorWake": null
+        "successorWake": null,
+        "integrationEvidenceCorrection": {
+          "schema": "kungfu.buildchain.dev-delivery-terminal-evidence-correction/v1",
+          "candidateId": "sha256:addff29a1e2e2b2bcdddc0d4fa92a34110335d43f02eeea8dc13dae85d0b330f",
+          "pullRequestNumber": 3776,
+          "sourceHead": "c36f238f40581ad233f1417bb7115ad5f581edeb",
+          "outcome": "merged",
+          "priorEvidenceRoot": "sha256:f3830a0c1274d7934b4123294b9f596b25cccecd95e30431eff4e0dc4658e9b4",
+          "integrationProof": {
+            "schema": "kungfu.buildchain.integration-delivery-proof/v1",
+            "repository": "kungfu-systems/buildchain",
+            "protectedBase": "dev/v4/v4.1",
+            "sourceProofRoot": "sha256:0fc7772a751986f9e23349377dc1f8decba88a65b82af9967f9f98941d96b194",
+            "currentBase": "3d73715bae72f175e4bde65bc566988e7fc8e63f",
+            "replayTree": "c46f798e33795f80f63b9feb07a344435e98d98f",
+            "mergeGroupHead": "3d73715bae72f175e4bde65bc566988e7fc8e63f",
+            "mergeGroupTree": "c46f798e33795f80f63b9feb07a344435e98d98f",
+            "warrantCandidateId": "sha256:addff29a1e2e2b2bcdddc0d4fa92a34110335d43f02eeea8dc13dae85d0b330f",
+            "warrantFencingToken": "sha256:8f78df5f7a1618e55f112dce5e00ef2de20ee34e82d3831e9722da4cf92f8eb4",
+            "warrantGeneration": 38,
+            "requiredContextRoots": [
+              "sha256:359633922fc5db3c9554d43397ae28a1294e5f19e696ecc474c89eba35facace"
+            ],
+            "verifiedAt": "2026-09-13T12:27:22.621Z",
+            "finalAuthority": "exact-github-merge-group",
+            "proofRoot": "sha256:f3830a0c1274d7934b4123294b9f596b25cccecd95e30431eff4e0dc4658e9b4"
+          },
+          "correctedAt": "2026-09-13T12:35:36.608Z",
+          "reason": "Recover protected merge evidence after terminal writer CAS race for 3d73715bae72f175e4bde65bc566988e7fc8e63f",
+          "correctionRoot": "sha256:7f68905b0fe42d2223670b24c3574770f100885924d3d36810b2d988f076a033"
+        }
       },
       "affectedPaths": [
         "architecture/agent-change-map.md",
@@ -7336,6 +7366,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-13T12:34:54.114Z",
-  "stateRoot": "sha256:816cc47b1d91f0e1ec0130678c604736e6c54381d218173e40c053ec244f3095"
+  "updatedAt": "2026-09-13T12:35:36.608Z",
+  "stateRoot": "sha256:f3f85a09656976de2572aa98caec43b0dcb9c16229559393a4039df67b4a0568"
 }
