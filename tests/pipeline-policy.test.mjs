@@ -49,18 +49,31 @@ function fixture() {
   ];
   let reads = 0;
   const branchPolicy = {
-    ref: { branchProtectionRule: null },
+    ref: { refUpdateRule: null },
     mergeQueue: null,
+  };
+  const branch = {
+    name: f.intent.source.targetBranch,
+    protection: {
+      required_status_checks: {
+        contexts: ["check"],
+        checks: [{ context: "check", app_id: 77 }],
+      },
+    },
   };
   const ref = { sha: f.generation.baseCommit };
   const request = async (url, options) => {
     if (url === "/graphql") {
+      if (options.body.query.includes("branchProtectionRule"))
+        throw new Error("Resource not accessible by integration");
       if (options.body.variables.ref)
         return { data: { repository: structuredClone(branchPolicy) } };
       reads++;
       return { data: { repository: { pullRequest: structuredClone(pr) } } };
     }
     if (url.includes("/rules/branches/")) return rules;
+    if (url.endsWith(`/branches/${encodeURIComponent(branch.name)}`))
+      return structuredClone(branch);
     if (url.includes("/reviews?")) return reviews;
     if (url.includes("/check-runs?")) return { check_runs: checks };
     if (url.includes("/statuses?")) return [];
@@ -78,6 +91,7 @@ function fixture() {
     reviews,
     checks,
     branchPolicy,
+    branch,
     observe,
     request,
     ref,
@@ -135,22 +149,37 @@ test("merged recovery requalifies the protected head from exact integration evid
   );
 });
 
-test("classic review and check protection uses readable GraphQL metadata without an administrative REST request", async () => {
+test("viewer-enforced classic rules retain check App identity without administrative queries", async () => {
   const f = fixture();
   f.rules.length = 0;
-  f.branchPolicy.ref.branchProtectionRule = {
-    requiresApprovingReviews: true,
+  f.branchPolicy.ref.refUpdateRule = {
     requiredApprovingReviewCount: 2,
     requiresCodeOwnerReviews: true,
-    requiresStatusChecks: true,
-    requiredStatusChecks: [{ context: "check", app: { databaseId: 77 } }],
+    requiredStatusCheckContexts: ["check"],
   };
   f.branchPolicy.mergeQueue = { id: "QUEUE" };
   const result = await f.observe();
   assert.equal(result.review, true);
   assert.equal(result.checksPassing, true);
-  f.branchPolicy.ref.branchProtectionRule.requiresApprovingReviews = false;
+  f.checks[0].app.id = 88;
+  assert.equal((await f.observe()).checksPassing, false);
+  f.checks[0].app.id = 77;
+  f.branchPolicy.ref.refUpdateRule.requiredApprovingReviewCount = 0;
   await assert.rejects(f.observe(), /enforce declared/);
+});
+
+test("missing check App metadata and incomplete viewer rule projection fail closed", async () => {
+  const f = fixture();
+  const status = f.branch.protection.required_status_checks;
+  delete status.checks[0].app_id;
+  await assert.rejects(f.observe(), /check identity metadata is incomplete/);
+  status.checks[0].app_id = 0;
+  await assert.rejects(f.observe(), /check identity metadata is incomplete/);
+  status.checks[0].app_id = 77;
+  f.branchPolicy.ref.refUpdateRule = {
+    requiredStatusCheckContexts: ["additional-check"],
+  };
+  await assert.rejects(f.observe(), /check identity metadata is incomplete/);
 });
 
 test("latest check is bound to required app and changes-requested cannot be counted as approval", async () => {

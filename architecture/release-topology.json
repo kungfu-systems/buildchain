@@ -386,6 +386,7 @@
         "packages/core/workflow/pipeline/build-qualification.js",
         "packages/core/workflow/pipeline/build.js",
         "packages/core/workflow/pipeline/channel-control.js",
+        "packages/core/workflow/pipeline/channel-source.js",
         "packages/core/workflow/pipeline/delivery-observation.js",
         "packages/core/workflow/pipeline/events.js",
         "packages/core/workflow/pipeline/fence.js",
@@ -410,7 +411,7 @@
         "packages/core/workflow/pipeline/wake.js",
         "packages/core/workflow/pipeline/web-status.js"
       ],
-      "root": "sha256:5d735b6117bdc114550e736cec02b396e51a3cc284d59d704e906ae8aaceb7c1"
+      "root": "sha256:b474be097d7b1455785cf78247c966601a2adfb03ff1baee9cc009f26b9c2ac1"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/runtime/domain-wasm.js",

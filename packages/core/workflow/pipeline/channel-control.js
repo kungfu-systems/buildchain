@@ -68,6 +68,10 @@ export async function controlPipelineChannel(session, admission, inputs, host) {
   }
   if (host.terminalOnly)
     return { operation: "wait", reason: "terminal-event-cannot-execute" };
+  const qualification = await host.qualifyChannel(
+    live.source,
+    live.targetBranch,
+  );
   const build = await pipelineBuildEvidence(session, host);
   if (!build) return { operation: "build", admission };
   if (build.run.status !== "completed" || build.run.conclusion !== "success")
@@ -97,7 +101,12 @@ export async function controlPipelineChannel(session, admission, inputs, host) {
     session,
     "merge",
     "waiting",
-    { schema: "buildchain.pipeline-channel-enqueue/v1", policy, queue },
+    {
+      schema: "buildchain.pipeline-channel-enqueue/v1",
+      qualification,
+      policy,
+      queue,
+    },
     host,
   );
   const again = await host.source.observeIntent(

@@ -108,6 +108,9 @@ export function pipelineHostFixture() {
         root: recordDigest("policy"),
       }),
     },
+    qualifyChannel: async () => ({
+      root: recordDigest("channel qualification fixture"),
+    }),
     delivery: () => ({ read: async () => structuredClone(queue), service: {} }),
     prepareDelivery: async ({ current }) => ({
       "pipeline-attempt": current.identity.id,

@@ -10,10 +10,13 @@ export function discussionMaterials({
   octokit,
   repository,
   intentId,
+  partition = "",
   authorityDescription = "The associated Discussion owns transaction state.",
 }) {
   const [owner, repo] = repository.split("/");
-  const tag = `buildchain-records/${intentId.replace("sha256:", "")}`;
+  if (partition && !/^[1-9][0-9]*-[1-9][0-9]*-[1-9][0-9]*$/u.test(partition))
+    throw new Error("Invalid material archive writer partition");
+  const tag = `buildchain-records/${intentId.replace("sha256:", "")}${partition ? `/${partition}` : ""}`;
   const repos = octokit.rest.repos;
   let retainedArchive;
   async function findArchive() {
@@ -32,8 +35,7 @@ export function discussionMaterials({
       throw new Error("Ambiguous transaction material archive");
     return matches[0];
   }
-  async function archive() {
-    if (retainedArchive) return retainedArchive;
+  async function createArchive() {
     let release = await findArchive();
     if (!release) {
       try {
@@ -60,8 +62,14 @@ export function discussionMaterials({
     }
     if (!release.draft || release.tag_name !== tag)
       throw new Error("Transaction material archive identity mismatch");
-    retainedArchive = release;
     return release;
+  }
+  function archive() {
+    // Concurrent puts in one writer share the same creation, including readback.
+    return (retainedArchive ||= createArchive().catch((error) => {
+      retainedArchive = undefined;
+      throw error;
+    }));
   }
   async function read(handle) {
     const response = await repos.getReleaseAsset({

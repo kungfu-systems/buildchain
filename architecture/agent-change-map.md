@@ -137,6 +137,12 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - `.github/workflows/.release-binary-assets.yml`
 - `.github/workflows/public-ops-dev-auto-merge.yml`
 - `tests/release-topology.test.mjs`
+- `scripts/check-release-topology.mjs`
+- `packages/core/providers/github/discussions/materials.js`
+- `.github/workflows/self-build-alpha-dogfood.yml`
+- `.github/workflows/self-build-binary-distribution.yml`
+- `.github/workflows/self-ops-bootstrap-dogfood.yml`
+- `packages/core/governance/buildchain-publication-authority.js`
 
 ## action-process-runtime
 
