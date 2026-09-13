@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from "node:fs";
+import { readNpmPackResult } from "../packages/core/publication/npm/pack-result.js";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -44,7 +45,10 @@ export function verifyGoldenPath() {
       ["pack", "--json", "--pack-destination", packDir],
       { cwd: root, json: true },
     );
-    const tarball = path.join(packDir, packed[0].filename);
+    const tarball = path.join(
+      packDir,
+      readNpmPackResult(JSON.stringify(packed)).filename,
+    );
     fs.writeFileSync(
       path.join(consumer, "package.json"),
       `${JSON.stringify(

@@ -1,0 +1,23 @@
+name: Select the next protected pipeline transaction.
+description: Select the next protected pipeline transaction.
+inputs:
+  config-path:
+    description: "Minimal product contract."
+    default: ".buildchain/buildchain.toml"
+  token:
+    description: "Scoped provider credential."
+    required: true
+outputs:
+  operation:
+    description: Internally selected operation.
+  context:
+    description: Internally selected context.
+  matrix:
+    description: Internally selected matrix.
+  request:
+    description: Internally selected request.
+  attempt:
+    description: Internally selected attempt.
+runs:
+  using: node24
+  main: dist/index.js

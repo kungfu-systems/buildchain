@@ -82,6 +82,36 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/.ops-pipeline-delivery.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/.ops-pipeline-delivery.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/.ops-pipeline-execute.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "channel-ref",
+        "github-release",
+        "npm-publish"
+      ],
+      "credentialMode": "trusted-publishing",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/.release-pipeline-products.yml",
+      "environment": "none",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/.release-authority.yml",
       "authorityClass": "evidence-publication",
       "publicationCapable": false,
@@ -105,6 +135,23 @@
       "publisherWorkflowMode": "fixed",
       "publisherWorkflowPath": ".github/workflows/.release-binary-assets.yml",
       "environment": "buildchain-release-assets",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/.release-pipeline-products.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "channel-ref",
+        "github-release",
+        "npm-publish"
+      ],
+      "credentialMode": "trusted-publishing",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/.release-pipeline-products.yml",
+      "environment": "none",
       "environmentMode": "fixed",
       "runnerPolicy": "qualified-measured",
       "notes": ""
@@ -297,6 +344,40 @@
       "environment": "",
       "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/public-ops-pipeline.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "channel-ref",
+        "github-release",
+        "npm-publish"
+      ],
+      "credentialMode": "trusted-publishing",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/.release-pipeline-products.yml",
+      "environment": "none",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/public-ops-recover.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "channel-ref",
+        "github-release",
+        "npm-publish"
+      ],
+      "credentialMode": "trusted-publishing",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/.release-pipeline-products.yml",
+      "environment": "none",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
       "notes": ""
     },
     {
@@ -793,6 +874,21 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/.ops-pipeline-delivery.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/.ops-pipeline-execute.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/.release-authority.yml",
       "signals": [],
       "classified": true
@@ -802,6 +898,14 @@
       "signals": [
         "write-permission",
         "environment"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/.release-pipeline-products.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
       ],
       "classified": true
     },
@@ -911,6 +1015,22 @@
       "path": ".github/workflows/public-ops-patrol.yml",
       "signals": [
         "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/public-ops-pipeline.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/public-ops-recover.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
       ],
       "classified": true
     },
@@ -1207,5 +1327,5 @@
       "classified": true
     }
   ],
-  "registryDigest": "536dca8dab8dd8e28018a6fd9ac023d0d116e0fdb612ecda870a0a2225a3f77b"
+  "registryDigest": "6dda3a3bc77be67600fe57c42cd6abe3d05744a6b3f3a49719b1a0395cba75b8"
 }

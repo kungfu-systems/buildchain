@@ -1,0 +1,12 @@
+name: Pipeline product build
+description: Execute the internal build product node.
+inputs:
+  context:
+    description: Internal source-bound publication context.
+    required: true
+  platform:
+    description: Declared product platform.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

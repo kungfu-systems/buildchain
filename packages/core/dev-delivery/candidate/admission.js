@@ -1,10 +1,7 @@
 import path from "node:path";
 import fs from "node:fs";
 import crypto from "node:crypto";
-import {
-  sourceCoordinates,
-  validateNativeContract,
-} from "./coordinates.js";
+import { sourceCoordinates, validateNativeContract } from "./coordinates.js";
 import {
   verifyProjectCutReplayProof,
   createSourceQualificationProof,
@@ -16,6 +13,7 @@ import { assertBranchUnlocked } from "../../providers/dev-delivery/protection.js
 import { deriveSourcePaths } from "./source-paths.js";
 import { admissionPolicyRequest } from "../admission/request.js";
 import { runAdmissionTransaction } from "../admission/transaction.js";
+import { guardPipelineAdmission } from "../../workflow/pipeline/guard.js";
 export function admitDeliveryRequest(input, defaultBranch) {
   const target = sourceCoordinates({
     branch: input["target-branch"],
@@ -46,6 +44,7 @@ export async function qualifyDeliverySource(
   },
   dependencies = {},
 ) {
+  const pipeline = await guardPipelineAdmission(request, { repository, token });
   const outputs = {
     "runtime-sha": runtimeSha,
     "qualify-outcome": "skipped",
@@ -146,7 +145,12 @@ export async function qualifyDeliverySource(
   if (!affectedPaths.length)
     affectedPaths = await (dependencies.derivePaths || deriveSourcePaths)(
       source,
-      { token, apiUrl, environment },
+      {
+        token,
+        apiUrl,
+        environment,
+        qualifiedBase: pipeline?.history.at(-1).generation.baseCommit,
+      },
     );
   const receiptRoot = qualification.result.receiptRoot;
   if (!/^sha256:[0-9a-f]{64}$/u.test(receiptRoot || ""))

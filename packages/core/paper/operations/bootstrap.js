@@ -1,3 +1,4 @@
+import { readNpmPackResult } from "../../publication/npm/pack-result.js";
 import path from "node:path";
 import fs from "node:fs";
 import { jsonText, extractUrls, safeParseJson, toPosix } from "./files.js";
@@ -66,6 +67,7 @@ export function executePaperNpmBootstrap(options = {}) {
     path,
     resolvePaperRepository,
     safeParseJson,
+    readNpmPackResult,
     toPosix,
     validatePaperProvisioningAuthority,
     writePaperReceipt,

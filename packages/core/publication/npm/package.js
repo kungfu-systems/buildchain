@@ -1,3 +1,4 @@
+import { readNpmPackResult } from "./pack-result.js";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
@@ -11,12 +12,8 @@ export function readPackageJson(cwd) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
-function parsePackResult(stdout) {
-  const parsed = JSON.parse(stdout);
-  const pack = Array.isArray(parsed) ? parsed[0] : parsed;
-  if (!pack?.name || !pack?.version) {
-    throw new Error("npm pack did not return package name and version");
-  }
+export function parsePackResult(stdout) {
+  const pack = readNpmPackResult(stdout);
   return {
     name: pack.name,
     version: pack.version,

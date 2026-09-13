@@ -1,0 +1,15 @@
+name: Pipeline product settle
+description: Execute the internal settle product node.
+inputs:
+  context:
+    description: Internal source-bound publication context.
+    required: true
+  token:
+    description: Scoped provider credential.
+    required: true
+  pr-token:
+    description: Repository-authorized App credential for generating ordinary protected PRs.
+    required: false
+runs:
+  using: node24
+  main: dist/index.js

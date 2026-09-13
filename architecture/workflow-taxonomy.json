@@ -742,6 +742,61 @@
       "status": "active",
       "invocation": "repository",
       "rationale": "Verify exact release PR lineage without retired prebuild, dependency discovery, version mutation or approval adapters."
+    },
+    {
+      "id": "pipeline",
+      "role": "public",
+      "category": "ops",
+      "purpose": "pipeline",
+      "summary": "Buildchain pipeline",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "rationale": "Buildchain pipeline: owned normal pipeline and internal credential boundaries."
+    },
+    {
+      "id": ".pipeline-delivery",
+      "role": "component",
+      "category": "ops",
+      "purpose": "pipeline-delivery",
+      "summary": "Internal pipeline delivery",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "rationale": "Internal pipeline delivery: owned normal pipeline and internal credential boundaries."
+    },
+    {
+      "id": ".pipeline-products",
+      "role": "component",
+      "category": "release",
+      "purpose": "pipeline-products",
+      "summary": "Internal pipeline product publication",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "rationale": "Separate product execution, qualification/signing, canonical APPLY and protected follow-ups without consumer orchestration."
+    },
+    {
+      "id": "recover",
+      "role": "public",
+      "category": "ops",
+      "purpose": "recover",
+      "summary": "Buildchain recovery",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "rationale": "Recover one exact attempt with an optional repaired runtime through the same internal product and delivery jobs."
+    },
+    {
+      "id": ".pipeline-execute",
+      "role": "component",
+      "category": "ops",
+      "purpose": "pipeline-execute",
+      "summary": "Internal pipeline execution",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "rationale": "Share credentialless product execution and protected delivery between normal and recovery public entries."
     }
   ]
 }

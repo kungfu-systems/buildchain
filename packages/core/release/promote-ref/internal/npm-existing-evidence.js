@@ -1,3 +1,4 @@
+import { parseNpmView } from "../../../publication/npm/registry.js";
 import { npmPackageSpec } from "./publish-contract.js";
 import { execNpmSync } from "./npm-distribution.js";
 import fs from "node:fs";
@@ -14,7 +15,7 @@ export function readExistingNpmIntegrity({ cwd, artifact }) {
     if (!output) {
       throw new Error("empty dist.integrity");
     }
-    return JSON.parse(output);
+    return parseNpmView(output).integrity;
   } catch (error) {
     const message = error.stderr?.toString?.().trim() || error.message;
     throw new Error(

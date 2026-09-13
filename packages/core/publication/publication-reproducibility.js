@@ -1,3 +1,4 @@
+import { readNpmPackResult } from "./npm/pack-result.js";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
@@ -564,8 +565,7 @@ function packPublication({ buildRoot, packageDir, source, toolchain }) {
       label: "npm pack reproducibility candidate",
     },
   );
-  const parsed = JSON.parse(output);
-  const result = Array.isArray(parsed) ? parsed[0] : parsed;
+  const result = readNpmPackResult(output);
   if (!result?.filename || !result?.integrity || !result?.shasum) {
     throw new Error(
       "npm pack reproducibility candidate did not report filename, integrity, and shasum",

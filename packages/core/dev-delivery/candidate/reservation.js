@@ -10,6 +10,8 @@ import { dispatchDeliveryHandoff } from "../warrant/handoff.js";
 import { resolveCandidateAffectedPaths } from "./evidence.js";
 import { deliverySubmissionRequest } from "./submission.js";
 import { jsonList } from "../warrant/values.js";
+import { guardPipelineAdmission } from "../../workflow/pipeline/guard.js";
+import { wakePipelineCandidate } from "../../workflow/pipeline/wake.js";
 export async function reserveDeliveryCandidate(
   {
     workspace,
@@ -31,6 +33,7 @@ export async function reserveDeliveryCandidate(
     );
   if (!predecessorsOk || proofOutcome !== "success")
     throw new Error("Delivery candidate submission failed");
+  await guardPipelineAdmission(input, connection);
   const service =
     dependencies.service ||
     createDeliveryWarrantService({ ...connection, branch });
@@ -77,6 +80,14 @@ export async function reserveDeliveryCandidate(
     warrant.pullRequestNumber !== Number(input["expected-pr-number"]) ||
     warrant.sourceHead !== input["expected-head-sha"]
   ) {
+    if (input["pipeline-attempt"]) {
+      await wakePipelineCandidate(warrant, { ...connection, branch });
+      return {
+        "warrant-outcome": "success",
+        "warrant-handoff-required": "true",
+        "warrant-handoff-dispatched": "true",
+      };
+    }
     outputs = await dispatchDeliveryHandoff(
       {
         warrant,

@@ -1,3 +1,6 @@
+import { consumerContractLock } from "../../consumer/contract/identity.js";
+import { canonicalJson } from "../../release/discussion/envelope.js";
+
 const exactSha = /^[a-f0-9]{40}$/iu;
 const repository = "kungfu-systems/buildchain";
 const trainRef =
@@ -28,6 +31,14 @@ export function runtimeSelector({ runtimeRef = "", lock, workflowSha }) {
     return { ref: runtimeRef, origin: "runtime-parameter" };
   }
   if (lock) {
+    if (lock.schema === "buildchain.consumer-contract-lock/v2") {
+      const validated = consumerContractLock(lock);
+      if (canonicalJson(validated) !== canonicalJson(lock))
+        throw new Error(
+          "Minimal consumer contract lock contains unsupported fields",
+        );
+      return { ref: validated.runtime.sha, origin: "consumer-contract-lock" };
+    }
     if (lock.contract !== "kungfu-buildchain-contract-lock")
       throw new Error("Unsupported Buildchain contract lock");
     const sha = commit(lock.buildchain?.resolvedSha, "Contract lock runtime");
@@ -91,6 +102,9 @@ export async function selectExecutionRuntime(
     origin: selected.origin,
     ...(selected.origin === "contract-lock"
       ? { contract: { digest: request.lock.buildchain.contractDigest } }
+      : {}),
+    ...(selected.origin === "consumer-contract-lock"
+      ? { contract: { consumerConfigDigest: request.lock.configDigest } }
       : {}),
     class:
       selected.origin === "contract-lock" &&

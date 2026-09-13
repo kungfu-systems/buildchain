@@ -84,7 +84,12 @@ test("npm preview cannot publish and never runs after failed repository verifica
         calls.push(options);
         return {
           stdout: JSON.stringify([
-            { name: "@fixture/paper", version: "4.1.0-alpha.0", files: [] },
+            {
+              name: "@fixture/paper",
+              version: "4.1.0-alpha.0",
+              filename: "fixture-paper-4.1.0-alpha.0.tgz",
+              files: [],
+            },
           ]),
         };
       },
