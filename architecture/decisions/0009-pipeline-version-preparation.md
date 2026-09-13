@@ -13,7 +13,7 @@ ai_provenance:
   model_family: GPT-6
   product: Codex
   generated_at: 2026-09-13
-  visible_context: Consumer compiler, product execution, version materialization, provider adapters and local adversarial tests.
+  visible_context: Consumer compiler, prepared self product contract, product execution, version materialization, provider adapters and local adversarial tests.
   invisible_context_boundary: Local tests do not establish published entry qualification, hosted provider authorization or completed self migration.
 ---
 
@@ -70,3 +70,13 @@ the standard runtime packer with lifecycle hooks disabled. Optional artifact
 filenames with the declared format, unique across the full publication plan,
 and independently verified against the packed file. These fields do not expose
 publication commands or provider control to the consumer.
+
+The prepared `.buildchain/minimal-consumer.toml` declares Buildchain's npm
+package and the three existing binary downloads using those ordinary product
+fields. It retains all seven primary version documents and three derived
+documents. The contract is inactive: the current callers still select
+`.buildchain/buildchain.toml`. Publishing this preparation does not activate a
+second publisher or prove the self migration. The protected transition must
+qualify the published entry and selected runtime, preserve the existing stable
+qualification gates, retire the old consumer callers with a single writer,
+and finally use the shared normal/recovery pair and canonical TOML path.
