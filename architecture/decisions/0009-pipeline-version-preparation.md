@@ -99,7 +99,23 @@ candidate version and duplicate canary observations instead of selecting the
 last observation. These declarations and local checks do not activate the new
 publisher: independent provider collection and enforcement in the pipeline
 remain required before the protected self cutover.
-Until that connection is implemented and verified, a pipeline plan declaring
-this policy rejects stable preparation and application before provider writes,
-including recovery. Alpha preparation remains available for the protected
-transition; the current legacy stable publisher retains its existing policy.
+Stable preparation and application now collect source facts after verifying
+the authoritative attempt. The collector resolves the exact public Alpha tag,
+requires the same channel PR source and compiled contract, and verifies every
+declared version document. It reads product impact from a bounded regular Git
+blob in that exact tree, independently checking its bytes and version. Product
+differences include added, removed and mode-changed files from complete Git
+trees; a short comparison listing cannot silently hide product changes.
+
+Complete bounded release pagination identifies the previous published product
+and the most recent earlier stable publication, including backports for the
+cooldown. The comparison must match the plan's retained previous channel.
+Fresh tag, release and predecessor observations reject concurrent changes.
+Same-version recovery does not count its own completed publication as an older
+release. These facts carry their own root and the exact publication plan root.
+
+Source facts alone cannot establish successful product or published-entry
+qualification. Those independent collectors remain required: their missing
+evidence produces a blocked eligibility report and prevents first or recovered
+publication writes. Alpha preparation remains available for the protected
+transition; the legacy stable publisher retains its existing policy.

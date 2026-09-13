@@ -6,8 +6,8 @@ import {
   planPipelinePublication,
   pipelineExpectedProducts,
   verifyPipelinePublicationPlan,
-  assertPipelineStableQualification,
 } from "../packages/core/publication/pipeline/plan.js";
+import { assertPipelineStableQualification } from "../packages/core/publication/pipeline/stable.js";
 import { applyPipelinePublication } from "../packages/core/publication/pipeline/apply.js";
 import {
   readPipelineVersion,
@@ -91,21 +91,17 @@ test("publication retains the exact stable policy independently of later configu
   assert.throws(() => verifyPipelinePublicationPlan(removed), /retained root/);
 });
 
-test("a declared stable policy cannot silently publish before provider qualification is connected", async () => {
+test("Alpha stays available and an unadmitted context cannot read stable provider data", async () => {
   const request = input();
   request.contract.stable = compileConsumerPlan(
     fs.readFileSync(".buildchain/minimal-consumer.toml", "utf8"),
   ).stable;
   const alpha = planPipelinePublication(request);
-  assert.doesNotThrow(() => assertPipelineStableQualification(alpha));
+  assert.equal(await assertPipelineStableQualification(alpha), null);
   const stable = planPipelinePublication({
     ...request,
     route: request.contract.channels[2],
   });
-  assert.throws(
-    () => assertPipelineStableQualification(stable),
-    /independent pipeline qualification/,
-  );
   let accessed = false;
   const host = new Proxy(
     {},
@@ -118,7 +114,7 @@ test("a declared stable policy cannot silently publish before provider qualifica
   );
   await assert.rejects(
     applyPipelinePublication({ plan: stable }, host),
-    /independent pipeline qualification/,
+    /Publication context is not from this exact provider execution/,
   );
   assert.equal(accessed, false);
 });

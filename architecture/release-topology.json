@@ -200,6 +200,7 @@
         "packages/core/providers/github/pipeline-run-entry.js",
         "packages/core/providers/github/pipeline-runs.js",
         "packages/core/providers/github/pipeline-source.js",
+        "packages/core/providers/github/pipeline-stable-source.js",
         "packages/core/providers/github/pipeline-version-artifacts.js",
         "packages/core/providers/github/pipeline-version-readback.js",
         "packages/core/providers/github/pipeline-version.js",
@@ -263,6 +264,7 @@
         "packages/core/publication/pipeline/settle.js",
         "packages/core/publication/pipeline/signing.js",
         "packages/core/publication/pipeline/source-plan.js",
+        "packages/core/publication/pipeline/stable.js",
         "packages/core/publication/pipeline/version-actions.js",
         "packages/core/publication/pipeline/version-build.js",
         "packages/core/publication/pipeline/version-context.js",
@@ -358,6 +360,7 @@
         "packages/core/release/release-tail-provider-plane.js",
         "packages/core/release/release-train.js",
         "packages/core/release/reuse-complete-release.js",
+        "packages/core/release/stable-release-gate.js",
         "packages/core/release/version-state.js",
         "packages/core/release/version-state/verification.js",
         "packages/core/runtime/action-process.mjs",
@@ -402,7 +405,7 @@
         "packages/core/workflow/pipeline/wake.js",
         "packages/core/workflow/pipeline/web-status.js"
       ],
-      "root": "sha256:cc23dd0670e5337e733b4f3355849efab793430ecf547e78eda1cb888e70d52f"
+      "root": "sha256:4a25413768c83ea23931ece747ac8aa813c1f4e4326f87aede3db1d562a7d3fd"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/runtime/domain-wasm.js",

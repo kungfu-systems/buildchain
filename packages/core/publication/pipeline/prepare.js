@@ -3,7 +3,7 @@ import { recordDigest } from "../../release/discussion/envelope.js";
 import { pipelinePlatforms } from "../../workflow/pipeline/platforms.js";
 import { githubPipelineVersion } from "../../providers/github/pipeline-version.js";
 import { createPipelinePublicationPlan } from "./source-plan.js";
-import { assertPipelineStableQualification } from "./plan.js";
+import { assertPipelineStableQualification } from "./stable.js";
 import { prepareRecoveredPublication } from "./recovery-prepare.js";
 import {
   preparePipelineVersionContext,
@@ -46,10 +46,9 @@ export async function preparePipelinePublication(attempt, publisherSha, host) {
       host,
       version,
     );
-    assertPipelineStableQualification(plan);
     await journal.record("publication/plan", plan);
   }
-  assertPipelineStableQualification(plan);
+  await assertPipelineStableQualification(plan, host);
   if (
     !recovery &&
     (plan.publisher.workflowSha !== publisherSha ||
