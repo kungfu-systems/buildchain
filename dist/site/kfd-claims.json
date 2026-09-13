@@ -21,11 +21,11 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "6fa4aaee34e9e0c2ea3ef095b1c1503b9fd2c88d690b047645fe97571a5c9eb2",
+    "sha256": "9567e5e2f2535c78fe7cc169d475e9de58f15973fc81edeec027a361bee76d5a",
     "summary": {
       "cliCommandCount": 117,
-      "workflowCount": 72,
-      "actionCount": 280,
+      "workflowCount": 73,
+      "actionCount": 283,
       "sitePageCount": 94,
       "docCommandRefCount": 1036,
       "failureCount": 0
@@ -246,11 +246,11 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "6fa4aaee34e9e0c2ea3ef095b1c1503b9fd2c88d690b047645fe97571a5c9eb2",
+      "sha256": "9567e5e2f2535c78fe7cc169d475e9de58f15973fc81edeec027a361bee76d5a",
       "summary": {
         "cliCommandCount": 117,
-        "workflowCount": 72,
-        "actionCount": 280,
+        "workflowCount": 73,
+        "actionCount": 283,
         "sitePageCount": 94,
         "docCommandRefCount": 1036,
         "failureCount": 0
@@ -3999,6 +3999,26 @@
           "inputCount": 2,
           "inputs": [
             "attempt",
+            "runtime-selection"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:.release-pipeline-version",
+          "name": "workflow:.release-pipeline-version",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/.release-pipeline-version.yml",
+          "evidencePath": ".github/workflows/.release-pipeline-version.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 5,
+          "inputs": [
+            "context",
+            "matrix",
+            "operation",
+            "purpose",
             "runtime-selection"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -8787,6 +8807,59 @@
           "reverseAuditSource": "actions/*/action.yml"
         },
         {
+          "id": "action:publication/version/build",
+          "name": "action:publication/version/build",
+          "kind": "action",
+          "sourcePath": "actions/publication/version/build/action.yml",
+          "evidencePath": "actions/publication/version/build/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "context",
+            "platform"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:publication/version/materialize-development",
+          "name": "action:publication/version/materialize-development",
+          "kind": "action",
+          "sourcePath": "actions/publication/version/materialize-development/action.yml",
+          "evidencePath": "actions/publication/version/materialize-development/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 3,
+          "inputs": [
+            "context",
+            "pr-token",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:publication/version/materialize-publication",
+          "name": "action:publication/version/materialize-publication",
+          "kind": "action",
+          "sourcePath": "actions/publication/version/materialize-publication/action.yml",
+          "evidencePath": "actions/publication/version/materialize-publication/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 3,
+          "inputs": [
+            "context",
+            "operation",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
           "id": "action:release/binary/coordinates",
           "name": "action:release/binary/coordinates",
           "kind": "action",
@@ -10658,9 +10731,10 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 2,
+          "inputCount": 3,
           "inputs": [
             "attempt",
+            "stable-wait",
             "token"
           ],
           "reverseAuditSource": "actions/*/action.yml"
@@ -11981,6 +12055,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 750
+    "publicSurfaceCount": 754
   }
 }

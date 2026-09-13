@@ -27,6 +27,111 @@ import { inspectConsumerContract } from "../packages/core/consumer/contract/insp
 const example = (type = "npm") => standardConsumerExample(type);
 const config = () => parse(example()[CONFIG_PATH]);
 
+test("self product migration retains full source qualification on each checkpoint platform", () => {
+  const plan = compileConsumerPlan(
+    fs.readFileSync(".buildchain/minimal-consumer.toml", "utf8"),
+  );
+  const declaration = JSON.parse(
+    fs.readFileSync("architecture/platform-stage-checkpoints.json", "utf8"),
+  );
+  for (const { id } of declaration.platforms) {
+    const products = plan.products.filter((product) =>
+      product.platforms.includes(id),
+    );
+    assert.ok(products.length, `${id}: missing native product build`);
+    const verified = products.find((product) =>
+      product.verify.includes("corepack pnpm@11.7.0 run check"),
+    );
+    assert.ok(verified, `${id}: missing full source verification`);
+    assert.ok(
+      verified.build.includes("corepack pnpm@11.7.0 run build"),
+      `${id}: missing candidate action build`,
+    );
+    assert.ok(
+      verified.build.includes("corepack pnpm@11.7.0 run generate:site"),
+      `${id}: missing candidate generated source build`,
+    );
+    assert.ok(
+      verified.install.includes(
+        "rustup component add --toolchain 1.96.0 rustfmt clippy",
+      ),
+      `${id}: missing Rust verification toolchain components`,
+    );
+  }
+});
+
+test("stable eligibility is closed product policy and preserves the self migration thresholds", () => {
+  const self = compileConsumerPlan(
+    fs.readFileSync(".buildchain/minimal-consumer.toml", "utf8"),
+  );
+  const previous = JSON.parse(
+    fs.readFileSync(".buildchain/stable-release-policy.json", "utf8"),
+  );
+  assert.deepEqual(self.stable, {
+    minimum_interval_seconds: previous.minimumStableIntervalSeconds,
+    minimum_soak_seconds: previous.minimumCanarySoakSeconds,
+    product_paths: previous.productPathPrefixes,
+    impact_file: ".buildchain/release-impact.json",
+    require_published_entry: true,
+  });
+  assert.equal(compileConsumerPlan(example()[CONFIG_PATH]).stable, undefined);
+  for (const change of [
+    { minimum_soak_seconds: -1 },
+    { minimum_interval_seconds: "3600" },
+    { minimum_soak_seconds: 0.5 },
+    { minimum_soak_seconds: Number.MAX_SAFE_INTEGER + 1 },
+    { product_paths: ["../outside/"] },
+    { product_paths: ["packages/*"] },
+    { product_paths: ["packages/", "packages/"] },
+    { product_paths: [123] },
+    { impact_file: "../impact.json" },
+    { impact_file: "impact*.json" },
+    { require_published_entry: "false" },
+    { enabled: false },
+    { workflow: ".release-pipeline-products.yml" },
+    { request_json: "{}" },
+    { command: "npm publish" },
+  ]) {
+    const value = { ...config(), stable: { ...self.stable, ...change } };
+    assert.throws(() => compileConsumerPlan(stringify(value)), /stable\./);
+  }
+});
+
+test("npm root artifacts and stable download filenames remain product data with bounded paths", () => {
+  const c = config();
+  c.products[0].artifacts[0].path = ".";
+  c.products[0].artifacts[0].filename = "product.tgz";
+  assert.equal(
+    compileConsumerPlan(stringify(c)).products[0].artifacts[0].path,
+    ".",
+  );
+  for (const filename of [
+    "../outside.tgz",
+    "dir/product.tgz",
+    "product.zip",
+    ".hidden.tgz",
+    `${"a".repeat(252)}.tgz`,
+  ])
+    assert.throws(
+      () =>
+        compileConsumerPlan(
+          stringify({
+            ...c,
+            products: [
+              {
+                ...c.products[0],
+                artifacts: [{ ...c.products[0].artifacts[0], filename }],
+              },
+            ],
+          }),
+        ),
+      /filename/,
+    );
+  const binary = parse(example("binary")[CONFIG_PATH]);
+  binary.products[0].artifacts[0].path = ".";
+  assert.throws(() => compileConsumerPlan(stringify(binary)), /relative path/);
+});
+
 test("three products use byte-identical callers and closed publication plans", () => {
   const expected = consumerWorkflows();
   for (const type of ["npm", "binary", "paper"]) {

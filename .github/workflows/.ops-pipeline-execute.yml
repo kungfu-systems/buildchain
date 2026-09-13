@@ -112,3 +112,25 @@ jobs:
       id-token: write
       attestations: write
       pull-requests: write
+  stable-recheck:
+    name: Recheck stable publication
+    needs: publication
+    if: always() && inputs.operation == 'publish' && needs.publication.result == 'success' && needs.publication.outputs.stable-wait != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    concurrency:
+      group: buildchain-stable-recheck-${{ github.repository }}-${{ inputs.attempt }}
+      cancel-in-progress: false
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ inputs.runtime-selection }}
+          token: ${{ github.token }}
+      - uses: ./.buildchain/runtime/actions/workflow/pipeline/wake
+        with:
+          attempt: ${{ inputs.attempt }}
+          stable-wait: ${{ needs.publication.outputs.stable-wait }}
+          token: ${{ github.token }}

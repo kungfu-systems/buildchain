@@ -10,6 +10,13 @@ inputs:
   pr-token:
     description: Repository-authorized App credential for generating ordinary protected PRs.
     required: false
+outputs:
+  operation:
+    description: Internal follow-up operation.
+  version-context:
+    description: Retained next-development version context.
+  matrix:
+    description: Declared next-development version platforms.
 runs:
   using: node24
   main: dist/index.js

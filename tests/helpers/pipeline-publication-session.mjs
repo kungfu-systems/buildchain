@@ -2,8 +2,10 @@ import { createHash } from "node:crypto";
 import { pipelineHostFixture } from "./pipeline-host.mjs";
 import { openPipelineSession } from "../../packages/core/workflow/pipeline/session.js";
 
-export async function publicationFixture() {
+export async function publicationFixture({ derivedFiles = {} } = {}) {
   const f = pipelineHostFixture();
+  if (Object.keys(derivedFiles).length)
+    f.admission.plan.version.derived_files = Object.keys(derivedFiles);
   f.admission.route = f.admission.plan.channels[1];
   f.admission.live.targetBranch = f.admission.route.to;
   const session = await openPipelineSession(
@@ -26,6 +28,17 @@ export async function publicationFixture() {
     .update(`blob ${pkg.length}\0`)
     .update(pkg)
     .digest("hex");
+  const derived = Object.entries(derivedFiles).map(([path, content]) => {
+    const bytes = Buffer.from(content);
+    return {
+      path,
+      bytes,
+      sha: createHash("sha1")
+        .update(`blob ${bytes.length}\0`)
+        .update(bytes)
+        .digest("hex"),
+    };
+  });
   const complete = new Set();
   f.host.runId = 200;
   f.host.writer = { ...f.host.writer, runId: "200", jobId: "21" };
@@ -62,6 +75,12 @@ export async function publicationFixture() {
         truncated: false,
         tree: [
           { path: "package.json", sha: blob, type: "blob", mode: "100644" },
+          ...derived.map(({ path, sha }) => ({
+            path,
+            sha,
+            type: "blob",
+            mode: "100644",
+          })),
         ],
       };
     if (url.endsWith(`/git/blobs/${blob}`))
@@ -72,6 +91,14 @@ export async function publicationFixture() {
         size: pkg.length,
       };
     if (url.includes("/git/ref/tags/")) return undefined;
+    const extra = derived.find(({ sha }) => url.endsWith(`/git/blobs/${sha}`));
+    if (extra)
+      return {
+        sha: extra.sha,
+        encoding: "base64",
+        content: extra.bytes.toString("base64"),
+        size: extra.bytes.length,
+      };
     throw new Error(`Unexpected publication provider path: ${url}`);
   };
   return { f, publisher, merge, complete, attempt: session.observed.attempt };

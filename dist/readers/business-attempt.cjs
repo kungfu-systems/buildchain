@@ -366,7 +366,7 @@ function pipelineIntent({
     source: { kind: "pipeline", repositoryId, pullRequest, targetBranch }
   });
 }
-function sourceGeneration(intent, source, baseCommit) {
+function validateConsumerSource(source, repository) {
   object(
     source,
     [
@@ -382,12 +382,16 @@ function sourceGeneration(intent, source, baseCommit) {
     [],
     "source"
   );
-  if (source.schema !== "buildchain.consumer-source/v1" || source.contract !== CONSUMER_CONTRACT || source.repository !== intent.repository)
+  if (source.schema !== "buildchain.consumer-source/v1" || source.contract !== CONSUMER_CONTRACT || source.repository !== repository)
     throw new Error("Generation requires the admitted consumer source");
   for (const key of ["commit", "tree", "configBlob"])
     text(source[key], `source.${key}`, /^[0-9a-f]{40}$/u);
   relativePath(source.configPath, "source.configPath");
   text(source.configDigest, "source.configDigest", ROOT);
+  return source;
+}
+function sourceGeneration(intent, source, baseCommit) {
+  validateConsumerSource(source, intent.repository);
   text(baseCommit, "baseCommit", /^[0-9a-f]{40}$/u);
   const value = {
     schema: SOURCE_GENERATION,

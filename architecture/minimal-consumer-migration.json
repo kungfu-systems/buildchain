@@ -7037,6 +7037,15 @@
       "commandReferences": []
     },
     {
+      "path": ".buildchain/minimal-consumer.toml",
+      "kind": "config",
+      "destination": "closed-toml-plan",
+      "commandReferences": [
+        "scripts/build-standalone-binary.mjs",
+        "scripts/verify-standalone-product.mjs"
+      ]
+    },
+    {
       "path": ".buildchain/release-impact.json",
       "kind": "consumer-source",
       "destination": "retain-product-source; move-orchestration-into-runtime",

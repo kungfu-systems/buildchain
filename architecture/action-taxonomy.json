@@ -353,6 +353,14 @@
             "apply",
             "settle"
           ]
+        },
+        "version": {
+          "responsibility": "Regenerate declared version data in credentialless product jobs and materialize independently qualified publication or development sources.",
+          "operations": [
+            "build",
+            "materialize-publication",
+            "materialize-development"
+          ]
         }
       }
     },

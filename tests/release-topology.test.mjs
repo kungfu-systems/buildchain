@@ -373,11 +373,11 @@ test("Rust and JavaScript produce byte-identical ReleaseInvocation root DAGs", (
 test("the topology ledger exactly freezes all current release jobs and authority signals", () => {
   const topology = checkReleaseTopology();
   assert.deepEqual(topology.metrics, {
-    workflowCount: 38,
-    jobCount: 111,
-    reusableEdgeCount: 24,
-    mutationRelevantNodeCount: 73,
-    contentsWriteJobCount: 34,
+    workflowCount: 39,
+    jobCount: 116,
+    reusableEdgeCount: 26,
+    mutationRelevantNodeCount: 77,
+    contentsWriteJobCount: 38,
     oidcWriteJobCount: 25,
   });
   assert.deepEqual(topology.semanticMetrics, {
@@ -420,6 +420,7 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
       "packages/core/publication/oci/preview-actions.js",
       "packages/core/publication/settlement/actions.js",
       "packages/core/publication/pipeline/actions.js",
+      "packages/core/publication/pipeline/version-actions.js",
     ],
   );
   assert.match(

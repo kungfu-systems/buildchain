@@ -101,3 +101,104 @@ test("a successful product command cannot change tracked source after admission"
   );
   await assert.rejects(buildPipelineSource(request), /tracked modifications/);
 });
+
+test("index-hidden source edits are rejected before any product command runs", async (t) => {
+  for (const flag of ["--assume-unchanged", "--skip-worktree"]) {
+    const request = checkout(t, "process.exit(0);\n");
+    execFileSync("git", ["update-index", flag, "src/build.mjs"], {
+      cwd: request.cwd,
+    });
+    fs.appendFileSync(path.join(request.cwd, "src/build.mjs"), "// hidden\n");
+    assert.equal(
+      execFileSync("git", ["status", "--porcelain"], {
+        cwd: request.cwd,
+        encoding: "utf8",
+      }).trim(),
+      "",
+    );
+    await assert.rejects(buildPipelineSource(request), /tracked source bytes/);
+    assert.equal(fs.existsSync(path.join(request.cwd, "built.txt")), false);
+  }
+});
+
+test("successful product commands cannot hide source drift with Git index flags", async (t) => {
+  const request = checkout(
+    t,
+    `import fs from 'node:fs';
+import { execFileSync } from 'node:child_process';
+execFileSync('git', ['update-index', '--assume-unchanged', 'src/build.mjs']);
+fs.appendFileSync('src/build.mjs', '// hidden after build');
+`,
+  );
+  await assert.rejects(buildPipelineSource(request), /tracked source bytes/);
+  assert.equal(
+    fs.readFileSync(path.join(request.cwd, "built.txt"), "utf8"),
+    "built",
+  );
+});
+
+test("tracked binary bytes are checked even when a local clean filter hides their replacement", async (t) => {
+  const request = checkout(t, "process.exit(0);\n");
+  const git = (...args) => execFileSync("git", args, { cwd: request.cwd });
+  // The committed build program is changed on disk while a local filter makes
+  // Git report its original content. Neither the index nor this filter is proof.
+  const original = fs.readFileSync(path.join(request.cwd, "src/build.mjs"));
+  fs.writeFileSync(path.join(request.cwd, "original.bin"), original);
+  git("config", "filter.hide.clean", "cat original.bin");
+  fs.writeFileSync(
+    path.join(request.cwd, ".git/info/attributes"),
+    "src/build.mjs filter=hide\n",
+  );
+  fs.writeFileSync(
+    path.join(request.cwd, "src/build.mjs"),
+    Buffer.from([0, 255, 13, 10]),
+  );
+  git("update-index", "--assume-unchanged", "src/build.mjs");
+  assert.equal(git("diff", "HEAD", "--", "src/build.mjs").length, 0);
+  await assert.rejects(buildPipelineSource(request), /tracked source bytes/);
+  assert.equal(fs.existsSync(path.join(request.cwd, "built.txt")), false);
+});
+
+test(
+  "source type, executable mode and parent links cannot be hidden from build qualification",
+  {
+    skip:
+      process.platform === "win32" &&
+      "POSIX modes and symlink creation require a native POSIX host",
+  },
+  async (t) => {
+    for (const mutation of ["mode", "link", "parent"]) {
+      const request = checkout(t, "process.exit(0);\n");
+      const file = path.join(request.cwd, "src/build.mjs");
+      execFileSync(
+        "git",
+        [
+          "update-index",
+          "--assume-unchanged",
+          "src/build.mjs",
+          "src/verify.mjs",
+        ],
+        {
+          cwd: request.cwd,
+        },
+      );
+      if (mutation === "mode") fs.chmodSync(file, 0o755);
+      if (mutation === "link") {
+        fs.renameSync(file, path.join(request.cwd, "original.mjs"));
+        fs.symlinkSync("../original.mjs", file);
+      }
+      if (mutation === "parent") {
+        fs.renameSync(
+          path.join(request.cwd, "src"),
+          path.join(request.cwd, "other"),
+        );
+        fs.symlinkSync("other", path.join(request.cwd, "src"));
+      }
+      await assert.rejects(
+        buildPipelineSource(request),
+        /source.*(?:mode|kind)|parent.*symbolic link|tracked modifications/,
+      );
+      assert.equal(fs.existsSync(path.join(request.cwd, "built.txt")), false);
+    }
+  },
+);

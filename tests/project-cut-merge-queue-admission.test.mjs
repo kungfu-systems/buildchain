@@ -199,3 +199,55 @@ test("family markers reject duplicates and release head drift", (context) => {
     /head drifted/u,
   );
 });
+
+test("large generated text patches retain exact replay without an output buffer ceiling", (context) => {
+  const fixture = repository();
+  context.after(() => fs.rmSync(fixture.cwd, { recursive: true, force: true }));
+  git(fixture.cwd, "switch", "source");
+  const bundle = Buffer.alloc(33 * 1024 * 1024, "a");
+  write(fixture.cwd, "generated.js", bundle);
+  const base = commit(fixture.cwd, "generated baseline");
+  bundle.fill("b");
+  write(fixture.cwd, "generated.js", bundle);
+  const head = commit(fixture.cwd, "generated source");
+  const before = git(fixture.cwd, "write-tree");
+  const receipt = qualifyProjectCut({ cwd: fixture.cwd, base, head });
+  assert.equal(receipt.ok, true);
+  assert.equal(receipt.compositionChanged, false);
+  assert.equal(
+    receipt.candidateTreeOid,
+    git(fixture.cwd, "rev-parse", `${head}^{tree}`),
+  );
+  assert.equal(git(fixture.cwd, "write-tree"), before);
+  assert.equal(git(fixture.cwd, "status", "--porcelain"), "");
+  assert.equal(git(fixture.cwd, "rev-parse", "HEAD"), head);
+});
+
+test("file-backed replay preserves binary patches on an independently advanced base", (context) => {
+  const fixture = repository();
+  context.after(() => fs.rmSync(fixture.cwd, { recursive: true, force: true }));
+  git(fixture.cwd, "switch", "source");
+  const bytes = Buffer.from([0, 255, 1, 13, 10, 128]);
+  write(fixture.cwd, "artifact.bin", bytes);
+  const head = commit(fixture.cwd, "binary source");
+  const before = git(fixture.cwd, "write-tree");
+  const receipt = qualifyProjectCut({
+    cwd: fixture.cwd,
+    base: fixture.base,
+    head,
+  });
+  assert.equal(receipt.ok, true);
+  assert.equal(receipt.compositionChanged, false);
+  assert.deepEqual(
+    execFileSync("git", ["show", `${receipt.candidateTreeOid}:artifact.bin`], {
+      cwd: fixture.cwd,
+    }),
+    bytes,
+  );
+  assert.equal(
+    git(fixture.cwd, "show", `${receipt.candidateTreeOid}:unrelated.txt`),
+    "latest protected base",
+  );
+  assert.equal(git(fixture.cwd, "write-tree"), before);
+  assert.equal(git(fixture.cwd, "status", "--porcelain"), "");
+});

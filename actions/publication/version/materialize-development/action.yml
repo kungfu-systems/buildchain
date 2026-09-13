@@ -1,0 +1,15 @@
+name: Pipeline version materialize-development
+description: Execute the internal materialize-development version material boundary.
+inputs:
+  context:
+    description: Retained exact version or publication context.
+    required: true
+  token:
+    description: Scoped provider credential.
+    required: true
+  pr-token:
+    description: Repository-authorized credential for ordinary protected PR creation.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

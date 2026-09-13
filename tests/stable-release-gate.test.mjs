@@ -59,6 +59,7 @@ function facts(overrides = {}) {
     },
     changedPaths: ["packages/core/release/promote-ref/lib.js", "package.json"],
     impact: {
+      release: { version: "2.11.14-alpha.1" },
       summary: "Gate stable promotion on canary evidence.",
       surfaceImpacts: [{ id: "stable-release-canary", class: "release-governance", impact: "minor" }],
     },
@@ -175,6 +176,24 @@ test("stable gate requires version-bound surface impact evidence", () => {
   const report = evaluateStableReleaseGate(facts({ impact: { summary: "", surfaceImpacts: [] } }));
   assert.equal(report.ok, false);
   assert.ok(report.summary.failedChecks.includes("stable.impact"));
+  for (const version of [undefined, "2.11.14-alpha.0", "2.11.14", "9.0.0-alpha.1"]) {
+    const stale = evaluateStableReleaseGate(facts({
+      impact: { ...facts().impact, release: { version } },
+    }));
+    assert.equal(stale.ok, false);
+    assert.ok(stale.summary.failedChecks.includes("stable.impact_version"));
+  }
+});
+
+test("a later successful duplicate cannot replace failed canary evidence", () => {
+  const original = facts();
+  for (const duplicate of [original.canaries[0], { ...original.canaries[0], status: "failure" }]) {
+    const report = evaluateStableReleaseGate({
+      ...original, canaries: [duplicate, ...original.canaries],
+    });
+    assert.equal(report.ok, false);
+    assert.ok(report.summary.failedChecks.includes("canary.evidence_inventory"));
+  }
 });
 
 test("stable policy loads from a repository path and fails closed on invalid contracts", () => {

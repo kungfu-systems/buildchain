@@ -11,6 +11,8 @@ inputs:
     description: Scoped provider credential.
     required: true
 outputs:
+  stable-wait:
+    description: Retained time-only stable qualification recheck.
   operation:
     description: Internal operation result.
   context:

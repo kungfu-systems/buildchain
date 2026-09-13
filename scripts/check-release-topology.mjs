@@ -30,6 +30,7 @@ const PRIVILEGED_ENTRYPOINTS = [
   "packages/core/publication/oci/preview-actions.js",
   "packages/core/publication/settlement/actions.js",
   "packages/core/publication/pipeline/actions.js",
+  "packages/core/publication/pipeline/version-actions.js",
 ];
 
 export function localModuleSpecifiers(source) {

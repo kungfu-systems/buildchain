@@ -157,6 +157,19 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/.release-pipeline-version.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/.release-pipeline-version.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/.release-promote.yml",
       "authorityClass": "product-publication",
       "publicationCapable": true,
@@ -910,6 +923,13 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/.release-pipeline-version.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/.release-promote.yml",
       "signals": [],
       "classified": true
@@ -1327,5 +1347,5 @@
       "classified": true
     }
   ],
-  "registryDigest": "6dda3a3bc77be67600fe57c42cd6abe3d05744a6b3f3a49719b1a0395cba75b8"
+  "registryDigest": "d60fb7e737c15cb032be4a8d2da05f9dad52a715707da3a04015d4e2d1da2574"
 }

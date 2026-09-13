@@ -4,8 +4,8 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 72,
-    "actionCount": 280,
+    "workflowCount": 73,
+    "actionCount": 283,
     "sitePageCount": 94,
     "docCommandRefCount": 1036,
     "failureCount": 0
@@ -878,8 +878,35 @@
           "BUILDCHAIN_NPM_TOKEN"
         ],
         "secretCount": 3,
-        "outputs": [],
-        "outputCount": 0
+        "outputs": [
+          "stable-wait"
+        ],
+        "outputCount": 1
+      },
+      {
+        "id": ".release-pipeline-version",
+        "path": ".github/workflows/.release-pipeline-version.yml",
+        "reusable": true,
+        "inputs": [
+          "context",
+          "matrix",
+          "operation",
+          "purpose",
+          "runtime-selection"
+        ],
+        "inputCount": 5,
+        "secrets": [
+          "BUILDCHAIN_APP_PRIVATE_KEY",
+          "BUILDCHAIN_AUTOMATION_TOKEN"
+        ],
+        "secretCount": 2,
+        "outputs": [
+          "context",
+          "matrix",
+          "operation",
+          "stable-wait"
+        ],
+        "outputCount": 4
       },
       {
         "id": ".release-promote",
@@ -4385,6 +4412,35 @@
         "inputCount": 2
       },
       {
+        "id": "publication/version/build",
+        "path": "actions/publication/version/build/action.yml",
+        "inputs": [
+          "context",
+          "platform"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "publication/version/materialize-development",
+        "path": "actions/publication/version/materialize-development/action.yml",
+        "inputs": [
+          "context",
+          "pr-token",
+          "token"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "publication/version/materialize-publication",
+        "path": "actions/publication/version/materialize-publication/action.yml",
+        "inputs": [
+          "context",
+          "operation",
+          "token"
+        ],
+        "inputCount": 3
+      },
+      {
         "id": "release/binary/coordinates",
         "path": "actions/release/binary/coordinates/action.yml",
         "inputs": [
@@ -5491,9 +5547,10 @@
         "path": "actions/workflow/pipeline/wake/action.yml",
         "inputs": [
           "attempt",
+          "stable-wait",
           "token"
         ],
-        "inputCount": 2
+        "inputCount": 3
       },
       {
         "id": "workflow/settlement/seal",
@@ -11071,8 +11128,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e43fdb0289df88871f3f0febbe04dcb9311a252a2b1df9b3a83a2d10c9d4a70f",
-    "workflowRegistryDigest": "ae10c707dda225c93b925f68a5649037cebfa241f599dc042ae695348c59522f",
-    "pageRegistryDigest": "1ed4d2d9e29138620c27644ab92954ccc0d564ffd4c4b426a759a76724a54d4f"
+    "workflowRegistryDigest": "331d2f6679adc08250131d0cc8f8927b4f12c2109d3582c18368e5a58a2754d5",
+    "pageRegistryDigest": "71e5bb99567bf82b2c896da95f83197b58fad84e35ef54f5e9e4dc0cc3b7e465"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -1343,7 +1343,7 @@ function buildSiteBundle() {
     "badge-endpoint-registry.json": badgeEndpointRegistry,
     "publication-registry.json": publicationRegistry,
     "buildchain-contract.json": createBuildchainContractWorld({ root, controllerRegistry }),
-    "kfd-upstream-aggregate.json": collectKfdUpstreamFacts({ cwd: root, includeOwn: false }),
+    "kfd-upstream-aggregate.json": collectKfdUpstreamFacts({ cwd: root, components: readJson("architecture/product-upstreams.json"), includeOwn: false }),
     "kfd-claims.json": createBuildchainKfdClaimRegistry({ root }),
     "product-mechanism.json": productMechanism,
     "release-provenance.json": releaseProvenance,
