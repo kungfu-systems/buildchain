@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-13
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-10
+  generated_at: 2026-09-13
   visible_context: Buildchain 4.1 source, architecture registries and local validation.
   invisible_context_boundary: No unpublished release or external consumer qualification is claimed.
 ---
@@ -27,7 +27,8 @@ reusable workflow is the primary consumer API. This development line is
 .github/workflows/                 Consumer APIs and hosted job topology
   public-*.yml, build.yml           Public reusable contracts
   .*.yml                           Internal reusable job components
-  self-*.yml                       Buildchain event callers
+  buildchain.yml, buildchain-recover.yml
+                                   Generated self normal and recovery callers
 
 actions/<capability>/<group>/<operation>/
                                    Composite or Node action adapter
@@ -102,13 +103,15 @@ entry selects one runtime through the shared runtime entry; every business
 action and module comes from that selection, independently of the entry SHA.
 The native node runs in separate hosted jobs where the trust boundary requires
 process and credential isolation.
-Dispatch carries exact source-run coordinates and content roots. When the path
+The advanced development-delivery component dispatch carries exact source-run coordinates and content roots. When the path
 array is omitted, source admission reconstructs the complete Git diff from the
 successful PR run and verifies its source identity root. Later nodes read the
 verified source proof, so large changes do not exceed provider dispatch limits. A semantic node need not mean one runner.
 
-Promotion enters the public workflow through one closed `request-json` contract,
-then QUALIFY, APPLY and SETTLE. Paper owns its publication plan and final receipt;
+The normal consumer entry derives promotion intent from a channel PR and the
+TOML plan; the recovery entry takes an attempt and optional repaired runtime.
+The retained advanced promotion component uses its closed `request-json`
+contract internally, then QUALIFY, APPLY and SETTLE. Paper owns its publication plan and final receipt;
 the candidate build receipt is an input to that publication proof.
 
 Dependencies point down the layers. Core modules cannot import actions,

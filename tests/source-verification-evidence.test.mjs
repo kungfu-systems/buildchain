@@ -22,7 +22,6 @@ test("verification identity hashes the complete tracked WASM above the default s
   const files = [
     wasm,
     manifestPath,
-    ".github/workflows/self-build-verify.yml",
     "actions/build/verification/repository/action.yml",
     "actions/build/stage-capsule/verify-checkpoints/action.yml",
     "actions/runtime/environment/prepare/action.yml",
@@ -40,6 +39,10 @@ test("verification identity hashes the complete tracked WASM above the default s
       fs.mkdirSync(path.dirname(path.join(fixture, file)), { recursive: true });
       fs.copyFileSync(path.join(root, file), path.join(fixture, file));
     }
+    fs.mkdirSync(path.join(fixture, ".github/workflows"), { recursive: true });
+    // The legacy verification protocol is tested against explicit input bytes;
+    // it no longer borrows a retired live self caller from this repository.
+    fs.writeFileSync(path.join(fixture, ".github/workflows/self-build-verify.yml"), "name: Source verification fixture\non: workflow_dispatch\njobs:\n  check:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo source-fixture\n");
     process.chdir(fixture);
     git(["init"]);
     git(["-c", "core.autocrlf=false", "-c", "core.eol=lf", "add", "."]);
