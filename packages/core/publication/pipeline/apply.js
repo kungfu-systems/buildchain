@@ -2,6 +2,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { createHash } from "node:crypto";
 import { recordDigest } from "../../release/discussion/envelope.js";
+import { assertPipelineStableQualification } from "./plan.js";
 import { canonicalJson } from "../../release/discussion/envelope.js";
 import {
   createReleaseReceipt,
@@ -31,6 +32,7 @@ export async function applyPipelinePublication(
     npmProvider = pipelineNpmProvider,
   } = {},
 ) {
+  assertPipelineStableQualification(context.plan);
   const { journal, archive } = await publicationContext(context, host);
   const retained = await uniquePublicationMaterial(
     journal,

@@ -83,10 +83,54 @@ function compileReview(value) {
   return { ...value };
 }
 
+function compileStable(value) {
+  object(
+    value,
+    [
+      "minimum_interval_seconds",
+      "minimum_soak_seconds",
+      "product_paths",
+      "impact_file",
+      "require_published_entry",
+    ],
+    [],
+    "stable",
+  );
+  for (const field of ["minimum_interval_seconds", "minimum_soak_seconds"])
+    if (!Number.isSafeInteger(value[field]) || value[field] < 0)
+      throw new Error(
+        `stable.${field}: expected non-negative safe integer seconds`,
+      );
+  const paths = list(
+    value.product_paths,
+    "stable.product_paths",
+    (item, field) => {
+      text(item, field);
+      relativePath(item.endsWith("/") ? item.slice(0, -1) : item, field);
+      if (item.includes("*"))
+        throw new Error(`${field}: expected a literal product path`);
+      return item;
+    },
+  );
+  unique(paths, "stable.product_paths");
+  relativePath(value.impact_file, "stable.impact_file");
+  if (!value.impact_file.endsWith(".json") || value.impact_file.includes("*"))
+    throw new Error(
+      "stable.impact_file: expected one product impact JSON file",
+    );
+  if (typeof value.require_published_entry !== "boolean")
+    throw new Error("stable.require_published_entry: expected a boolean");
+  return structuredClone(value);
+}
+
 // This compiler receives bytes. It has no filesystem, process, network or provider port.
 export function compileConsumerPlan(source) {
   const config = parse(source);
-  object(config, ["schema", "products", "version", "channels", "review"]);
+  object(
+    config,
+    ["schema", "products", "version", "channels", "review"],
+    ["stable"],
+  );
   choice(config.schema, [2], "schema");
   return {
     schema: CONSUMER_PLAN,
@@ -95,5 +139,8 @@ export function compileConsumerPlan(source) {
     version: compileVersion(config.version),
     channels: compileChannels(config.channels),
     review: compileReview(config.review),
+    ...(config.stable === undefined
+      ? {}
+      : { stable: compileStable(config.stable) }),
   };
 }

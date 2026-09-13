@@ -6,7 +6,9 @@ import {
   planPipelinePublication,
   pipelineExpectedProducts,
   verifyPipelinePublicationPlan,
+  assertPipelineStableQualification,
 } from "../packages/core/publication/pipeline/plan.js";
+import { applyPipelinePublication } from "../packages/core/publication/pipeline/apply.js";
 import {
   readPipelineVersion,
   materializePipelineVersion,
@@ -66,6 +68,59 @@ test("Rust version selection retains alpha and materializes stable; anchored aut
   assert.throws(() => planPipelinePublication(request), /Anchored publication/);
   request.version = "1.0.0";
   assert.equal(planPipelinePublication(request).version, "1.0.0");
+});
+
+test("publication retains the exact stable policy independently of later configuration mutation", () => {
+  const request = input();
+  request.contract.stable = compileConsumerPlan(
+    fs.readFileSync(".buildchain/minimal-consumer.toml", "utf8"),
+  ).stable;
+  const plan = planPipelinePublication(request);
+  assert.deepEqual(plan.stablePolicy, request.contract.stable);
+  request.contract.stable.minimum_soak_seconds = 0;
+  assert.equal(plan.stablePolicy.minimum_soak_seconds, 3600);
+  assert.throws(
+    () =>
+      verifyPipelinePublicationPlan({
+        ...plan,
+        stablePolicy: request.contract.stable,
+      }),
+    /retained root/,
+  );
+  const { stablePolicy, ...removed } = plan;
+  assert.throws(() => verifyPipelinePublicationPlan(removed), /retained root/);
+});
+
+test("a declared stable policy cannot silently publish before provider qualification is connected", async () => {
+  const request = input();
+  request.contract.stable = compileConsumerPlan(
+    fs.readFileSync(".buildchain/minimal-consumer.toml", "utf8"),
+  ).stable;
+  const alpha = planPipelinePublication(request);
+  assert.doesNotThrow(() => assertPipelineStableQualification(alpha));
+  const stable = planPipelinePublication({
+    ...request,
+    route: request.contract.channels[2],
+  });
+  assert.throws(
+    () => assertPipelineStableQualification(stable),
+    /independent pipeline qualification/,
+  );
+  let accessed = false;
+  const host = new Proxy(
+    {},
+    {
+      get() {
+        accessed = true;
+        throw new Error("unexpected provider access");
+      },
+    },
+  );
+  await assert.rejects(
+    applyPipelinePublication({ plan: stable }, host),
+    /independent pipeline qualification/,
+  );
+  assert.equal(accessed, false);
 });
 
 test("version materialization touches only declared existing fields and rejects drift and dangerous keys", () => {

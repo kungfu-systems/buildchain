@@ -27,6 +27,43 @@ import { inspectConsumerContract } from "../packages/core/consumer/contract/insp
 const example = (type = "npm") => standardConsumerExample(type);
 const config = () => parse(example()[CONFIG_PATH]);
 
+test("stable eligibility is closed product policy and preserves the self migration thresholds", () => {
+  const self = compileConsumerPlan(
+    fs.readFileSync(".buildchain/minimal-consumer.toml", "utf8"),
+  );
+  const previous = JSON.parse(
+    fs.readFileSync(".buildchain/stable-release-policy.json", "utf8"),
+  );
+  assert.deepEqual(self.stable, {
+    minimum_interval_seconds: previous.minimumStableIntervalSeconds,
+    minimum_soak_seconds: previous.minimumCanarySoakSeconds,
+    product_paths: previous.productPathPrefixes,
+    impact_file: ".buildchain/release-impact.json",
+    require_published_entry: true,
+  });
+  assert.equal(compileConsumerPlan(example()[CONFIG_PATH]).stable, undefined);
+  for (const change of [
+    { minimum_soak_seconds: -1 },
+    { minimum_interval_seconds: "3600" },
+    { minimum_soak_seconds: 0.5 },
+    { minimum_soak_seconds: Number.MAX_SAFE_INTEGER + 1 },
+    { product_paths: ["../outside/"] },
+    { product_paths: ["packages/*"] },
+    { product_paths: ["packages/", "packages/"] },
+    { product_paths: [123] },
+    { impact_file: "../impact.json" },
+    { impact_file: "impact*.json" },
+    { require_published_entry: "false" },
+    { enabled: false },
+    { workflow: ".release-pipeline-products.yml" },
+    { request_json: "{}" },
+    { command: "npm publish" },
+  ]) {
+    const value = { ...config(), stable: { ...self.stable, ...change } };
+    assert.throws(() => compileConsumerPlan(stringify(value)), /stable\./);
+  }
+});
+
 test("npm root artifacts and stable download filenames remain product data with bounded paths", () => {
   const c = config();
   c.products[0].artifacts[0].path = ".";

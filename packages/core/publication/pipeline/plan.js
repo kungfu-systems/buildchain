@@ -111,6 +111,9 @@ export function planPipelinePublication({
     route,
     sourceTimestamp,
     versionPolicy: contract.version,
+    ...(contract.stable
+      ? { stablePolicy: structuredClone(contract.stable) }
+      : {}),
     developmentBranch: developmentRoutes[0].from,
     expectedTagSha,
     previousChannelCommit,
@@ -129,4 +132,14 @@ export function verifyPipelinePublicationPlan(plan) {
   )
     throw new Error("Publication plan bytes do not match their retained root");
   return plan;
+}
+
+// Keep the prepared policy fail-closed until its independent provider collector
+// is wired into both first publication and recovery. A rooted policy is not
+// evidence that its real gates passed.
+export function assertPipelineStableQualification(plan) {
+  if (plan.channel === "stable" && plan.stablePolicy)
+    throw new Error(
+      "Stable policy requires independent pipeline qualification before publication",
+    );
 }

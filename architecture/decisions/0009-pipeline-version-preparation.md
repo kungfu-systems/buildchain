@@ -87,3 +87,19 @@ data explicitly, so changing the consumer TOML to the minimal schema preserves
 the product's seven upstream evidence assets and their digests. The legacy
 configuration retains its declarations until the protected caller cutover;
 the new data contains no build, publication or recovery orchestration.
+
+The prepared contract also declares stable eligibility as a closed `stable`
+table: minimum publication interval and canary soak in seconds, literal product
+paths, a product impact document, and whether published-entry qualification is
+required. It carries no workflow names, provider commands or evidence selectors.
+The publication plan retains an independent copy under its immutable root.
+The self preparation preserves the existing 86,400-second interval and
+3,600-second soak. The shared stable evaluator now rejects impact from another
+candidate version and duplicate canary observations instead of selecting the
+last observation. These declarations and local checks do not activate the new
+publisher: independent provider collection and enforcement in the pipeline
+remain required before the protected self cutover.
+Until that connection is implemented and verified, a pipeline plan declaring
+this policy rejects stable preparation and application before provider writes,
+including recovery. Alpha preparation remains available for the protected
+transition; the current legacy stable publisher retains its existing policy.
