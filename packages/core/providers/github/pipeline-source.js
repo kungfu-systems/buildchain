@@ -10,17 +10,34 @@ function exactSha(value) {
   return value;
 }
 
+function sourceRefBinding(reference) {
+  return {
+    ref: reference?.ref ?? null,
+    sha: reference?.sha ?? null,
+    repository: {
+      id: reference?.repo?.id ?? null,
+      nodeId: reference?.repo?.node_id ?? null,
+      fullName: reference?.repo?.full_name ?? null,
+    },
+  };
+}
+
+function mergedCommit(pr) {
+  return pr.merged === true ? pr.merge_commit_sha : null;
+}
+
 function pullRequestBinding(pr) {
+  // Provider timestamps and repository metadata can change during our own
+  // evidence writes. Bind source and delivery state, not those unrelated fields.
   return {
     number: pr.number,
     state: pr.state,
     merged: pr.merged,
-    mergeCommit: pr.merge_commit_sha,
-    head: pr.head,
-    base: pr.base,
+    mergeCommit: mergedCommit(pr),
+    head: sourceRefBinding(pr.head),
+    base: sourceRefBinding(pr.base),
     draft: pr.draft,
-    labels: pr.labels,
-    updatedAt: pr.updated_at,
+    ready: pr.labels.some((label) => label.name === "ready"),
   };
 }
 
@@ -113,7 +130,7 @@ export function githubPipelineSource(request, repository) {
         baseCommit,
         state: pr.state,
         merged: pr.merged === true,
-        mergeCommit: pr.merge_commit_sha,
+        mergeCommit: mergedCommit(pr),
         draft: pr.draft === true,
         ready: pr.labels.some((label) => label.name === "ready"),
       },
@@ -141,7 +158,7 @@ export function githubPipelineSource(request, repository) {
       targetBranch: pr.base.ref,
       state: pr.state,
       merged: pr.merged === true,
-      mergeCommit: pr.merge_commit_sha,
+      mergeCommit: mergedCommit(pr),
       source: sameHead ? generation.source : null,
       baseCommit: null,
       ready: pr.labels.some((label) => label.name === "ready"),
