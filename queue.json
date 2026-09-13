@@ -3,8 +3,8 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 116,
-  "fencingCounter": 38,
+  "generation": 117,
+  "fencingCounter": 39,
   "policy": {
     "agingSeconds": 900,
     "maxPriority": 2,
@@ -12,7 +12,45 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": null,
+  "activeWarrant": {
+    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
+    "phase": "ready",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v4/v4.1",
+    "candidateId": "sha256:52394217ad86f46e35865df63266c5c7cc7c126495e7bded296be731c2433162",
+    "pullRequestNumber": 3774,
+    "sourceHead": "237da3da01f3c161b97d8f43df0a453cc9aae06b",
+    "sourceRoot": "sha256:6c3fff2a84518931eabc6d466eb9be78b1a010c9c08453376e5098bc8a8e884e",
+    "sourceIdentityRoot": "sha256:459bf4d98966b991936038c9d653c59325a6d1546501a19124fee59294f97dea",
+    "sourcePatchRoot": "sha256:00ba049e839d139fb9484f5640f05edf887fb309cbe19e504310b11525df5c62",
+    "sourceProofRoot": "sha256:8806a44d67b575346dda967335fa28cf22a9e5551b7b12ece846bc93b10da915",
+    "planRoot": "sha256:ed22187350b7479be9cb4117e0f899195144bf95ee27e263ce43d3945f9f5dea",
+    "closureRoot": "sha256:19af9d9f6f2960e839b470582e69627c6d8b2f4d07529c3668d95886c8058e9e",
+    "dependencyRoot": "sha256:cb824bd779a6d7af6b62ede6d86dfc3499160aeaa6b08277175f55fa6a71b8ad",
+    "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
+    "affectedPaths": [
+      ".buildchain/release-impact.json",
+      "dist/site/buildchain-contract.json",
+      "dist/site/buildchain-site.json",
+      "dist/site/kfd-claims.json",
+      "dist/site/kfd-upstream-aggregate.json",
+      "dist/site/public-surface-audit.json",
+      "dist/site/publication-registry.json",
+      "dist/site/site-manifest.json",
+      "dist/site/workflow-registry.json",
+      "package.json"
+    ],
+    "shardEvidenceRoots": [],
+    "sourceWorkflowRunId": 34755223553,
+    "deliveryClass": "non-native-fast",
+    "priority": "ordinary",
+    "generation": 39,
+    "expectedOldStateRoot": "sha256:f6bd916fc325d40d36f71ab496da611e7722f7741472ad480ed45fcf8e36ce42",
+    "issuedAt": "2026-09-13T12:38:17.981Z",
+    "expiresAt": "2026-09-13T13:38:17.981Z",
+    "fencingToken": "sha256:666bb4c5369997f8f743f75c053e800c189619165039f724f2085ec966ef24c8",
+    "nextAction": "Replay on the exact current dev base, prove required checks, then enqueue the unchanged PR head."
+  },
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -7383,10 +7421,10 @@
       "sourceWorkflowRunId": 34755223553,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-13T12:38:15.088Z",
-      "updatedAt": "2026-09-13T12:38:15.088Z",
+      "updatedAt": "2026-09-13T12:38:17.981Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
+      "status": "selected",
       "terminal": null,
       "affectedPaths": [
         ".buildchain/release-impact.json",
@@ -7403,6 +7441,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-13T12:38:15.088Z",
-  "stateRoot": "sha256:f6bd916fc325d40d36f71ab496da611e7722f7741472ad480ed45fcf8e36ce42"
+  "updatedAt": "2026-09-13T12:38:17.981Z",
+  "stateRoot": "sha256:205f23ccf339bdac1a4e0be0a0101c22157ed29d459ef6834616d5bffc5a9c0d"
 }
