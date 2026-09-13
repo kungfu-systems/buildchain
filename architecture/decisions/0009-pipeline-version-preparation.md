@@ -80,3 +80,10 @@ second publisher or prove the self migration. The protected transition must
 qualify the published entry and selected runtime, preserve the existing stable
 qualification gates, retire the old consumer callers with a single writer,
 and finally use the shared normal/recovery pair and canonical TOML path.
+
+Site generation reads its KFD upstream declarations from the product-owned
+`architecture/product-upstreams.json`. The existing collector receives this
+data explicitly, so changing the consumer TOML to the minimal schema preserves
+the product's seven upstream evidence assets and their digests. The legacy
+configuration retains its declarations until the protected caller cutover;
+the new data contains no build, publication or recovery orchestration.
