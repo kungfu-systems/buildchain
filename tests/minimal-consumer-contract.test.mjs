@@ -27,6 +27,39 @@ import { inspectConsumerContract } from "../packages/core/consumer/contract/insp
 const example = (type = "npm") => standardConsumerExample(type);
 const config = () => parse(example()[CONFIG_PATH]);
 
+test("self product migration retains full source qualification on each checkpoint platform", () => {
+  const plan = compileConsumerPlan(
+    fs.readFileSync(".buildchain/minimal-consumer.toml", "utf8"),
+  );
+  const declaration = JSON.parse(
+    fs.readFileSync("architecture/platform-stage-checkpoints.json", "utf8"),
+  );
+  for (const { id } of declaration.platforms) {
+    const products = plan.products.filter((product) =>
+      product.platforms.includes(id),
+    );
+    assert.ok(products.length, `${id}: missing native product build`);
+    const verified = products.find((product) =>
+      product.verify.includes("corepack pnpm@11.7.0 run check"),
+    );
+    assert.ok(verified, `${id}: missing full source verification`);
+    assert.ok(
+      verified.build.includes("corepack pnpm@11.7.0 run build"),
+      `${id}: missing candidate action build`,
+    );
+    assert.ok(
+      verified.build.includes("corepack pnpm@11.7.0 run generate:site"),
+      `${id}: missing candidate generated source build`,
+    );
+    assert.ok(
+      verified.install.includes(
+        "rustup component add --toolchain 1.96.0 rustfmt clippy",
+      ),
+      `${id}: missing Rust verification toolchain components`,
+    );
+  }
+});
+
 test("stable eligibility is closed product policy and preserves the self migration thresholds", () => {
   const self = compileConsumerPlan(
     fs.readFileSync(".buildchain/minimal-consumer.toml", "utf8"),

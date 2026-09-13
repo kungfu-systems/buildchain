@@ -81,6 +81,16 @@ qualify the published entry and selected runtime, preserve the existing stable
 qualification gates, retire the old consumer callers with a single writer,
 and finally use the shared normal/recovery pair and canonical TOML path.
 
+Each declared native checkpoint platform retains a full candidate action build,
+site generation and repository check through ordinary product commands. Linux
+runs this with the npm product; macOS and Windows run it with their standalone
+product. The full check includes the product's checkpoint clean-process and
+recovery tests; a binary version/help smoke test alone cannot replace source
+qualification. Rust formatting, lint and WASM toolchain components are explicit
+install commands on each platform. Local configuration checks establish this
+wiring only; the protected hosted executions and any remaining container-specific
+qualification must still pass before retiring the existing verification caller.
+
 Site generation reads its KFD upstream declarations from the product-owned
 `architecture/product-upstreams.json`. The existing collector receives this
 data explicitly, so changing the consumer TOML to the minimal schema preserves

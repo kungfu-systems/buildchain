@@ -42,9 +42,9 @@ artifacts = [ "binary" ]
 id = "buildchain-macos"
 type = "binary"
 platforms = [ "macos-arm64" ]
-install = [ "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile" ]
-build = [ "node scripts/build-standalone-binary.mjs" ]
-verify = [ "node scripts/verify-standalone-product.mjs" ]
+install = [ "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
+build = [ "corepack pnpm@11.7.0 run build", "corepack pnpm@11.7.0 run generate:site", "node scripts/build-standalone-binary.mjs" ]
+verify = [ "corepack pnpm@11.7.0 run check", "node scripts/verify-standalone-product.mjs" ]
 
 [[products.artifacts]]
 id = "binary"
@@ -60,9 +60,9 @@ artifacts = [ "binary" ]
 id = "buildchain-windows"
 type = "binary"
 platforms = [ "windows-x64" ]
-install = [ "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile" ]
-build = [ "node scripts/build-standalone-binary.mjs" ]
-verify = [ "node scripts/verify-standalone-product.mjs" ]
+install = [ "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
+build = [ "corepack pnpm@11.7.0 run build", "corepack pnpm@11.7.0 run generate:site", "node scripts/build-standalone-binary.mjs" ]
+verify = [ "corepack pnpm@11.7.0 run check", "node scripts/verify-standalone-product.mjs" ]
 
 [[products.artifacts]]
 id = "binary"
