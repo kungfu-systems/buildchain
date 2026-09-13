@@ -1,10 +1,13 @@
+import { claimPipelinePublicationWorker } from "./worker.js";
 import { recordDigest } from "../../release/discussion/envelope.js";
-import { resumePipelineSession } from "../../workflow/pipeline/session.js";
 import { pipelinePlatforms } from "../../workflow/pipeline/platforms.js";
 import { githubPipelineVersion } from "../../providers/github/pipeline-version.js";
 import { createPipelinePublicationPlan } from "./source-plan.js";
-import { pipelinePublicationJournal } from "./journal.js";
 import { prepareRecoveredPublication } from "./recovery-prepare.js";
+import {
+  preparePipelineVersionContext,
+  retainedPipelineVersionRegeneration,
+} from "./version-context.js";
 
 function publicationNextOperation(phase, existing, recovery) {
   if (phase !== "publish") return "settle";
@@ -15,61 +18,14 @@ function publicationNextOperation(phase, existing, recovery) {
 }
 
 export async function preparePipelinePublication(attempt, publisherSha, host) {
-  const { run: execution } = await host.runs.read(host.runId, host.runAttempt);
-  const definitions = (execution.referenced_workflows || []).filter((entry) =>
-    entry.path?.startsWith(
-      "kungfu-systems/buildchain/.github/workflows/.release-pipeline-products.yml@",
-    ),
-  );
-  if (
-    !/^[0-9a-f]{40}$/u.test(publisherSha || "") ||
-    definitions.length !== 1 ||
-    definitions[0].sha !== publisherSha
-  )
-    throw new Error(
-      "Publisher definition is not the exact hosted reusable workflow",
-    );
-  const session = await resumePipelineSession({ ...host, attempt }, host);
-  const observed = session.observed;
-  if (observed.phases.merge?.payload.state !== "success")
-    throw new Error(
-      "Product publication requires completed protected integration",
-    );
-  if (observed.status === "complete") return { operation: "wait" };
-  const phase = observed.missing[0];
-  if (!["publish", "distribution", "next-development"].includes(phase))
-    throw new Error("Attempt is not at product publication");
-  const prior = observed.history
-    .at(-1)
-    .events.filter((event) =>
-      event.payload.materials.some((material) =>
-        material.id.startsWith("publication/worker/"),
-      ),
-    )
-    .at(-1)?.payload.writer;
-  if (
-    prior &&
-    (prior.runId !== String(host.runId) ||
-      prior.runAttempt !== String(host.runAttempt))
-  ) {
-    const { run } = await host.runs.read(
-      Number(prior.runId),
-      Number(prior.runAttempt),
-    );
-    if (run.status !== "completed") return { operation: "wait" };
-  }
-  const journal = pipelinePublicationJournal(session, host);
-  const claim = {
-    schema: "buildchain.pipeline-publication-worker/v1",
+  const claimed = await claimPipelinePublicationWorker(
     attempt,
-    runId: host.runId,
-    runAttempt: host.runAttempt,
-  };
-  await journal.record("publication/worker", claim, {
-    phase,
-    expectedHead: observed.head,
-  });
-  await journal.fence();
+    publisherSha,
+    host,
+  );
+  if (!claimed) return { operation: "wait" };
+  const { session, journal, phase } = claimed;
+  const observed = session.observed;
   const recovery = await prepareRecoveredPublication(
     session,
     publisherSha,
@@ -106,8 +62,33 @@ export async function preparePipelinePublication(attempt, publisherSha, host) {
     throw new Error("Publication materialized source is ambiguous");
   let materialization = materializations[0];
   if (!materialization) {
+    const regeneration = await retainedPipelineVersionRegeneration(
+      journal,
+      plan,
+      "publication",
+      host.runtime,
+    );
+    if (plan.versionPolicy.derived_files?.length && !regeneration) {
+      const publication = {
+        attempt,
+        generation: observed.generation,
+        plan,
+        ...(recovery ? { recovery } : {}),
+      };
+      return {
+        operation: "regenerate",
+        context: await preparePipelineVersionContext(
+          plan,
+          "publication",
+          publication,
+          host,
+          journal,
+          publisherSha,
+        ),
+      };
+    }
     await journal.fence();
-    materialization = await version.materialize(plan);
+    materialization = await version.materialize(plan, regeneration);
     const verified = await host.source.source(
       materialization.source.commit,
       plan.source.configPath,

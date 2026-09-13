@@ -457,6 +457,49 @@
       "nonDuplicationRationale": "Canonical workflow owns one declared API or orchestration responsibility."
     },
     {
+      "id": ".release-pipeline-version",
+      "path": ".github/workflows/.release-pipeline-version.yml",
+      "reusable": true,
+      "inputs": [
+        "context",
+        "matrix",
+        "operation",
+        "purpose",
+        "runtime-selection"
+      ],
+      "inputCount": 5,
+      "secrets": [
+        "BUILDCHAIN_APP_PRIVATE_KEY",
+        "BUILDCHAIN_AUTOMATION_TOKEN"
+      ],
+      "secretCount": 2,
+      "outputs": [
+        "context",
+        "matrix",
+        "operation"
+      ],
+      "outputCount": 3,
+      "taxonomy": {
+        "id": ".pipeline-version",
+        "role": "component",
+        "category": "release",
+        "purpose": "pipeline-version",
+        "status": "active",
+        "canonicalPath": ".github/workflows/.release-pipeline-version.yml",
+        "compatibilityAlias": false
+      },
+      "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "Canonical workflow owns one declared API or orchestration responsibility."
+    },
+    {
       "id": ".release-promote",
       "path": ".github/workflows/.release-promote.yml",
       "reusable": true,
@@ -6977,6 +7020,65 @@
         "runtime-sha"
       ],
       "inputCount": 2,
+      "capabilityGroup": "release-passport-trust",
+      "status": "active",
+      "owner": "buildchain-actions",
+      "maturity": "stable",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
+    },
+    {
+      "apiRole": "implementation",
+      "id": "publication/version/build",
+      "path": "actions/publication/version/build/action.yml",
+      "inputs": [
+        "context",
+        "platform"
+      ],
+      "inputCount": 2,
+      "capabilityGroup": "release-passport-trust",
+      "status": "active",
+      "owner": "buildchain-actions",
+      "maturity": "stable",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
+    },
+    {
+      "apiRole": "implementation",
+      "id": "publication/version/materialize-development",
+      "path": "actions/publication/version/materialize-development/action.yml",
+      "inputs": [
+        "context",
+        "pr-token",
+        "token"
+      ],
+      "inputCount": 3,
+      "capabilityGroup": "release-passport-trust",
+      "status": "active",
+      "owner": "buildchain-actions",
+      "maturity": "stable",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
+    },
+    {
+      "apiRole": "implementation",
+      "id": "publication/version/materialize-publication",
+      "path": "actions/publication/version/materialize-publication/action.yml",
+      "inputs": [
+        "context",
+        "operation",
+        "token"
+      ],
+      "inputCount": 3,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",

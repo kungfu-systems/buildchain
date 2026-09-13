@@ -3,6 +3,7 @@ import {
   publicationArtifactProducer,
   verifyPublicationBuildAggregate,
 } from "./build-segments.js";
+import path from "node:path";
 import { recordDigest } from "../../release/discussion/envelope.js";
 import { createDomainPublicationQualificationReceipt } from "../publication-qualification.js";
 import { verifyPipelinePublicationPlan } from "./plan.js";
@@ -22,6 +23,10 @@ function productDescriptor(artifact) {
 export function inspectPipelinePublicationArtifacts(directory, manifest, plan) {
   verifyPipelineProductFiles(directory, manifest);
   for (const artifact of manifest.artifacts) {
+    if (artifact.filename && path.basename(artifact.file) !== artifact.filename)
+      throw new Error(
+        "Independent qualification rejected the declared download filename",
+      );
     if (artifact.kind === "npm-package") {
       const pkg = readNpmPackageJsonFromTarball(
         publicationPath(directory, artifact.file),

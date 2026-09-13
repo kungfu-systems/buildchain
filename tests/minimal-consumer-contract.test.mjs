@@ -27,6 +27,41 @@ import { inspectConsumerContract } from "../packages/core/consumer/contract/insp
 const example = (type = "npm") => standardConsumerExample(type);
 const config = () => parse(example()[CONFIG_PATH]);
 
+test("npm root artifacts and stable download filenames remain product data with bounded paths", () => {
+  const c = config();
+  c.products[0].artifacts[0].path = ".";
+  c.products[0].artifacts[0].filename = "product.tgz";
+  assert.equal(
+    compileConsumerPlan(stringify(c)).products[0].artifacts[0].path,
+    ".",
+  );
+  for (const filename of [
+    "../outside.tgz",
+    "dir/product.tgz",
+    "product.zip",
+    ".hidden.tgz",
+    `${"a".repeat(252)}.tgz`,
+  ])
+    assert.throws(
+      () =>
+        compileConsumerPlan(
+          stringify({
+            ...c,
+            products: [
+              {
+                ...c.products[0],
+                artifacts: [{ ...c.products[0].artifacts[0], filename }],
+              },
+            ],
+          }),
+        ),
+      /filename/,
+    );
+  const binary = parse(example("binary")[CONFIG_PATH]);
+  binary.products[0].artifacts[0].path = ".";
+  assert.throws(() => compileConsumerPlan(stringify(binary)), /relative path/);
+});
+
 test("three products use byte-identical callers and closed publication plans", () => {
   const expected = consumerWorkflows();
   for (const type of ["npm", "binary", "paper"]) {

@@ -6,7 +6,7 @@ import { recordDigest } from "../../release/discussion/envelope.js";
 import { consumerCommandSession } from "../../runtime/consumer-shell.js";
 import { createNativeChildEnvironment } from "../../dev-delivery/native/execution.js";
 
-function sourceCheckout(cwd, expected) {
+export function inspectPipelineSource(cwd, expected) {
   const git = (...args) =>
     execFileSync("git", ["-C", cwd, ...args], {
       encoding: "utf8",
@@ -54,7 +54,7 @@ function productDirectory(cwd, product) {
 // jobs must bind provider completion and exact artifacts before granting reuse.
 export async function buildPipelineSource(
   { cwd, source, platform, environment = process.env },
-  { inspect = sourceCheckout, session = consumerCommandSession } = {},
+  { inspect = inspectPipelineSource, session = consumerCommandSession } = {},
 ) {
   const plan = inspect(cwd, source);
   const result = await buildPipelineProducts(

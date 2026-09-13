@@ -1,0 +1,72 @@
+---
+status: draft
+period: 2026-09-13
+theme: minimal-consumer-version-preparation
+doc_type: architecture-decision-record
+source_level: local-files
+confidence: medium
+sensitivity: public
+evidence_grade: B
+review_state: unreviewed
+last_reviewed: 2026-09-13
+ai_provenance:
+  model_family: GPT-6
+  product: Codex
+  generated_at: 2026-09-13
+  visible_context: Consumer compiler, product execution, version materialization, provider adapters and local adversarial tests.
+  invisible_context_boundary: Local tests do not establish published entry qualification, hosted provider authorization or completed self migration.
+---
+
+# ADR 0009: Regenerate version data before qualifying the final product source
+
+Changing a package version can invalidate generated documents that embed that
+version or hashes of other documents. Both publication and next-development
+preparation must regenerate those declared documents before creating the final
+Git source. Leaving the old documents in place would fail the ordinary clean
+source build, or publish facts that disagree with the product version.
+
+The runtime retains an exact preparation in the current attempt. It binds the
+source and TOML, selected runtime, target version, parent plan, purpose and
+declared platforms. An internal component checks out that source on separate
+product runners, patches only declared primary version fields, and executes the
+existing product install/build/verify commands without publication credentials.
+No new consumer command or workflow input is needed.
+
+The product result contains every declared version document and derived file.
+The source guard compares all original tracked bytes, types, executable modes,
+HEAD and tree directly; index flags cannot hide modifications. Only declared
+material bytes may change. Primary documents must exactly equal the pure version
+field patch. Changed derived documents from different platforms must agree.
+The source TOML, managed runtime locks and workflow authority cannot be generated
+as version material. Paths are literal, regular UTF-8 files with bounded size;
+symlink and submodule sources are not qualified by this preparation implementation.
+
+A separate job checks the original published caller, exact reusable definitions,
+provider run and retry, every successful platform job, and immutable artifact
+digests before reading results. The retained preparation and actual source
+contract are checked again before the qualified material enters the journal.
+Git materialization verifies the resulting tree, exact document bytes and ref.
+The final product build then runs against that exact materialized source and is
+qualified and signed through the existing publication boundary.
+
+For next-development, the same preparation starts from the retained current
+protected development source. It creates an ordinary PR and preserves the
+completed publication while waiting for protected review and integration.
+Recovery can reuse retained material only for the same parent and runtime;
+conflicting qualified results fail closed. Published payloads and provider
+receipts remain immutable under the existing recovery contract.
+
+This adds actual product execution when derived version files are declared.
+The publication component calls one shared internal version component for its
+two purposes. Each component stays within the existing job, step and module
+budgets. Local tests cover real child processes and Git byte guards, artifact
+transport rejection, retained request admission, materialization and existing
+recovery regressions. Hosted platform and provider qualification remain separate
+delivery requirements.
+
+An npm artifact may declare `path = "."` to pack the product directory through
+the standard runtime packer with lifecycle hooks disabled. Optional artifact
+`filename` data preserves established download names. Names are single bounded
+filenames with the declared format, unique across the full publication plan,
+and independently verified against the packed file. These fields do not expose
+publication commands or provider control to the consumer.

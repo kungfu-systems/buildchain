@@ -2852,6 +2852,74 @@
         "expectedContributionSeconds": 49500,
         "rationale": "Delegates to the same isolated product, native delivery and publication jobs. Recovery schedules only qualified missing work; this inherited conservative timeout sum is not measured latency or a new parallel lane family."
       }
+    },
+    {
+      "laneId": ".github/workflows/.release-pipeline-products.yml#materialize",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "declared version regeneration before publication or next-development materialization",
+        "expectedContributionSeconds": 300,
+        "rationale": "One shared internal component executes each declared product platform for version-derived files, then independently verifies actual job completion and archive digests before Git writes. Up to five product runners each have a sixty-minute ceiling, and materialization has twenty minutes; the component can run once for publication and once for next development. Parent reusable jobs delegate without a separate product runner. Bounds are declared capacity, not measured latency; per-repository publication concurrency retains a single provider writer."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-pipeline-products.yml#development",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "declared version regeneration before publication or next-development materialization",
+        "expectedContributionSeconds": 300,
+        "rationale": "One shared internal component executes each declared product platform for version-derived files, then independently verifies actual job completion and archive digests before Git writes. Up to five product runners each have a sixty-minute ceiling, and materialization has twenty minutes; the component can run once for publication and once for next development. Parent reusable jobs delegate without a separate product runner. Bounds are declared capacity, not measured latency; per-repository publication concurrency retains a single provider writer."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-pipeline-version.yml#build",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 300,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "declared version regeneration before publication or next-development materialization",
+        "expectedContributionSeconds": 18000,
+        "rationale": "One shared internal component executes each declared product platform for version-derived files, then independently verifies actual job completion and archive digests before Git writes. Up to five product runners each have a sixty-minute ceiling, and materialization has twenty minutes; the component can run once for publication and once for next development. Parent reusable jobs delegate without a separate product runner. Bounds are declared capacity, not measured latency; per-repository publication concurrency retains a single provider writer."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-pipeline-version.yml#materialize",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 20,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "declared version regeneration before publication or next-development materialization",
+        "expectedContributionSeconds": 1200,
+        "rationale": "One shared internal component executes each declared product platform for version-derived files, then independently verifies actual job completion and archive digests before Git writes. Up to five product runners each have a sixty-minute ceiling, and materialization has twenty minutes; the component can run once for publication and once for next development. Parent reusable jobs delegate without a separate product runner. Bounds are declared capacity, not measured latency; per-repository publication concurrency retains a single provider writer."
+      }
     }
   ],
   "declarationFamilies": [

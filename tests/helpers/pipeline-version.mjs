@@ -10,6 +10,7 @@ export function pipelineVersionFixture({
   lostResponse = false,
   tamper = false,
   mode = "100644",
+  derivedFiles = {},
 } = {}) {
   const repository = "example/product",
     base = `/repos/${repository}`,
@@ -35,6 +36,12 @@ export function pipelineVersionFixture({
   const original = '{"version":"1.0.0-alpha.1","keep":"untouched"}';
   const tree = [
       { path: "package.json", type: "blob", mode, sha: blob(original) },
+      ...Object.entries(derivedFiles).map(([path, content]) => ({
+        path,
+        type: "blob",
+        mode: "100644",
+        sha: blob(content),
+      })),
     ],
     treeSha = hash(tree),
     commitSha = "a".repeat(40);
@@ -52,6 +59,8 @@ export function pipelineVersionFixture({
       "utf8",
     ),
   );
+  if (Object.keys(derivedFiles).length)
+    contract.version.derived_files = Object.keys(derivedFiles);
   const plan = planPipelinePublication({
     attempt: "attempt",
     generation: "generation",
@@ -111,12 +120,22 @@ export function pipelineVersionFixture({
       return structuredClone(blobs.get(suffix.slice(11)));
     if (suffix.startsWith("/git/ref/"))
       return { object: { sha: refs.get(suffix.slice(9)) } };
-    if (suffix.startsWith("/compare/"))
+    if (suffix.startsWith("/compare/")) {
+      const [before, after] = suffix
+        .slice(9)
+        .split("...")
+        .map((sha) => trees.get(commits.get(sha).tree.sha).tree);
       return {
         status: "ahead",
         total_commits: 1,
-        files: [{ filename: "package.json", status: "modified" }],
+        files: after
+          .filter(
+            (entry) =>
+              before.find(({ path }) => path === entry.path).sha !== entry.sha,
+          )
+          .map(({ path }) => ({ filename: path, status: "modified" })),
       };
+    }
     throw new Error(`Unexpected provider call: ${url}`);
   }
   return {

@@ -30,12 +30,26 @@ test("real npm, native archive and PDF products are packed through one declared 
     path.join(fs.realpathSync(os.tmpdir()), "pipeline-publication-pack-"),
   );
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
-  for (const type of ["npm", "binary", "paper"]) {
+  for (const type of ["npm", "npm-root", "binary", "paper"]) {
     const cwd = path.join(root, type);
-    fs.cpSync(`templates/minimal-consumer/${type}`, cwd, { recursive: true });
+    fs.cpSync(
+      `templates/minimal-consumer/${type === "npm-root" ? "npm" : type}`,
+      cwd,
+      { recursive: true },
+    );
     const contract = compileConsumerPlan(
       fs.readFileSync(path.join(cwd, ".buildchain/buildchain.toml"), "utf8"),
     );
+    if (type === "binary")
+      contract.products[0].artifacts[0].filename = "product-native.tar.gz";
+    if (type === "npm-root") {
+      contract.products[0].artifacts[0].path = ".";
+      const file = path.join(cwd, "package.json");
+      const pkg = JSON.parse(fs.readFileSync(file));
+      delete pkg.private;
+      pkg.files = ["dist/package"];
+      fs.writeFileSync(file, JSON.stringify(pkg));
+    }
     const source = {
       repository: "example/product",
       commit: "a".repeat(40),
@@ -62,8 +76,11 @@ test("real npm, native archive and PDF products are packed through one declared 
       sourceTimestamp: "2026-09-13T00:00:00Z",
     });
     await buildPipelineProducts({ cwd, plan: contract, platform: "linux-x64" });
-    if (type === "npm") {
-      const file = path.join(cwd, "dist/package/package.json"),
+    if (type.startsWith("npm")) {
+      const file = path.join(
+          cwd,
+          type === "npm-root" ? "package.json" : "dist/package/package.json",
+        ),
         pkg = JSON.parse(fs.readFileSync(file));
       pkg.scripts = {
         prepack:
@@ -80,6 +97,11 @@ test("real npm, native archive and PDF products are packed through one declared 
       source,
     });
     assert.equal(manifest.artifacts.length, 1);
+    if (type === "binary")
+      assert.equal(
+        path.basename(manifest.artifacts[0].file),
+        "product-native.tar.gz",
+      );
     assert.equal(
       manifest.artifacts[0].kind,
       contract.products[0].artifacts[0].kind,
@@ -88,6 +110,7 @@ test("real npm, native archive and PDF products are packed through one declared 
       fs.existsSync(path.join(cwd, "dist/package/forbidden-hook")),
       false,
     );
+    assert.equal(fs.existsSync(path.join(cwd, "forbidden-hook")), false);
     verifyPipelineProductFiles(output, manifest);
     const buildBody = {
       schema: "buildchain.pipeline-publication-build-readback/v1",

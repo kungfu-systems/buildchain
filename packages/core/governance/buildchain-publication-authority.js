@@ -43,6 +43,7 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/public-ops-recover.yml", "product-publication", true, ["npm-publish", "github-release", "channel-ref"], "trusted-publishing", "none", "fixed", "fixed", ".github/workflows/.release-pipeline-products.yml"],
   [".github/workflows/.ops-pipeline-execute.yml", "product-publication", true, ["npm-publish", "github-release", "channel-ref"], "trusted-publishing", "none", "fixed", "fixed", ".github/workflows/.release-pipeline-products.yml"],
   [".github/workflows/.release-pipeline-products.yml", "product-publication", true, ["npm-publish", "github-release", "channel-ref"], "trusted-publishing", "none", "fixed", "fixed"],
+  [".github/workflows/.release-pipeline-version.yml", "governance-write"],
   [".github/workflows/.ops-pipeline-delivery.yml", "governance-write"],
   [".github/workflows/self-ops-housekeeping-daily.yml", "governance-write"],
   [".github/workflows/self-ops-housekeeping-monthly.yml", "governance-write"],

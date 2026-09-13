@@ -50,6 +50,11 @@ test("one publication plan covers npm, archive and PDF declarations without prod
   const request = input();
   request.contract.products[0].platforms.push("windows-x64");
   assert.equal(pipelineExpectedProducts(request.contract).length, 2);
+  request.contract.products[0].artifacts[0].filename = "same-package.tgz";
+  assert.throws(
+    () => pipelineExpectedProducts(request.contract),
+    /filenames must be unique/,
+  );
 });
 
 test("Rust version selection retains alpha and materializes stable; anchored authority cannot be inferred", () => {

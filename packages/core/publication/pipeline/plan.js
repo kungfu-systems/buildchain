@@ -13,6 +13,7 @@ export function pipelineExpectedProducts(plan) {
           kind: artifact.kind,
           directory: product.directory || ".",
           path: artifact.path,
+          ...(artifact.filename ? { filename: artifact.filename } : {}),
           targets: product.targets
             .filter((target) => target.artifacts.includes(artifact.id))
             .map(({ provider, access }) => ({
@@ -30,6 +31,23 @@ export function pipelineExpectedProducts(plan) {
   )
     throw new Error(
       "Publication requires a bounded unique product/platform/artifact inventory",
+    );
+  const filenames = outputs.map(
+    (output) =>
+      output.filename ||
+      `${output.product}-${output.platform}-${output.artifact}${
+        output.kind === "npm-package"
+          ? ".tgz"
+          : output.kind === "pdf"
+            ? ".pdf"
+            : [".tar.gz", ".tar.xz", ".tgz", ".zip", ".tar"].find((suffix) =>
+                output.path.endsWith(suffix),
+              )
+      }`,
+  );
+  if (new Set(filenames).size !== filenames.length)
+    throw new Error(
+      "Publication artifact filenames must be unique across every declared platform",
     );
   return outputs;
 }

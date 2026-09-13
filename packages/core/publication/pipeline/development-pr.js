@@ -1,4 +1,8 @@
 import { recordDigest } from "../../release/discussion/envelope.js";
+import {
+  preparePipelineVersionContext,
+  retainedPipelineVersionRegeneration,
+} from "./version-context.js";
 
 export async function prepareNextDevelopmentPullRequest(
   context,
@@ -44,8 +48,31 @@ export async function prepareNextDevelopmentPullRequest(
       phase: "next-development",
     });
   }
+  const regeneration = await retainedPipelineVersionRegeneration(
+    journal,
+    request,
+    "development",
+    host.runtime,
+  );
+  if (request.versionPolicy.derived_files?.length && !regeneration)
+    return {
+      state: "waiting",
+      reason: "next-development-version-regeneration-required",
+      versionContext: await preparePipelineVersionContext(
+        request,
+        "development",
+        context,
+        host,
+        journal,
+        context.recovery?.execution.publisher.workflowSha ||
+          plan.publisher.workflowSha,
+      ),
+    };
   await journal.fence();
-  const materialization = await adapter.materializeDevelopment(request);
+  const materialization = await adapter.materializeDevelopment(
+    request,
+    regeneration,
+  );
   const branch = materialization.branch;
   const pulls = await host.request(
     `/repos/${host.repository}/pulls?state=all&head=${encodeURIComponent(`${host.repository.split("/")[0]}:${branch}`)}&base=${encodeURIComponent(plan.developmentBranch)}&per_page=100`,

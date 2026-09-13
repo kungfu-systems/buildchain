@@ -97,4 +97,13 @@ export async function settlePipelinePublicationAction(core, env) {
     env,
   );
   core.info(result.reason);
+  core.setOutput(
+    "version-context",
+    JSON.stringify(result.versionContext || {}),
+  );
+  core.setOutput("operation", result.versionContext ? "regenerate" : "wait");
+  core.setOutput(
+    "matrix",
+    JSON.stringify({ include: result.versionContext?.platforms || [] }),
+  );
 }

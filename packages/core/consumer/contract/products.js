@@ -18,10 +18,28 @@ export const PLATFORMS = [
 ];
 
 function artifact(value, location) {
-  object(value, ["id", "path", "kind"], [], location);
+  object(value, ["id", "path", "kind"], ["filename"], location);
   slug(value.id, `${location}.id`);
-  relativePath(value.path, `${location}.path`);
+  if (value.path !== "." || value.kind !== "npm-package")
+    relativePath(value.path, `${location}.path`);
   choice(value.kind, ["npm-package", "archive", "pdf"], `${location}.kind`);
+  if (value.filename !== undefined) {
+    text(
+      value.filename,
+      `${location}.filename`,
+      /^[A-Za-z0-9][A-Za-z0-9._-]{0,254}$/u,
+    );
+    const extension =
+      value.kind === "npm-package"
+        ? /\.tgz$/u
+        : value.kind === "pdf"
+          ? /\.pdf$/u
+          : /\.(?:tar\.gz|tar\.xz|tgz|zip|tar)$/u;
+    if (!extension.test(value.filename))
+      throw new Error(
+        `${location}.filename: artifact extension does not match its kind`,
+      );
+  }
   return { ...value };
 }
 

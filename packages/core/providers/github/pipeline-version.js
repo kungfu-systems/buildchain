@@ -1,9 +1,7 @@
 import { createHash } from "node:crypto";
 import { recordDigest } from "../../release/discussion/envelope.js";
-import {
-  materializePipelineVersion,
-  readPipelineVersion,
-} from "../../publication/pipeline/version.js";
+import { readPipelineVersion } from "../../publication/pipeline/version.js";
+import { preparedPipelineVersionMaterial } from "../../publication/pipeline/version-material.js";
 import { verifyPipelinePublicationPlan } from "../../publication/pipeline/plan.js";
 
 function blobBytes(value, sha) {
@@ -64,15 +62,15 @@ export function githubPipelineVersion(request, repository) {
       sourceTimestamp: commit.committer.date,
     };
   }
-  async function materialize(plan) {
+  async function materialize(plan, regeneration) {
     verifyPipelinePublicationPlan(plan);
     const input = await inspect(plan.source, plan.versionPolicy);
     if (input.version !== plan.candidateVersion)
       throw new Error("Version material changed after planning");
-    const material = materializePipelineVersion(
-      plan.versionPolicy,
+    const material = preparedPipelineVersionMaterial(
+      plan,
       input.files,
-      plan.version,
+      regeneration,
     );
     let source = plan.source;
     if (material.changes.length)
@@ -86,12 +84,12 @@ export function githubPipelineVersion(request, repository) {
     };
     return { ...body, root: recordDigest(body) };
   }
-  async function materializeDevelopment(plan) {
+  async function materializeDevelopment(plan, regeneration) {
     const input = await inspect(plan.source, plan.versionPolicy);
-    const material = materializePipelineVersion(
-      plan.versionPolicy,
+    const material = preparedPipelineVersionMaterial(
+      plan,
       input.files,
-      plan.version,
+      regeneration,
     );
     const branch = `feature/buildchain-next/${plan.root.slice(7)}`;
     const source = material.changes.length
