@@ -50,6 +50,13 @@ bytes (Buildchain declares LF checkout in `.gitattributes`); unresolved submodul
 are rejected. This strengthens both the initial version-preparation source check
 and ordinary build qualification without granting product commands credentials.
 
+Project Cut replay transfers generated source patches through private temporary
+files instead of buffering them as command metadata. Git still applies the exact
+binary patch to an isolated index and compares stable patch identity and changed
+paths against the source. This permits large committed action bundles without
+changing the source composition, family receipt, conflict rejection or metadata
+output bound. Temporary descriptors and files are closed on success and failure.
+
 A separate job checks the original published caller, exact reusable definitions,
 provider run and retry, every successful platform job, and immutable artifact
 digests before reading results. The retained preparation and actual source
