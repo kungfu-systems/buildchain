@@ -17,6 +17,8 @@
       ".github/workflows/.release-pipeline-version.yml",
       ".github/workflows/.release-promote.yml",
       ".github/workflows/build.yml",
+      ".github/workflows/buildchain-recover.yml",
+      ".github/workflows/buildchain.yml",
       ".github/workflows/public-build-demo.yml",
       ".github/workflows/public-ops-alpha-candidate-patrol.yml",
       ".github/workflows/public-ops-dev-auto-merge.yml",
@@ -30,41 +32,22 @@
       ".github/workflows/public-release-promote.yml",
       ".github/workflows/public-release-propagation.yml",
       ".github/workflows/public-release-tail.yml",
-      ".github/workflows/public-release-web.yml",
-      ".github/workflows/self-build-alpha-dogfood.yml",
-      ".github/workflows/self-build-demo-dogfood.yml",
-      ".github/workflows/self-build-fixture.yml",
-      ".github/workflows/self-build-stable-dogfood.yml",
-      ".github/workflows/self-ops-dev-delivery.yml",
-      ".github/workflows/self-ops-patrol-daily.yml",
-      ".github/workflows/self-ops-patrol-monthly.yml",
-      ".github/workflows/self-ops-patrol-weekly.yml",
-      ".github/workflows/self-ops-promotion-recovery.yml",
-      ".github/workflows/self-ops-stable-candidate-patrol.yml",
-      ".github/workflows/self-release-binary-assets.yml",
-      ".github/workflows/self-release-line-open.yml",
-      ".github/workflows/self-release-next-development.yml",
-      ".github/workflows/self-release-npm-dry-run.yml",
-      ".github/workflows/self-release-promote.yml",
-      ".github/workflows/self-release-rehearsal-dogfood.yml",
-      ".github/workflows/self-release-tail-dogfood.yml"
+      ".github/workflows/public-release-web.yml"
     ],
     "unknownTopologyPolicy": "fail-closed"
   },
   "semanticScope": {
     "workflowPaths": [
       ".github/workflows/.release-promote.yml",
-      ".github/workflows/self-ops-promotion-recovery.yml",
-      ".github/workflows/self-release-promote.yml",
-      ".github/workflows/public-release-promote.yml",
-      ".github/workflows/self-release-tail-dogfood.yml"
+      ".github/workflows/public-release-promote.yml"
     ],
     "excludedMechanisms": [
       "Paper product release",
       "npm dry-run",
       "Protected generated version review: no package, tag or Release mutation; independently inventoried in closedWorld and privilegedExecutableClosure. Stable finalization review consumes the exact tag and regenerates the rooted version state before protected auto-merge.",
       "Post-publication protected development review: no package, tag or Release mutation; independently inventoried in closedWorld and privilegedExecutableClosure.",
-      "Post-publication OCI Compose preview activation is measured separately in postPublicationScope; it consumes completed publication and qualification, copies one manifest to the sealed alias, and cannot materialize versions or release refs."
+      "Post-publication OCI Compose preview activation is measured separately in postPublicationScope; it consumes completed publication and qualification, copies one manifest to the sealed alias, and cannot materialize versions or release refs.",
+      "Generated normal and recovery callers delegate to the public pipeline; their authority is measured in pipelinePublicationScope, including the product publisher."
     ]
   },
   "authorityClosure": {
@@ -99,7 +82,10 @@
       "packages/core/runtime/entry/selection.js",
       "packages/core/runtime/entry/source.js"
     ],
-    "runtimeEngines": ["packages/core/release/promote-candidate/action.js"],
+    "runtimeEngines": [
+      "packages/core/release/promote-candidate/action.js",
+      "packages/core/publication/pipeline/apply.js"
+    ],
     "terminalProjections": [
       "actions/release/promotion/apply/action.yml",
       "actions/release/promotion/settle/action.yml",
@@ -432,8 +418,8 @@
       "packages/core/release/promote-ref/internal/promote-release-channel.js",
       "packages/core/release/promote-ref/lib.js"
     ],
-    "freshEntry": ".github/workflows/public-release-promote.yml",
-    "recoveryEntry": ".github/workflows/self-ops-promotion-recovery.yml",
+    "freshEntry": ".github/workflows/public-ops-pipeline.yml",
+    "recoveryEntry": ".github/workflows/public-ops-recover.yml",
     "forbiddenPublisherPatterns": [
       "legacy-promote",
       "v4-declarative-promote",
@@ -512,54 +498,19 @@
           "resolve-promotion|runner|-|read|-|jobOutput|-"
         ],
         "reusableEdges": ["./.github/workflows/.release-promote.yml"]
-      },
-      {
-        "path": ".github/workflows/self-ops-promotion-recovery.yml",
-        "triggers": ["workflow_dispatch"],
-        "jobs": [
-          "resume|reusable-call|kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4|write|write|-|contents-write,oidc-write"
-        ],
-        "reusableEdges": [
-          "kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4"
-        ]
-      },
-      {
-        "path": ".github/workflows/self-release-promote.yml",
-        "triggers": ["workflow_dispatch", "workflow_run"],
-        "jobs": [
-          "classify-workflow-run|runner|-|read|-|jobOutput|-",
-          "execution-runtime|runner|-|read|-|jobOutput|-",
-          "promote|reusable-call|kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4|write|write|-|contents-write,oidc-write",
-          "reject-invalid-candidate-recovery|runner|-|read|-|-|-",
-          "reject-invalid-durable-recovery|runner|-|read|-|-|-",
-          "reject-manual-apply|runner|-|read|-|-|-"
-        ],
-        "reusableEdges": [
-          "kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4"
-        ]
-      },
-      {
-        "path": ".github/workflows/self-release-tail-dogfood.yml",
-        "triggers": ["workflow_dispatch"],
-        "jobs": [
-          "publish|reusable-call|kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4|write|write|-|contents-write,oidc-write"
-        ],
-        "reusableEdges": [
-          "kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4"
-        ]
       }
     ],
     "metrics": {
-      "workflowCount": 39,
-      "jobCount": 116,
-      "reusableEdgeCount": 26,
-      "mutationRelevantNodeCount": 77,
-      "contentsWriteJobCount": 38,
-      "oidcWriteJobCount": 25
+      "workflowCount": 24,
+      "jobCount": 87,
+      "reusableEdgeCount": 14,
+      "mutationRelevantNodeCount": 60,
+      "contentsWriteJobCount": 29,
+      "oidcWriteJobCount": 21
     },
     "semanticMetrics": {
-      "workflowCount": 5,
-      "mutationRelevantNodeCount": 8,
+      "workflowCount": 2,
+      "mutationRelevantNodeCount": 5,
       "contentsWriteJobCount": 1,
       "oidcWriteJobCount": 1
     }
@@ -612,16 +563,18 @@
       ".github/workflows/public-ops-pipeline.yml",
       ".github/workflows/public-ops-recover.yml",
       ".github/workflows/.ops-pipeline-execute.yml",
-      ".github/workflows/.release-pipeline-version.yml"
+      ".github/workflows/.release-pipeline-version.yml",
+      ".github/workflows/buildchain.yml",
+      ".github/workflows/buildchain-recover.yml"
     ],
     "authority": "retained-protected-source-qualified-sealed-products-and-live-provider-readback",
     "maximumMetrics": {
-      "workflowCount": 5,
-      "jobCount": 21,
-      "reusableEdgeCount": 6,
-      "mutationRelevantNodeCount": 16,
-      "contentsWriteJobCount": 16,
-      "oidcWriteJobCount": 6
+      "workflowCount": 7,
+      "jobCount": 23,
+      "reusableEdgeCount": 8,
+      "mutationRelevantNodeCount": 18,
+      "contentsWriteJobCount": 18,
+      "oidcWriteJobCount": 8
     },
     "observedTopology": {
       "jobRecordFields": [
@@ -695,19 +648,46 @@
             "materialize|runner|-|write|-|jobOutput|contents-write"
           ],
           "reusableEdges": []
+        },
+        {
+          "path": ".github/workflows/buildchain.yml",
+          "triggers": [
+            "merge_group",
+            "pull_request",
+            "pull_request_review",
+            "pull_request_target",
+            "push",
+            "repository_dispatch"
+          ],
+          "jobs": [
+            "buildchain|reusable-call|kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha|write|write|-|contents-write,oidc-write"
+          ],
+          "reusableEdges": [
+            "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha"
+          ]
+        },
+        {
+          "path": ".github/workflows/buildchain-recover.yml",
+          "triggers": ["workflow_dispatch"],
+          "jobs": [
+            "buildchain|reusable-call|kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4-alpha|write|write|-|contents-write,oidc-write"
+          ],
+          "reusableEdges": [
+            "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4-alpha"
+          ]
         }
       ],
       "metrics": {
-        "workflowCount": 5,
-        "jobCount": 21,
-        "reusableEdgeCount": 6,
-        "mutationRelevantNodeCount": 16,
-        "contentsWriteJobCount": 16,
-        "oidcWriteJobCount": 6
+        "workflowCount": 7,
+        "jobCount": 23,
+        "reusableEdgeCount": 8,
+        "mutationRelevantNodeCount": 18,
+        "contentsWriteJobCount": 18,
+        "oidcWriteJobCount": 8
       },
       "semanticMetrics": {
-        "workflowCount": 5,
-        "mutationRelevantNodeCount": 16,
+        "workflowCount": 7,
+        "mutationRelevantNodeCount": 18,
         "contentsWriteJobCount": 10,
         "oidcWriteJobCount": 3
       }

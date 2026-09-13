@@ -92,7 +92,7 @@ test("unregistered alias cannot be written or called", (t) => {
   );
   assert.equal(fs.existsSync(path.join(root, alias)), false);
   fs.appendFileSync(
-    path.join(root, ".github/workflows/self-build-adopter-dogfood.yml"),
+    path.join(root, ".github/workflows/buildchain.yml"),
     `  stale:\n    uses: kungfu-systems/buildchain/${alias}@v4-alpha\n`,
   );
   rejected(root, /undeclared Buildchain workflow/u);
@@ -104,7 +104,10 @@ test("canonical public entry cannot bind consumer admission to its retired alias
     (item) => item.id === "v4-adopter-delivery",
   );
   const file = path.join(root, workflowPath(entry));
-  fs.appendFileSync(file, "\nenv:\n  BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/v4-adopter-delivery.yml\n");
+  fs.appendFileSync(
+    file,
+    "\nenv:\n  BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/v4-adopter-delivery.yml\n",
+  );
   rejected(root, /consumer admission must bind the canonical invoked workflow/);
 });
 
@@ -230,14 +233,14 @@ test("gate cannot be removed or changed to best-effort in the required check cha
 
 test("required queue trigger and independent ownership cannot disappear", (t) => {
   const root = fixture(t);
-  const file = path.join(root, ".github/workflows/self-build-verify.yml");
+  const file = path.join(root, ".github/workflows/buildchain.yml");
   fs.writeFileSync(
     file,
     fs
       .readFileSync(file, "utf8")
-      .replace(/  merge_group:\n    types:\n      - checks_requested\n/u, ""),
+      .replace(/  merge_group:\n    types: \[checks_requested\]\n/u, ""),
   );
-  rejected(root, /lacks merge_group/);
+  rejected(root, /generated pipeline caller drift/);
   fs.writeFileSync(path.join(root, ".github/CODEOWNERS"), "* @someone-else\n");
   rejected(root, /independent review ownership missing/);
 });
@@ -263,13 +266,16 @@ test("declared lifecycle cannot replace the full check with a passing echo", (t)
       .readFileSync(file, "utf8")
       .replace("corepack pnpm@11.7.0 run check", "echo passed"),
   );
-  rejected(root, /declared verify lifecycle/);
+  rejected(root, /declared product verification/);
 });
 
 test("repository dispatch and handoff parameters cannot retain removed filenames", (t) => {
   const root = fixture(t);
-  const file = path.join(root, ".github/workflows/self-ops-dev-delivery.yml");
-  fs.appendFileSync(file, "  invalid-handoff:\n    uses: ./.github/workflows/public-ops-dev-auto-merge.yml\n    with:\n      source-workflow-id: verify.yml\n");
+  const file = path.join(root, ".github/workflows/buildchain.yml");
+  fs.appendFileSync(
+    file,
+    "  invalid-handoff:\n    uses: ./.github/workflows/public-ops-dev-auto-merge.yml\n    with:\n      source-workflow-id: verify.yml\n",
+  );
   rejected(root, /dangling repository workflow reference verify.yml/);
 });
 

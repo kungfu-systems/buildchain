@@ -1136,53 +1136,7 @@
         ]
       },
       "digest": "sha256:bf6c18f33642654314281e4f1aaf49c16d3a8e765e62c7162ad53beaef630c76"
-    },
-    {
-      "schemaVersion": 1,
-      "contract": "buildchain.controller-descriptor/v1",
-      "id": "binary-distribution",
-      "version": 1,
-      "workflow": {
-        "id": "self-build-binary-distribution",
-        "path": ".github/workflows/self-build-binary-distribution.yml"
-      },
-      "inputs": {},
-      "expected": {
-        "stages": [
-          {
-            "id": "resolve-runtime",
-            "required": true
-          },
-          {
-            "id": "build",
-            "required": true
-          },
-          {
-            "id": "verify",
-            "required": true
-          },
-          {
-            "id": "bundle",
-            "required": true
-          },
-          {
-            "id": "aggregate",
-            "required": true
-          }
-        ],
-        "capabilities": [
-          "standalone-binary-build",
-          "release-evidence-bundle",
-          "artifact-admission"
-        ],
-        "evidence": [
-          "release-evidence-bundle",
-          "release-passport",
-          "controller-receipt"
-        ]
-      },
-      "digest": "sha256:2e6bee5214be76d3f2b8088e23f3a61a79124696f2d69ec3cc86d793d2306ead"
     }
   ],
-  "digest": "sha256:f3a2670f026d44ad84d482668ef5ee2a447a4f80f986c96986d61977272bdccd"
+  "digest": "sha256:e4a23fdcb6c8f3483e8c5dc70f813cec94313597f6196189d0f14e2c084ea7f4"
 }

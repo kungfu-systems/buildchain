@@ -30,7 +30,7 @@ function compileChannels(values) {
     text(
       value.from,
       `${field}.from`,
-      /^(?:feature|dev|alpha|release)\/[A-Za-z0-9/*._-]+$/u,
+      /^(?:feature|fix|chore|docs|ci|refactor|dev|alpha|release)\/[A-Za-z0-9/*._-]+$/u,
     );
     text(
       value.to,
@@ -45,7 +45,10 @@ function compileChannels(values) {
     const source = value.from.split("/")[0],
       target = value.to.split("/")[0];
     const legal = {
-      develop: source === "feature" && target === "dev",
+      develop:
+        ["feature", "fix", "chore", "docs", "ci", "refactor"].includes(
+          source,
+        ) && target === "dev",
       alpha: source === "dev" && target === "alpha",
       stable: source === "alpha" && target === "release",
       major: source === "release" && value.to === "publish-gate/major",

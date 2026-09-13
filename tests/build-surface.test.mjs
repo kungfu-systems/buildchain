@@ -560,7 +560,7 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.ok(graph.modules.has("packages/core/dev-delivery/candidate/admission.js"));
   assert.ok(graph.modules.has("packages/core/dev-delivery/warrant/reservation-readback.js"));
   assert.match(graph.workflow.concurrency.group, /buildchain-dev-pr-admission-/u);
-  const verify = readWorkflow(".github/workflows/self-build-verify.yml");
+  const verify = readWorkflow(".github/workflows/buildchain.yml");
   assert.ok(Object.hasOwn(verify.on, "pull_request"));
   assert.deepEqual(verify.on.merge_group.types, ["checks_requested"]);
 });
@@ -579,28 +579,14 @@ test("queued Warrant cancellation workflow binds exact terminal event authority"
   assert.ok(graph.steps.some(step => step.uses?.startsWith("actions/upload-artifact@") && step.if.includes("always()")));
 });
 
-test("Buildchain self-delivery exposes the complete two-phase Warrant caller", () => {
-  const workflow = readWorkflow(".github/workflows/self-ops-dev-delivery.yml"), job = workflow.jobs.deliver;
-  assert.deepEqual(workflow.on.repository_dispatch.types, ["buildchain-dev-delivery-wake"]);
-  assert.equal(job.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@v4");
-  assert.equal(job.with["delivery-warrant-mode"], "required");
-  assert.equal(job.with["landing-mode"], "queue");
-  assert.equal(job.with["dry-run"], false);
-  assert.match(job.with["source-root"], /candidate.sourceRoot.*native-roots-json.*sourceRoot/);
-  assert.match(job.with["expected-pr-number"], /candidate.pullRequestNumber.*expected-pr-number/);
-  for (const field of ["source-identity-root", "source-patch-root", "plan-root", "closure-root", "dependency-root", "toolchain-root", "environment-root", "native-proof-json", "native-command", "native-heartbeat-seconds"])
-    assert.ok(job.with[field], field);
-  for (const field of ["assignment-root", "initiative-root", "legacy-active-owner-binding-json"])
-    assert.equal(job.with[field], undefined);
-  assert.equal(job.with["queue-admission-context"], "Queue admission lease");
-  assert.equal(job.with["active-lease-context"], "Queue family lease/exact");
-  assert.equal(job.with["required-status-checks"], "check");
-  assert.deepEqual(Object.keys(job.secrets), ["github-token"]);
-  assert.match(job.secrets["github-token"], /secrets.BUILDCHAIN_PROMOTION_TOKEN/);
+test("self delivery exposes only the ordinary attempt wake boundary", () => {
+  const workflow = readWorkflow(".github/workflows/buildchain.yml"), job = workflow.jobs.buildchain;
+  assert.deepEqual(workflow.on.repository_dispatch.types, ["buildchain-attempt-wake"]);
+  assert.equal(job.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha");
+  assert.deepEqual(Object.keys(job.with), ["config-path"]);
   for (const [file, ref] of [["contract-lock.json", "v4"], ["alpha-contract-lock.json", "v4-alpha"]])
     assert.equal(JSON.parse(readRepoText(`.buildchain/${file}`)).buildchain.ref, ref);
 });
-
 test("PR-controlled native delivery and provider finalization use distinct hosted jobs", () => {
   const file = ".github/workflows/public-ops-dev-auto-merge.yml";
   const workflow = readWorkflow(file);
@@ -642,21 +628,12 @@ test("PR-controlled native delivery and provider finalization use distinct hoste
   assert.ok(template.on.workflow_dispatch.inputs["native-roots-json"]);
 });
 
-test("declared merge queue governance reconciles automatically on dev changes", () => {
-  const workflow = readRepoText(
-    ".github/workflows/self-ops-merge-queue.yml",
-  );
-  assert.match(workflow, /push:\n\s+branches:\n\s+- dev\/v\*\/v\*/);
-  assert.match(workflow, /\.buildchain\/buildchain\.toml/);
-  assert.match(
-    workflow,
-    /BUILDCHAIN_GOVERNANCE_TOKEN \|\| secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token/,
-  );
-  assert.match(inspectWorkflowJob(".github/workflows/self-ops-merge-queue.yml", "reconcile").modules.get("packages/core/dev-delivery/queue/reconciliation-action.js"), /reconcile = reconcileConfiguredDevMergeQueue/);
-  assert.match(workflow, /github\.event_name == 'push' \|\| inputs\.apply/);
+test("self keeps provider governance outside the generated caller", () => {
+  const workflow = readRepoText(".github/workflows/buildchain.yml");
+  assert.doesNotMatch(workflow, /BUILDCHAIN_GOVERNANCE_TOKEN|reconcileConfiguredDevMergeQueue|steps:/u);
+  assert.equal(fs.existsSync(path.join(root, ".github/workflows/self-ops-merge-queue.yml")), false);
 });
-
-test("patrol workflow family exposes daily weekly monthly reusable entries and dogfood schedules", () => {
+test("patrol libraries retain their cadence without independent self schedules", () => {
   const graph = inspectWorkflowJob(".github/workflows/public-ops-patrol.yml", "patrol");
   const execute = graph.steps.find(step => step.id === "execute");
   assert.match(execute.uses, /governance\/repository\/reconcile-patrol$/);
@@ -667,19 +644,14 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
   assert.ok(graph.steps.some(step => step.uses?.startsWith("actions/upload-artifact@")));
   for (const cadence of ["daily", "weekly", "monthly"]) {
     const workflow = readWorkflow(`.github/workflows/public-ops-patrol-${cadence}.yml`);
-    const caller = readWorkflow(`.github/workflows/self-ops-patrol-${cadence}.yml`);
     const entry = Object.values(workflow.jobs).find(job => job.uses);
     assert.equal(entry.with.cadence, cadence);
     assert.equal(workflow.permissions.contents, "write");
     assert.equal(workflow.permissions["pull-requests"], "write");
-    assert.ok(caller.on.schedule.length);
-    assert.equal(caller.jobs.patrol.with["runtime-ref"], "${{ inputs.runtime-ref }}");
-    assert.ok(Object.values(caller.jobs).some(job => job.uses === `kungfu-systems/buildchain/.github/workflows/public-ops-patrol-${cadence}.yml@v4`));
   }
 });
 
 test("stable candidate patrol persists exact candidates and uses source-lock PR promotion", () => {
-  assert.equal(readWorkflow(".github/workflows/self-ops-stable-candidate-patrol.yml").jobs.patrol.with["runtime-ref"], "${{ inputs.runtime-ref }}");
   const graph = inspectWorkflowJob(".github/workflows/public-ops-stable-candidate-patrol.yml", "patrol");
   assert.equal(graph.workflow.concurrency["cancel-in-progress"], false);
   for (const field of ["release-now", "auto-promote", "auto-merge"])
@@ -688,12 +660,7 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   assert.ok(graph.modules.has("packages/core/release/stable-patrol/options.js"));
   const approval = graph.steps.find(step => step.with?.["approval-token"]);
   assert.match(approval.with["approval-token"], /inputs.secrets-approval-token \|\| github.token/);
-  const qualification = readWorkflow(".github/workflows/self-build-stable-candidate-qualification.yml");
-  assert.deepEqual(qualification.on.workflow_run.workflows, ["Buildchain Alpha Self-Dogfood"]);
-  const qualified = inspectWorkflowJob(".github/workflows/self-build-stable-candidate-qualification.yml", "qualify");
-  assert.ok(qualified.modules.has("packages/core/release/qualification/public-build.js"));
-  assert.doesNotMatch(JSON.stringify(qualified.steps), /secrets\.|canary-ref|candidate-sha/);
-  assert.ok(qualified.steps.some(step => step.uses?.startsWith("actions/download-artifact@") && step.with["run-id"]));
+
 });
 
 test("check workflow exposes source and verify modes through the declared nodes", () => {
@@ -1445,59 +1412,26 @@ test("web-surface release feedback passport records responsibility and renders s
   assert.match(body, /PR #42/);
 });
 
-test("binary distribution exposes only current evidence production", () => {
-  const workflow = readRepoText(".github/workflows/self-build-binary-distribution.yml");
-  const preflight = readRepoText("actions/build/binary/preflight/action.yml");
-  assert.deepEqual(readWorkflow(".github/workflows/self-build-binary-distribution.yml").jobs.binary.needs, ["preflight", "execution-runtime"]);
+test("binary evidence action retains explicit admission independently of self wiring", () => {
   assert.equal(readWorkflow("actions/build/binary/preflight/action.yml").runs.using, "node24");
   assert.match(readRepoText("packages/core/build/binary/actions.js"), /admitBinaryDistributionAction/);
-  assert.doesNotMatch(workflow, /upload-release/);
-  assert.match(workflow, /actions\/build\/binary\/passport/);
+  assert.equal(fs.existsSync(path.join(root, ".github/workflows/self-build-binary-distribution.yml")), false);
 });
-
-test("binary evidence publication remains isolated from the canonical v4 publisher", () => {
-  const evidence = readRepoText(".github/workflows/self-build-binary-distribution.yml");
+test("binary publication library retains its bounded authority environment", () => {
   const publication = readRepoText(".github/workflows/.release-binary-assets.yml");
-  const publicPublication = readRepoText(
-    ".github/workflows/self-release-binary-assets.yml",
-  );
-  const promotion = readRepoText(
-    ".github/workflows/.release-promote.yml",
-  );
-  assert.doesNotMatch(evidence, /gh release create|gh release upload/);
-  assert.match(evidence, /Dispatch sealed binary asset publication/);
   assert.match(publication, /environment: buildchain-release-assets/);
   assert.match(publication, /actions\/release\/binary\/publish/);
   assert.match(readRepoText("actions/release/binary/publish/action.yml"), /actions\/publication\/binary\/publish/);
-  assert.match(
-    publicPublication,
-    /uses: \.\/\.github\/workflows\/\.release-binary-assets\.yml/,
-  );
-  assert.doesNotMatch(
-    promotion,
-    /Dispatch standalone binary distribution|gh workflow run binary-distribution\.yml/,
-  );
+  const pipeline = readWorkflow(".github/workflows/.release-pipeline-products.yml");
+  assert.deepEqual(pipeline.jobs.build.permissions, { contents: "read" });
+  assert.ok(pipeline.jobs.apply.needs.includes("qualify"));
+});test("self normal and recovery callers cannot hide secondary publication jobs", () => {
+  for (const file of ["buildchain.yml", "buildchain-recover.yml"]) {
+    const workflow = readWorkflow(`.github/workflows/${file}`);
+    assert.deepEqual(Object.keys(workflow.jobs), ["buildchain"]);
+    assert.equal(workflow.jobs.buildchain.steps, undefined);
+  }
 });
-test("canonical v4 alpha publication does not retain a binary or stable publisher", () => {
-  const promotion = readRepoText(
-    ".github/workflows/.release-promote.yml",
-  );
-  const selfPromotion = readRepoText(
-    ".github/workflows/self-release-promote.yml",
-  );
-  const recovery = readRepoText(
-    ".github/workflows/self-ops-promotion-recovery.yml",
-  );
-  assert.match(promotion, /^  apply:/m);
-  assert.doesNotMatch(promotion, /gh workflow run binary-distribution\.yml/);
-  assert.match(selfPromotion, /^  promote:/m);
-  assert.doesNotMatch(selfPromotion, /^  promote-stable:/m);
-  assert.match(
-    recovery,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-release-promote\.yml@v4/,
-  );
-});
-
 test("web-surface release PR close hands production to the protected main push", () => {
   assert.equal(admitWebApplyInputs({ event: {name: "pull_request", action: "closed"}, decisionApproved: false })["web-surface-channel"], "");
   assert.equal(admitWebApplyInputs({ event: {name: "push", refName: "main"}, decisionApproved: true })["web-surface-channel"], "production");

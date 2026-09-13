@@ -54,12 +54,12 @@ test("public self-dogfood remains the exact thin reusable consumer path", () => 
   assert.equal(result.ok, true);
   assert.equal(
     result.caller,
-    ".github/workflows/self-build-public-consumer-dogfood.yml",
+    ".github/workflows/buildchain.yml",
   );
   assert.equal(result.validationRef, "v4");
   for (const workflow of [
-    ".github/workflows/self-build-public-consumer-dogfood.yml",
-    ".github/workflows/self-build-alpha-dogfood.yml",
+    ".github/workflows/buildchain.yml",
+    ".github/workflows/buildchain-recover.yml",
   ]) {
     const source = fs.readFileSync(path.join(repositoryRoot, workflow), "utf8");
     assert.doesNotMatch(source, /next-development-self-dogfood/u);

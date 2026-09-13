@@ -27,6 +27,23 @@ import { inspectConsumerContract } from "../packages/core/consumer/contract/insp
 const example = (type = "npm") => standardConsumerExample(type);
 const config = () => parse(example()[CONFIG_PATH]);
 
+test("ordinary task branches retain protected develop routes without admitting channel shortcuts", () => {
+  for (const prefix of ["feature", "fix", "chore", "docs", "ci", "refactor"]) {
+    const value = config();
+    value.channels[0].from = `${prefix}/*`;
+    assert.equal(
+      compileConsumerPlan(stringify(value)).channels[0].operation,
+      "develop",
+    );
+    value.channels[0].to = "alpha/v4/v4.1";
+    value.channels[0].operation = "alpha";
+    assert.throws(
+      () => compileConsumerPlan(stringify(value)),
+      /unlawful channel route/u,
+    );
+  }
+});
+
 test("self product migration retains full source qualification on each checkpoint platform", () => {
   const plan = compileConsumerPlan(
     fs.readFileSync(".buildchain/minimal-consumer.toml", "utf8"),
