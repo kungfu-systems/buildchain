@@ -1,9 +1,7 @@
 import path from "node:path";
 import fs from "node:fs";
-import { createHash } from "node:crypto";
 import { recordDigest } from "../../release/discussion/envelope.js";
 import { assertPipelineStableQualification } from "./stable.js";
-import { canonicalJson } from "../../release/discussion/envelope.js";
 import {
   createReleaseReceipt,
   RELEASE_RECEIPT_CONTRACT,
@@ -12,7 +10,10 @@ import { githubPipelineProductRelease } from "../../providers/github/pipeline-pr
 import { pipelineNpmProvider } from "../npm/pipeline-provider.js";
 import { publicationContext, uniquePublicationMaterial } from "./context.js";
 import { restorePipelineProducts } from "./sealed-products.js";
-import { pipelineReleaseDocuments } from "./documents.js";
+import {
+  pipelineReleaseDocuments,
+  pipelineReleaseEvidence,
+} from "./documents.js";
 import { writeImmutablePublicationFile } from "./files.js";
 import { verifyPipelineSigning } from "./signing.js";
 import { pipelinePublicationEffects, applyPipelineEffects } from "./effects.js";
@@ -82,20 +83,13 @@ export async function applyPipelinePublication(
     artifacts: qualified.artifacts,
     environment,
   });
-  const evidence = Object.entries({
-    qualification: Buffer.from(`${canonicalJson(qualified)}\n`),
-    capsules: Buffer.from(`${canonicalJson(capsules)}\n`),
-    invocation: Buffer.from(
-      `${canonicalJson(documents.invocation.invocation)}\n`,
-    ),
-    attestation: fs.readFileSync(bundlePath),
-  }).map(([id, bytes]) => ({
-    id,
-    name: `buildchain.${id}.json`,
-    bytes,
-    size: bytes.length,
-    digest: `sha256:${createHash("sha256").update(bytes).digest("hex")}`,
-  }));
+  const evidence = pipelineReleaseEvidence({
+    plan,
+    qualified,
+    capsules,
+    documents,
+    bundle: fs.readFileSync(bundlePath),
+  });
   const github = githubPipelineProductRelease({
     ...host,
     plan,

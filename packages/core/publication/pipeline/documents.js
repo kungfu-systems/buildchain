@@ -1,4 +1,8 @@
-import { recordDigest } from "../../release/discussion/envelope.js";
+import { createHash } from "node:crypto";
+import {
+  canonicalJson,
+  recordDigest,
+} from "../../release/discussion/envelope.js";
 import { releaseTailRoot } from "../../release/release-tail-provider-plane.js";
 import {
   RELEASE_INVOCATION_CONTRACT,
@@ -11,6 +15,38 @@ import {
   domainPublicationQualificationRoot,
 } from "../publication-qualification.js";
 import { verifyPipelinePublicationPlan } from "./plan.js";
+
+export function pipelineReleaseEvidence({
+  plan,
+  qualified,
+  capsules,
+  documents,
+  bundle,
+}) {
+  verifyPipelinePublicationPlan(plan);
+  if (plan.evidenceVersion !== undefined && plan.evidenceVersion !== 1)
+    throw new Error("Unsupported retained publication evidence version");
+  // An older retained transaction keeps its original evidence inventory.
+  // Adding a disclosure during recovery would change its provider receipt.
+  const values = {
+    ...(plan.evidenceVersion === 1 ? { plan } : {}),
+    qualification: qualified,
+    capsules,
+    invocation: documents.invocation.invocation,
+  };
+  const bytes = Object.entries(values).map(([id, value]) => [
+    id,
+    Buffer.from(`${canonicalJson(value)}\n`),
+  ]);
+  bytes.push(["attestation", Buffer.from(bundle)]);
+  return bytes.map(([id, value]) => ({
+    id,
+    name: `buildchain.${id}.json`,
+    bytes: value,
+    size: value.length,
+    digest: `sha256:${createHash("sha256").update(value).digest("hex")}`,
+  }));
+}
 
 export function verifyRootedPublication(value, schema) {
   const { root, ...body } = value || {};

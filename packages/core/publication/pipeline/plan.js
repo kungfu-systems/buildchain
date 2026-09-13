@@ -97,6 +97,7 @@ export function planPipelinePublication({
     );
   const body = {
     schema: "buildchain.pipeline-publication-plan/v1",
+    evidenceVersion: 1,
     attempt,
     generation,
     source,

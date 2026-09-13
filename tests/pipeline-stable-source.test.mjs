@@ -133,6 +133,7 @@ function fixture() {
       },
     ],
     [`/releases/tags/${alphaTag}`, alphaRelease],
+    ["/releases/11/assets?per_page=100&page=1", []],
     ["/releases?per_page=100&page=1", [alphaRelease, stableRelease]],
     [
       `/git/commits/${alpha}`,

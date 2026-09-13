@@ -114,8 +114,26 @@ Fresh tag, release and predecessor observations reject concurrent changes.
 Same-version recovery does not count its own completed publication as an older
 release. These facts carry their own root and the exact publication plan root.
 
-Source facts alone cannot establish successful product or published-entry
-qualification. Those independent collectors remain required: their missing
-evidence produces a blocked eligibility report and prevents first or recovered
-publication writes. Alpha preparation remains available for the protected
-transition; the legacy stable publisher retains its existing policy.
+New publication plans declare evidence version 1 and publish their full plan
+alongside qualification, capsules, invocation, attestation and Passport. The
+plan root is already bound by the signed product predicate. Recovery of an older
+retained transaction preserves its original evidence inventory and provider
+receipts; it does not retroactively add a plan or replace public bytes.
+
+Stable product qualification reads those fixed evidence assets from the exact
+Alpha release, with complete bounded pagination, unique identities, byte digests
+and a second asset readback. It checks the original signature through the
+central publisher workflow and exact provider source, reconstructs the Passport
+and invocation, and requires every declared product/platform output. Original
+build jobs and the signing job must still match provider readback, including
+their attempt, source, publisher definition and completion times. Historical
+qualification is checked at its issue time; it does not renew that receipt or
+authorize the current Stable publisher. Successful product evidence also causes
+another source observation before the eligibility decision.
+
+Source metadata and product qualification cannot establish post-publication
+entry qualification. That independent collector remains required when selected
+by the stable policy; missing evidence blocks publication. The prepared self
+contract requires it, so this implementation does not complete or activate the
+self cutover. Alpha preparation remains available for the protected transition;
+the legacy stable publisher retains its existing policy.

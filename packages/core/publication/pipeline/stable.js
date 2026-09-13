@@ -2,6 +2,7 @@ import { recordDigest } from "../../release/discussion/envelope.js";
 import { evaluateStableReleaseGate } from "../../release/stable-release-gate.js";
 import { readPipelineStableSource } from "../../providers/github/pipeline-stable-source.js";
 import { verifyPipelinePublicationPlan } from "./plan.js";
+import { readPipelineStableProducts } from "./stable-products.js";
 
 function stablePolicy(plan) {
   const value = plan.stablePolicy;
@@ -37,9 +38,14 @@ export async function assertPipelineStableQualification(
   verifyPipelinePublicationPlan(plan);
   if (plan.channel !== "stable" || !plan.stablePolicy) return null;
   const source = await readPipelineStableSource(plan, host);
-  // Source/release metadata cannot manufacture a successful product build or
-  // post-publication entry qualification. Until their independent collectors
-  // are connected, these mandatory checks remain missing and publication stops.
+  const products = await readPipelineStableProducts(plan, source, host);
+  if (
+    products.canary &&
+    recordDigest(await readPipelineStableSource(plan, host)) !==
+      recordDigest(source)
+  )
+    throw new Error("Stable source facts changed during product qualification");
+  // Post-publication entry qualification still needs its independent collector.
   const report = evaluateStableReleaseGate({
     policy: stablePolicy(plan),
     channel: "release",
@@ -48,13 +54,14 @@ export async function assertPipelineStableQualification(
     previousStable: source.previousStable || undefined,
     impact: source.impact.value,
     changedPaths: source.changedPaths,
-    canaries: [],
+    canaries: products.canary ? [products.canary] : [],
   });
   report.previousStable ??= null;
   const body = {
     schema: "buildchain.pipeline-stable-eligibility/v1",
     planRoot: plan.root,
     source,
+    products,
     evaluatedAt: now,
     report,
   };

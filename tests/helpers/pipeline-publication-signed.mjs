@@ -16,7 +16,7 @@ import {
 import { pipelineReleaseDocuments } from "../../packages/core/publication/pipeline/documents.js";
 import { recordDigest } from "../../packages/core/release/discussion/envelope.js";
 
-export async function signedPublicationFixture(t) {
+export async function signedPublicationFixture(t, { jobs, issuedAt } = {}) {
   const f = await publicationFixture(),
     host = f.f.host;
   const root = fs.mkdtempSync(
@@ -55,6 +55,7 @@ export async function signedPublicationFixture(t) {
     runId: 200,
     runAttempt: 1,
     providerSource: "6".repeat(40),
+    ...(jobs ? { jobs } : {}),
   };
   const bundles = [
     {
@@ -70,7 +71,7 @@ export async function signedPublicationFixture(t) {
   ];
   // Deliberately expired original authorization. Recovery must preserve the
   // signed transaction while obtaining a fresh current runtime admission.
-  const issued = new Date(Date.now() - 7200000);
+  const issued = issuedAt ? new Date(issuedAt) : new Date(Date.now() - 7200000);
   const qualified = qualifyPipelineProducts({
     plan: context.plan,
     source,
