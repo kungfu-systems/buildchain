@@ -25,6 +25,7 @@ export async function preparePipelinePublicationAction(core, env) {
     host,
   );
   core.setOutput("operation", result.operation);
+  core.setOutput("stable-wait", result.wait ? JSON.stringify(result.wait) : "");
   core.setOutput("context", JSON.stringify(result.context || {}));
   core.setOutput(
     "matrix",
@@ -79,7 +80,13 @@ export async function sealPipelineQualificationAction(core, env) {
 
 export async function applyPipelinePublicationAction(core, env) {
   const host = await pipelineHost(core, env, "Apply qualified publication");
-  await applyPipelinePublication(contextInput(core), host, directory(env), env);
+  const result = await applyPipelinePublication(
+    contextInput(core),
+    host,
+    directory(env),
+    env,
+  );
+  core.setOutput("stable-wait", result.wait ? JSON.stringify(result.wait) : "");
 }
 
 export async function settlePipelinePublicationAction(core, env) {

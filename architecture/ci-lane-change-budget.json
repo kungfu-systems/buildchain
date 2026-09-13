@@ -2920,6 +2920,23 @@
         "expectedContributionSeconds": 1200,
         "rationale": "One shared internal component executes each declared product platform for version-derived files, then independently verifies actual job completion and archive digests before Git writes. Up to five product runners each have a sixty-minute ceiling, and materialization has twenty minutes; the component can run once for publication and once for next development. Parent reusable jobs delegate without a separate product runner. Bounds are declared capacity, not measured latency; per-repository publication concurrency retains a single provider writer."
       }
+    },
+    {
+      "laneId": ".github/workflows/.ops-pipeline-execute.yml#stable-recheck",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 20,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "bounded stable qualification recheck",
+        "expectedContributionSeconds": 1200,
+        "rationale": "Wait at most fifteen minutes outside the publication lock, then wake the same native Attempt through the normal entry to collect fresh qualification. Twenty minutes includes runtime preparation; this is a conservative timeout budget, not measured latency."
+      }
     }
   ],
   "declarationFamilies": [

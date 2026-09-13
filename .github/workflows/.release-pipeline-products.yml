@@ -15,6 +15,9 @@ on:
         required: false
       BUILDCHAIN_NPM_TOKEN:
         required: false
+    outputs:
+      stable-wait:
+        value: ${{ jobs.prepare.outputs.stable-wait || jobs.materialize.outputs.stable-wait || jobs.apply.outputs.stable-wait }}
 permissions:
   contents: read
 concurrency:
@@ -30,6 +33,7 @@ jobs:
       contents: write
       pull-requests: read
     outputs:
+      stable-wait: ${{ steps.prepare.outputs.stable-wait }}
       operation: ${{ steps.prepare.outputs.operation }}
       context: ${{ steps.prepare.outputs.context }}
       matrix: ${{ steps.prepare.outputs.matrix }}
@@ -110,6 +114,8 @@ jobs:
     if: always() && (needs.materialize.outputs.operation == 'apply' || needs.qualify.result == 'success')
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    outputs:
+      stable-wait: ${{ steps.apply.outputs.stable-wait }}
     permissions:
       actions: read
       contents: write
@@ -120,7 +126,8 @@ jobs:
         with:
           selection: ${{ inputs.runtime-selection }}
           token: ${{ github.token }}
-      - uses: ./.buildchain/runtime/actions/publication/pipeline/apply
+      - id: apply
+        uses: ./.buildchain/runtime/actions/publication/pipeline/apply
         env:
           NODE_AUTH_TOKEN: ${{ secrets.BUILDCHAIN_NPM_TOKEN }}
         with:
@@ -129,7 +136,7 @@ jobs:
   settle:
     name: Settle product follow-ups
     needs: [materialize, apply]
-    if: always() && (needs.materialize.outputs.operation == 'settle' || needs.apply.result == 'success')
+    if: always() && (needs.materialize.outputs.operation == 'settle' || (needs.apply.result == 'success' && needs.apply.outputs.stable-wait == ''))
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:

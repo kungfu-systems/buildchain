@@ -23,6 +23,8 @@ on:
       BUILDCHAIN_AUTOMATION_TOKEN:
         required: false
     outputs:
+      stable-wait:
+        value: ${{ jobs.materialize.outputs.stable-wait }}
       operation:
         value: ${{ jobs.materialize.outputs.operation }}
       context:
@@ -68,6 +70,7 @@ jobs:
       contents: write
       pull-requests: write
     outputs:
+      stable-wait: ${{ steps.publication.outputs.stable-wait }}
       operation: ${{ steps.publication.outputs.operation }}
       context: ${{ steps.publication.outputs.context }}
       matrix: ${{ steps.publication.outputs.matrix }}

@@ -878,8 +878,10 @@
           "BUILDCHAIN_NPM_TOKEN"
         ],
         "secretCount": 3,
-        "outputs": [],
-        "outputCount": 0
+        "outputs": [
+          "stable-wait"
+        ],
+        "outputCount": 1
       },
       {
         "id": ".release-pipeline-version",
@@ -901,9 +903,10 @@
         "outputs": [
           "context",
           "matrix",
-          "operation"
+          "operation",
+          "stable-wait"
         ],
-        "outputCount": 3
+        "outputCount": 4
       },
       {
         "id": ".release-promote",
@@ -5544,9 +5547,10 @@
         "path": "actions/workflow/pipeline/wake/action.yml",
         "inputs": [
           "attempt",
+          "stable-wait",
           "token"
         ],
-        "inputCount": 2
+        "inputCount": 3
       },
       {
         "id": "workflow/settlement/seal",
@@ -11124,7 +11128,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e43fdb0289df88871f3f0febbe04dcb9311a252a2b1df9b3a83a2d10c9d4a70f",
-    "workflowRegistryDigest": "57d46cf14c14caada2b74c3eb2dbc4e11ca1d67a6412b435795aec2a95708055",
+    "workflowRegistryDigest": "331d2f6679adc08250131d0cc8f8927b4f12c2109d3582c18368e5a58a2754d5",
     "pageRegistryDigest": "71e5bb99567bf82b2c896da95f83197b58fad84e35ef54f5e9e4dc0cc3b7e465"
   },
   "comparison": {

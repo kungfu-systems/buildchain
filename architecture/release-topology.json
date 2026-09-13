@@ -192,6 +192,7 @@
         "packages/core/providers/github/discussions/transport.js",
         "packages/core/providers/github/graphql-errors.js",
         "packages/core/providers/github/json-client.js",
+        "packages/core/providers/github/pipeline-entry-runs.js",
         "packages/core/providers/github/pipeline-integration.js",
         "packages/core/providers/github/pipeline-policy.js",
         "packages/core/providers/github/pipeline-product-payload.js",
@@ -265,7 +266,9 @@
         "packages/core/publication/pipeline/settle.js",
         "packages/core/publication/pipeline/signing.js",
         "packages/core/publication/pipeline/source-plan.js",
+        "packages/core/publication/pipeline/stable-entry.js",
         "packages/core/publication/pipeline/stable-products.js",
+        "packages/core/publication/pipeline/stable-wait.js",
         "packages/core/publication/pipeline/stable.js",
         "packages/core/publication/pipeline/version-actions.js",
         "packages/core/publication/pipeline/version-build.js",
@@ -407,7 +410,7 @@
         "packages/core/workflow/pipeline/wake.js",
         "packages/core/workflow/pipeline/web-status.js"
       ],
-      "root": "sha256:f8e943d0b72a62e3ea4d89cdce19c22506cebe9a6ed16fe3665214b144cf3667"
+      "root": "sha256:5d735b6117bdc114550e736cec02b396e51a3cc284d59d704e906ae8aaceb7c1"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/runtime/domain-wasm.js",
@@ -548,10 +551,10 @@
     ],
     "metrics": {
       "workflowCount": 39,
-      "jobCount": 115,
+      "jobCount": 116,
       "reusableEdgeCount": 26,
-      "mutationRelevantNodeCount": 76,
-      "contentsWriteJobCount": 37,
+      "mutationRelevantNodeCount": 77,
+      "contentsWriteJobCount": 38,
       "oidcWriteJobCount": 25
     },
     "semanticMetrics": {
@@ -614,10 +617,10 @@
     "authority": "retained-protected-source-qualified-sealed-products-and-live-provider-readback",
     "maximumMetrics": {
       "workflowCount": 5,
-      "jobCount": 20,
+      "jobCount": 21,
       "reusableEdgeCount": 6,
-      "mutationRelevantNodeCount": 15,
-      "contentsWriteJobCount": 15,
+      "mutationRelevantNodeCount": 16,
+      "contentsWriteJobCount": 16,
       "oidcWriteJobCount": 6
     },
     "observedTopology": {
@@ -635,7 +638,7 @@
           "path": ".github/workflows/.release-pipeline-products.yml",
           "triggers": ["workflow_call"],
           "jobs": [
-            "apply|runner|-|write|write|-|contents-write,oidc-write",
+            "apply|runner|-|write|write|jobOutput|contents-write,oidc-write",
             "build|runner|-|read|-|-|-",
             "development|reusable-call|./.github/workflows/.release-pipeline-version.yml|write|-|-|contents-write",
             "materialize|reusable-call|./.github/workflows/.release-pipeline-version.yml|write|-|-|contents-write",
@@ -676,7 +679,8 @@
             "delivery|reusable-call|./.github/workflows/.ops-pipeline-delivery.yml|write|-|-|contents-write",
             "publication|reusable-call|./.github/workflows/.release-pipeline-products.yml|write|write|-|contents-write,oidc-write",
             "record-build|runner|-|write|-|-|contents-write",
-            "record-delivery|runner|-|write|-|-|contents-write"
+            "record-delivery|runner|-|write|-|-|contents-write",
+            "stable-recheck|runner|-|write|-|-|contents-write"
           ],
           "reusableEdges": [
             "./.github/workflows/.ops-pipeline-delivery.yml",
@@ -695,16 +699,16 @@
       ],
       "metrics": {
         "workflowCount": 5,
-        "jobCount": 20,
+        "jobCount": 21,
         "reusableEdgeCount": 6,
-        "mutationRelevantNodeCount": 15,
-        "contentsWriteJobCount": 15,
+        "mutationRelevantNodeCount": 16,
+        "contentsWriteJobCount": 16,
         "oidcWriteJobCount": 6
       },
       "semanticMetrics": {
         "workflowCount": 5,
-        "mutationRelevantNodeCount": 15,
-        "contentsWriteJobCount": 9,
+        "mutationRelevantNodeCount": 16,
+        "contentsWriteJobCount": 10,
         "oidcWriteJobCount": 3
       }
     }

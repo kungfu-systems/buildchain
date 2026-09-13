@@ -57,6 +57,7 @@ export async function materializePipelinePublicationAction(core, env) {
       );
   }
   core.setOutput("operation", result.operation);
+  core.setOutput("stable-wait", result.wait ? JSON.stringify(result.wait) : "");
   core.setOutput("context", JSON.stringify(result.context || {}));
   core.setOutput(
     "matrix",

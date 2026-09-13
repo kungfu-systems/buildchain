@@ -3,6 +3,7 @@ import { evaluateStableReleaseGate } from "../../release/stable-release-gate.js"
 import { readPipelineStableSource } from "../../providers/github/pipeline-stable-source.js";
 import { verifyPipelinePublicationPlan } from "./plan.js";
 import { readPipelineStableProducts } from "./stable-products.js";
+import { readPipelineStableEntry } from "./stable-entry.js";
 
 function stablePolicy(plan) {
   const value = plan.stablePolicy;
@@ -39,13 +40,16 @@ export async function assertPipelineStableQualification(
   if (plan.channel !== "stable" || !plan.stablePolicy) return null;
   const source = await readPipelineStableSource(plan, host);
   const products = await readPipelineStableProducts(plan, source, host);
+  const entry =
+    plan.stablePolicy.require_published_entry && products.canary
+      ? await readPipelineStableEntry(plan, source, host)
+      : { status: "not-evaluated" };
   if (
     products.canary &&
     recordDigest(await readPipelineStableSource(plan, host)) !==
       recordDigest(source)
   )
     throw new Error("Stable source facts changed during product qualification");
-  // Post-publication entry qualification still needs its independent collector.
   const report = evaluateStableReleaseGate({
     policy: stablePolicy(plan),
     channel: "release",
@@ -54,7 +58,7 @@ export async function assertPipelineStableQualification(
     previousStable: source.previousStable || undefined,
     impact: source.impact.value,
     changedPaths: source.changedPaths,
-    canaries: products.canary ? [products.canary] : [],
+    canaries: [products.canary, entry.canary].filter(Boolean),
   });
   report.previousStable ??= null;
   const body = {
@@ -62,6 +66,7 @@ export async function assertPipelineStableQualification(
     planRoot: plan.root,
     source,
     products,
+    entry,
     evaluatedAt: now,
     report,
   };

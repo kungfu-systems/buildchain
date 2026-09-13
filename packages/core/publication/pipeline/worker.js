@@ -1,5 +1,6 @@
 import { resumePipelineSession } from "../../workflow/pipeline/session.js";
 import { pipelinePublicationJournal } from "./journal.js";
+import { retainedPipelineStableWait } from "./stable-wait.js";
 
 export async function claimPipelinePublicationWorker(
   attempt,
@@ -47,7 +48,13 @@ export async function claimPipelinePublicationWorker(
       Number(prior.runId),
       Number(prior.runAttempt),
     );
-    if (run.status !== "completed") return null;
+    // A time-only wait releases publication ownership before its outer run ends.
+    // The next worker still claims the exact native head under the publication lock.
+    if (
+      run.status !== "completed" &&
+      !(await retainedPipelineStableWait(observed, host))
+    )
+      return null;
   }
   const journal = pipelinePublicationJournal(session, host);
   const claim = {

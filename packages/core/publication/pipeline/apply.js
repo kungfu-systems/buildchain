@@ -1,7 +1,7 @@
 import path from "node:path";
 import fs from "node:fs";
 import { recordDigest } from "../../release/discussion/envelope.js";
-import { assertPipelineStableQualification } from "./stable.js";
+import { preparePipelineStableQualification } from "./stable-wait.js";
 import {
   createReleaseReceipt,
   RELEASE_RECEIPT_CONTRACT,
@@ -34,7 +34,17 @@ export async function applyPipelinePublication(
   } = {},
 ) {
   const { journal, archive } = await publicationContext(context, host);
-  await assertPipelineStableQualification(context.plan, host);
+  const wait = await preparePipelineStableQualification(
+    context.plan,
+    host,
+    journal,
+    {
+      attempt: context.attempt,
+      generation: context.generation,
+      phase: "publish",
+    },
+  );
+  if (wait) return { operation: "wait", wait };
   const retained = await uniquePublicationMaterial(
     journal,
     "publication/qualified/",

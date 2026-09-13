@@ -374,10 +374,10 @@ test("the topology ledger exactly freezes all current release jobs and authority
   const topology = checkReleaseTopology();
   assert.deepEqual(topology.metrics, {
     workflowCount: 39,
-    jobCount: 115,
+    jobCount: 116,
     reusableEdgeCount: 26,
-    mutationRelevantNodeCount: 76,
-    contentsWriteJobCount: 37,
+    mutationRelevantNodeCount: 77,
+    contentsWriteJobCount: 38,
     oidcWriteJobCount: 25,
   });
   assert.deepEqual(topology.semanticMetrics, {

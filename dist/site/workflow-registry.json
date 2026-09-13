@@ -434,8 +434,10 @@
         "BUILDCHAIN_NPM_TOKEN"
       ],
       "secretCount": 3,
-      "outputs": [],
-      "outputCount": 0,
+      "outputs": [
+        "stable-wait"
+      ],
+      "outputCount": 1,
       "taxonomy": {
         "id": ".pipeline-products",
         "role": "component",
@@ -476,9 +478,10 @@
       "outputs": [
         "context",
         "matrix",
-        "operation"
+        "operation",
+        "stable-wait"
       ],
-      "outputCount": 3,
+      "outputCount": 4,
       "taxonomy": {
         "id": ".pipeline-version",
         "role": "component",
@@ -9147,9 +9150,10 @@
       "path": "actions/workflow/pipeline/wake/action.yml",
       "inputs": [
         "attempt",
+        "stable-wait",
         "token"
       ],
-      "inputCount": 2,
+      "inputCount": 3,
       "capabilityGroup": "api-cli-reference",
       "status": "active",
       "owner": "buildchain-actions",

@@ -6,6 +6,7 @@ import { pipelineHost } from "./host.js";
 import { controlPipeline } from "./controller.js";
 import { buildPipelineSource } from "./build.js";
 import { recordPipelineBuild } from "./build-control.js";
+import { wakePipelineStableWait } from "../../publication/pipeline/stable-wait.js";
 import {
   RECOVERY_BUILD_CONTEXT,
   recordRecoveryBuild,
@@ -57,6 +58,18 @@ export async function recordPipelineBuildAction(core, env) {
 }
 
 export async function wakePipelineAction(core, env) {
-  const host = await pipelineHost(core, env, "Record delivery attempt");
+  const waiting = core.getInput("stable-wait");
+  const host = await pipelineHost(
+    core,
+    env,
+    waiting ? "Recheck stable publication" : "Record delivery attempt",
+  );
+  if (waiting) {
+    const wait = JSON.parse(waiting);
+    if (wait.attempt !== core.getInput("attempt", { required: true }))
+      throw new Error("Stable wake changed its exact business attempt");
+    core.info(JSON.stringify(await wakePipelineStableWait(wait, host)));
+    return;
+  }
   await host.wake(core.getInput("attempt", { required: true }));
 }

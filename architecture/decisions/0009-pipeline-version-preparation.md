@@ -131,9 +131,30 @@ qualification is checked at its issue time; it does not renew that receipt or
 authorize the current Stable publisher. Successful product evidence also causes
 another source observation before the eligibility decision.
 
-Source metadata and product qualification cannot establish post-publication
-entry qualification. That independent collector remains required when selected
-by the stable policy; missing evidence blocks publication. The prepared self
-contract requires it, so this implementation does not complete or activate the
-self cutover. Alpha preparation remains available for the protected transition;
-the legacy stable publisher retains its existing policy.
+Published-entry qualification independently inventories completed normal PR
+runs after the exact Alpha release. It verifies the generated thin caller,
+published entry definition, managed source lock and selected candidate runtime,
+then reads the original native Attempt and retained product-build receipt.
+The normal consumer commit can differ from the released runtime commit; its
+compiled product contract must be identical. Every declared platform and the
+exact recorder job must agree with fresh provider readback. A newer failed or
+unrecorded matching build blocks fallback to older successful evidence. Recovery
+runs, foreign entries and an old runtime behind a new entry do not qualify.
+
+When only the publication interval or canary soak remains unsatisfied, preparation
+retains the eligibility and a source-bound waiting receipt in the same Attempt.
+An internal job outside the repository publication lock waits at most fifteen
+minutes, checks native ownership every thirty seconds, and wakes the same normal
+entry. The next execution recollects qualification; the waiting receipt grants
+no publication authority. Publication checks again before provider effects and
+can return to this waiting path if new evidence moves the soak deadline.
+
+The timer stops if its retained receipt is superseded, the Attempt changes or
+the phase advances. A successor can claim the exact waiting native head while
+the old outer run finishes its wake job; the existing worker fence then rejects
+the old publisher. Missing qualification and non-time failures remain errors.
+Local tests exercise real native records with deterministic provider facts and
+an injected clock, including bounded waits and stale-worker races. They do not
+establish live published qualification or activate the prepared self contract.
+Alpha preparation remains available for the protected transition; the legacy
+stable publisher retains its existing policy until the protected self cutover.
