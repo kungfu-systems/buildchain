@@ -71,6 +71,8 @@ jobs:
   delivery:
     if: inputs.operation == 'deliver'
     uses: ./.github/workflows/.ops-pipeline-delivery.yml
+    secrets:
+      BUILDCHAIN_AUTOMATION_TOKEN: ${{ secrets.BUILDCHAIN_AUTOMATION_TOKEN }}
     with:
       request: ${{ inputs.request }}
       runtime-selection: ${{ inputs.runtime-selection }}

@@ -8,12 +8,12 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-13
+last_reviewed: 2026-09-14
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-13
-  visible_context: Source-bound attempt recovery implementation, published entry contract and local failure-path tests.
+  generated_at: 2026-09-14
+  visible_context: Source-bound recovery, nested delivery credential transport, published entry contract and local failure-path tests.
   invisible_context_boundary: This contract does not claim implementation or hosted qualification is complete.
 ---
 
@@ -55,6 +55,27 @@ Acceptance requires a complete workflow/action acquisition inventory, enforced
 single preparation ownership, different entry/runtime execution, train recovery,
 platform and multi-job qualification, and validation of the published consumer
 entry. A source test or a successful package import alone is insufficient.
+
+## Minimal pipeline provider credentials
+
+Configure `BUILDCHAIN_AUTOMATION_TOKEN` once as a repository Actions secret when
+protected delivery requires permissions unavailable to `GITHUB_TOKEN`. Both
+generated callers already inherit secrets. No token value, additional input or
+provider orchestration belongs in the consumer TOML or workflow source.
+
+Scope this credential to the consumer repository. Delivery needs Administration
+read access to inspect classic branch locks, Checks read, and Actions, Contents,
+Pull requests and Commit statuses write access for its existing provider steps.
+It does not need permission to change branch protection or bypass review. A
+missing credential falls back to `GITHUB_TOKEN`; unreadable protection still
+fails closed before candidate reservation instead of assuming an unlocked branch.
+
+The internal delivery edge forwards only this named secret to the credentialed
+source, reservation, heartbeat and landing steps. Product builds, native
+execution and native evidence sealing retain their separate read-only jobs and
+receive no automation credential. Publication settlement uses the same canonical
+secret as its existing fallback credential. Repairing a missing workflow secret
+edge requires a corrected published entry and a new provider run.
 
 ## Minimal pipeline recovery
 

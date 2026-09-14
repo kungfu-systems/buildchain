@@ -8,6 +8,10 @@ on:
       runtime-selection:
         type: string
         required: true
+    secrets:
+      BUILDCHAIN_AUTOMATION_TOKEN:
+        description: Repository-scoped delivery credential with branch protection read access.
+        required: false
 permissions:
   actions: write
   checks: read
@@ -17,6 +21,8 @@ permissions:
 jobs:
   delivery:
     uses: ./.github/workflows/public-ops-dev-auto-merge.yml
+    secrets:
+      github-token: ${{ secrets.BUILDCHAIN_AUTOMATION_TOKEN || github.token }}
     with:
       runtime-selection: ${{ inputs.runtime-selection }}
       target-branch: ${{ fromJSON(inputs.request)['target-branch'] }}

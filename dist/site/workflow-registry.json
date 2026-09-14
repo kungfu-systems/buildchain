@@ -233,8 +233,10 @@
         "runtime-selection"
       ],
       "inputCount": 2,
-      "secrets": [],
-      "secretCount": 0,
+      "secrets": [
+        "BUILDCHAIN_AUTOMATION_TOKEN"
+      ],
+      "secretCount": 1,
       "outputs": [],
       "outputCount": 0,
       "taxonomy": {
