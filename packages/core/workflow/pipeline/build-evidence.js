@@ -152,6 +152,7 @@ export async function publishPipelineBuildCheck(
     );
   const externalId = `buildchain:${context.attempt}:${context.runId}:${context.runAttempt}`;
   const recovered = readback.schema === PIPELINE_BUILD_QUALIFICATION;
+  let checkName = recovered ? RECOVERY_CHECK : "check";
   const output = {
     title: recovered
       ? "Buildchain recovered product verification"
@@ -176,6 +177,11 @@ export async function publishPipelineBuildCheck(
           segment.readback.runAttempt === check.runAttempt,
       ),
     );
+    // A complete replacement has no reusable original check to project onto.
+    // Retain that failed execution and publish this independently qualified
+    // aggregate as the required check. Protected landing still requalifies it
+    // and publishes the App-bound commit status before queue admission.
+    if (!original) checkName = "check";
     // Keep the eligible normal-event check identity. Only a fully requalified
     // source aggregate can repair its failed projection; original runs and
     // immutable build receipts still retain their original failure outcomes.
@@ -192,7 +198,7 @@ export async function publishPipelineBuildCheck(
   return request(`/repos/${repository}/check-runs`, {
     method: "POST",
     body: {
-      name: recovered ? RECOVERY_CHECK : "check",
+      name: checkName,
       head_sha: context.source.commit,
       external_id: externalId,
       status: "completed",

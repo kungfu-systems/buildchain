@@ -156,6 +156,68 @@ test("recovery checks cannot shadow eligible source checks and retain the origin
   assert.equal(effects.length, 0);
 });
 
+test("full replacement recovery projects its required check without rewriting failed original execution", async () => {
+  const { source, attempt } = identities();
+  const context = { source, attempt: attempt.id, runId: 200, runAttempt: 1 };
+  const original = {
+    id: 17,
+    name: "check",
+    head_sha: source.commit,
+    app: { slug: "github-actions" },
+    conclusion: "failure",
+    external_id: `buildchain:${attempt.id}:100:1`,
+  };
+  for (const inventory of [[original], []]) {
+    for (const failed of [[], ["linux-x64"]]) {
+      const readback = qualifyPipelineBuild({
+        source,
+        platforms: ["linux-x64"],
+        runId: 200,
+        runAttempt: 1,
+        segments: [
+          {
+            readback: result(200, source, ["linux-x64"], failed),
+            platforms: ["linux-x64"],
+            runtime,
+          },
+        ],
+      });
+      const effects = [];
+      const request = async (url, options) => {
+        if (options) {
+          effects.push({ url, ...options });
+          return {};
+        }
+        if (url.includes("/check-runs?")) return { check_runs: inventory };
+        return {
+          id: 100,
+          run_attempt: 1,
+          event: "pull_request",
+          head_sha: source.commit,
+          repository: { full_name: source.repository },
+        };
+      };
+      const before = structuredClone({ original, readback });
+      await publishPipelineBuildCheck(
+        context,
+        readback,
+        request,
+        source.repository,
+      );
+      assert.equal(effects.length, 1);
+      assert.equal(effects[0].method, "POST");
+      assert.equal(effects[0].body.name, "check");
+      assert.equal(effects[0].body.head_sha, source.commit);
+      assert.equal(
+        effects[0].body.conclusion,
+        failed.length ? "failure" : "success",
+      );
+      assert.ok(effects[0].body.output.summary.includes(readback.root));
+      assert.deepEqual({ original, readback }, before);
+    }
+  }
+});
+
 function result(runId, source, platforms, failed = []) {
   const body = {
     schema: "buildchain.pipeline-build-readback/v1",
