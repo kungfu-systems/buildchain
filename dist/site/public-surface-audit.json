@@ -11130,7 +11130,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e43fdb0289df88871f3f0febbe04dcb9311a252a2b1df9b3a83a2d10c9d4a70f",
-    "workflowRegistryDigest": "d52b008d8113340194ec1e074870b71b83392a914536e2ef830c10abee0756d6",
+    "workflowRegistryDigest": "b0f9880d69b07247f041028c8f14a110e7578f3c9b0ce817d08dec7fe2a0a954",
     "pageRegistryDigest": "a2631ef693dd1f1a6df3b42f31c5113b242368b7680343e5ff7cd94222d30d3d"
   },
   "comparison": {
