@@ -77,8 +77,8 @@ test("publication retains the exact stable policy independently of later configu
   ).stable;
   const plan = planPipelinePublication(request);
   assert.deepEqual(plan.stablePolicy, request.contract.stable);
-  request.contract.stable.minimum_soak_seconds = 0;
-  assert.equal(plan.stablePolicy.minimum_soak_seconds, 3600);
+  request.contract.stable.minimum_soak_seconds = 1;
+  assert.equal(plan.stablePolicy.minimum_soak_seconds, 0);
   assert.throws(
     () =>
       verifyPipelinePublicationPlan({

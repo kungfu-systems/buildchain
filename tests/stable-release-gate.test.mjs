@@ -93,6 +93,16 @@ test("stable gate accepts a non-empty candidate after named canaries, soak, and 
   assert.deepEqual(report.summary.failedChecks, []);
 });
 
+test("zero timing policy admits completed evidence immediately and still rejects missing evidence", () => {
+  const input = facts({ policy: policy({ minimumStableIntervalSeconds: 0, minimumCanarySoakSeconds: 0 }) });
+  input.now = input.canaries.at(-1).completedAt;
+  input.previousStable.publishedAt = input.now;
+  assert.equal(assertStableReleaseGate(input).ok, true);
+  const missing = evaluateStableReleaseGate({ ...input, canaries: [] });
+  assert.equal(missing.ok, false);
+  assert.ok(missing.summary.failedChecks.includes("stable.canary.build-surface-fixture"));
+});
+
 test("stable gate accepts release-candidate evidence produced before alpha publication", () => {
   const canaries = facts().canaries.map((entry) => entry.id === "build-surface-fixture"
     ? { ...entry, completedAt: "2026-07-08T23:55:00.000Z" }

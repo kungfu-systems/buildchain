@@ -15,6 +15,7 @@ import {
 } from "../packages/core/build/stage-capsule-qualification.js";
 
 const root = path.resolve(import.meta.dirname, "..");
+const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 const runtimeRef = "8ccd88c43fa2f5d78a641b66c8e7fecccdb7b49f";
 const platforms = ["linux-x64", "macos-arm64", "windows-x64"];
 const consumers = ["buildchain"];
@@ -165,7 +166,7 @@ function campaign(platform, consumer) {
       "--consumer-source-revision",
       sourceRevision,
       "--consumer-root",
-      root,
+      externalConsumer(),
       "--lifecycle-evidence-root",
       evidenceRoot,
     ],
@@ -236,6 +237,8 @@ test("public consumer qualification requires exact real lifecycle evidence", () 
       "linux-x64",
       "--consumer",
       "buildchain",
+      "--consumer-root",
+      externalConsumer(),
       "--runtime-ref",
       runtimeRef,
       "--consumer-source-revision",
@@ -477,10 +480,7 @@ test("Wave reconciliation requires five native-terminal protected deliveries", (
 
 test("architecture freezes the public consumer path, rollback, and authority ceilings", () => {
   const architecture = JSON.parse(
-    fs.readFileSync(
-      path.join(root, "architecture/stage-capsule-qualification.json"),
-      "utf8",
-    ),
+    read("architecture/stage-capsule-qualification.json"),
   );
   assert.equal(architecture.mode, "shadow-only");
   assert.equal(architecture.productionAuthority, "v4-native");
@@ -532,18 +532,16 @@ test("architecture freezes the public consumer path, rollback, and authority cei
   assert.equal(architecture.budgets.providerSdkImports, 0);
   assert.equal(architecture.budgets.productionWriteAuthorityChanges, 0);
 
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/self-build-verify.yml"),
-    "utf8",
-  );
+  const workflow = read(".github/workflows/buildchain.yml");
   assert.doesNotMatch(workflow, /stage-capsule-qualification:/u);
   assert.doesNotMatch(workflow, /stage-capsule-qualification\.mjs/u);
-  assert.match(workflow, /needs:\s*- stage-capsule-checkpoints/u);
   assert.match(
-    fs.readFileSync(
-      path.join(root, "actions/build/verification/repository/action.yml"),
-      "utf8",
-    ),
+    read("scripts/verify-product-platform.mjs"),
+    /verifyStageCapsuleCheckpoints\(\{/u,
+  );
+  assert.equal(architecture.publicConsumerDogfood.active, false);
+  assert.match(
+    read("actions/build/verification/repository/action.yml"),
     /actions\/build\/verification\/qualify-source/u,
   );
   const packageScripts = JSON.parse(
@@ -554,9 +552,8 @@ test("architecture freezes the public consumer path, rollback, and authority cei
     /node scripts\/check-public-dogfood-contract\.mjs/u,
   );
 
-  const canaryWorkflow = fs.readFileSync(
-    path.join(root, ".github/workflows/public-build-stage-capsule-canary.yml"),
-    "utf8",
+  const canaryWorkflow = read(
+    ".github/workflows/public-build-stage-capsule-canary.yml",
   );
   const canaryNodes = ["admit-consumer", "qualify", "reconcile"]
     .map((phase) =>
@@ -571,20 +568,14 @@ test("architecture freezes the public consumer path, rollback, and authority cei
   assert.doesNotMatch(canaryNodes, /actions\/runtime\/selection\/workflow/);
   const prepare = /uses: \$\/actions\/runtime\/environment\/prepare/g;
   assert.equal((canaryWorkflow.match(prepare) || []).length, 3);
-  const action = fs.readFileSync(
-    path.join(root, "packages/core/build/stage-capsule/actions.js"),
-    "utf8",
-  );
+  const action = read("packages/core/build/stage-capsule/actions.js");
   assert.match(action, /sourceSha: env.GITHUB_SHA/);
   assert.doesNotMatch(
     action,
     /Stage Capsule runtime differs from called workflow/,
   );
   assert.match(action, /Stage Capsule consumer differs from invoked source/);
-  const canary = fs.readFileSync(
-    path.join(root, "packages/core/build/stage-capsule/canary.js"),
-    "utf8",
-  );
+  const canary = read("packages/core/build/stage-capsule/canary.js");
   assert.match(canary, /\["install", "build", "verify"\]/u);
   assert.match(canary, /stageName: stage,\s*required: true/u);
   assert.match(

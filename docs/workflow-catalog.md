@@ -23,7 +23,7 @@ Generated from `architecture/workflow-taxonomy.json`. Every workflow has one can
 
 Public workflows own the consumer API. Component workflows own reusable multi-job topology. Self workflows own Buildchain repository automation. Actions own execution steps; JS adapters and Rust/WASM own implementation.
 
-Names use `public-<category>-<purpose>.yml`, `.<category>-<purpose>.yml`, and `self-<category>-<purpose>.yml`, with categories `build`, `release`, and `ops`. The primary build API and backbone use `build.yml` and `.build.yml`.
+Names use `public-<category>-<purpose>.yml`, `.<category>-<purpose>.yml`, and the generated self callers `buildchain.yml` and `buildchain-recover.yml`, with categories `build`, `release`, and `ops`. The primary build API and backbone use `build.yml` and `.build.yml`.
 
 Register ownership before adding a workflow. `pnpm run check:workflows` validates source, calls, required CI integration and independent review ownership. `pnpm run generate:workflows` regenerates this catalog.
 
@@ -85,34 +85,3 @@ Register ownership before adding a workflow. `pnpm run check:workflows` validate
 | --- | --- | --- | --- | --- |
 | [buildchain-recover.yml](../.github/workflows/buildchain-recover.yml) | ops | repository | active | Buildchain recovery |
 | [buildchain.yml](../.github/workflows/buildchain.yml) | ops | repository | active | Buildchain pipeline |
-| [self-build-adopter-dogfood.yml](../.github/workflows/self-build-adopter-dogfood.yml) | build | repository | active | V4 Adopter Delivery Dogfood |
-| [self-build-alpha-dogfood.yml](../.github/workflows/self-build-alpha-dogfood.yml) | build | repository | active | Buildchain Alpha Self-Dogfood |
-| [self-build-binary-distribution.yml](../.github/workflows/self-build-binary-distribution.yml) | build | repository | active | Binary Distribution |
-| [self-build-channel-verify.yml](../.github/workflows/self-build-channel-verify.yml) | build | repository | active | Release - Verify |
-| [self-build-demo-dogfood.yml](../.github/workflows/self-build-demo-dogfood.yml) | build | repository | active | Buildchain Declarative Demo Dogfood |
-| [self-build-demo-media-qualification.yml](../.github/workflows/self-build-demo-media-qualification.yml) | build | repository | active | Auditable Demo Media Profile Qualification |
-| [self-build-fixture.yml](../.github/workflows/self-build-fixture.yml) | build | repository | active | Build Surface Fixture |
-| [self-build-public-consumer-dogfood.yml](../.github/workflows/self-build-public-consumer-dogfood.yml) | build | repository | active | V4 Public Consumer Dogfood |
-| [self-build-stable-candidate-qualification.yml](../.github/workflows/self-build-stable-candidate-qualification.yml) | build | repository | active | Buildchain Stable Candidate Qualification |
-| [self-build-stable-dogfood.yml](../.github/workflows/self-build-stable-dogfood.yml) | build | repository | active | Buildchain Stable Self-Dogfood |
-| [self-build-verify.yml](../.github/workflows/self-build-verify.yml) | build | repository | active | Verify |
-| [self-ops-bootstrap-dogfood.yml](../.github/workflows/self-ops-bootstrap-dogfood.yml) | ops | repository | active | Universal Bootstrap Train-First Self-Dogfood |
-| [self-ops-dev-delivery.yml](../.github/workflows/self-ops-dev-delivery.yml) | ops | repository | active | Buildchain Dev Delivery |
-| [self-ops-governance-audit.yml](../.github/workflows/self-ops-governance-audit.yml) | ops | repository | active | GitHub Governance Authority Audit |
-| [self-ops-housekeeping-daily.yml](../.github/workflows/self-ops-housekeeping-daily.yml) | ops | repository | active | Engineering Housekeeper Daily |
-| [self-ops-housekeeping-monthly.yml](../.github/workflows/self-ops-housekeeping-monthly.yml) | ops | repository | active | Engineering Housekeeper Monthly |
-| [self-ops-housekeeping-weekly.yml](../.github/workflows/self-ops-housekeeping-weekly.yml) | ops | repository | active | Engineering Housekeeper Weekly |
-| [self-ops-merge-queue.yml](../.github/workflows/self-ops-merge-queue.yml) | ops | repository | active | Dev Merge Queue Governance |
-| [self-ops-patrol-daily.yml](../.github/workflows/self-ops-patrol-daily.yml) | ops | repository | active | Buildchain Dogfood Patrol Daily |
-| [self-ops-patrol-monthly.yml](../.github/workflows/self-ops-patrol-monthly.yml) | ops | repository | active | Buildchain Dogfood Patrol Monthly |
-| [self-ops-patrol-weekly.yml](../.github/workflows/self-ops-patrol-weekly.yml) | ops | repository | active | Buildchain Dogfood Patrol Weekly |
-| [self-ops-promotion-recovery.yml](../.github/workflows/self-ops-promotion-recovery.yml) | ops | repository | active | Buildchain Ref Promotion Recovery |
-| [self-ops-runner-smoke.yml](../.github/workflows/self-ops-runner-smoke.yml) | ops | repository | active | Self-hosted Runner Smoke |
-| [self-ops-stable-candidate-patrol.yml](../.github/workflows/self-ops-stable-candidate-patrol.yml) | ops | repository | active | Buildchain Dogfood Stable Candidate Patrol |
-| [self-release-binary-assets.yml](../.github/workflows/self-release-binary-assets.yml) | release | repository | active | Binary Release Assets |
-| [self-release-line-open.yml](../.github/workflows/self-release-line-open.yml) | release | repository | active | Release Line Bootstrap |
-| [self-release-next-development.yml](../.github/workflows/self-release-next-development.yml) | release | repository | active | Next Development Review |
-| [self-release-npm-dry-run.yml](../.github/workflows/self-release-npm-dry-run.yml) | release | repository | active | Publish npm package |
-| [self-release-promote.yml](../.github/workflows/self-release-promote.yml) | release | repository | active | Buildchain Ref Promotion |
-| [self-release-rehearsal-dogfood.yml](../.github/workflows/self-release-rehearsal-dogfood.yml) | release | repository | active | V4 Publication Rehearsal Dogfood |
-| [self-release-tail-dogfood.yml](../.github/workflows/self-release-tail-dogfood.yml) | release | repository | active | V4 Declarative Release Tail Dogfood |

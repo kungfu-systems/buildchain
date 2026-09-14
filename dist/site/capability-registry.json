@@ -257,7 +257,7 @@
         "pageCount": 17,
         "cliCommandCount": 13,
         "nodeApiCount": 16,
-        "workflowCount": 11,
+        "workflowCount": 7,
         "actionCount": 1
       },
       "manuals": [
@@ -298,7 +298,7 @@
         "pageCount": 13,
         "cliCommandCount": 0,
         "nodeApiCount": 2,
-        "workflowCount": 63,
+        "workflowCount": 36,
         "actionCount": 31
       },
       "manuals": [
