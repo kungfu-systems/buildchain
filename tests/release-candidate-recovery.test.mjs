@@ -887,11 +887,11 @@ test("workflow recovery resumes through the same canonical publisher transaction
     "utf8",
   );
   const recovery = fs.readFileSync(
-    new URL("../.github/workflows/self-ops-promotion-recovery.yml", import.meta.url),
+    new URL("../.github/workflows/buildchain-recover.yml", import.meta.url),
     "utf8",
   );
   const refPromotion = fs.readFileSync(
-    new URL("../.github/workflows/self-release-promote.yml", import.meta.url),
+    new URL("../.github/workflows/buildchain.yml", import.meta.url),
     "utf8",
   );
   const candidateAdapter = fs.readFileSync(
@@ -911,13 +911,13 @@ test("workflow recovery resumes through the same canonical publisher transaction
   ]) {
     assert.ok(requestSchema.properties[input], input);
     assert.ok(invocationSchema.properties[input], input);
-    assert.match(recovery, new RegExp(`"${input}":`));
+    assert.doesNotMatch(recovery, new RegExp(`"${input}":`));
   }
 
-  assert.match(recovery, /^  resume:/m);
+  assert.match(recovery, /^  buildchain:/m);
   assert.match(
     recovery,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-release-promote\.yml@v4/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-recover\.yml@v4-alpha/,
   );
   assert.doesNotMatch(recovery, /^  (?:alpha|stable|install|publish):/m);
   assert.match(advanced, /actions\/release\/promotion\/qualify/);
@@ -935,7 +935,7 @@ test("workflow recovery resumes through the same canonical publisher transaction
   assert.match(applyNode, /Resume the same transaction journal/);
   assert.match(
     refPromotion,
-    /^  promote:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-release-promote\.yml@v4/m,
+    /^  buildchain:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-pipeline\.yml@v4-alpha/m,
   );
   assert.doesNotMatch(refPromotion, /^  promote-stable:/m);
   assert.doesNotMatch(advanced, /gh run rerun/);

@@ -126,39 +126,11 @@ test("request rejection always fails and treats its reason as data", () => {
   assert.equal(result.status, 1, result.error?.message);
   assert.equal(result.stdout, `::error::${reason}${EOL}`);
 });
-test("all rejection nodes retain their workflow-owned conditions and scoped permissions", () => {
-  for (const name of ["daily", "weekly", "monthly"]) {
-    const workflow = YAML.parse(
-      fs.readFileSync(
-        path.join(root, `.github/workflows/self-ops-housekeeping-${name}.yml`),
-        "utf8",
-      ),
-    );
-    const job = workflow.jobs["invalid-apply-gate"];
-    assert.match(job.if, /!inputs.apply-enabled/);
-    assert.deepEqual(job.permissions, {});
-    assert.equal(
-      job.steps.at(-1).uses,
-      "./.buildchain/runtime/actions/workflow/admission/reject",
-    );
-  }
-  const workflow = YAML.parse(
-    fs.readFileSync(
-      path.join(root, ".github/workflows/self-release-promote.yml"),
-      "utf8",
-    ),
-  );
-  for (const id of [
-    "reject-manual-apply",
-    "reject-invalid-durable-recovery",
-    "reject-invalid-candidate-recovery",
-  ]) {
-    const job = workflow.jobs[id];
-    assert.match(job.if, /github.event_name == 'workflow_dispatch'/);
-    assert.deepEqual(job.permissions, { contents: "read" });
-    assert.equal(
-      job.steps.at(-1).uses,
-      "./.buildchain/runtime/actions/workflow/admission/reject",
-    );
+test("self callers delegate admission rather than implementing separate rejection jobs", () => {
+  for (const file of ["buildchain.yml", "buildchain-recover.yml"]) {
+    const workflow = YAML.parse(fs.readFileSync(path.join(root, ".github/workflows", file), "utf8"));
+    assert.deepEqual(Object.keys(workflow.jobs), ["buildchain"]);
+    assert.equal(workflow.jobs.buildchain.steps, undefined);
+    assert.equal(workflow.jobs.buildchain["runs-on"], undefined);
   }
 });

@@ -1,3 +1,4 @@
+import { checkSelfConsumerContract } from "./check-self-consumer-contract.mjs";
 import { assertBinaryInventory } from "./inventory/binary.mjs";
 import YAML from "yaml";
 import { actionInventory } from "../packages/core/contracts/action-inventory.js";
@@ -145,41 +146,29 @@ const requiredPaths = [
   ".buildchain/alpha-contract-lock.json",
   ".buildchain/release-impact.json",
   ".github/actionlint.yaml",
-  ".github/workflows/self-ops-runner-smoke.yml",
-  ".github/workflows/self-release-promote.yml",
-  ".github/workflows/self-release-line-open.yml",
   ".github/workflows/public-ops-release-governance.yml",
   ".github/workflows/public-ops-dev-auto-merge.yml",
-  ".github/workflows/self-ops-dev-delivery.yml",
   ".github/workflows/public-ops-patrol.yml",
   ".github/workflows/public-ops-patrol-daily.yml",
   ".github/workflows/public-ops-patrol-weekly.yml",
   ".github/workflows/public-ops-patrol-monthly.yml",
   ".github/workflows/public-ops-observed-evidence.yml",
-  ".github/workflows/self-ops-patrol-daily.yml",
-  ".github/workflows/self-ops-patrol-weekly.yml",
-  ".github/workflows/self-ops-patrol-monthly.yml",
-  ".github/workflows/self-build-alpha-dogfood.yml",
-  ".github/workflows/self-build-stable-dogfood.yml",
   ".github/workflows/public-release-promote.yml",
   ".github/workflows/.release-promote.yml",
   ".github/workflows/public-release-propagation.yml",
-  ".github/workflows/self-release-npm-dry-run.yml",
   ".github/workflows/public-release-paper.yml",
-  ".github/workflows/self-build-binary-distribution.yml",
   ".github/workflows/.release-binary-assets.yml",
-  ".github/workflows/self-release-binary-assets.yml",
-  ".github/workflows/self-build-verify.yml",
   ".github/workflows/.build.yml",
   ".github/workflows/.build-gate-profile.yml",
   ".github/workflows/.build-demo-adapter.yml",
   ".github/workflows/public-build-demo.yml",
-  ".github/workflows/self-build-demo-dogfood.yml",
   ".github/workflows/build.yml",
-  ".github/workflows/self-build-fixture.yml",
   "fixtures/libnode-shaped/buildchain.toml",
   "fixtures/libnode-shaped/.github/workflows/build.yml",
-  "fixtures/libnode-shaped/package.json"
+  "fixtures/libnode-shaped/package.json",
+  ".github/workflows/buildchain.yml",
+  ".github/workflows/buildchain-recover.yml",
+  "scripts/check-self-consumer-contract.mjs",
 ];
 
 for (const rel of requiredPaths) {
@@ -277,14 +266,7 @@ for (const channel of ["alpha-contract-lock.json", "contract-lock.json"]) {
   if (lock.buildchain.ref !== ref)
     throw new Error(`${channel}: invalid accepted runtime selector`);
 }
-for (const [channel, ref] of [["alpha", `v${selfDogfoodMajor}-alpha`], ["stable", `v${selfDogfoodMajor}`]]) {
-  const workflow = fs.readFileSync(path.join(root, `.github/workflows/self-build-${channel}-dogfood.yml`), "utf8");
-  if (!workflow.includes(`/.github/workflows/build.yml@${ref}`) || /steps:|buildchain-channel:|runner-preset:|working-directory:/u.test(workflow)) throw new Error(`${channel} self-dogfood must remain a thin public TOML build caller`);
-  if (!workflow.includes(`group: buildchain-${channel}-self-dogfood-`) || !workflow.includes("cancel-in-progress: false")) throw new Error(`${channel} self-dogfood must serialize its own runs`);
-  const expectedInputs = [];
-  const call = parseWorkflowCallJobs(workflow).find((job) => job.id === `${channel}-consumer`);
-  if (JSON.stringify(Object.keys(call.with || {})) !== JSON.stringify(expectedInputs)) throw new Error(`${channel} self-dogfood input contract drift`);
-}
+checkSelfConsumerContract(root);
 const reusableBuildWorkflow = fs.readFileSync(
   path.join(root, ".github/workflows/.build.yml"),
   "utf8",
@@ -308,10 +290,6 @@ const advancedPromotionWorkflow = fs.readFileSync(
 );
 const channelPromotionWorkflow = fs.readFileSync(
   path.join(root, ".github/workflows/public-release-promote.yml"),
-  "utf8",
-);
-const boundedAlphaRecoveryWorkflow = fs.readFileSync(
-  path.join(root, ".github/workflows/self-ops-promotion-recovery.yml"),
   "utf8",
 );
 assertPromotionInventory(root);
@@ -957,11 +935,6 @@ for (const requiredSnippet of [
 if (commonJsSourcePattern.test(standaloneBinaryScript)) {
   throw new Error("scripts/build-standalone-binary.mjs must use ESM syntax");
 }
-const npmPublishWorkflow = fs.readFileSync(path.join(root, ".github/workflows/self-release-npm-dry-run.yml"), "utf8");
-const buildchainRefPromotionWorkflow = fs.readFileSync(path.join(root, ".github/workflows/self-release-promote.yml"), "utf8");
-const binaryDistributionWorkflow = fs.readFileSync(path.join(root, ".github/workflows/self-build-binary-distribution.yml"), "utf8");
-const binaryReleaseAssetsWorkflow = fs.readFileSync(path.join(root, ".github/workflows/.release-binary-assets.yml"), "utf8");
-const selfHostedRunnerSmokeWorkflow = fs.readFileSync(path.join(root, ".github/workflows/self-ops-runner-smoke.yml"), "utf8");
 const npmDryRunScript = fs.readFileSync(path.join(root, "packages/core/publication/npm/preview.js"), "utf8").replace(/\s+/gu, " ");
 const npmPublishTransactionScript = ["transaction", "environment"].map(name => fs.readFileSync(path.join(root, `packages/core/publication/npm/${name}.js`), "utf8")).join("\n");
 const rootPackageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
@@ -977,29 +950,6 @@ if (!["patch", "minor", "major"].includes(selfReleaseImpact.classification)) {
 if (!Array.isArray(selfReleaseImpact.surfaceImpacts) || selfReleaseImpact.surfaceImpacts.length === 0) {
   throw new Error("Buildchain self release impact requires a summary and surfaceImpacts[]");
 }
-for (const requiredSnippet of [
-  "runs-on: ubuntu-24.04",
-  "workflow_dispatch:",
-  "Dry-run npm publish",
-]) {
-  if (!npmPublishWorkflow.includes(requiredSnippet)) {
-    throw new Error(`npm publish workflow missing required snippet: ${requiredSnippet}`);
-  }
-}
-for (const forbiddenSnippet of [
-  "tags:",
-  "Publish exact release tag",
-  "npm publish --access public --tag",
-]) {
-  if (npmPublishWorkflow.includes(forbiddenSnippet)) {
-    throw new Error(`npm publish dry-run workflow must not contain real publish snippet: ${forbiddenSnippet}`);
-  }
-}
-const selfPromotion = inspectWorkflowJob(".github/workflows/self-release-promote.yml", "classify-workflow-run", root);
-if (![...selfPromotion.modules.values()].some(source => source.includes("selectFinalizedProductPublicationVersion")))
-  throw new Error("self promotion must classify finalization from rooted product state");
-if (buildchainRefPromotionWorkflow.includes("workflow_run.display_title"))
-  throw new Error("self promotion must not classify finalization from a display title");
 const workflowDir = path.join(root, ".github/workflows");
 for (const workflowFile of fs.readdirSync(workflowDir).filter((entry) => entry.endsWith(".yml"))) {
   const workflowPath = path.join(workflowDir, workflowFile);
@@ -1054,14 +1004,6 @@ for (const requiredSnippet of [
     throw new Error(`promote-buildchain-ref index missing semver GitHub Release implementation: ${requiredSnippet}`);
   }
 }
-for (const forbiddenSnippet of [
-  "run: node packages/core/release/commands/release-candidate-resolver.mjs",
-  "uses: ./actions/release/promotion/ref",
-]) {
-  if (buildchainRefPromotionWorkflow.includes(forbiddenSnippet)) {
-    throw new Error(`buildchain ref promotion workflow must use the declarative wrapper, found manual snippet: ${forbiddenSnippet}`);
-  }
-}
 for (const requiredSnippet of [
   "distTag || (pkg.version.includes(\"-\") ? \"alpha\" : \"latest\")",
   "\"publish\", \"--dry-run\", \"--access\", \"public\"",
@@ -1089,13 +1031,8 @@ for (const requiredSnippet of [
 if (commonJsSourcePattern.test(npmPublishTransactionScript)) {
   throw new Error("packages/core/publication/commands/npm-publish-transaction.mjs must use ESM syntax");
 }
-if (/runs-on:\s*self-hosted/.test(npmPublishWorkflow)) {
-  throw new Error("npm publish workflow must use GitHub-hosted runners for trusted publishing");
-}
 assertBinaryInventory(root);
-if (!inspectWorkflowJob(".github/workflows/self-ops-runner-smoke.yml", "smoke", root).modules.get("packages/core/build/verification/runner.js")?.includes('runnerKind: "self-hosted"')) {
-  throw new Error("self-hosted smoke must identify its actual runner kind");
-}
+
 
 const inventory = JSON.parse(
   fs.readFileSync(path.join(root, "tests/buildchain-inventory.json"), "utf8")

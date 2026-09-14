@@ -365,23 +365,8 @@ test("stable binary Passport uses verified publication version despite alpha sou
     writes.get(path.join(cwd, `.buildchain/publication-evidence/${SETTLEMENT_ASSET}`)),
     settlement,
   );
-  const workflow = fs.readFileSync(
-    new URL(
-      "../.github/workflows/self-build-binary-distribution.yml",
-      import.meta.url,
-    ),
-    "utf8",
-  );
-  assert.match(
-    workflow,
-    /actions\/build\/binary\/passport/,
-  );
   const { binaryPassportOptions } = await import("../packages/core/build/binary/distribution.js");
   for (const [file, value] of writes) { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, JSON.stringify(value)); }
   const options = binaryPassportOptions({ workspace: cwd, tag: settlement.release.tag });
   assert.equal(options.packageVersion, "4.1.0");
-  assert.match(
-    workflow,
-    /name: Collect release passport[\s\S]*?timeout-minutes: 45/,
-  );
 });

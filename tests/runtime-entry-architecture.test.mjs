@@ -54,7 +54,7 @@ test("generated consumers use declared public inputs and a floating entry", () =
 });
 
 test("recovery selectors declare original-run read permission", () => {
-  for (const file of [".build.yml", "self-build-fixture.yml"]) {
+  for (const file of [".build.yml"]) {
     const workflow = YAML.parse(fs.readFileSync(path.resolve(import.meta.dirname, "../.github/workflows", file), "utf8"));
     assert.equal(workflow.jobs["execution-runtime"].permissions.actions, "read");
   }
