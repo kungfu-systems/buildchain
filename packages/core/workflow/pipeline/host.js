@@ -24,6 +24,24 @@ import { resumePipelineNotifications } from "./notifications.js";
 import { projectPipelineStatus } from "./web-status.js";
 import { inspectRecoveryPublication } from "../../publication/pipeline/recovery-inspection.js";
 
+export function pipelineQueue({ queueToken, ...options }) {
+  const reader = new GitHubClient(options);
+  return {
+    getMergeQueueState: (branch) => reader.getMergeQueueState(branch),
+    enqueuePullRequest: async (input) => {
+      // GITHUB_TOKEN enqueue suppresses the merge_group workflow it requires.
+      if (!queueToken || queueToken === options.token)
+        throw new Error(
+          "Channel enqueue requires a distinct App or automation credential",
+        );
+      return new GitHubClient({
+        ...options,
+        token: queueToken,
+      }).enqueuePullRequest(input);
+    },
+  };
+}
+
 export async function pipelineHost(core, env, jobName) {
   const token = core.getInput("token", { required: true });
   const repository = env.GITHUB_REPOSITORY;
@@ -84,7 +102,11 @@ export async function pipelineHost(core, env, jobName) {
     source,
     workers: githubPipelineWorker(request),
     policy: githubPipelinePolicy(request, repository),
-    queue: new GitHubClient({ repository: { owner, repo }, token }),
+    queue: pipelineQueue({
+      repository: { owner, repo },
+      token,
+      queueToken: core.getInput("queue-token"),
+    }),
     integration: githubPipelineIntegration(request, repository, source, runs),
     groupRecord: (context) => recordPipelineGroup(context, host),
     channel: (session, admission, inputs) =>

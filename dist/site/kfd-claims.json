@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "a50a3dd5f993e7a3fef046dfb17fb8d4d6fefc3ef94487839582c69196362942",
+    "sha256": "ccab1976e789f7e20be1668c4743ee8bfcd8da3dfa56c006cf781387eee05e02",
     "summary": {
       "cliCommandCount": 117,
       "workflowCount": 44,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "a50a3dd5f993e7a3fef046dfb17fb8d4d6fefc3ef94487839582c69196362942",
+      "sha256": "ccab1976e789f7e20be1668c4743ee8bfcd8da3dfa56c006cf781387eee05e02",
       "summary": {
         "cliCommandCount": 117,
         "workflowCount": 44,
@@ -10274,9 +10274,10 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 2,
+          "inputCount": 3,
           "inputs": [
             "config-path",
+            "queue-token",
             "token"
           ],
           "reverseAuditSource": "actions/*/action.yml"
@@ -10308,10 +10309,11 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 3,
+          "inputCount": 4,
           "inputs": [
             "attempt",
             "definition-sha",
+            "queue-token",
             "token"
           ],
           "reverseAuditSource": "actions/*/action.yml"

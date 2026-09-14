@@ -8225,9 +8225,10 @@
       "path": "actions/workflow/pipeline/control/action.yml",
       "inputs": [
         "config-path",
+        "queue-token",
         "token"
       ],
-      "inputCount": 2,
+      "inputCount": 3,
       "capabilityGroup": "api-cli-reference",
       "status": "active",
       "owner": "buildchain-actions",
@@ -8264,9 +8265,10 @@
       "inputs": [
         "attempt",
         "definition-sha",
+        "queue-token",
         "token"
       ],
-      "inputCount": 3,
+      "inputCount": 4,
       "capabilityGroup": "api-cli-reference",
       "status": "active",
       "owner": "buildchain-actions",

@@ -66,9 +66,16 @@ provider orchestration belongs in the consumer TOML or workflow source.
 Scope this credential to the consumer repository. Delivery needs Administration
 read access to inspect classic branch locks, Checks read, and Actions, Contents,
 Pull requests and Commit statuses write access for its existing provider steps.
-It does not need permission to change branch protection or bypass review. A
-missing credential falls back to `GITHUB_TOKEN`; unreadable protection still
-fails closed before candidate reservation instead of assuming an unlocked branch.
+It does not need permission to change branch protection or bypass review. Development
+admission can fall back to `GITHUB_TOKEN`; unreadable protection still fails
+closed before candidate reservation instead of assuming an unlocked branch.
+Channel enqueue requires an explicit automation credential or an App installation
+credential because `GITHUB_TOKEN` suppresses the required `merge_group` workflow.
+Both central entries select that credential through the shared token provider;
+queue reads and journal writes retain their existing workflow credential. An App
+uses `BUILDCHAIN_APP_CLIENT_ID` and `BUILDCHAIN_APP_PRIVATE_KEY`, scoped to the
+consumer repository with Pull requests write access. Missing or incomplete queue
+credentials fail closed before enqueue.
 
 The internal delivery edge forwards only this named secret to the credentialed
 source, reservation, heartbeat and landing steps. Product builds, native
