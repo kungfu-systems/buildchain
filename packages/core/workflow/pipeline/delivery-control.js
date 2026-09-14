@@ -145,14 +145,28 @@ export async function controlPipelineDelivery(session, inputs, host) {
       !["cancelled", "failure", "superseded", "complete"].includes(
         fresh.observed.status,
       )
-    )
-      await session.progress.progress({
-        attempt: fresh.attempt,
-        phase: fresh.phase,
-        state: "superseded",
-        eventKey: `supersede:${recordDigest(fresh.live)}`,
-        reason: fresh.decision.reason,
-      });
+    ) {
+      try {
+        await session.progress.progress({
+          attempt: fresh.attempt,
+          phase: fresh.phase,
+          state: "superseded",
+          eventKey: `supersede:${recordDigest(fresh.live)}`,
+          reason: fresh.decision.reason,
+        });
+      } catch (error) {
+        // Concurrent notifications can finish the same attempt after readback.
+        // Its immutable terminal result is sufficient; never rewrite that phase.
+        const latest = await session.journal.read();
+        if (
+          latest.attempt !== fresh.attempt ||
+          !["cancelled", "failure", "superseded", "complete"].includes(
+            latest.status,
+          )
+        )
+          throw error;
+      }
+    }
     return { operation: "successor", reason: fresh.decision.reason };
   }
   if (fresh.live.merged) return { operation: "settle", fresh, delivery };

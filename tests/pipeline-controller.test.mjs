@@ -4,6 +4,7 @@ import { pipelineHostFixture } from "./helpers/pipeline-host.mjs";
 import { recordPipelineBuild } from "../packages/core/workflow/pipeline/build-control.js";
 import { resumePipelineSession } from "../packages/core/workflow/pipeline/session.js";
 import { pipelineRuntimeSource } from "../packages/core/workflow/pipeline/runtime-source.js";
+import { controlPipeline } from "../packages/core/workflow/pipeline/controller.js";
 
 test("normal controller binds product build, independently records it, and waits for real review before delivery", async () => {
   const f = pipelineHostFixture();
@@ -83,6 +84,56 @@ test("duplicate normal events do not start a second live product execution", asy
     "existing-build-execution-retained",
   );
   assert.equal(f.observed().head, before);
+});
+
+test("concurrent close notifications retain one immutable terminal result", async () => {
+  const f = pipelineHostFixture();
+  const first = await f.event();
+  f.build(first.context);
+  await recordPipelineBuild(first.context, f.host);
+  f.complete();
+  f.admission.live.state = "closed";
+  const results = await Promise.all(
+    ["pull_request", "pull_request_target"].map((name, index) =>
+      controlPipeline(
+        name,
+        {
+          repository: { full_name: f.host.repository },
+          action: "closed",
+          pull_request: { number: 23 },
+        },
+        { "config-path": f.f.source.configPath },
+        {
+          ...f.host,
+          runId: 101 + index,
+          writer: { ...f.host.writer, runId: String(101 + index) },
+        },
+      ),
+    ),
+  );
+  assert.ok(results.every((result) => result.operation === "wait"));
+  const observed = f.observed();
+  assert.equal(observed.status, "superseded");
+  assert.equal(observed.phases.review.payload.reason, "pull-request-closed");
+  assert.equal(
+    observed.history.at(-1).events.filter((event) => event.node === "review")
+      .length,
+    1,
+  );
+  const history = JSON.stringify(observed.history);
+  await f.event("closed");
+  assert.equal(JSON.stringify(f.observed().history), history);
+});
+
+test("a failed close write without terminal readback remains an error", async () => {
+  const f = pipelineHostFixture();
+  await f.event();
+  f.admission.live.state = "closed";
+  f.host.provider.append = async () => {
+    throw new Error("provider unavailable");
+  };
+  await assert.rejects(f.event("closed"), /provider unavailable/);
+  assert.equal(f.observed().status, "running");
 });
 
 test("a failed product build retains its history and admits a changed source without retrying unchanged bytes", async () => {
