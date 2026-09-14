@@ -213,3 +213,59 @@ test("a failed product build retains its history and admits a changed source wit
   f.host.selection.source.sha = f.admission.live.source.commit;
   assert.equal((await f.wake()).operation, "build");
 });
+
+test("a queued delivery owns its coordinates before Warrant acquisition and terminal failure permits a new execution", async () => {
+  const f = pipelineHostFixture();
+  const first = await f.event();
+  f.build(first.context);
+  await recordPipelineBuild(first.context, f.host);
+  f.complete();
+  f.admission.live.ready = true;
+  f.host.policy.observe = async () => ({
+    review: true,
+    checksPassing: true,
+    root: `sha256:${"a".repeat(64)}`,
+  });
+  f.host.runId = 101;
+  assert.equal((await f.wake()).operation, "deliver");
+  const retained = structuredClone(f.snapshot());
+  assert.equal((await f.host.delivery().read()).activeWarrant, null);
+  const read = f.host.runs.read;
+  let ownerStatus = "queued",
+    ownerAttempt = 1;
+  f.host.runs.read = async (id, attempt) =>
+    id === 101
+      ? {
+          run: {
+            id,
+            run_attempt: ownerAttempt,
+            status: ownerStatus,
+            conclusion: ownerStatus === "completed" ? "failure" : null,
+          },
+          jobs: [],
+        }
+      : read(id, attempt);
+  f.host.runId = 102;
+  for (const status of ["queued", "pending", "in_progress"]) {
+    ownerStatus = status;
+    assert.equal(
+      (await f.wake()).reason,
+      "admitted-delivery-execution-running",
+    );
+    assert.deepEqual(f.snapshot(), retained);
+  }
+  ownerAttempt = 2;
+  await assert.rejects(f.wake(), /provider identity drift/u);
+  assert.deepEqual(f.snapshot(), retained);
+  ownerAttempt = 1;
+  ownerStatus = "completed";
+  assert.equal((await f.wake()).operation, "deliver");
+  const references = f
+    .observed()
+    .history.at(-1)
+    .events.flatMap((e) => e.payload.materials)
+    .filter((m) => m.id.startsWith("delivery/execution-"));
+  assert.equal(references.length, 2);
+  assert.match(references[0].id, /execution-101-1$/u);
+  assert.match(references[1].id, /execution-102-1$/u);
+});

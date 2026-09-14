@@ -13,16 +13,7 @@ function workerJob(jobs, name) {
   return selected[0];
 }
 
-export async function observePipelineWorker(session, current, queue, host) {
-  const warrant = queue.activeWarrant;
-  const candidate = pipelineCandidate(queue, current);
-  if (
-    !warrant ||
-    candidate?.candidateId !== warrant.candidateId ||
-    warrant.sourceHead !== current.generation.source.commit ||
-    warrant.pullRequestNumber !== current.intent.source.pullRequest
-  )
-    return null;
+export async function pipelineDeliveryExecution(session, current, host) {
   const phase = [...current.events]
     .reverse()
     .find((event) =>
@@ -43,6 +34,21 @@ export async function observePipelineWorker(session, current, queue, host) {
     execution.generation !== current.generation.id
   )
     throw new Error("Native worker execution belongs to another attempt");
+  return execution;
+}
+
+export async function observePipelineWorker(session, current, queue, host) {
+  const warrant = queue.activeWarrant;
+  const candidate = pipelineCandidate(queue, current);
+  if (
+    !warrant ||
+    candidate?.candidateId !== warrant.candidateId ||
+    warrant.sourceHead !== current.generation.source.commit ||
+    warrant.pullRequestNumber !== current.intent.source.pullRequest
+  )
+    return null;
+  const execution = await pipelineDeliveryExecution(session, current, host);
+  if (!execution) return null;
   const { run, jobs } = await host.runs.read(
     execution.runId,
     execution.runAttempt,

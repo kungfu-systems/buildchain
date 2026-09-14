@@ -3,6 +3,7 @@ import { preparePipelineDelivery } from "./delivery-request.js";
 import { pipelineBuildEvidence } from "./build-evidence.js";
 import {
   observePipelineWorker,
+  pipelineDeliveryExecution,
   pipelineDeliveryStore,
 } from "./delivery-observation.js";
 import { reconcilePipeline, pipelineCandidate } from "./reconcile.js";
@@ -74,6 +75,30 @@ async function retainDeliveryRequest(fresh, session, build, host) {
     ...scheduling.history.at(-1),
     intent: session.intent,
   };
+  // The provider execution owns the delivery slot before it acquires a
+  // Warrant. A later wake must not replace its retained coordinates while its
+  // queued or running job is still entitled to perform final admission.
+  const executionOwner = await pipelineDeliveryExecution(
+    session,
+    schedulingCurrent,
+    host,
+  );
+  if (executionOwner) {
+    const { run } = await host.runs.read(
+      executionOwner.runId,
+      executionOwner.runAttempt,
+    );
+    if (
+      run.id !== executionOwner.runId ||
+      run.run_attempt !== executionOwner.runAttempt
+    )
+      throw new Error("Retained delivery execution provider identity drift");
+    if (run.status !== "completed")
+      return {
+        operation: "wait",
+        reason: "admitted-delivery-execution-running",
+      };
+  }
   const active = await observePipelineWorker(
     session,
     schedulingCurrent,
