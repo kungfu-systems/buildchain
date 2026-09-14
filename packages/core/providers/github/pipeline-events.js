@@ -1,5 +1,84 @@
 import { readBusinessAttempt } from "../../workflow/attempt/reader.js";
 
+// The current provider timeline survives webhook/runtime handoff. Compare it
+// with this candidate's lifetime so an earlier removal cannot cancel recovery.
+export function githubPipelineQueueExit(graphql, repository) {
+  if (!/^[\w.-]+\/[\w.-]+$/u.test(repository || ""))
+    throw new Error("Invalid pipeline queue repository");
+  const [owner, repo] = repository.split("/");
+  return async (current, candidate) => {
+    if (!candidate || candidate.terminal) return null;
+    const started = Date.parse(candidate.enqueuedAt);
+    if (!Number.isFinite(started))
+      throw new Error("Queue candidate timestamp is missing");
+    const number = current.intent.source.pullRequest;
+    const result = await graphql(
+      `
+        query ($owner: String!, $repo: String!, $number: Int!) {
+          repository(owner: $owner, name: $repo) {
+            pullRequest(number: $number) {
+              number
+              headRefOid
+              baseRefName
+              state
+              mergeQueueEntry {
+                id
+              }
+              timelineItems(
+                last: 2
+                itemTypes: [
+                  ADDED_TO_MERGE_QUEUE_EVENT
+                  REMOVED_FROM_MERGE_QUEUE_EVENT
+                ]
+              ) {
+                nodes {
+                  __typename
+                  ... on AddedToMergeQueueEvent {
+                    id
+                    createdAt
+                  }
+                  ... on RemovedFromMergeQueueEvent {
+                    id
+                    createdAt
+                  }
+                }
+              }
+            }
+          }
+        }
+      `,
+      { owner, repo, number },
+    );
+    const pr = result.repository?.pullRequest;
+    if (
+      pr?.number !== number ||
+      pr.headRefOid !== current.generation.source.commit ||
+      pr.baseRefName !== current.intent.source.targetBranch
+    )
+      throw new Error("Queue exit source identity changed; reobserve");
+    if (pr.state !== "OPEN" || pr.mergeQueueEntry) return null;
+    const nodes = pr.timelineItems?.nodes;
+    if (!Array.isArray(nodes) || nodes.length > 2)
+      throw new Error("Queue exit timeline readback is missing or ambiguous");
+    const event = nodes.at(-1);
+    if (event?.__typename !== "RemovedFromMergeQueueEvent") return null;
+    const queued = nodes.at(-2);
+    if (queued?.__typename !== "AddedToMergeQueueEvent")
+      throw new Error("Queue removal has no matching admission readback");
+    const removed = Date.parse(event.createdAt);
+    const entered = Date.parse(queued.createdAt);
+    if (
+      !event.id ||
+      !queued.id ||
+      !Number.isFinite(removed) ||
+      !Number.isFinite(entered) ||
+      entered > removed
+    )
+      throw new Error("Queue removal identity or timestamp is missing");
+    return entered > started ? event : null;
+  };
+}
+
 // Branch/terminal notifications wake existing intents only. They cannot create
 // historical releases or infer an execution request from an untracked old PR.
 export function githubPipelineEvents(request, journal, repository) {

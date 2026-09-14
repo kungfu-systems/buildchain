@@ -112,6 +112,7 @@ export function pipelineHostFixture() {
       root: recordDigest("channel qualification fixture"),
     }),
     delivery: () => ({ read: async () => structuredClone(queue), service: {} }),
+    queueExit: async () => null,
     prepareDelivery: async ({ current }) => ({
       "pipeline-attempt": current.identity.id,
       "expected-head-sha": current.generation.source.commit,
