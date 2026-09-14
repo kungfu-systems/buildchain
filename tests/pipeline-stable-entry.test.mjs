@@ -195,6 +195,65 @@ test("published entry qualification binds a normal post-release consumer, exact 
   assert.equal(result.native.attempt, f.f.observed().attempt);
 });
 
+test("GitHub-owned check URLs preserve exact normal-entry qualification and ignore other executions", async () => {
+  const f = await fixture({
+    platforms: ["linux-x64", "macos-arm64", "windows-x64"],
+  });
+  const check = f.state.checks[0];
+  check.details_url = `https://github.com/${f.host.repository}/runs/${check.id}`;
+  f.state.checks.push({
+    ...structuredClone(check),
+    id: 78,
+    details_url: `https://github.com/${f.host.repository}/runs/78`,
+    external_id: check.external_id.replace(/:100:1$/u, ":101:1"),
+    conclusion: "failure",
+  });
+  const result = await readPipelineStableEntry(f.plan, f.source, f.host);
+  assert.equal(result.canary.status, "success");
+  assert.equal(result.native.attempt, f.f.observed().attempt);
+  assert.equal(result.native.readback.jobs.length, 3);
+  f.state.checks[1].external_id = check.external_id;
+  await assert.rejects(
+    readPipelineStableEntry(f.plan, f.source, f.host),
+    /checks disagree/,
+  );
+});
+
+test("provider check URLs cannot hide another repository, check, run, attempt or native evidence", async () => {
+  for (const [field, value, pattern] of [
+    ["details_url", "https://github.com/foreign/repo/runs/77"],
+    ["details_url", "wrong-check-id"],
+    ["external_id", `buildchain:attempt-${"0".repeat(64)}:101:1`],
+    ["external_id", `buildchain:attempt-${"0".repeat(64)}:100:2`],
+    ["head_sha", "0".repeat(40), /exact native attempt/],
+    ["app", { slug: "untrusted" }, /exact native attempt/],
+    ["output", { summary: "green" }, /native build material disagree/],
+    [
+      "external_id",
+      `buildchain:attempt-${"0".repeat(64)}:100:1`,
+      /another source/,
+    ],
+  ]) {
+    const f = await fixture(),
+      check = f.state.checks[0];
+    check.details_url = `https://github.com/${f.host.repository}/runs/${check.id}`;
+    check[field] =
+      value === "wrong-check-id"
+        ? `https://github.com/${f.host.repository}/runs/78`
+        : value;
+    if (pattern)
+      await assert.rejects(
+        readPipelineStableEntry(f.plan, f.source, f.host),
+        pattern,
+      );
+    else
+      assert.equal(
+        (await readPipelineStableEntry(f.plan, f.source, f.host)).status,
+        "missing",
+      );
+  }
+});
+
 test("a green published entry running the old locked runtime is not candidate qualification", async () => {
   const f = await fixture();
   const value = JSON.parse(Buffer.from(f.state.lock.content, "base64"));
