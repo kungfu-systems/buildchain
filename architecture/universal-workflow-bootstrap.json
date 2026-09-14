@@ -57,7 +57,9 @@
     "runtimeRecovery": "same-public-entry-with-transient-runtime",
     "entryRecovery": "upgrade-public-entry-and-full-rerun",
     "executionAuthority": "selected-runtime",
-    "entryRepairRequiresNewRelease": true
+    "entryRepairRequiresNewRelease": true,
+    "selfDogfoodActive": false,
+    "selfDogfoodSupersededBy": ".github/workflows/buildchain.yml"
   },
   "capabilityAdapters": [
     {

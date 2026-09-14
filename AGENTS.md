@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-14
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-11
+  generated_at: 2026-09-14
   visible_context: Buildchain 4.1 source, architecture registries and local validation.
   invisible_context_boundary: No unpublished release or external consumer qualification is claimed.
 ---
@@ -38,52 +38,27 @@ restating them.
 
 ## Using this repo as a Buildchain consumer
 
-Ordinary builds read project configuration from `buildchain.toml`. Single-project
-consumers call the public workflow with no inputs:
+The consumer-facing self boundary is `.buildchain/buildchain.toml`, two generated
+callers (`.github/workflows/buildchain.yml` and `buildchain-recover.yml`),
+tool-maintained contract locks, and necessary provider permissions. The normal
+caller invokes the published `public-ops-pipeline.yml`; recovery accepts only an
+exact attempt and an optional repaired runtime through `public-ops-recover.yml`.
+No repository-specific runtime selection or recovery exception is allowed.
 
-```yaml
-uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4
-```
+During the protected migration, both callers use `@v4-alpha` and the prepared
+`.buildchain/minimal-consumer.toml` path, kept byte-identical to the canonical
+TOML. The pipeline reads policy at the same path on its protected target branch,
+so each target must contain the schema-2 policy before its first pipeline PR.
+The TOML declares `feature/*`, `fix/*`, `chore/*`, `docs/*`, `ci/*`, and
+`refactor/*` development routes before the first new-pipeline Alpha qualification.
+After the canonical path is protected and the stable entry is qualified,
+regenerate the same pair using the default path and `@v4`.
+Do not claim the transition complete while that final cleanup is outstanding.
 
-The public workflow is the API entry. It selects the execution runtime from a
-trusted non-persistent runtime input (`runtime-ref`), the selected consumer
-contract lock, or the entry commit default. `@v4-alpha` selects the alpha entry
-and its default lock path. Entry and runtime commits may differ. See
-[`Runtime entry`](docs/runtime-entry.md) for selection and recovery.
-
-Project settings belong in TOML; `config-path` locates a nested project. All
-execution jobs prepare the selected runtime through
-`actions/runtime/environment/prepare`. Subsequent business actions use that
-runtime without Buildchain SHA comparisons or secondary runtime admission.
-
-For new repositories, prefer the CLI:
-
-```sh
-npx @kungfu-tech/buildchain init --type package
-npx @kungfu-tech/buildchain validate --require-version-state
-npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v4/v4.1
-```
-
-For governed Paper repositories, scaffold or migrate the repository once, then
-follow the generated `AGENTS.md` entry contract. Work begins and ends through
-the pinned pnpm scripts:
-
-```sh
-pnpm paper:agent:verify
-pnpm paper:work:start -- <topic> --execute --json
-pnpm paper:work:submit -- --execute --json
-```
-
-The reusable required check independently enforces the same contract and PR
-lineage, so local command use is never treated as remote acceptance evidence.
-
-See [`docs/cli.md`](docs/cli.md), [`docs/lifecycle-protocol.md`](docs/lifecycle-protocol.md),
-and [`docs/reusable-build-surface.md`](docs/reusable-build-surface.md) for the
-consumer contract.
-
-All public entries share the same runtime contract. A runtime bug is recovered
-through a new execution with a repaired train and original source evidence.
-An entry bug requires an upgraded published entry and a complete new run.
+Products declare their own install, build, and verification commands in TOML.
+Publication, source qualification, reviews, merge queues, provider readback and
+recovery belong to the published runtime. Internal workflow libraries may be
+retained, but self callers must use the same public reusable-workflow contract as every other consumer.
 
 ## Building this repo
 
@@ -119,33 +94,24 @@ Stage Capsule resume planning is governed by
 TypeScript projection pure and byte-identical; explicit provider/release-tail
 effects always require readback and never become Capsule reuse.
 
-Stage Capsule qualification and Wave 2 reconciliation are governed by
-`architecture/stage-capsule-qualification.json`. Buildchain v4 dogfood is a
-repository invariant, not an implementation convenience: this repository must
-consume `kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml`
-through the same public reusable-workflow contract as every other consumer.
-The caller must remain a thin workflow with no steps or local orchestration,
-and `.buildchain/buildchain.toml` must declare the same real `install`, `build`,
-and `verify` lifecycle. The public workflow records the entry and selected runtime and binds
-consumer source SHA, platform, commands, manifests, summaries, dependencies,
-and output roots on Linux, macOS, and Windows.
+Stage Capsule qualification and Wave 2 reconciliation remain governed by
+`architecture/stage-capsule-qualification.json`. Its prior standalone public
+Canary caller is explicitly historical; its shadow-only authority and retained
+evidence do not grant publication or production reuse. Current product verification
+runs the committed WASM checks, clean-process checkpoint restoration, and resume
+planning on Linux, macOS and Windows, with the same pinned Linux container
+backbone checks. These are product tests, not consumer-side delivery controllers.
 
-Dogfood callers use the same public entry and runtime preparation as external
-consumers. No repository-specific runtime selection or recovery exception is
-allowed. Stage Capsule internals are invoked by public workflows and tests;
-provider effects remain subject to their own source, artifact and readback rules.
+Normal self workflows and recovery share central runtime selection. The
+central entry resolves it once, and every business job uses that selected runtime.
+Persist only `@v4` or `@v4-alpha` in caller source, with matching stable and alpha contract locks
+maintained by the tooling. A source-persisted exact commit SHA or train is not a durable entry selector;
+exact SHAs belong in locks and provenance. A repaired train is a trusted,
+non-persistent recovery input and must retain the original attempt evidence.
+The optional repair selector is a trusted non-persistent runtime input.
 
-External Buildchain v4 workflow calls persisted in tracked source use only `@v4` or
-`@v4-alpha` and retain matching stable and alpha contract locks. A
-source-persisted exact commit SHA or train is not a durable entry selector.
-Exact resolved SHAs belong in lock data and provenance. Normal self workflows
-call `@v4`; dedicated post-publication alpha entry qualification calls `@v4-alpha`.
-
-Train validation passes `train/v4/v4.1/<capability>` only through the trusted
-non-persistent runtime input. The central entry resolves it once, and every
-business job executes the selected runtime. Protected merge and requested alpha
-publication follow successful validation. Changes to dogfood policy or its
-gates require independent `@kungfu-origin` review.
+Changes to this consumer wiring, its required product checks, or publication
+gates require `@kungfu-origin` approval through the protected PR workflow.
 
 `pnpm run check` validates inventory data, generated public references and site
 bundle drift, lints root workflows, runs unit tests, and rebuilds every action

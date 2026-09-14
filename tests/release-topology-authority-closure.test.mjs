@@ -1,3 +1,5 @@
+import { channelRoute } from "../packages/core/workflow/pipeline/events.js";
+import { compileConsumerPlan } from "../packages/core/consumer/contract/plan.js";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -120,13 +122,9 @@ test("fork governance retains a credential-limited receipt without claiming auth
   assert.match(transaction, /Fork PR governance is credential-limited/);
 });
 
-test("fork pull requests cannot enter the release fixture authority path", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/self-build-fixture.yml"),
-    "utf8",
-  );
-  assert.match(
-    workflow,
-    /libnode-shaped:\n    if: \$\{\{ github\.event_name != 'pull_request' \|\| !github\.event\.pull_request\.head\.repo\.fork \}\}/,
-  );
+test("fork pull requests cannot enter the self product channel route", () => {
+  const plan = compileConsumerPlan(fs.readFileSync(path.join(root, ".buildchain/buildchain.toml"), "utf8"));
+  const repository = "kungfu-systems/buildchain";
+  const pr = { base: {ref: "dev/v4/v4.1", repo: {full_name: repository}}, head: {ref: "feature/topic", repo: {full_name: "attacker/buildchain"}} };
+  assert.throws(() => channelRoute(plan, pr, repository), /repository/u);
 });

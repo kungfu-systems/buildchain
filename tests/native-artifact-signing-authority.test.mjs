@@ -463,10 +463,6 @@ test("Buildchain authority owns native credentials and performs provider verific
     path.join(root, "actions/release/signing/deliver/action.yml"),
     "utf8",
   );
-  const releaseVerify = fs.readFileSync(
-    path.join(root, ".github/workflows/self-build-channel-verify.yml"),
-    "utf8",
-  );
   const reusableDocs = fs.readFileSync(
     path.join(root, "docs/reusable-build-surface.md"),
     "utf8",

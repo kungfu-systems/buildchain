@@ -6,15 +6,15 @@ import { readWorkflow } from "../scripts/workflow-action-graph.mjs";
 import { resolveFreshPublicationVersion } from "../packages/core/release/candidate/selection.js";
 
 const promotion = fs.readFileSync(
-  path.resolve(".github/workflows/self-release-promote.yml"),
+  path.resolve(".github/workflows/buildchain.yml"),
   "utf8",
 );
 const recovery = fs.readFileSync(
-  path.resolve(".github/workflows/self-ops-promotion-recovery.yml"),
+  path.resolve(".github/workflows/buildchain-recover.yml"),
   "utf8",
 );
 const publicPromotion = fs.readFileSync(
-  path.resolve(".github/workflows/public-release-promote.yml"),
+  path.resolve(".github/workflows/public-ops-recover.yml"),
   "utf8",
 );
 const resolver = fs.readFileSync(
@@ -50,14 +50,12 @@ function jobBlock(source, jobId) {
   return source.slice(start, next === -1 ? source.length : start + 1 + next);
 }
 
-test("self promotion has one publishing API and no overlapping universal dispatch", () => {
-  const workflow = readWorkflow(".github/workflows/self-release-promote.yml");
-  assert.equal(workflow.on.workflow_dispatch.inputs["universal-request-json"], undefined);
-  assert.equal(workflow.jobs["universal-bootstrap"], undefined);
-  const publishers = Object.values(workflow.jobs).filter(job => job.uses);
-  assert.equal(publishers.length, 1);
-  assert.equal(publishers[0].uses, "kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4");
-  assert.deepEqual(Object.keys(publishers[0].with), ["request-json", "runtime-selection"]);
+test("self normal delivery delegates one public pipeline without a dispatch controller", () => {
+  const workflow = readWorkflow(".github/workflows/buildchain.yml");
+  assert.equal(workflow.on.workflow_dispatch, undefined);
+  assert.deepEqual(Object.keys(workflow.jobs), ["buildchain"]);
+  assert.equal(workflow.jobs.buildchain.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha");
+  assert.deepEqual(Object.keys(workflow.jobs.buildchain.with), ["config-path"]);
 });
 
 test("universal inspection preserves the consumer capability independently from runtime selection", () => {
@@ -66,46 +64,17 @@ test("universal inspection preserves the consumer capability independently from 
   assert.doesNotMatch(universalEngine, /candidate: request.candidate|mode: request.mode/);
 });
 
-test("alpha convergence retains one standalone recovery adapter", () => {
-  assert.match(
-    promotion,
-    /^  promote:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-release-promote\.yml@v4/m,
-  );
-  assert.doesNotMatch(promotion, /^  recover-stable-candidate:/mu);
-  assert.doesNotMatch(promotion, /^  promote-stable:/mu);
-  assert.match(recovery, /^  workflow_dispatch:/mu);
-  assert.doesNotMatch(recovery, /^  workflow_call:/mu);
-  assert.match(
-    recovery,
-    /"publication-publisher-workflow-path": "\.github\/workflows\/self-ops-promotion-recovery\.yml"/,
-  );
-});
-
-test("stable recovery forwards only the declared public request envelope", () => {
-  const declaredInputs = new Set(nestedKeys(publicPromotion, "    inputs:"));
-  const forwardedInputs = nestedKeys(recovery, "    with:");
-  assert.deepEqual(
-    forwardedInputs.filter((name) => !declaredInputs.has(name)),
-    [],
-  );
-});
-
-test("self-promotion recovery retains the sealed npm payload selector", () => {
-  assert.match(promotion, /"artifact-patterns": "buildchain-package-\*"/);
-  assert.doesNotMatch(
-    promotion,
-    /artifact-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && ''/,
-  );
-  assert.match(recovery, /"artifact-patterns": "buildchain-package-\*"/);
-  assert.match(promotion, /"required-artifact-count": 0/);
-  assert.match(recovery, /"required-artifact-count": 0/);
-});
-
-test("protected recovery forwards the entry selection instead of a private source runtime", () => {
- const caller=readWorkflow(".github/workflows/self-release-promote.yml");
- assert.equal(caller.jobs.promote.with["runtime-selection"],"${{ needs.execution-runtime.outputs.selection }}");
- assert.equal(caller.jobs["execution-runtime"].steps[0].with["runtime-ref"],"${{ inputs.runtime-ref }}");
- assert.doesNotMatch(promotion, /"buildchain-ref"|resume-buildchain-runtime-sha/);
+test("recovery forwards only attempt and the optional runtime to the public declaration", () => {
+  const declaredInputs = nestedKeys(publicPromotion, "    inputs:");
+  assert.deepEqual(nestedKeys(recovery, "    with:"), declaredInputs);
+  const caller = readWorkflow(".github/workflows/buildchain-recover.yml");
+  assert.deepEqual(Object.keys(caller.jobs), ["buildchain"]);
+  assert.equal(caller.jobs.buildchain.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4-alpha");
+  assert.equal(caller.jobs.buildchain.with.attempt, "${{ inputs.attempt }}");
+  assert.equal(caller.jobs.buildchain.with["runtime-ref"], "${{ inputs.runtime-ref }}");
+  for (const source of [promotion, recovery]) {
+    assert.doesNotMatch(source, /request-json|artifact-patterns|required-artifact-count|resume-candidate|runtime-selection|runs-on:|steps:/u);
+  }
 });
 
 test("candidate sealing precedes required-artifact version projection", () => {

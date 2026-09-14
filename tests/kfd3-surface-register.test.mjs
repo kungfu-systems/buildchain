@@ -424,7 +424,7 @@ test("Buildchain reports concrete gates and explicit KFD-1 through KFD-13 barrie
 });
 
 test("Buildchain dogfoods KFD upstream aggregate facts for the KFD package", () => {
-  const upstream = collectKfdUpstreamFacts({ cwd: root });
+  const upstream = collectKfdUpstreamFacts({ cwd: root, components: JSON.parse(fs.readFileSync(path.join(root, "architecture/product-upstreams.json"), "utf8")) });
   assert.equal(upstream.contract, "kungfu-buildchain-kfd-upstream-aggregate");
   assert.equal(upstream.summary.upstreamCount, 1);
   assert.deepEqual(upstream.summary.kfdAwareUpstreams, ["kfd"]);
@@ -460,23 +460,35 @@ test("Buildchain dogfoods KFD upstream aggregate facts for the KFD package", () 
   assert.equal(invalidRoleCheck.ok, false);
   assert.ok(invalidRoleCheck.issues.some((entry) => entry.code === "kfd.upstream.upstreams[0].role"));
 
-  const aggregate = collectKfdAggregate({ cwd: root });
+  // CLI configuration remains covered independently of this product's schema-2
+  // delivery TOML. Product metadata is supplied explicitly to the collector above.
+  const configuredConsumer = tempDir("configured-upstream-cli");
+  writeJson(path.join(configuredConsumer, "package.json"), {
+    name: "@example/kfd-cli-consumer",
+    version: "1.0.0",
+    devDependencies: { "@kungfu-tech/kfd": discoverKfdStandards().package.version },
+  });
+  fs.mkdirSync(path.join(configuredConsumer, ".buildchain"));
+  fs.writeFileSync(path.join(configuredConsumer, ".buildchain/buildchain.toml"),
+    "schema = 1\n[kfd.upstream]\nauto_discover = true\n");
+  fs.symlinkSync(path.join(root, "node_modules"), path.join(configuredConsumer, "node_modules"), "dir");
+  const aggregate = collectKfdAggregate({ cwd: configuredConsumer });
   assert.equal(aggregate.contract, "kungfu-buildchain-kfd-aggregate");
   assert.equal(aggregate.upstreamCheck.status, "passed");
 
-  const cliCollect = JSON.parse(runBuildchain(["kfd", "upstream", "collect", "--json"]));
+  const cliCollect = JSON.parse(runBuildchain(["kfd", "upstream", "collect", "--json"], { cwd: configuredConsumer }));
   assert.equal(cliCollect.contract, upstream.contract);
   assert.equal(cliCollect.summary.packageVersions.kfd, upstream.summary.packageVersions.kfd);
   assert.equal(cliCollect.upstreams[0].roleSource, "known-package");
 
-  const cliRoles = JSON.parse(runBuildchain(["kfd", "upstream", "roles", "--json"]));
+  const cliRoles = JSON.parse(runBuildchain(["kfd", "upstream", "roles", "--json"], { cwd: configuredConsumer }));
   assert.equal(cliRoles.contract, roles.contract);
   assert.ok(cliRoles.roles.some((entry) => entry.role === "standard-and-schema-provider"));
 
-  const cliCheck = JSON.parse(runBuildchain(["kfd", "upstream", "check", "--json"]));
+  const cliCheck = JSON.parse(runBuildchain(["kfd", "upstream", "check", "--json"], { cwd: configuredConsumer }));
   assert.equal(cliCheck.ok, true);
 
-  const cliAggregate = JSON.parse(runBuildchain(["kfd", "aggregate", "--json"]));
+  const cliAggregate = JSON.parse(runBuildchain(["kfd", "aggregate", "--json"], { cwd: configuredConsumer }));
   assert.equal(cliAggregate.contract, aggregate.contract);
   assert.equal(cliAggregate.upstreamCheck.status, "passed");
 });

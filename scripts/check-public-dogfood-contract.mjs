@@ -4,6 +4,7 @@ import fs from "node:fs";
 import YAML from "yaml";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { checkSelfConsumerContract } from "./check-self-consumer-contract.mjs";
 
 const DEFAULT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -14,35 +15,6 @@ const REUSABLE_PATH = ".github/workflows/public-build-stage-capsule-canary.yml";
 export const PUBLIC_DOGFOOD_ENTRY_REF = "v4";
 const PRIVATE_CONSUMER = ["buildchain", "self", "dogfood"].join("-");
 const PRIVATE_SHADOW = ["kungfu", "shadow"].join("-");
-
-export function expectedPublicDogfoodWorkflow(validationRef) {
-  return `name: V4 Public Consumer Dogfood
-
-on:
-  pull_request:
-  workflow_dispatch:
-    inputs:
-      runtime-ref:
-        description: Transient runtime selected by the public entry.
-        type: string
-        default: ""
-
-permissions:
-  contents: read
-
-jobs:
-  dogfood:
-    uses: kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml@${validationRef}
-    with:
-      runtime-ref: \${{ inputs.runtime-ref }}
-      consumer: buildchain
-      node-version: "24"
-      go-version: "1.25.x"
-      install-artifact-path: node_modules/.modules.yaml
-      build-artifact-path: actions/build/lifecycle/run/dist/index.js
-      verify-artifact-path: dist/site
-`;
-}
 
 function fail(message) {
   throw new Error(`v4-public-dogfood-contract: ${message}`);
@@ -238,17 +210,22 @@ function assertWorkflowInventory(root) {
 }
 
 function assertProtectedVerify(root) {
-  const verify = read(root, ".github/workflows/self-build-verify.yml");
-  const parsed = YAML.parse(verify);
-  const nodePath = "actions/build/verification/repository/action.yml";
+  checkSelfConsumerContract(root);
+  const verify = read(root, "scripts/verify-product-platform.mjs");
   if (
-    ![parsed.jobs.check.needs].flat().includes("stage-capsule-checkpoints") ||
-    parsed.jobs.check.steps.at(-1).uses !==
-      `./.buildchain/runtime/${nodePath.replace(/\/action.yml$/, "")}`
+    !verify.includes("verifyStageCapsuleCheckpoints({") ||
+    !verify.includes('"--network=none"') ||
+    !verify.includes(
+      "sha256:11f0ba64267ce88174a4f73a9bf833ff4e9c59cd16ec3d08a6432a06c2be6fb1",
+    ) ||
+    !verify.includes("tests/build-orchestration.test.mjs") ||
+    !verify.includes("tests/build-artifact-pipeline.test.mjs") ||
+    !verify.includes("tests/dev-delivery-minimal-request.test.mjs")
   )
     fail(
-      "Verify must bind the protected check node after Stage Capsule checkpoints",
+      "Product verification must retain checkpoint recovery and the isolated container backbone lane",
     );
+  const nodePath = "actions/build/verification/repository/action.yml";
   const implementation = read(root, nodePath);
   const steps = YAML.parse(implementation).runs.steps;
   const qualify = steps.find((step) => step.id === "source-verification");
@@ -283,12 +260,13 @@ function assertArchitecture(root) {
   const validationRef = dogfood?.validationRef;
   if (validationRef !== PUBLIC_DOGFOOD_ENTRY_REF)
     fail("architecture validationRef must use the public v4 entry");
-  const caller = read(root, CALLER_PATH);
   if (
-    JSON.stringify(YAML.parse(caller)) !==
-    JSON.stringify(YAML.parse(expectedPublicDogfoodWorkflow(validationRef)))
+    dogfood?.active !== false ||
+    dogfood.supersededBy !== ".github/workflows/buildchain.yml"
   )
-    fail(`${CALLER_PATH} must remain the exact thin public consumer caller`);
+    fail(
+      "Historical Canary caller must be explicitly superseded by the minimal pipeline",
+    );
   if (JSON.stringify(architecture.campaign?.consumers) !== '["buildchain"]')
     fail(
       "architecture must qualify only the public Buildchain consumer identity",
@@ -335,17 +313,25 @@ function assertArchitecture(root) {
 }
 
 function assertConsumerLifecycle(root) {
-  const lifecycle = read(root, ".buildchain/buildchain.toml");
-  for (const declaration of [
-    '[lifecycle.install]\ncommand = "corepack enable pnpm && corepack pnpm@11.7.0 install --frozen-lockfile"',
-    '[lifecycle.build]\ncommand = "corepack pnpm@11.7.0 run build && corepack pnpm@11.7.0 run generate:site"',
-    "[lifecycle.verify]\ncommands = [",
-    '"corepack pnpm@11.7.0 run check",',
-  ])
-    if (!lifecycle.includes(declaration))
+  const { plan } = checkSelfConsumerContract(root);
+  for (const platform of ["linux-x64", "macos-arm64", "windows-x64"]) {
+    const product = plan.products.find(
+      (product) =>
+        product.platforms.includes(platform) &&
+        product.verify.includes("corepack pnpm@11.7.0 run check"),
+    );
+    if (
+      !product?.install.includes("corepack enable pnpm") ||
+      !product.install.includes(
+        "corepack pnpm@11.7.0 install --frozen-lockfile",
+      ) ||
+      !product.build.includes("corepack pnpm@11.7.0 run build") ||
+      !product.build.includes("corepack pnpm@11.7.0 run generate:site")
+    )
       fail(
-        `tracked consumer lifecycle is missing ${declaration.split("\n")[0]}`,
+        `${platform}: tracked consumer lifecycle is missing its pinned install or full generated build`,
       );
+  }
   const attributes = read(root, ".gitattributes");
   if (!attributes.split("\n").includes("* text=auto eol=lf"))
     fail("consumer checkout is missing the cross-platform LF contract");
@@ -394,8 +380,9 @@ export function checkPublicDogfoodContract(root = DEFAULT_ROOT) {
   return {
     schema: "buildchain-v4-public-dogfood-contract-check/v1",
     ok: true,
-    caller: CALLER_PATH,
-    reusable: REUSABLE_PATH,
+    caller: ".github/workflows/buildchain.yml",
+    reusable: ".github/workflows/public-ops-pipeline.yml",
+    historicalCanary: REUSABLE_PATH,
     validationRef,
     productionAuthority: "v4-native",
   };
