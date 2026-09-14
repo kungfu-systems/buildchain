@@ -4700,7 +4700,7 @@
       ],
       "maturity": "stable",
       "sourcePath": "docs/runtime-train-validation.md",
-      "digest": "sha256:f9fcb27edcbd2194bd1a66b616fb8b0988a0f9046ccd8995e2e456842522ae0a",
+      "digest": "sha256:b36831e6d2a5caf9672be117265290867588da23a98ca066d43dc2bd9728bb6f",
       "headings": [
         {
           "level": 1,
@@ -4716,9 +4716,14 @@
           "level": 2,
           "title": "Recover a runtime failure",
           "anchor": "recover-a-runtime-failure"
+        },
+        {
+          "level": 2,
+          "title": "Protected minimal-entry installation",
+          "anchor": "protected-minimal-entry-installation"
         }
       ],
-      "markdown": "---\nstatus: active\nperiod: ongoing\ntheme: buildchain-runtime-train-validation\ndoc_type: technical-reference\nsource_level: local-files\nconfidence: high\nsensitivity: public\nevidence_grade: B\nreview_state: unreviewed\nlast_reviewed: 2026-09-13\nai_provenance:\n  model_family: GPT-6\n  product: Codex\n  generated_at: 2026-09-13\n  invisible_context: not asserted\n---\n\n# Runtime Train Validation\n\nA train repairs the execution runtime without changing the consumer's durable\npublic entry. All public workflows, including ordinary builds, use the same\n[Runtime entry contract](runtime-entry.md). The recovery entry accepts a transient runtime parameter, which wins over the\nconsumer lock. The normal minimal pipeline accepts only an optional config path.\nBuildchain dogfood follows the same two-entry contract.\n\n## Validate a runtime change\n\n1. Commit the candidate with its action bundles, WASM and runtime contract.\n2. Publish the candidate at `train/v4/v4.1/<capability>`.\n3. Recover the exact retained attempt through `buildchain-recover.yml`, with\n   `runtime-ref` set to that train. Record the attempt, selected runtime, consumer\n   source and resulting evidence.\n4. After checks and independent review, merge into protected Dev and publish\n   the requested Alpha. Qualify the published entry before Stable promotion.\n\nTrain selection is a trusted non-persistent runtime input. It never grants\npublication or signing authority by itself; those business effects retain their\nprovider credentials, capability constraints and readback requirements.\n\n## Recover a runtime failure\n\nStart a new dispatch through `buildchain-recover.yml` with the exact attempt\nand the repaired train. The runtime selects the retained source and completed\nevidence; the consumer does not provide candidate, run or transaction selectors.\nA GitHub failed-job rerun does not change its inputs and cannot select a new\nruntime. Do not persist the train into the caller workflow or contract lock.\n\nIf the public entry itself is defective, publish and adopt the corrected entry\nand start a full run. Copied consumer recovery packages and alternate recovery\nworkflows are not part of the runtime contract."
+      "markdown": "---\nstatus: active\nperiod: ongoing\ntheme: buildchain-runtime-train-validation\ndoc_type: technical-reference\nsource_level: local-files\nconfidence: high\nsensitivity: public\nevidence_grade: B\nreview_state: unreviewed\nlast_reviewed: 2026-09-14\nai_provenance:\n  model_family: GPT-6\n  product: Codex\n  generated_at: 2026-09-14\n  invisible_context: not asserted\n---\n\n# Runtime Train Validation\n\nA train repairs the execution runtime without changing the consumer's durable\npublic entry. All public workflows, including ordinary builds, use the same\n[Runtime entry contract](runtime-entry.md). The recovery entry accepts a transient runtime parameter, which wins over the\nconsumer lock. The normal minimal pipeline accepts only an optional config path.\nBuildchain dogfood follows the same two-entry contract.\n\n## Validate a runtime change\n\n1. Commit the candidate with its action bundles, WASM and runtime contract.\n2. Publish the candidate at `train/v4/v4.1/<capability>`.\n3. Recover the exact retained attempt through `buildchain-recover.yml`, with\n   `runtime-ref` set to that train. Record the attempt, selected runtime, consumer\n   source and resulting evidence.\n4. After checks and independent review, merge into protected Dev and publish\n   the requested Alpha. Qualify the published entry before Stable promotion.\n\nTrain selection is a trusted non-persistent runtime input. It never grants\npublication or signing authority by itself; those business effects retain their\nprovider credentials, capability constraints and readback requirements.\n\n## Recover a runtime failure\n\nStart a new dispatch through `buildchain-recover.yml` with the exact attempt\nand the repaired train. The runtime selects the retained source and completed\nevidence; the consumer does not provide candidate, run or transaction selectors.\nA GitHub failed-job rerun does not change its inputs and cannot select a new\nruntime. Do not persist the train into the caller workflow or contract lock.\n\nIf the public entry itself is defective, publish and adopt the corrected entry\nand start a full run. Copied consumer recovery packages and alternate recovery\nworkflows are not part of the runtime contract.\n\n## Protected minimal-entry installation\n\nInstall the generated `buildchain-recover.yml` on the protected default branch\nbefore retiring the previous delivery controller. Verify its provider workflow\nregistration before enabling the normal minimal pipeline. A branch-only manual\ncaller is not an installed recovery entry. During this bounded migration, pause\nthe normal pipeline before enabling the previous protected delivery controller;\nafter the installation merge, wait for its runs and Warrant to become terminal,\nthen pause that controller before recovering the retained attempt.\n\nThe installed caller is byte-identical to the generated consumer recovery entry:\nit accepts only `attempt` and optional `runtime-ref`, calls the published\n`public-ops-recover.yml@v4-alpha`, and preserves the original source and artifacts.\nThis installation order does not qualify the full self cutover or Stable release."
     },
     {
       "id": "manual:shifu-gate-profiles",
@@ -6300,7 +6305,7 @@
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:f9fcb27edcbd2194bd1a66b616fb8b0988a0f9046ccd8995e2e456842522ae0a"
+      "digest": "sha256:b36831e6d2a5caf9672be117265290867588da23a98ca066d43dc2bd9728bb6f"
     },
     {
       "id": "versioning",

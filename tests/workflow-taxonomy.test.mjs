@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { consumerWorkflows } from "../packages/core/consumer/contract/entries.js";
 import fs from "node:fs";
 import { execFileSync } from "node:child_process";
 import os from "node:os";
@@ -318,4 +319,10 @@ test("workflow hotspot routes retain the same logical identities as debt metrics
       `hotspot must use the measured logical workflow identity: ${file}`,
     );
   }
+});
+
+test("installed recovery is the generated two-input public consumer entry", () => {
+  const file = ".github/workflows/buildchain-recover.yml";
+  assert.equal(fs.readFileSync(path.join(repository, file), "utf8"),
+    consumerWorkflows("v4-alpha", ".buildchain/minimal-consumer.toml")[file]);
 });

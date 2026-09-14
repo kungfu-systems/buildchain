@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-13
+last_reviewed: 2026-09-14
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-13
+  generated_at: 2026-09-14
   invisible_context: not asserted
 ---
 
@@ -49,3 +49,18 @@ runtime. Do not persist the train into the caller workflow or contract lock.
 If the public entry itself is defective, publish and adopt the corrected entry
 and start a full run. Copied consumer recovery packages and alternate recovery
 workflows are not part of the runtime contract.
+
+## Protected minimal-entry installation
+
+Install the generated `buildchain-recover.yml` on the protected default branch
+before retiring the previous delivery controller. Verify its provider workflow
+registration before enabling the normal minimal pipeline. A branch-only manual
+caller is not an installed recovery entry. During this bounded migration, pause
+the normal pipeline before enabling the previous protected delivery controller;
+after the installation merge, wait for its runs and Warrant to become terminal,
+then pause that controller before recovering the retained attempt.
+
+The installed caller is byte-identical to the generated consumer recovery entry:
+it accepts only `attempt` and optional `runtime-ref`, calls the published
+`public-ops-recover.yml@v4-alpha`, and preserves the original source and artifacts.
+This installation order does not qualify the full self cutover or Stable release.

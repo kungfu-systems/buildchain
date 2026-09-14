@@ -548,7 +548,7 @@
       "title": "Runtime train validation",
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
-      "digest": "sha256:f9fcb27edcbd2194bd1a66b616fb8b0988a0f9046ccd8995e2e456842522ae0a",
+      "digest": "sha256:b36831e6d2a5caf9672be117265290867588da23a98ca066d43dc2bd9728bb6f",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",

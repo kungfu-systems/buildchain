@@ -11,13 +11,15 @@ export function verifyFailureSettlement(result, settlement, stateRoot) {
       result.receipt.evidenceRoot === settlement.evidenceRoot,
     "Failure settlement receipt does not bind its exact evidence and prior state",
   );
-  const candidate = result.observation?.candidates?.find(
-    (item) =>
-      item.pullRequestNumber === settlement.pullRequestNumber &&
-      item.sourceHead === settlement.sourceHead &&
-      item.terminal?.evidenceRoot === settlement.evidenceRoot,
+  const candidate = result.terminalCandidate;
+  requireValue(
+    candidate?.candidateId === result.receipt.candidateId &&
+      candidate?.pullRequestNumber === settlement.pullRequestNumber &&
+      candidate?.sourceHead === settlement.sourceHead &&
+      candidate?.status === "terminal-failure" &&
+      candidate?.terminal?.evidenceRoot === settlement.evidenceRoot,
+    "Failure settlement terminal candidate is missing",
   );
-  requireValue(candidate, "Failure settlement terminal candidate is missing");
   for (const key of [
     "transferRoot",
     "finalizerBoundaryRoot",
