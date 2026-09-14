@@ -2937,6 +2937,23 @@
         "expectedContributionSeconds": 1200,
         "rationale": "Wait at most fifteen minutes outside the publication lock, then wake the same native Attempt through the normal entry to collect fresh qualification. Twenty minutes includes runtime preparation; this is a conservative timeout budget, not measured latency."
       }
+    },
+    {
+      "laneId": ".github/workflows/buildchain-recover.yml#buildchain",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "manual",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 360,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": true,
+        "metric": "delegated pipeline execution ceiling",
+        "expectedContributionSeconds": 21600,
+        "rationale": "Generated caller delegates to the published pipeline. Runtime jobs own bounded admission, execution, cancellation and provider settlement. Six-hour budget is conservative, not measured latency or an additional self controller."
+      }
     }
   ],
   "declarationFamilies": [

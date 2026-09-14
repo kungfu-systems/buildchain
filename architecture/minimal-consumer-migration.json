@@ -93,6 +93,44 @@
       ]
     },
     {
+      "path": ".github/workflows/buildchain-recover.yml",
+      "role": "self",
+      "events": ["workflow_dispatch"],
+      "secrets": [],
+      "outputs": [],
+      "destination": "self-dogfood.two-callers-or-internal-component",
+      "interfaces": [
+        {
+          "trigger": "workflow_dispatch",
+          "name": "attempt",
+          "definition": {
+            "description": "Exact Buildchain attempt to recover",
+            "required": true,
+            "type": "string"
+          },
+          "destination": "attempt.material-index"
+        },
+        {
+          "trigger": "workflow_dispatch",
+          "name": "runtime-ref",
+          "definition": {
+            "description": "Optional repaired runtime",
+            "required": false,
+            "type": "string"
+          },
+          "destination": "recovery-entry.runtime-ref"
+        }
+      ],
+      "calls": [
+        {
+          "id": "buildchain",
+          "uses": "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4-alpha",
+          "inputs": ["attempt", "runtime-ref"],
+          "destination": "internal.workflow-composition"
+        }
+      ]
+    },
+    {
       "path": ".github/workflows/public-build-adopter-qualification.yml",
       "role": "public",
       "events": ["workflow_call", "workflow_dispatch"],

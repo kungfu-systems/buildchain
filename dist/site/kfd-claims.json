@@ -21,10 +21,10 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "79f23c0a42418163605b7690caa2c0ddceb7280754c6fad82d3cc3bdcefe5884",
+    "sha256": "4e6752b9e9ab9df68d38dd3779976d4b3ada71926f8b910d3073278d93e7b203",
     "summary": {
       "cliCommandCount": 117,
-      "workflowCount": 73,
+      "workflowCount": 74,
       "actionCount": 283,
       "sitePageCount": 94,
       "docCommandRefCount": 1036,
@@ -246,10 +246,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "79f23c0a42418163605b7690caa2c0ddceb7280754c6fad82d3cc3bdcefe5884",
+      "sha256": "4e6752b9e9ab9df68d38dd3779976d4b3ada71926f8b910d3073278d93e7b203",
       "summary": {
         "cliCommandCount": 117,
-        "workflowCount": 73,
+        "workflowCount": 74,
         "actionCount": 283,
         "sitePageCount": 94,
         "docCommandRefCount": 1036,
@@ -4060,6 +4060,20 @@
             "runtime-ref",
             "runtime-selection"
           ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:buildchain-recover",
+          "name": "workflow:buildchain-recover",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/buildchain-recover.yml",
+          "evidencePath": ".github/workflows/buildchain-recover.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -12055,6 +12069,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 754
+    "publicSurfaceCount": 755
   }
 }

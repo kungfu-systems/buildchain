@@ -808,6 +808,18 @@
       "status": "active",
       "invocation": "reusable",
       "rationale": "Regenerate declared version material in credentialless product jobs and independently qualify it before publication or protected next-development Git writes."
+    },
+    {
+      "id": "buildchain-recover",
+      "role": "self",
+      "category": "ops",
+      "purpose": "recovery",
+      "summary": "Buildchain recovery",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "rationale": "Generated minimal consumer caller; all orchestration belongs to the published runtime.",
+      "path": ".github/workflows/buildchain-recover.yml"
     }
   ]
 }

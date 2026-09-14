@@ -4,7 +4,7 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 73,
+    "workflowCount": 74,
     "actionCount": 283,
     "sitePageCount": 94,
     "docCommandRefCount": 1036,
@@ -998,6 +998,17 @@
           "result"
         ],
         "outputCount": 3
+      },
+      {
+        "id": "buildchain-recover",
+        "path": ".github/workflows/buildchain-recover.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
       },
       {
         "id": "public-build-adopter-qualification",
@@ -11130,8 +11141,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e43fdb0289df88871f3f0febbe04dcb9311a252a2b1df9b3a83a2d10c9d4a70f",
-    "workflowRegistryDigest": "b0f9880d69b07247f041028c8f14a110e7578f3c9b0ce817d08dec7fe2a0a954",
-    "pageRegistryDigest": "a2631ef693dd1f1a6df3b42f31c5113b242368b7680343e5ff7cd94222d30d3d"
+    "workflowRegistryDigest": "154f61ebcf07b6bf4cddf21ea6bcb6d30b82c9b2d9b98a8bab6e4b81d060c1cb",
+    "pageRegistryDigest": "8b45528747da91bd85d62a3b1ab199309048271bd17a93521bf97c607b671f77"
   },
   "comparison": {
     "missingCliRegistry": [],

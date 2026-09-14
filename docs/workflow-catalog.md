@@ -83,6 +83,7 @@ Register ownership before adding a workflow. `pnpm run check:workflows` validate
 
 | Workflow | Category | Invocation | Status | Purpose |
 | --- | --- | --- | --- | --- |
+| [buildchain-recover.yml](../.github/workflows/buildchain-recover.yml) | ops | repository | active | Buildchain recovery |
 | [self-build-adopter-dogfood.yml](../.github/workflows/self-build-adopter-dogfood.yml) | build | repository | active | V4 Adopter Delivery Dogfood |
 | [self-build-alpha-dogfood.yml](../.github/workflows/self-build-alpha-dogfood.yml) | build | repository | active | Buildchain Alpha Self-Dogfood |
 | [self-build-binary-distribution.yml](../.github/workflows/self-build-binary-distribution.yml) | build | repository | active | Binary Distribution |

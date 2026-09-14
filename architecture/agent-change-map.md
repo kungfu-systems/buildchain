@@ -144,6 +144,7 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - `.github/workflows/self-build-binary-distribution.yml`
 - `.github/workflows/self-ops-bootstrap-dogfood.yml`
 - `packages/core/governance/buildchain-publication-authority.js`
+- `tests/workflow-taxonomy.test.mjs`
 
 ## action-process-runtime
 
