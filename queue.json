@@ -3,8 +3,8 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 186,
-  "fencingCounter": 52,
+  "generation": 187,
+  "fencingCounter": 53,
   "policy": {
     "agingSeconds": 900,
     "maxPriority": 2,
@@ -12,7 +12,66 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": null,
+  "activeWarrant": {
+    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
+    "phase": "provisional",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v4/v4.1",
+    "candidateId": "sha256:2b737e3da93f4e89485022d32f01ecc31a4b26c72d714fe3e706b8d7279effb4",
+    "pullRequestNumber": 3809,
+    "sourceHead": "3ea7f4b98a477a4d57336fc0559d62f3df1f1b4b",
+    "sourceRoot": "sha256:0209f26835c30ae32ba175b2fb9aba302f684d35da85d502d175c79298c78a51",
+    "sourceIdentityRoot": "sha256:003f34e30871e1049b6d9ae7e2e56f02eb2ddb4175f0b9c47b5a7ea6e3ab85df",
+    "sourcePatchRoot": "sha256:282d16f0d758114de97b788355d133cb7684c837d717411c92e3ccea075c7604",
+    "sourceProofRoot": "sha256:a954dba5daada0e0565c312c62d1e871ef411e41fec64617c0f6547ddb42582a",
+    "planRoot": "sha256:00401bd7b70998e57b9443d7151e6a4a787657309bb122effb10b7807670d2ef",
+    "closureRoot": "sha256:f5f81dddf6f8ccec702037f6560af0357811e52611ce7da58a4d6b54f8da256b",
+    "dependencyRoot": "sha256:afcf4e6fea6578bbad9f105d2d2e93c23557b37ac51cff48e72c716bf73511cb",
+    "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
+    "environmentRoot": "sha256:84dbe566ae977a18e6053a714bfafe57db0667caec5f512857698bc55abbbd40",
+    "nativeCommandContract": {
+      "schema": "kungfu.buildchain.native-command-contract/v1",
+      "runner": "bash-lc",
+      "command": "node ../runtime/packages/core/workflow/commands/pipeline-build.mjs --platform linux-x64 --config-path '.buildchain/minimal-consumer.toml'",
+      "commandRoot": "sha256:a05dcdae36757162da44421de801bae64f605b54d3e6fd15552a18e0b5f14801"
+    },
+    "affectedPaths": [
+      ".github/workflows/public-ops-pipeline.yml",
+      ".github/workflows/public-ops-recover.yml",
+      "actions/publication/pipeline/apply/dist/index.js",
+      "actions/publication/pipeline/prepare-qualification/dist/index.js",
+      "actions/publication/pipeline/prepare/dist/index.js",
+      "actions/publication/pipeline/seal-qualification/dist/index.js",
+      "actions/publication/pipeline/settle/dist/index.js",
+      "actions/publication/version/materialize-development/dist/index.js",
+      "actions/publication/version/materialize-publication/dist/index.js",
+      "actions/workflow/pipeline/control/action.yml",
+      "actions/workflow/pipeline/control/dist/index.js",
+      "actions/workflow/pipeline/record-build/dist/index.js",
+      "actions/workflow/pipeline/recover/action.yml",
+      "actions/workflow/pipeline/recover/dist/index.js",
+      "actions/workflow/pipeline/wake/dist/index.js",
+      "architecture/maintainability-policy.json",
+      "dist/site/buildchain-site.json",
+      "dist/site/kfd-claims.json",
+      "dist/site/page-registry.json",
+      "dist/site/public-surface-audit.json",
+      "dist/site/workflow-registry.json",
+      "docs/runtime-entry.md",
+      "packages/core/workflow/pipeline/host.js",
+      "tests/pipeline-credentials.test.mjs"
+    ],
+    "shardEvidenceRoots": [],
+    "sourceWorkflowRunId": 34902815196,
+    "deliveryClass": "native-proof-required",
+    "priority": "ordinary",
+    "generation": 53,
+    "expectedOldStateRoot": "sha256:5e17f68bc5e53ff57495f7b94150f75ac9f632942ce9995114382bd9772dc36d",
+    "issuedAt": "2026-09-14T22:39:01.653Z",
+    "expiresAt": "2026-09-14T23:39:01.653Z",
+    "fencingToken": "sha256:d3966136e42df59c9dbfff5eb505be885a89395123ab29cc01e0440fbba25a5b",
+    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission."
+  },
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -9022,10 +9081,10 @@
       "sourceWorkflowRunId": 34902815196,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-14T22:38:58.546Z",
-      "updatedAt": "2026-09-14T22:38:58.546Z",
+      "updatedAt": "2026-09-14T22:39:01.653Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
+      "status": "selected",
       "terminal": null,
       "affectedPaths": [
         ".github/workflows/public-ops-pipeline.yml",
@@ -9056,6 +9115,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-14T22:38:58.546Z",
-  "stateRoot": "sha256:5e17f68bc5e53ff57495f7b94150f75ac9f632942ce9995114382bd9772dc36d"
+  "updatedAt": "2026-09-14T22:39:01.653Z",
+  "stateRoot": "sha256:23e3c069990073109a7fc55faf11f4602d1f4504e1657ea804fe57822eecb99e"
 }
