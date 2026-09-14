@@ -12184,7 +12184,7 @@
       ],
       "source": {
         "path": "packages/core/governance/buildchain-publication-authority.js",
-        "line": 71
+        "line": 72
       },
       "example": "import { buildchainPublicationAuthorityDescriptors } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12213,7 +12213,7 @@
       ],
       "source": {
         "path": "packages/core/governance/buildchain-publication-authority.js",
-        "line": 110
+        "line": 111
       },
       "example": "import { createBuildchainPublicationAuthorityRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -29127,7 +29127,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/governance/buildchain-publication-authority.js",
-      "digest": "sha256:57b7a0922c57daa5647a6e6439d36d62d80ec3a21050073330ff0c81df84ae24",
+      "digest": "sha256:d6ee750f2e35aebe44cebc8815b7da50519753e80958a3c0951f4111dd886c51",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -30102,7 +30102,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:a7135f86b2c74078eed1b6fd920629addce974140d7f18a7cdc86c21c8fd7f8d"
+      "digest": "sha256:cc5e5ba3107259155dd8edd9df64853428da9a26fa06d98841862b64209a5b19"
     },
     {
       "id": "build-facts",

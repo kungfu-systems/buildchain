@@ -632,6 +632,36 @@
       "nonDuplicationRationale": "Canonical workflow owns one declared API or orchestration responsibility."
     },
     {
+      "id": "buildchain-recover",
+      "path": ".github/workflows/buildchain-recover.yml",
+      "reusable": false,
+      "inputs": [],
+      "inputCount": 0,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "taxonomy": {
+        "id": "buildchain-recover",
+        "role": "self",
+        "category": "ops",
+        "purpose": "recovery",
+        "status": "active",
+        "canonicalPath": ".github/workflows/buildchain-recover.yml",
+        "compatibilityAlias": false
+      },
+      "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "Canonical workflow owns one declared API or orchestration responsibility."
+    },
+    {
       "id": "public-build-adopter-qualification",
       "path": ".github/workflows/public-build-adopter-qualification.yml",
       "reusable": true,

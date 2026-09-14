@@ -63,12 +63,13 @@ function validateEntries(policy, errors) {
     if (
       entry.path &&
       !(
-        (entry.id === ".build" || entry.id === "build") &&
-        entry.path === `.github/workflows/${entry.id}.yml`
+        [".build", "build", "buildchain", "buildchain-recover"].includes(
+          entry.id,
+        ) && entry.path === `.github/workflows/${entry.id}.yml`
       )
     )
       errors.push(
-        `${entry.id}: explicit path is reserved for the build facade and backbone`,
+        `${entry.id}: explicit path is reserved for build APIs and the generated consumer pair`,
       );
     const file = workflowPath(entry);
     if (!WORKFLOW.test(file) || paths.has(file))
