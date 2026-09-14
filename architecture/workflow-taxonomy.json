@@ -820,6 +820,18 @@
       "invocation": "repository",
       "rationale": "Generated minimal consumer caller; all orchestration belongs to the published runtime.",
       "path": ".github/workflows/buildchain-recover.yml"
+    },
+    {
+      "id": "buildchain",
+      "role": "self",
+      "category": "ops",
+      "purpose": "pipeline",
+      "summary": "Buildchain pipeline",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "rationale": "Generated minimal consumer caller; all orchestration belongs to the published runtime.",
+      "path": ".github/workflows/buildchain.yml"
     }
   ]
 }

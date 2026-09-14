@@ -362,7 +362,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:cc5e5ba3107259155dd8edd9df64853428da9a26fa06d98841862b64209a5b19",
+      "digest": "sha256:f24b0759c3f6920581d33e178891480b4b04535bc4540e55fe28f3869d848d63",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -548,7 +548,7 @@
       "title": "Runtime train validation",
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
-      "digest": "sha256:79e138d31b0c7d680d75557640f860969657ba18692fccdad5a8c150d9ec2896",
+      "digest": "sha256:a7273316ed8786e0da32cc1ffccb2eb6761e373de45e1d4293e311639a8a2f3d",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
