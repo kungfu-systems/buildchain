@@ -4,6 +4,7 @@ import path from "node:path";
 import { createPublicationAuthorityRegistry } from "../publication/publication-authority.js";
 
 const DESCRIPTORS = Object.freeze([
+  [".github/workflows/buildchain.yml", "product-publication", true, ["npm-publish", "github-release", "channel-ref"], "trusted-publishing", "none", "fixed", "fixed", ".github/workflows/.release-pipeline-products.yml"],
   [".github/workflows/buildchain-recover.yml", "product-publication", true, ["npm-publish", "github-release", "channel-ref"], "trusted-publishing", "none", "fixed", "fixed", ".github/workflows/.release-pipeline-products.yml"],
   [".github/workflows/public-release-oci-compose-preview.yml", "product-publication", true, ["oci-compose-preview"], "caller-secrets", "none", "fixed", "caller-bound"],
   [".github/workflows/.build-demo-adapter.yml", "non-publication-oidc"],

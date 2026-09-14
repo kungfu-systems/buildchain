@@ -131,6 +131,30 @@
       ]
     },
     {
+      "path": ".github/workflows/buildchain.yml",
+      "role": "self",
+      "events": [
+        "merge_group",
+        "pull_request",
+        "pull_request_review",
+        "pull_request_target",
+        "push",
+        "repository_dispatch"
+      ],
+      "secrets": [],
+      "outputs": [],
+      "destination": "self-dogfood.two-callers-or-internal-component",
+      "interfaces": [],
+      "calls": [
+        {
+          "id": "buildchain",
+          "uses": "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha",
+          "inputs": ["config-path"],
+          "destination": "internal.workflow-composition"
+        }
+      ]
+    },
+    {
       "path": ".github/workflows/public-build-adopter-qualification.yml",
       "role": "public",
       "events": ["workflow_call", "workflow_dispatch"],
