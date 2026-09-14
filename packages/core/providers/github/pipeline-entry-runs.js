@@ -167,8 +167,15 @@ export async function pipelineEntryCheck(run, host) {
 
 function exactCheck(checks, run, repository) {
   const url = `https://github.com/${repository}/actions/runs/${run.id}/attempts/${run.run_attempt}`;
+  // Actions may replace details_url with the check's own provider URL. Its
+  // exact external execution identity still binds the original native receipt.
   const matches = checks.filter(
-    (check) => check.name === "check" && check.details_url === url,
+    (check) =>
+      check.name === "check" &&
+      (check.details_url === url ||
+        (check.details_url ===
+          `https://github.com/${repository}/runs/${check.id}` &&
+          check.external_id?.endsWith(`:${run.id}:${run.run_attempt}`))),
   );
   if (!matches.length) return null;
   const values = matches.map((check) => {
