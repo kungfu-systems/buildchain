@@ -4380,9 +4380,10 @@
         "project-cut-proof-root",
         "request-json",
         "runtime-sha",
+        "status-token",
         "token"
       ],
-      "inputCount": 5,
+      "inputCount": 6,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",
