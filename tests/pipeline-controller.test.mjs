@@ -5,6 +5,49 @@ import { recordPipelineBuild } from "../packages/core/workflow/pipeline/build-co
 import { resumePipelineSession } from "../packages/core/workflow/pipeline/session.js";
 import { pipelineRuntimeSource } from "../packages/core/workflow/pipeline/runtime-source.js";
 import { controlPipeline } from "../packages/core/workflow/pipeline/controller.js";
+import { observePipelineDelivery } from "../packages/core/workflow/pipeline/delivery-control.js";
+import { pipelineCandidateRoot } from "../packages/core/workflow/pipeline/reconcile.js";
+
+test("attempt wake reads queue removal while a stale dequeue webhook cannot cancel current work", async () => {
+  const f = pipelineHostFixture();
+  const first = await f.event();
+  const session = await resumePipelineSession(
+    { ...f.host, attempt: first.context.attempt },
+    f.host,
+  );
+  const current = { ...f.observed().history.at(-1), intent: session.intent };
+  const queue = await f.host.delivery().read();
+  queue.candidates.push({
+    candidateId: "owned-candidate",
+    pullRequestNumber: 23,
+    sourceHead: current.generation.source.commit,
+    sourceRoot: pipelineCandidateRoot(current),
+    status: "queued",
+  });
+  const delivery = { read: async () => queue };
+  f.host.eventAction = "buildchain-attempt-wake";
+  f.host.queueExit = async () => ({ id: "provider-removal" });
+  const inputs = { "config-path": f.f.source.configPath };
+  const removed = await observePipelineDelivery(
+    session,
+    inputs,
+    f.host,
+    delivery,
+  );
+  assert.equal(removed.decision.operation, "cancel-queued");
+  assert.equal(removed.decision.reason, "pull-request-dequeued");
+  assert.equal(removed.live.queueExit.id, "provider-removal");
+  f.host.eventAction = "dequeued";
+  f.host.queueExit = async () => null;
+  const currentQueue = await observePipelineDelivery(
+    session,
+    inputs,
+    f.host,
+    delivery,
+  );
+  assert.equal(currentQueue.live.dequeued, false);
+  assert.notEqual(currentQueue.decision.operation, "cancel-queued");
+});
 
 test("normal controller binds product build, independently records it, and waits for real review before delivery", async () => {
   const f = pipelineHostFixture();

@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { githubPipelineQueueExit } from "../packages/core/providers/github/pipeline-events.js";
 import {
   pipelineEvent,
   channelRoute,
@@ -9,6 +10,74 @@ const repository = "example/consumer";
 const envelope = (extra = {}) => ({
   repository: { full_name: repository },
   ...extra,
+});
+
+test("queue removal survives runtime handoff without cancelling a successor or a re-enqueued PR", async () => {
+  const current = {
+    intent: { source: { pullRequest: 7, targetBranch: "dev/v1/v1.0" } },
+    generation: { source: { commit: "a".repeat(40) } },
+  };
+  const candidate = { enqueuedAt: "2026-09-14T14:20:43.871Z" };
+  const removed = {
+    __typename: "RemovedFromMergeQueueEvent",
+    id: "provider-event",
+    createdAt: "2026-09-14T14:43:21Z",
+  };
+  const added = {
+    __typename: "AddedToMergeQueueEvent",
+    id: "provider-enqueue",
+    createdAt: "2026-09-14T14:38:36Z",
+  };
+  const pr = {
+    number: 7,
+    headRefOid: "a".repeat(40),
+    baseRefName: "dev/v1/v1.0",
+    state: "OPEN",
+    mergeQueueEntry: null,
+    timelineItems: { nodes: [added, removed] },
+  };
+  const observe = githubPipelineQueueExit(async (_query, variables) => {
+    assert.deepEqual(variables, {
+      owner: "example",
+      repo: "consumer",
+      number: 7,
+    });
+    return { repository: { pullRequest: structuredClone(pr) } };
+  }, repository);
+  assert.deepEqual(await observe(current, candidate), removed);
+  assert.equal(
+    await observe(current, { enqueuedAt: "2026-09-14T14:40:00Z" }),
+    null,
+  );
+  assert.equal(
+    await observe(current, { enqueuedAt: "2026-09-14T14:50:00Z" }),
+    null,
+  );
+  pr.mergeQueueEntry = { id: "new-entry" };
+  assert.equal(await observe(current, candidate), null);
+  pr.mergeQueueEntry = null;
+  pr.timelineItems.nodes = [
+    { ...removed, __typename: "AddedToMergeQueueEvent" },
+  ];
+  assert.equal(await observe(current, candidate), null);
+  pr.timelineItems.nodes = [added, removed];
+  pr.state = "MERGED";
+  assert.equal(await observe(current, candidate), null);
+  pr.state = "OPEN";
+  pr.headRefOid = "b".repeat(40);
+  await assert.rejects(observe(current, candidate), /identity changed/);
+  pr.headRefOid = "a".repeat(40);
+  pr.baseRefName = "dev/v1/other";
+  await assert.rejects(observe(current, candidate), /identity changed/);
+  pr.baseRefName = "dev/v1/v1.0";
+  pr.timelineItems.nodes[0].createdAt = "invalid";
+  await assert.rejects(observe(current, candidate), /timestamp/);
+  pr.timelineItems = null;
+  await assert.rejects(observe(current, candidate), /timeline readback/);
+  const unavailable = githubPipelineQueueExit(async () => {
+    throw new Error("provider unavailable");
+  }, repository);
+  await assert.rejects(unavailable(current, candidate), /provider unavailable/);
 });
 
 test("normal events select live reconciliation without trusting payload authority", () => {

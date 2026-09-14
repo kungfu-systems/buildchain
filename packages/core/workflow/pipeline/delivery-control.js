@@ -21,8 +21,14 @@ export async function observePipelineDelivery(session, inputs, host, delivery) {
     inputs,
   );
   admission.live.terminalOnly = host.terminalOnly === true;
-  admission.live.dequeued = host.eventAction === "dequeued";
   const queue = await delivery.read();
+  admission.live.queueExit =
+    admission.live.state === "open" &&
+    admission.live.source?.commit === current.generation.source.commit &&
+    admission.live.targetBranch === session.intent.source.targetBranch
+      ? await host.queueExit(current, pipelineCandidate(queue, current))
+      : null;
+  admission.live.dequeued = Boolean(admission.live.queueExit);
   const worker = await observePipelineWorker(session, current, queue, host);
   const input = { current, live: admission.live, queue, worker, evidence: {} };
   return {
