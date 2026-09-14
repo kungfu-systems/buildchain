@@ -372,20 +372,8 @@ test("Rust and JavaScript produce byte-identical ReleaseInvocation root DAGs", (
 
 test("the topology ledger exactly freezes all current release jobs and authority signals", () => {
   const topology = checkReleaseTopology();
-  assert.deepEqual(topology.metrics, {
-    workflowCount: 39,
-    jobCount: 116,
-    reusableEdgeCount: 26,
-    mutationRelevantNodeCount: 77,
-    contentsWriteJobCount: 38,
-    oidcWriteJobCount: 25,
-  });
-  assert.deepEqual(topology.semanticMetrics, {
-    workflowCount: 5,
-    mutationRelevantNodeCount: 8,
-    contentsWriteJobCount: 1,
-    oidcWriteJobCount: 1,
-  });
+  assert.deepEqual(topology.metrics, {"workflowCount": 24, "jobCount": 87, "reusableEdgeCount": 14, "mutationRelevantNodeCount": 60, "contentsWriteJobCount": 29, "oidcWriteJobCount": 21});
+  assert.deepEqual(topology.semanticMetrics, {"workflowCount": 2, "mutationRelevantNodeCount": 5, "contentsWriteJobCount": 1, "oidcWriteJobCount": 1});
   assert.deepEqual(
     discoverReleaseTopology(
       topologyLedger.closedWorld.workflowPaths,
@@ -405,11 +393,12 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
     "utf8",
   );
   const recovery = fs.readFileSync(
-    path.join(root, ".github/workflows/self-ops-promotion-recovery.yml"),
+    path.join(root, ".github/workflows/buildchain-recover.yml"),
     "utf8",
   );
   assert.deepEqual(topologyLedger.authorityClosure.runtimeEngines, [
     "packages/core/release/promote-candidate/action.js",
+    "packages/core/publication/pipeline/apply.js",
   ]);
   assert.deepEqual(
     topologyLedger.authorityClosure.privilegedExecutableClosure.entrypoints,
@@ -469,7 +458,7 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
   );
   assert.match(
     recovery,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-release-promote\.yml@v4/u,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-recover\.yml@v4-alpha/u,
   );
 });
 

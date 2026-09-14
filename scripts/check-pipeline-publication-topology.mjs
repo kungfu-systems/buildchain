@@ -13,6 +13,8 @@ export function assertPipelinePublicationTopology(
     ".github/workflows/public-ops-recover.yml",
     ".github/workflows/.ops-pipeline-execute.yml",
     ".github/workflows/.release-pipeline-version.yml",
+    ".github/workflows/buildchain.yml",
+    ".github/workflows/buildchain-recover.yml",
   ]);
   const pipelineTopology = discoverReleaseTopology(
     pipeline.workflowPaths,

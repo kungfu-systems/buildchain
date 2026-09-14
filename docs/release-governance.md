@@ -8,12 +8,12 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-12
+last_reviewed: 2026-09-14
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-12
-  visible_context: Stable canary policy, symmetric zero-input self-build callers, artifact validation and regression tests.
+  generated_at: 2026-09-14
+  visible_context: User-directed zero-delay self release policy, required provider evidence and regression tests.
   invisible_context_boundary: No external consumer changes or completed stable publication is claimed.
 ---
 
@@ -358,7 +358,7 @@ The production channel and the test channel therefore intentionally diverge
 after release: production stays on the release commit, while alpha/dev continue
 at the next prerelease commit.
 
-### Stable Release Throttle And Canary Gate
+### Stable Release Evidence Gate
 
 Buildchain's own stable channel has an additional pre-publication gate. It is
 evaluated after the PR-stage release candidate has been resolved and before the
@@ -379,8 +379,6 @@ candidate is allowed only when all of these facts are true:
 
 - the candidate resolves to an immutable exact alpha tag and its GitHub
   prerelease timestamp;
-- at least 24 hours have passed since the preceding stable patch on the same
-  minor line;
 - the preceding stable-to-alpha comparison contains a product or public
   contract path, not only version, test, evidence, or retrospective changes;
 - the version-bound impact record has a non-empty summary and at least one
@@ -392,8 +390,7 @@ candidate is allowed only when all of these facts are true:
 - the status target is the repository-owned alpha dogfood workflow, its summary
   archive matches the provider digest, and the summary binds the source run,
   attempt, exact candidate runtime and all install/build/verify stages; overrides,
-  another candidate and incomplete artifacts are rejected;
-- at least one hour has elapsed after the last required canary completed.
+  another candidate and incomplete artifacts are rejected.
 
 The machine report is written to
 `.buildchain/release-passport/stable-release-gate.json`. A passing report is
@@ -407,10 +404,11 @@ Generic `commit-status` consumer canaries remain supported for repositories that
 explicitly declare them; their runtime input or workflow-owned run-name binding
 continues to apply.
 
-The cooldown is a minimum interval, not an instruction to release every day.
-Compatible work should still be batched until a stable release has a concrete
-consumer need. Changing the interval, canary set, attestors, product path
-boundary, or soak time is a reviewed policy change.
+Buildchain sets both the minimum stable interval and canary soak duration to
+zero. A candidate can proceed as soon as its required evidence is valid; no
+fixed cooldown, soak window or scheduled release time delays this delivery.
+Changing the canary set, attestors or product path boundary remains a reviewed
+policy change.
 
 Repositories that want a predictable scheduled stable window can use
 [`Stable Candidate Patrol`](stable-candidate-patrol.md). It persists each exact

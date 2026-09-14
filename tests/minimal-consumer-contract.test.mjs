@@ -77,7 +77,7 @@ test("self product migration retains full source qualification on each checkpoin
   }
 });
 
-test("stable eligibility is closed product policy and preserves the self migration thresholds", () => {
+test("stable eligibility preserves required evidence without a self release delay", () => {
   const self = compileConsumerPlan(
     fs.readFileSync(".buildchain/minimal-consumer.toml", "utf8"),
   );
@@ -91,6 +91,8 @@ test("stable eligibility is closed product policy and preserves the self migrati
     impact_file: ".buildchain/release-impact.json",
     require_published_entry: true,
   });
+  assert.equal(self.stable.minimum_interval_seconds, 0);
+  assert.equal(self.stable.minimum_soak_seconds, 0);
   assert.equal(compileConsumerPlan(example()[CONFIG_PATH]).stable, undefined);
   for (const change of [
     { minimum_soak_seconds: -1 },

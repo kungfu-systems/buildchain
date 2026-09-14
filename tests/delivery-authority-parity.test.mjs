@@ -826,15 +826,6 @@ test("every implemented parity disposition has an executable behavioral proof", 
       "utf8",
     ),
   );
-  const caller = reusableWorkflowCall(
-    fs.readFileSync(
-      path.join(
-        repositoryRoot,
-        ".github/workflows/self-ops-dev-delivery.yml",
-      ),
-      "utf8",
-    ),
-  );
   const template = reusableWorkflowCall(
     fs.readFileSync(
       path.join(repositoryRoot, "templates/native-dev-delivery.yml"),
@@ -975,10 +966,9 @@ assert.ok(executeWorkflowMapping(template, dispatchContext, ["runtime-ref"])[
         "runtime-ref"
       ] === "", "DA-15: executeWorkflowMapping(template, dispatchContext, [\"runtime-ref\"])[\n        \"runtime-ref\"\n      ] === \"\"");
 assert.ok(authorityInputs.every(
-        (input) => input in caller.with && input in template.with,
-      ), "DA-15: authorityInputs.every(\n        (input) => input in caller.with && input in template.with,\n      )");
+        (input) => input in template.with,
+      ), "DA-15: authorityInputs.every(\n        (input) => input in template.with,\n      )");
 assert.ok(/activeLeaseContext: String\([\s\S]*options.activeLeaseContext[\s\S]*VALID_WARRANT_MODES[\s\S]*"required"[\s\S]*"Queue family lease\/exact"/.test(autoMergeRuntime), "DA-15: /activeLeaseContext: String\\([\\s\\S]*options.activeLeaseContext[\\s\\S]*VALID_WARRANT_MODES[\\s\\S]*\"required\"[\\s\\S]*\"Queue family leas");
-assert.deepEqual(executeWorkflowMapping(caller, dispatchContext, mappingNames), expectedMapping);
 assert.deepEqual(executeWorkflowMapping(template, dispatchContext, mappingNames), expectedMapping);
 assert.ok(JSON.stringify(generatedSchema) === JSON.stringify(schema), "DA-15: JSON.stringify(generatedSchema) === JSON.stringify(schema)");
 prove("DA-15", true);

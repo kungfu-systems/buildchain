@@ -22,10 +22,11 @@ test("current runtime defaults use v4 with no historical producer fallback", () 
 });
 
 test("binary evidence requires an explicit exact current tag instead of a historical default", () => {
-  const workflow = YAML.parse(source(".github/workflows/self-build-binary-distribution.yml"));
-  assert.equal(workflow.on.workflow_dispatch.inputs.tag.required, true);
-  assert.equal(workflow.on.workflow_dispatch.inputs.tag.default, undefined);
-  assert.deepEqual(workflow.on.push.tags, ["v4.*.*", "v4.*.*-alpha.*"]);
+  const workflow = YAML.parse(source(".github/workflows/.release-binary-assets.yml"));
+  assert.equal(workflow.on.workflow_call.inputs["release-tag"].required, true);
+  assert.equal(workflow.on.workflow_call.inputs["release-tag"].default, undefined);
+  assert.equal(workflow.on.workflow_call.inputs["source-sha"].required, true);
+  assert.equal(workflow.on.push, undefined);
 });
 
 test("current manuals and action references use v3 examples", () => {
