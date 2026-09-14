@@ -7,18 +7,18 @@ import { loadStableReleasePolicy } from "../packages/core/release/stable-release
 
 const root = path.resolve(import.meta.dirname, "..");
 
-test("self stable plan preserves soak, interval and published-entry requirements", () => {
+test("self stable plan removes fixed delays and preserves published-entry requirements", () => {
   const policy = compileConsumerPlan(fs.readFileSync(path.join(root, ".buildchain/buildchain.toml"), "utf8")).stable;
-  assert.equal(policy.minimum_soak_seconds, 3600);
-  assert.equal(policy.minimum_interval_seconds, 86400);
+  assert.equal(policy.minimum_soak_seconds, 0);
+  assert.equal(policy.minimum_interval_seconds, 0);
   assert.equal(policy.require_published_entry, true);
-  // The retained legacy policy is the migration baseline, not a new-entry receipt.
+  // Both policy paths retain the required evidence without a fixed delay.
   const gate = loadStableReleasePolicy({
     cwd: root,
     input: ".buildchain/stable-release-policy.json",
   });
-  assert.equal(gate.minimumCanarySoakSeconds, 3600);
-  assert.equal(gate.minimumStableIntervalSeconds, 86400);
+  assert.equal(gate.minimumCanarySoakSeconds, 0);
+  assert.equal(gate.minimumStableIntervalSeconds, 0);
   const canary = gate.requiredCanaries.find(
     (entry) => entry.source === "public-build",
   );

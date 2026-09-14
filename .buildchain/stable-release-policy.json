@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-stable-release-policy",
   "enabled": true,
-  "minimumStableIntervalSeconds": 86400,
-  "minimumCanarySoakSeconds": 3600,
+  "minimumStableIntervalSeconds": 0,
+  "minimumCanarySoakSeconds": 0,
   "productPathPrefixes": [
     ".buildchain/stable-release-policy.json",
     ".github/workflows/",

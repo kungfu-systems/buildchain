@@ -321,8 +321,10 @@ test("workflow hotspot routes retain the same logical identities as debt metrics
   }
 });
 
-test("installed recovery is the generated two-input public consumer entry", () => {
-  const file = ".github/workflows/buildchain-recover.yml";
-  assert.equal(fs.readFileSync(path.join(repository, file), "utf8"),
-    consumerWorkflows("v4-alpha", ".buildchain/minimal-consumer.toml")[file]);
+test("installed normal and recovery entries preserve the generated public contract", () => {
+  for (const [file, expected] of Object.entries(
+    consumerWorkflows("v4-alpha", ".buildchain/minimal-consumer.toml"),
+  )) {
+    assert.equal(fs.readFileSync(path.join(repository, file), "utf8"), expected);
+  }
 });

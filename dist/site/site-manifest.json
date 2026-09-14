@@ -333,7 +333,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:2714f40f9f5980dd5d0693bd4cfa7cc2a30f0fc3a0457d9c16844d6359fd97ee"
+      "digest": "sha256:4f3ce05b94c78243aaffca178789ca1ef4929ae36d975878ff7ff4828f1d5f95"
     },
     {
       "id": "v4-compatibility-facts",
@@ -357,7 +357,7 @@
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:b36831e6d2a5caf9672be117265290867588da23a98ca066d43dc2bd9728bb6f"
+      "digest": "sha256:3a96b88cafd3afd357e27e585aac0d048dbfb91659ac5f97c4b2535cde0ce3e1"
     },
     {
       "id": "versioning",

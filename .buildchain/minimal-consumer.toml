@@ -163,8 +163,8 @@ code_owners = true
 merge_queue = true
 
 [stable]
-minimum_interval_seconds = 86400
-minimum_soak_seconds = 3600
+minimum_interval_seconds = 0
+minimum_soak_seconds = 0
 product_paths = [ ".buildchain/stable-release-policy.json", ".github/workflows/", "actions/", "packages/", "scripts/" ]
 impact_file = ".buildchain/release-impact.json"
 require_published_entry = true
