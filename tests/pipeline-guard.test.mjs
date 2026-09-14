@@ -7,7 +7,7 @@ import {
   validatePipelineExecutionRequest,
 } from "../packages/core/workflow/pipeline/guard.js";
 
-import { publishPipelineBuildStatus } from "../packages/core/workflow/pipeline/guard-build.js";
+import { publishPipelineBuildStatus } from "../packages/core/workflow/pipeline/build-evidence.js";
 
 test("landing projects its requalified source independently of later empty workflow check suites", async () => {
   const f = identities(),
