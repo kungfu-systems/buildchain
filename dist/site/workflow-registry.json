@@ -233,8 +233,10 @@
         "runtime-selection"
       ],
       "inputCount": 2,
-      "secrets": [],
-      "secretCount": 0,
+      "secrets": [
+        "BUILDCHAIN_AUTOMATION_TOKEN"
+      ],
+      "secretCount": 1,
       "outputs": [],
       "outputCount": 0,
       "taxonomy": {
@@ -1201,7 +1203,7 @@
       "status": "preview",
       "owner": "buildchain-workflows",
       "maturity": "preview",
-      "introducedVersion": "4.1.3-alpha.4",
+      "introducedVersion": "4.1.3-alpha.5",
       "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
       "sunsetCondition": "explicit-contract-change-review",
@@ -2699,7 +2701,7 @@
       "status": "preview",
       "owner": "buildchain-workflows",
       "maturity": "preview",
-      "introducedVersion": "4.1.3-alpha.4",
+      "introducedVersion": "4.1.3-alpha.5",
       "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
       "sunsetCondition": "explicit-contract-change-review",
@@ -2729,7 +2731,7 @@
       "status": "preview",
       "owner": "buildchain-workflows",
       "maturity": "preview",
-      "introducedVersion": "4.1.3-alpha.4",
+      "introducedVersion": "4.1.3-alpha.5",
       "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
       "sunsetCondition": "explicit-contract-change-review",
@@ -2759,7 +2761,7 @@
       "status": "preview",
       "owner": "buildchain-workflows",
       "maturity": "preview",
-      "introducedVersion": "4.1.3-alpha.4",
+      "introducedVersion": "4.1.3-alpha.5",
       "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
       "sunsetCondition": "explicit-contract-change-review",
