@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 189,
+  "generation": 190,
   "fencingCounter": 53,
   "policy": {
     "agingSeconds": 900,
@@ -14,7 +14,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.1",
     "candidateId": "sha256:2b737e3da93f4e89485022d32f01ecc31a4b26c72d714fe3e706b8d7279effb4",
@@ -70,8 +70,13 @@
     "issuedAt": "2026-09-14T22:39:01.653Z",
     "expiresAt": "2026-09-14T23:45:18.866Z",
     "fencingToken": "sha256:d3966136e42df59c9dbfff5eb505be885a89395123ab29cc01e0440fbba25a5b",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-09-14T22:45:18.866Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-09-14T22:45:18.866Z",
+    "nativeProofRoot": "sha256:2b67d10e2bad971d083ead086fd06908315e6a4034986adfa12f9a5f82a39f56",
+    "nativeExecutionReceiptRoot": "sha256:50df6bd3d3e7f7c14db4749a357f41b85a07dbefb1139bb7e26632da57639b5b",
+    "nativeProofReuseRoot": "sha256:1aedeed9ae5d573ae3b07c19197f4c75fa49fb1034375f4fdf6287b1243a7597",
+    "qualificationReceiptRoot": "sha256:e7af3fe1f74a6ff32cb0803c8db9bfbbbb112b703a6d61f9232b7f1e4738f13f",
+    "qualifiedAt": "2026-09-14T22:48:34.431Z"
   },
   "candidates": [
     {
@@ -9082,10 +9087,10 @@
       "sourceWorkflowRunId": 34902815196,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-14T22:38:58.546Z",
-      "updatedAt": "2026-09-14T22:45:18.866Z",
+      "updatedAt": "2026-09-14T22:48:34.431Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         ".github/workflows/public-ops-pipeline.yml",
@@ -9116,6 +9121,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-14T22:45:18.866Z",
-  "stateRoot": "sha256:864a44fecc74667b69bd695c13d2aae69343d6d239a051d26a47b54b186c2d5c"
+  "updatedAt": "2026-09-14T22:48:34.431Z",
+  "stateRoot": "sha256:581e87eda068e4c943f45c2b2fe6ac8eb1a320f5bbdd976db0eccd1b36713007"
 }
