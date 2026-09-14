@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 138,
+  "generation": 139,
   "fencingCounter": 45,
   "policy": {
     "agingSeconds": 900,
@@ -12,56 +12,7 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": {
-    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "ready",
-    "repository": "kungfu-systems/buildchain",
-    "protectedBase": "dev/v4/v4.1",
-    "candidateId": "sha256:ffa7f0261b35c58de2602df11fdeb9a17b71ef38ec421aca2049a0b116745eb0",
-    "pullRequestNumber": 3800,
-    "sourceHead": "d9195cbd63347baad9a87f7646cf797108030090",
-    "sourceRoot": "sha256:6c3fff2a84518931eabc6d466eb9be78b1a010c9c08453376e5098bc8a8e884e",
-    "sourceIdentityRoot": "sha256:37af943d0ffbeb4b8c7c621cec303a993b13d159c99a758229707d01795903d5",
-    "sourcePatchRoot": "sha256:1e69c619711deec865a53e758a94a4c2b56241399e0c9c66c942d8116417220b",
-    "sourceProofRoot": "sha256:a129a2e33b73e9d2d34c764a6e6b7d77613b68543275cc96694ea8f0a5e12033",
-    "planRoot": "sha256:e6457a08bf8cef6e6e8f4345b6fd48d000416bea8efc82c87214ed6ec23a8f3a",
-    "closureRoot": "sha256:ef8adecb7a18e90bd03dc67832b2dc853b82c3ccb0edbadeaaf941236803f864",
-    "dependencyRoot": "sha256:59ccef0017a03358a85805e96f2128c8ad196f16b249bdaac54a4c6fdb9fdd04",
-    "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
-    "affectedPaths": [
-      ".github/workflows/buildchain.yml",
-      "architecture/ci-lane-change-budget.json",
-      "architecture/maintainability-policy.json",
-      "architecture/minimal-consumer-migration.json",
-      "architecture/workflow-taxonomy.json",
-      "dist/site/buildchain-contract.json",
-      "dist/site/buildchain-site.json",
-      "dist/site/capability-registry.json",
-      "dist/site/kfd-claims.json",
-      "dist/site/manual-registry.json",
-      "dist/site/node-api-registry.json",
-      "dist/site/page-registry.json",
-      "dist/site/public-surface-audit.json",
-      "dist/site/publication-authority-registry.json",
-      "dist/site/site-manifest.json",
-      "dist/site/workflow-registry.json",
-      "docs/node-api-reference.md",
-      "docs/runtime-train-validation.md",
-      "docs/workflow-catalog.md",
-      "packages/core/governance/buildchain-publication-authority.js",
-      "tests/workflow-taxonomy.test.mjs"
-    ],
-    "shardEvidenceRoots": [],
-    "sourceWorkflowRunId": 34845611613,
-    "deliveryClass": "non-native-fast",
-    "priority": "ordinary",
-    "generation": 45,
-    "expectedOldStateRoot": "sha256:c75b25ccd87f465c3ecc07051c6118476056892959dfe5cd043449a5f5d29595",
-    "issuedAt": "2026-09-14T13:01:43.100Z",
-    "expiresAt": "2026-09-14T14:01:43.100Z",
-    "fencingToken": "sha256:29599c050d51d3b78a3bc725b89a00bd750ba4f16f74681a784e6f6ad084d388",
-    "nextAction": "Replay on the exact current dev base, prove required checks, then enqueue the unchanged PR head."
-  },
+  "activeWarrant": null,
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -7972,11 +7923,19 @@
       "sourceWorkflowRunId": 34845611613,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-14T13:01:40.465Z",
-      "updatedAt": "2026-09-14T13:01:43.100Z",
+      "updatedAt": "2026-09-14T13:12:49.409Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "selected",
-      "terminal": null,
+      "status": "merged",
+      "terminal": {
+        "outcome": "merged",
+        "reason": "Protected merge read back at exact commit c32bb50d4699a8f085b2bb11a495183619286cea",
+        "evidenceRoot": "sha256:d04fd9b3ddaed41c6401ec4516bc80e7c8395686b70bd7622fbbc656d2d3cdde",
+        "closedAt": "2026-09-14T13:12:49.409Z",
+        "fencingToken": "sha256:29599c050d51d3b78a3bc725b89a00bd750ba4f16f74681a784e6f6ad084d388",
+        "leaseGeneration": 45,
+        "successorWake": null
+      },
       "affectedPaths": [
         ".github/workflows/buildchain.yml",
         "architecture/ci-lane-change-budget.json",
@@ -8003,6 +7962,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-14T13:01:43.100Z",
-  "stateRoot": "sha256:c054ee0248e3232b1d27863aedcc7693072eee869f16351b81ce3c3b7f5b0cb1"
+  "updatedAt": "2026-09-14T13:12:49.409Z",
+  "stateRoot": "sha256:34d71af22141b88393f06cdd4cfde9dd450dbab9eefffb8974eda5ff7d5a4c63"
 }
