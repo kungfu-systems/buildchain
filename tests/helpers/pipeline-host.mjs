@@ -126,6 +126,7 @@ export function pipelineHostFixture() {
     project: async () => effects.push("project"),
     wake: async (attempt) => effects.push({ wake: attempt }),
     request: async (url, options) => {
+      if (url.includes("/check-runs?")) return { check_runs: [] };
       if (url.endsWith("/pulls/23"))
         return {
           base: { ref: f.intent.source.targetBranch },
