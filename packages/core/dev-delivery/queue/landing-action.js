@@ -4,12 +4,24 @@ import { admissionPolicyRequest } from "../admission/request.js";
 import { runAdmissionTransaction } from "../admission/transaction.js";
 import { enforceLanding } from "./completion.js";
 import { guardPipelineAdmission } from "../../workflow/pipeline/guard.js";
+import { githubJsonClient } from "../../providers/github/json-client.js";
+import { publishPipelineBuildStatus } from "../../workflow/pipeline/guard-build.js";
 export async function admitLandingAction(core, env) {
   const context = deliveryActionContext(core, env);
   const request = JSON.parse(core.getInput("request-json", { required: true }));
   await guardPipelineAdmission(request, {
     repository: env.GITHUB_REPOSITORY,
     token: core.getInput("token", { required: true }),
+    publishBuildStatus: (build) =>
+      publishPipelineBuildStatus(
+        request,
+        build,
+        githubJsonClient({
+          token: core.getInput("status-token", { required: true }),
+          userAgent: "buildchain-qualified-status",
+        }),
+        env.GITHUB_REPOSITORY,
+      ),
   });
   const result = await runAdmissionTransaction(
     {
