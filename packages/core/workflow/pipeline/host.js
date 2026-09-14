@@ -11,7 +11,6 @@ import { githubPipelineSource } from "../../providers/github/pipeline-source.js"
 import { githubPipelineRuns } from "../../providers/github/pipeline-runs.js";
 import { githubPipelineWorker } from "../../providers/github/pipeline-worker.js";
 import { githubPipelinePolicy } from "../../providers/github/pipeline-policy.js";
-import { githubPipelineQueueExit } from "../../providers/github/pipeline-events.js";
 import { discussionMaterials } from "../../providers/github/discussions/materials.js";
 import { pipelineMaterials } from "./materials.js";
 import { GitHubClient } from "../../dev-delivery/admission/github-client.js";
@@ -85,7 +84,6 @@ export async function pipelineHost(core, env, jobName) {
     source,
     workers: githubPipelineWorker(request),
     policy: githubPipelinePolicy(request, repository),
-    queueExit: githubPipelineQueueExit(github.graphql, repository),
     queue: new GitHubClient({ repository: { owner, repo }, token }),
     integration: githubPipelineIntegration(request, repository, source, runs),
     groupRecord: (context) => recordPipelineGroup(context, host),

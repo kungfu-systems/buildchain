@@ -5,6 +5,83 @@ import {
 } from "./build-qualification.js";
 import { pipelinePlatforms } from "./platforms.js";
 
+const RECOVERY_CHECK = "Buildchain recovery verification";
+
+// Dispatch-created Actions checks do not satisfy protected PR checks. Preserve
+// their evidence under a diagnostic name instead of shadowing normal PR checks.
+export async function observePipelineBuildChecks(source, request, repository) {
+  if (
+    source.repository !== repository ||
+    !/^[0-9a-f]{40}$/u.test(source.commit)
+  )
+    throw new Error("Recovery check repository or source identity drift");
+  const base = `/repos/${repository}`,
+    renames = [],
+    eligible = [];
+  for (let page = 1; page <= 20; page++) {
+    const result = await request(
+      `${base}/commits/${source.commit}/check-runs?filter=all&per_page=100&page=${page}`,
+    );
+    if (!Array.isArray(result.check_runs) || result.check_runs.length > 100)
+      throw new Error("Recovery check inventory is incomplete");
+    for (const check of result.check_runs) {
+      const match = /^buildchain:(attempt-[0-9a-f]{64}):(\d+):(\d+)$/u.exec(
+        check.external_id || "",
+      );
+      if (
+        check.name !== "check" ||
+        check.app?.slug !== "github-actions" ||
+        !match
+      )
+        continue;
+      const runId = Number(match[2]),
+        runAttempt = Number(match[3]);
+      if (
+        check.head_sha !== source.commit ||
+        ![check.id, runId, runAttempt].every(
+          (value) => Number.isSafeInteger(value) && value > 0,
+        )
+      )
+        throw new Error("Recovery check provider identity drift");
+      const run = await request(
+        `${base}/actions/runs/${runId}/attempts/${runAttempt}`,
+      );
+      if (
+        run.id !== runId ||
+        run.run_attempt !== runAttempt ||
+        run.repository?.full_name !== repository
+      )
+        throw new Error("Recovery check execution identity drift");
+      if (["workflow_dispatch", "repository_dispatch"].includes(run.event))
+        renames.push({
+          id: check.id,
+          externalId: check.external_id,
+          sourceHead: source.commit,
+          runId,
+          runAttempt,
+          name: RECOVERY_CHECK,
+        });
+      else if (
+        [
+          "push",
+          "pull_request",
+          "pull_request_review",
+          "pull_request_target",
+        ].includes(run.event) &&
+        run.head_sha === source.commit
+      )
+        eligible.push({
+          id: check.id,
+          runId,
+          runAttempt,
+          conclusion: check.conclusion,
+        });
+    }
+    if (result.check_runs.length < 100) return { renames, eligible };
+  }
+  throw new Error("Recovery check inventory exceeds its complete-read bound");
+}
+
 // The archive reference is already validated against the current attempt. A
 // build result is still re-read from the provider before it can admit delivery.
 export async function pipelineBuildEvidence(session, host) {
@@ -74,18 +151,53 @@ export async function publishPipelineBuildCheck(
       "Product check source differs from independently verified build",
     );
   const externalId = `buildchain:${context.attempt}:${context.runId}:${context.runAttempt}`;
+  const recovered = readback.schema === PIPELINE_BUILD_QUALIFICATION;
+  const output = {
+    title: recovered
+      ? "Buildchain recovered product verification"
+      : "Buildchain product verification",
+    summary: `Exact product jobs: ${readback.root}\nAttempt: ${context.attempt}`,
+  };
+  if (recovered) {
+    const checks = await observePipelineBuildChecks(
+      context.source,
+      request,
+      repository,
+    );
+    for (const change of checks.renames)
+      await request(`/repos/${repository}/check-runs/${change.id}`, {
+        method: "PATCH",
+        body: { name: change.name },
+      });
+    const original = checks.eligible.find((check) =>
+      readback.segments.some(
+        (segment) =>
+          segment.readback.runId === check.runId &&
+          segment.readback.runAttempt === check.runAttempt,
+      ),
+    );
+    // Keep the eligible normal-event check identity. Only a fully requalified
+    // source aggregate can repair its failed projection; original runs and
+    // immutable build receipts still retain their original failure outcomes.
+    if (
+      original &&
+      original.conclusion !== "success" &&
+      readback.outcome === "success"
+    )
+      await request(`/repos/${repository}/check-runs/${original.id}`, {
+        method: "PATCH",
+        body: { status: "completed", conclusion: "success", output },
+      });
+  }
   return request(`/repos/${repository}/check-runs`, {
     method: "POST",
     body: {
-      name: "check",
+      name: recovered ? RECOVERY_CHECK : "check",
       head_sha: context.source.commit,
       external_id: externalId,
       status: "completed",
       conclusion: readback.outcome === "success" ? "success" : "failure",
-      output: {
-        title: "Buildchain product verification",
-        summary: `Exact product jobs: ${readback.root}\nAttempt: ${context.attempt}`,
-      },
+      output,
       details_url: `https://github.com/${repository}/actions/runs/${context.runId}/attempts/${context.runAttempt}`,
     },
   });

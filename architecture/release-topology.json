@@ -179,7 +179,6 @@
         "packages/core/providers/github/graphql-errors.js",
         "packages/core/providers/github/json-client.js",
         "packages/core/providers/github/pipeline-entry-runs.js",
-        "packages/core/providers/github/pipeline-events.js",
         "packages/core/providers/github/pipeline-integration.js",
         "packages/core/providers/github/pipeline-policy.js",
         "packages/core/providers/github/pipeline-product-payload.js",
@@ -398,7 +397,7 @@
         "packages/core/workflow/pipeline/wake.js",
         "packages/core/workflow/pipeline/web-status.js"
       ],
-      "root": "sha256:e07aa091efedeeb03167a67b3e6f74df184d5368b627104794604d12e1c580e4"
+      "root": "sha256:b474be097d7b1455785cf78247c966601a2adfb03ff1baee9cc009f26b9c2ac1"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/runtime/domain-wasm.js",
