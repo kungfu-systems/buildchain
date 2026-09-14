@@ -753,8 +753,10 @@
           "runtime-selection"
         ],
         "inputCount": 2,
-        "secrets": [],
-        "secretCount": 0,
+        "secrets": [
+          "BUILDCHAIN_AUTOMATION_TOKEN"
+        ],
+        "secretCount": 1,
         "outputs": [],
         "outputCount": 0
       },
@@ -11128,8 +11130,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e43fdb0289df88871f3f0febbe04dcb9311a252a2b1df9b3a83a2d10c9d4a70f",
-    "workflowRegistryDigest": "9a781fbaac03265e04ab61cfca00282e8c3f70f1d47756138cbed43460f2e3b2",
-    "pageRegistryDigest": "71e5bb99567bf82b2c896da95f83197b58fad84e35ef54f5e9e4dc0cc3b7e465"
+    "workflowRegistryDigest": "d52b008d8113340194ec1e074870b71b83392a914536e2ef830c10abee0756d6",
+    "pageRegistryDigest": "a2631ef693dd1f1a6df3b42f31c5113b242368b7680343e5ff7cd94222d30d3d"
   },
   "comparison": {
     "missingCliRegistry": [],
