@@ -5203,9 +5203,10 @@
         "path": "actions/workflow/pipeline/control/action.yml",
         "inputs": [
           "config-path",
+          "queue-token",
           "token"
         ],
-        "inputCount": 2
+        "inputCount": 3
       },
       {
         "id": "workflow/pipeline/record-build",
@@ -5222,9 +5223,10 @@
         "inputs": [
           "attempt",
           "definition-sha",
+          "queue-token",
           "token"
         ],
-        "inputCount": 3
+        "inputCount": 4
       },
       {
         "id": "workflow/pipeline/wake",
@@ -10812,8 +10814,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e43fdb0289df88871f3f0febbe04dcb9311a252a2b1df9b3a83a2d10c9d4a70f",
-    "workflowRegistryDigest": "86d5d66e4461dff39b301e3706073e7c17a36f2853b297c4b616b1f2f35f267a",
-    "pageRegistryDigest": "364e2b7fa9fd173985912b50c2db92f32879ceed95779954b3ec276aef957d9a"
+    "workflowRegistryDigest": "023f6ff72a4603c4a1cd2b670f38d88a31ca49f51b7a670cb1a87ffc0b75d407",
+    "pageRegistryDigest": "80d9a72bc3833c1f9ec4ad39f3dbab4ebce9b51c795d390a3526acf904054eb7"
   },
   "comparison": {
     "missingCliRegistry": [],
