@@ -7,6 +7,58 @@ import {
   validatePipelineExecutionRequest,
 } from "../packages/core/workflow/pipeline/guard.js";
 
+import { publishPipelineBuildStatus } from "../packages/core/workflow/pipeline/guard-build.js";
+
+test("landing projects its requalified source independently of later empty workflow check suites", async () => {
+  const f = identities(),
+    effects = [];
+  const input = {
+    "expected-head-sha": f.source.commit,
+    "source-workflow-run-id": "200",
+  };
+  const build = {
+    run: { id: 200, run_attempt: 1 },
+    sourceHead: f.source.commit,
+    outcome: "success",
+    readback: {
+      source: f.source,
+      runId: 200,
+      runAttempt: 1,
+      outcome: "success",
+      root: "sha256:" + "a".repeat(64),
+    },
+  };
+  const request = async (url, options) =>
+    effects.push({ url, body: options.body });
+  await publishPipelineBuildStatus(input, build, request, f.source.repository);
+  assert.equal(
+    effects[0].url,
+    `/repos/${f.source.repository}/statuses/${f.source.commit}`,
+  );
+  assert.equal(effects[0].body.context, "check");
+  assert.equal(effects[0].body.state, "success");
+  assert.match(effects[0].body.target_url, /runs\/200\/attempts\/1$/u);
+  for (const changed of [
+    { ...build, sourceHead: "f".repeat(40) },
+    { ...build, run: { id: 201, run_attempt: 1 } },
+    { ...build, run: { id: 200, run_attempt: 2 } },
+    { ...build, outcome: "failure" },
+    { ...build, readback: { ...build.readback, outcome: "failure" } },
+    {
+      ...build,
+      readback: {
+        ...build.readback,
+        source: { ...f.source, repository: "other/repo" },
+      },
+    },
+  ])
+    await assert.rejects(
+      publishPipelineBuildStatus(input, changed, request, f.source.repository),
+      /qualified exact-source/u,
+    );
+  assert.equal(effects.length, 1);
+});
+
 test("delivery effects cannot change the retained native command or borrow another provider execution", () => {
   const f = identities();
   const observed = { attempt: f.attempt.id, generation: f.generation.id };

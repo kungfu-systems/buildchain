@@ -78,6 +78,7 @@ runs:
           fromJSON(inputs.needs-json).admission.outputs.project-cut-proof-root
           }}
         token: ${{ inputs.github-token || github.token }}
+        status-token: ${{ github.token }}
     - name: Upload dev PR auto-merge plan
       if: always() && fromJSON(inputs.request-json).defer-landing != true
       uses: actions/upload-artifact@v7.0.1

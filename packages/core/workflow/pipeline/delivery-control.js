@@ -3,6 +3,7 @@ import { preparePipelineDelivery } from "./delivery-request.js";
 import { pipelineBuildEvidence } from "./build-evidence.js";
 import {
   observePipelineWorker,
+  pipelineDeliveryExecution,
   pipelineDeliveryStore,
 } from "./delivery-observation.js";
 import { reconcilePipeline, pipelineCandidate } from "./reconcile.js";
@@ -21,8 +22,14 @@ export async function observePipelineDelivery(session, inputs, host, delivery) {
     inputs,
   );
   admission.live.terminalOnly = host.terminalOnly === true;
-  admission.live.dequeued = host.eventAction === "dequeued";
   const queue = await delivery.read();
+  admission.live.queueExit =
+    admission.live.state === "open" &&
+    admission.live.source?.commit === current.generation.source.commit &&
+    admission.live.targetBranch === session.intent.source.targetBranch
+      ? await host.queueExit(current, pipelineCandidate(queue, current))
+      : null;
+  admission.live.dequeued = Boolean(admission.live.queueExit);
   const worker = await observePipelineWorker(session, current, queue, host);
   const input = { current, live: admission.live, queue, worker, evidence: {} };
   return {
@@ -68,6 +75,30 @@ async function retainDeliveryRequest(fresh, session, build, host) {
     ...scheduling.history.at(-1),
     intent: session.intent,
   };
+  // The provider execution owns the delivery slot before it acquires a
+  // Warrant. A later wake must not replace its retained coordinates while its
+  // queued or running job is still entitled to perform final admission.
+  const executionOwner = await pipelineDeliveryExecution(
+    session,
+    schedulingCurrent,
+    host,
+  );
+  if (executionOwner) {
+    const { run } = await host.runs.read(
+      executionOwner.runId,
+      executionOwner.runAttempt,
+    );
+    if (
+      run.id !== executionOwner.runId ||
+      run.run_attempt !== executionOwner.runAttempt
+    )
+      throw new Error("Retained delivery execution provider identity drift");
+    if (run.status !== "completed")
+      return {
+        operation: "wait",
+        reason: "admitted-delivery-execution-running",
+      };
+  }
   const active = await observePipelineWorker(
     session,
     schedulingCurrent,
@@ -145,14 +176,28 @@ export async function controlPipelineDelivery(session, inputs, host) {
       !["cancelled", "failure", "superseded", "complete"].includes(
         fresh.observed.status,
       )
-    )
-      await session.progress.progress({
-        attempt: fresh.attempt,
-        phase: fresh.phase,
-        state: "superseded",
-        eventKey: `supersede:${recordDigest(fresh.live)}`,
-        reason: fresh.decision.reason,
-      });
+    ) {
+      try {
+        await session.progress.progress({
+          attempt: fresh.attempt,
+          phase: fresh.phase,
+          state: "superseded",
+          eventKey: `supersede:${recordDigest(fresh.live)}`,
+          reason: fresh.decision.reason,
+        });
+      } catch (error) {
+        // Concurrent notifications can finish the same attempt after readback.
+        // Its immutable terminal result is sufficient; never rewrite that phase.
+        const latest = await session.journal.read();
+        if (
+          latest.attempt !== fresh.attempt ||
+          !["cancelled", "failure", "superseded", "complete"].includes(
+            latest.status,
+          )
+        )
+          throw error;
+      }
+    }
     return { operation: "successor", reason: fresh.decision.reason };
   }
   if (fresh.live.merged) return { operation: "settle", fresh, delivery };

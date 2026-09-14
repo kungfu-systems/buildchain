@@ -105,13 +105,15 @@ export async function guardPipelineAdmission(input, connection) {
     throw new Error(
       "Pipeline protected review or required checks changed before delivery effect",
     );
-  await guardPipelineBuild(input, observed, {
+  const build = await guardPipelineBuild(input, observed, {
     material,
     source,
     request,
     repository: connection.repository,
   });
-  return guardPipelineDelivery(input, connection);
+  const fresh = await guardPipelineDelivery(input, connection);
+  await connection.publishBuildStatus?.(build);
+  return fresh;
 }
 
 export async function guardPipelineDelivery(input, connection, lookup) {

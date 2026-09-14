@@ -3148,9 +3148,10 @@
           "project-cut-proof-root",
           "request-json",
           "runtime-sha",
+          "status-token",
           "token"
         ],
-        "inputCount": 5
+        "inputCount": 6
       },
       {
         "id": "dev-delivery/queue/apply-policy",
@@ -10811,7 +10812,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e43fdb0289df88871f3f0febbe04dcb9311a252a2b1df9b3a83a2d10c9d4a70f",
-    "workflowRegistryDigest": "38db0d6e8f4d10cc4b6d86c4d5e741351b29b842667be0b521b30f6e45a0627d",
+    "workflowRegistryDigest": "86d5d66e4461dff39b301e3706073e7c17a36f2853b297c4b616b1f2f35f267a",
     "pageRegistryDigest": "364e2b7fa9fd173985912b50c2db92f32879ceed95779954b3ec276aef957d9a"
   },
   "comparison": {
