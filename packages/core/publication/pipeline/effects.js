@@ -1,3 +1,4 @@
+import { setTimeout } from "node:timers/promises";
 import { recordDigest } from "../../release/discussion/envelope.js";
 
 const KINDS = new Set([
@@ -133,7 +134,13 @@ export async function applyPipelineEffects({
       } catch (error) {
         failure = error;
       }
-      observed = await provider.observe(effect);
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (attempt) await setTimeout(1000);
+        await fence();
+        observed = await provider.observe(effect);
+        if (observed.state !== "absent" || provider.matches(effect, observed))
+          break;
+      }
       if (!provider.matches(effect, observed)) {
         if (failure) throw failure;
         throw new Error(

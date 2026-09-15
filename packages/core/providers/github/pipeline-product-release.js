@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { setTimeout } from "node:timers/promises";
 import { pipelineProductPayload } from "./pipeline-product-payload.js";
 
 const sha256 = (bytes) =>
@@ -48,6 +49,7 @@ export function githubPipelineProductRelease({
       throw new Error("Release requires the exact immutable publication tag");
     let value = await findRelease();
     if (!value && create) {
+      let failure;
       try {
         await github.rest.repos.createRelease({
           owner,
@@ -61,12 +63,17 @@ export function githubPipelineProductRelease({
           make_latest: "false",
         });
       } catch (error) {
-        value = await findRelease();
-        if (!value) throw error;
+        failure = error;
       }
-      value = await findRelease();
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (attempt) await setTimeout(1000);
+        value = await findRelease();
+        if (value) break;
+      }
       if (!value)
-        throw new Error("Release creation lacks exact provider readback");
+        throw (
+          failure || new Error("Release creation lacks exact provider readback")
+        );
     }
     if (
       value &&
