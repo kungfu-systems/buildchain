@@ -176,9 +176,7 @@ ${r}    secrets: inherit
       config-path: ${e}
 `;return{".github/workflows/buildchain.yml":`name: Buildchain pipeline
 on:
-${Object.entries(mOe).map(([i,o])=>i==="push"?`  push:
-    branches-ignore: [gh-readonly-queue/**]
-`:o.length?`  ${i}:
+${Object.entries(mOe).map(([i,o])=>o.length?`  ${i}:
     types: [${o.join(", ")}]
 `:`  ${i}:
 `).join("")}${nX(gP,t,r)}`,".github/workflows/buildchain-recover.yml":`name: Buildchain recovery

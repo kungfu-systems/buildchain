@@ -112,9 +112,7 @@ ${r}    secrets: inherit
       config-path: ${t}
 `;return{".github/workflows/buildchain.yml":`name: Buildchain pipeline
 on:
-${Object.entries(MM).map(([o,n])=>o==="push"?`  push:
-    branches-ignore: [gh-readonly-queue/**]
-`:n.length?`  ${o}:
+${Object.entries(MM).map(([o,n])=>n.length?`  ${o}:
     types: [${n.join(", ")}]
 `:`  ${o}:
 `).join("")}${aw(ug,e,r)}`,".github/workflows/buildchain-recover.yml":`name: Buildchain recovery

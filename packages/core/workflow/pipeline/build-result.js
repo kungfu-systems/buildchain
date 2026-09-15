@@ -61,6 +61,7 @@ export async function retainPipelineBuildResult(
     host.request,
     host.repository,
   );
+  await host.publishBuildStatus?.(context, readback);
   if (
     readback.schema === PIPELINE_BUILD_QUALIFICATION &&
     readback.outcome === "success"

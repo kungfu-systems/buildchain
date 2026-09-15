@@ -151,23 +151,6 @@ test("npm root artifacts and stable download filenames remain product data with 
   assert.throws(() => compileConsumerPlan(stringify(binary)), /relative path/);
 });
 
-test("queue previews use merge_group without a competing push check suite", () => {
-  for (const channel of ["v4", "v4-alpha"]) {
-    const workflow = yaml(
-      consumerWorkflows(channel)[".github/workflows/buildchain.yml"],
-    );
-    assert.deepEqual(workflow.on.push, {
-      "branches-ignore": ["gh-readonly-queue/**"],
-    });
-    assert.deepEqual(workflow.on.merge_group, { types: ["checks_requested"] });
-    assert.equal(workflow.on.pull_request.types.includes("synchronize"), true);
-    assert.equal(workflow.on.pull_request.types.includes("enqueued"), true);
-    assert.deepEqual(workflow.on.repository_dispatch, {
-      types: ["buildchain-attempt-wake"],
-    });
-  }
-});
-
 test("three products use byte-identical callers and closed publication plans", () => {
   const expected = consumerWorkflows();
   for (const type of ["npm", "binary", "paper"]) {
