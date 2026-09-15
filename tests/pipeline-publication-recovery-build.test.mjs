@@ -7,6 +7,33 @@ import { planRecoveryPublicationBuild } from "../packages/core/publication/pipel
 import { downloadRecoveryPublicationBuild } from "../packages/core/publication/pipeline/recovery-build-download.js";
 import { qualifyPipelineProducts } from "../packages/core/publication/pipeline/qualification.js";
 import { pipelineProductCapsules } from "../packages/core/publication/pipeline/capsules.js";
+import { publicationRecoveryFixture } from "./helpers/pipeline-publication-recovery.mjs";
+
+test("provider second-precision retention preserves the exact Capsule instant and immutable identity", () => {
+  const f = publicationRecoveryFixture();
+  const input = {
+    ...f.context,
+    qualified: f.retained.qualified,
+    evaluatedAt: f.retained.qualified.qualification.issuedAt,
+    bundles: [
+      { providerArtifact: { id: 1, expires_at: "2026-09-14T00:00:00Z" } },
+    ],
+  };
+  const before = structuredClone(input);
+  assert.deepEqual(pipelineProductCapsules(input), f.retained.capsules);
+  assert.deepEqual(input, before);
+  for (const expiresAt of [
+    "invalid",
+    "2027-02-30T00:00:00Z",
+    "2026-09-14T00:00:00+00:00",
+    input.evaluatedAt,
+    "2026-09-12T00:00:00Z",
+    "",
+  ]) {
+    input.bundles[0].providerArtifact.expires_at = expiresAt;
+    assert.throws(() => pipelineProductCapsules(input));
+  }
+});
 
 test("partial publication reuses the successful original platform and qualifies actual bytes from two producer runs", async (t) => {
   const f = await fixture(t);

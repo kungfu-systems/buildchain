@@ -72,7 +72,10 @@ export function pipelineProductCapsules({
       identityRoot: stageCapsuleIdentityRoot(identity),
       retentionPromise: {
         class: "github-artifact",
-        retainUntil: bundle.providerArtifact.expires_at,
+        retainUntil: bundle.providerArtifact.expires_at.replace(
+          /T(\d{2}:\d{2}:\d{2})Z$/u,
+          "T$1.000Z",
+        ),
       },
       capsuleRoot: `sha256:${"0".repeat(64)}`,
     };
