@@ -103,6 +103,73 @@ test("landing projects the actual merged commit after successful queue integrati
   assert.match(f.effects[0].body.target_url, /runs\/42\/attempts\/1$/u);
 });
 
+test("queue removal can precede the converged merged PR readback", async () => {
+  for (const state of ["open", "closed"]) {
+    const f = fixture();
+    let elapsed = 0;
+    f.pr.state = state;
+    f.ports.now = () => elapsed;
+    f.ports.queue = async () => ({ enabled: true, entries: [] });
+    f.ports.pause = async (ms) => {
+      elapsed += ms;
+      assert.equal(f.effects.length, 0);
+      if (elapsed >= 20_000) f.pr.merged = true;
+    };
+    await publishIntegratedPipelineStatus(f.current, f.ports);
+    assert.equal(elapsed, 20_000);
+    assert.equal(f.effects.length, 1);
+  }
+});
+
+test("an absent queue entry has a bounded convergence window and no success without merge", async () => {
+  const f = fixture();
+  let elapsed = 0;
+  f.ports.now = () => elapsed;
+  f.ports.pause = async (ms) => {
+    elapsed += ms;
+  };
+  f.ports.queue = async () => ({ enabled: true, entries: [] });
+  await assert.rejects(
+    publishIntegratedPipelineStatus(f.current, f.ports),
+    /left its protected merge queue/u,
+  );
+  assert.equal(elapsed, 30_000);
+  assert.equal(f.effects.length, 0);
+});
+
+test("source drift during convergence cannot publish the old integration proof", async () => {
+  const f = fixture();
+  let elapsed = 0;
+  f.ports.now = () => elapsed;
+  f.ports.queue = async () => ({ enabled: true, entries: [] });
+  f.ports.pause = async (ms) => {
+    elapsed += ms;
+    f.pr.head.sha = "3".repeat(40);
+    f.pr.merged = true;
+  };
+  await assert.rejects(
+    publishIntegratedPipelineStatus(f.current, f.ports),
+    /exact admitted PR source/u,
+  );
+  assert.equal(f.effects.length, 0);
+});
+
+test("an exact queue reappearance resets only its absence window", async () => {
+  const f = fixture();
+  let elapsed = 0;
+  const present = f.ports.queue;
+  f.ports.now = () => elapsed;
+  f.ports.queue = async () =>
+    elapsed === 10_000 ? present() : { enabled: true, entries: [] };
+  f.ports.pause = async (ms) => {
+    elapsed += ms;
+    if (elapsed === 40_000) f.pr.merged = true;
+  };
+  await publishIntegratedPipelineStatus(f.current, f.ports);
+  assert.equal(elapsed, 40_000);
+  assert.equal(f.effects.length, 1);
+});
+
 test("source changes, queue removal, closed PR and bounded queue expiry never publish success", async () => {
   for (const change of [
     (f) => {
@@ -123,6 +190,11 @@ test("source changes, queue removal, closed PR and bounded queue expiry never pu
     },
   ]) {
     const f = fixture();
+    let elapsed = 0;
+    f.ports.now = () => elapsed;
+    f.ports.pause = async (ms) => {
+      elapsed += ms;
+    };
     change(f);
     await assert.rejects(publishIntegratedPipelineStatus(f.current, f.ports));
     assert.equal(f.effects.length, 0);

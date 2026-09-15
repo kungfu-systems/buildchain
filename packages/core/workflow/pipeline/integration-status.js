@@ -11,6 +11,7 @@ async function observeProtectedQueue(current, ports) {
   const deadline = now() + 120 * 60 * 1000;
   const number = current.intent.source.pullRequest;
   const branch = current.intent.source.targetBranch;
+  let queueExitAt;
   while (true) {
     const pr = await request(`/repos/${repository}/pulls/${number}`);
     if (
@@ -21,12 +22,13 @@ async function observeProtectedQueue(current, ports) {
     )
       throw new Error("Integrated status lost its exact admitted PR source");
     if (pr.merged) return { pr, deadline, now, pause };
-    if (pr.state !== "open" || now() >= deadline)
+    if (now() >= deadline)
       throw new Error(
         "Protected queue did not complete the admitted integration",
       );
     const pending = await queue(branch);
     if (
+      pr.state !== "open" ||
       !pending.enabled ||
       !pending.entries.some(
         (entry) =>
@@ -34,12 +36,12 @@ async function observeProtectedQueue(current, ports) {
           entry.pullRequestHeadSha === current.generation.source.commit,
       )
     ) {
-      // Removal can race a successful merge; reread the provider once.
-      const fresh = await request(`/repos/${repository}/pulls/${number}`);
-      if (!fresh.merged)
+      // Queue removal can precede the PR endpoint's merged readback. Bound
+      // convergence without treating absence or a closed PR as merge evidence.
+      queueExitAt ??= now();
+      if (now() - queueExitAt >= 30_000)
         throw new Error("Admitted PR left its protected merge queue");
-      continue;
-    }
+    } else queueExitAt = undefined;
     await pause(10000);
   }
 }
