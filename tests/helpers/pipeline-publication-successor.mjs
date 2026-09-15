@@ -18,6 +18,11 @@ export async function publicationSuccessor(f, current, runId) {
   f.host.runId = runId;
   f.host.writer = { ...f.host.writer, runId: String(runId) };
   f.host.runtime = { ...f.host.runtime, sha: "9".repeat(40) };
+  Object.assign(f.f.admission.live, {
+    state: "closed",
+    merged: true,
+    mergeCommit: f.merge.commit,
+  });
   const integration = {
     mergeCommit: f.merge.commit,
     mergeTree: f.merge.tree,

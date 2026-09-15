@@ -8,6 +8,7 @@ import {
   sourceGeneration,
 } from "../packages/core/workflow/attempt/identity.js";
 import { runtime } from "./helpers/business-attempt.mjs";
+import { qualifyRecoveryIntegration } from "../packages/core/workflow/pipeline/recovery-integration.js";
 
 function fixture({ mutateReadback, moveProtectedBase = false } = {}) {
   const repository = "example/consumer",
@@ -248,5 +249,60 @@ test("terminal observation ignores metadata but binds the actual merge commit", 
   await assert.rejects(
     f.provider.observeIntent(intent, generation),
     /changed during terminal observation/,
+  );
+});
+
+test("merged recovery reobserves protected review policy through the real source adapter", async () => {
+  const f = fixture();
+  const initial = await f.provider.observe(23);
+  const intent = pipelineIntent({
+    repository: "example/consumer",
+    repositoryId: "R1",
+    pullRequest: 23,
+    targetBranch: "dev/v1/v1.0",
+    phases: ["admission", "build", "merge"],
+    runtime,
+  });
+  const generation = sourceGeneration(
+    intent,
+    initial.live.source,
+    initial.live.baseCommit,
+  );
+  f.pr.state = "closed";
+  f.pr.merged = true;
+  f.pr.merge_commit_sha = "d".repeat(40);
+  const admission = await f.provider.observeIntent(intent, generation);
+  assert.equal(admission.protectedPlan, undefined);
+  const session = { intent, observed: { history: [{ generation }] } };
+  let policyReads = 0;
+  const host = {
+    source: f.provider,
+    integration: {
+      observe: async () => ({ mergeCommit: f.pr.merge_commit_sha }),
+    },
+    policy: {
+      observeMerged: async (_current, policy) => {
+        assert.deepEqual(policy, initial.protectedPlan.review);
+        policyReads++;
+        return { review: true, checksPassing: true };
+      },
+    },
+  };
+  await qualifyRecoveryIntegration(session, admission, host);
+  assert.equal(policyReads, 1);
+  f.pr.merge_commit_sha = "e".repeat(40);
+  await assert.rejects(
+    qualifyRecoveryIntegration(session, admission, host),
+    /changed protected integration/,
+  );
+  assert.equal(policyReads, 1);
+  f.pr.merge_commit_sha = admission.live.mergeCommit;
+  host.policy.observeMerged = async () => ({
+    review: false,
+    checksPassing: true,
+  });
+  await assert.rejects(
+    qualifyRecoveryIntegration(session, admission, host),
+    /current exact review and required checks/,
   );
 });
