@@ -5,12 +5,7 @@ import { normalInputs } from "../../consumer/contract/entries.js";
 import { pipelineHost } from "./host.js";
 import { controlPipeline } from "./controller.js";
 import { buildPipelineSource } from "./build.js";
-import { recordPipelineBuild } from "./build-control.js";
 import { wakePipelineStableWait } from "../../publication/pipeline/stable-wait.js";
-import {
-  RECOVERY_BUILD_CONTEXT,
-  recordRecoveryBuild,
-} from "./recovery-build-control.js";
 
 export async function controlPipelineAction(core, env) {
   const { configPath } = normalInputs({
@@ -36,24 +31,6 @@ export async function buildPipelineAction(core, env) {
   });
   core.info(
     `Verified ${result.products.length} products on ${result.platform}`,
-  );
-}
-
-export async function recordPipelineBuildAction(core, env) {
-  const host = await pipelineHost(core, env, "Record product build");
-  const context = JSON.parse(core.getInput("context", { required: true }));
-  if (context.schema === "buildchain.pipeline-group-build-context/v1")
-    return host.groupRecord(context);
-  const result =
-    context.schema === RECOVERY_BUILD_CONTEXT
-      ? await recordRecoveryBuild(context, host)
-      : await recordPipelineBuild(context, host);
-  if (result.outcome !== "success")
-    throw new Error("Product build did not succeed");
-  core.info(
-    result.wakePending
-      ? "Build retained; next event will retry delivery wake"
-      : "Build retained and attempt woken",
   );
 }
 

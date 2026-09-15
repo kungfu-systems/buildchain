@@ -3,17 +3,38 @@ import { pipelineBuildEvidence } from "./build-evidence.js";
 
 async function record(session, phase, state, receipt, host, reason = "") {
   const observed = await session.journal.read();
+  if (observed.attempt !== session.observed.attempt)
+    throw new Error("Channel receipt belongs to a superseded attempt");
   const root = recordDigest(receipt);
-  const reference = await host
-    .materialStore(session)
-    .retain(`${phase}/${root.slice(7)}`, receipt, "provider-readback");
+  const eventKey = `${phase}:${state}:${root}`;
+  const store = host.materialStore(session);
+  const prior = observed.history
+    .at(-1)
+    .events.find((event) => event.payload.eventKey === eventKey);
+  if (prior) {
+    if (
+      prior.node !== phase ||
+      prior.payload.state !== state ||
+      prior.payload.reason !== reason ||
+      prior.payload.materials.length !== 1 ||
+      recordDigest(await store.read(prior.payload.materials[0])) !== root
+    )
+      throw new Error("Channel retry changed its immutable receipt");
+    return observed;
+  }
+  const reference = await store.retain(
+    `${phase}/${root.slice(7)}`,
+    receipt,
+    "provider-readback",
+  );
   return session.progress.progress({
     attempt: observed.attempt,
     phase,
     state,
-    eventKey: `${phase}:${state}:${root}`,
+    eventKey,
     reason,
     materials: [reference],
+    expectedHead: observed.head,
   });
 }
 

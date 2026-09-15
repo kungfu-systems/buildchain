@@ -59,6 +59,7 @@ jobs:
       checks: write
       contents: write
       discussions: write
+      statuses: write
     steps:
       - uses: $/actions/runtime/environment/prepare
         with:
