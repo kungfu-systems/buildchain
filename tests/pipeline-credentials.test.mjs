@@ -89,14 +89,3 @@ test("queue reads retain workflow authority while enqueue requires a distinct ex
     assert.equal(requests.length, before, "invalid authority must fail before provider mutation");
   }
 });
-
-test("channel status projection uses the Actions credential in both protected entry controllers", () => {
-  for (const name of ["public-ops-pipeline", "public-ops-recover"]) {
-    const control = workflow(name).jobs.control;
-    assert.equal(control.permissions.statuses, "write");
-    assert.equal(
-      control.steps.find((step) => step.id === "control").with.token,
-      "${{ github.token }}",
-    );
-  }
-});

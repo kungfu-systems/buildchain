@@ -132,7 +132,7 @@ export function pipelineHostFixture() {
           base: { ref: f.intent.source.targetBranch },
           state: admission.live.state,
         };
-      if (url.endsWith("/check-runs") || url.includes("/statuses/")) {
+      if (url.endsWith("/check-runs")) {
         effects.push(options.body);
         return { id: 12 };
       }

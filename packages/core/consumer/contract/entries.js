@@ -73,6 +73,10 @@ export function consumerWorkflows(channel = "v4", configPath = CONFIG_PATH) {
       : `    with:\n      config-path: ${configPath}\n`;
   const events = Object.entries(PIPELINE_EVENTS)
     .map(([name, types]) => {
+      // A queue preview is verified by merge_group. A simultaneous push run
+      // can capture later source checks in the temporary branch's check suite.
+      if (name === "push")
+        return "  push:\n    branches-ignore: [gh-readonly-queue/**]\n";
       return types.length
         ? `  ${name}:\n    types: [${types.join(", ")}]\n`
         : `  ${name}:\n`;

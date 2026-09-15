@@ -5,7 +5,7 @@ import { runAdmissionTransaction } from "../admission/transaction.js";
 import { enforceLanding } from "./completion.js";
 import { guardPipelineAdmission } from "../../workflow/pipeline/guard.js";
 import { githubJsonClient } from "../../providers/github/json-client.js";
-import { publishPipelineBuildStatus } from "../../workflow/pipeline/build-evidence.js";
+import { publishPipelineBuildStatus } from "../../workflow/pipeline/guard-build.js";
 export async function admitLandingAction(core, env) {
   const context = deliveryActionContext(core, env);
   const request = JSON.parse(core.getInput("request-json", { required: true }));

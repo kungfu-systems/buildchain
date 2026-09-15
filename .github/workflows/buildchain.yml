@@ -9,6 +9,7 @@ on:
   merge_group:
     types: [checks_requested]
   push:
+    branches-ignore: [gh-readonly-queue/**]
   repository_dispatch:
     types: [buildchain-attempt-wake]
 permissions:
