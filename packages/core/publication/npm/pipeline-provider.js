@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { stripVTControlCharacters } from "node:util";
 import { publishedDigest, runNpm } from "./registry.js";
 import { createNativeChildEnvironment } from "../../dev-delivery/native/execution.js";
 import {
@@ -7,6 +8,33 @@ import {
   publicationPath,
   writeImmutablePublicationFile,
 } from "../pipeline/files.js";
+
+function publicationFailureCode(result) {
+  const code = stripVTControlCharacters(String(result.stderr ?? "")).match(
+    /^npm (?:error|ERR!) code ([A-Z0-9_]+)\r?$/m,
+  )?.[1];
+  return [
+    "ENEEDAUTH",
+    "EOTP",
+    "E401",
+    "E403",
+    "E404",
+    "EPUBLISHCONFLICT",
+    "EPRIVATE",
+    "EINTEGRITY",
+    "EUSAGE",
+    "EINVALIDPACKAGENAME",
+    "ETARGET",
+    "ENOENT",
+    "ETIMEDOUT",
+    "ECONNRESET",
+    "EAI_AGAIN",
+    "ENETUNREACH",
+    "ENOTFOUND",
+  ].includes(code)
+    ? code
+    : "unclassified";
+}
 
 export function pipelineNpmEnvironment(directory, environment = process.env) {
   const cwd = path.resolve(directory);
@@ -102,7 +130,7 @@ export function pipelineNpmProvider({
       });
       if (result.status !== 0)
         throw new Error(
-          `Sealed npm publication failed with exit ${result.status}`,
+          `Sealed npm publication failed with exit ${result.status} (npm code ${publicationFailureCode(result)})`,
         );
     },
   };

@@ -158,6 +158,67 @@ test("npm publisher executes only the exact sealed tarball and excludes product 
   await assert.rejects(provider.apply(effect), /bytes changed/);
 });
 
+test("npm publication failures expose only recognized error codes and retain one sealed write", async (t) => {
+  const directory = fs.mkdtempSync(
+    path.join(fs.realpathSync(os.tmpdir()), "pipeline-npm-failure-"),
+  );
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const file = path.join(directory, "sealed.tgz");
+  fs.writeFileSync(file, "sealed test payload");
+  const bytes = publicationFile(file);
+  const artifact = {
+    id: "p/linux/pkg",
+    file: "sealed.tgz",
+    digest: bytes.digest,
+    package: {
+      name: "@example/pkg",
+      version: "1.0.0",
+      integrity: bytes.integrity,
+    },
+  };
+  const effect = {
+    kind: "npm-package",
+    product: artifact.id,
+    ...artifact.package,
+    access: "public",
+    tag: "latest",
+  };
+  for (const [stderr, code] of [
+    ["npm error code ENEEDAUTH", "ENEEDAUTH"],
+    ["npm ERR! code E403", "E403"],
+    ["\u001b[31mnpm error\u001b[39m code E401\r\n", "E401"],
+    ["npm error code PRIVATE_CREDENTIAL", "unclassified"],
+    ["npm error code E403_PRIVATE_CREDENTIAL", "unclassified"],
+    ["unrelated ENEEDAUTH", "unclassified"],
+  ]) {
+    let writes = 0;
+    const provider = pipelineNpmProvider({
+      directory,
+      artifacts: [artifact],
+      environment: {},
+      run: (request) => {
+        writes++;
+        assert.equal(request.args[0], "publish");
+        assert.equal(request.args[1], file);
+        return {
+          status: 1,
+          stdout: "private stdout",
+          stderr: `${stderr}\nhttps://private.invalid/?token=private-secret`,
+        };
+      },
+    });
+    await assert.rejects(provider.apply(effect), (error) => {
+      assert.equal(
+        error.message,
+        `Sealed npm publication failed with exit 1 (npm code ${code})`,
+      );
+      assert.equal(error.cause, undefined);
+      return true;
+    });
+    assert.equal(writes, 1);
+  }
+});
+
 async function verifyGithubPublication(t, lostReleaseResponse) {
   const directory = fs.mkdtempSync(
     path.join(fs.realpathSync(os.tmpdir()), "pipeline-release-provider-"),
