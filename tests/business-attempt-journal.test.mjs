@@ -78,3 +78,58 @@ test("journal cannot admit corrupt history or an uncompleted predecessor", async
   );
   await assert.rejects(reader.read(), /content root drift/);
 });
+
+test("atomic append reobserves delayed visibility without repeating the mutation", async () => {
+  for (const lostResponse of [false, true]) {
+    const f = identities();
+    let current,
+      lag = 0,
+      reads = 0,
+      writes = 0;
+    const journal = atomicAttemptJournal(
+      {
+        read: async () => {
+          reads++;
+          return lag-- > 0 ? null : current;
+        },
+        append: async ({ snapshot }) => {
+          writes++;
+          current = { commit: "committed", snapshot };
+          lag = 2;
+          if (lostResponse) throw new Error("response lost after commit");
+        },
+      },
+      f.intent,
+    );
+    const record = f.event();
+    assert.equal((await journal.append(record, "")).head, record.id);
+    assert.equal(writes, 1);
+    assert.equal(reads, 4);
+  }
+});
+
+test("atomic append retains the original failure after bounded absent readback", async () => {
+  const f = identities();
+  let reads = 0,
+    writes = 0;
+  const failure = new Error("provider rejected append");
+  const journal = atomicAttemptJournal(
+    {
+      read: async () => {
+        reads++;
+        return null;
+      },
+      append: async () => {
+        writes++;
+        throw failure;
+      },
+    },
+    f.intent,
+  );
+  await assert.rejects(
+    journal.append(f.event(), ""),
+    (error) => error === failure,
+  );
+  assert.equal(writes, 1);
+  assert.equal(reads, 4);
+});
