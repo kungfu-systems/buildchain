@@ -1175,6 +1175,7 @@ Owner: Buildchain pipeline maintainers
 - `packages/core/workflow/pipeline/platforms.js`
 - `packages/core/workflow/pipeline/progress.js`
 - `packages/core/workflow/pipeline/projection.js`
+- `packages/core/workflow/pipeline/record-check.js`
 - `packages/core/workflow/pipeline/reconcile.js`
 - `packages/core/workflow/pipeline/recovery-action.js`
 - `packages/core/workflow/pipeline/recovery-admission.js`
