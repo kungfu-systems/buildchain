@@ -3,6 +3,7 @@ import test from "node:test";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { compileConsumerPlan } from "../packages/core/consumer/contract/plan.js";
 import { buildPipelineProducts } from "../packages/core/workflow/pipeline/build.js";
 import { planPipelinePublication } from "../packages/core/publication/pipeline/plan.js";
@@ -30,10 +31,10 @@ test("real npm, native archive and PDF products are packed through one declared 
     path.join(fs.realpathSync(os.tmpdir()), "pipeline-publication-pack-"),
   );
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
-  for (const type of ["npm", "npm-root", "binary", "paper"]) {
+  for (const type of ["npm", "npm-root", "binary", "binary-zip", "paper"]) {
     const cwd = path.join(root, type);
     fs.cpSync(
-      `templates/minimal-consumer/${type === "npm-root" ? "npm" : type}`,
+      `templates/minimal-consumer/${type === "npm-root" ? "npm" : type === "binary-zip" ? "binary" : type}`,
       cwd,
       { recursive: true },
     );
@@ -42,6 +43,10 @@ test("real npm, native archive and PDF products are packed through one declared 
     );
     if (type === "binary")
       contract.products[0].artifacts[0].filename = "product-native.tar.gz";
+    if (type === "binary-zip") {
+      contract.products[0].artifacts[0].path = "dist/hello.zip";
+      contract.products[0].artifacts[0].filename = "product-native.zip";
+    }
     if (type === "npm-root") {
       contract.products[0].artifacts[0].path = ".";
       const file = path.join(cwd, "package.json");
@@ -76,6 +81,15 @@ test("real npm, native archive and PDF products are packed through one declared 
       sourceTimestamp: "2026-09-13T00:00:00Z",
     });
     await buildPipelineProducts({ cwd, plan: contract, platform: "linux-x64" });
+    if (type === "binary-zip")
+      execFileSync(
+        process.platform === "win32" ? "python" : "python3",
+        [
+          "-c",
+          "import zipfile; z=zipfile.ZipFile('dist/hello.zip','w',zipfile.ZIP_DEFLATED); z.write('dist/hello','hello'); z.close()",
+        ],
+        { cwd },
+      );
     if (type.startsWith("npm")) {
       const file = path.join(
           cwd,
@@ -97,10 +111,10 @@ test("real npm, native archive and PDF products are packed through one declared 
       source,
     });
     assert.equal(manifest.artifacts.length, 1);
-    if (type === "binary")
+    if (type.startsWith("binary"))
       assert.equal(
         path.basename(manifest.artifacts[0].file),
-        "product-native.tar.gz",
+        type === "binary-zip" ? "product-native.zip" : "product-native.tar.gz",
       );
     assert.equal(
       manifest.artifacts[0].kind,
