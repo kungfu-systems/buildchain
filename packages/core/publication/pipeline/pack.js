@@ -44,6 +44,33 @@ function packageArtifact(directory, output, expected, version, environment) {
   };
 }
 
+function archiveNames(file, suffix) {
+  const options = {
+    cwd: path.dirname(file),
+    encoding: "utf8",
+    maxBuffer: 16 * 1024 * 1024,
+    timeout: 30000,
+    stdio: ["ignore", "pipe", "pipe"],
+  };
+  if (suffix === ".zip") {
+    const script = [
+      "import json,sys,zipfile",
+      "with zipfile.ZipFile(sys.argv[1]) as archive:",
+      "    print(json.dumps(archive.namelist()))",
+    ].join("\n");
+    return JSON.parse(
+      execFileSync(
+        process.platform === "win32" ? "python" : "python3",
+        ["-c", script, path.basename(file)],
+        options,
+      ),
+    );
+  }
+  return execFileSync("tar", ["-tf", path.basename(file)], options)
+    .trim()
+    .split(/\r?\n/u);
+}
+
 export function inspectPipelineFileArtifact(directory, expected) {
   const file = publicationPath(directory, expected.path);
   if (expected.kind === "pdf") {
@@ -60,18 +87,14 @@ export function inspectPipelineFileArtifact(directory, expected) {
   );
   if (!suffix)
     throw new Error("Declared binary output must be a standard archive");
-  const names = execFileSync("tar", ["-tf", path.basename(file)], {
-    cwd: path.dirname(file),
-    encoding: "utf8",
-    maxBuffer: 16 * 1024 * 1024,
-  })
-    .trim()
-    .split(/\r?\n/u);
+  const names = archiveNames(file, suffix);
   if (
     !names[0] ||
     names.some(
       (name) =>
-        name.startsWith("/") ||
+        !name.trim() ||
+        /[\u0000-\u001f\u007f]/u.test(name) ||
+        name.replaceAll("\\", "/").startsWith("/") ||
         /^[A-Za-z]:/u.test(name) ||
         name.replaceAll("\\", "/").split("/").includes(".."),
     )
