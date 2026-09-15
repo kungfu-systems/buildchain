@@ -6,6 +6,7 @@ import {
 } from "./transactions.js";
 import { admitProviderFinalizer } from "./finalizer-admission.js";
 import { guardPipelineAdmission } from "../../workflow/pipeline/guard.js";
+import { replaceNativeActionProcess } from "./process-entry.js";
 function request(core, env) {
   const candidate = JSON.parse(
     core.getInput("request-json", { required: true }),
@@ -23,6 +24,7 @@ function outputs(core, result) {
     core.setOutput(name, value);
 }
 export async function executeDeliveryNativeAction(core, env) {
+  replaceNativeActionProcess();
   const context = deliveryActionContext(core, env);
   const input = request(core, env);
   outputs(

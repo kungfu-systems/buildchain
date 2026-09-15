@@ -82,3 +82,49 @@ test("lawful channel PR uses protected queue and hands exact merge to the distin
   ]);
   assert.notEqual(observed.status, "complete");
 });
+
+test("repeated channel source retirement reuses verified immutable material across workers", async () => {
+  const f = pipelineHostFixture();
+  f.admission.route = {
+    operation: "alpha",
+    from: "dev/v4/v4.1",
+    to: "alpha/v4/v4.1",
+  };
+  f.admission.live.targetBranch = f.admission.route.to;
+  const session = await openPipelineSession(
+    { admission: f.admission, ...f.host },
+    f.host,
+  );
+  const materialStore = f.host.materialStore;
+  let retained = 0;
+  f.host.materialStore = (selected) => {
+    const store = materialStore(selected);
+    return {
+      ...store,
+      retain: async (...args) => {
+        retained++;
+        return store.retain(...args);
+      },
+    };
+  };
+  f.admission.live.state = "closed";
+  const control = () =>
+    controlPipelineChannel(session, f.admission, {}, f.host);
+  assert.equal((await control()).operation, "successor");
+  const original = await session.journal.read();
+  f.host.runId = 101;
+  f.host.writer = { ...f.host.writer, runId: "101", jobId: "201" };
+  assert.equal((await control()).operation, "successor");
+  assert.equal(retained, 1, "replay must keep the original asset identity");
+  assert.deepEqual(await session.journal.read(), original);
+
+  f.host.materialStore = (selected) => ({
+    ...materialStore(selected),
+    read: async () => ({ changed: true }),
+  });
+  await assert.rejects(
+    control(),
+    /Channel retry changed its immutable receipt/,
+  );
+  assert.deepEqual(await session.journal.read(), original);
+});

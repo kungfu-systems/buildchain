@@ -37,3 +37,55 @@ test("automation credentials remain absent from product builds, native execution
     assert.ok(Object.values(job.permissions).every((value) => value === "read"));
   }
 });
+
+
+test("channel enqueue has an event-producing credential in both central entries", () => {
+  for (const name of ["public-ops-pipeline", "public-ops-recover"]) {
+    const entry = workflow(name);
+    const steps = entry.jobs.control.steps;
+    const credential = steps.find((step) => step.id === "queue-credential");
+    assert.ok(credential, `${name} lacks the queue credential boundary`);
+    assert.equal(credential.uses, "./.buildchain/runtime/actions/providers/github/token");
+    assert.equal(credential.with["client-id"], "${{ vars.BUILDCHAIN_APP_CLIENT_ID }}");
+    assert.equal(credential.with["private-key"], "${{ secrets.BUILDCHAIN_APP_PRIVATE_KEY }}");
+    assert.equal(credential.with["fallback-token"], "${{ secrets.BUILDCHAIN_AUTOMATION_TOKEN }}");
+    assert.equal(credential.with["failure-policy"], "strict");
+    assert.equal(credential.with["permission-pull-requests"], "write");
+    assert.equal(credential.with["workflow-token"], undefined);
+    const control = steps.find((step) => step.id === "control");
+    assert.ok(steps.indexOf(credential) > 0 && steps.indexOf(credential) < steps.indexOf(control));
+    assert.equal(control.with["queue-token"], "${{ steps.queue-credential.outputs.token }}");
+    assert.equal(control.with.token, "${{ github.token }}");
+    assert.equal(entry.on.workflow_call.inputs["queue-token"], undefined);
+  }
+});
+
+test("queue reads retain workflow authority while enqueue requires a distinct explicit credential", async () => {
+  const { pipelineQueue } = await import("../packages/core/workflow/pipeline/host.js");
+  const requests = [];
+  const fetchImpl = async (url, options) => {
+    const body = JSON.parse(options.body);
+    requests.push({ url, authorization: options.headers.authorization, body });
+    return { ok: true, text: async () => JSON.stringify({ data: {
+      repository: { mergeQueue: { id: "queue", entries: { nodes: [] } } },
+      enqueuePullRequest: { mergeQueueEntry: { id: "entry" } },
+    } }) };
+  };
+  const options = { repository: { owner: "consumer", repo: "product" }, token: "workflow", fetchImpl };
+  const input = { pullRequestId: "exact-pr", expectedHeadOid: "a".repeat(40) };
+  for (const queueToken of ["app-installation", "explicit-automation"]) {
+    const queue = pipelineQueue({ ...options, queueToken });
+    assert.equal((await queue.getMergeQueueState("alpha/v4/v4.1")).id, "queue");
+    assert.equal(requests.at(-1).authorization, "Bearer workflow");
+    assert.equal((await queue.enqueuePullRequest(input)).id, "entry");
+    assert.equal(requests.at(-1).authorization, `Bearer ${queueToken}`);
+    assert.deepEqual(requests.at(-1).body.variables.input, input);
+  }
+  for (const queueToken of [undefined, "", "workflow"]) {
+    const queue = pipelineQueue({ ...options, queueToken });
+    await queue.getMergeQueueState("alpha/v4/v4.1");
+    const before = requests.length;
+    await assert.rejects(() => queue.enqueuePullRequest(input), /distinct App or automation credential/);
+    assert.equal(requests.length, before, "invalid authority must fail before provider mutation");
+  }
+});

@@ -186,6 +186,8 @@ test("failure settlement locates its exact candidate and checks all provider-bou
     sealJobId: 456,
   };
   const candidate = {
+    candidateId: root("e"),
+    status: "terminal-failure",
     pullRequestNumber: 7,
     sourceHead: settlement.sourceHead,
     terminal: { ...settlement },
@@ -194,11 +196,12 @@ test("failure settlement locates its exact candidate and checks all provider-bou
     ok: true,
     receipt: {
       ...settlement,
+      candidateId: candidate.candidateId,
       outcome: "terminal-failure",
       expectedOldStateRoot: root("d"),
     },
+    terminalCandidate: candidate,
     observation: {
-      candidates: [candidate, { pullRequestNumber: 8 }],
       activeWarrant: null,
     },
   };
@@ -210,7 +213,7 @@ test("failure settlement locates its exact candidate and checks all provider-bou
     "sealJobId",
   ]) {
     const altered = structuredClone(result);
-    altered.observation.candidates[0].terminal[key] = "drift";
+    altered.terminalCandidate.terminal[key] = "drift";
     assert.throws(
       () => verifyFailureSettlement(altered, settlement, root("d")),
       /drift/u,

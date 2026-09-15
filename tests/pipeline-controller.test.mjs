@@ -4,6 +4,50 @@ import { pipelineHostFixture } from "./helpers/pipeline-host.mjs";
 import { recordPipelineBuild } from "../packages/core/workflow/pipeline/build-control.js";
 import { resumePipelineSession } from "../packages/core/workflow/pipeline/session.js";
 import { pipelineRuntimeSource } from "../packages/core/workflow/pipeline/runtime-source.js";
+import { controlPipeline } from "../packages/core/workflow/pipeline/controller.js";
+import { observePipelineDelivery } from "../packages/core/workflow/pipeline/delivery-control.js";
+import { pipelineCandidateRoot } from "../packages/core/workflow/pipeline/reconcile.js";
+
+test("attempt wake reads queue removal while a stale dequeue webhook cannot cancel current work", async () => {
+  const f = pipelineHostFixture();
+  const first = await f.event();
+  const session = await resumePipelineSession(
+    { ...f.host, attempt: first.context.attempt },
+    f.host,
+  );
+  const current = { ...f.observed().history.at(-1), intent: session.intent };
+  const queue = await f.host.delivery().read();
+  queue.candidates.push({
+    candidateId: "owned-candidate",
+    pullRequestNumber: 23,
+    sourceHead: current.generation.source.commit,
+    sourceRoot: pipelineCandidateRoot(current),
+    status: "queued",
+  });
+  const delivery = { read: async () => queue };
+  f.host.eventAction = "buildchain-attempt-wake";
+  f.host.queueExit = async () => ({ id: "provider-removal" });
+  const inputs = { "config-path": f.f.source.configPath };
+  const removed = await observePipelineDelivery(
+    session,
+    inputs,
+    f.host,
+    delivery,
+  );
+  assert.equal(removed.decision.operation, "cancel-queued");
+  assert.equal(removed.decision.reason, "pull-request-dequeued");
+  assert.equal(removed.live.queueExit.id, "provider-removal");
+  f.host.eventAction = "dequeued";
+  f.host.queueExit = async () => null;
+  const currentQueue = await observePipelineDelivery(
+    session,
+    inputs,
+    f.host,
+    delivery,
+  );
+  assert.equal(currentQueue.live.dequeued, false);
+  assert.notEqual(currentQueue.decision.operation, "cancel-queued");
+});
 
 test("normal controller binds product build, independently records it, and waits for real review before delivery", async () => {
   const f = pipelineHostFixture();
@@ -85,6 +129,56 @@ test("duplicate normal events do not start a second live product execution", asy
   assert.equal(f.observed().head, before);
 });
 
+test("concurrent close notifications retain one immutable terminal result", async () => {
+  const f = pipelineHostFixture();
+  const first = await f.event();
+  f.build(first.context);
+  await recordPipelineBuild(first.context, f.host);
+  f.complete();
+  f.admission.live.state = "closed";
+  const results = await Promise.all(
+    ["pull_request", "pull_request_target"].map((name, index) =>
+      controlPipeline(
+        name,
+        {
+          repository: { full_name: f.host.repository },
+          action: "closed",
+          pull_request: { number: 23 },
+        },
+        { "config-path": f.f.source.configPath },
+        {
+          ...f.host,
+          runId: 101 + index,
+          writer: { ...f.host.writer, runId: String(101 + index) },
+        },
+      ),
+    ),
+  );
+  assert.ok(results.every((result) => result.operation === "wait"));
+  const observed = f.observed();
+  assert.equal(observed.status, "superseded");
+  assert.equal(observed.phases.review.payload.reason, "pull-request-closed");
+  assert.equal(
+    observed.history.at(-1).events.filter((event) => event.node === "review")
+      .length,
+    1,
+  );
+  const history = JSON.stringify(observed.history);
+  await f.event("closed");
+  assert.equal(JSON.stringify(f.observed().history), history);
+});
+
+test("a failed close write without terminal readback remains an error", async () => {
+  const f = pipelineHostFixture();
+  await f.event();
+  f.admission.live.state = "closed";
+  f.host.provider.append = async () => {
+    throw new Error("provider unavailable");
+  };
+  await assert.rejects(f.event("closed"), /provider unavailable/);
+  assert.equal(f.observed().status, "running");
+});
+
 test("a failed product build retains its history and admits a changed source without retrying unchanged bytes", async () => {
   const f = pipelineHostFixture();
   const first = await f.event();
@@ -118,4 +212,60 @@ test("a failed product build retains its history and admits a changed source wit
   assert.equal(JSON.stringify(f.observed().history[0]), failed);
   f.host.selection.source.sha = f.admission.live.source.commit;
   assert.equal((await f.wake()).operation, "build");
+});
+
+test("a queued delivery owns its coordinates before Warrant acquisition and terminal failure permits a new execution", async () => {
+  const f = pipelineHostFixture();
+  const first = await f.event();
+  f.build(first.context);
+  await recordPipelineBuild(first.context, f.host);
+  f.complete();
+  f.admission.live.ready = true;
+  f.host.policy.observe = async () => ({
+    review: true,
+    checksPassing: true,
+    root: `sha256:${"a".repeat(64)}`,
+  });
+  f.host.runId = 101;
+  assert.equal((await f.wake()).operation, "deliver");
+  const retained = structuredClone(f.snapshot());
+  assert.equal((await f.host.delivery().read()).activeWarrant, null);
+  const read = f.host.runs.read;
+  let ownerStatus = "queued",
+    ownerAttempt = 1;
+  f.host.runs.read = async (id, attempt) =>
+    id === 101
+      ? {
+          run: {
+            id,
+            run_attempt: ownerAttempt,
+            status: ownerStatus,
+            conclusion: ownerStatus === "completed" ? "failure" : null,
+          },
+          jobs: [],
+        }
+      : read(id, attempt);
+  f.host.runId = 102;
+  for (const status of ["queued", "pending", "in_progress"]) {
+    ownerStatus = status;
+    assert.equal(
+      (await f.wake()).reason,
+      "admitted-delivery-execution-running",
+    );
+    assert.deepEqual(f.snapshot(), retained);
+  }
+  ownerAttempt = 2;
+  await assert.rejects(f.wake(), /provider identity drift/u);
+  assert.deepEqual(f.snapshot(), retained);
+  ownerAttempt = 1;
+  ownerStatus = "completed";
+  assert.equal((await f.wake()).operation, "deliver");
+  const references = f
+    .observed()
+    .history.at(-1)
+    .events.flatMap((e) => e.payload.materials)
+    .filter((m) => m.id.startsWith("delivery/execution-"));
+  assert.equal(references.length, 2);
+  assert.match(references[0].id, /execution-101-1$/u);
+  assert.match(references[1].id, /execution-102-1$/u);
 });

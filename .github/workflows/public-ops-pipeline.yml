@@ -46,11 +46,20 @@ jobs:
         with:
           selection: ${{ needs.runtime.outputs.selection }}
           token: ${{ github.token }}
+      - id: queue-credential
+        uses: ./.buildchain/runtime/actions/providers/github/token
+        with:
+          client-id: ${{ vars.BUILDCHAIN_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BUILDCHAIN_APP_PRIVATE_KEY }}
+          fallback-token: ${{ secrets.BUILDCHAIN_AUTOMATION_TOKEN }}
+          failure-policy: strict
+          permission-pull-requests: write
       - id: control
         uses: ./.buildchain/runtime/actions/workflow/pipeline/control
         with:
           config-path: ${{ inputs.config-path }}
           token: ${{ github.token }}
+          queue-token: ${{ steps.queue-credential.outputs.token }}
   execute:
     needs: [runtime, control]
     uses: ./.github/workflows/.ops-pipeline-execute.yml

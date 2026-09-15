@@ -125,9 +125,8 @@ test("missing finalization is bounded and retains the original exact tag for rec
   assert.equal(s.github.refs.get("tags/v4"), REBASED_VERSION_STATE);
 });
 
-test("ordinary protected stable Verify enters promotion and its generated PR enters independent review", () => {
-  const workflow = fs.readFileSync(".github/workflows/self-release-promote.yml", "utf8");
-  for (const section of [workflow.split("  classify-workflow-run:")[1].split("  promote:")[0], workflow.split("  promote:")[1]])
-    assert.match(section, /startsWith\(github.event.workflow_run.head_branch, 'release\/'\)/u);
-  assert.match(fs.readFileSync(".github/workflows/self-release-next-development.yml", "utf8"), /chore\/v4-product-pr\/release-/u);
+test("stable product finalization uses the shared reviewed version component", () => {
+  const workflow = fs.readFileSync(".github/workflows/.release-pipeline-products.yml", "utf8");
+  assert.match(workflow, /materialize:[\s\S]*uses: \.\/\.github\/workflows\/\.release-pipeline-version\.yml/u);
+  assert.match(workflow, /development:[\s\S]*uses: \.\/\.github\/workflows\/\.release-pipeline-version\.yml/u);
 });

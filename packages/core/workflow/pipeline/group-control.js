@@ -38,6 +38,7 @@ export async function recordPipelineGroup(context, host) {
   );
   if (readback.outcome === "success")
     await host.qualifyChannel(context.source, context.branch);
+  await host.publishBuildStatus?.(context, readback);
   await host.request(`/repos/${host.repository}/check-runs`, {
     method: "POST",
     body: {

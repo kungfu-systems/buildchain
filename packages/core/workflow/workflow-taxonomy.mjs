@@ -20,7 +20,8 @@ const PROTECTED = [
   "scripts/generate-workflow-taxonomy.mjs",
   "scripts/check-workflows.sh",
   "tests/workflow-taxonomy.test.mjs",
-  ".github/workflows/self-build-verify.yml",
+  ".github/workflows/buildchain.yml",
+  ".github/workflows/buildchain-recover.yml",
   "package.json",
   ".buildchain/buildchain.toml",
 ];
@@ -63,12 +64,13 @@ function validateEntries(policy, errors) {
     if (
       entry.path &&
       !(
-        (entry.id === ".build" || entry.id === "build") &&
-        entry.path === `.github/workflows/${entry.id}.yml`
+        [".build", "build", "buildchain", "buildchain-recover"].includes(
+          entry.id,
+        ) && entry.path === `.github/workflows/${entry.id}.yml`
       )
     )
       errors.push(
-        `${entry.id}: explicit path is reserved for the build facade and backbone`,
+        `${entry.id}: explicit path is reserved for build APIs and the generated consumer pair`,
       );
     const file = workflowPath(entry);
     if (!WORKFLOW.test(file) || paths.has(file))
@@ -191,35 +193,53 @@ function validateGateIntegration(root, errors) {
     )
   )
     errors.push("required check chain does not enforce check:workflows");
-  const { parse: parseToml } = createRequire(import.meta.url)("smol-toml");
-  const config = parseToml(read(".buildchain/buildchain.toml"));
+  const require = createRequire(import.meta.url);
+  const { parse: parseYaml } = require("yaml");
+  const { compileConsumerPlan } = require("../consumer/contract/plan.js");
+  const { consumerWorkflows } = require("../consumer/contract/entries.js");
+  const config = compileConsumerPlan(read(".buildchain/buildchain.toml"));
+  for (const platform of ["linux-x64", "macos-arm64", "windows-x64"])
+    if (
+      !config.products.some(
+        (product) =>
+          product.platforms.includes(platform) &&
+          product.verify.includes("corepack pnpm@11.7.0 run check") &&
+          product.verify.includes("node scripts/verify-product-platform.mjs"),
+      )
+    )
+      errors.push(
+        `${platform}: declared product verification must execute the full required check and checkpoint recovery`,
+      );
+  const caller = parseYaml(read(".github/workflows/buildchain.yml"));
+  const channel = caller.jobs?.buildchain?.uses?.split("@").at(-1);
+  const configPath = caller.jobs?.buildchain?.with?.["config-path"];
+  for (const [file, expected] of Object.entries(
+    consumerWorkflows(channel, configPath),
+  ))
+    if (read(file) !== expected)
+      errors.push(`${file}: required generated pipeline caller drift`);
+  const execution = parseYaml(
+    read(".github/workflows/.ops-pipeline-execute.yml"),
+  );
+  const build = execution.jobs?.build;
+  const record = execution.jobs?.["record-build"];
   if (
-    !config.lifecycle?.verify?.commands?.includes(
-      "corepack pnpm@11.7.0 run check",
+    build?.permissions?.contents !== "read" ||
+    Object.values(build?.permissions || {}).includes("write") ||
+    !build?.steps?.some(
+      (step) =>
+        step.uses === "./.buildchain/runtime/actions/workflow/pipeline/build",
+    ) ||
+    ![record?.needs].flat().includes("build") ||
+    !record?.steps?.some(
+      (step) =>
+        step.uses ===
+        "./.buildchain/runtime/actions/workflow/pipeline/record-build",
     )
   )
     errors.push(
-      "declared verify lifecycle must execute the full required check",
+      "required product execution and independent source qualification boundary is missing",
     );
-  const verify = read(".github/workflows/self-build-verify.yml");
-  const document = parseWorkflowDocument(verify);
-  for (const trigger of ["pull_request", "merge_group", "push"]) {
-    if (!document.triggers.some((item) => item.split(":")[0] === trigger))
-      errors.push(`required Verify workflow lacks ${trigger}`);
-  }
-  const checkJob = verify.match(/^  check:\n([\s\S]*?)(?=^  [\w-]+:|(?![\s\S]))/mu)?.[1] || "";
-  const verifyNode = "./.buildchain/runtime/actions/build/verification/repository";
-  const verifyAction = read("actions/build/verification/repository/action.yml");
-  const sourceAction = read("actions/build/verification/qualify-source/action.yml");
-  const sourceVerification = read("packages/core/build/verification/source.js");
-  const sourceLifecycle = read("packages/core/build/source/lifecycle.js");
-  if (!parseYamlUses(checkJob).some(call => call.value === verifyNode) ||
-      !parseYamlUses(verifyAction).some(call => call.value === "./.buildchain/runtime/actions/build/verification/qualify-source") ||
-      !/using: node24/u.test(sourceAction) ||
-      !/qualify = qualifySourceLifecycle/u.test(sourceVerification) ||
-      !/mode: "verify"/u.test(sourceVerification) ||
-      !/lifecycle\(\{[\s\S]*stageName,[\s\S]*required: true/u.test(sourceLifecycle))
-    errors.push("required Verify lifecycle integration is missing");
   const owners = read(".github/CODEOWNERS")
     .split(/\r?\n/u)
     .map((line) => line.trim());
@@ -306,7 +326,7 @@ export function renderWorkflowCatalog(policy) {
     "",
     "Public workflows own the consumer API. Component workflows own reusable multi-job topology. Self workflows own Buildchain repository automation. Actions own execution steps; JS adapters and Rust/WASM own implementation.",
     "",
-    "Names use `public-<category>-<purpose>.yml`, `.<category>-<purpose>.yml`, and `self-<category>-<purpose>.yml`, with categories `build`, `release`, and `ops`. The primary build API and backbone use `build.yml` and `.build.yml`.",
+    "Names use `public-<category>-<purpose>.yml`, `.<category>-<purpose>.yml`, and the generated self callers `buildchain.yml` and `buildchain-recover.yml`, with categories `build`, `release`, and `ops`. The primary build API and backbone use `build.yml` and `.build.yml`.",
     "",
     "Register ownership before adding a workflow. `pnpm run check:workflows` validates source, calls, required CI integration and independent review ownership. `pnpm run generate:workflows` regenerates this catalog.",
     "",
@@ -330,22 +350,22 @@ export function renderWorkflowCatalog(policy) {
 }
 
 function validateEntryOwnership(entry, errors) {
-    for (const field of ["summary", "owner", "rationale"])
-      if (typeof entry[field] !== "string" || !entry[field].trim())
-        errors.push(`${entry.id}: missing ${field}`);
-    if (!["active", "preview"].includes(entry.status))
-      errors.push(`${entry.id}: unsupported lifecycle status`);
-    for (const field of ["compatibility", "migration", "retiredAlias"])
-      if (field in entry)
-        errors.push(
-          `${entry.id}: ${field} is not an executable architecture contract`,
-        );
-    if (
-      !["reusable", "dispatch-service", "repository"].includes(entry.invocation)
-    )
-      errors.push(`${entry.id}: invalid invocation`);
-    if ((entry.role === "self") !== (entry.invocation === "repository"))
-      errors.push(`${entry.id}: role and invocation disagree`);
-    if (entry.role === "component" && entry.invocation !== "reusable")
-      errors.push(`${entry.id}: component must be reusable`);
+  for (const field of ["summary", "owner", "rationale"])
+    if (typeof entry[field] !== "string" || !entry[field].trim())
+      errors.push(`${entry.id}: missing ${field}`);
+  if (!["active", "preview"].includes(entry.status))
+    errors.push(`${entry.id}: unsupported lifecycle status`);
+  for (const field of ["compatibility", "migration", "retiredAlias"])
+    if (field in entry)
+      errors.push(
+        `${entry.id}: ${field} is not an executable architecture contract`,
+      );
+  if (
+    !["reusable", "dispatch-service", "repository"].includes(entry.invocation)
+  )
+    errors.push(`${entry.id}: invalid invocation`);
+  if ((entry.role === "self") !== (entry.invocation === "repository"))
+    errors.push(`${entry.id}: role and invocation disagree`);
+  if (entry.role === "component" && entry.invocation !== "reusable")
+    errors.push(`${entry.id}: component must be reusable`);
 }

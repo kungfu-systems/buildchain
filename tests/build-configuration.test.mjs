@@ -7,8 +7,11 @@ import { discoverBuildConfiguration, normalizeBuildConfiguration } from "../pack
 import { resolveBuildConfiguration } from "../packages/core/build/plan/configuration.js";
 import { selectReleaseCandidateArtifacts } from "../packages/core/release/candidate/selection.js";
 import { loadBuildchainConfig } from "../packages/core/consumer/buildchain-config.js";
+import { compileConsumerPlan } from "../packages/core/consumer/contract/plan.js";
 import { resolveRunnerMatrix } from "../packages/core/build/runner/matrix.js";
 import { resolveArtifactTransferMode } from "../packages/core/build/commands/resolve-artifact-transfer-mode.mjs";
+import { consumerCommandSession } from "../packages/core/runtime/consumer-shell.js";
+import { createNativeChildEnvironment } from "../packages/core/dev-delivery/native/execution.js";
 
 function fixture(t, relative = "buildchain.toml", extra = "") {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-config-plan-"));
@@ -22,11 +25,29 @@ function resolve(root, overrides = {}) {
 }
 
 test("root verification declares Go and Rust prerequisites", () => {
-  const { config } = loadBuildchainConfig(process.cwd());
-  assert.ok(config.build.tools.go, "workflow lint needs a configured Go toolchain");
-  const commands = config.lifecycle.verify.commands;
-  assert.ok(commands.includes(`rustup component add --toolchain ${config.build.tools.rust} rustfmt clippy`));
-  assert.ok(commands.indexOf(`rustup component add --toolchain ${config.build.tools.rust} rustfmt clippy`) < commands.indexOf("corepack pnpm@11.7.0 run check"));
+  const plan = compileConsumerPlan(fs.readFileSync(".buildchain/buildchain.toml", "utf8"));
+  for (const platform of ["linux-x64", "macos-arm64", "windows-x64"]) {
+    const product = plan.products.find(product => product.platforms.includes(platform) &&
+      product.verify.includes("corepack pnpm@11.7.0 run check"));
+    assert.ok(product.install.includes("go version"));
+    assert.ok(product.install.indexOf("node scripts/prepare-product-toolchain.mjs") < product.install.indexOf("go version"));
+    if (platform === "macos-arm64")
+      assert.equal(product.install[0], "brew install go");
+    assert.ok(product.install.includes("rustup component add --toolchain 1.96.0 rustfmt clippy"));
+    assert.ok(product.install.includes("rustup target add --toolchain 1.96.0 wasm32-unknown-unknown"));
+    assert.ok(product.verify.includes("node scripts/verify-product-platform.mjs"));
+  }
+  assert.match(fs.readFileSync("scripts/verify-product-platform.mjs", "utf8"), /Number\(goMatch\[1\]\) < 25/u);
+});
+
+test("product Go prerequisites reach later commands without Windows profile or credentials", async () => {
+  const environment = createNativeChildEnvironment({ ...process.env, GITHUB_TOKEN: "must-not-pass", LOCALAPPDATA: "must-not-be-required" });
+  const commands = consumerCommandSession(environment);
+  await commands.run({ script: "node scripts/prepare-product-toolchain.mjs", cwd: process.cwd(), strict: true });
+  assert.equal(commands.environment.GOTOOLCHAIN, "go1.25.14+auto");
+  assert.ok(path.isAbsolute(commands.environment.GOCACHE));
+  assert.ok(path.isAbsolute(commands.environment.GOPATH));
+  await commands.run({ script: `node -e 'const assert = require("node:assert/strict"); assert.equal(process.env.GOTOOLCHAIN, "go1.25.14+auto"); assert.ok(require("node:path").isAbsolute(process.env.GOCACHE)); assert.equal(process.env.GITHUB_TOKEN, undefined); assert.equal(process.env.LOCALAPPDATA, undefined)'`, cwd: process.cwd(), strict: true });
 });
 
 test("zero-input discovery binds lifecycle, configuration bytes and exact runtime", (t) => {

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { checkSelfConsumerContract } from "../check-self-consumer-contract.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import YAML from "yaml";
@@ -35,19 +36,7 @@ export function assertPromotionInventory(root) {
     "publish-command",
   ])
     assert.ok(!request.properties[key]);
-  for (const file of [
-    "self-release-promote",
-    "self-release-tail-dogfood",
-    "self-ops-promotion-recovery",
-  ]) {
-    const caller = YAML.parse(read(`.github/workflows/${file}.yml`));
-    const calls = Object.values(caller.jobs).filter(
-      (job) => job.uses === `kungfu-systems/buildchain/${publicPath}@v4`,
-    );
-    assert.equal(calls.length, 1, file);
-    assert.ok(calls[0].with["request-json"]);
-    assert.ok(Object.keys(calls[0].with).every(key => ["request-json", "runtime-ref", "contract-lock", "runtime-selection"].includes(key)));
-  }
+  checkSelfConsumerContract(root);
   const component = ".github/workflows/.release-promote.yml";
   const expected = {
     qualify: "promotion/qualify",

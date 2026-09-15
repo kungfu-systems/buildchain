@@ -95,7 +95,7 @@ test("alpha promotion wiring admits a consumer that accepted the selected runtim
 });
 
 test("bounded recovery is a one-way adapter into the same public publisher", () => {
-  const relative = ".github/workflows/self-ops-promotion-recovery.yml";
+  const relative = ".github/workflows/buildchain-recover.yml";
   const workflow = fs.readFileSync(path.join(root, relative), "utf8");
   const publicPromotion = fs.readFileSync(
     path.join(root, ".github/workflows/public-release-promote.yml"),
@@ -152,13 +152,10 @@ test("bounded recovery is a one-way adapter into the same public publisher", () 
     fs.rmSync(consumerRoot, { recursive: true, force: true });
   }
   assert.match(workflow, /^  workflow_dispatch:/mu);
-  assert.equal(readWorkflow(relative).jobs.resume.uses, "kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4");
-  assert.equal(readWorkflow(".github/workflows/public-release-promote.yml").jobs.invoke.uses, "./.github/workflows/.release-promote.yml");
-  assert.doesNotMatch(workflow, /^  consumer-admission:/mu);
-  for (const marker of ["resume-candidate-run-id", "resume-transaction-id"]) {
-    assert.ok(readWorkflow(relative).jobs.resume.with["request-json"].includes(`"${marker}":`));
-  }
-  assert.match(workflow, /"publish-transaction-override": true/);
+  const caller = readWorkflow(relative).jobs.buildchain;
+  assert.equal(caller.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4-alpha");
+  assert.deepEqual(Object.keys(caller.with), ["attempt", "runtime-ref"]);
+  assert.doesNotMatch(workflow, /request-json|publish-transaction-override|resume-candidate-run-id/u);
 });
 
 test("v4 floating policy contract rejects certification without caller lock readback", () => {

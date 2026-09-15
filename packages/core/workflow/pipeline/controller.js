@@ -2,7 +2,10 @@ import { pipelineEvent } from "./events.js";
 import { selectPipelineSession } from "./selection.js";
 import { beginPipelineBuild } from "./build-control.js";
 import { controlPipelineDelivery } from "./delivery-control.js";
-import { githubPipelineEvents } from "../../providers/github/pipeline-events.js";
+import {
+  githubPipelineEvents,
+  githubPipelineQueueExit,
+} from "../../providers/github/pipeline-events.js";
 import { pipelinePlatforms } from "./platforms.js";
 import { recordDigest } from "../../release/discussion/envelope.js";
 
@@ -95,6 +98,11 @@ export async function controlPipeline(name, payload, inputs, host) {
       attempt: session.observed.attempt,
     };
   }
+  if (session.intent.expectedNodes.includes("warrant"))
+    host.queueExit ||= githubPipelineQueueExit(
+      host.github.graphql,
+      host.repository,
+    );
   const operation = session.intent.expectedNodes.includes("warrant")
     ? await controlPipelineDelivery(session, inputs, host)
     : await host.channel(session, admission, inputs);

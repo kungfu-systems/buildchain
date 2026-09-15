@@ -104,6 +104,13 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
     concurrencyRecovery,
     receipt: persisted.changed.receipt,
     receiptRoot: persisted.changed.receiptRoot,
+    terminalCandidate:
+      options.command === "settle"
+        ? persisted.changed.queue.candidates.find(
+            (candidate) =>
+              candidate.candidateId === persisted.changed.receipt.candidateId,
+          ) || null
+        : null,
     warrant:
       persisted.changed.warrant ||
       persisted.changed.queue.activeWarrant ||

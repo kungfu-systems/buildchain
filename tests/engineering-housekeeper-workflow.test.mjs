@@ -240,41 +240,7 @@ test("reusable workflow exposes typed evidence outputs and separated job permiss
     assert.ok(workflow.on.workflow_call.secrets[field]);
 });
 
-test("daily, weekly, and monthly callers remain thin reusable workflow policy", () => {
-  for (const cadence of ["daily", "weekly", "monthly"]) {
-    const caller = fs.readFileSync(
-      new URL(
-        `../.github/workflows/self-ops-housekeeping-${cadence}.yml`,
-        import.meta.url,
-      ),
-      "utf8",
-    );
-    assert.match(caller, /schedule:/);
-    assert.match(
-      caller,
-      /uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-housekeeping\.yml@v4/,
-    );
-    assert.match(caller, /mode: report/);
-    assert.match(caller, /mode: apply/);
-    assert.match(caller, /apply-enabled: true/);
-    assert.match(caller, /github\.event_name == 'schedule'/);
-    assert.match(
-      caller,
-      /report:[\s\S]*?permissions:\n      contents: read\n      pull-requests: read/,
-    );
-    assert.match(
-      caller,
-      /apply:[\s\S]*?permissions:\n      contents: write\n      pull-requests: write/,
-    );
-    assert.match(
-      caller,
-      /stale-pull-request-label: engineering-housekeeper:stale/,
-    );
-    assert.match(
-      caller,
-      /runtime-selection: \$\{\{ needs.execution-runtime.outputs.selection \}\}/,
-    );
-    assert.doesNotMatch(caller, /target-branch: dev\/v3\/v3\.0/);
-    assert.doesNotMatch(caller, /engineering-housekeeper-workflow\.mjs/);
-  }
+test("self has no separately scheduled housekeeping controllers", () => {
+  for (const cadence of ["daily", "weekly", "monthly"])
+    assert.equal(fs.existsSync(new URL(`../.github/workflows/self-ops-housekeeping-${cadence}.yml`, import.meta.url)), false);
 });

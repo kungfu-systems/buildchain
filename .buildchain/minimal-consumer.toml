@@ -1,14 +1,13 @@
-# Prepared product contract for the protected consumer migration.
-# Inactive until the published entry and single-writer cutover are qualified.
+# Product build and verification plan for the published minimal consumer entry.
 schema = 2
 
 [[products]]
 id = "buildchain"
 type = "npm"
 platforms = [ "linux-x64" ]
-install = [ "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
+install = [ "node scripts/prepare-product-toolchain.mjs", "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
 build = [ "corepack pnpm@11.7.0 run build", "corepack pnpm@11.7.0 run generate:site" ]
-verify = [ "corepack pnpm@11.7.0 run check" ]
+verify = [ "corepack pnpm@11.7.0 run check", "node scripts/verify-product-platform.mjs" ]
 
 [[products.artifacts]]
 id = "package"
@@ -24,7 +23,7 @@ artifacts = [ "package" ]
 id = "buildchain-linux"
 type = "binary"
 platforms = [ "linux-x64" ]
-install = [ "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile" ]
+install = [ "node scripts/prepare-product-toolchain.mjs", "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile" ]
 build = [ "node scripts/build-standalone-binary.mjs" ]
 verify = [ "node scripts/verify-standalone-product.mjs" ]
 
@@ -42,9 +41,9 @@ artifacts = [ "binary" ]
 id = "buildchain-macos"
 type = "binary"
 platforms = [ "macos-arm64" ]
-install = [ "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
+install = [ "brew install go", "node scripts/prepare-product-toolchain.mjs", "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
 build = [ "corepack pnpm@11.7.0 run build", "corepack pnpm@11.7.0 run generate:site", "node scripts/build-standalone-binary.mjs" ]
-verify = [ "corepack pnpm@11.7.0 run check", "node scripts/verify-standalone-product.mjs" ]
+verify = [ "corepack pnpm@11.7.0 run check", "node scripts/verify-product-platform.mjs", "node scripts/verify-standalone-product.mjs" ]
 
 [[products.artifacts]]
 id = "binary"
@@ -60,9 +59,9 @@ artifacts = [ "binary" ]
 id = "buildchain-windows"
 type = "binary"
 platforms = [ "windows-x64" ]
-install = [ "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
+install = [ "node scripts/prepare-product-toolchain.mjs", "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
 build = [ "corepack pnpm@11.7.0 run build", "corepack pnpm@11.7.0 run generate:site", "node scripts/build-standalone-binary.mjs" ]
-verify = [ "corepack pnpm@11.7.0 run check", "node scripts/verify-standalone-product.mjs" ]
+verify = [ "corepack pnpm@11.7.0 run check", "node scripts/verify-product-platform.mjs", "node scripts/verify-standalone-product.mjs" ]
 
 [[products.artifacts]]
 id = "binary"
@@ -119,6 +118,31 @@ to = "dev/v4/v4.1"
 operation = "develop"
 
 [[channels]]
+from = "fix/*"
+to = "dev/v4/v4.1"
+operation = "develop"
+
+[[channels]]
+from = "chore/*"
+to = "dev/v4/v4.1"
+operation = "develop"
+
+[[channels]]
+from = "docs/*"
+to = "dev/v4/v4.1"
+operation = "develop"
+
+[[channels]]
+from = "ci/*"
+to = "dev/v4/v4.1"
+operation = "develop"
+
+[[channels]]
+from = "refactor/*"
+to = "dev/v4/v4.1"
+operation = "develop"
+
+[[channels]]
 from = "dev/v4/v4.1"
 to = "alpha/v4/v4.1"
 operation = "alpha"
@@ -139,8 +163,8 @@ code_owners = true
 merge_queue = true
 
 [stable]
-minimum_interval_seconds = 86400
-minimum_soak_seconds = 3600
+minimum_interval_seconds = 0
+minimum_soak_seconds = 0
 product_paths = [ ".buildchain/stable-release-policy.json", ".github/workflows/", "actions/", "packages/", "scripts/" ]
 impact_file = ".buildchain/release-impact.json"
 require_published_entry = true

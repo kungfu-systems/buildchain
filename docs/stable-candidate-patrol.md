@@ -8,12 +8,12 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-12
+last_reviewed: 2026-09-14
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-12
-  visible_context: Repository stable policy, public build qualification producer, artifact reader and regression tests.
+  generated_at: 2026-09-14
+  visible_context: User-directed zero-delay self release policy, required provider evidence and regression tests.
   invisible_context_boundary: No credentials, private logs, or unpublished consumer content were used.
 ---
 
@@ -52,7 +52,8 @@ It writes `buildchain-canary/buildchain-zero-input` on the qualified runtime SHA
 as `github-actions[bot]`. The consumer source SHA may differ from that runtime.
 
 The repository Patrol policy requires the alpha Release and this qualification
-status. It retains the one-hour soak. The publication transaction still requires
+status. Its minimum soak and stable publication interval are both zero.
+The publication transaction still requires
 its sealed release candidate and protected branch checks. Qualification produces
 evidence; it does not publish or merge a candidate.
 
@@ -78,7 +79,7 @@ Declare the default once in `.buildchain/buildchain.toml`:
 strategy = "latest-qualified-alpha"
 timezone = "Asia/Shanghai"
 publish_at = "03:00"
-minimum_soak_seconds = 3600
+minimum_soak_seconds = 0
 required_checks = [
   "alpha-release",
   "workflow:Build",

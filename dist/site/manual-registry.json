@@ -362,7 +362,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:a7135f86b2c74078eed1b6fd920629addce974140d7f18a7cdc86c21c8fd7f8d",
+      "digest": "sha256:176c523f579e4b2221f2e323c35d4a5a803d522b8e4f9eeb252a25481688c09a",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -505,7 +505,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:2714f40f9f5980dd5d0693bd4cfa7cc2a30f0fc3a0457d9c16844d6359fd97ee",
+      "digest": "sha256:4f3ce05b94c78243aaffca178789ca1ef4929ae36d975878ff7ff4828f1d5f95",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -548,7 +548,7 @@
       "title": "Runtime train validation",
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
-      "digest": "sha256:82680cf3fb71e32639f186d3e3f92f3e57bea3755065937487af794cfdb711fc",
+      "digest": "sha256:3a96b88cafd3afd357e27e585aac0d048dbfb91659ac5f97c4b2535cde0ce3e1",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",

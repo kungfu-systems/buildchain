@@ -7,6 +7,9 @@ inputs:
   token:
     description: "Scoped provider credential."
     required: true
+  queue-token:
+    description: "App or explicit automation credential that can trigger merge-group workflows."
+    default: ""
 outputs:
   operation:
     description: Internally selected operation.
