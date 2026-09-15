@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 213,
+  "generation": 214,
   "fencingCounter": 57,
   "policy": {
     "agingSeconds": 900,
@@ -12,60 +12,7 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": {
-    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
-    "repository": "kungfu-systems/buildchain",
-    "protectedBase": "dev/v4/v4.1",
-    "candidateId": "sha256:8b34177d66ffd76d7477bb0ab35c29305ea91631da54737faf19bb956ca8867c",
-    "pullRequestNumber": 3819,
-    "sourceHead": "5edbcb06c52500299a432bd831f77836ed11065d",
-    "sourceRoot": "sha256:2246cba0532ab89c4a9aeb00cda0c85b7d7a30931b54df98793815a2e41099a0",
-    "sourceIdentityRoot": "sha256:7af8810006086052fbfeb90652b0581328660cb1424dcdd9a0cbf8bbb55485ce",
-    "sourcePatchRoot": "sha256:25dd5cc7c196cda49fc2647d68ec585b49235d01e7af5702c43611717e48bf80",
-    "sourceProofRoot": "sha256:f971c7012e2d54ab2c7fd53c37798fa3b2879666f3894c89e1e8eb89f9effe47",
-    "planRoot": "sha256:9cc0330522048a3dcd38574ee5ddcc5fa41f6eedebc4dac18e7028ccb9a0442e",
-    "closureRoot": "sha256:cdaeb3c11f4dbfb3a5d7f052e284ff2fd1878e8179103013df821ae62e15e27d",
-    "dependencyRoot": "sha256:afcf4e6fea6578bbad9f105d2d2e93c23557b37ac51cff48e72c716bf73511cb",
-    "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
-    "environmentRoot": "sha256:00396fe126a3741ad1856f832f4b6f866bf40ecd4ed402dfd71ef47e65b5f64e",
-    "nativeCommandContract": {
-      "schema": "kungfu.buildchain.native-command-contract/v1",
-      "runner": "bash-lc",
-      "command": "node ../runtime/packages/core/workflow/commands/pipeline-build.mjs --platform linux-x64 --config-path '.buildchain/minimal-consumer.toml'",
-      "commandRoot": "sha256:a05dcdae36757162da44421de801bae64f605b54d3e6fd15552a18e0b5f14801"
-    },
-    "affectedPaths": [
-      "actions/publication/pipeline/apply/dist/index.js",
-      "actions/publication/pipeline/prepare-qualification/dist/index.js",
-      "actions/publication/pipeline/prepare/dist/index.js",
-      "actions/publication/pipeline/seal-qualification/dist/index.js",
-      "actions/publication/pipeline/settle/dist/index.js",
-      "actions/publication/version/materialize-development/dist/index.js",
-      "actions/publication/version/materialize-publication/dist/index.js",
-      "actions/workflow/pipeline/control/dist/index.js",
-      "actions/workflow/pipeline/record-build/dist/index.js",
-      "actions/workflow/pipeline/recover/dist/index.js",
-      "actions/workflow/pipeline/wake/dist/index.js",
-      "architecture/maintainability-policy.json",
-      "packages/core/publication/pipeline/capsules.js",
-      "packages/core/workflow/pipeline/recovery-integration.js",
-      "tests/helpers/pipeline-publication-successor.mjs",
-      "tests/pipeline-publication-recovery-build.test.mjs",
-      "tests/pipeline-source.test.mjs"
-    ],
-    "shardEvidenceRoots": [],
-    "sourceWorkflowRunId": 34975695674,
-    "deliveryClass": "native-proof-required",
-    "priority": "ordinary",
-    "generation": 57,
-    "expectedOldStateRoot": "sha256:3a627121f61ff728600c4fdec11fc67a2ebc2631ae191201b464f2dfbd33822f",
-    "issuedAt": "2026-09-15T14:09:20.077Z",
-    "expiresAt": "2026-09-15T15:15:10.138Z",
-    "fencingToken": "sha256:a9db4fbab2dfd814ba8f3f203fa7bf181c85f163ac899fda99a2f1446f846b68",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-09-15T14:15:10.138Z"
-  },
+  "activeWarrant": null,
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -9306,11 +9253,23 @@
       "sourceWorkflowRunId": 34975695674,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-15T14:09:16.178Z",
-      "updatedAt": "2026-09-15T14:15:10.138Z",
+      "updatedAt": "2026-09-15T14:15:48.866Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
-      "terminal": null,
+      "status": "terminal-failure",
+      "terminal": {
+        "outcome": "terminal-failure",
+        "reason": "write-capable credential-like variable found in process ancestry: 2662:ACTIONS_RUNTIME_TOKEN",
+        "evidenceRoot": "sha256:ac32a8b304ae7d77a21be4ac25dbe45649371c7a981f7ac03c376a9a77860308",
+        "closedAt": "2026-09-15T14:15:48.866Z",
+        "fencingToken": "sha256:a9db4fbab2dfd814ba8f3f203fa7bf181c85f163ac899fda99a2f1446f846b68",
+        "leaseGeneration": 57,
+        "transferRoot": "sha256:d49ca7c97ee9dfa749aa03c1f1a95354fe694cb2aa9e4a67205b79195ef91cff",
+        "finalizerBoundaryRoot": "sha256:1648130dfc1164a6c3d760c3971fe656a442f0f3337f7dde7de69985e1e9c266",
+        "nativeJobId": 104416603797,
+        "sealJobId": 104417013352,
+        "successorWake": null
+      },
       "affectedPaths": [
         "actions/publication/pipeline/apply/dist/index.js",
         "actions/publication/pipeline/prepare-qualification/dist/index.js",
@@ -9333,6 +9292,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-15T14:15:10.138Z",
-  "stateRoot": "sha256:cf55a29993bd6bab86430e5a7e5dd0933342802f19e34c47f920e3b460359eb5"
+  "updatedAt": "2026-09-15T14:15:48.866Z",
+  "stateRoot": "sha256:fb5a7adf2103ff138b71cc161f8017d3d81e5591d75f26ad01a7610c2015be69"
 }
