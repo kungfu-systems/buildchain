@@ -86,7 +86,7 @@ test("real npm, native archive and PDF products are packed through one declared 
         process.platform === "win32" ? "python" : "python3",
         [
           "-c",
-          "import zipfile; z=zipfile.ZipFile('dist/hello.zip','w',zipfile.ZIP_DEFLATED); z.write('dist/hello','hello'); z.close()",
+          "import sys,zipfile; name='hello.exe' if sys.platform == 'win32' else 'hello'; z=zipfile.ZipFile('dist/hello.zip','w',zipfile.ZIP_DEFLATED); z.write('dist/'+name,name); z.close()",
         ],
         { cwd },
       );
