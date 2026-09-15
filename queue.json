@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 209,
+  "generation": 210,
   "fencingCounter": 56,
   "policy": {
     "agingSeconds": 900,
@@ -9227,8 +9227,59 @@
         "tests/pipeline-publication-pack.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.1",
+      "pullRequestNumber": 3819,
+      "sourceRoot": "sha256:2246cba0532ab89c4a9aeb00cda0c85b7d7a30931b54df98793815a2e41099a0",
+      "sourceIdentityRoot": "sha256:7af8810006086052fbfeb90652b0581328660cb1424dcdd9a0cbf8bbb55485ce",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:8b34177d66ffd76d7477bb0ab35c29305ea91631da54737faf19bb956ca8867c",
+      "sourceHead": "5edbcb06c52500299a432bd831f77836ed11065d",
+      "sourcePatchRoot": "sha256:25dd5cc7c196cda49fc2647d68ec585b49235d01e7af5702c43611717e48bf80",
+      "sourceProofRoot": "sha256:f971c7012e2d54ab2c7fd53c37798fa3b2879666f3894c89e1e8eb89f9effe47",
+      "planRoot": "sha256:9cc0330522048a3dcd38574ee5ddcc5fa41f6eedebc4dac18e7028ccb9a0442e",
+      "closureRoot": "sha256:cdaeb3c11f4dbfb3a5d7f052e284ff2fd1878e8179103013df821ae62e15e27d",
+      "dependencyRoot": "sha256:afcf4e6fea6578bbad9f105d2d2e93c23557b37ac51cff48e72c716bf73511cb",
+      "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
+      "environmentRoot": "sha256:00396fe126a3741ad1856f832f4b6f866bf40ecd4ed402dfd71ef47e65b5f64e",
+      "nativeCommandContract": {
+        "schema": "kungfu.buildchain.native-command-contract/v1",
+        "runner": "bash-lc",
+        "command": "node ../runtime/packages/core/workflow/commands/pipeline-build.mjs --platform linux-x64 --config-path '.buildchain/minimal-consumer.toml'",
+        "commandRoot": "sha256:a05dcdae36757162da44421de801bae64f605b54d3e6fd15552a18e0b5f14801"
+      },
+      "sourceWorkflowRunId": 34975695674,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-15T14:09:16.178Z",
+      "updatedAt": "2026-09-15T14:09:16.178Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "actions/publication/pipeline/apply/dist/index.js",
+        "actions/publication/pipeline/prepare-qualification/dist/index.js",
+        "actions/publication/pipeline/prepare/dist/index.js",
+        "actions/publication/pipeline/seal-qualification/dist/index.js",
+        "actions/publication/pipeline/settle/dist/index.js",
+        "actions/publication/version/materialize-development/dist/index.js",
+        "actions/publication/version/materialize-publication/dist/index.js",
+        "actions/workflow/pipeline/control/dist/index.js",
+        "actions/workflow/pipeline/record-build/dist/index.js",
+        "actions/workflow/pipeline/recover/dist/index.js",
+        "actions/workflow/pipeline/wake/dist/index.js",
+        "architecture/maintainability-policy.json",
+        "packages/core/publication/pipeline/capsules.js",
+        "packages/core/workflow/pipeline/recovery-integration.js",
+        "tests/helpers/pipeline-publication-successor.mjs",
+        "tests/pipeline-publication-recovery-build.test.mjs",
+        "tests/pipeline-source.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-15T10:59:39.882Z",
-  "stateRoot": "sha256:5647de610d35fb9733d804d39b6ec2a5cd3636c2b062db47a5198cc8cf94c6c5"
+  "updatedAt": "2026-09-15T14:09:16.178Z",
+  "stateRoot": "sha256:3a627121f61ff728600c4fdec11fc67a2ebc2631ae191201b464f2dfbd33822f"
 }
