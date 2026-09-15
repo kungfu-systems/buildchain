@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 218,
+  "generation": 219,
   "fencingCounter": 58,
   "policy": {
     "agingSeconds": 900,
@@ -14,7 +14,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.1",
     "candidateId": "sha256:2a40cfac82e670ef3a59ed1440e991c9a1009263b5e71e79598d8a1699e41d0a",
@@ -63,8 +63,13 @@
     "issuedAt": "2026-09-15T14:53:35.173Z",
     "expiresAt": "2026-09-15T15:59:54.863Z",
     "fencingToken": "sha256:a43ea92e86b997f063784700c5354bc4a8ae07a148cb9c9e1594c7e0ec4307e8",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-09-15T14:59:54.863Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-09-15T14:59:54.863Z",
+    "nativeProofRoot": "sha256:3bd82dbbf9c05aaa98e902a3c07e449305c1dd6055194cc44bb7d4c2fac98a5c",
+    "nativeExecutionReceiptRoot": "sha256:6bba69ca0013ee01ca4661d63a411bf4c24dadaca1bc10c8ddd6d951ade77c12",
+    "nativeProofReuseRoot": "sha256:b88ddd5e7a98b6dd72e43916302ac1775d16b9be2ce3c88bde62937c11d625f0",
+    "qualificationReceiptRoot": "sha256:1e31b7aebf9d3dfa850a2fce8bc4968a7c1753f18589fe75b74f1a9c1ab2c887",
+    "qualifiedAt": "2026-09-15T15:05:37.781Z"
   },
   "candidates": [
     {
@@ -9371,10 +9376,10 @@
       "sourceWorkflowRunId": 34981795610,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-15T14:53:31.806Z",
-      "updatedAt": "2026-09-15T14:59:54.863Z",
+      "updatedAt": "2026-09-15T15:05:37.781Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         "actions/publication/pipeline/apply/dist/index.js",
@@ -9398,6 +9403,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-15T14:59:54.863Z",
-  "stateRoot": "sha256:9019a1393eaa0e4d89998d1ef66f00f0c12518e8db1a09b40c54cd4620a0e79b"
+  "updatedAt": "2026-09-15T15:05:37.781Z",
+  "stateRoot": "sha256:e598780216eb4842e621036c6932c7c2aa9db2fb7fdc4c4835eb4893c9a661ac"
 }
