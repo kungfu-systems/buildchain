@@ -7,10 +7,23 @@ export async function qualifyRecoveryIntegration(session, admission, host) {
     ...session.observed.history.at(-1),
     intent: session.intent,
   };
+  const policyAdmission = await host.source.observe(
+    session.intent.source.pullRequest,
+    { "config-path": current.generation.source.configPath },
+  );
+  if (
+    !policyAdmission.eligible ||
+    !policyAdmission.live.merged ||
+    policyAdmission.live.targetBranch !== session.intent.source.targetBranch ||
+    policyAdmission.live.mergeCommit !== admission.live.mergeCommit ||
+    recordDigest(policyAdmission.live.source) !==
+      recordDigest(current.generation.source)
+  )
+    throw new Error("Recovery observed changed protected integration");
   const integration = await host.integration.observe(current);
   const review = await host.policy.observeMerged(
     current,
-    admission.protectedPlan.review,
+    policyAdmission.protectedPlan.review,
     integration,
   );
   if (!review.review || !review.checksPassing)
