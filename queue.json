@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 202,
+  "generation": 203,
   "fencingCounter": 55,
   "policy": {
     "agingSeconds": 900,
@@ -12,52 +12,7 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": {
-    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "qualified",
-    "repository": "kungfu-systems/buildchain",
-    "protectedBase": "dev/v4/v4.1",
-    "candidateId": "sha256:274f53bf83091c7ca33fa612d7b72f73c7e2bae44ebeb0189d1c19a5e30d698a",
-    "pullRequestNumber": 3813,
-    "sourceHead": "c866d42e60226dd581eab6c916ef15e32b22a17a",
-    "sourceRoot": "sha256:215b415af47847613634b054a34540432d72fe4c308df3a55ddaa20a2617ba83",
-    "sourceIdentityRoot": "sha256:3e89ee552fcf0d020bd9164c6db840fa8a86b8b64542bf8692c3a0885e55dec4",
-    "sourcePatchRoot": "sha256:d78e4bcac7f34b5d69ace7ca046897e1c90f0836c50c09eba36ba2f9bb95a5a2",
-    "sourceProofRoot": "sha256:8f9f32c9ab72b23b59b899bf9be745a3b935d6c2ba3fe31881f0e39a28639322",
-    "planRoot": "sha256:7c24e767a8fd720dd6b042d11124dab404660294c05f403bba96f83c3e3ed8c9",
-    "closureRoot": "sha256:23868b810c5bb9dad260f845a6b41959671246972bc3e5e4ed3a901c23c5e74e",
-    "dependencyRoot": "sha256:afcf4e6fea6578bbad9f105d2d2e93c23557b37ac51cff48e72c716bf73511cb",
-    "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
-    "environmentRoot": "sha256:863d1c43787e634519a43409057ab5531728c72e039e934aaf45073b1596cc3d",
-    "nativeCommandContract": {
-      "schema": "kungfu.buildchain.native-command-contract/v1",
-      "runner": "bash-lc",
-      "command": "node ../runtime/packages/core/workflow/commands/pipeline-build.mjs --platform linux-x64 --config-path '.buildchain/minimal-consumer.toml'",
-      "commandRoot": "sha256:a05dcdae36757162da44421de801bae64f605b54d3e6fd15552a18e0b5f14801"
-    },
-    "affectedPaths": [
-      "actions/dev-delivery/queue/admit-landing/dist/index.js",
-      "architecture/maintainability-policy.json",
-      "packages/core/workflow/pipeline/integration-status.js",
-      "tests/pipeline-integration-status.test.mjs"
-    ],
-    "shardEvidenceRoots": [],
-    "sourceWorkflowRunId": 34932715916,
-    "deliveryClass": "native-proof-required",
-    "priority": "ordinary",
-    "generation": 55,
-    "expectedOldStateRoot": "sha256:69817ea984ea530f5eefed561c6fd83635d9ec89e62ac87b27a7f32312cbc781",
-    "issuedAt": "2026-09-15T06:00:23.584Z",
-    "expiresAt": "2026-09-15T07:06:48.570Z",
-    "fencingToken": "sha256:b5f8ffce6bd804f7fffc1791180ef7ad113ede172364df86292044157a1048c3",
-    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
-    "heartbeatAt": "2026-09-15T06:06:48.570Z",
-    "nativeProofRoot": "sha256:55d7d11af2c1414570181262d4bf6f6e93bd9e97d371e84aa0a4a627299429f5",
-    "nativeExecutionReceiptRoot": "sha256:9bdeb6f69c74dd1a065ea3b90c9f09a1219f3c8ef3e5fb97aed2af101ffdbc96",
-    "nativeProofReuseRoot": "sha256:f1017dc69c567e77a536d60e198d6b773cfb1861f9dda2b0a5a2ba9091fe582b",
-    "qualificationReceiptRoot": "sha256:f420a7a367db3ed11e55bb4220a3cbad870b482a7717a359a765e0f3ebc4c26a",
-    "qualifiedAt": "2026-09-15T06:09:39.637Z"
-  },
+  "activeWarrant": null,
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -9204,11 +9159,19 @@
       "sourceWorkflowRunId": 34932715916,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-15T06:00:19.205Z",
-      "updatedAt": "2026-09-15T06:09:39.637Z",
+      "updatedAt": "2026-09-15T06:34:18.552Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "qualified",
-      "terminal": null,
+      "status": "merged",
+      "terminal": {
+        "outcome": "merged",
+        "reason": "exact-protected-pipeline-integration",
+        "evidenceRoot": "sha256:dd3a374ab248a0b689d463274301c3719579099cb8596928dd4a821c97fae223",
+        "closedAt": "2026-09-15T06:34:18.552Z",
+        "fencingToken": "sha256:b5f8ffce6bd804f7fffc1791180ef7ad113ede172364df86292044157a1048c3",
+        "leaseGeneration": 55,
+        "successorWake": null
+      },
       "affectedPaths": [
         "actions/dev-delivery/queue/admit-landing/dist/index.js",
         "architecture/maintainability-policy.json",
@@ -9218,6 +9181,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-15T06:09:39.637Z",
-  "stateRoot": "sha256:fbc317ed183b5959e38ecf91cae5634397f711f646adcccf445db7e79660c21c"
+  "updatedAt": "2026-09-15T06:34:18.552Z",
+  "stateRoot": "sha256:58e4191ba89ac684d470467c5728247f181e75b02ed08c977b060e0c2487f6bc"
 }
