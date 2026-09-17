@@ -86,6 +86,7 @@ export async function applyPipelineEffects({
   provider,
   fence,
   retain,
+  wait = setTimeout,
 }) {
   const results = [];
   for (const effect of effects) {
@@ -134,8 +135,12 @@ export async function applyPipelineEffects({
       } catch (error) {
         failure = error;
       }
-      for (let attempt = 0; attempt < 3; attempt++) {
-        if (attempt) await setTimeout(1000);
+      // Accepted npm versions remain unavailable during registry scanning.
+      // Bound that wait to fifteen minutes without repeating the write.
+      const scanning = effect.kind === "npm-package" && !failure;
+      const maximumReads = scanning ? 31 : 3;
+      for (let attempt = 0; attempt < maximumReads; attempt++) {
+        if (attempt) await wait(scanning ? 30_000 : 1000);
         await fence();
         observed = await provider.observe(effect);
         if (observed.state !== "absent" || provider.matches(effect, observed))
@@ -144,7 +149,7 @@ export async function applyPipelineEffects({
       if (!provider.matches(effect, observed)) {
         if (failure) throw failure;
         throw new Error(
-          "Publication write lacks exact successful provider readback",
+          `Publication write lacks exact successful provider readback (${effect.kind})`,
         );
       }
     }

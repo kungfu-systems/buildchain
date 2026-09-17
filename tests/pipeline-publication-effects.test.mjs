@@ -92,3 +92,69 @@ test("lost journal receipt reconciles provider bytes while conflicting or supers
   f.supersede();
   await assert.rejects(applyPipelineEffects(f.input), /superseded/);
 });
+
+for (const scenario of ["available", "pending", "conflicting", "superseded"])
+  test(`accepted npm publication waits for scanning without rewriting bytes: ${scenario}`, async () => {
+    const body = { id: "package", kind: "npm-package", integrity: "sealed" };
+    const effect = { ...body, root: recordDigest(body) };
+    const receipts = [];
+    let elapsed = 0,
+      writes = 0,
+      reads = 0,
+      fences = 0;
+    const result = applyPipelineEffects({
+      effects: [effect],
+      transactionRoot: recordDigest("transaction"),
+      receipts,
+      wait: async (milliseconds) => {
+        elapsed += milliseconds;
+      },
+      fence: async () => {
+        fences++;
+        if (scenario === "superseded" && elapsed >= 60_000)
+          throw new Error("writer superseded during scanning");
+      },
+      retain: async (receipt) => receipts.push(receipt),
+      provider: {
+        apply: async () => {
+          writes++;
+        },
+        observe: async () => {
+          reads++;
+          if (elapsed < 300_000 || scenario === "pending")
+            return { state: "absent" };
+          return {
+            state: "present",
+            integrity: scenario === "conflicting" ? "different" : "sealed",
+          };
+        },
+        matches: (_effect, value) => value.integrity === "sealed",
+      },
+    });
+    if (scenario === "available") {
+      await result;
+      assert.equal(receipts.at(-1).state, "success");
+      assert.ok(elapsed >= 300_000 && elapsed <= 900_000);
+    } else {
+      await assert.rejects(
+        result,
+        scenario === "superseded"
+          ? /writer superseded during scanning/
+          : /exact successful provider readback/,
+      );
+      assert.deepEqual(
+        receipts.map(({ state }) => state),
+        ["pending"],
+      );
+      assert.equal(
+        elapsed,
+        scenario === "pending"
+          ? 900_000
+          : scenario === "conflicting"
+            ? 300_000
+            : 60_000,
+      );
+    }
+    assert.equal(writes, 1);
+    assert.ok(fences >= reads, "every provider read retains the writer fence");
+  });

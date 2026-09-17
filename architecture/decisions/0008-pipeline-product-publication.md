@@ -8,12 +8,12 @@ confidence: medium
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-13
+last_reviewed: 2026-09-17
 ai_provenance:
   model_family: GPT-6
   product: Codex
   generated_at: 2026-09-13
-  visible_context: Product contract, hosted pipeline, provider adapters and local failure-path tests.
+  visible_context: Product contract, hosted pipeline, npm provider documentation, publication readback and local failure-path tests.
   invisible_context_boundary: No published entry qualification, production publication or external consumer adoption is established by this document.
 ---
 
@@ -64,6 +64,14 @@ reconciled from current provider state; completed packages are not republished.
 The Release contains product assets requested by TOML, its Passport, qualification,
 Capsule aggregate, invocation and attestation bundle.
 
+An accepted npm publication can remain unavailable while the registry scans it.
+The publisher permits fifteen minutes of bounded readback delays after a
+successful publish, retaining the writer fence before every observation. It
+never repeats the publish command while waiting. A conflicting integrity fails
+immediately; an unavailable version keeps its pending receipt for normal attempt
+recovery. This accounts for npm's documented
+[publish-time scanning delay](https://github.blog/changelog/2026-07-28-npm-publish-time-malware-scanning-and-dual-use-metadata/).
+
 Publication success does not finish the business attempt. Distribution moves the
 npm channel and the major Git channel, with exact prior readback and no forced
 Git update or npm version regression. Divergent Git channel history stops for
@@ -78,8 +86,12 @@ proof and cannot regress its version. Stable and Alpha retain their distinct
 transition identities and the original successful publication.
 
 Provider authorization is a one-time repository setup. Hosted npm trusted
-publishing is preferred; `BUILDCHAIN_NPM_TOKEN` is an optional publisher-only
-credential. Internal PR creation uses the repository's automation App
+publishing is preferred for package creation. npm's OIDC credentials do not
+authorize changing an existing version's dist-tags; the separate distribution
+step requires `BUILDCHAIN_NPM_TOKEN` with permission to update the package's
+tags. Missing credentials fail explicitly before a channel write, without an
+unsupported OIDC exchange fallback. These credentials remain confined to the
+publisher and distribution jobs. Internal PR creation uses the repository's automation App
 (`BUILDCHAIN_APP_CLIENT_ID` variable and `BUILDCHAIN_APP_PRIVATE_KEY` secret), or
 `BUILDCHAIN_AUTOMATION_TOKEN`. It does not use `GITHUB_TOKEN` to create a PR whose
 ordinary checks would be suppressed. No such credential reaches product commands.
