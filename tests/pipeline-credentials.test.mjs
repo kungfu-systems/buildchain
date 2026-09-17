@@ -4,6 +4,28 @@ import { readWorkflow } from "../scripts/workflow-action-graph.mjs";
 
 const workflow = (name) => readWorkflow(`.github/workflows/${name}.yml`);
 
+test("npm channel credentials reach only distribution across normal and recovery publication", () => {
+  for (const name of ["public-ops-pipeline", "public-ops-recover"]) {
+    assert.equal(workflow(name).jobs.execute.secrets, "inherit");
+  }
+  const execute = workflow(".ops-pipeline-execute");
+  assert.equal(execute.jobs.publication.uses, "./.github/workflows/.release-pipeline-products.yml");
+  assert.equal(execute.jobs.publication.secrets, "inherit");
+  const publication = workflow(".release-pipeline-products");
+  assert.equal(publication.on.workflow_call.secrets.BUILDCHAIN_NPM_CHANNEL_TOKEN.required, false);
+  const apply = publication.jobs.apply.steps.find((step) => step.id === "apply");
+  const settle = publication.jobs.settle.steps.find((step) => step.id === "settle");
+  assert.equal(publication.jobs.apply.permissions["id-token"], "write");
+  assert.equal(apply.env.NODE_AUTH_TOKEN, "${{ secrets.BUILDCHAIN_NPM_TOKEN }}");
+  assert.equal(settle.env.NODE_AUTH_TOKEN, "${{ secrets.BUILDCHAIN_NPM_CHANNEL_TOKEN || secrets.BUILDCHAIN_NPM_TOKEN }}");
+  for (const [name, job] of Object.entries(publication.jobs)) {
+    if (name !== "settle") assert.doesNotMatch(JSON.stringify(job), /BUILDCHAIN_NPM_CHANNEL_TOKEN/);
+  }
+  for (const name of ["build", "qualify"]) {
+    assert.doesNotMatch(JSON.stringify(publication.jobs[name]), /NODE_AUTH_TOKEN|BUILDCHAIN_NPM_TOKEN/);
+  }
+});
+
 test("normal and recovered delivery forward the canonical provider credential across every reusable edge", () => {
   for (const name of ["public-ops-pipeline", "public-ops-recover"]) {
     const entry = workflow(name);

@@ -433,9 +433,10 @@
       "secrets": [
         "BUILDCHAIN_APP_PRIVATE_KEY",
         "BUILDCHAIN_AUTOMATION_TOKEN",
+        "BUILDCHAIN_NPM_CHANNEL_TOKEN",
         "BUILDCHAIN_NPM_TOKEN"
       ],
-      "secretCount": 3,
+      "secretCount": 4,
       "outputs": [
         "stable-wait"
       ],

@@ -88,14 +88,27 @@ transition identities and the original successful publication.
 Provider authorization is a one-time repository setup. Hosted npm trusted
 publishing is preferred for package creation. npm's OIDC credentials do not
 authorize changing an existing version's dist-tags; the separate distribution
-step requires `BUILDCHAIN_NPM_TOKEN` with permission to update the package's
-tags. Missing credentials fail explicitly before a channel write, without an
-unsupported OIDC exchange fallback. These credentials remain confined to the
-publisher and distribution jobs. Internal PR creation uses the repository's automation App
+step accepts `BUILDCHAIN_NPM_CHANNEL_TOKEN` with permission to update the
+package's tags. This separate secret reaches only the Settle step, so a repository
+using OIDC leaves `BUILDCHAIN_NPM_TOKEN` unset. Consumers that need token-based
+publication may still provide `BUILDCHAIN_NPM_TOKEN`; distribution falls back to
+it when the channel secret is absent. Missing credentials fail explicitly before
+a channel write, without an unsupported OIDC exchange fallback. Neither token
+reaches product commands. The channel credential should be limited to the exact
+package with no organization access. npm also supports stage-only write tokens
+that permit dist-tag updates while denying direct publication; see the
+[registry token contract](https://api-docs.npmjs.com/#tag/Tokens).
+Internal PR creation uses the repository's automation App
 (`BUILDCHAIN_APP_CLIENT_ID` variable and `BUILDCHAIN_APP_PRIVATE_KEY` secret), or
 `BUILDCHAIN_AUTOMATION_TOKEN`. It does not use `GITHUB_TOKEN` to create a PR whose
 ordinary checks would be suppressed. No such credential reaches product commands.
 Review and branch protections still apply to generated PRs.
+
+The separate channel secret requires a published entry containing this workflow
+wiring. A repaired runtime selects action code, not a replacement reusable
+workflow definition; adding the new repository secret alone cannot repair an
+older published entry that only forwards `BUILDCHAIN_NPM_TOKEN`. Qualify entry
+adoption and credential isolation separately from local configuration tests.
 
 The local tests cover real npm packing, native archives and PDFs, source and
 version drift, independent provider inventory, signature-verifier rejection,
