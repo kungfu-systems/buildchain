@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { pipelineNpmChannel } from "../packages/core/publication/npm/pipeline-channel.js";
 
-test("npm channel exchanges hosted identity for the exact package and never forwards provider tokens to a consumer host", async () => {
+test("npm channel confines the configured credential to the exact registry package", async () => {
   const calls = [];
   let version = null;
   const effect = {
@@ -12,6 +12,7 @@ test("npm channel exchanges hosted identity for the exact package and never forw
   };
   const provider = pipelineNpmChannel({
     environment: {
+      NODE_AUTH_TOKEN: "package-fixture",
       ACTIONS_ID_TOKEN_REQUEST_URL:
         "https://pipelines.actions.githubusercontent.com/token?api-version=2",
       ACTIONS_ID_TOKEN_REQUEST_TOKEN: "hosted-request-fixture",
@@ -19,17 +20,12 @@ test("npm channel exchanges hosted identity for the exact package and never forw
     fetchImpl: async (url, options) => {
       calls.push({ url, options });
       let body;
-      if (url.startsWith("https://pipelines.actions.githubusercontent.com/")) {
-        assert.equal(
-          new URL(url).searchParams.get("audience"),
-          "npm:registry.npmjs.org",
-        );
-        body = { value: "identity-fixture" };
-      } else if (url.includes("/oidc/token/exchange/")) {
-        assert.ok(url.endsWith("%40example%2Fproduct"));
-        assert.equal(options.headers.authorization, "Bearer identity-fixture");
-        body = { token: "package-fixture" };
-      } else if (options.method === "PUT") {
+      assert.ok(
+        url.startsWith(
+          "https://registry.npmjs.org/-/package/%40example%2Fproduct/dist-tags",
+        ),
+      );
+      if (options.method === "PUT") {
         assert.equal(options.headers.authorization, "Bearer package-fixture");
         version = JSON.parse(options.body);
         body = { ok: true };
@@ -51,6 +47,36 @@ test("npm channel exchanges hosted identity for the exact package and never forw
     calls.filter(({ options }) => options.method === "PUT").length,
     1,
   );
+});
+
+test("npm channel rejects OIDC-only writes before attempting an unsupported token exchange", async () => {
+  let requests = 0;
+  const provider = pipelineNpmChannel({
+    environment: {
+      ACTIONS_ID_TOKEN_REQUEST_URL:
+        "https://pipelines.actions.githubusercontent.com/token?api-version=2",
+      ACTIONS_ID_TOKEN_REQUEST_TOKEN: "hosted-request-fixture",
+    },
+    fetchImpl: async () => {
+      requests++;
+      return {
+        ok: true,
+        json: async () => ({
+          value: "identity-fixture",
+          token: "package-fixture",
+        }),
+      };
+    },
+  });
+  await assert.rejects(
+    provider.apply({
+      name: "@example/product",
+      tag: "alpha",
+      version: "1.0.0-alpha.1",
+    }),
+    /dist-tags.*configured channel credential/,
+  );
+  assert.equal(requests, 0);
 });
 
 test("npm channel rejects unknown provider failures without exposing response bodies", async () => {
