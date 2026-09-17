@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 226,
+  "generation": 227,
   "fencingCounter": 59,
   "policy": {
     "agingSeconds": 900,
@@ -9424,8 +9424,51 @@
         "tests/pipeline-publication-providers.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.1",
+      "pullRequestNumber": 3823,
+      "sourceRoot": "sha256:fabadeeeb0aff705933ad02e03b923913c7f2b46d55d2a6e0146f5a98f6a9289",
+      "sourceIdentityRoot": "sha256:189ad2f17182904b0c0fa481aca39d7dad4a40bce072c33faf230f9336657145",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:dde39234e1ffe2f7ac121e95ac778b6c4ad3a7ca8df02284c04fc2f41b362996",
+      "sourceHead": "7a7efd6ca6eefb6dfd9d4c631d426e108e84b152",
+      "sourcePatchRoot": "sha256:08073fd280fbb887a207013354724a6055cdcc196825cfc3ba3a5b4ce7752892",
+      "sourceProofRoot": "sha256:2a1eeebede6eaecb99bf1be4ae2b11eaa65bf4b7f02200ffa5c50f69bd36aa6f",
+      "planRoot": "sha256:9cc0330522048a3dcd38574ee5ddcc5fa41f6eedebc4dac18e7028ccb9a0442e",
+      "closureRoot": "sha256:a56d1b7461bab6aadde13a776ce4409117296ed2c7b907b90beccac101a4631e",
+      "dependencyRoot": "sha256:afcf4e6fea6578bbad9f105d2d2e93c23557b37ac51cff48e72c716bf73511cb",
+      "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
+      "environmentRoot": "sha256:d9e1ecd77cabaf78e0ac9f683059d86b2c1e467962d74e48e765c870119753f0",
+      "nativeCommandContract": {
+        "schema": "kungfu.buildchain.native-command-contract/v1",
+        "runner": "bash-lc",
+        "command": "node ../runtime/packages/core/workflow/commands/pipeline-build.mjs --platform linux-x64 --config-path '.buildchain/minimal-consumer.toml'",
+        "commandRoot": "sha256:a05dcdae36757162da44421de801bae64f605b54d3e6fd15552a18e0b5f14801"
+      },
+      "sourceWorkflowRunId": 35197462542,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-17T08:30:47.502Z",
+      "updatedAt": "2026-09-17T08:30:47.502Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".buildchain/alpha-contract-lock.json",
+        "actions/publication/pipeline/apply/dist/index.js",
+        "actions/publication/pipeline/settle/dist/index.js",
+        "actions/publication/version/materialize-development/dist/index.js",
+        "architecture/decisions/0008-pipeline-product-publication.md",
+        "packages/core/publication/npm/pipeline-channel.js",
+        "packages/core/publication/pipeline/effects.js",
+        "tests/pipeline-npm-channel.test.mjs",
+        "tests/pipeline-publication-effects.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-15T18:00:59.777Z",
-  "stateRoot": "sha256:a5e4452ea08f097dfd161cfa388a70e649cde3045fa74b51f52332cd8483e0d4"
+  "updatedAt": "2026-09-17T08:30:47.502Z",
+  "stateRoot": "sha256:79c6a038966e365dbde6dc8dcf311a302a3730017c3d2127710dea1ba337311c"
 }
