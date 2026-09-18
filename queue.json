@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 244,
+  "generation": 245,
   "fencingCounter": 62,
   "policy": {
     "agingSeconds": 900,
@@ -9588,8 +9588,43 @@
         "package.json"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.1",
+      "pullRequestNumber": 3831,
+      "sourceRoot": "sha256:e8484ddd971f6e7beff428f383de95eba2caa13f8d5baf53b4ee0be1ef1be01a",
+      "sourceIdentityRoot": "sha256:262d7d784c115e6489db75fdc12ce91ce9a3ecd450012b96ad885ab0b497dafb",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:6baeeab10888450b954428bea6bb1bac4261c105ede5b4f0a686457c4807655e",
+      "sourceHead": "68e1d000f6a3b625141c2e9ac4dbf825ee4f2ebc",
+      "sourcePatchRoot": "sha256:6f1157324e039d45418f57ceaeb039c590f43aadb49033bc0ceb224b42d783bd",
+      "sourceProofRoot": "sha256:cc9f832020f08faece1868d1580b0fb881ca551acdd7e8330a5ded97e772b2a9",
+      "planRoot": "sha256:9cc0330522048a3dcd38574ee5ddcc5fa41f6eedebc4dac18e7028ccb9a0442e",
+      "closureRoot": "sha256:b60bd5c24c315f068814d0071d2c03d0f594ca83907eeecd4e505dcab5593baa",
+      "dependencyRoot": "sha256:6298efc4729ed2789361e9a9bca69f3b7b9f56363c6bb2486df3b21e48a5bd8a",
+      "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
+      "environmentRoot": "sha256:d4ab2df236f949a4f20d28544e5962e9654ee23b20815e568c55b15a79c13b3d",
+      "nativeCommandContract": {
+        "schema": "kungfu.buildchain.native-command-contract/v1",
+        "runner": "bash-lc",
+        "command": "node ../runtime/packages/core/workflow/commands/pipeline-build.mjs --platform linux-x64 --config-path '.buildchain/minimal-consumer.toml'",
+        "commandRoot": "sha256:a05dcdae36757162da44421de801bae64f605b54d3e6fd15552a18e0b5f14801"
+      },
+      "sourceWorkflowRunId": 35361024913,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-18T15:38:22.099Z",
+      "updatedAt": "2026-09-18T15:38:22.099Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".buildchain/alpha-contract-lock.json"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-18T12:11:50.204Z",
-  "stateRoot": "sha256:d597757d30a05013863691e9dd75657e2027531642f28501457102195876634c"
+  "updatedAt": "2026-09-18T15:38:22.099Z",
+  "stateRoot": "sha256:3ada41963b3c856d4dfed377b3d27cf7f1d7ad5f7801e3eb4c110b7e691e6fae"
 }
