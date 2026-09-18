@@ -12,6 +12,70 @@ import {
   pipelinePublicationEffects,
 } from "../packages/core/publication/pipeline/effects.js";
 
+test("publication readback retries only absence with fresh fences and one mutation", async () => {
+  for (const scenario of ["delayed", "absent", "conflict", "lost-fence"]) {
+    const body = {
+      id: "exact-tag",
+      kind: "exact-tag",
+      tag: "v1.0.0",
+      commit: "a".repeat(40),
+    };
+    const effect = { ...body, root: recordDigest(body) };
+    let writes = 0,
+      reads = 0,
+      lag = 2,
+      fences = 0;
+    const receipts = [];
+    const failure = new Error("lost write response");
+    const invocation = applyPipelineEffects({
+      effects: [effect],
+      transactionRoot: recordDigest("transaction"),
+      receipts,
+      provider: {
+        observe: async () => {
+          reads++;
+          if (!writes || scenario === "absent") return { state: "absent" };
+          if (scenario === "conflict")
+            return { state: "present", commit: "b".repeat(40) };
+          return lag-- > 0
+            ? { state: "absent" }
+            : { state: "present", commit: body.commit };
+        },
+        matches: (_effect, value) =>
+          value.state === "present" && value.commit === body.commit,
+        apply: async () => {
+          writes++;
+          throw failure;
+        },
+      },
+      fence: async () => {
+        fences++;
+        if (scenario === "lost-fence" && writes)
+          throw new Error("writer fence lost");
+      },
+      retain: async (receipt) => receipts.push(receipt),
+    });
+    if (scenario === "delayed") {
+      await invocation;
+      assert.equal(receipts.at(-1).state, "success");
+      assert.ok(fences >= 5);
+    } else {
+      await assert.rejects(
+        invocation,
+        scenario === "lost-fence"
+          ? /writer fence lost/
+          : (error) => error === failure,
+      );
+      assert.equal(receipts.length, 1);
+    }
+    assert.equal(writes, 1);
+    assert.equal(
+      reads,
+      scenario === "conflict" ? 2 : scenario === "lost-fence" ? 1 : 4,
+    );
+  }
+});
+
 test("npm publisher executes only the exact sealed tarball and excludes product commands and unrelated credentials", async (t) => {
   const directory = fs.mkdtempSync(
     path.join(fs.realpathSync(os.tmpdir()), "pipeline-npm-provider-"),
@@ -34,7 +98,7 @@ test("npm publisher executes only the exact sealed tarball and excludes product 
     product: artifact.id,
     ...artifact.package,
     access: "public",
-    tag: "staged",
+    tag: "alpha",
   };
   let invocation;
   const provider = pipelineNpmProvider({
@@ -57,6 +121,7 @@ test("npm publisher executes only the exact sealed tarball and excludes product 
   });
   await provider.apply(effect);
   assert.ok(invocation.args.includes("--ignore-scripts"));
+  assert.equal(invocation.args[invocation.args.indexOf("--tag") + 1], "alpha");
   assert.equal(invocation.args[1], path.join(directory, "sealed.tgz"));
   assert.equal(invocation.env.GITHUB_TOKEN, undefined);
   assert.equal(invocation.env.NODE_OPTIONS, undefined);
@@ -94,7 +159,68 @@ test("npm publisher executes only the exact sealed tarball and excludes product 
   await assert.rejects(provider.apply(effect), /bytes changed/);
 });
 
-test("GitHub publication reconciles lost tag/release/asset responses and refuses historical byte conflicts", async (t) => {
+test("npm publication failures expose only recognized error codes and retain one sealed write", async (t) => {
+  const directory = fs.mkdtempSync(
+    path.join(fs.realpathSync(os.tmpdir()), "pipeline-npm-failure-"),
+  );
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const file = path.join(directory, "sealed.tgz");
+  fs.writeFileSync(file, "sealed test payload");
+  const bytes = publicationFile(file);
+  const artifact = {
+    id: "p/linux/pkg",
+    file: "sealed.tgz",
+    digest: bytes.digest,
+    package: {
+      name: "@example/pkg",
+      version: "1.0.0",
+      integrity: bytes.integrity,
+    },
+  };
+  const effect = {
+    kind: "npm-package",
+    product: artifact.id,
+    ...artifact.package,
+    access: "public",
+    tag: "latest",
+  };
+  for (const [stderr, code] of [
+    ["npm error code ENEEDAUTH", "ENEEDAUTH"],
+    ["npm ERR! code E403", "E403"],
+    ["\u001b[31mnpm error\u001b[39m code E401\r\n", "E401"],
+    ["npm error code PRIVATE_CREDENTIAL", "unclassified"],
+    ["npm error code E403_PRIVATE_CREDENTIAL", "unclassified"],
+    ["unrelated ENEEDAUTH", "unclassified"],
+  ]) {
+    let writes = 0;
+    const provider = pipelineNpmProvider({
+      directory,
+      artifacts: [artifact],
+      environment: {},
+      run: (request) => {
+        writes++;
+        assert.equal(request.args[0], "publish");
+        assert.equal(request.args[1], file);
+        return {
+          status: 1,
+          stdout: "private stdout",
+          stderr: `${stderr}\nhttps://private.invalid/?token=private-secret`,
+        };
+      },
+    });
+    await assert.rejects(provider.apply(effect), (error) => {
+      assert.equal(
+        error.message,
+        `Sealed npm publication failed with exit 1 (npm code ${code})`,
+      );
+      assert.equal(error.cause, undefined);
+      return true;
+    });
+    assert.equal(writes, 1);
+  }
+});
+
+async function verifyGithubPublication(t, lostReleaseResponse) {
   const directory = fs.mkdtempSync(
     path.join(fs.realpathSync(os.tmpdir()), "pipeline-release-provider-"),
   );
@@ -123,7 +249,9 @@ test("GitHub publication reconciles lost tag/release/asset responses and refuses
     transaction: { transactionRoot: recordDigest("transaction") },
     passport: { passportRoot: recordDigest("passport") },
   };
-  let tag, release;
+  let tag,
+    release,
+    releaseLag = 0;
   const assets = [],
     writes = [],
     receipts = [];
@@ -133,7 +261,10 @@ test("GitHub publication reconciles lost tag/release/asset responses and refuses
     createRelease: async (input) => {
       writes.push("release");
       release = { id: 5, ...input };
-      throw new Error("lost release response");
+      releaseLag = lostReleaseResponse === "absent" ? Infinity : 2;
+      if (lostReleaseResponse === true)
+        throw new Error("lost release response");
+      return { data: release };
     },
     uploadReleaseAsset: async (input) => {
       writes.push(input.name);
@@ -156,6 +287,8 @@ test("GitHub publication reconciles lost tag/release/asset responses and refuses
   const github = {
     rest: { repos },
     paginate: async (method, args, map) => {
+      if (method === "releases" && releaseLag-- > 0)
+        return map ? map({ data: [] }) : [];
       const data = method === "releases" ? (release ? [release] : []) : assets;
       return map ? map({ data }) : data;
     },
@@ -193,6 +326,14 @@ test("GitHub publication reconciles lost tag/release/asset responses and refuses
     fence: async () => {},
     retain: async (receipt) => receipts.push(receipt),
   };
+  if (lostReleaseResponse === "absent") {
+    await assert.rejects(
+      applyPipelineEffects(input),
+      /Release creation lacks exact provider readback/,
+    );
+    assert.deepEqual(writes, ["tag", "release"]);
+    return;
+  }
   await applyPipelineEffects(input);
   assert.deepEqual(writes, [
     "tag",
@@ -206,4 +347,8 @@ test("GitHub publication reconciles lost tag/release/asset responses and refuses
   assets[0].bytes = Buffer.from("conflicting historical bytes");
   await assert.rejects(applyPipelineEffects(input), /completed publication/);
   assert.equal(writes.length, 5);
-});
+}
+
+for (const scenario of [false, true, "absent"])
+  test(`GitHub publication reconciles delayed visibility and lost responses (${scenario})`, (t) =>
+    verifyGithubPublication(t, scenario));

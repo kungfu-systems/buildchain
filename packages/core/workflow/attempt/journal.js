@@ -1,3 +1,4 @@
+import { setTimeout } from "node:timers/promises";
 import {
   canonicalJson,
   recordDigest,
@@ -72,16 +73,17 @@ export function atomicAttemptJournal(provider, intent) {
     }
     // A lost response can follow a committed append. Reconcile the immutable
     // record in live history; never retry the old parent with force=true.
-    const result = await read();
-    if (
-      !result.snapshot.records.some(
-        (event) => canonicalJson(event) === canonicalJson(record),
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt) await setTimeout(1000);
+      const result = await read();
+      if (
+        result.snapshot.records.some(
+          (event) => canonicalJson(event) === canonicalJson(record),
+        )
       )
-    )
-      throw (
-        failure || new Error("Attempt append missing from provider readback")
-      );
-    return result;
+        return result;
+    }
+    throw failure || new Error("Attempt append missing from provider readback");
   }
   return { read, append };
 }
