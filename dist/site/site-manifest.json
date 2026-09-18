@@ -253,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:176c523f579e4b2221f2e323c35d4a5a803d522b8e4f9eeb252a25481688c09a"
+      "digest": "sha256:5c00176bff01621ea48e2d35fbea8c34810963eda6a7413a1819ca3fae529f6c"
     },
     {
       "id": "build-facts",

@@ -20048,7 +20048,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 343
+        "line": 344
       },
       "example": "import { advanceNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20081,7 +20081,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 304
+        "line": 305
       },
       "example": "import { bindNextDevelopmentAnchor } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20110,7 +20110,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 252
+        "line": 253
       },
       "example": "import { createNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20139,7 +20139,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 471
+        "line": 472
       },
       "example": "import { materializeNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20163,7 +20163,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 20
+        "line": 21
       },
       "example": "import { NEXT_DEVELOPMENT_ADR } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20187,7 +20187,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 22
+        "line": 23
       },
       "example": "import { NEXT_DEVELOPMENT_INVARIANT } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20211,7 +20211,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 18
+        "line": 19
       },
       "example": "import { NEXT_DEVELOPMENT_REQUEST_CONTRACT } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20235,7 +20235,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 24
+        "line": 25
       },
       "example": "import { NEXT_DEVELOPMENT_STATES } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20259,7 +20259,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 16
+        "line": 17
       },
       "example": "import { NEXT_DEVELOPMENT_TRANSITION_CONTRACT } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20283,7 +20283,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 32
+        "line": 33
       },
       "example": "import { NEXT_DEVELOPMENT_VERSION_MODELS } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20312,7 +20312,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 63
+        "line": 64
       },
       "example": "import { nextDevelopmentRoot } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20345,7 +20345,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 415
+        "line": 416
       },
       "example": "import { recordNextDevelopmentMaterialization } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -29394,7 +29394,7 @@
       "specifier": "@kungfu-tech/buildchain/next-development-transition",
       "export": "./next-development-transition",
       "target": "./packages/core/release/next-development-transition.js",
-      "digest": "sha256:326f5c9478e0f17d292c95445c460d02665046e7c4924c20a614e349f2e9d634",
+      "digest": "sha256:8a2438fa640517f007efc643f1878fc6fb382ba3f9a01c61d3929fdd91bab9f6",
       "summary": "Provider-neutral completed-Alpha preservation and rooted next-development state, version-model, idempotency, and local materialization APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -30102,7 +30102,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:176c523f579e4b2221f2e323c35d4a5a803d522b8e4f9eeb252a25481688c09a"
+      "digest": "sha256:5c00176bff01621ea48e2d35fbea8c34810963eda6a7413a1819ca3fae529f6c"
     },
     {
       "id": "build-facts",

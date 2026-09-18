@@ -3,6 +3,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { isDeepStrictEqual } from "node:util";
 
 import {
   discoverConfiguredDerivedVersionMaterial,
@@ -606,7 +607,7 @@ function assertStaticTransition(record, recreated) {
       throw new Error(`next-development ${field} drifted`);
   }
   for (const field of ["adapter", "declaredPaths", "effectBounds", "target"]) {
-    if (JSON.stringify(record[field]) !== JSON.stringify(recreated[field])) {
+    if (!isDeepStrictEqual(record[field], recreated[field])) {
       const label = field === "effectBounds" ? "effect bounds" : field;
       throw new Error(`next-development ${label} drifted`);
     }
@@ -638,20 +639,19 @@ function assertStaticTransition(record, recreated) {
 }
 
 function assertMaterialization(record) {
-  if (record.materialization !== null) {
-    const { materializationRoot, ...body } = record.materialization;
-    if (materializationRoot !== nextDevelopmentRoot(body)) {
-      throw new Error("next-development materialization root drifted");
-    }
-    const materializedPaths = (record.materialization.paths || []).map(
-      (entry) => entry.path,
-    );
-    if (
-      JSON.stringify(materializedPaths) !==
-      JSON.stringify(record.adapter.sourcePaths)
-    ) {
-      throw new Error("next-development materialization escaped source paths");
-    }
+  if (record.materialization === null) return;
+  const { materializationRoot, ...body } = record.materialization;
+  if (materializationRoot !== nextDevelopmentRoot(body))
+    throw new Error("next-development materialization root drifted");
+  const { paths = [] } = record.materialization;
+  const materializedPaths = paths.map(({ path }) => path);
+  // Reference adapters cover sources; transaction adapters cover all outputs.
+  if (
+    ![record.adapter.sourcePaths, record.adapter.allowedChangePaths].some(
+      (expected) => isDeepStrictEqual(materializedPaths, expected),
+    )
+  ) {
+    throw new Error("next-development materialization paths drifted");
   }
 }
 
