@@ -877,10 +877,9 @@
         "secrets": [
           "BUILDCHAIN_APP_PRIVATE_KEY",
           "BUILDCHAIN_AUTOMATION_TOKEN",
-          "BUILDCHAIN_NPM_CHANNEL_TOKEN",
           "BUILDCHAIN_NPM_TOKEN"
         ],
-        "secretCount": 4,
+        "secretCount": 3,
         "outputs": [
           "stable-wait"
         ],
@@ -10815,7 +10814,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e43fdb0289df88871f3f0febbe04dcb9311a252a2b1df9b3a83a2d10c9d4a70f",
-    "workflowRegistryDigest": "8d18990fa0e99d89ac19a9e660c71b0d3893dbb38a128e1860d6d8b4571db382",
+    "workflowRegistryDigest": "023f6ff72a4603c4a1cd2b670f38d88a31ca49f51b7a670cb1a87ffc0b75d407",
     "pageRegistryDigest": "80d9a72bc3833c1f9ec4ad39f3dbab4ebce9b51c795d390a3526acf904054eb7"
   },
   "comparison": {

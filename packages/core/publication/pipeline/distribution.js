@@ -1,7 +1,6 @@
 import { recordDigest } from "../../release/discussion/envelope.js";
 import { pipelineNpmChannel } from "../npm/pipeline-channel.js";
-import { applyPipelineEffects } from "./effects.js";
-import { compareDevelopmentVersions } from "../publication-development.js";
+import { applyPipelineEffects, pipelinePublicationEffects } from "./effects.js";
 
 export async function distributePipelineProducts(
   context,
@@ -9,12 +8,10 @@ export async function distributePipelineProducts(
   journal,
   retained,
   environment,
-  directory,
 ) {
   const { plan, materialization } = context;
   const channel = `v${plan.version.split(".")[0]}${plan.channel === "alpha" ? "-alpha" : ""}`;
   const refPath = `/repos/${host.repository}/git/ref/tags/${channel}`;
-  const npmTag = plan.channel === "alpha" ? "alpha" : "latest";
   const npm = pipelineNpmChannel({ environment });
   async function observe(effect) {
     if (effect.kind === "git-channel") {
@@ -25,7 +22,14 @@ export async function distributePipelineProducts(
         ? { state: "present", commit: value.object.sha }
         : { state: "absent", commit: null };
     }
-    return npm.observe(effect);
+    // Only retained historical plans contain npm channel effects. New releases
+    // set their channel in npm publish and never enter a separate npm operation.
+    const value = await npm.observe(effect);
+    if (value.version !== effect.version)
+      throw new Error(
+        `Historical npm channel ${effect.name}@${effect.tag} requires a one-time authenticated correction to ${effect.version}; recovery never republishes or rewrites npm tags`,
+      );
+    return value;
   }
   const plans = await journal.materials("publication/distribution-plan/");
   if (plans.length > 1)
@@ -40,18 +44,26 @@ export async function distributePipelineProducts(
         commit: materialization.source.commit,
       },
     ];
-    for (const artifact of retained.qualified.artifacts.filter((entry) =>
-      entry.targets.some(({ provider }) => provider === "npm"),
-    ))
-      raw.push({
-        id: `npm-channel:${artifact.id}`,
-        kind: "npm-channel",
-        name: artifact.package.name,
-        access: artifact.targets.find(({ provider }) => provider === "npm")
-          .access,
-        tag: npmTag,
-        version: plan.version,
+    const receipts = await journal.materials("publication/effect/");
+    if (receipts.length) {
+      const published = pipelinePublicationEffects({
+        plan,
+        ...retained,
+        receipts,
       });
+      for (const effect of published.filter(
+        (item) =>
+          item.kind === "npm-package" && item.tag.startsWith("buildchain-"),
+      ))
+        raw.push({
+          id: `npm-channel:${effect.product}`,
+          kind: "npm-channel",
+          name: effect.name,
+          access: effect.access,
+          tag: plan.channel === "alpha" ? "alpha" : "latest",
+          version: effect.version,
+        });
+    }
     effects = [];
     for (const effect of raw) {
       const before = await observe(effect);
@@ -81,12 +93,6 @@ export async function distributePipelineProducts(
         throw new Error(
           "Floating channel changed since retained distribution admission",
         );
-      if (
-        effect.kind === "npm-channel" &&
-        current.version &&
-        compareDevelopmentVersions(current.version, effect.version) > 0
-      )
-        throw new Error("npm channel cannot regress a newer published version");
       await journal.fence();
       if (effect.kind === "git-channel") {
         if (current.state === "absent")
@@ -101,7 +107,7 @@ export async function distributePipelineProducts(
           { method: "PATCH", body: { sha: effect.commit, force: false } },
         );
       }
-      await npm.apply(effect);
+      throw new Error("Distribution cannot write npm channels");
     },
   };
   const receipts = await applyPipelineEffects({

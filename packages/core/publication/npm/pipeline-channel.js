@@ -32,24 +32,5 @@ export function pipelineNpmChannel({
         ? { state: "present", version }
         : { state: "absent", version: null };
     },
-    async apply(effect) {
-      // npm's exchanged OIDC tokens authorize publication, not dist-tag writes.
-      const token = environment.NODE_AUTH_TOKEN;
-      if (!token)
-        throw new Error(
-          "Updating npm dist-tags requires a configured channel credential; hosted OIDC only authorizes package publication",
-        );
-      await json(
-        `${REGISTRY}/-/package/${encodeURIComponent(effect.name)}/dist-tags/${encodeURIComponent(effect.tag)}`,
-        {
-          method: "PUT",
-          headers: {
-            authorization: `Bearer ${token}`,
-            "content-type": "application/json",
-          },
-          body: JSON.stringify(effect.version),
-        },
-      );
-    },
   };
 }

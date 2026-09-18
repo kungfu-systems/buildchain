@@ -2,81 +2,31 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { pipelineNpmChannel } from "../packages/core/publication/npm/pipeline-channel.js";
 
-test("npm channel confines the configured credential to the exact registry package", async () => {
+test("historical npm channel readback has no writer and needs no credential for public packages", async () => {
   const calls = [];
-  let version = null;
-  const effect = {
-    name: "@example/product",
-    tag: "alpha",
-    version: "1.0.0-alpha.1",
-  };
   const provider = pipelineNpmChannel({
-    environment: {
-      NODE_AUTH_TOKEN: "package-fixture",
-      ACTIONS_ID_TOKEN_REQUEST_URL:
-        "https://pipelines.actions.githubusercontent.com/token?api-version=2",
-      ACTIONS_ID_TOKEN_REQUEST_TOKEN: "hosted-request-fixture",
-    },
+    environment: {},
     fetchImpl: async (url, options) => {
       calls.push({ url, options });
-      let body;
-      assert.ok(
-        url.startsWith(
-          "https://registry.npmjs.org/-/package/%40example%2Fproduct/dist-tags",
-        ),
+      assert.equal(
+        url,
+        "https://registry.npmjs.org/-/package/%40example%2Fproduct/dist-tags",
       );
-      if (options.method === "PUT") {
-        assert.equal(options.headers.authorization, "Bearer package-fixture");
-        version = JSON.parse(options.body);
-        body = { ok: true };
-      } else body = version ? { alpha: version } : {};
-      return { ok: true, json: async () => body };
+      assert.equal(options.method, undefined);
+      assert.deepEqual(options.headers, {});
+      assert.equal(options.redirect, "error");
+      return { ok: true, json: async () => ({ alpha: "1.0.0-alpha.1" }) };
     },
   });
-  assert.deepEqual(await provider.observe(effect), {
-    state: "absent",
-    version: null,
-  });
-  await provider.apply(effect);
-  assert.deepEqual(await provider.observe(effect), {
-    state: "present",
-    version: effect.version,
-  });
-  assert.ok(calls.every(({ options }) => options.redirect === "error"));
-  assert.equal(
-    calls.filter(({ options }) => options.method === "PUT").length,
-    1,
-  );
-});
-
-test("npm channel rejects OIDC-only writes before attempting an unsupported token exchange", async () => {
-  let requests = 0;
-  const provider = pipelineNpmChannel({
-    environment: {
-      ACTIONS_ID_TOKEN_REQUEST_URL:
-        "https://pipelines.actions.githubusercontent.com/token?api-version=2",
-      ACTIONS_ID_TOKEN_REQUEST_TOKEN: "hosted-request-fixture",
-    },
-    fetchImpl: async () => {
-      requests++;
-      return {
-        ok: true,
-        json: async () => ({
-          value: "identity-fixture",
-          token: "package-fixture",
-        }),
-      };
-    },
-  });
-  await assert.rejects(
-    provider.apply({
-      name: "@example/product",
-      tag: "alpha",
+  assert.equal(provider.apply, undefined);
+  assert.deepEqual(
+    await provider.observe({ name: "@example/product", tag: "alpha" }),
+    {
+      state: "present",
       version: "1.0.0-alpha.1",
-    }),
-    /dist-tags.*configured channel credential/,
+    },
   );
-  assert.equal(requests, 0);
+  assert.equal(calls.length, 1);
 });
 
 test("npm channel rejects unknown provider failures without exposing response bodies", async () => {
@@ -89,7 +39,7 @@ test("npm channel rejects unknown provider failures without exposing response bo
     }),
   });
   await assert.rejects(
-    provider.apply({
+    provider.observe({
       name: "@example/product",
       tag: "alpha",
       version: "1.0.0-alpha.1",

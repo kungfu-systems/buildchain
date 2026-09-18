@@ -15,8 +15,6 @@ on:
         required: false
       BUILDCHAIN_NPM_TOKEN:
         required: false
-      BUILDCHAIN_NPM_CHANNEL_TOKEN:
-        required: false
     outputs:
       stable-wait:
         value: ${{ jobs.prepare.outputs.stable-wait || jobs.materialize.outputs.stable-wait || jobs.apply.outputs.stable-wait }}
@@ -168,7 +166,7 @@ jobs:
       - id: settle
         uses: ./.buildchain/runtime/actions/publication/pipeline/settle
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.BUILDCHAIN_NPM_CHANNEL_TOKEN || secrets.BUILDCHAIN_NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.BUILDCHAIN_NPM_TOKEN }}
         with:
           context: ${{ needs.materialize.outputs.context }}
           token: ${{ github.token }}

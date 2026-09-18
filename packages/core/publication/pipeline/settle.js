@@ -26,7 +26,6 @@ export async function settlePipelinePublication(
       journal,
       retained,
       environment,
-      directory,
     );
     await journal.record("publication/distribution-complete", receipt, {
       phase: "distribution",
