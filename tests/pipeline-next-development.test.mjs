@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import { pipelineVersionFixture } from "./helpers/pipeline-version.mjs";
 import { planPipelinePublication } from "../packages/core/publication/pipeline/plan.js";
 import { nextPipelineDevelopment } from "../packages/core/publication/pipeline/next-development.js";
-import { recordDigest } from "../packages/core/release/discussion/envelope.js";
+import {
+  canonicalJson,
+  recordDigest,
+} from "../packages/core/release/discussion/envelope.js";
 
 function fixture({ channel = "alpha" } = {}) {
   const f = pipelineVersionFixture();
@@ -34,7 +37,7 @@ function fixture({ channel = "alpha" } = {}) {
     materials: async (prefix) =>
       records
         .filter(({ id }) => id.startsWith(prefix))
-        .map(({ value }) => structuredClone(value)),
+        .map(({ value }) => JSON.parse(canonicalJson(value))),
     record: async (id, value) =>
       records.push({
         id: `${id}/${recordDigest(value)}`,
