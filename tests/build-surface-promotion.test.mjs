@@ -1197,20 +1197,20 @@ test("expected artifact JSON normalizes supported checks", () => {
   );
 });
 
-test("buildchain semver version state includes generated site contract version", () => {
+test("buildchain semver version state retains generated contract material", () => {
   const plan = compileConsumerPlan(fs.readFileSync(path.join(root, ".buildchain/buildchain.toml"), "utf8"));
   assert.deepEqual(
     plan.version.files.map((file) => `${file.path}#${file.key}`),
     [
       "package.json#version",
       ".buildchain/release-impact.json#release.version",
-      "dist/site/buildchain-contract.json#product.version",
       "dist/site/buildchain-site.json#package.version",
       "dist/site/site-manifest.json#package.version",
       "dist/site/publication-registry.json#package.version",
       "dist/site/kfd-upstream-aggregate.json#product.version",
     ],
   );
+  assert.ok(plan.version.derived_files.includes("dist/site/buildchain-contract.json"));
   const versionFiles = Object.fromEntries(plan.version.files.map(file => [file.path, fs.readFileSync(path.join(root, file.path), "utf8")]));
   const currentImpact = JSON.parse(fs.readFileSync(path.join(root, ".buildchain/release-impact.json"), "utf8"));
   const currentVersion = String(currentImpact.release.version);
