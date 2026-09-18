@@ -115,13 +115,14 @@ export async function applyPipelinePublication(
     matches: (effect, value) => providerFor(effect).matches(effect, value),
     apply: (effect) => providerFor(effect).apply(effect),
   };
+  const receipts = await journal.materials("publication/effect/");
   const effects = pipelinePublicationEffects({
     plan,
     qualified,
     documents,
     evidence: evidence.map(({ bytes, ...asset }) => asset),
+    receipts,
   });
-  const receipts = await journal.materials("publication/effect/");
   let fence = journal.fence;
   if (context.recovery?.preserveTransaction) {
     const readback = await observeRecoveryPublicationEffects({

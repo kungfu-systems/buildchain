@@ -15,6 +15,7 @@ export function pipelinePublicationEffects({
   qualified,
   documents,
   evidence = [],
+  receipts = [],
 }) {
   const effects = [
     {
@@ -35,7 +36,7 @@ export function pipelinePublicationEffects({
           version: artifact.package.version,
           integrity: artifact.package.integrity,
           access: target.access || "public",
-          tag: `buildchain-${plan.root.slice(7, 23)}`,
+          tag: plan.channel === "alpha" ? "alpha" : "latest",
         });
       if (target.provider === "github-release")
         effects.push({
@@ -73,7 +74,24 @@ export function pipelinePublicationEffects({
     tag: plan.tag,
     prerelease: plan.channel === "alpha",
   });
-  return effects.map((effect) => ({ ...effect, root: recordDigest(effect) }));
+  return effects.map((effect) => {
+    if (effect.kind === "npm-package") {
+      // Historical receipts keep their exact identity across runtime repairs.
+      const original = {
+        ...effect,
+        tag: `buildchain-${plan.root.slice(7, 23)}`,
+      };
+      if (
+        receipts.some(
+          (receipt) =>
+            receipt.effectId === effect.id &&
+            receipt.effectRoot === recordDigest(original),
+        )
+      )
+        effect = original;
+    }
+    return { ...effect, root: recordDigest(effect) };
+  });
 }
 
 // This executor owns only bounded provider operations. Journal admission/fencing

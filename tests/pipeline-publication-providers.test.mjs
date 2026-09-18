@@ -98,7 +98,7 @@ test("npm publisher executes only the exact sealed tarball and excludes product 
     product: artifact.id,
     ...artifact.package,
     access: "public",
-    tag: "staged",
+    tag: "alpha",
   };
   let invocation;
   const provider = pipelineNpmProvider({
@@ -121,6 +121,7 @@ test("npm publisher executes only the exact sealed tarball and excludes product 
   });
   await provider.apply(effect);
   assert.ok(invocation.args.includes("--ignore-scripts"));
+  assert.equal(invocation.args[invocation.args.indexOf("--tag") + 1], "alpha");
   assert.equal(invocation.args[1], path.join(directory, "sealed.tgz"));
   assert.equal(invocation.env.GITHUB_TOKEN, undefined);
   assert.equal(invocation.env.NODE_OPTIONS, undefined);

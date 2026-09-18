@@ -1,7 +1,55 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { applyPipelineEffects } from "../packages/core/publication/pipeline/effects.js";
+import {
+  applyPipelineEffects,
+  pipelinePublicationEffects,
+} from "../packages/core/publication/pipeline/effects.js";
 import { recordDigest } from "../packages/core/release/discussion/envelope.js";
+
+for (const channel of ["alpha", "stable"])
+  test(`npm ${channel} publication sets the final channel in its single publish effect`, () => {
+    const input = {
+      plan: { channel, tag: "v1.0.0", root: recordDigest("plan") },
+      qualified: {
+        source: { commit: "a".repeat(40) },
+        artifacts: [
+          {
+            id: "package",
+            targets: [{ provider: "npm" }],
+            package: { name: "example", version: "1.0.0", integrity: "sealed" },
+          },
+        ],
+      },
+      documents: { passport: { passportRoot: recordDigest("passport") } },
+    };
+    const effect = pipelinePublicationEffects(input).find(
+      ({ kind }) => kind === "npm-package",
+    );
+    assert.equal(effect.tag, channel === "alpha" ? "alpha" : "latest");
+    const { root, ...body } = effect;
+    assert.equal(root, recordDigest(body));
+    const original = {
+      ...body,
+      tag: `buildchain-${input.plan.root.slice(7, 23)}`,
+    };
+    const receipt = {
+      effectId: effect.id,
+      effectRoot: recordDigest(original),
+      state: "success",
+    };
+    const recovered = pipelinePublicationEffects({
+      ...input,
+      receipts: [receipt],
+    });
+    assert.deepEqual(
+      recovered.find(({ kind }) => kind === "npm-package"),
+      {
+        ...original,
+        root: receipt.effectRoot,
+      },
+      "a runtime repair preserves the already published effect instead of republishing it",
+    );
+  });
 
 function setup() {
   const effects = ["first", "second"].map((id) => {
