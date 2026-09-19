@@ -9,7 +9,7 @@ function publicationFilename(template, platform, version) {
     version === undefined ? name : name.replaceAll("{version}", version);
   if (
     resolved !== resolved.trim() ||
-    !/^[A-Za-z0-9][A-Za-z0-9._+-]{0,254}$/u.test(
+    !/^[A-Za-z0-9][A-Za-z0-9._+ -]{0,254}$/u.test(
       version === undefined
         ? resolved.replaceAll("{version}", "version")
         : resolved,

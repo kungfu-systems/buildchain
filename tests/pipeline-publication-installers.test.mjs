@@ -32,6 +32,68 @@ function header(suffix) {
   return bytes;
 }
 
+test("Windows installer download names preserve spaces without admitting unsafe paths", (t) => {
+  const config = parse(
+    fs.readFileSync(
+      "templates/minimal-consumer/binary/.buildchain/buildchain.toml",
+      "utf8",
+    ),
+  );
+  const product = config.products[0];
+  product.platforms = ["windows-x64"];
+  product.artifacts[0] = {
+    id: "main",
+    path: "dist/installer.exe",
+    kind: "installer",
+    filename: "Kungfu Setup {version}.exe",
+  };
+  const compiled = compileConsumerPlan(stringify(config));
+  const outputs = pipelineExpectedProducts(compiled, "4.0.0-alpha.5");
+  assert.equal(outputs[0].filename, "Kungfu Setup 4.0.0-alpha.5.exe");
+  const root = fs.mkdtempSync(
+    path.join(fs.realpathSync(os.tmpdir()), "pipeline-windows-name-"),
+  );
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(root, "dist"));
+  fs.writeFileSync(path.join(root, "dist/installer.exe"), header(".exe"));
+  const body = {
+    schema: "buildchain.pipeline-publication-plan/v1",
+    version: "4.0.0-alpha.5",
+    outputs,
+  };
+  const output = path.join(root, "packed");
+  const manifest = packPipelineProducts({
+    cwd: root,
+    output,
+    plan: { ...body, root: recordDigest(body) },
+    platform: "windows-x64",
+    source: {
+      repository: "example/product",
+      commit: "a".repeat(40),
+      tree: "b".repeat(40),
+    },
+  });
+  assert.equal(
+    manifest.artifacts[0].file,
+    "payloads/Kungfu Setup 4.0.0-alpha.5.exe",
+  );
+  verifyPipelineProductFiles(output, manifest);
+  for (const filename of [
+    " Kungfu.exe",
+    "Kungfu.exe ",
+    "Kungfu/Setup.exe",
+    "Kungfu\\Setup.exe",
+    "Kungfu\nSetup.exe",
+    "Kungfu;Setup.exe",
+  ]) {
+    product.artifacts[0].filename = filename;
+    assert.throws(
+      () => compileConsumerPlan(stringify(config)),
+      /filename.*invalid string/,
+    );
+  }
+});
+
 for (const [suffix, platform] of [
   [".dmg", "macos-arm64"],
   [".exe", "windows-x64"],

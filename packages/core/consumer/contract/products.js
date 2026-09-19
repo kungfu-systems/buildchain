@@ -42,7 +42,7 @@ function artifact(value, location) {
         .replaceAll("{version}", "version")
         .replaceAll("{platform}", "platform"),
       `${location}.filename`,
-      /^[A-Za-z0-9][A-Za-z0-9._+-]{0,254}$/u,
+      /^[A-Za-z0-9][A-Za-z0-9._+ -]{0,254}$/u,
     );
     const extension =
       value.kind === "npm-package"
