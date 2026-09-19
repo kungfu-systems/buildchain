@@ -18,8 +18,13 @@ export const EXACT_DEV_DELIVERY_PROOF_FIELDS = Object.freeze([
   "sourceWorkflowRunId",
 ]);
 export function devDeliverySourceBinding(input = {}) {
-  if (Object.hasOwn(input, "assignmentRoot") || Object.hasOwn(input, "initiativeRoot"))
-    throw new Error("provide sourceRoot alone; obsolete producer roots are unsupported");
+  if (
+    Object.hasOwn(input, "assignmentRoot") ||
+    Object.hasOwn(input, "initiativeRoot")
+  )
+    throw new Error(
+      "provide sourceRoot alone; obsolete producer roots are unsupported",
+    );
   return { sourceRoot: exactRoot(input.sourceRoot, "sourceRoot") };
 }
 export function matchesExactDevDeliveryCandidate(existing, attempted) {
@@ -44,9 +49,7 @@ export function reuseExactActiveDevDeliverySourceProof(active, input) {
   );
   const exact =
     admittedPhase &&
-    ["sourceRoot"].every(
-      (field) => active[field] === input[field],
-    ) &&
+    ["sourceRoot"].every((field) => active[field] === input[field]) &&
     [
       "pullRequestNumber",
       "sourceIdentityRoot",
@@ -65,6 +68,36 @@ export function createDevDeliveryCandidateIdentity(
   expected,
   deliveryClass,
 ) {
+  return candidateIdentity(
+    input,
+    expected,
+    deliveryClass,
+    devDeliverySourceBinding(input),
+  );
+}
+
+export function readDevDeliveryCandidateIdentity(
+  input,
+  expected,
+  deliveryClass,
+  terminalStates,
+) {
+  const historical =
+    terminalStates.has(input.status) &&
+    !Object.hasOwn(input, "sourceRoot") &&
+    Object.hasOwn(input, "assignmentRoot") &&
+    Object.hasOwn(input, "initiativeRoot");
+  if (historical) exactRoot(input.candidateId, "historical candidateId");
+  const binding = historical
+    ? {
+        assignmentRoot: exactRoot(input.assignmentRoot, "assignmentRoot"),
+        initiativeRoot: exactRoot(input.initiativeRoot, "initiativeRoot"),
+      }
+    : devDeliverySourceBinding(input);
+  return candidateIdentity(input, expected, deliveryClass, binding);
+}
+
+function candidateIdentity(input, expected, deliveryClass, binding) {
   const identity = {
     repository: expected.repository,
     protectedBase: expected.protectedBase,
@@ -72,7 +105,7 @@ export function createDevDeliveryCandidateIdentity(
       input.pullRequestNumber,
       "pullRequestNumber",
     ),
-    ...devDeliverySourceBinding(input),
+    ...binding,
     sourceIdentityRoot: exactRoot(
       input.sourceIdentityRoot,
       "sourceIdentityRoot",
@@ -93,13 +126,20 @@ export function createDevDeliveryCandidateIdentity(
   return { ...identity, candidateId: devDeliveryContentRoot(identity) };
 }
 export function validateDevDeliveryCandidateChain(candidates, terminalStates) {
+  const historicalTerminal = (candidate) =>
+    terminalStates.has(candidate.status) &&
+    !Object.hasOwn(candidate, "sourceRoot") &&
+    candidate.assignmentRoot &&
+    candidate.initiativeRoot &&
+    candidate.enqueuedAt < "2026-08-05T14:42:34.000Z";
   const precedingCandidates = new Map();
   const latestByPullRequest = new Map();
   for (const candidate of candidates) {
     const latest = latestByPullRequest.get(candidate.pullRequestNumber);
     if (
       latest &&
-      candidate.identitySemantics !== CHAINED_ATTEMPT_IDENTITY
+      candidate.identitySemantics !== CHAINED_ATTEMPT_IDENTITY &&
+      !(historicalTerminal(latest) && historicalTerminal(candidate))
     ) {
       throw new Error(UNCHAINED_SUCCESSOR);
     }

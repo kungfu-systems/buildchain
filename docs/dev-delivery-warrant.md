@@ -7,12 +7,12 @@ source_level: local-files
 confidence: high
 sensitivity: public
 evidence_grade: A
-review_state: self-reviewed
-last_reviewed: 2026-09-11
+review_state: unreviewed
+last_reviewed: 2026-09-20
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-08-11
+  generated_at: 2026-09-20
   invisible_context: not asserted
 ---
 
@@ -206,26 +206,22 @@ buildchain dev warrant cancel-queued --repository owner/repository \
 Warrant-scoped mutations require the exact fencing token and lease generation.
 `close` also requires a rooted terminal evidence object.
 
-Legacy v3 queues that predate the native command contract can be observed but
-cannot enter ordinary mutation paths. If every live legacy candidate has an
-exact completed failed hosted run with zero nonterminal jobs, an operator may
-atomically terminalize that complete live set:
+New submissions and live candidates require the canonical `sourceRoot`. The
+retired `assignmentRoot` / `initiativeRoot` pair is rejected even when a new
+request claims a terminal status.
 
-```sh
-buildchain dev warrant recover-legacy-terminal \
-  --repository owner/repository --branch dev/v4/v4.0 \
-  --expected-old sha256:<current-state-root> \
-  --legacy-terminal-recovery legacy-terminal-recovery.json --execute
-```
+Stored terminal candidates may retain that historical pair without inventing a
+`sourceRoot`. Readback verifies the original candidate identity and complete
+queue root, preserves their evidence and successor links, and grants no active
+Warrant or native execution authority. The original pre-chain-cutover terminal
+history remains readable; later successors must still chain their predecessor.
+Historical terminal records that predate native execution contracts do not
+qualify a new build, and current-format records retain strict native-contract
+validation even after termination.
 
-The request must cover every live legacy native candidate exactly once and
-bind each stored candidate, source workflow run, terminal provider result, and
-content-addressed evidence object. Each evidence object carries the exact
-provider job identities, attempts, conclusions, and completion timestamps; all
-jobs must be terminal and at least one must have failed. The transition writes
-one expected-old state update and requires the resulting queue to pass the
-current strict native-proof contract. The recovery cannot qualify, merge,
-requeue, or partially advance a legacy authority state.
+This bounded readback requires no rewrite of the stored queue and introduces no
+legacy submission or migration command. A legacy live candidate remains a
+closed admission boundary; it must not be relabeled terminal to bypass it.
 
 On the v4 line, `observe` also has an explicit `--read-mode v4` candidate. It requires retained exact semantic-diff qualification and source binding, invokes the effect-disabled Rust projection, retains parity evidence, and returns the existing observation shape. The default and rollback mode remains `v3`; mutation commands ignore the read switch. See [`v4-delivery-warrant-read-candidate.md`](v4-delivery-warrant-read-candidate.md).
 

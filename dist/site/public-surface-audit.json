@@ -7,7 +7,7 @@
     "workflowCount": 45,
     "actionCount": 285,
     "sitePageCount": 94,
-    "docCommandRefCount": 1036,
+    "docCommandRefCount": 1035,
     "failureCount": 0
   },
   "enumerated": {
@@ -6970,11 +6970,6 @@
       {
         "id": "dev",
         "path": "docs/dev-delivery-warrant.md",
-        "command": "buildchain dev warrant recover-legacy-terminal"
-      },
-      {
-        "id": "dev",
-        "path": "docs/dev-delivery-warrant.md",
         "command": "buildchain dev proof source"
       },
       {
@@ -10855,7 +10850,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e43fdb0289df88871f3f0febbe04dcb9311a252a2b1df9b3a83a2d10c9d4a70f",
     "workflowRegistryDigest": "5f9169a9bccb28c8c231c687f0c391f2c893f5523e72646ba9c4d78efa9fa2fe",
-    "pageRegistryDigest": "5246af1636bf62b49cb0841cbfc6b9e67e8987213fb486227ad5a76af46cf0ed"
+    "pageRegistryDigest": "0a8054fd7f48deb6d2d3695cd99548d2aa4006a20c3d507d6e4f393607aed6c7"
   },
   "comparison": {
     "missingCliRegistry": [],
