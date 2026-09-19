@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 274,
+  "generation": 275,
   "fencingCounter": 67,
   "policy": {
     "agingSeconds": 900,
@@ -9866,8 +9866,67 @@
         "package.json"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.1",
+      "pullRequestNumber": 3854,
+      "sourceRoot": "sha256:529cbce9f1366ca9d74e0e738934ea7a82376113680fdf2fbe0bc27915b00196",
+      "sourceIdentityRoot": "sha256:a161172b12465118de43b23a3d75a4e8db9b33d3b5f2af8bed916b9d7f9fb97e",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:6d509ace8a191e856bde837aad4fb393551c26156991d7c555db688be822825b",
+      "sourceHead": "6cbfc1af3f999ad2916125b1d037162f912c1a1f",
+      "sourcePatchRoot": "sha256:c05329930125a25b16ba5a5f28498ceebf35420b2587008b595f23756796e711",
+      "sourceProofRoot": "sha256:9baea782323df5a505fe6d9b3e0805a46ef6cefb0d69fdeb47187ca3e2b4e3f6",
+      "planRoot": "sha256:16003a60f6625710d3c99699b921a48c2624662c3055793f643b909f1054f8a6",
+      "closureRoot": "sha256:471765e3920951d6b86dfed2881262f3b29e16fabdf64fa5abdacac6f7efa189",
+      "dependencyRoot": "sha256:33f483257f2b135d0c653ea5850d435153e75fa24f73d5fd4d0899916e57ff80",
+      "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
+      "environmentRoot": "sha256:684e262f15b7b04249945f65977bb5fc738ab02cdcda5a29bc664be509037aaa",
+      "nativeCommandContract": {
+        "schema": "kungfu.buildchain.native-command-contract/v1",
+        "runner": "bash-lc",
+        "command": "node ../runtime/packages/core/workflow/commands/pipeline-build.mjs --platform linux-x64 --config-path '.buildchain/minimal-consumer.toml'",
+        "commandRoot": "sha256:a05dcdae36757162da44421de801bae64f605b54d3e6fd15552a18e0b5f14801"
+      },
+      "sourceWorkflowRunId": 35423021586,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-19T05:32:46.094Z",
+      "updatedAt": "2026-09-19T05:32:46.094Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "actions/publication/pipeline/apply/dist/index.js",
+        "actions/publication/pipeline/build/dist/index.js",
+        "actions/publication/pipeline/prepare-qualification/dist/index.js",
+        "actions/publication/pipeline/prepare/dist/index.js",
+        "actions/publication/pipeline/seal-qualification/dist/index.js",
+        "actions/publication/pipeline/settle/dist/index.js",
+        "actions/publication/version/build/dist/index.js",
+        "actions/publication/version/materialize-development/dist/index.js",
+        "actions/publication/version/materialize-publication/dist/index.js",
+        "actions/workflow/pipeline/build/dist/index.js",
+        "actions/workflow/pipeline/control/dist/index.js",
+        "actions/workflow/pipeline/wake/dist/index.js",
+        "architecture/maintainability-policy.json",
+        "architecture/release-topology.json",
+        "packages/core/providers/github/pipeline-release-evidence.js",
+        "packages/core/providers/github/pipeline-stable-baseline.js",
+        "packages/core/providers/github/pipeline-stable-source.js",
+        "packages/core/providers/github/release-evidence-assets.js",
+        "packages/core/publication/pipeline/journal.js",
+        "packages/core/publication/pipeline/recovery-import.js",
+        "tests/helpers/pipeline-stable-baseline.mjs",
+        "tests/helpers/publication-settlement.mjs",
+        "tests/pipeline-publication-journal.test.mjs",
+        "tests/pipeline-stable-baseline.test.mjs",
+        "tests/pipeline-stable-source.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-19T03:48:35.969Z",
-  "stateRoot": "sha256:b9557a325eb6be82b348ceb41732a98b272ad31ac19c85f695cfd4873741df60"
+  "updatedAt": "2026-09-19T05:32:46.094Z",
+  "stateRoot": "sha256:a372c03186f8111464f583147c809e5718371df481f10df469efffd8320b91f0"
 }
