@@ -11,9 +11,13 @@ import {
 import { applyPipelinePublication } from "./apply.js";
 import { settlePipelinePublication } from "./settle.js";
 import { githubJsonClient } from "../../providers/github/json-client.js";
+import {
+  readPipelineContext,
+  writePipelineContext,
+} from "../../providers/github/pipeline-context-artifacts.js";
 
-const contextInput = (core) =>
-  JSON.parse(core.getInput("context", { required: true }));
+const contextInput = (core, env) =>
+  readPipelineContext(core.getInput("context", { required: true }), env);
 const directory = (env) =>
   path.join(env.GITHUB_WORKSPACE, ".buildchain/publication");
 
@@ -26,7 +30,10 @@ export async function preparePipelinePublicationAction(core, env) {
   );
   core.setOutput("operation", result.operation);
   core.setOutput("stable-wait", result.wait ? JSON.stringify(result.wait) : "");
-  core.setOutput("context", JSON.stringify(result.context || {}));
+  core.setOutput(
+    "context",
+    await writePipelineContext(result.context || {}, env),
+  );
   core.setOutput(
     "matrix",
     JSON.stringify({ include: result.context?.platforms || [] }),
@@ -34,7 +41,7 @@ export async function preparePipelinePublicationAction(core, env) {
 }
 
 export async function buildPipelinePublicationAction(core, env) {
-  const context = contextInput(core);
+  const context = await contextInput(core, env);
   const platform = core.getInput("platform", { required: true });
   const cwd = path.join(env.GITHUB_WORKSPACE, ".buildchain/product");
   await buildPipelineSource({
@@ -59,7 +66,7 @@ export async function buildPipelinePublicationAction(core, env) {
 export async function preparePipelineQualificationAction(core, env) {
   const host = await pipelineHost(core, env, "Qualify and sign products");
   const prepared = await preparePipelineQualification(
-    contextInput(core),
+    await contextInput(core, env),
     host,
     directory(env),
   );
@@ -71,7 +78,7 @@ export async function preparePipelineQualificationAction(core, env) {
 export async function sealPipelineQualificationAction(core, env) {
   const host = await pipelineHost(core, env, "Qualify and sign products");
   await sealPipelineQualification(
-    contextInput(core),
+    await contextInput(core, env),
     host,
     directory(env),
     core.getInput("bundle-path", { required: true }),
@@ -81,7 +88,7 @@ export async function sealPipelineQualificationAction(core, env) {
 export async function applyPipelinePublicationAction(core, env) {
   const host = await pipelineHost(core, env, "Apply qualified publication");
   const result = await applyPipelinePublication(
-    contextInput(core),
+    await contextInput(core, env),
     host,
     directory(env),
     env,
@@ -98,7 +105,7 @@ export async function settlePipelinePublicationAction(core, env) {
       userAgent: "buildchain-next-development",
     });
   const result = await settlePipelinePublication(
-    contextInput(core),
+    await contextInput(core, env),
     host,
     directory(env),
     env,
@@ -106,7 +113,7 @@ export async function settlePipelinePublicationAction(core, env) {
   core.info(result.reason);
   core.setOutput(
     "version-context",
-    JSON.stringify(result.versionContext || {}),
+    await writePipelineContext(result.versionContext || {}, env),
   );
   core.setOutput("operation", result.versionContext ? "regenerate" : "wait");
   core.setOutput(
