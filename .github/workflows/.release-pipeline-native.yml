@@ -1,0 +1,61 @@
+name: Internal pipeline native signing and product finalization
+on:
+  workflow_call:
+    inputs:
+      context:
+        type: string
+        required: true
+      runtime-selection:
+        type: string
+        required: true
+    secrets:
+      BUILDCHAIN_AUTOMATION_TOKEN:
+        required: true
+permissions:
+  contents: read
+jobs:
+  control:
+    name: Control native signing
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ inputs.runtime-selection }}
+          token: ${{ github.token }}
+      - uses: ./.buildchain/runtime/actions/publication/pipeline/native-control
+        with:
+          context: ${{ inputs.context }}
+          token: ${{ github.token }}
+          authority-token: ${{ secrets.BUILDCHAIN_AUTOMATION_TOKEN }}
+  finalize:
+    name: Finalize publication (${{ matrix.platform }})
+    needs: control
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(inputs.context).nativePlatforms }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: ${{ matrix.timeoutMinutes || 60 }}
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ inputs.runtime-selection }}
+          token: ${{ github.token }}
+      - uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ fromJSON(inputs.context).materialization.source.repository }}
+          ref: ${{ fromJSON(inputs.context).materialization.source.commit }}
+          path: .buildchain/product
+          persist-credentials: false
+      - uses: ./.buildchain/runtime/actions/publication/pipeline/finalize
+        with:
+          context: ${{ inputs.context }}
+          platform: ${{ matrix.platform }}
+          token: ${{ github.token }}

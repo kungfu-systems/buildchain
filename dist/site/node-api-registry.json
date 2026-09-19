@@ -4209,7 +4209,7 @@
       ],
       "source": {
         "path": "packages/core/build/artifact-signing.js",
-        "line": 374
+        "line": 391
       },
       "example": "import { createArtifactSigningReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4238,7 +4238,7 @@
       ],
       "source": {
         "path": "packages/core/build/artifact-signing.js",
-        "line": 226
+        "line": 242
       },
       "example": "import { createArtifactSigningRequest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4262,7 +4262,7 @@
       ],
       "source": {
         "path": "packages/core/build/artifact-signing.js",
-        "line": 162
+        "line": 178
       },
       "example": "import { listArtifactSigningProfiles } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4291,7 +4291,7 @@
       ],
       "source": {
         "path": "packages/core/build/artifact-signing.js",
-        "line": 170
+        "line": 186
       },
       "example": "import { resolveArtifactSigningProfile } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4324,7 +4324,7 @@
       ],
       "source": {
         "path": "packages/core/build/artifact-signing.js",
-        "line": 432
+        "line": 449
       },
       "example": "import { validateArtifactSigningReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4353,7 +4353,7 @@
       ],
       "source": {
         "path": "packages/core/build/artifact-signing.js",
-        "line": 352
+        "line": 369
       },
       "example": "import { validateArtifactSigningRequest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -4978,6 +4978,36 @@
         "line": 512
       },
       "example": "import { writeBuildFacts } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/build/demo/transport-smoke.js#runTransportSmoke",
+      "name": "runTransportSmoke",
+      "kind": "function",
+      "signature": "function runTransportSmoke({ artifactRoot, scenarioPath })",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ artifactRoot, scenarioPath }"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "local-filesystem-write",
+        "subprocess"
+      ],
+      "source": {
+        "path": "packages/core/build/demo/transport-smoke.js",
+        "line": 74
+      },
+      "example": "import { runTransportSmoke } from \"@kungfu-tech/buildchain/auditable-demo-transport\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -12184,7 +12214,7 @@
       ],
       "source": {
         "path": "packages/core/governance/buildchain-publication-authority.js",
-        "line": 50
+        "line": 51
       },
       "example": "import { buildchainPublicationAuthorityDescriptors } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12213,7 +12243,7 @@
       ],
       "source": {
         "path": "packages/core/governance/buildchain-publication-authority.js",
-        "line": 89
+        "line": 90
       },
       "example": "import { createBuildchainPublicationAuthorityRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -27656,7 +27686,7 @@
       "specifier": "@kungfu-tech/buildchain/artifact-signing",
       "export": "./artifact-signing",
       "target": "./packages/core/build/artifact-signing.js",
-      "digest": "sha256:bf79ee5e7190c4bcc132b32b63eaf97647440502390fbf91569a12f45cddbe6e",
+      "digest": "sha256:3c4f7272e72747347066be8f456dfadddcfe8c5e8dbbc09ef2393e1095bf7829",
       "summary": "Credential-free artifact signing declarations, source-bound requests, authority receipts, profile resolution, and fail-closed validation APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -27675,6 +27705,29 @@
         "packages/core/build/artifact-signing.js#resolveArtifactSigningProfile",
         "packages/core/build/artifact-signing.js#validateArtifactSigningReceipt",
         "packages/core/build/artifact-signing.js#validateArtifactSigningRequest"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/auditable-demo-transport",
+      "export": "./auditable-demo-transport",
+      "target": "./packages/core/build/demo/transport-smoke.js",
+      "digest": "sha256:c2d881eb84662e40481b04a5fa4d1bbf207195af4a7cf13526eb1a6b6df625c8",
+      "summary": "Credential-free pre-upload demo transport smoke using the exact binary, isolated environment, and restored executable closure; grants no publication authority.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 1,
+      "symbolIds": [
+        "packages/core/build/demo/transport-smoke.js#runTransportSmoke"
       ],
       "owner": "buildchain-core",
       "maturity": "stable",
@@ -29127,7 +29180,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/governance/buildchain-publication-authority.js",
-      "digest": "sha256:3913adeed87ec92822a912d2a54fb5623fc7bdf0fe0bd40956b6e5588f98bd6e",
+      "digest": "sha256:79eed321be2349636271e2e7f47289137385e73477c3ba001372b16f23ce29aa",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -30102,7 +30155,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:5c00176bff01621ea48e2d35fbea8c34810963eda6a7413a1819ca3fae529f6c"
+      "digest": "sha256:32a80ece29536cae9b3035c28ed2cae26fd6f5d422797ed4d552d62f772609c3"
     },
     {
       "id": "build-facts",

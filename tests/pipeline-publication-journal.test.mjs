@@ -234,3 +234,101 @@ test("recovery adopts original materials and the derived publisher/source in one
     /immutable material bundle/,
   );
 });
+
+test("signed recovery selection preserves the declared native plan schema and signature inventory", async () => {
+  for (const [version, native] of [
+    [1, false],
+    [2, true],
+    [3, false],
+    [3, true],
+  ]) {
+    const rooted = (body) => ({ ...body, root: recordDigest(body) });
+    const plan = rooted({
+      schema: `buildchain.pipeline-publication-plan/v${version}`,
+      publisher: { workflowSha: "a".repeat(40), repository: "example/runtime" },
+      ...(native ? { nativeSigning: [{ id: "required-signature" }] } : {}),
+      ...(version === 3
+        ? { githubRelease: { prerelease: "never", latest: "newest-product" } }
+        : {}),
+    });
+    const staleBody = {
+      ...plan,
+      publisher: { ...plan.publisher, workflowSha: "b".repeat(40) },
+    };
+    delete staleBody.root;
+    const stale = rooted(staleBody);
+    const source = rooted({
+      schema: "buildchain.pipeline-version-materialization/v1",
+      planRoot: plan.root,
+      source: { commit: "c".repeat(40) },
+    });
+    const values = new Map([
+      ["publication/plan/original", plan],
+      ["publication/plan/stale", stale],
+      ["publication/materialization/original", source],
+      [
+        "publication/qualified/original",
+        {
+          qualified: {
+            schema: `buildchain.pipeline-publication-qualification/v${native ? 2 : 1}`,
+            planRoot: plan.root,
+          },
+          signing: { materializationRoot: source.root },
+        },
+      ],
+    ]);
+    // This only tests material selection. Qualification and signature admission
+    // remain independently exercised by the native and signed recovery suites.
+    const session = {
+      observed: {
+        history: [
+          {
+            events: [
+              {
+                payload: {
+                  materials: [...values].map(([id, value]) => ({
+                    id,
+                    digest: recordDigest(value),
+                  })),
+                },
+              },
+            ],
+          },
+        ],
+      },
+    };
+    const host = {
+      materialStore: () => ({ read: async ({ id }) => values.get(id) }),
+    };
+    const materials = await readRecoveryPublicationMaterials(session, host);
+    assert.deepEqual(
+      recoveryPublicationMaterial(materials, "publication/plan/"),
+      plan,
+    );
+    assert.deepEqual(
+      recoveryPublicationMaterial(materials, "publication/predecessor-plan/"),
+      stale,
+    );
+    if (version === 3) {
+      const changed = {
+        ...stale,
+        githubRelease: { prerelease: "never", latest: "never" },
+      };
+      delete changed.root;
+      values.set("publication/plan/stale", rooted(changed));
+      await assert.rejects(
+        readRecoveryPublicationMaterials(session, host),
+        /changed more than the publisher entry/,
+      );
+    }
+    if (native) {
+      const changed = { ...stale, nativeSigning: [] };
+      delete changed.root;
+      values.set("publication/plan/stale", rooted(changed));
+      await assert.rejects(
+        readRecoveryPublicationMaterials(session, host),
+        /changed more than the publisher entry/,
+      );
+    }
+  }
+});

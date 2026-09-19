@@ -2700,12 +2700,13 @@
       ],
       "tests": [
         "tests/signing-authority-transactions.test.mjs",
-        "tests/native-artifact-signing-authority.test.mjs"
+        "tests/native-artifact-signing-authority.test.mjs",
+        "tests/macos-signing-result.test.mjs"
       ],
       "contracts": [],
       "generatedOutputs": [],
       "validationCommands": [
-        "node --test tests/signing-authority-transactions.test.mjs tests/native-artifact-signing-authority.test.mjs"
+        "node --test tests/signing-authority-transactions.test.mjs tests/native-artifact-signing-authority.test.mjs tests/macos-signing-result.test.mjs"
       ]
     },
     {

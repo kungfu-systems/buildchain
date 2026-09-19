@@ -12,7 +12,7 @@ export async function prepareCredential(context) {
   const input = path.join(workspace, ".buildchain/credential-input");
   await downloadCredential(platform, input);
   const { loadCredentialInput } =
-    await import("../macos-credential-island/lib.js");
+    await import("../macos-credential-island/input.js");
   const sealed = loadCredentialInput(input, {
     repository: plan.run.repository,
     sourceSha: plan.source.sha,

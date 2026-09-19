@@ -10,31 +10,66 @@ import { preparePipelineSigning, verifyPipelineSigning } from "./signing.js";
 import { pipelineReleaseDocuments } from "./documents.js";
 import { downloadRecoveryPublicationBuild } from "./recovery-build-download.js";
 import { prepareRecoveredSigning } from "./recovery-signing.js";
+import { observePipelineNativePublication } from "./native-publish.js";
 
-export async function preparePipelineQualification(context, host, directory) {
+export async function preparePipelineQualification(
+  context,
+  host,
+  directory,
+  signingHost,
+) {
   const { journal, archive } = await publicationContext(context, host);
   if (context.recovery?.mode === "prepared")
-    return prepareRecoveredSigning(context, host, journal, archive, directory);
+    return prepareRecoveredSigning(
+      context,
+      host,
+      journal,
+      archive,
+      directory,
+      signingHost,
+    );
   const products = githubPipelinePublicationArtifacts(host);
   const productDirectory = path.join(directory, "products");
   const { build, bundles } = context.recovery?.build
     ? await downloadRecoveryPublicationBuild(context, host, productDirectory)
     : await products.download(context, productDirectory);
   const { plan, materialization } = context;
+  const native = plan.nativeSigning?.length
+    ? await observePipelineNativePublication({
+        context,
+        host,
+        signingHost,
+        directory,
+        raw: { build, bundles },
+        journal,
+      })
+    : undefined;
   const qualified = qualifyPipelineProducts({
     plan,
     source: materialization.source,
     bundles,
     build,
     policyRoot: plan.contractRoot,
+    ...(native ? { native } : {}),
   });
+  const finalBundles = native
+    ? [
+        ...bundles.filter(
+          (bundle) =>
+            !plan.nativeSigning.some(
+              (rule) => rule.platform === bundle.manifest.platform,
+            ),
+        ),
+        ...native.finalized.bundles,
+      ]
+    : bundles;
   const capsules = pipelineProductCapsules({
     plan,
     materialization,
     qualified,
-    bundles,
+    bundles: finalBundles,
   });
-  const sealed = await retainPipelineProducts(archive, qualified, bundles);
+  const sealed = await retainPipelineProducts(archive, qualified, finalBundles);
   const prepared = {
     schema: "buildchain.pipeline-qualification-preparation/v1",
     contextRoot: recordDigest(context),

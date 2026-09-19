@@ -18,6 +18,7 @@ import {
   artifactSigningEvidenceDigest,
   createArtifactSigningResult,
 } from "../artifact-signing-result.js";
+import { verifyMacosCredentialPayloads } from "../macos-credential-island/payload-evidence.js";
 import { acceptedMacosCredentialEvidence } from "../macos-credential-island/dmg-assembly.js";
 
 function expectedCredentialExecution(
@@ -46,6 +47,8 @@ function collectCredentialResultEvidence({
   appBundleResult,
   credentialArtifactRoot,
   resultDirectory,
+  evidenceDocument,
+  payloadPath,
 }) {
   let credentialOutput = "";
   let credentialEvidence = [];
@@ -69,6 +72,7 @@ function collectCredentialResultEvidence({
     const manifest = JSON.parse(fs.readFileSync(manifestOutput, "utf8"));
     if (!Array.isArray(manifest.files) || manifest.files.length === 0)
       throw new Error("credential artifact manifest contains no files");
+    verifyMacosCredentialPayloads({ evidenceDocument, manifest, payloadPath });
     credentialEvidence = [
       {
         kind: "credential-artifact-manifest",
@@ -163,6 +167,8 @@ export function finalizeNativeArtifactSigningResult({
     appBundleResult,
     credentialArtifactRoot,
     resultDirectory,
+    evidenceDocument,
+    payloadPath,
   });
   const evidence = [
     {

@@ -36,7 +36,10 @@ export async function reobservePublicationBuild(
       depth + 1,
     );
   if (
-    build.schema !== "buildchain.pipeline-publication-build-readback/v1" ||
+    ![
+      "buildchain.pipeline-publication-build-readback/v1",
+      "buildchain.pipeline-native-finalization-readback/v1",
+    ].includes(build.schema) ||
     !Array.isArray(build.jobs) ||
     !build.jobs.length ||
     build.outcome !== "success"

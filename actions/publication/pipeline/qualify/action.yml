@@ -7,6 +7,9 @@ inputs:
   token:
     description: Scoped qualification credential.
     required: true
+  authority-token:
+    description: Scoped readback credential for products requiring native signing.
+    required: false
 runs:
   using: composite
   steps:
@@ -15,6 +18,7 @@ runs:
       with:
         context: ${{ inputs.context }}
         token: ${{ inputs.token }}
+        authority-token: ${{ inputs.authority-token }}
     - id: attest
       uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6
       with:

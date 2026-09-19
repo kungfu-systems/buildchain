@@ -366,6 +366,7 @@ export function createRunBoundDmg({
 function acceptedAssemblyBinding(binding, request, expectedExecution) {
   return (
     binding?.sourceSha === request.source.sha &&
+    binding?.runtimeSha === request.runtime.sha &&
     binding?.requestDigest === request.digest &&
     binding?.unsignedArchiveDigest === request.artifact.transport.digest &&
     binding?.runId === expectedExecution.runId &&
@@ -426,8 +427,13 @@ export function acceptedMacosCredentialEvidence(
     evidence.source?.repository === request.source.repository &&
     evidence.source?.sha === request.source.sha &&
     evidence.source?.treeSha === request.source.treeSha &&
+    evidence.buildchain?.runtimeSha === request.runtime.sha &&
     evidence.input?.requestDigest === request.digest &&
+    evidence.input?.archiveSha256 === request.artifact.transport.digest &&
+    evidence.input?.archiveBytes === request.artifact.transport.bytes &&
     evidence.app?.architecture === request.artifact.arch &&
+    (!request.artifact.bundleId ||
+      evidence.app?.bundleId === request.artifact.bundleId) &&
     evidence.execution?.runId === expectedExecution.runId &&
     evidence.execution?.runAttempt === expectedExecution.runAttempt &&
     evidence.cleanup?.status === "complete" &&
@@ -436,6 +442,15 @@ export function acceptedMacosCredentialEvidence(
     Boolean(evidence.toolchain?.macosBuildVersion) &&
     Boolean(evidence.toolchain?.xcode) &&
     evidence.notarization?.application?.status === "Accepted" &&
-    evidence.notarization?.diskImage?.status === "Accepted"
+    evidence.notarization?.diskImage?.status === "Accepted" &&
+    [
+      "codesignStrict",
+      "hardenedRuntime",
+      "appStaple",
+      "appGatekeeper",
+      "dmgCodesign",
+      "dmgStaple",
+      "dmgGatekeeper",
+    ].every((check) => evidence.verification?.[check] === true)
   );
 }

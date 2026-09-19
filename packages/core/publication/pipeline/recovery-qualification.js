@@ -7,10 +7,15 @@ import { verifyPipelineQualification } from "./documents.js";
 import { reobservePublicationBuild } from "./recovery-build-readback.js";
 import { requalifyPublicationCapsules } from "./recovery-capsules.js";
 import { readPipelineCaller } from "../../providers/github/pipeline-run-entry.js";
+import { reobservePipelineNativeQualification } from "./native-recovery.js";
 
 function originalManifests(qualified) {
   return [...new Set(qualified.artifacts.map((item) => item.manifestRoot))].map(
     (root) => {
+      const native = qualified.native?.platforms.find(
+        (proof) => proof.finalManifest.root === root,
+      );
+      if (native) return native.finalManifest;
       const artifacts = qualified.artifacts
         .filter((item) => item.manifestRoot === root)
         .map(({ manifestRoot, providerArtifactId, ...item }) => item);
@@ -37,6 +42,7 @@ export async function requalifySealedPublication({
   originalMaterialization,
   archive,
   host,
+  signingHost,
   directory,
   now = new Date(),
 }) {
@@ -58,6 +64,12 @@ export async function requalifySealedPublication({
       "Signing recovery cannot change the already sealed product contract or source",
     );
   await reobservePublicationBuild(previous.build, previous.source, host);
+  await reobservePipelineNativeQualification(
+    previous,
+    originalPlan,
+    host,
+    signingHost,
+  );
   const products = await restorePipelineProducts(
     archive,
     previous,
@@ -92,18 +104,20 @@ export async function requalifySealedPublication({
       planRoot: plan.root,
       source: previous.source,
       artifacts: previous.artifacts,
+      ...(previous.native ? { nativeRoot: previous.native.root } : {}),
     }),
     issuedAt: now.toISOString(),
     expiresAt: new Date(now.getTime() + 3600000).toISOString(),
   });
   const body = {
-    schema: "buildchain.pipeline-publication-qualification/v1",
+    schema: `buildchain.pipeline-publication-qualification/v${previous.native ? 2 : 1}`,
     planRoot: plan.root,
     source: previous.source,
     artifacts: previous.artifacts,
     build,
     qualification,
     predecessorRoot: previous.root,
+    ...(previous.native ? { native: previous.native } : {}),
   };
   const qualified = { ...body, root: recordDigest(body) };
   const capsules = requalifyPublicationCapsules(

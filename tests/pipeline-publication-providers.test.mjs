@@ -220,7 +220,11 @@ test("npm publication failures expose only recognized error codes and retain one
   }
 });
 
-async function verifyGithubPublication(t, lostReleaseResponse) {
+async function verifyGithubPublication(
+  t,
+  lostReleaseResponse,
+  presentation = false,
+) {
   const directory = fs.mkdtempSync(
     path.join(fs.realpathSync(os.tmpdir()), "pipeline-release-provider-"),
   );
@@ -232,6 +236,9 @@ async function verifyGithubPublication(t, lostReleaseResponse) {
     version: "1.0.0-alpha.1",
     tag: "v1.0.0-alpha.1",
     channel: "alpha",
+    ...(presentation
+      ? { githubRelease: { prerelease: "never", latest: "newest-product" } }
+      : {}),
   };
   const qualified = {
     source: { commit: "a".repeat(40) },
@@ -251,6 +258,8 @@ async function verifyGithubPublication(t, lostReleaseResponse) {
   };
   let tag,
     release,
+    latestRelease,
+    newerRelease,
     releaseLag = 0;
   const assets = [],
     writes = [],
@@ -282,6 +291,11 @@ async function verifyGithubPublication(t, lostReleaseResponse) {
     updateRelease: async (input) => {
       writes.push("publish");
       release.draft = input.draft;
+      release.published_at = "2026-09-19T12:00:00Z";
+      assert.equal(input.make_latest, presentation ? "true" : "false");
+      if (input.make_latest === "true") latestRelease = release;
+      if (lostReleaseResponse === "visibility")
+        throw new Error("lost visibility response");
     },
   };
   const github = {
@@ -289,7 +303,10 @@ async function verifyGithubPublication(t, lostReleaseResponse) {
     paginate: async (method, args, map) => {
       if (method === "releases" && releaseLag-- > 0)
         return map ? map({ data: [] }) : [];
-      const data = method === "releases" ? (release ? [release] : []) : assets;
+      const data =
+        method === "releases"
+          ? [release, newerRelease].filter(Boolean)
+          : assets;
       return map ? map({ data }) : data;
     },
   };
@@ -303,6 +320,7 @@ async function verifyGithubPublication(t, lostReleaseResponse) {
       throw new Error("lost tag response");
     }
     if (url.includes("/git/ref/tags/")) return tag;
+    if (url.endsWith("/releases/latest")) return latestRelease;
     throw new Error(`Unexpected provider path ${url}`);
   };
   const provider = githubPipelineProductRelease({
@@ -344,6 +362,22 @@ async function verifyGithubPublication(t, lostReleaseResponse) {
   ]);
   await applyPipelineEffects(input);
   assert.equal(writes.length, 5);
+  assert.equal(release.prerelease, !presentation);
+  if (presentation) {
+    newerRelease = {
+      id: 9,
+      tag_name: "v1.0.0-alpha.2",
+      draft: false,
+      published_at: "2026-09-19T13:00:00Z",
+    };
+    latestRelease = newerRelease;
+    await assert.rejects(applyPipelineEffects(input), /completed publication/);
+    await assert.rejects(
+      provider.apply(effects.at(-1)),
+      /move GitHub Latest backward/,
+    );
+    assert.equal(writes.length, 5);
+  }
   assets[0].bytes = Buffer.from("conflicting historical bytes");
   await assert.rejects(applyPipelineEffects(input), /completed publication/);
   assert.equal(writes.length, 5);
@@ -352,3 +386,7 @@ async function verifyGithubPublication(t, lostReleaseResponse) {
 for (const scenario of [false, true, "absent"])
   test(`GitHub publication reconciles delayed visibility and lost responses (${scenario})`, (t) =>
     verifyGithubPublication(t, scenario));
+
+for (const response of [false, "visibility"])
+  test(`explicit product discovery preserves Alpha maturity and reconciles Latest (${response})`, (t) =>
+    verifyGithubPublication(t, response, true));

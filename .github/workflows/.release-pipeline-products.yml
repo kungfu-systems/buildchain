@@ -48,6 +48,7 @@ jobs:
           attempt: ${{ inputs.attempt }}
           definition-sha: ${{ job.workflow_sha }}
           token: ${{ github.token }}
+          authority-token: ${{ secrets.BUILDCHAIN_AUTOMATION_TOKEN }}
   materialize:
     name: Prepare publication version
     needs: prepare
@@ -70,7 +71,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.materialize.outputs.matrix) }}
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 60
+    timeout-minutes: ${{ matrix.timeoutMinutes || 60 }}
     permissions:
       contents: read
     steps:
@@ -88,10 +89,34 @@ jobs:
         with:
           context: ${{ needs.materialize.outputs.context }}
           platform: ${{ matrix.platform }}
+  native:
+    name: Native publication
+    needs: [materialize, build]
+    if: >-
+      always() && needs.materialize.result == 'success' &&
+      fromJSON(needs.materialize.outputs.context).plan.nativeSigning &&
+      fromJSON(needs.materialize.outputs.context).recovery.mode != 'prepared' &&
+      (needs.materialize.outputs.operation == 'qualify' ||
+      (needs.materialize.outputs.operation == 'build' && needs.build.result == 'success'))
+    uses: ./.github/workflows/.release-pipeline-native.yml
+    with:
+      context: ${{ needs.materialize.outputs.context }}
+      runtime-selection: ${{ inputs.runtime-selection }}
+    secrets:
+      BUILDCHAIN_AUTOMATION_TOKEN: ${{ secrets.BUILDCHAIN_AUTOMATION_TOKEN }}
+    permissions:
+      actions: read
+      contents: write
   qualify:
     name: Qualify and sign products
-    needs: [materialize, build]
-    if: always() && (needs.materialize.outputs.operation == 'qualify' || (needs.materialize.outputs.operation == 'build' && needs.build.result == 'success'))
+    needs: [materialize, build, native]
+    if: >-
+      always() && needs.materialize.result == 'success' &&
+      (needs.materialize.outputs.operation == 'qualify' ||
+      (needs.materialize.outputs.operation == 'build' && needs.build.result == 'success')) &&
+      (!fromJSON(needs.materialize.outputs.context).plan.nativeSigning ||
+      fromJSON(needs.materialize.outputs.context).recovery.mode == 'prepared' ||
+      needs.native.result == 'success')
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -108,6 +133,7 @@ jobs:
         with:
           context: ${{ needs.materialize.outputs.context }}
           token: ${{ github.token }}
+          authority-token: ${{ fromJSON(needs.materialize.outputs.context).plan.nativeSigning && secrets.BUILDCHAIN_AUTOMATION_TOKEN || '' }}
   apply:
     name: Apply qualified publication
     needs: [materialize, qualify]

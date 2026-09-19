@@ -105,7 +105,7 @@ function walkSubject(subjectRoot) {
   return entries;
 }
 
-function subjectDescriptor(subjectPath) {
+export function subjectDescriptor(subjectPath) {
   const stat = fs.lstatSync(subjectPath);
   if (stat.isSymbolicLink())
     throw new Error("artifact root must not be a symlink");
@@ -175,7 +175,13 @@ function run(command, args, options = {}) {
   }
 }
 
-function archiveSubject({ subjectPath, outputRoot, id, kind, platform }) {
+export function archiveSubject({
+  subjectPath,
+  outputRoot,
+  id,
+  kind,
+  platform,
+}) {
   const artifactRoot = path.join(outputRoot, id);
   fs.mkdirSync(artifactRoot, { recursive: true });
   const stat = fs.statSync(subjectPath);

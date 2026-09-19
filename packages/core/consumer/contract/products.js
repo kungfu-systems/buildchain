@@ -7,6 +7,7 @@ import {
   text,
   unique,
 } from "./shape.js";
+import { compileProductSigning } from "./signing.js";
 
 export const PRODUCT_TYPES = ["npm", "binary", "paper"];
 export const PLATFORMS = [
@@ -22,19 +23,35 @@ function artifact(value, location) {
   slug(value.id, `${location}.id`);
   if (value.path !== "." || value.kind !== "npm-package")
     relativePath(value.path, `${location}.path`);
-  choice(value.kind, ["npm-package", "archive", "pdf"], `${location}.kind`);
+  choice(
+    value.kind,
+    ["npm-package", "archive", "installer", "pdf"],
+    `${location}.kind`,
+  );
+  if (
+    value.kind === "installer" &&
+    !/\.(?:dmg|exe|AppImage)$/u.test(value.path)
+  )
+    throw new Error(`${location}.path: unsupported native installer format`);
   if (value.filename !== undefined) {
+    text(value.filename, `${location}.filename`);
+    if (value.filename !== value.filename.trim())
+      throw new Error(`${location}.filename: invalid string`);
     text(
-      value.filename,
+      value.filename
+        .replaceAll("{version}", "version")
+        .replaceAll("{platform}", "platform"),
       `${location}.filename`,
-      /^[A-Za-z0-9][A-Za-z0-9._-]{0,254}$/u,
+      /^[A-Za-z0-9][A-Za-z0-9._+ -]{0,254}$/u,
     );
     const extension =
       value.kind === "npm-package"
         ? /\.tgz$/u
-        : value.kind === "pdf"
-          ? /\.pdf$/u
-          : /\.(?:tar\.gz|tar\.xz|tgz|zip|tar)$/u;
+        : value.kind === "installer"
+          ? /\.(?:dmg|exe|AppImage)$/u
+          : value.kind === "pdf"
+            ? /\.pdf$/u
+            : /\.(?:tar\.gz|tar\.xz|tgz|zip|tar)$/u;
     if (!extension.test(value.filename))
       throw new Error(
         `${location}.filename: artifact extension does not match its kind`,
@@ -60,10 +77,17 @@ export function compileProducts(values) {
     object(
       value,
       ["id", "type", "platforms", "build", "verify", "artifacts", "targets"],
-      ["install", "directory"],
+      ["install", "directory", "timeout_minutes", "signing", "finalize"],
       location,
     );
     slug(value.id, `${location}.id`);
+    if (
+      value.timeout_minutes !== undefined &&
+      (!Number.isInteger(value.timeout_minutes) ||
+        value.timeout_minutes < 1 ||
+        value.timeout_minutes > 360)
+    )
+      throw new Error(`${location}.timeout_minutes: expected 1 to 360 minutes`);
     choice(value.type, PRODUCT_TYPES, `${location}.type`);
     list(value.platforms, `${location}.platforms`, (item, field) =>
       choice(item, PLATFORMS, field),
@@ -73,14 +97,34 @@ export function compileProducts(values) {
       "build",
       "verify",
       ...(value.install !== undefined ? ["install"] : []),
+      ...(value.finalize !== undefined ? ["finalize"] : []),
     ])
       list(value[operation], `${location}.${operation}`, text);
     if (value.directory !== undefined)
       relativePath(value.directory, `${location}.directory`);
     const artifacts = list(value.artifacts, `${location}.artifacts`, artifact);
+    for (const item of artifacts.filter(
+      (entry) => entry.kind === "installer",
+    )) {
+      const family = item.path.endsWith(".dmg")
+        ? "macos-"
+        : item.path.endsWith(".exe")
+          ? "windows-"
+          : "linux-";
+      if (value.platforms.some((platform) => !platform.startsWith(family)))
+        throw new Error(
+          `${location}: installer format does not match product platforms`,
+        );
+    }
     unique(
       artifacts.map((item) => item.id),
       `${location}.artifacts`,
+    );
+    const signing = compileProductSigning(
+      value.signing,
+      value,
+      artifacts,
+      `${location}.signing`,
     );
     const targets = list(value.targets, `${location}.targets`, target);
     unique(
@@ -92,7 +136,13 @@ export function compileProducts(values) {
       binary: "archive",
       paper: "pdf",
     }[value.type];
-    if (artifacts.some((item) => item.kind !== expectedKind))
+    if (
+      artifacts.some(
+        (item) =>
+          item.kind !== expectedKind &&
+          !(value.type === "binary" && item.kind === "installer"),
+      )
+    )
       throw new Error(`${location}: artifact kind does not match product type`);
     const published = targets.flatMap((item) => item.artifacts);
     if (
@@ -109,7 +159,12 @@ export function compileProducts(values) {
       throw new Error(
         `${location}: npm products require an npm target; other products cannot publish to npm`,
       );
-    return structuredClone({ ...value, artifacts, targets });
+    return structuredClone({
+      ...value,
+      artifacts,
+      targets,
+      ...(signing ? { signing } : {}),
+    });
   });
   unique(
     products.map((item) => item.id),

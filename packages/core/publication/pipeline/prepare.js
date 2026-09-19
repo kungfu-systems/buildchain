@@ -130,6 +130,14 @@ export async function preparePipelinePublication(attempt, publisherSha, host) {
     runId: host.runId,
     runAttempt: host.runAttempt,
     ...(recovery ? { recovery } : {}),
+    ...(plan.nativeSigning?.length
+      ? {
+          nativePlatforms: pipelinePlatforms(admitted.plan).filter(
+            ({ platform }) =>
+              plan.nativeSigning.some((rule) => rule.platform === platform),
+          ),
+        }
+      : {}),
   };
   await journal.record("publication/context", context, { phase });
   return {

@@ -4,10 +4,10 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 44,
-    "actionCount": 283,
+    "workflowCount": 45,
+    "actionCount": 285,
     "sitePageCount": 94,
-    "docCommandRefCount": 1036,
+    "docCommandRefCount": 1035,
     "failureCount": 0
   },
   "enumerated": {
@@ -862,6 +862,22 @@
         "inputCount": 16,
         "secrets": [],
         "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": ".release-pipeline-native",
+        "path": ".github/workflows/.release-pipeline-native.yml",
+        "reusable": true,
+        "inputs": [
+          "context",
+          "runtime-selection"
+        ],
+        "inputCount": 2,
+        "secrets": [
+          "BUILDCHAIN_AUTOMATION_TOKEN"
+        ],
+        "secretCount": 1,
         "outputs": [],
         "outputCount": 0
       },
@@ -4028,32 +4044,55 @@
         "inputCount": 2
       },
       {
-        "id": "publication/pipeline/prepare",
-        "path": "actions/publication/pipeline/prepare/action.yml",
+        "id": "publication/pipeline/finalize",
+        "path": "actions/publication/pipeline/finalize/action.yml",
         "inputs": [
-          "attempt",
-          "definition-sha",
+          "context",
+          "platform",
           "token"
         ],
         "inputCount": 3
       },
       {
-        "id": "publication/pipeline/prepare-qualification",
-        "path": "actions/publication/pipeline/prepare-qualification/action.yml",
+        "id": "publication/pipeline/native-control",
+        "path": "actions/publication/pipeline/native-control/action.yml",
         "inputs": [
+          "authority-token",
           "context",
           "token"
         ],
-        "inputCount": 2
+        "inputCount": 3
+      },
+      {
+        "id": "publication/pipeline/prepare",
+        "path": "actions/publication/pipeline/prepare/action.yml",
+        "inputs": [
+          "attempt",
+          "authority-token",
+          "definition-sha",
+          "token"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "publication/pipeline/prepare-qualification",
+        "path": "actions/publication/pipeline/prepare-qualification/action.yml",
+        "inputs": [
+          "authority-token",
+          "context",
+          "token"
+        ],
+        "inputCount": 3
       },
       {
         "id": "publication/pipeline/qualify",
         "path": "actions/publication/pipeline/qualify/action.yml",
         "inputs": [
+          "authority-token",
           "context",
           "token"
         ],
-        "inputCount": 2
+        "inputCount": 3
       },
       {
         "id": "publication/pipeline/seal-qualification",
@@ -4118,11 +4157,12 @@
         "id": "publication/version/materialize-publication",
         "path": "actions/publication/version/materialize-publication/action.yml",
         "inputs": [
+          "authority-token",
           "context",
           "operation",
           "token"
         ],
-        "inputCount": 3
+        "inputCount": 4
       },
       {
         "id": "release/binary/coordinates",
@@ -6926,11 +6966,6 @@
         "id": "dev",
         "path": "docs/dev-delivery-warrant.md",
         "command": "buildchain dev warrant cancel-queued"
-      },
-      {
-        "id": "dev",
-        "path": "docs/dev-delivery-warrant.md",
-        "command": "buildchain dev warrant recover-legacy-terminal"
       },
       {
         "id": "dev",
@@ -10814,8 +10849,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e43fdb0289df88871f3f0febbe04dcb9311a252a2b1df9b3a83a2d10c9d4a70f",
-    "workflowRegistryDigest": "5178b865e9bb44cde48c93f252c11d8e990e997d84d9d95f0da22df64cfeffe5",
-    "pageRegistryDigest": "1e79a71c8f1d094ad1291b2d8b4bc983633245dcc104ae5ef7bae755fb733209"
+    "workflowRegistryDigest": "5f9169a9bccb28c8c231c687f0c391f2c893f5523e72646ba9c4d78efa9fa2fe",
+    "pageRegistryDigest": "0a8054fd7f48deb6d2d3695cd99548d2aa4006a20c3d507d6e4f393607aed6c7"
   },
   "comparison": {
     "missingCliRegistry": [],

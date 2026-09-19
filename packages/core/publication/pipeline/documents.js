@@ -15,6 +15,7 @@ import {
   domainPublicationQualificationRoot,
 } from "../publication-qualification.js";
 import { verifyPipelinePublicationPlan } from "./plan.js";
+import { verifyRetainedNativeQualification } from "./native-qualification.js";
 
 export function pipelineReleaseEvidence({
   plan,
@@ -24,12 +25,15 @@ export function pipelineReleaseEvidence({
   bundle,
 }) {
   verifyPipelinePublicationPlan(plan);
-  if (plan.evidenceVersion !== undefined && plan.evidenceVersion !== 1)
+  if (
+    plan.evidenceVersion !== undefined &&
+    plan.evidenceVersion !== (plan.nativeSigning?.length ? 2 : 1)
+  )
     throw new Error("Unsupported retained publication evidence version");
   // An older retained transaction keeps its original evidence inventory.
   // Adding a disclosure during recovery would change its provider receipt.
   const values = {
-    ...(plan.evidenceVersion === 1 ? { plan } : {}),
+    ...([1, 2].includes(plan.evidenceVersion) ? { plan } : {}),
     qualification: qualified,
     capsules,
     invocation: documents.invocation.invocation,
@@ -68,8 +72,9 @@ export function verifyPipelineQualification({
   );
   verifyRootedPublication(
     qualified,
-    "buildchain.pipeline-publication-qualification/v1",
+    `buildchain.pipeline-publication-qualification/v${plan.nativeSigning?.length ? 2 : 1}`,
   );
+  verifyRetainedNativeQualification(qualified, plan);
   if (
     qualified.planRoot !== plan.root ||
     materialization.planRoot !== plan.root ||
@@ -99,6 +104,7 @@ export function verifyPipelineQualification({
       planRoot: plan.root,
       source: qualified.source,
       artifacts: qualified.artifacts,
+      ...(qualified.native ? { nativeRoot: qualified.native.root } : {}),
     }),
     artifactRoot: domainPublicationQualificationRoot(artifacts),
     policyDigest: plan.contractRoot,

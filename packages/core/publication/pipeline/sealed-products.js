@@ -28,10 +28,34 @@ export async function retainPipelineProducts(archive, qualified, bundles) {
     await verifiedBytes(archive, handle, artifact);
     retained.push({ id: artifact.id, handle });
   }
+  const nativeFiles = [];
+  for (const proof of qualified.native?.platforms || []) {
+    const bundle = bundles.find(
+      (item) => item.manifest.root === proof.finalManifest.root,
+    );
+    if (!bundle)
+      throw new Error("Native qualification has no exact finalized bundle");
+    for (const file of proof.finalManifest.nativeSigning.files) {
+      const observed = publicationFile(
+        publicationPath(bundle.directory, file.file),
+      );
+      if (observed.digest !== file.digest || observed.size !== file.size)
+        throw new Error(
+          "Native qualification evidence changed before retention",
+        );
+      const handle = await archive.put(observed.bytes, {
+        name: `${file.digest.slice(7)}-${path.basename(file.file)}`,
+        mediaType: "application/json",
+      });
+      await verifiedBytes(archive, handle, file);
+      nativeFiles.push({ ...file, platform: proof.platform, handle });
+    }
+  }
   const body = {
     schema: "buildchain.pipeline-sealed-products/v1",
     qualificationRoot: qualified.root,
     products: retained,
+    ...(nativeFiles.length ? { nativeFiles } : {}),
   };
   return { ...body, root: recordDigest(body) };
 }
@@ -74,6 +98,28 @@ export async function restorePipelineProducts(
       throw new Error("Retained product path escapes its directory");
     writeImmutablePublicationFile(target, bytes);
     publicationPath(directory, artifact.file);
+  }
+  const expected = (qualified.native?.platforms || []).flatMap((proof) =>
+    proof.finalManifest.nativeSigning.files.map((file) => ({
+      ...file,
+      platform: proof.platform,
+    })),
+  );
+  if (
+    recordDigest(
+      (sealed.nativeFiles || []).map(({ handle, ...file }) => file),
+    ) !== recordDigest(expected)
+  )
+    throw new Error(
+      "Retained native evidence must cover its exact qualification inventory",
+    );
+  for (const file of sealed.nativeFiles || []) {
+    const bytes = await verifiedBytes(archive, file.handle, file);
+    const target = path.resolve(directory, file.file);
+    if (!target.startsWith(`${path.resolve(directory)}${path.sep}`))
+      throw new Error("Retained native evidence path escapes its directory");
+    writeImmutablePublicationFile(target, bytes);
+    publicationPath(directory, file.file);
   }
   return directory;
 }

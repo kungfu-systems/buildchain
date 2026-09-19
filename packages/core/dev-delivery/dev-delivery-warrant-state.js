@@ -12,6 +12,7 @@ import {
 import {
   chainedDevDeliveryAttemptInput,
   createDevDeliveryCandidateIdentity,
+  readDevDeliveryCandidateIdentity,
   devDeliverySourceBinding,
   EXACT_DEV_DELIVERY_PROOF_FIELDS,
   matchesExactDevDeliveryCandidate,
@@ -180,10 +181,11 @@ function normalizePolicy(policy = {}) {
   return normalized;
 }
 function normalizeCandidate(input, expected) {
-  const identity = createDevDeliveryCandidateIdentity(
+  const identity = readDevDeliveryCandidateIdentity(
     input,
     expected,
     deliveryClass,
+    TERMINAL_STATES,
   );
   if (input.candidateId && input.candidateId !== identity.candidateId)
     throw new Error(
@@ -277,7 +279,14 @@ function normalizeCandidate(input, expected) {
       "candidate shardEvidenceRoots",
     );
   }
-  if (lacksLiveNativeProof(candidate, status))
+  if (
+    lacksLiveNativeProof(candidate, status) &&
+    !(
+      TERMINAL_STATES.has(status) &&
+      identity.assignmentRoot &&
+      identity.initiativeRoot
+    )
+  )
     throw new Error("live native candidate requires exact native proof");
   if (Object.hasOwn(input, "releaseBlockerPriority"))
     candidate.releaseBlockerPriority = normalizeReleaseBlockerPriorityClaim(

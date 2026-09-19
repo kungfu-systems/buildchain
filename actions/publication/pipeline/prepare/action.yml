@@ -1,6 +1,9 @@
 name: Pipeline product prepare
 description: Execute the internal prepare product node.
 inputs:
+  authority-token:
+    description: Scoped native signing readback credential for stable qualification.
+    required: false
   attempt:
     description: Exact current business attempt.
     required: true

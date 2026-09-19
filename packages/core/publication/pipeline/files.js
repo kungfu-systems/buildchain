@@ -1,3 +1,4 @@
+import { recordDigest } from "../../release/discussion/envelope.js";
 import fs from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
@@ -63,4 +64,31 @@ export function writeImmutablePublicationFile(file, bytes) {
       );
   }
   return file;
+}
+
+export function verifyPipelineProductFiles(directory, manifest) {
+  const { root, ...body } = manifest;
+  const native = Object.hasOwn(body, "nativeSigning");
+  if (
+    body.schema !==
+      `buildchain.pipeline-publication-products/v${native ? 2 : 1}` ||
+    (native && !Array.isArray(body.nativeSigning?.files)) ||
+    root !== recordDigest(body)
+  )
+    throw new Error("Publication manifest root does not match retained bytes");
+  for (const artifact of [
+    ...manifest.artifacts,
+    ...(manifest.nativeSigning?.files || []),
+  ]) {
+    const observed = publicationFile(publicationPath(directory, artifact.file));
+    if (
+      observed.size !== artifact.size ||
+      observed.digest !== artifact.digest ||
+      (artifact.package && observed.integrity !== artifact.package.integrity)
+    )
+      throw new Error(
+        "Publication artifact changed after its manifest was sealed",
+      );
+  }
+  return manifest;
 }

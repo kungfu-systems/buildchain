@@ -1,4 +1,10 @@
 export function assertPipelinePackagePolicy(pkg) {
+  if (
+    typeof pkg?.name !== "string" ||
+    pkg.name.length > 214 ||
+    !/^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/u.test(pkg.name)
+  )
+    throw new Error("npm package name is not a bounded registry identity");
   const config = pkg.publishConfig;
   if (config === undefined) return;
   if (

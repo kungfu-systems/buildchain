@@ -126,13 +126,24 @@ function compileStable(value) {
   return structuredClone(value);
 }
 
+function compileGithubRelease(value) {
+  object(value, ["prerelease", "latest"], [], "github_release");
+  choice(value.prerelease, ["channel", "never"], "github_release.prerelease");
+  choice(value.latest, ["never", "newest-product"], "github_release.latest");
+  if (value.latest === "newest-product" && value.prerelease !== "never")
+    throw new Error(
+      "github_release: Latest requires non-prerelease presentation",
+    );
+  return { ...value };
+}
+
 // This compiler receives bytes. It has no filesystem, process, network or provider port.
 export function compileConsumerPlan(source) {
   const config = parse(source);
   object(
     config,
     ["schema", "products", "version", "channels", "review"],
-    ["stable"],
+    ["stable", "github_release"],
   );
   choice(config.schema, [2], "schema");
   return {
@@ -142,6 +153,9 @@ export function compileConsumerPlan(source) {
     version: compileVersion(config.version),
     channels: compileChannels(config.channels),
     review: compileReview(config.review),
+    ...(config.github_release === undefined
+      ? {}
+      : { github_release: compileGithubRelease(config.github_release) }),
     ...(config.stable === undefined
       ? {}
       : { stable: compileStable(config.stable) }),

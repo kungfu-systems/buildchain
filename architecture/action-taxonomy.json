@@ -351,7 +351,9 @@
             "prepare-qualification",
             "seal-qualification",
             "apply",
-            "settle"
+            "settle",
+            "native-control",
+            "finalize"
           ]
         },
         "version": {

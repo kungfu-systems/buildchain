@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-05
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-05
+  generated_at: 2026-09-20
   invisible_context: not asserted
 ---
 
@@ -62,18 +62,18 @@ for the versioned policy and evidence contract.
 
 ## Ref State
 
-| Ref kind | Example | Mutability | Purpose |
-| --- | --- | --- | --- |
-| Development branch | `dev/v4/v4.0` | moves | next source state for a minor line |
-| Alpha branch | `alpha/v4/v4.0` | moves | latest test state for a minor line |
-| Release branch | `release/v4/v4.0` | moves | latest production state for a minor line |
-| Major gate branch | `publish-gate/major` | moves | reviewed administrator gate for publishing the next major |
-| Exact alpha tag | `v4.0.3-alpha.0` | immutable | audit ref for one tested prerelease |
-| Exact release tag | `v4.0.2` | immutable | audit ref for one production release |
-| Floating alpha tag | `v4.0-alpha` | moves | latest test channel for a minor line |
-| Floating major alpha tag | `v4-alpha` | moves | latest test channel on the highest published alpha minor for a major line |
-| Floating minor tag | `v4.0` | moves | latest production patch on a minor line |
-| Floating major tag | `v4` | moves | selected stable major entrypoint |
+| Ref kind                 | Example              | Mutability | Purpose                                                                   |
+| ------------------------ | -------------------- | ---------- | ------------------------------------------------------------------------- |
+| Development branch       | `dev/v4/v4.0`        | moves      | next source state for a minor line                                        |
+| Alpha branch             | `alpha/v4/v4.0`      | moves      | latest test state for a minor line                                        |
+| Release branch           | `release/v4/v4.0`    | moves      | latest production state for a minor line                                  |
+| Major gate branch        | `publish-gate/major` | moves      | reviewed administrator gate for publishing the next major                 |
+| Exact alpha tag          | `v4.0.3-alpha.0`     | immutable  | audit ref for one tested prerelease                                       |
+| Exact release tag        | `v4.0.2`             | immutable  | audit ref for one production release                                      |
+| Floating alpha tag       | `v4.0-alpha`         | moves      | latest test channel for a minor line                                      |
+| Floating major alpha tag | `v4-alpha`           | moves      | latest test channel on the highest published alpha minor for a major line |
+| Floating minor tag       | `v4.0`               | moves      | latest production patch on a minor line                                   |
+| Floating major tag       | `v4`                 | moves      | selected stable major entrypoint                                          |
 
 ## Ref Protection Contract
 
@@ -141,6 +141,36 @@ goes through the normal verify/review/promotion path before an alpha is
 published. Queue reconciliation runs after branch protection and before the
 default-branch switch, so a failed governance apply leaves the old active line
 in place and the idempotently created new refs can be retried.
+
+## Schema-2 GitHub product discovery
+
+The optional root section below separates GitHub presentation from the product's
+SemVer maturity. Without it, Alpha remains a GitHub prerelease and publication
+does not change GitHub Latest.
+
+```toml
+[github_release]
+prerelease = "never"
+latest = "newest-product"
+```
+
+`prerelease` accepts `channel` or `never`; `latest` accepts `never` or
+`newest-product`. Updating Latest requires `prerelease = "never"`. This does not
+change the Alpha version, channel, qualification, review, or support contract.
+The controller publishes the already qualified bytes, then independently reads
+back the exact public release and Latest pointer. Product commands receive no
+additional credentials or publication hook.
+
+Product discovery considers public `v`-prefixed SemVer releases, ordered by their
+publication time and release ID. Component tags outside that namespace cannot
+become the product pointer. Recovery refuses to move Latest back to an older
+public product, including when a previous operation has a retained success
+receipt. Lost provider responses are reconciled from readback before another
+write. Missing or malformed publication timestamps fail closed.
+
+The policy is bound into publication-plan v3 so earlier runtimes reject the plan
+instead of silently ignoring discovery requirements. Plans without this section
+retain their existing v1/v2 identities and provider effects.
 
 ## V4 Alpha Publication
 
@@ -350,15 +380,15 @@ before writing the transaction state as `complete`.
 
 ## What each verification proves
 
-| Evidence | Meaning and reuse boundary |
-| --- | --- |
-| Full source execution | `pnpm run check` runs source tests, Rust gates, policy checks and generated artifact checks. Each Node test file runs once; the focused `check:contracts` command still includes its 22 contract test files. |
-| Merge queue proof | A successful full merge-group run seals its exact source SHA/tree, workflow, check definition, WASM runtime, toolchain versions, dependency locks, hosted image and platform. The proof expires after six hours and is verified against the completed GitHub run attempt and artifact archive digest. |
-| Push reuse | A Dev push may reuse that exact full execution. Its summary links the original run and proof; it does not claim to have rerun tests. Missing, failed, expired, ambiguous, tampered or unavailable evidence executes the full check. |
-| Version-state projection | Requires an authenticated full-source proof for the exact base and an ancestor-bound delta containing only declared version files and derived material. The base generator reconstructs every tracked byte, including derived digests. Any source, workflow, lock, configuration, file-mode or unexplained output change executes the full check. Projection results cannot issue a new full-source proof. |
-| Generated version-state check | `Version-state projection / <context>` describes generated material. It never uses a protected full-source check's name on v4. Required PR lineage, review and merge queue gates remain independent. |
-| Candidate qualification | Validates the sealed candidate, admitted runtime, source lock and publication authority. Source test reuse grants no provider mutation authority. |
-| Provider readback and settlement | Verifies actual tags, npm integrity, release assets and native receipt roots. Publication, next-development and binary distribution are reported separately. |
+| Evidence                         | Meaning and reuse boundary                                                                                                                                                                                                                                                                                                                                                                                 |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Full source execution            | `pnpm run check` runs source tests, Rust gates, policy checks and generated artifact checks. Each Node test file runs once; the focused `check:contracts` command still includes its 22 contract test files.                                                                                                                                                                                               |
+| Merge queue proof                | A successful full merge-group run seals its exact source SHA/tree, workflow, check definition, WASM runtime, toolchain versions, dependency locks, hosted image and platform. The proof expires after six hours and is verified against the completed GitHub run attempt and artifact archive digest.                                                                                                      |
+| Push reuse                       | A Dev push may reuse that exact full execution. Its summary links the original run and proof; it does not claim to have rerun tests. Missing, failed, expired, ambiguous, tampered or unavailable evidence executes the full check.                                                                                                                                                                        |
+| Version-state projection         | Requires an authenticated full-source proof for the exact base and an ancestor-bound delta containing only declared version files and derived material. The base generator reconstructs every tracked byte, including derived digests. Any source, workflow, lock, configuration, file-mode or unexplained output change executes the full check. Projection results cannot issue a new full-source proof. |
+| Generated version-state check    | `Version-state projection / <context>` describes generated material. It never uses a protected full-source check's name on v4. Required PR lineage, review and merge queue gates remain independent.                                                                                                                                                                                                       |
+| Candidate qualification          | Validates the sealed candidate, admitted runtime, source lock and publication authority. Source test reuse grants no provider mutation authority.                                                                                                                                                                                                                                                          |
+| Provider readback and settlement | Verifies actual tags, npm integrity, release assets and native receipt roots. Publication, next-development and binary distribution are reported separately.                                                                                                                                                                                                                                               |
 
 The protected `check` context keeps its stable name while step names and summaries
 identify full execution, exact proof reuse, or generated projection. The two

@@ -83,6 +83,41 @@ test("scheduled patrol promotes the previous qualified alpha while the newest so
   assert.equal(fake.writes.length, 1);
 });
 
+test("Alpha identity follows the product tag for either GitHub presentation", async () => {
+  for (const prerelease of [true, false]) {
+    const fake = client();
+    const release = {
+      tag_name: "v2.12.0-alpha.4",
+      prerelease,
+      draft: false,
+      published_at: "2026-07-11T00:00:00Z",
+      html_url: "https://example.test/a4",
+    };
+    fake.listReleases = async () => [
+      release,
+      { ...release, tag_name: "v2.12.0-alpha.5", draft: true },
+      { ...release, tag_name: "sdk-v2.12.0-alpha.6" },
+      { ...release, tag_name: "v3.0.0-alpha.7" },
+      { ...release, tag_name: "v2.12.0-alpha.8", prerelease: undefined },
+    ];
+    const result = await runStableCandidatePatrol(
+      {
+        repository: "kungfu-systems/example",
+        targetBranch: "release/v2/v2.12",
+        requiredChecks: "alpha-release",
+        minimumSoakSeconds: 3600,
+        now: "2026-07-11T03:00:00Z",
+        dryRun: true,
+      },
+      fake,
+    );
+    assert.equal(result.selection.candidate.version, "2.12.0-alpha.4");
+    assert.deepEqual(fake.branches, []);
+    assert.deepEqual(fake.pullRequests, []);
+    assert.deepEqual(fake.writes, []);
+  }
+});
+
 test("dry-run selects without writing refs, PRs, or ledger", async () => {
   const fake = client();
   const result = await runStableCandidatePatrol({

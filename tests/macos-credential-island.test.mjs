@@ -1,3 +1,7 @@
+import {
+  loadArtifactSigningInput,
+  loadCredentialInput,
+} from "../packages/core/build/macos-credential-island/input.js";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -24,8 +28,6 @@ import {
   entitlementsForProfile,
   findEmbeddedWheels,
   inspectExtractedWheel,
-  loadArtifactSigningInput,
-  loadCredentialInput,
   parseIdentityListing,
   parseNotaryResult,
   parseNotarySubmission,

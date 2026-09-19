@@ -91,7 +91,6 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - tests: `tests/github-governance-authority.test.mjs`
 - tests: `tests/infra-contract.test.mjs`
 - tests: `tests/macos-credential-island.test.mjs`
-- tests: `tests/native-artifact-signing-authority.test.mjs`
 - tests: `tests/paper.test.mjs`
 - tests: `tests/promote-buildchain-ref-durable-recovery.test.mjs`
 - tests: `tests/promote-buildchain-ref-governance.test.mjs`
@@ -438,6 +437,7 @@ Owner: Buildchain build signing transactions maintainers
 
 - `tests/signing-authority-transactions.test.mjs`
 - `tests/native-artifact-signing-authority.test.mjs`
+- `tests/macos-signing-result.test.mjs`
 
 ### Generated outputs
 
@@ -445,7 +445,7 @@ Owner: Buildchain build signing transactions maintainers
 
 ### Minimal validation
 
-- `node --test tests/signing-authority-transactions.test.mjs tests/native-artifact-signing-authority.test.mjs`
+- `node --test tests/signing-authority-transactions.test.mjs tests/native-artifact-signing-authority.test.mjs tests/macos-signing-result.test.mjs`
 
 ## business-attempt-journal
 

@@ -36,10 +36,15 @@ export function pipelineProductCapsules({
       throw new Error(
         "Product Capsule requires a live provider retention promise",
       );
-    const producer = publicationArtifactProducer(
-      qualified.build,
-      artifact.providerArtifactId,
+    const native = qualified.native?.platforms.find(
+      (proof) => proof.platform === artifact.platform,
     );
+    const producer = native
+      ? { plan }
+      : publicationArtifactProducer(
+          qualified.build,
+          artifact.providerArtifactId,
+        );
     const identity = {
       schema: STAGE_CAPSULE_IDENTITY_CONTRACT,
       sourceRoot: recordDigest(qualified.source),
@@ -62,6 +67,12 @@ export function pipelineProductCapsules({
       qualificationRoot: qualified.qualification.receiptRoot,
       observationRoots: [
         { name: "provider-build", root: qualified.build.root },
+        ...(native
+          ? [
+              { name: "native-finalization", root: native.finalizer.root },
+              { name: "native-authority", root: native.lineage.authority.root },
+            ]
+          : []),
       ],
     };
     const capsule = {

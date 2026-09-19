@@ -7,7 +7,7 @@ import {
   pipelinePublicationArtifactName,
 } from "../packages/core/providers/github/pipeline-publication-artifacts.js";
 
-function fixture(change = () => {}) {
+function fixture(change = () => {}, stage = "unsigned") {
   const plan = {
     root: `sha256:${"a".repeat(64)}`,
     outputs: [{ platform: "linux-x64" }, { platform: "windows-x64" }],
@@ -27,6 +27,11 @@ function fixture(change = () => {}) {
       },
     ],
   };
+  if (stage === "finalized")
+    plan.nativeSigning = [
+      { platform: "linux-x64" },
+      { platform: "windows-x64" },
+    ];
   const bytes = Buffer.from(consumerWorkflows()[run.path]);
   const caller = {
     type: "file",
@@ -40,7 +45,7 @@ function fixture(change = () => {}) {
   };
   const jobs = plan.outputs.map(({ platform }, index) => ({
     id: index + 1,
-    name: `Products / Build publication (${platform})`,
+    name: `Products / ${stage === "finalized" ? "Finalize" : "Build"} publication (${platform})`,
     run_id: 8,
     run_attempt: 2,
     status: "completed",
@@ -48,7 +53,7 @@ function fixture(change = () => {}) {
   }));
   const artifacts = plan.outputs.map(({ platform }, index) => ({
     id: index + 10,
-    name: pipelinePublicationArtifactName(plan, platform),
+    name: pipelinePublicationArtifactName(plan, platform, stage),
     expired: false,
     digest: `sha256:${"c".repeat(64)}`,
     workflow_run: { id: 8, head_sha: run.head_sha },
@@ -57,6 +62,7 @@ function fixture(change = () => {}) {
   change(state);
   let reads = 0;
   const provider = githubPipelinePublicationArtifacts({
+    stage,
     repository: "example/product",
     token: "test",
     request: async (url) =>
@@ -101,6 +107,21 @@ test("publication independently rereads every completed platform and exact provi
   assert.equal(build.source.commit, "d".repeat(40));
   assert.equal(build.providerSource, "b".repeat(40));
   assert.equal(reads(), 2);
+});
+
+test("native finalized products require separate successful finalizer jobs and immutable artifacts", async () => {
+  const f = fixture(() => {}, "finalized");
+  const { build } = await f.provider.buildReadback(f.context);
+  assert.equal(
+    build.schema,
+    "buildchain.pipeline-native-finalization-readback/v1",
+  );
+  for (const job of f.state.jobs)
+    job.name = job.name.replace("Finalize", "Build");
+  await assert.rejects(
+    f.provider.buildReadback(f.context),
+    /exact credentialless build job/,
+  );
 });
 
 test("publication rejects incomplete inventories, old jobs, duplicate or expired artifacts and unrelated run sources", async () => {

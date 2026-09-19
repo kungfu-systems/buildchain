@@ -41,7 +41,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(inputs.matrix) }}
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 60
+    timeout-minutes: ${{ matrix.timeoutMinutes || 60 }}
     permissions:
       contents: read
     steps:
@@ -96,6 +96,7 @@ jobs:
           context: ${{ inputs.context }}
           operation: ${{ inputs.operation }}
           token: ${{ github.token }}
+          authority-token: ${{ secrets.BUILDCHAIN_AUTOMATION_TOKEN }}
       - if: inputs.purpose == 'development'
         uses: ./.buildchain/runtime/actions/publication/version/materialize-development
         with:
