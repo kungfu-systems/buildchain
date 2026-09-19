@@ -5,6 +5,7 @@ import { githubPipelineVersion } from "../../providers/github/pipeline-version.j
 import { createPipelinePublicationPlan } from "./source-plan.js";
 import { preparePipelineStableQualification } from "./stable-wait.js";
 import { prepareRecoveredPublication } from "./recovery-prepare.js";
+import { completedPublicationRecovery } from "./context.js";
 import {
   preparePipelineVersionContext,
   retainedPipelineVersionRegeneration,
@@ -48,12 +49,20 @@ export async function preparePipelinePublication(attempt, publisherSha, host) {
     );
     await journal.record("publication/plan", plan);
   }
-  const wait = await preparePipelineStableQualification(plan, host, journal, {
-    attempt,
-    generation: observed.generation,
-    phase,
-  });
-  if (wait) return { operation: "wait", wait };
+  // Native phase order admits follow-ups only after publication succeeded.
+  // Later PR events must not reopen the completed publication's Alpha gate.
+  const completed = await completedPublicationRecovery(
+    { plan, recovery },
+    journal,
+  );
+  if (phase === "publish" && !completed) {
+    const wait = await preparePipelineStableQualification(plan, host, journal, {
+      attempt,
+      generation: observed.generation,
+      phase,
+    });
+    if (wait) return { operation: "wait", wait };
+  }
   if (
     !recovery &&
     (plan.publisher.workflowSha !== publisherSha ||

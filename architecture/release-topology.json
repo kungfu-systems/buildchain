@@ -90,6 +90,7 @@
       "actions/release/promotion/apply/action.yml",
       "actions/release/promotion/settle/action.yml",
       "packages/core/publication/pipeline/apply.js",
+      "packages/core/publication/pipeline/context.js",
       "packages/core/publication/pipeline/recovery-admission.js",
       "packages/core/publication/settlement/transaction.js",
       "packages/core/release/promote-candidate/provider-settlement.js",

@@ -182,3 +182,8 @@ Stable completion under `semver/auto` prepares the next patch at `alpha.0` from
 the exact current protected development commit. See the generated
 [next-development contract](docs/next-development-transition.md) for retry,
 independent review, and publication-preservation behavior.
+
+Stable eligibility is checked before publication. Once the native publication
+phase has succeeded, distribution and next-development continue from the retained
+publication, source and runtime. Later Alpha PR events do not restart that gate;
+the follow-up stages still verify their original publication and protected merge.
