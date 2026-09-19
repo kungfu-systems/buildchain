@@ -4,15 +4,41 @@ import assert from "node:assert/strict";
 import { preparePipelinePublication } from "../packages/core/publication/pipeline/prepare.js";
 import { publicationContext } from "../packages/core/publication/pipeline/context.js";
 import { pipelinePublicationJournal } from "../packages/core/publication/pipeline/journal.js";
-import { readRecoveryPublicationMaterials } from "../packages/core/publication/pipeline/recovery-materials.js";
+import {
+  readRecoveryPublicationMaterials,
+  recoveryPublicationMaterial,
+} from "../packages/core/publication/pipeline/recovery-materials.js";
 import { importRecoveredPublication } from "../packages/core/publication/pipeline/recovery-import.js";
 import { publicationImportedValues } from "../packages/core/publication/pipeline/imported-materials.js";
+import { prepareRecoveredPublication } from "../packages/core/publication/pipeline/recovery-prepare.js";
 import {
   selectRecoveryAttempt,
   openRecoveryAttempt,
 } from "../packages/core/workflow/pipeline/recovery-session.js";
 import { planPipelineRecovery } from "../packages/core/workflow/pipeline/recovery-plan.js";
 import { recordDigest } from "../packages/core/release/discussion/envelope.js";
+
+test("unsigned conflicting plans remain ambiguous and cannot select their own recovery authority", async () => {
+  const { f, publisher, attempt } = await publicationFixture();
+  const { context } = await preparePipelinePublication(
+    attempt,
+    publisher,
+    f.host,
+  );
+  const { session, journal } = await publicationContext(context, f.host);
+  const { root, ...body } = context.plan;
+  body.publisher = { ...body.publisher, workflowSha: "8".repeat(40) };
+  await journal.record("publication/plan", {
+    ...body,
+    root: recordDigest(body),
+  });
+  session.observed = await session.journal.read();
+  const materials = await readRecoveryPublicationMaterials(session, f.host);
+  assert.throws(
+    () => recoveryPublicationMaterial(materials, "publication/plan/"),
+    /one exact retained material/,
+  );
+});
 
 test("publication freezes the real protected source and defining publisher, and fences duplicate/late workers across jobs", async () => {
   const { f, publisher, merge, complete, attempt } = await publicationFixture();
@@ -176,10 +202,115 @@ test("recovery adopts original materials and the derived publisher/source in one
     }),
     /immutable recorded result/,
   );
+  // Isolate preparation's retained-plan decision. Signature verification is
+  // exercised by the signed publication recovery/apply tests.
+  await resumedJournal.record(
+    "publication/qualified",
+    {
+      qualified: { planRoot: imported[0].root },
+    },
+    { phase: "next-development" },
+  );
+  const beforeEntryMove = structuredClone(f.snapshot().records);
+  const prepared = await prepareRecoveredPublication(
+    session,
+    "8".repeat(40),
+    f.host,
+    resumedJournal,
+    "next-development",
+  );
+  assert.equal(prepared.mode, "qualified");
+  assert.equal(prepared.preserveTransaction, true);
+  assert.equal(prepared.execution.publisher.workflowSha, "8".repeat(40));
+  assert.deepEqual(
+    await resumedJournal.materials("publication/plan/"),
+    imported,
+  );
+  assert.deepEqual(f.snapshot().records, beforeEntryMove);
   const tampered = structuredClone(container);
   tampered.values[0].value = { changed: true };
   assert.throws(
     () => publicationImportedValues(tampered),
     /immutable material bundle/,
   );
+});
+
+test("signed recovery selection preserves the declared native plan schema and signature inventory", async () => {
+  for (const version of [1, 2]) {
+    const rooted = (body) => ({ ...body, root: recordDigest(body) });
+    const plan = rooted({
+      schema: `buildchain.pipeline-publication-plan/v${version}`,
+      publisher: { workflowSha: "a".repeat(40), repository: "example/runtime" },
+      ...(version === 2
+        ? { nativeSigning: [{ id: "required-signature" }] }
+        : {}),
+    });
+    const staleBody = {
+      ...plan,
+      publisher: { ...plan.publisher, workflowSha: "b".repeat(40) },
+    };
+    delete staleBody.root;
+    const stale = rooted(staleBody);
+    const source = rooted({
+      schema: "buildchain.pipeline-version-materialization/v1",
+      planRoot: plan.root,
+      source: { commit: "c".repeat(40) },
+    });
+    const values = new Map([
+      ["publication/plan/original", plan],
+      ["publication/plan/stale", stale],
+      ["publication/materialization/original", source],
+      [
+        "publication/qualified/original",
+        {
+          qualified: {
+            schema: `buildchain.pipeline-publication-qualification/v${version}`,
+            planRoot: plan.root,
+          },
+          signing: { materializationRoot: source.root },
+        },
+      ],
+    ]);
+    // This only tests material selection. Qualification and signature admission
+    // remain independently exercised by the native and signed recovery suites.
+    const session = {
+      observed: {
+        history: [
+          {
+            events: [
+              {
+                payload: {
+                  materials: [...values].map(([id, value]) => ({
+                    id,
+                    digest: recordDigest(value),
+                  })),
+                },
+              },
+            ],
+          },
+        ],
+      },
+    };
+    const host = {
+      materialStore: () => ({ read: async ({ id }) => values.get(id) }),
+    };
+    const materials = await readRecoveryPublicationMaterials(session, host);
+    assert.deepEqual(
+      recoveryPublicationMaterial(materials, "publication/plan/"),
+      plan,
+    );
+    assert.deepEqual(
+      recoveryPublicationMaterial(materials, "publication/predecessor-plan/"),
+      stale,
+    );
+    if (version === 2) {
+      const changed = { ...stale, nativeSigning: [] };
+      delete changed.root;
+      values.set("publication/plan/stale", rooted(changed));
+      await assert.rejects(
+        readRecoveryPublicationMaterials(session, host),
+        /changed more than the publisher entry/,
+      );
+    }
+  }
 });
