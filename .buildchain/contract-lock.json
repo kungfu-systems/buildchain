@@ -3,16 +3,16 @@
   "contract": "kungfu-buildchain-contract-lock",
   "buildchain": {
     "ref": "v4",
-    "resolvedSha": "73cee1f6ad6fd679fe29a2faf94f09d729bd04e7",
+    "resolvedSha": "1a35569933b727fd4eabe13147ac5fdb2abc05d0",
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "contractDigest": "sha256:eb24ee8a72892fe5f5bed2ed886699c578724a72e043c616c0497232d37f6888",
-    "compatibilityDigest": "sha256:b1088f1c224329b16cd23c285bc69334aa1ee102e5b44d5c09aaf156d76821b6",
+    "contractDigest": "sha256:41084ce334ddbf03549d209d96310db8f653921cbb25eaf0dce0571565d2cce5",
+    "compatibilityDigest": "sha256:81e32696723fe82fe29d2b2214cd56cf6c87bbeae5cff1a201de7ee7fd10ee9c",
     "compatibilityFactRegistryRoot": "sha256:ea8f656c9fd74aa2d2fb9b7807e7daa39a708f6a7cd37ab7d154eac7be5605a6",
     "compatibilityFactCutRoot": "sha256:58f33e498596505a26b6fc3c7ae5acef847ff699eee6c7e17a7b318a40bdf0d6",
     "compatibilityProofRegistryRoot": "sha256:2f6477405c7891b754b33ad6515d55618bd320e7cdc59330d7cc645e17201e72",
     "majorLine": "v4",
     "compatibilityPolicy": "major-compatible",
-    "acceptedAt": "2026-09-11T23:53:43.798Z",
+    "acceptedAt": "2026-09-19T18:23:04.580Z",
     "surfaces": [
       {
         "id": "reusable-build",
@@ -38,14 +38,14 @@
       {
         "id": "release-candidate-promote",
         "kind": "workflow",
-        "breakingDigest": "sha256:a32cbccc2a4b6e1a16f9feba892a1e8d4b8db0098ff63ea2e9719e985da64a7c",
+        "breakingDigest": "sha256:c9727056289fc47fbd3bd5f1d0b39b9816f2d6828f3262587aec53e5062da7f1",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       },
       {
         "id": "advanced-release-candidate-promote",
         "kind": "workflow",
-        "breakingDigest": "sha256:3130cd971f83ef8fb44cbe3ea0e25c95b65693aaab15b6cc4e5a1e3657f2b6ee",
+        "breakingDigest": "sha256:64b800e0189286f5bc8615f8f1a0ee1ba2420a79dc6ec77b14e96619ef4dd094",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       },
@@ -214,13 +214,6 @@
         "id": "controller:release-propagation",
         "kind": "controller",
         "breakingDigest": "sha256:63cbc80ea892431ee4780c358a60f4357ba95553c632dd86e1d62c18e375ecca",
-        "compatibilityProofRoots": [],
-        "compatibilityFactRoots": []
-      },
-      {
-        "id": "controller:binary-distribution",
-        "kind": "controller",
-        "breakingDigest": "sha256:c8dc1280b05fa2fc1e976292d7a3d31d6dfb99ce1a814834462e634b38671859",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       }

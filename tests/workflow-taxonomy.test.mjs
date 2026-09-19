@@ -323,7 +323,7 @@ test("workflow hotspot routes retain the same logical identities as debt metrics
 
 test("installed normal and recovery entries preserve the generated public contract", () => {
   for (const [file, expected] of Object.entries(
-    consumerWorkflows("v4-alpha", ".buildchain/minimal-consumer.toml"),
+    consumerWorkflows(),
   )) {
     assert.equal(fs.readFileSync(path.join(repository, file), "utf8"), expected);
   }

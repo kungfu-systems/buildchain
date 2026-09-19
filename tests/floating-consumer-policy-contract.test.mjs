@@ -153,7 +153,7 @@ test("bounded recovery is a one-way adapter into the same public publisher", () 
   }
   assert.match(workflow, /^  workflow_dispatch:/mu);
   const caller = readWorkflow(relative).jobs.buildchain;
-  assert.equal(caller.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4-alpha");
+  assert.equal(caller.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4");
   assert.deepEqual(Object.keys(caller.with), ["attempt", "runtime-ref"]);
   assert.doesNotMatch(workflow, /request-json|publish-transaction-override|resume-candidate-run-id/u);
 });

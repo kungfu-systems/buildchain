@@ -222,7 +222,7 @@ test("workflow, generated template, and Agent guidance project the declaration",
   const workflow = readWorkflow(declaration.projections.protectedWorkflow);
   assert.equal(
     workflow.jobs.buildchain.uses,
-    "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha",
+    "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4",
   );
   const config = fs.readFileSync(
     path.join(root, ".buildchain/buildchain.toml"),

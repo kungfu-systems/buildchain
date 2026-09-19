@@ -2230,6 +2230,7 @@
     }
   },
   "hotspots": [
+    "tests/adopter-delivery.test.mjs",
     "tests/internal-architecture.test.mjs",
     "tests/build-surface-promotion.test.mjs",
     "tests/build-surface.test.mjs",

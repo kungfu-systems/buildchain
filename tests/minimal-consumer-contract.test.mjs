@@ -46,7 +46,7 @@ test("ordinary task branches retain protected develop routes without admitting c
 
 test("self product migration retains full source qualification on each checkpoint platform", () => {
   const plan = compileConsumerPlan(
-    fs.readFileSync(".buildchain/minimal-consumer.toml", "utf8"),
+    fs.readFileSync(".buildchain/buildchain.toml", "utf8"),
   );
   const declaration = JSON.parse(
     fs.readFileSync("architecture/platform-stage-checkpoints.json", "utf8"),
@@ -79,7 +79,7 @@ test("self product migration retains full source qualification on each checkpoin
 
 test("stable eligibility preserves required evidence without a self release delay", () => {
   const self = compileConsumerPlan(
-    fs.readFileSync(".buildchain/minimal-consumer.toml", "utf8"),
+    fs.readFileSync(".buildchain/buildchain.toml", "utf8"),
   );
   const previous = JSON.parse(
     fs.readFileSync(".buildchain/stable-release-policy.json", "utf8"),

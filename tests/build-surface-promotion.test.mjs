@@ -140,11 +140,11 @@ test("qualification verifies the invocation before checkout and admits the contr
   const positions = names.map(name => graph.steps.findIndex(step => step.name === name));
   assert.ok(positions.every((position, index) => position >= 0 && (!index || positions[index - 1] < position)), JSON.stringify({ names, positions }));
 });
-test("self promotion delegates the published pipeline with only a config path", () => {
+test("self promotion delegates the published stable pipeline with default configuration", () => {
   const workflow = readWorkflow(".github/workflows/buildchain.yml");
-  assert.equal(workflow.jobs.buildchain.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha");
+  assert.equal(workflow.jobs.buildchain.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4");
   assert.deepEqual(Object.keys(workflow.jobs), ["buildchain"]);
-  assert.deepEqual(Object.keys(workflow.jobs.buildchain.with), ["config-path"]);
+  assert.equal(workflow.jobs.buildchain.with, undefined);
 });test("SETTLE consumes APPLY evidence and emits the sole terminal receipt projection", () => {
   const graph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "settle");
   assert.deepEqual(graph.job.needs, ["qualify", "apply", "execution-runtime"]);
@@ -1233,10 +1233,10 @@ test("generated release model publishes the generic major alpha channel contract
   assert.match(releaseModel.floatingTags, /highest minor in major X with a published alpha/);
 });
 
-test("self dogfood uses the canonical generated pair for either published channel", () => {
+test("self dogfood uses the canonical generated stable entry without config overrides", () => {
   const normal = readWorkflow(".github/workflows/buildchain.yml");
-  assert.equal(normal.jobs.buildchain.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha");
-  assert.equal(normal.jobs.buildchain.with["config-path"], ".buildchain/minimal-consumer.toml");
+  assert.equal(normal.jobs.buildchain.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4");
+  assert.equal(normal.jobs.buildchain.with, undefined);
   assert.equal(normal.jobs.buildchain.steps, undefined);
   assert.equal(normal.jobs.buildchain["runs-on"], undefined);
 });test("self-dogfood never bridges an adjacent major or bypasses contract compatibility", () => {

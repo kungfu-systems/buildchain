@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-14
+last_reviewed: 2026-09-19
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-14
+  generated_at: 2026-09-19
   visible_context: Buildchain 4.1 source, architecture registries and local validation.
   invisible_context_boundary: No unpublished release or external consumer qualification is claimed.
 ---
@@ -45,15 +45,12 @@ caller invokes the published `public-ops-pipeline.yml`; recovery accepts only an
 exact attempt and an optional repaired runtime through `public-ops-recover.yml`.
 No repository-specific runtime selection or recovery exception is allowed.
 
-During the protected migration, both callers use `@v4-alpha` and the prepared
-`.buildchain/minimal-consumer.toml` path, kept byte-identical to the canonical
-TOML. The pipeline reads policy at the same path on its protected target branch,
-so each target must contain the schema-2 policy before its first pipeline PR.
-The TOML declares `feature/*`, `fix/*`, `chore/*`, `docs/*`, `ci/*`, and
-`refactor/*` development routes before the first new-pipeline Alpha qualification.
-After the canonical path is protected and the stable entry is qualified,
-regenerate the same pair using the default path and `@v4`.
-Do not claim the transition complete while that final cleanup is outstanding.
+Both callers use the published `@v4` entry and the default
+`.buildchain/buildchain.toml` path. The pipeline reads policy at the same path on
+its protected target branch, so each target must contain the schema-2 policy
+before its first pipeline PR. The TOML declares `feature/*`, `fix/*`, `chore/*`,
+`docs/*`, `ci/*`, and `refactor/*` development routes. The tool-maintained stable
+contract lock binds the qualified published runtime.
 
 Products declare their own install, build, and verification commands in TOML.
 Publication, source qualification, reviews, merge queues, provider readback and

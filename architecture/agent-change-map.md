@@ -111,6 +111,7 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 
 ### Current top twenty maintenance hotspots
 
+- `tests/adopter-delivery.test.mjs`
 - `tests/internal-architecture.test.mjs`
 - `tests/build-surface-promotion.test.mjs`
 - `tests/build-surface.test.mjs`

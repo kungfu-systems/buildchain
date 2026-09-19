@@ -458,7 +458,7 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
   );
   assert.match(
     recovery,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-recover\.yml@v4-alpha/u,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-recover\.yml@v4(?:\n|$)/u,
   );
 });
 

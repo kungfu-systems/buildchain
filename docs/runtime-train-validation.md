@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-14
+last_reviewed: 2026-09-19
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-14
+  generated_at: 2026-09-19
   visible_context: Source-bound caller installation, pipeline wake implementation and GitHub event documentation.
   invisible_context_boundary: No unobserved provider execution or publication authority is claimed.
 ---
@@ -72,7 +72,9 @@ the normal pipeline before recovering a current admitted attempt. An installatio
 merge advances the protected base, so an older unmerged source attempt must be
 re-admitted on the current base before recovery.
 
-Both callers are byte-identical to the generated consumer entries and call the
-published `@v4-alpha` public workflows. Recovery accepts only `attempt` and
-optional `runtime-ref`; the normal caller retains its protected config path.
-This installation order does not qualify the full self cutover or Stable release.
+The tracked callers are byte-identical to the default generated consumer entries:
+published `@v4` public workflows and `.buildchain/buildchain.toml`. Recovery accepts
+only `attempt` and optional `runtime-ref`. The stable entry must be published and
+qualified before adopting these defaults. Historical installation and recovery
+receipts retain their original transition path and runtime identities; installation
+order alone does not qualify a Stable release.
