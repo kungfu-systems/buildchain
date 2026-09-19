@@ -5,6 +5,79 @@ import { signedPublicationFixture } from "./helpers/pipeline-publication-signed.
 import { publicationApplyProvider } from "./helpers/pipeline-publication-apply-provider.mjs";
 import { publicationSuccessor } from "./helpers/pipeline-publication-successor.mjs";
 import { applyPipelinePublication } from "../packages/core/publication/pipeline/apply.js";
+import { recordDigest } from "../packages/core/release/discussion/envelope.js";
+
+async function appendPublisherDrift(f, mutate = () => {}) {
+  const plan = structuredClone(f.context.plan);
+  plan.publisher.workflowSha = "8".repeat(40);
+  const materialization = structuredClone(f.context.materialization);
+  mutate(plan, materialization);
+  const { root: oldPlan, ...body } = plan;
+  plan.root = recordDigest(body);
+  materialization.planRoot = plan.root;
+  const { root: oldSource, ...source } = materialization;
+  materialization.root = recordDigest(source);
+  await f.journal.record("publication/plan", plan);
+  await f.journal.record("publication/materialization", materialization);
+  return { plan, materialization };
+}
+
+test("signed lineage recovers an unsigned publisher rederivation without replacing any product or historical record", async (t) => {
+  const f = await signedPublicationFixture(t);
+  const stale = await appendPublisherDrift(f);
+  const before = structuredClone(f.f.snapshot().records);
+  const successor = await publicationSuccessor(f, f.session, 300);
+  assert.deepEqual(successor.context.plan, f.context.plan);
+  assert.deepEqual(
+    successor.context.materialization,
+    f.context.materialization,
+  );
+  assert.equal(successor.context.recovery.preserveTransaction, true);
+  assert.deepEqual(await successor.journal.materials("publication/plan/"), [
+    f.context.plan,
+  ]);
+  assert.deepEqual(
+    await successor.journal.materials("publication/predecessor-plan/"),
+    [stale.plan],
+  );
+  assert.deepEqual(f.f.snapshot().records.slice(0, before.length), before);
+  const { state, npmProvider } = publicationApplyProvider(f.host);
+  state.failAsset = false;
+  const result = await applyPipelinePublication(
+    successor.context,
+    f.host,
+    path.join(f.root, "publisher-drift"),
+    {},
+    { verifySigning: f.verifySigning, npmProvider },
+  );
+  assert.equal(
+    result.release.receipt.transactionRoot,
+    f.retained.documents.transaction.transactionRoot,
+  );
+  assert.equal(state.writes.filter((value) => value === "npm").length, 1);
+  assert.deepEqual(
+    (await successor.journal.materials("publication/qualified/"))[0],
+    f.retained,
+  );
+});
+
+test("signed plan selection rejects source and runtime drift in conflicting records", async (t) => {
+  for (const mutate of [
+    (plan) => {
+      plan.runtime.commit = "7".repeat(40);
+    },
+    (plan, materialization) => {
+      materialization.source.commit = "7".repeat(40);
+    },
+  ]) {
+    const f = await signedPublicationFixture(t);
+    await appendPublisherDrift(f, mutate);
+    await assert.rejects(
+      publicationSuccessor(f, f.session, 300),
+      /Conflicting recovery|one exact retained material/,
+    );
+  }
+});
 
 test("expired signed publication survives partial npm success, a second recovery and lost asset responses with its original transaction", async (t) => {
   const f = await signedPublicationFixture(t);

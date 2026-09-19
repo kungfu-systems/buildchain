@@ -54,20 +54,32 @@ export async function prepareRecoveredPublication(
       tree: runtime.tree.sha,
     },
   };
-  await importRecoveredPublication(
-    publication,
-    execution,
-    recoveryPlan.root,
-    journal,
-    phase,
-  );
+  const qualified = await journal.materials("publication/qualified/");
+  if (qualified.length > 1)
+    throw new Error("Recovered publication has conflicting qualifications");
+  if (qualified.length) {
+    const plans = await journal.materials("publication/plan/");
+    if (plans.length !== 1 || plans[0].root !== qualified[0].qualified.planRoot)
+      throw new Error("Recovered qualification lacks its one retained plan");
+  }
+  // A prepared recovery may already have signed and published its derived
+  // plan. Later workers retain that plan even when the floating entry moves.
+  if (!qualified.length)
+    await importRecoveredPublication(
+      publication,
+      execution,
+      recoveryPlan.root,
+      journal,
+      phase,
+    );
+  const mode = qualified.length ? "qualified" : publication.mode;
   return {
     planRoot: recoveryPlan.root,
     predecessor: recoveryPlan.predecessor,
     originalPlanRoot: plan.root,
-    mode: publication.mode,
+    mode,
     build: publication.build || null,
-    preserveTransaction: publication.mode === "qualified",
+    preserveTransaction: mode === "qualified",
     execution,
   };
 }
