@@ -76,5 +76,5 @@ export async function importRecoveredPublication(
   publicationImportedValues(bundle);
   // One journal append publishes the complete import and derived source/plan.
   // An interruption cannot expose a new plan beside an old materialization.
-  await journal.record("publication/recovery-import", bundle, { phase });
+  await journal.recordImport(bundle, phase);
 }
