@@ -150,6 +150,32 @@ test("recovery adopts original materials and the derived publisher/source in one
     .materialStore(session)
     .read(recovered[0].reference);
   assert.equal(publicationImportedValues(container).length, recovered.length);
+  // A different worker resumes the same import after publish/distribution.
+  // Its new phase must not rewrite or reappend the original import event.
+  for (const phase of ["publish", "distribution"])
+    await session.progress.progress({
+      attempt: session.observed.attempt,
+      phase,
+      state: "success",
+      eventKey: `finished:${phase}`,
+    });
+  const beforeTail = structuredClone(f.snapshot().records);
+  const resumedJournal = pipelinePublicationJournal(session, f.host);
+  await importRecoveredPublication(
+    publication,
+    execution,
+    plan.root,
+    resumedJournal,
+    "next-development",
+  );
+  assert.deepEqual(f.snapshot().records, beforeTail);
+  // Other journal results remain phase-bound; the import replay is explicit.
+  await assert.rejects(
+    resumedJournal.record("publication/recovery-import", container, {
+      phase: "next-development",
+    }),
+    /immutable recorded result/,
+  );
   const tampered = structuredClone(container);
   tampered.values[0].value = { changed: true };
   assert.throws(
