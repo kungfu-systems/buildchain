@@ -106,5 +106,17 @@ export function pipelinePublicationJournal(session, host) {
     });
     return value;
   }
-  return { fence, materials, record };
+  async function recordImport(value, phase) {
+    publicationImportedValues(value);
+    const observed = await fence();
+    const id = "publication/recovery-import";
+    const eventKey = `publication:${id}:${recordDigest(value)}`;
+    const prior = observed.history
+      .at(-1)
+      .events.find((event) => event.payload.eventKey === eventKey);
+    // Import is one atomic append, not a new result for each resumed phase.
+    // Replay still verifies the original event, state and retained bytes.
+    return record(id, value, { phase: prior?.node || phase });
+  }
+  return { fence, materials, record, recordImport };
 }

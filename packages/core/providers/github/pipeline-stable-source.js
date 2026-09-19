@@ -5,6 +5,7 @@ import { compareDevelopmentVersions } from "../../publication/publication-develo
 import { githubPipelineSource } from "./pipeline-source.js";
 import { githubPipelineVersion } from "./pipeline-version.js";
 import { normalInputs } from "../../consumer/contract/entries.js";
+import { readPipelineStableBaseline } from "./pipeline-stable-baseline.js";
 
 const SHA = /^[0-9a-f]{40}$/u;
 const STABLE = /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/u;
@@ -295,10 +296,12 @@ export async function readPipelineStableSource(plan, host) {
   const prior = selected.comparison
     ? await exactTag(get, selected.comparison.tag)
     : null;
-  if ((prior?.commit || null) !== plan.previousChannelCommit)
-    throw new Error(
-      "Stable comparison differs from the retained published channel",
-    );
+  const baseline = await readPipelineStableBaseline(
+    plan,
+    { ...host, request },
+    selected.comparison,
+    prior,
+  );
   const current = await treeFiles(get, pointer.commit);
   if (current.tree !== candidate.identity.tree)
     throw new Error(
@@ -335,6 +338,20 @@ export async function readPipelineStableSource(plan, host) {
     prior,
     latest,
   });
+  if (
+    baseline &&
+    recordDigest(
+      await readPipelineStableBaseline(
+        plan,
+        { ...host, request },
+        selected.comparison,
+        prior,
+      ),
+    ) !== recordDigest(baseline)
+  )
+    throw new Error(
+      "Stable baseline evidence changed during provider readback",
+    );
   const body = {
     schema: "buildchain.pipeline-stable-source/v1",
     planRoot: plan.root,
@@ -347,6 +364,7 @@ export async function readPipelineStableSource(plan, host) {
     comparisonStable: selected.comparison
       ? { ...selected.comparison, sha: prior.commit, tree: previous.tree }
       : null,
+    ...(baseline ? { comparisonChannel: baseline } : {}),
     impact,
     changedPaths: changedPaths(previous.files, current.files),
   };

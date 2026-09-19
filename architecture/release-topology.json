@@ -188,12 +188,14 @@
         "packages/core/providers/github/pipeline-run-entry.js",
         "packages/core/providers/github/pipeline-runs.js",
         "packages/core/providers/github/pipeline-source.js",
+        "packages/core/providers/github/pipeline-stable-baseline.js",
         "packages/core/providers/github/pipeline-stable-source.js",
         "packages/core/providers/github/pipeline-version-artifacts.js",
         "packages/core/providers/github/pipeline-version-readback.js",
         "packages/core/providers/github/pipeline-version.js",
         "packages/core/providers/github/pipeline-worker.js",
         "packages/core/providers/github/release-assets.js",
+        "packages/core/providers/github/release-evidence-assets.js",
         "packages/core/publication/binary/action.js",
         "packages/core/publication/binary/capability.js",
         "packages/core/publication/binary/evidence.js",
@@ -397,7 +399,7 @@
         "packages/core/workflow/pipeline/wake.js",
         "packages/core/workflow/pipeline/web-status.js"
       ],
-      "root": "sha256:b474be097d7b1455785cf78247c966601a2adfb03ff1baee9cc009f26b9c2ac1"
+      "root": "sha256:d95f03e3906b482b6ab0486d531865162e62961f2398058f6aecb380500f5314"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/runtime/domain-wasm.js",

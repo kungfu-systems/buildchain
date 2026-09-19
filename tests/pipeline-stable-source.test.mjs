@@ -8,6 +8,7 @@ import { recordDigest } from "../packages/core/release/discussion/envelope.js";
 import { planPipelinePublication } from "../packages/core/publication/pipeline/plan.js";
 import { assertPipelineStableQualification } from "../packages/core/publication/pipeline/stable.js";
 import { readPipelineStableSource } from "../packages/core/providers/github/pipeline-stable-source.js";
+import { stableBaselineFixture } from "./helpers/pipeline-stable-baseline.mjs";
 
 const repository = "example/product",
   base = `/repos/${repository}`;
@@ -214,6 +215,29 @@ test("stable facts bind exact Alpha blobs and complete product trees without a m
   assert.deepEqual(result.changedPaths, ["src/product.js"]);
   assert.ok(!f.calls.some((key) => key.startsWith("/compare/")));
   assert.equal(f.counts.get(`/git/ref/tags/${alphaTag}`), 2);
+});
+
+test("completed legacy floating promotion preserves exact-tag product comparison and rechecks evidence", async () => {
+  const f = fixture(),
+    legacy = await stableBaselineFixture();
+  const { root, ...body } = f.plan;
+  body.previousChannelCommit = legacy.plan.previousChannelCommit;
+  f.plan = { ...body, root: recordDigest(body) };
+  const original = f.host.request;
+  f.host.request = (endpoint, options) =>
+    endpoint.includes("/releases/10/assets?")
+      ? legacy.host.request(endpoint, options)
+      : original(endpoint, options);
+  f.host.github = legacy.host.github;
+  const result = await readPipelineStableSource(f.plan, f.host);
+  assert.equal(result.comparisonStable.sha, previous);
+  assert.equal(result.comparisonStable.tree, previousTree);
+  assert.equal(
+    result.comparisonChannel.channelCommit,
+    legacy.plan.previousChannelCommit,
+  );
+  assert.deepEqual(result.changedPaths, ["src/product.js"]);
+  assert.equal(legacy.calls.length, 4);
 });
 
 test("complete trees include additions, removals and mode changes beyond a short diff listing", async () => {

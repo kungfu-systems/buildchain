@@ -47,22 +47,29 @@ async function completedTail(subject, transactionRoot) {
     { adapters },
   );
 }
-export async function publicationSettlementFixture({ channel = "alpha" } = {}) {
-  const repository = "kungfu-systems/buildchain",
-    sourceSha = "d".repeat(40),
-    tree = "e".repeat(40),
+export async function publicationSettlementFixture({
+  channel = "alpha",
+  repository = "kungfu-systems/buildchain",
+  sourceSha = "d".repeat(40),
+  promotedSha = sourceSha,
+  version = channel === "alpha" ? "4.1.0-alpha.0" : "4.1.0",
+} = {}) {
+  const tree = "e".repeat(40),
     runtimeSha = "f".repeat(40);
-  const version = channel === "alpha" ? "4.1.0-alpha.0" : "4.1.0",
-    tag = `v${version}`;
+  const tag = `v${version}`;
   const invocation = {
     schema: "kungfu-buildchain-v4-release-invocation/v1",
     publisher: {
-      repository,
+      repository: "kungfu-systems/buildchain",
       workflow: ".github/workflows/.release-promote.yml",
       workflowSha: runtimeSha,
       job: "apply",
     },
-    runtime: { repository, commit: runtimeSha, tree },
+    runtime: {
+      repository: "kungfu-systems/buildchain",
+      commit: runtimeSha,
+      tree,
+    },
     candidate: { repository, commit: sourceSha, tree, version },
     target: { channel, tag, expectedOldSha: null },
     authority: {
@@ -91,7 +98,7 @@ export async function publicationSettlementFixture({ channel = "alpha" } = {}) {
   };
   const subject = { repository, sourceSha, version, tag, channel };
   const providerState = await completedTail(
-    subject,
+    { ...subject, sourceSha: promotedSha },
     releaseTailRoot({ test: "provider", subject }),
   );
   const productState = await completedTail(
@@ -127,7 +134,7 @@ export async function publicationSettlementFixture({ channel = "alpha" } = {}) {
       state: "complete",
       finalizationNeeded: false,
     },
-    promotedSha: sourceSha,
+    promotedSha,
     transaction: {
       transactionRoot: productState.transactionRoot,
       stateRoot: productState.stateRoot,
@@ -135,7 +142,16 @@ export async function publicationSettlementFixture({ channel = "alpha" } = {}) {
       receiptRoots: productState.receipts.map((x) => x.receiptRoot),
       failure: null,
     },
-    updates: [],
+    updates:
+      promotedSha === sourceSha
+        ? []
+        : [
+            {
+              action: "converged-release-tag",
+              ref: `refs/tags/v${version.split(".")[0]}`,
+              sha: promotedSha,
+            },
+          ],
   };
   const product = { ...productBody, root: releaseTailRoot(productBody) };
   const terminal = createReleaseReceipt({
