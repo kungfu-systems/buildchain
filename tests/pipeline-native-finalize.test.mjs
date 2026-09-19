@@ -26,7 +26,7 @@ function fixture(t, script) {
   });
   const signed = path.join(f.cwd, "signed.tar.gz");
   fs.writeFileSync(path.join(f.cwd, "payload"), "signed fixture bytes");
-  execFileSync("tar", ["-czf", signed, "-C", f.cwd, "payload"]);
+  execFileSync("tar", ["-czf", "signed.tar.gz", "payload"], { cwd: f.cwd });
   const evidencePath = path.join(f.cwd, "evidence.json");
   fs.writeFileSync(
     evidencePath,
@@ -98,7 +98,7 @@ function fixture(t, script) {
 test("native finalizer runs the declared command without credentials and seals signed bytes without resealing unsigned requests", async (t) => {
   const { f, input } = fixture(
     t,
-    `node -e "if(process.env.GITHUB_TOKEN)throw Error('credential');require('fs').writeFileSync('finalized.marker','yes')"`,
+    `node -e "if(process.env.GITHUB_TOKEN)throw Error('credential');require('fs').readFileSync('.buildchain/native-unsigned/macos-arm64/index.json');require('fs').writeFileSync('finalized.marker','yes')"`,
   );
   let inspections = 0;
   const manifest = await finalizePipelineNativeProducts(input, {
@@ -112,6 +112,20 @@ test("native finalizer runs the declared command without credentials and seals s
     fs.readFileSync(path.join(input.cwd, "finalized.marker"), "utf8"),
     "yes",
   );
+  const unsignedRoot = path.join(
+    input.cwd,
+    ".buildchain/native-unsigned/macos-arm64",
+  );
+  const unsigned = JSON.parse(
+    fs.readFileSync(path.join(unsignedRoot, "index.json")),
+  );
+  assert.equal(unsigned.manifestRoot, f.manifest.root);
+  assert.deepEqual(unsigned.artifacts, f.manifest.artifacts);
+  for (const artifact of unsigned.artifacts)
+    assert.deepEqual(
+      fs.readFileSync(path.join(unsignedRoot, artifact.file)),
+      fs.readFileSync(path.join(f.output, artifact.file)),
+    );
   assert.equal(manifest.nativeSigning.phase, "finalized");
   assert.equal(manifest.nativeSigning.unsignedManifestRoot, f.manifest.root);
   assert.equal(manifest.nativeSigning.requestRoot, undefined);

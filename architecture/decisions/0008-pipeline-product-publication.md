@@ -24,6 +24,13 @@ product/platform/artifact and publication target. npm packages, native archives
 and Paper PDFs use the same entry and product build/verify boundary. Consumers
 do not supply standard packaging, signing, publication or recovery commands.
 
+An npm product may declare either a package directory or an already packed
+`.tgz` artifact. A prepacked input is admitted without unpacking, running package
+scripts or repacking: package identity, planned version, privacy, publication
+policy and integrity are still independently verified. Its original bytes flow
+unchanged through qualification and provider publication, preserving product
+qualification that already binds the tarball.
+
 Binary products may also declare `kind = "installer"` for `.dmg`, `.exe`, or
 `.AppImage` files. The declaration admits only matching macOS, Windows, or Linux
 platforms. The publisher preserves the original installer bytes and download
@@ -73,6 +80,11 @@ The separate `Finalize publication` job restores unsigned products and verified
 signed outputs, exposes the immutable result index under
 `.buildchain/native-signing/<platform>/index.json`, and runs the signed products'
 declared `install` and `finalize` commands in the filtered product environment.
+Original unsigned product files remain available under
+`.buildchain/native-unsigned/<platform>/`, with an `index.json` bound to their
+original manifest root. Consumers may use those copies to restore product-owned
+metadata or retire intermediate packages; this projection grants no signing or
+publication authority and is not consumed as qualification evidence.
 Finalization may update declared product metadata but must preserve every signed
 archive and installer byte. It cannot reseal signed outputs as unsigned inputs.
 Qualification independently re-reads the unsigned producer, central authority

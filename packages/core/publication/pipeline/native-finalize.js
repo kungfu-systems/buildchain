@@ -23,13 +23,35 @@ function outputTarget(cwd, artifact) {
 }
 
 function restoreUnsignedOutputs(cwd, bundle) {
+  const projection = path.join(
+    cwd,
+    ".buildchain/native-unsigned",
+    bundle.manifest.platform,
+  );
   for (const artifact of bundle.manifest.artifacts) {
-    if (artifact.kind === "npm-package") continue;
     const bytes = publicationFile(
       publicationPath(bundle.directory, artifact.file),
     );
-    writeImmutablePublicationFile(outputTarget(cwd, artifact), bytes.bytes);
+    writeImmutablePublicationFile(
+      path.join(projection, artifact.file),
+      bytes.bytes,
+    );
+    if (artifact.kind !== "npm-package")
+      writeImmutablePublicationFile(outputTarget(cwd, artifact), bytes.bytes);
   }
+  writeImmutablePublicationFile(
+    path.join(projection, "index.json"),
+    `${JSON.stringify(
+      {
+        schema: "buildchain.pipeline-native-unsigned-inputs/v1",
+        manifestRoot: bundle.manifest.root,
+        source: bundle.manifest.source,
+        artifacts: bundle.manifest.artifacts,
+      },
+      null,
+      2,
+    )}\n`,
+  );
 }
 
 function importSignedOutputs(cwd, bundle, signed, verified) {

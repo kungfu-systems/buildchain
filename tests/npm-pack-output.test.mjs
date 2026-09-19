@@ -71,6 +71,7 @@ test("npm registry readback accepts npm 11 and 12 while ambiguous or missing int
 
 test("sealed npm metadata cannot inject a scoped registry or execution configuration", () => {
   assertPipelinePackagePolicy({
+    name: "@example/product",
     publishConfig: {
       access: "public",
       provenance: true,
@@ -83,5 +84,12 @@ test("sealed npm metadata cannot inject a scoped registry or execution configura
     { "node-options": "--import=untrusted" },
     { _authToken: "untrusted" },
   ])
-    assert.throws(() => assertPipelinePackagePolicy({ publishConfig }), /npm/);
+    assert.throws(
+      () =>
+        assertPipelinePackagePolicy({
+          name: "@example/product",
+          publishConfig,
+        }),
+      /npm/,
+    );
 });

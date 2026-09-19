@@ -15,15 +15,25 @@ import {
   writeImmutablePublicationFile,
 } from "./files.js";
 
-function packageArtifact(directory, output, expected, version, environment) {
+function prepareNpmInput(directory, output, expected, environment) {
+  if (expected.path.endsWith(".tgz")) {
+    const tarballPath = publicationPath(directory, expected.path);
+    publicationFile(tarballPath);
+    const pkg = readNpmPackageJsonFromTarball(tarballPath);
+    return { tarballPath, name: pkg.name, version: pkg.version };
+  }
   const product = publicationPath(directory, expected.path, "directory");
-  const pack = packNpmArtifact({
+  return packNpmArtifact({
     cwd: product,
     env: createNativeChildEnvironment(environment),
     outputDirectory: output,
     ignoreScripts: true,
     registry: "https://registry.npmjs.org/",
   });
+}
+
+function packageArtifact(directory, output, expected, version, environment) {
+  const pack = prepareNpmInput(directory, output, expected, environment);
   const sealed = sealedPackResult({
     tarballPath: pack.tarballPath,
     integrity: pack.integrity,

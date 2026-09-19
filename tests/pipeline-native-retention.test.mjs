@@ -11,7 +11,9 @@ import { publicationFile } from "../packages/core/publication/pipeline/files.js"
 import { recordDigest } from "../packages/core/release/discussion/envelope.js";
 
 test("native result retention restores exact bytes and refuses corrupted or escaping evidence", async (t) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "native-retention-"));
+  const root = fs.mkdtempSync(
+    path.join(fs.realpathSync(os.tmpdir()), "native-retention-"),
+  );
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const input = path.join(root, "input");
   fs.mkdirSync(path.join(input, "payload"), { recursive: true });

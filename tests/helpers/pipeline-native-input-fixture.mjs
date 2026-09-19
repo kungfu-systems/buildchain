@@ -21,13 +21,7 @@ export function nativeInputFixture(t, app = false, configure = () => {}) {
   p.platforms = ["macos-arm64"];
   fs.mkdirSync(path.join(cwd, "dist"));
   fs.writeFileSync(path.join(cwd, "payload"), "unsigned product bytes\n");
-  execFileSync("tar", [
-    "-czf",
-    path.join(cwd, "dist/hello.tar.gz"),
-    "-C",
-    cwd,
-    "payload",
-  ]);
+  execFileSync("tar", ["-czf", "dist/hello.tar.gz", "payload"], { cwd });
   p.signing = [
     { artifact: "main", profile: "apple-developer-id", kind: "archive" },
   ];
