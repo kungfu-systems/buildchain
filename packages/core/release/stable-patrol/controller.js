@@ -22,7 +22,8 @@ function targetLinePrefix(branch) {
 
 function alphaRelease(release, prefix) {
   const version = text(release.tag_name).replace(/^v/, "");
-  return release.prerelease === true &&
+  return release.draft !== true &&
+    typeof release.prerelease === "boolean" &&
     version.startsWith(prefix) &&
     /^\d+\.\d+\.\d+-alpha\.\d+$/.test(version)
     ? {
