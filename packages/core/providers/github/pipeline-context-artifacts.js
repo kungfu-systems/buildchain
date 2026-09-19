@@ -143,7 +143,7 @@ export async function readPipelineContext(encoded, env, client = artifact) {
     // current workflow execution, including credentialless product build jobs.
     const downloaded = await client.downloadArtifact(reference.artifact.id, {
       path: directory,
-      expectedHash: reference.artifact.digest.slice(7),
+      expectedHash: reference.artifact.digest,
     });
     if (
       downloaded.digestMismatch ||

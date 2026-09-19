@@ -3,6 +3,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { createHash } from "node:crypto";
+import { createServer } from "node:http";
 import {
   readPipelineContext,
   writePipelineContext,
@@ -50,7 +52,7 @@ function fixture(t, schema = "buildchain.pipeline-publication-context/v1") {
       state.reads++;
       assert.equal(id, 123);
       assert.deepEqual(Object.keys(options).sort(), ["expectedHash", "path"]);
-      assert.equal(options.expectedHash, "b".repeat(64));
+      assert.equal(options.expectedHash, `sha256:${"b".repeat(64)}`);
       const bytes = state.corrupt
         ? Buffer.from(state.bytes.toString().replace('"4.1.3"', '"4.1.4"'))
         : state.bytes;
@@ -179,3 +181,85 @@ test("oversized inline input and retained material fail within explicit bounds",
   );
   assert.equal(f.state.bytes, null);
 });
+
+test(
+  "installed artifact SDK accepts the retained digest and rejects changed digests",
+  { timeout: 15000 },
+  async (t) => {
+    const f = fixture(t);
+    const reference = JSON.parse(
+      await writePipelineContext(f.value, f.env, f.client),
+    );
+    reference.artifact.digest = `sha256:${createHash("sha256").update(f.state.bytes).digest("hex")}`;
+    const calls = [];
+    const server = createServer(async (request, response) => {
+      calls.push(request.url);
+      if (request.url === "/context") {
+        response.writeHead(200, {
+          "Content-Type": "application/json",
+          "Content-Disposition": 'attachment; filename="context.json"',
+        });
+        response.end(f.state.bytes);
+        return;
+      }
+      const chunks = [];
+      for await (const chunk of request) chunks.push(chunk);
+      const body = JSON.parse(Buffer.concat(chunks));
+      assert.equal(body.workflow_run_backend_id, "fixture-run");
+      assert.equal(body.workflow_job_run_backend_id, "fixture-job");
+      response.setHeader("Content-Type", "application/json");
+      if (request.url.endsWith("/ListArtifacts")) {
+        assert.equal(body.id_filter, "123");
+        response.end(
+          JSON.stringify({
+            artifacts: [
+              {
+                workflowRunBackendId: "fixture-run",
+                workflowJobRunBackendId: "fixture-job",
+                databaseId: "123",
+                name: "context",
+              },
+            ],
+          }),
+        );
+      } else {
+        assert(request.url.endsWith("/GetSignedArtifactURL"));
+        response.end(
+          JSON.stringify({
+            signedUrl: `http://127.0.0.1:${server.address().port}/context`,
+          }),
+        );
+      }
+    });
+    await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+    t.after(
+      () =>
+        new Promise((resolve) => {
+          server.closeAllConnections();
+          server.close(resolve);
+        }),
+    );
+    const overrides = {
+      ACTIONS_RESULTS_URL: `http://127.0.0.1:${server.address().port}`,
+      ACTIONS_RUNTIME_TOKEN: `fixture.${Buffer.from(JSON.stringify({ scp: "Actions.Results:fixture-run:fixture-job" })).toString("base64url")}.fixture`,
+    };
+    for (const [key, value] of Object.entries(overrides)) {
+      const previous = process.env[key];
+      process.env[key] = value;
+      t.after(() => {
+        if (previous === undefined) delete process.env[key];
+        else process.env[key] = previous;
+      });
+    }
+    assert.deepEqual(
+      await readPipelineContext(JSON.stringify(reference), f.env),
+      f.value,
+    );
+    reference.artifact.digest = `sha256:${"0".repeat(64)}`;
+    await assert.rejects(
+      readPipelineContext(JSON.stringify(reference), f.env),
+      /archive or file inventory/u,
+    );
+    assert.equal(calls.filter((url) => url === "/context").length, 2);
+  },
+);
