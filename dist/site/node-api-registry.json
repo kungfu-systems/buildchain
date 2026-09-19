@@ -841,7 +841,7 @@
       ],
       "source": {
         "path": "packages/core/adoption/buildchain-kfd-claims.js",
-        "line": 530
+        "line": 532
       },
       "example": "import { createBuildchainKfd1Witness } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -928,7 +928,7 @@
       ],
       "source": {
         "path": "packages/core/adoption/buildchain-kfd-claims.js",
-        "line": 583
+        "line": 584
       },
       "example": "import { createBuildchainKfd3PrebuildWitness } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -957,7 +957,7 @@
       ],
       "source": {
         "path": "packages/core/adoption/buildchain-kfd-claims.js",
-        "line": 510
+        "line": 512
       },
       "example": "import { createBuildchainKfdClaimRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -986,7 +986,7 @@
       ],
       "source": {
         "path": "packages/core/adoption/buildchain-kfd-claims.js",
-        "line": 411
+        "line": 413
       },
       "example": "import { createBuildchainKfdSurfaceRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1010,7 +1010,7 @@
       ],
       "source": {
         "path": "packages/core/adoption/buildchain-kfd-claims.js",
-        "line": 226
+        "line": 228
       },
       "example": "import { createBuildchainPublicClaimDefinitions } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6129,7 +6129,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/buildchain-config.js",
-        "line": 1551
+        "line": 1532
       },
       "example": "import { discoverConfiguredDerivedVersionMaterial } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6162,7 +6162,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/buildchain-config.js",
-        "line": 1512
+        "line": 1493
       },
       "example": "import { discoverConfiguredVersionStateFiles } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6195,7 +6195,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/buildchain-config.js",
-        "line": 1456
+        "line": 1437
       },
       "example": "import { getLifecycleStage } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6224,7 +6224,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/buildchain-config.js",
-        "line": 575
+        "line": 556
       },
       "example": "import { getNativeDiagnosticsProfile } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6253,7 +6253,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/buildchain-config.js",
-        "line": 1460
+        "line": 1441
       },
       "example": "import { getPublishContract } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6282,7 +6282,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/buildchain-config.js",
-        "line": 362
+        "line": 343
       },
       "example": "import { getStableReleasePolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6311,7 +6311,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/buildchain-config.js",
-        "line": 1584
+        "line": 1565
       },
       "example": "import { getVersionStrategy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6333,7 +6333,7 @@
       ],
       "returns": "unknown",
       "errors": [
-        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
       ],
       "sideEffects": [
         "none-detected-by-static-source-scan"
@@ -6373,7 +6373,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/buildchain-config.js",
-        "line": 1593
+        "line": 1574
       },
       "example": "import { loadConfiguredAnchorManifest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6402,7 +6402,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/buildchain-config.js",
-        "line": 206
+        "line": 187
       },
       "example": "import { normalizeBuildchainConfig } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6439,7 +6439,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/buildchain-config.js",
-        "line": 1417
+        "line": 1398
       },
       "example": "import { normalizeLifecycleStage } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6468,7 +6468,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/buildchain-config.js",
-        "line": 1464
+        "line": 1445
       },
       "example": "import { runLifecycleStage } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6501,7 +6501,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/buildchain-config.js",
-        "line": 1764
+        "line": 1745
       },
       "example": "import { updateConfiguredVersionStateContents } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6534,7 +6534,7 @@
       ],
       "source": {
         "path": "packages/core/consumer/buildchain-config.js",
-        "line": 1631
+        "line": 1612
       },
       "example": "import { validateBuildchainConfig } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12184,7 +12184,7 @@
       ],
       "source": {
         "path": "packages/core/governance/buildchain-publication-authority.js",
-        "line": 65
+        "line": 50
       },
       "example": "import { buildchainPublicationAuthorityDescriptors } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12213,7 +12213,7 @@
       ],
       "source": {
         "path": "packages/core/governance/buildchain-publication-authority.js",
-        "line": 104
+        "line": 89
       },
       "example": "import { createBuildchainPublicationAuthorityRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12773,7 +12773,7 @@
       ],
       "source": {
         "path": "packages/core/governance/github-governance-authority.js",
-        "line": 1359
+        "line": 1360
       },
       "example": "import { BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -12797,7 +12797,7 @@
       ],
       "source": {
         "path": "packages/core/governance/github-governance-authority.js",
-        "line": 1361
+        "line": 1362
       },
       "example": "import { BUILDCHAIN_GITHUB_GOVERNANCE_PROTECTED_PATHS } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14290,7 +14290,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 446
+        "line": 438
       },
       "example": "import { aggregateControllerReceipts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14415,7 +14415,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 145
+        "line": 137
       },
       "example": "import { controllerEvidenceDigest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14444,7 +14444,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 285
+        "line": 277
       },
       "example": "import { createControllerPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14473,7 +14473,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 361
+        "line": 353
       },
       "example": "import { createControllerReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14502,7 +14502,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 488
+        "line": 480
       },
       "example": "import { createControllerReceiptReference } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14531,7 +14531,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 191
+        "line": 183
       },
       "example": "import { createControllerRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14560,7 +14560,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 527
+        "line": 519
       },
       "example": "import { normalizeControllerReceiptReferences } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14589,7 +14589,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 323
+        "line": 315
       },
       "example": "import { validateControllerPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14622,7 +14622,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 421
+        "line": 413
       },
       "example": "import { validateControllerReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14655,7 +14655,7 @@
       ],
       "source": {
         "path": "packages/core/observability/controller-evidence.js",
-        "line": 502
+        "line": 494
       },
       "example": "import { validateControllerReceiptReference } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -15895,7 +15895,7 @@
       ],
       "source": {
         "path": "packages/core/paper/operations/bootstrap.js",
-        "line": 47
+        "line": 48
       },
       "example": "import { executePaperNpmBootstrap } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19237,7 +19237,7 @@
       ],
       "source": {
         "path": "packages/core/publication/publication-reproducibility.js",
-        "line": 11
+        "line": 12
       },
       "example": "import { PUBLICATION_REPRODUCIBILITY_RECEIPT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19437,6 +19437,64 @@
         "line": 91
       },
       "example": "import { decideChannelCandidate } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release/discussion/reader.js#discussionStatus",
+      "name": "discussionStatus",
+      "kind": "function",
+      "signature": "function discussionStatus(state)",
+      "parameters": [
+        {
+          "name": "state",
+          "signature": "state"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release/discussion/reader.js",
+        "line": 155
+      },
+      "example": "import { discussionStatus } from \"@kungfu-tech/buildchain/release-discussion-reader\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/release/discussion/reader.js#readReleaseDiscussion",
+      "name": "readReleaseDiscussion",
+      "kind": "function",
+      "signature": "function readReleaseDiscussion({ body, records })",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ body, records }"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release/discussion/reader.js",
+        "line": 11
+      },
+      "example": "import { readReleaseDiscussion } from \"@kungfu-tech/buildchain/release-discussion-reader\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -19990,7 +20048,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 343
+        "line": 344
       },
       "example": "import { advanceNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20023,7 +20081,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 304
+        "line": 305
       },
       "example": "import { bindNextDevelopmentAnchor } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20052,7 +20110,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 252
+        "line": 253
       },
       "example": "import { createNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20081,7 +20139,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 471
+        "line": 472
       },
       "example": "import { materializeNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20105,7 +20163,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 20
+        "line": 21
       },
       "example": "import { NEXT_DEVELOPMENT_ADR } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20129,7 +20187,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 22
+        "line": 23
       },
       "example": "import { NEXT_DEVELOPMENT_INVARIANT } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20153,7 +20211,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 18
+        "line": 19
       },
       "example": "import { NEXT_DEVELOPMENT_REQUEST_CONTRACT } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20177,7 +20235,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 24
+        "line": 25
       },
       "example": "import { NEXT_DEVELOPMENT_STATES } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20201,7 +20259,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 16
+        "line": 17
       },
       "example": "import { NEXT_DEVELOPMENT_TRANSITION_CONTRACT } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20225,7 +20283,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 32
+        "line": 33
       },
       "example": "import { NEXT_DEVELOPMENT_VERSION_MODELS } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20254,7 +20312,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 63
+        "line": 64
       },
       "example": "import { nextDevelopmentRoot } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -20287,7 +20345,7 @@
       ],
       "source": {
         "path": "packages/core/release/next-development-transition.js",
-        "line": 415
+        "line": 416
       },
       "example": "import { recordNextDevelopmentMaterialization } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -27914,7 +27972,7 @@
       "specifier": "@kungfu-tech/buildchain/controller-evidence",
       "export": "./controller-evidence",
       "target": "./packages/core/observability/controller-evidence.js",
-      "digest": "sha256:81d609cbb09d542498235b08e8d0a09ed677d365a928b5b6399c8d00893ff5cf",
+      "digest": "sha256:a5962561d88b70284116c4877e1598d7cbd3e3fcda92eb8f1225dfe84890094b",
       "summary": "Project-independent controller descriptors, source/runtime-bound plans, receipts, aggregates, and validation APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -28923,7 +28981,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-reproducibility",
       "export": "./publication-reproducibility",
       "target": "./packages/core/publication/publication-reproducibility.js",
-      "digest": "sha256:d027569bed07f6136d20cbcafe289f55ef04493ab680f7dbfc8b7e097fbdee11",
+      "digest": "sha256:2ade464bb70d65afde351cceefa5d8989477a081ba9a82552723d061500332e6",
       "summary": "Two-clean-build publication byte reproducibility receipt APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -29069,7 +29127,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/governance/buildchain-publication-authority.js",
-      "digest": "sha256:e1ebc4de808346fbb24358e7910508d5b2452f348b672ed32eff3d2195fb9d2f",
+      "digest": "sha256:3913adeed87ec92822a912d2a54fb5623fc7bdf0fe0bd40956b6e5588f98bd6e",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -29093,7 +29151,7 @@
       "specifier": "@kungfu-tech/buildchain/github-governance-authority",
       "export": "./github-governance-authority",
       "target": "./packages/core/governance/github-governance-authority.js",
-      "digest": "sha256:78a4a33e1791d97de21d31f24d1aaf1e10a9cc17090c25f025c9d48e66b1bd61",
+      "digest": "sha256:47a6a89126c626722761ed6e682e0c16a3bbd851463d24fbcc7082f1edc948d9",
       "summary": "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -29336,7 +29394,7 @@
       "specifier": "@kungfu-tech/buildchain/next-development-transition",
       "export": "./next-development-transition",
       "target": "./packages/core/release/next-development-transition.js",
-      "digest": "sha256:326f5c9478e0f17d292c95445c460d02665046e7c4924c20a614e349f2e9d634",
+      "digest": "sha256:8a2438fa640517f007efc643f1878fc6fb382ba3f9a01c61d3929fdd91bab9f6",
       "summary": "Provider-neutral completed-Alpha preservation and rooted next-development state, version-model, idempotency, and local materialization APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -29722,7 +29780,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/adoption/buildchain-kfd-claims.js",
-      "digest": "sha256:6655f2c6a891f3c62a5577aee2b1ecff6e40dbc4ba5f2f566a0db8326e4e5967",
+      "digest": "sha256:42da36e3dd17fc034b3d1f05b4115b0feeb484953dad197915ade993e936cc79",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -30009,6 +30067,30 @@
       "deprecationReplacement": "",
       "sunsetCondition": "explicit-contract-change-review",
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/release-discussion-reader",
+      "export": "./release-discussion-reader",
+      "target": "./packages/core/release/discussion/reader.js",
+      "digest": "sha256:da8d3bfc6ba04130df6e894fc28ef4786eae322d8db874f87080429aab382b81",
+      "summary": "Standalone historical decoder for append-only release Discussion intent, attempt lineage and recovery handoff.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 2,
+      "symbolIds": [
+        "packages/core/release/discussion/reader.js#discussionStatus",
+        "packages/core/release/discussion/reader.js#readReleaseDiscussion"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     }
   ],
   "docs": [
@@ -30020,7 +30102,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:ba1b9db61750646d507f086f0f267965a94b6c1276ab6d9f958ca4645b2a5073"
+      "digest": "sha256:5c00176bff01621ea48e2d35fbea8c34810963eda6a7413a1819ca3fae529f6c"
     },
     {
       "id": "build-facts",

@@ -3,6 +3,10 @@ description:
   Heartbeat the admitted Warrant until the exact native execution and seal
   jobs are terminal.
 inputs:
+  pipeline-attempt:
+    description: Internally selected business attempt checked before each renewal.
+    required: false
+    default: ""
   runtime-sha:
     description: Immutable admitted runtime commit
     required: true

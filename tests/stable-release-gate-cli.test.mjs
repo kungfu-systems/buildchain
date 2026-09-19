@@ -35,6 +35,7 @@ function workspace() {
     ],
   }));
   fs.writeFileSync(path.join(cwd, ".buildchain/release-impact.json"), JSON.stringify({
+    release: { version: "2.12.0-alpha.0" },
     summary: "Adds the stable release gate.",
     surfaceImpacts: [{ id: "stable-release-gate", impact: "patch" }],
   }));

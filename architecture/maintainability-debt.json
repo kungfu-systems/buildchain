@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 38852,
-    "current": 30791
+    "measuredExcess": 38590,
+    "current": 30529
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -32,13 +32,16 @@
           "functions": {
             "createBuildchainPublicClaimDefinitions@226": {
               "lines": 184
+            },
+            "createBuildchainPublicClaimDefinitions@228": {
+              "lines": 184
             }
           }
         },
         "current": {
           "lines": 733,
           "functions": {
-            "createBuildchainPublicClaimDefinitions@226": {
+            "createBuildchainPublicClaimDefinitions@228": {
               "lines": 184
             }
           }
@@ -47,6 +50,9 @@
           "lines": 600,
           "functions": {
             "createBuildchainPublicClaimDefinitions@226": {
+              "lines": 180
+            },
+            "createBuildchainPublicClaimDefinitions@228": {
               "lines": 180
             }
           }
@@ -321,7 +327,7 @@
           "lines": 1887
         },
         "current": {
-          "lines": 1825
+          "lines": 1806
         },
         "target": {
           "lines": 600
@@ -499,7 +505,7 @@
           }
         },
         "current": {
-          "lines": 1362,
+          "lines": 1363,
           "functions": {
             "evaluateGithubGovernanceSnapshot@695": {
               "lines": 189,
@@ -1203,7 +1209,7 @@
           "lines": 1515
         },
         "current": {
-          "lines": 1322
+          "lines": 1259
         },
         "target": {
           "lines": 600
@@ -1547,7 +1553,7 @@
           "lines": 714
         },
         "current": {
-          "lines": 609
+          "lines": 607
         },
         "target": {
           "lines": 600
@@ -1602,13 +1608,16 @@
             },
             "<anonymous@1402>@1402": {
               "lines": 206
+            },
+            "<anonymous@1377>@1377": {
+              "lines": 206
             }
           }
         },
         "current": {
-          "lines": 2561,
+          "lines": 2531,
           "functions": {
-            "<anonymous@1402>@1402": {
+            "<anonymous@1377>@1377": {
               "lines": 206
             }
           }
@@ -1624,6 +1633,9 @@
             },
             "<anonymous@1402>@1402": {
               "lines": 180
+            },
+            "<anonymous@1377>@1377": {
+              "lines": 180
             }
           }
         }
@@ -1638,7 +1650,7 @@
           }
         },
         "current": {
-          "lines": 1514
+          "lines": 1448
         },
         "target": {
           "lines": 600,
@@ -1697,10 +1709,10 @@
           }
         },
         "current": {
-          "lines": 1002,
+          "lines": 992,
           "functions": {
             "<anonymous@426>@426": {
-              "lines": 577
+              "lines": 567
             }
           }
         },
@@ -1813,14 +1825,17 @@
             },
             "<anonymous@814>@814": {
               "lines": 205
+            },
+            "<anonymous@829>@829": {
+              "lines": 205
             }
           }
         },
         "current": {
-          "lines": 1133,
+          "lines": 1124,
           "functions": {
-            "<anonymous@814>@814": {
-              "lines": 205
+            "<anonymous@829>@829": {
+              "lines": 181
             }
           }
         },
@@ -1831,6 +1846,9 @@
               "lines": 180
             },
             "<anonymous@814>@814": {
+              "lines": 180
+            },
+            "<anonymous@829>@829": {
               "lines": 180
             }
           }
@@ -1852,7 +1870,7 @@
           "lines": 916
         },
         "current": {
-          "lines": 831
+          "lines": 827
         },
         "target": {
           "lines": 600
@@ -1874,7 +1892,7 @@
           }
         },
         "current": {
-          "lines": 702,
+          "lines": 698,
           "functions": {
             "<anonymous@221>@221": {
               "lines": 229
@@ -2121,7 +2139,7 @@
           "lines": 773
         },
         "current": {
-          "lines": 770
+          "lines": 749
         },
         "target": {
           "lines": 600
@@ -2208,17 +2226,6 @@
           "lines": 600,
           "jobs": 8
         }
-      },
-      ".github/workflows/self-ops-bootstrap-dogfood.yml": {
-        "baseline": {
-          "jobs": 9
-        },
-        "current": {
-          "jobs": 9
-        },
-        "target": {
-          "jobs": 8
-        }
       }
     }
   },
@@ -2232,7 +2239,6 @@
     "tests/dev-delivery-minimal-request.test.mjs",
     "tests/build-configuration.test.mjs",
     ".github/workflows/build.yml",
-    ".github/workflows/self-build-fixture.yml",
     "scripts/generate-channel-promotion-workflow.mjs",
     "tests/github-governance-authority.test.mjs",
     "tests/maintainability.test.mjs",
@@ -2243,8 +2249,19 @@
     ".github/workflows/public-build-stage-capsule-canary.yml",
     ".github/workflows/public-release-oci-compose-preview.yml",
     ".github/workflows/public-release-promote.yml",
-    ".github/workflows/self-build-verify.yml",
-    ".github/workflows/self-release-promote.yml"
+    ".github/workflows/.release-binary-assets.yml",
+    ".github/workflows/public-ops-dev-auto-merge.yml",
+    "tests/release-topology.test.mjs",
+    "scripts/check-release-topology.mjs",
+    "packages/core/governance/buildchain-publication-authority.js",
+    "scripts/check-universal-workflow-bootstrap.mjs",
+    "packages/core/providers/github/discussions/materials.js",
+    "tests/controller-evidence.test.mjs",
+    "tests/floating-consumer-policy-contract.test.mjs",
+    "tests/macos-credential-island.test.mjs",
+    "tests/minimal-consumer-contract.test.mjs",
+    "tests/native-artifact-signing-authority.test.mjs",
+    "tests/workflow-taxonomy.test.mjs"
   ],
   "burnDownSlices": [
     {
@@ -2252,7 +2269,7 @@
       "path": "tests/build-surface.test.mjs",
       "metric": "lines",
       "baseline": 4639,
-      "current": 1514
+      "current": 1448
     }
   ]
 }

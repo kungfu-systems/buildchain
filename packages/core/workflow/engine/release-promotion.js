@@ -6,9 +6,10 @@ import { planReleaseRoute } from "../../release/release-invocation.js";
 import { selectRecoveredProductPublicationVersion } from "../universal-workflow-bootstrap.js";
 import { assertDeclarativePromotionInputs } from "../../publication/publication-qualification.js";
 import { normalizePromotionRequest } from "../../release/promotion-request.js";
-import { resolveReleaseCandidateArtifacts } from "../../release/candidate/resolve.js";
+import { qualifyPromotionCandidate } from "../../release/promotion/candidate.js";
 import { materializePublicationIntent } from "../../release/candidate/publication-intent.js";
-import { promoteReleaseCandidate } from "../../release/promote-candidate/transaction.js";
+import { publishWithDiscussion } from "../../release/discussion/publication.js";
+import { selectedRecordRuntime } from "../../release/discussion/session.js";
 import {
   observeReleaseRoute,
   observedSourceTimestamp,
@@ -34,7 +35,9 @@ async function materializeProductPublicationIntent(
   const version = String(
     candidate.publicationVersion || candidate.version || "",
   ).trim();
-  const explicitResume = String(inputs["resume-transaction-id"] || "") !== "";
+  const explicitResume = Boolean(
+    inputs["resume-transaction-id"] || inputs["resume-discussion-id"],
+  );
   const recovery =
     route.decision !== "Resume" || explicitResume
       ? {}
@@ -45,14 +48,16 @@ async function materializeProductPublicationIntent(
           route.channel,
           context,
         );
-  const recoveredVersion = selectRecoveredProductPublicationVersion({
-    routeDecision: route.decision,
-    candidateVersion: version,
-    channel: route.channel,
-    requestedSha: route.requestedSha,
-    explicitResume,
-    ...recovery,
-  });
+  const recoveredVersion = inputs["resume-discussion-id"]
+    ? version
+    : selectRecoveredProductPublicationVersion({
+        routeDecision: route.decision,
+        candidateVersion: version,
+        channel: route.channel,
+        requestedSha: route.requestedSha,
+        explicitResume,
+        ...recovery,
+      });
   materializePublicationIntent({
     repository,
     channel: route.channel,
@@ -128,24 +133,21 @@ export async function executeReleasePromotion(request, admission, context) {
   prepareReleaseConsumerDependencies();
   if (payload.inputs["trusted-publishing"] === true)
     prepareTrustedPublishingNpm();
-  const candidate = await resolveReleaseCandidateArtifacts({
+  const candidate = await qualifyPromotionCandidate({
+    request: payload.inputs,
+    intent: {
+      "target-ref": route.targetRef,
+      "requested-sha": route.requestedSha,
+      channel: route.channel,
+    },
     repository,
-    targetRef: route.targetRef,
-    targetSha: route.requestedSha,
     token: context.token,
     apiUrl: context.apiUrl,
-    workflowFile: payload.inputs["release-candidate-workflow-file"],
-    workflowName: payload.inputs["release-candidate-workflow-name"],
-    artifactName: payload.inputs["artifact-name"],
-    artifactPatterns: payload.inputs["artifact-patterns"],
-    githubReleasePayloadPatterns:
-      payload.inputs["github-release-payload-patterns"],
-    requiredArtifactCount: payload.inputs["required-artifact-count"],
-    publishArtifactKind: payload.inputs["publish-artifact-kind"],
-    publishPackageMain: payload.inputs["publish-package-main"],
     runtimeSha: admission.runtime.sha,
-    outputDir: ".buildchain/release-candidate",
-    waitSeconds: payload.inputs["release-candidate-wait-seconds"],
+    runtimeRoot: context.runtimeRoot,
+    recoveryRunId: context.runId,
+    recoveryRunAttempt: context.runAttempt,
+    outputDir: path.resolve(".buildchain/release-candidate"),
   });
   if (!candidate.enabled)
     fail(candidate.reason || "release candidate is unavailable");
@@ -203,12 +205,22 @@ export async function executeReleasePromotion(request, admission, context) {
     "publish-transaction-override":
       payload.inputs["publish-transaction-override"],
     "resume-transaction-id": payload.inputs["resume-transaction-id"],
+    "resume-discussion-id": payload.inputs["resume-discussion-id"],
+    "standalone-binary-distribution":
+      payload.inputs["standalone-binary-distribution"],
     "artifact-paths": candidate.paths.releaseAssets,
     "state-path": ".buildchain/release-tail/state.json",
     "failure-after-capability":
       payload.inputs["provider-failure-after-capability"],
   };
-  const provider = await promoteReleaseCandidate(publicationRequest, {
+  const provider = await publishWithDiscussion(publicationRequest, {
+    runtime: selectedRecordRuntime({
+      BUILDCHAIN_RUNTIME_SELECTION: context.runtimeSelection,
+      BUILDCHAIN_RUNTIME_ROOT: context.runtimeRoot,
+    }),
+    workspace: process.cwd(),
+    runtimeRoot: context.runtimeRoot,
+    attempt: `${context.runId}:${context.runAttempt || "1"}:bootstrap`,
     octokit: context.octokit,
     mutationOctokit: context.mutationOctokit,
     actor: context.actor,

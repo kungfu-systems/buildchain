@@ -37,6 +37,7 @@ runs:
         token: ${{ inputs.github-token || github.token }}
         lease-seconds: ${{ fromJSON(inputs.request-json).warrant-lease-seconds }}
         heartbeat-seconds: ${{ fromJSON(inputs.request-json).native-heartbeat-seconds }}
+        pipeline-attempt: ${{ fromJSON(inputs.request-json).pipeline-attempt }}
     - name: Upload rooted provider heartbeat receipt
       if: ${{ success() }}
       uses: actions/upload-artifact@v7.0.1

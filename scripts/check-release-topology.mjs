@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
+import { assertPipelinePublicationTopology } from "./check-pipeline-publication-topology.mjs";
 import { inspectWorkflowJob, readWorkflow } from "./workflow-action-graph.mjs";
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -28,6 +29,8 @@ const PRIVILEGED_ENTRYPOINTS = [
   "packages/core/release/next-development/actions.js",
   "packages/core/publication/oci/preview-actions.js",
   "packages/core/publication/settlement/actions.js",
+  "packages/core/publication/pipeline/actions.js",
+  "packages/core/publication/pipeline/version-actions.js",
 ];
 
 export function localModuleSpecifiers(source) {
@@ -150,7 +153,9 @@ export function discoverReleaseAuthorityClosure() {
     [".js", ".mjs", ".cjs"],
     /(?:release-tail-provider-(?:adapters|plane)|create(?:GitHubReleaseAssets|SignedStaticChannel|SiteReleaseActivation|ReleasedEvidence)Adapter)/u,
   );
-  const runtimeSelectors = productionFiles("packages/core/runtime/entry", [".js"]).sort();
+  const runtimeSelectors = productionFiles("packages/core/runtime/entry", [
+    ".js",
+  ]).sort();
   const terminalProjections = matchingProductionFiles(
     [".github/workflows", "actions", "packages/core", "scripts"],
     [".yml", ".yaml", ".js", ".mjs", ".cjs"],
@@ -181,7 +186,10 @@ export function discoverReleaseAuthorityClosure() {
       ]),
     ].sort(),
     runtimeSelectors,
-    runtimeEngines: ["packages/core/release/promote-candidate/action.js"],
+    runtimeEngines: [
+      "packages/core/release/promote-candidate/action.js",
+      "packages/core/publication/pipeline/apply.js",
+    ],
     terminalProjections,
     privilegedExecutableClosure: {
       entrypoints: PRIVILEGED_ENTRYPOINTS,
@@ -377,7 +385,7 @@ export function findUnknownReleaseTopology(
     .filter((relative) => {
       const source = readWorkflow(relative);
       const usesReleaseAuthority = parseYamlUses(source).some(({ value }) =>
-        /(?:release-candidate-promote|promote-buildchain-ref|release-tail|actions\/release\/promotion\/(?:candidate|ref)|\.github\/workflows\/(?:public-release-promote|\.release-promote))/u.test(
+        /(?:release-candidate-promote|promote-buildchain-ref|release-tail|actions\/release\/promotion\/(?:candidate|ref)|\.github\/workflows\/(?:public-release-promote|\.release-promote|public-ops-pipeline|public-ops-recover|\.release-pipeline-products))/u.test(
           value,
         ),
       );
@@ -456,14 +464,12 @@ function assertAuthorityClosure(ledger) {
   );
   assert.deepEqual(closure.runtimeEngines, [
     "packages/core/release/promote-candidate/action.js",
+    "packages/core/publication/pipeline/apply.js",
   ]);
-  assert.equal(
-    closure.freshEntry,
-    ".github/workflows/public-release-promote.yml",
-  );
+  assert.equal(closure.freshEntry, ".github/workflows/public-ops-pipeline.yml");
   assert.equal(
     closure.recoveryEntry,
-    ".github/workflows/self-ops-promotion-recovery.yml",
+    ".github/workflows/public-ops-recover.yml",
   );
   const engineSurface = [
     ".github/workflows/.release-promote.yml",
@@ -523,6 +529,7 @@ export function checkReleaseTopology() {
   assert.equal(ledger.contract, "kungfu-buildchain-v4-release-topology/v1");
   assertClosedWorld(ledger.closedWorld.workflowPaths);
   assertAuthorityClosure(ledger);
+  assertPipelinePublicationTopology(ledger, discoverReleaseTopology, root);
   const preview = ledger.postPublicationScope;
   assert.deepEqual(preview.workflowPaths, [
     ".github/workflows/public-release-oci-compose-preview.yml",

@@ -1,45 +1,38 @@
 import { resolveRecoverySource } from "./recovery.js";
 import { getOctokit } from "@actions/github";
 import { runtimeEntryProvider } from "./github.js";
+import { resolveRuntimeActionSource } from "./source.js";
 import {
   preparedRuntimeSelection,
   selectExecutionRuntime,
 } from "./selection.js";
+import { selectAttemptRecoveryRuntime } from "./attempt.js";
 
 export async function selectExecutionRuntimeAction(
   core,
   env,
-  { providerFactory = runtimeEntryProvider, githubFactory = getOctokit } = {},
+  {
+    providerFactory = runtimeEntryProvider,
+    githubFactory = getOctokit,
+    pipelineLookup,
+  } = {},
 ) {
   const retained = core.getInput("selection");
   const transport = retained
     ? preparedRuntimeSelection(JSON.parse(retained))
     : undefined;
   const github = githubFactory(core.getInput("token", { required: true }));
-  let source = {
-    repository: core.getInput("source-repository") || env.GITHUB_REPOSITORY,
-    sha: core.getInput("source-sha") || env.GITHUB_SHA,
-    ref: env.GITHUB_REF,
-  };
-  const resumeRunId = core.getInput("resume-run-id");
-  if (resumeRunId) {
-    const reader = providerFactory(github, {
-      sourceRepository: source.repository,
-      sourceSha: source.sha,
-      actor: env.GITHUB_ACTOR,
-      eventName: env.GITHUB_EVENT_NAME,
-    });
-    await reader.authorize({ origin: "runtime-parameter" });
-    source = await resolveRecoverySource(
-      {
-        repository: source.repository,
-        runId: resumeRunId,
-        currentRunId: env.GITHUB_RUN_ID,
-        workflow: env.GITHUB_WORKFLOW_REF?.slice(source.repository.length + 1),
-      },
-      reader.readRun,
-    );
-  }
+  const {
+    source: resolvedSource,
+    continuation,
+    resumeRunId,
+    pipelineAttempt,
+  } = await resolveRuntimeActionSource(core, env, {
+    providerFactory,
+    github,
+    pipelineLookup,
+  });
+  let source = resolvedSource;
   const provider = providerFactory(github, {
     sourceRepository: source.repository,
     sourceSha: source.sha,
@@ -91,6 +84,15 @@ export async function selectExecutionRuntimeAction(
       selection.source?.sha !== source.sha
     )
       throw new Error("Runtime transport changed the admitted consumer source");
+  } else if (continuation?.recovery && (!runtimeRef || pipelineAttempt)) {
+    if (runtimeRef)
+      throw new Error(
+        "An admitted recovery runtime can change only through a new recovery attempt",
+      );
+    selection = await selectAttemptRecoveryRuntime(
+      continuation.recovery,
+      provider,
+    );
   } else {
     selection = await selectExecutionRuntime(
       {

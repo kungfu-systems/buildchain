@@ -29,6 +29,7 @@ export async function observeReleaseRoute(
     targetRef,
     dryRun: inputs["dry-run"] === true,
     resume:
+      Boolean(inputs["resume-discussion-id"]) ||
       String(inputs["resume-candidate-run-id"] || "") !== "" ||
       inputs["publish-transaction-override"] === true,
   });

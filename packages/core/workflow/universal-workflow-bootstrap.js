@@ -22,6 +22,7 @@ const PERMISSIONS = new Set([
   "checks",
   "contents",
   "deployments",
+  "discussions",
   "id-token",
   "issues",
   "packages",

@@ -6,7 +6,10 @@ import {
 import { createReleaseInvocation } from "../../release/release-invocation.js";
 import { executeBootstrapConformance } from "./conformance.js";
 import { executeReleasePromotion } from "./release-promotion.js";
+import { executeReleaseDiscussion } from "../../release/discussion/qualification.js";
 async function capabilityResult(request, admission, context) {
+  if (request.capability.id === "release-discussion")
+    return executeReleaseDiscussion(request, admission, context);
   if (request.capability.id === "bootstrap-conformance")
     return executeBootstrapConformance(request, admission, context);
   if (request.capability.id === "release-invocation") {
@@ -61,7 +64,8 @@ export async function executeAdmittedWorkflow(request, admission, context) {
 
 export function assertResultLineage(admission, result) {
   const { resultRoot, ...body } = result || {};
-  if (resultRoot !== contentRoot("universal-workflow-result", body)) fail("candidate result root mismatch");
+  if (resultRoot !== contentRoot("universal-workflow-result", body))
+    fail("candidate result root mismatch");
   if (
     result?.schema !== "kungfu-buildchain-v4-universal-workflow-result/v1" ||
     result.requestRoot !== admission.requestRoot ||

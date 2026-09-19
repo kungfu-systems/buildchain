@@ -1,3 +1,4 @@
+import { recoverDiscussionCandidate } from "../discussion/recovery.js";
 import { resolveReleaseCandidateArtifacts } from "../candidate/resolve.js";
 import { resumeFromCandidateRun } from "../recovery/candidate.js";
 export async function qualifyPromotionCandidate(
@@ -16,6 +17,7 @@ export async function qualifyPromotionCandidate(
   {
     fresh = resolveReleaseCandidateArtifacts,
     recover = resumeFromCandidateRun,
+    recoverDiscussion = recoverDiscussionCandidate,
   } = {},
 ) {
   const shared = {
@@ -29,6 +31,15 @@ export async function qualifyPromotionCandidate(
     runtimeSha,
     outputDir,
   };
+  if (request["resume-discussion-id"])
+    return recoverDiscussion({
+      discussionId: request["resume-discussion-id"],
+      repository,
+      token,
+      outputDir,
+      targetSha: intent["requested-sha"],
+      targetRef: intent["target-ref"],
+    });
   if (request["resume-candidate-run-id"])
     return recover({
       ...shared,
@@ -52,8 +63,6 @@ export async function qualifyPromotionCandidate(
       runtimeRoot,
       recoveryRunId,
       recoveryRunAttempt,
-
-
     });
   return fresh({
     ...shared,

@@ -4,9 +4,9 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 67,
-    "actionCount": 265,
-    "sitePageCount": 93,
+    "workflowCount": 44,
+    "actionCount": 283,
+    "sitePageCount": 94,
     "docCommandRefCount": 1036,
     "failureCount": 0
   },
@@ -745,6 +745,40 @@
         "outputCount": 0
       },
       {
+        "id": ".ops-pipeline-delivery",
+        "path": ".github/workflows/.ops-pipeline-delivery.yml",
+        "reusable": true,
+        "inputs": [
+          "request",
+          "runtime-selection"
+        ],
+        "inputCount": 2,
+        "secrets": [
+          "BUILDCHAIN_AUTOMATION_TOKEN"
+        ],
+        "secretCount": 1,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": ".ops-pipeline-execute",
+        "path": ".github/workflows/.ops-pipeline-execute.yml",
+        "reusable": true,
+        "inputs": [
+          "attempt",
+          "context",
+          "matrix",
+          "operation",
+          "request",
+          "runtime-selection"
+        ],
+        "inputCount": 6,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
         "id": ".release-authority",
         "path": ".github/workflows/.release-authority.yml",
         "reusable": true,
@@ -832,6 +866,51 @@
         "outputCount": 0
       },
       {
+        "id": ".release-pipeline-products",
+        "path": ".github/workflows/.release-pipeline-products.yml",
+        "reusable": true,
+        "inputs": [
+          "attempt",
+          "runtime-selection"
+        ],
+        "inputCount": 2,
+        "secrets": [
+          "BUILDCHAIN_APP_PRIVATE_KEY",
+          "BUILDCHAIN_AUTOMATION_TOKEN",
+          "BUILDCHAIN_NPM_TOKEN"
+        ],
+        "secretCount": 3,
+        "outputs": [
+          "stable-wait"
+        ],
+        "outputCount": 1
+      },
+      {
+        "id": ".release-pipeline-version",
+        "path": ".github/workflows/.release-pipeline-version.yml",
+        "reusable": true,
+        "inputs": [
+          "context",
+          "matrix",
+          "operation",
+          "purpose",
+          "runtime-selection"
+        ],
+        "inputCount": 5,
+        "secrets": [
+          "BUILDCHAIN_APP_PRIVATE_KEY",
+          "BUILDCHAIN_AUTOMATION_TOKEN"
+        ],
+        "secretCount": 2,
+        "outputs": [
+          "context",
+          "matrix",
+          "operation",
+          "stable-wait"
+        ],
+        "outputCount": 4
+      },
+      {
         "id": ".release-promote",
         "path": ".github/workflows/.release-promote.yml",
         "reusable": true,
@@ -864,6 +943,8 @@
           "controller-receipt-digest",
           "controller-receipt-json",
           "controller-receipt-status",
+          "discussion-id",
+          "discussion-url",
           "github-artifact-attestation-evidence-root",
           "github-artifact-attestation-id",
           "github-artifact-attestation-publication-receipt-digest",
@@ -888,7 +969,7 @@
           "release-tail-transaction-state",
           "release-transaction-root"
         ],
-        "outputCount": 31
+        "outputCount": 33
       },
       {
         "id": "build",
@@ -917,6 +998,28 @@
           "result"
         ],
         "outputCount": 3
+      },
+      {
+        "id": "buildchain-recover",
+        "path": ".github/workflows/buildchain-recover.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "buildchain",
+        "path": ".github/workflows/buildchain.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
       },
       {
         "id": "public-build-adopter-qualification",
@@ -1182,7 +1285,9 @@
           "native-command",
           "native-command-root",
           "native-heartbeat-seconds",
+          "native-platform",
           "native-proof-json",
+          "pipeline-attempt",
           "plan-root",
           "project-cut-proof-json",
           "queue-admission-context",
@@ -1202,7 +1307,7 @@
           "toolchain-root",
           "warrant-lease-seconds"
         ],
-        "inputCount": 42,
+        "inputCount": 44,
         "secrets": [
           "github-token"
         ],
@@ -1452,6 +1557,33 @@
           "skipped-count"
         ],
         "outputCount": 5
+      },
+      {
+        "id": "public-ops-pipeline",
+        "path": ".github/workflows/public-ops-pipeline.yml",
+        "reusable": true,
+        "inputs": [
+          "config-path"
+        ],
+        "inputCount": 1,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "public-ops-recover",
+        "path": ".github/workflows/public-ops-recover.yml",
+        "reusable": true,
+        "inputs": [
+          "attempt",
+          "runtime-ref"
+        ],
+        "inputCount": 2,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
       },
       {
         "id": "public-ops-release-governance",
@@ -1740,6 +1872,8 @@
           "controller-receipt-digest",
           "controller-receipt-json",
           "controller-receipt-status",
+          "discussion-id",
+          "discussion-url",
           "github-artifact-attestation-evidence-root",
           "github-artifact-attestation-id",
           "github-artifact-attestation-publication-receipt-digest",
@@ -1775,7 +1909,7 @@
           "release-tail-transaction-state",
           "release-transaction-root"
         ],
-        "outputCount": 43
+        "outputCount": 45
       },
       {
         "id": "public-release-propagation",
@@ -1942,347 +2076,6 @@
           "web-surface-urls-json"
         ],
         "outputCount": 23
-      },
-      {
-        "id": "self-build-adopter-dogfood",
-        "path": ".github/workflows/self-build-adopter-dogfood.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-build-alpha-dogfood",
-        "path": ".github/workflows/self-build-alpha-dogfood.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-build-binary-distribution",
-        "path": ".github/workflows/self-build-binary-distribution.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-build-channel-verify",
-        "path": ".github/workflows/self-build-channel-verify.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-build-demo-dogfood",
-        "path": ".github/workflows/self-build-demo-dogfood.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-build-demo-media-qualification",
-        "path": ".github/workflows/self-build-demo-media-qualification.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-build-fixture",
-        "path": ".github/workflows/self-build-fixture.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-build-public-consumer-dogfood",
-        "path": ".github/workflows/self-build-public-consumer-dogfood.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-build-stable-candidate-qualification",
-        "path": ".github/workflows/self-build-stable-candidate-qualification.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-build-stable-dogfood",
-        "path": ".github/workflows/self-build-stable-dogfood.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-build-verify",
-        "path": ".github/workflows/self-build-verify.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-ops-bootstrap-dogfood",
-        "path": ".github/workflows/self-ops-bootstrap-dogfood.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-ops-dev-delivery",
-        "path": ".github/workflows/self-ops-dev-delivery.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-ops-governance-audit",
-        "path": ".github/workflows/self-ops-governance-audit.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-ops-housekeeping-daily",
-        "path": ".github/workflows/self-ops-housekeeping-daily.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-ops-housekeeping-monthly",
-        "path": ".github/workflows/self-ops-housekeeping-monthly.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-ops-housekeeping-weekly",
-        "path": ".github/workflows/self-ops-housekeeping-weekly.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-ops-merge-queue",
-        "path": ".github/workflows/self-ops-merge-queue.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-ops-patrol-daily",
-        "path": ".github/workflows/self-ops-patrol-daily.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-ops-patrol-monthly",
-        "path": ".github/workflows/self-ops-patrol-monthly.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-ops-patrol-weekly",
-        "path": ".github/workflows/self-ops-patrol-weekly.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-ops-promotion-recovery",
-        "path": ".github/workflows/self-ops-promotion-recovery.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-ops-runner-smoke",
-        "path": ".github/workflows/self-ops-runner-smoke.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-ops-stable-candidate-patrol",
-        "path": ".github/workflows/self-ops-stable-candidate-patrol.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-release-binary-assets",
-        "path": ".github/workflows/self-release-binary-assets.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-release-line-open",
-        "path": ".github/workflows/self-release-line-open.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-release-next-development",
-        "path": ".github/workflows/self-release-next-development.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-release-npm-dry-run",
-        "path": ".github/workflows/self-release-npm-dry-run.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-release-promote",
-        "path": ".github/workflows/self-release-promote.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-release-rehearsal-dogfood",
-        "path": ".github/workflows/self-release-rehearsal-dogfood.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-release-tail-dogfood",
-        "path": ".github/workflows/self-release-tail-dogfood.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
       }
     ],
     "actionInputs": [
@@ -3297,10 +3090,11 @@
           "branch",
           "heartbeat-seconds",
           "lease-seconds",
+          "pipeline-attempt",
           "runtime-sha",
           "token"
         ],
-        "inputCount": 5
+        "inputCount": 6
       },
       {
         "id": "dev-delivery/native/qualify-proof",
@@ -3354,9 +3148,10 @@
           "project-cut-proof-root",
           "request-json",
           "runtime-sha",
+          "status-token",
           "token"
         ],
-        "inputCount": 5
+        "inputCount": 6
       },
       {
         "id": "dev-delivery/queue/apply-policy",
@@ -4215,6 +4010,72 @@
         "inputCount": 2
       },
       {
+        "id": "publication/pipeline/apply",
+        "path": "actions/publication/pipeline/apply/action.yml",
+        "inputs": [
+          "context",
+          "token"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "publication/pipeline/build",
+        "path": "actions/publication/pipeline/build/action.yml",
+        "inputs": [
+          "context",
+          "platform"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "publication/pipeline/prepare",
+        "path": "actions/publication/pipeline/prepare/action.yml",
+        "inputs": [
+          "attempt",
+          "definition-sha",
+          "token"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "publication/pipeline/prepare-qualification",
+        "path": "actions/publication/pipeline/prepare-qualification/action.yml",
+        "inputs": [
+          "context",
+          "token"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "publication/pipeline/qualify",
+        "path": "actions/publication/pipeline/qualify/action.yml",
+        "inputs": [
+          "context",
+          "token"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "publication/pipeline/seal-qualification",
+        "path": "actions/publication/pipeline/seal-qualification/action.yml",
+        "inputs": [
+          "bundle-path",
+          "context",
+          "token"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "publication/pipeline/settle",
+        "path": "actions/publication/pipeline/settle/action.yml",
+        "inputs": [
+          "context",
+          "pr-token",
+          "token"
+        ],
+        "inputCount": 3
+      },
+      {
         "id": "publication/settlement/retain",
         "path": "actions/publication/settlement/retain/action.yml",
         "inputs": [
@@ -4233,6 +4094,35 @@
           "runtime-sha"
         ],
         "inputCount": 2
+      },
+      {
+        "id": "publication/version/build",
+        "path": "actions/publication/version/build/action.yml",
+        "inputs": [
+          "context",
+          "platform"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "publication/version/materialize-development",
+        "path": "actions/publication/version/materialize-development/action.yml",
+        "inputs": [
+          "context",
+          "pr-token",
+          "token"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "publication/version/materialize-publication",
+        "path": "actions/publication/version/materialize-publication/action.yml",
+        "inputs": [
+          "context",
+          "operation",
+          "token"
+        ],
+        "inputCount": 3
       },
       {
         "id": "release/binary/coordinates",
@@ -4435,6 +4325,7 @@
           "repository",
           "required-artifacts-path",
           "required-status-check",
+          "resume-discussion-id",
           "resume-transaction-id",
           "runtime-commit",
           "runtime-tree",
@@ -4442,12 +4333,13 @@
           "sealed-bundle-root",
           "source-sha",
           "stage-capsules-path",
+          "standalone-binary-distribution",
           "state-path",
           "target-ref",
           "target-sha",
           "token"
         ],
-        "inputCount": 32
+        "inputCount": 34
       },
       {
         "id": "release/promotion/classify",
@@ -4838,6 +4730,42 @@
         "inputCount": 11
       },
       {
+        "id": "release/transaction/inspect",
+        "path": "actions/release/transaction/inspect/action.yml",
+        "inputs": [
+          "session-json",
+          "token"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "release/transaction/open",
+        "path": "actions/release/transaction/open/action.yml",
+        "inputs": [
+          "discussion-id",
+          "dry-run",
+          "expected-nodes-json",
+          "intent-key",
+          "predecessor",
+          "source-json",
+          "token"
+        ],
+        "inputCount": 7
+      },
+      {
+        "id": "release/transaction/record",
+        "path": "actions/release/transaction/record/action.yml",
+        "inputs": [
+          "node",
+          "payload-json",
+          "sequence",
+          "session-json",
+          "status",
+          "token"
+        ],
+        "inputCount": 6
+      },
+      {
         "id": "runtime/dependencies/install",
         "path": "actions/runtime/dependencies/install/action.yml",
         "inputs": [
@@ -4869,6 +4797,8 @@
         "path": "actions/runtime/selection/resolve/action.yml",
         "inputs": [
           "contract-lock",
+          "pipeline-attempt",
+          "recovery-attempt",
           "resume-run-id",
           "runtime-ref",
           "selection",
@@ -4878,7 +4808,7 @@
           "workflow-ref",
           "workflow-sha"
         ],
-        "inputCount": 9
+        "inputCount": 11
       },
       {
         "id": "runtime/toolchain/user-paths",
@@ -5260,6 +5190,55 @@
         "inputCount": 3
       },
       {
+        "id": "workflow/pipeline/build",
+        "path": "actions/workflow/pipeline/build/action.yml",
+        "inputs": [
+          "context",
+          "platform"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "workflow/pipeline/control",
+        "path": "actions/workflow/pipeline/control/action.yml",
+        "inputs": [
+          "config-path",
+          "queue-token",
+          "token"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "workflow/pipeline/record-build",
+        "path": "actions/workflow/pipeline/record-build/action.yml",
+        "inputs": [
+          "context",
+          "token"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "workflow/pipeline/recover",
+        "path": "actions/workflow/pipeline/recover/action.yml",
+        "inputs": [
+          "attempt",
+          "definition-sha",
+          "queue-token",
+          "token"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "workflow/pipeline/wake",
+        "path": "actions/workflow/pipeline/wake/action.yml",
+        "inputs": [
+          "attempt",
+          "stable-wait",
+          "token"
+        ],
+        "inputCount": 3
+      },
+      {
         "id": "workflow/settlement/seal",
         "path": "actions/workflow/settlement/seal/action.yml",
         "inputs": [
@@ -5516,6 +5495,10 @@
       },
       {
         "id": "manual:release-candidate",
+        "category": "manual"
+      },
+      {
+        "id": "manual:release-discussions",
         "category": "manual"
       },
       {
@@ -10831,8 +10814,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "e43fdb0289df88871f3f0febbe04dcb9311a252a2b1df9b3a83a2d10c9d4a70f",
-    "workflowRegistryDigest": "cc99c356cdbf52e800e5ecc80d960998e5d453f14b78c4d87a7b8842cbe4db98",
-    "pageRegistryDigest": "db7e6d4ea151259ee3cfc863d9f928d77db783548788771097a94f148d5f9a0a"
+    "workflowRegistryDigest": "071f8c15fed251611c981d66e8961b74476bfdce7bd8a25e0c396e37947e2c47",
+    "pageRegistryDigest": "1e79a71c8f1d094ad1291b2d8b4bc983633245dcc104ae5ef7bae755fb733209"
   },
   "comparison": {
     "missingCliRegistry": [],

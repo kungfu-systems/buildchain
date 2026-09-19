@@ -20,11 +20,11 @@ for(const repository of ['kungfu-systems/buildchain','consumer/project'])test(`$
  for(const uses of [`./${workflow}`,`kungfu-systems/buildchain/${workflow}@${'a'.repeat(40)}`,`kungfu-systems/buildchain/${workflow}@train/v4/v4.1/repair`])assert.equal(f.scan(uses).ok,false,uses);
  fs.unlinkSync(path.join(f.root,'.buildchain/alpha-contract-lock.json'));assert.equal(f.scan().ok,false);
 });
-test('all self promotion callers use the same public API with a separate runtime parameter',()=>{
- for(const file of ['self-release-promote','self-release-tail-dogfood','self-ops-promotion-recovery']){
-  const wf=YAML.parse(fs.readFileSync(`.github/workflows/${file}.yml`,'utf8'));
-  const callers=Object.values(wf.jobs).filter(job=>job.uses===`kungfu-systems/buildchain/${workflow}@v4`);
-  assert.equal(callers.length,1,file);assert.ok(callers[0].with['request-json']);
-  assert.ok(Object.keys(callers[0].with).every(k=>['request-json','runtime-ref','contract-lock','runtime-selection'].includes(k)));
- }
+test('self normal and recovery callers expose only their generated public inputs',()=>{
+ const normal=YAML.parse(fs.readFileSync('.github/workflows/buildchain.yml','utf8'));
+ const recovery=YAML.parse(fs.readFileSync('.github/workflows/buildchain-recover.yml','utf8'));
+ assert.equal(normal.jobs.buildchain.uses,'kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha');
+ assert.equal(recovery.jobs.buildchain.uses,'kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4-alpha');
+ assert.deepEqual(Object.keys(normal.jobs.buildchain.with),['config-path']);
+ assert.deepEqual(Object.keys(recovery.jobs.buildchain.with),['attempt','runtime-ref']);
 });

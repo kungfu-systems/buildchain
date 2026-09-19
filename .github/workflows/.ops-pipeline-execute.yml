@@ -1,0 +1,139 @@
+name: Internal pipeline execution
+on:
+  workflow_call:
+    inputs:
+      operation:
+        type: string
+        required: true
+      runtime-selection:
+        type: string
+        required: true
+      context:
+        type: string
+        required: true
+      matrix:
+        type: string
+        required: true
+      request:
+        type: string
+        required: true
+      attempt:
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  build:
+    name: Build product (${{ matrix.platform }})
+    if: inputs.operation == 'build'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(inputs.matrix) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ inputs.runtime-selection }}
+          token: ${{ github.token }}
+      - uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ fromJSON(inputs.context).source.repository }}
+          ref: ${{ fromJSON(inputs.context).source.commit }}
+          path: .buildchain/product
+          persist-credentials: false
+      - uses: ./.buildchain/runtime/actions/workflow/pipeline/build
+        with:
+          context: ${{ inputs.context }}
+          platform: ${{ matrix.platform }}
+  record-build:
+    name: Record product build
+    needs: build
+    if: always() && (inputs.operation == 'build' || inputs.operation == 'qualify-build')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: write
+      checks: write
+      contents: write
+      discussions: write
+      statuses: write
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ inputs.runtime-selection }}
+          token: ${{ github.token }}
+      - uses: ./.buildchain/runtime/actions/workflow/pipeline/record-build
+        with:
+          context: ${{ inputs.context }}
+          token: ${{ github.token }}
+  delivery:
+    if: inputs.operation == 'deliver'
+    uses: ./.github/workflows/.ops-pipeline-delivery.yml
+    secrets:
+      BUILDCHAIN_AUTOMATION_TOKEN: ${{ secrets.BUILDCHAIN_AUTOMATION_TOKEN }}
+    with:
+      request: ${{ inputs.request }}
+      runtime-selection: ${{ inputs.runtime-selection }}
+    permissions:
+      actions: write
+      checks: read
+      contents: write
+      pull-requests: write
+      statuses: write
+  record-delivery:
+    name: Record delivery attempt
+    needs: delivery
+    if: always() && inputs.operation == 'deliver'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: write
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ inputs.runtime-selection }}
+          token: ${{ github.token }}
+      - uses: ./.buildchain/runtime/actions/workflow/pipeline/wake
+        with:
+          attempt: ${{ inputs.attempt }}
+          token: ${{ github.token }}
+  publication:
+    if: inputs.operation == 'publish'
+    uses: ./.github/workflows/.release-pipeline-products.yml
+    with:
+      attempt: ${{ inputs.attempt }}
+      runtime-selection: ${{ inputs.runtime-selection }}
+    secrets: inherit
+    permissions:
+      actions: write
+      contents: write
+      discussions: write
+      id-token: write
+      attestations: write
+      pull-requests: write
+  stable-recheck:
+    name: Recheck stable publication
+    needs: publication
+    if: always() && inputs.operation == 'publish' && needs.publication.result == 'success' && needs.publication.outputs.stable-wait != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    concurrency:
+      group: buildchain-stable-recheck-${{ github.repository }}-${{ inputs.attempt }}
+      cancel-in-progress: false
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ inputs.runtime-selection }}
+          token: ${{ github.token }}
+      - uses: ./.buildchain/runtime/actions/workflow/pipeline/wake
+        with:
+          attempt: ${{ inputs.attempt }}
+          stable-wait: ${{ needs.publication.outputs.stable-wait }}
+          token: ${{ github.token }}

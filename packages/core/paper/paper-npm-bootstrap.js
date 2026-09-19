@@ -20,6 +20,7 @@ function executePaperNpmBootstrap(options = {}, runtime) {
     path,
     resolvePaperRepository,
     safeParseJson,
+    readNpmPackResult,
     toPosix,
     validatePaperProvisioningAuthority,
     writePaperReceipt,
@@ -208,8 +209,7 @@ function executePaperNpmBootstrap(options = {}, runtime) {
           pack: {
             status: pack.ok ? "pass" : "fail",
             entryCount: (() => {
-              const parsed = safeParseJson(pack.stdout);
-              const value = Array.isArray(parsed) ? parsed[0] : parsed;
+              const value = pack.ok ? readNpmPackResult(pack.stdout) : null;
               return Array.isArray(value?.files) ? value.files.length : 0;
             })(),
           },

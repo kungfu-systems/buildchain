@@ -4,10 +4,22 @@ import os from "node:os";
 import path from "node:path";
 import crypto from "node:crypto";
 import test from "node:test";
+import { spawnSync } from "node:child_process";
+import { replaceNativeActionProcess } from "../packages/core/dev-delivery/native/process-entry.js";
+import { createDeliveryWarrantService } from "../packages/core/dev-delivery/warrant/service.js";
+import {
+  createDevDeliveryQueue,
+  createNativeCommandContract,
+  submitDevDeliveryCandidate,
+  selectDevDeliveryWarrant,
+} from "../packages/core/dev-delivery/dev-delivery-warrant.js";
 import { writeJson } from "../packages/core/dev-delivery/native/files.js";
 import { executeDeliveryNative } from "../packages/core/dev-delivery/native/transactions.js";
 import { qualifyDeliverySource } from "../packages/core/dev-delivery/candidate/admission.js";
-import { settleNativeFailure } from "../packages/core/dev-delivery/warrant/failure-settlement.js";
+import {
+  settleNativeFailure,
+  verifyFailureSettlement,
+} from "../packages/core/dev-delivery/warrant/failure-settlement.js";
 import { settleTerminalDelivery } from "../packages/core/dev-delivery/warrant/terminal.js";
 const root = (digit) => `sha256:${digit.repeat(64)}`;
 const sha = "a".repeat(40);
@@ -100,11 +112,45 @@ test("runtime byte drift prevents native execution and records a failed producer
 test("native failure settlement requires live CAS and never accepts provider coordinates from transferred data", async (t) => {
   const { workspace, file } = fixture(t);
   const requests = [];
+  const connection = { repository: "owner/repo", branch: "dev/v4/v4.1" };
+  const submitted = submitDevDeliveryCandidate(
+    createDevDeliveryQueue({
+      repository: connection.repository,
+      protectedBase: connection.branch,
+    }),
+    {
+      pullRequestNumber: 7,
+      sourceHead: sha,
+      sourceRoot: root("0"),
+      sourceIdentityRoot: root("1"),
+      sourcePatchRoot: root("2"),
+      sourceProofRoot: root("3"),
+      planRoot: root("4"),
+      closureRoot: root("5"),
+      dependencyRoot: root("6"),
+      toolchainRoot: root("7"),
+      environmentRoot: root("8"),
+      nativeCommand: "native-check",
+      nativeCommandContract: createNativeCommandContract("native-check"),
+      deliveryClass: "native-proof-required",
+    },
+  );
+  const selected = selectDevDeliveryWarrant(submitted.queue);
+  let queue = selected.queue;
+  const stateRoot = queue.stateRoot;
+  const actualService = createDeliveryWarrantService(connection, {
+    read: async () => ({ queue, commitSha: sha }),
+    write: async (input) => {
+      assert.equal(input.expectedStateRoot, queue.stateRoot);
+      queue = input.queue;
+      return { commitSha: "b".repeat(40), stateRoot: queue.stateRoot };
+    },
+  });
   const settlement = {
     pullRequestNumber: 7,
     sourceHead: sha,
-    fencingToken: root("1"),
-    leaseGeneration: 2,
+    fencingToken: selected.warrant.fencingToken,
+    leaseGeneration: selected.warrant.generation,
     evidenceRoot: root("2"),
     reason: "native failed",
     transferRoot: root("3"),
@@ -121,16 +167,7 @@ test("native failure settlement requires live CAS and never accepts provider coo
   const service = {
     settle: async (request) => {
       requests.push(request);
-      return {
-        ok: true,
-        receipt: { ...request, expectedOldStateRoot: root("5") },
-        observation: {
-          activeWarrant: null,
-          candidates: [
-            { pullRequestNumber: 7, sourceHead: sha, terminal: { ...request } },
-          ],
-        },
-      };
+      return actualService.settle(request);
     },
   };
   await assert.rejects(
@@ -139,10 +176,30 @@ test("native failure settlement requires live CAS and never accepts provider coo
   );
   assert.equal(requests.length, 0);
   writeJson(file("provider-heartbeat-verification.json"), {
-    latestStateRoot: root("5"),
+    latestStateRoot: stateRoot,
   });
-  await settleNativeFailure({ workspace }, service);
-  assert.equal(requests[0].expectedOldStateRoot, root("5"));
+  const result = await settleNativeFailure({ workspace }, service);
+  assert.equal(requests[0].expectedOldStateRoot, stateRoot);
+  assert.equal(queue.activeWarrant, null);
+  assert.deepEqual(result.terminalCandidate, queue.candidates[0]);
+  for (const drift of [
+    { sourceHead: "b".repeat(40) },
+    { candidateId: root("f") },
+    { status: "qualified" },
+    { terminal: { ...result.terminalCandidate.terminal, nativeJobId: 99 } },
+  ])
+    assert.throws(
+      () =>
+        verifyFailureSettlement(
+          {
+            ...result,
+            terminalCandidate: { ...result.terminalCandidate, ...drift },
+          },
+          settlement,
+          stateRoot,
+        ),
+      /Failure settlement/u,
+    );
   for (const key of ["repository", "branch", "apiUrl", "token"])
     assert.equal(Object.hasOwn(requests[0], key), false);
 });
@@ -214,3 +271,86 @@ test("successor wake occurs after durable settlement and cannot erase its receip
     root("3"),
   );
 });
+
+test("native entry fails closed when process replacement is unavailable", () => {
+  for (const host of [
+    { platform: "win32", execve() {} },
+    { platform: "linux" },
+  ]) {
+    assert.throws(
+      () =>
+        replaceNativeActionProcess({
+          ...host,
+          env: { ACTIONS_RUNTIME_TOKEN: "sentinel" },
+        }),
+      /requires Linux execve/u,
+    );
+  }
+});
+
+test("native entry cannot continue if execve returns", () => {
+  assert.throws(
+    () =>
+      replaceNativeActionProcess({
+        platform: "linux",
+        env: { ACTIONS_RUNTIME_TOKEN: "sentinel" },
+        execPath: "/node",
+        execArgv: [],
+        argv: ["/node", "/entry.js"],
+        execve() {},
+      }),
+    /replacement returned/u,
+  );
+});
+
+test(
+  "execve removes runner authority from kernel environment without leaving a credentialed ancestor",
+  {
+    skip: process.platform !== "linux",
+  },
+  (t) => {
+    const directory = fs.mkdtempSync(
+      path.join(os.tmpdir(), "native-process-entry-"),
+    );
+    t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+    const entry = path.join(directory, "entry.mjs");
+    const implementation = new URL(
+      "../packages/core/dev-delivery/native/process-entry.js",
+      import.meta.url,
+    ).href;
+    fs.writeFileSync(
+      entry,
+      `
+    import fs from 'node:fs';
+    import {replaceNativeActionProcess} from ${JSON.stringify(implementation)};
+    const record = new URL('./before.json', import.meta.url);
+    if (process.env.ACTIONS_RUNTIME_TOKEN) fs.writeFileSync(record, JSON.stringify({pid:process.pid,ppid:process.ppid}));
+    replaceNativeActionProcess();
+    const before = JSON.parse(fs.readFileSync(record));
+    const kernel = fs.readFileSync('/proc/self/environ', 'utf8');
+    console.log(JSON.stringify({before,pid:process.pid,ppid:process.ppid,
+      exposed:kernel.includes('artifact-sentinel') || kernel.includes('oidc-sentinel'),
+      unexpectedCredential:process.env.GH_TOKEN, input:process.env['INPUT_REQUEST-JSON']}));
+  `,
+    );
+    const result = spawnSync(process.execPath, [entry], {
+      encoding: "utf8",
+      env: {
+        PATH: process.env.PATH,
+        ACTIONS_RUNTIME_TOKEN: "artifact-sentinel",
+        ACTIONS_ID_TOKEN_REQUEST_TOKEN: "oidc-sentinel",
+        GH_TOKEN: "must-still-be-rejected-by-ancestry",
+        "INPUT_REQUEST-JSON": '{"source":"unchanged"}',
+      },
+    });
+    assert.equal(result.status, 0, result.stderr);
+    const actual = JSON.parse(result.stdout);
+    assert.deepEqual(actual.before, { pid: actual.pid, ppid: actual.ppid });
+    assert.equal(actual.exposed, false);
+    assert.equal(
+      actual.unexpectedCredential,
+      "must-still-be-rejected-by-ancestry",
+    );
+    assert.equal(actual.input, '{"source":"unchanged"}');
+  },
+);

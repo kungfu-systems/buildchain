@@ -120,10 +120,7 @@
       "id": "release-candidate-recovery",
       "owner": "Buildchain promotion recovery plane",
       "sourceInventoryId": "release-candidate-recovery",
-      "surfaces": [
-        "export:./release-candidate-recovery",
-        "workflow:self-ops-promotion-recovery"
-      ],
+      "surfaces": ["export:./release-candidate-recovery"],
       "migrationPhase": "legacy-retired"
     },
     {

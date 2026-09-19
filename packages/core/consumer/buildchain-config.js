@@ -5,8 +5,8 @@ import { isDeepStrictEqual } from "node:util";
 import { parse } from "smol-toml";
 import {
   BUILDCHAIN_CONFIG_PATH,
-  resolveBuildchainConfigPath,
 } from "../contracts/buildchain-layout.js";
+import { readProductConfiguration } from "./contract/reader.js";
 import { runShellCommandSync } from "../runtime/spawn-command.js";
 import { normalizeBuildConfiguration } from "../build/build-configuration.js";
 
@@ -181,26 +181,7 @@ function updateTomlStringValuePreservingSource({ source, content, key, value, fi
 }
 
 export function loadBuildchainConfig(cwd = process.cwd()) {
-  const configPath = resolveBuildchainConfigPath(cwd);
-  const filePath = path.join(cwd, configPath);
-  if (!fs.existsSync(filePath)) {
-    return undefined;
-  }
-  const source = fs.readFileSync(filePath, "utf8");
-  let config;
-  try {
-    config = parse(source);
-  } catch (error) {
-    throw new Error(`${configPath} parse failed: ${error.message}`);
-  }
-  if (config.schema !== 1) {
-    throw new Error(`${configPath} schema must be 1`);
-  }
-  return {
-    path: configPath,
-    filePath,
-    config: normalizeBuildchainConfig(config),
-  };
+  return readProductConfiguration(cwd, normalizeBuildchainConfig);
 }
 
 export function normalizeBuildchainConfig(config) {

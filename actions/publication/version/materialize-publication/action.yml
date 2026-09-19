@@ -1,0 +1,24 @@
+name: Pipeline version materialize-publication
+description: Execute the internal materialize-publication version material boundary.
+inputs:
+  context:
+    description: Retained exact version or publication context.
+    required: true
+  token:
+    description: Scoped provider credential.
+    required: true
+  operation:
+    description: Retained internal publication operation.
+    required: true
+outputs:
+  stable-wait:
+    description: Retained time-only stable qualification recheck.
+  operation:
+    description: Independently prepared publication operation.
+  context:
+    description: Independently prepared publication context.
+  matrix:
+    description: Independently prepared publication matrix.
+runs:
+  using: node24
+  main: dist/index.js

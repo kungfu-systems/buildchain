@@ -14,19 +14,19 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:b1088f1c224329b16cd23c285bc69334aa1ee102e5b44d5c09aaf156d76821b6",
+    "compatibilityDigest": "sha256:81e32696723fe82fe29d2b2214cd56cf6c87bbeae5cff1a201de7ee7fd10ee9c",
     "majorLine": "v4"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "a99dd0ac259cc7c8b3f67c0762395ee94164f675c9763c874e8f7b78d84982dc",
+    "sha256": "e215e928cf074b0532e8e1892a7b7b7e5855dc3531e0a78cec8b4e3b51d8a65a",
     "summary": {
       "cliCommandCount": 117,
-      "workflowCount": 67,
-      "actionCount": 265,
-      "sitePageCount": 93,
+      "workflowCount": 44,
+      "actionCount": 283,
+      "sitePageCount": 94,
       "docCommandRefCount": 1036,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "a99dd0ac259cc7c8b3f67c0762395ee94164f675c9763c874e8f7b78d84982dc",
+      "sha256": "e215e928cf074b0532e8e1892a7b7b7e5855dc3531e0a78cec8b4e3b51d8a65a",
       "summary": {
         "cliCommandCount": 117,
-        "workflowCount": 67,
-        "actionCount": 265,
-        "sitePageCount": 93,
+        "workflowCount": 44,
+        "actionCount": 283,
+        "sitePageCount": 94,
         "docCommandRefCount": 1036,
         "failureCount": 0
       },
@@ -2107,6 +2107,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./cross-platform-adopter-qualification"
+        },
+        {
+          "id": "export:./release-discussion-reader",
+          "name": "@kungfu-tech/buildchain/release-discussion-reader",
+          "kind": "package-export",
+          "sourcePath": "packages/core/release/discussion/reader.js",
+          "evidencePath": "packages/core/release/discussion/reader.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./release-discussion-reader"
         }
       ],
       "siteConsumptionContracts": [
@@ -3853,6 +3865,44 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:.ops-pipeline-delivery",
+          "name": "workflow:.ops-pipeline-delivery",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/.ops-pipeline-delivery.yml",
+          "evidencePath": ".github/workflows/.ops-pipeline-delivery.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "request",
+            "runtime-selection"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:.ops-pipeline-execute",
+          "name": "workflow:.ops-pipeline-execute",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/.ops-pipeline-execute.yml",
+          "evidencePath": ".github/workflows/.ops-pipeline-execute.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 6,
+          "inputs": [
+            "attempt",
+            "context",
+            "matrix",
+            "operation",
+            "request",
+            "runtime-selection"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:.release-authority",
           "name": "workflow:.release-authority",
           "kind": "workflow",
@@ -3937,6 +3987,43 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:.release-pipeline-products",
+          "name": "workflow:.release-pipeline-products",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/.release-pipeline-products.yml",
+          "evidencePath": ".github/workflows/.release-pipeline-products.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "attempt",
+            "runtime-selection"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:.release-pipeline-version",
+          "name": "workflow:.release-pipeline-version",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/.release-pipeline-version.yml",
+          "evidencePath": ".github/workflows/.release-pipeline-version.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 5,
+          "inputs": [
+            "context",
+            "matrix",
+            "operation",
+            "purpose",
+            "runtime-selection"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:.release-promote",
           "name": "workflow:.release-promote",
           "kind": "workflow",
@@ -3973,6 +4060,34 @@
             "runtime-ref",
             "runtime-selection"
           ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:buildchain-recover",
+          "name": "workflow:buildchain-recover",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/buildchain-recover.yml",
+          "evidencePath": ".github/workflows/buildchain-recover.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:buildchain",
+          "name": "workflow:buildchain",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/buildchain.yml",
+          "evidencePath": ".github/workflows/buildchain.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -4174,7 +4289,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 42,
+          "inputCount": 44,
           "inputs": [
             "active-lease-context",
             "affected-paths-json",
@@ -4199,7 +4314,9 @@
             "native-command",
             "native-command-root",
             "native-heartbeat-seconds",
+            "native-platform",
             "native-proof-json",
+            "pipeline-attempt",
             "plan-root",
             "project-cut-proof-json",
             "queue-admission-context",
@@ -4404,6 +4521,39 @@
             "runtime-selection",
             "same-repository-only",
             "target-branch"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:public-ops-pipeline",
+          "name": "workflow:public-ops-pipeline",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/public-ops-pipeline.yml",
+          "evidencePath": ".github/workflows/public-ops-pipeline.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 1,
+          "inputs": [
+            "config-path"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:public-ops-recover",
+          "name": "workflow:public-ops-recover",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/public-ops-recover.yml",
+          "evidencePath": ".github/workflows/public-ops-recover.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "attempt",
+            "runtime-ref"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -4769,440 +4919,6 @@
             "verify-command",
             "working-directory"
           ],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-build-adopter-dogfood",
-          "name": "workflow:self-build-adopter-dogfood",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-build-adopter-dogfood.yml",
-          "evidencePath": ".github/workflows/self-build-adopter-dogfood.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-build-alpha-dogfood",
-          "name": "workflow:self-build-alpha-dogfood",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-build-alpha-dogfood.yml",
-          "evidencePath": ".github/workflows/self-build-alpha-dogfood.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-build-binary-distribution",
-          "name": "workflow:self-build-binary-distribution",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-build-binary-distribution.yml",
-          "evidencePath": ".github/workflows/self-build-binary-distribution.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-build-channel-verify",
-          "name": "workflow:self-build-channel-verify",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-build-channel-verify.yml",
-          "evidencePath": ".github/workflows/self-build-channel-verify.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-build-demo-dogfood",
-          "name": "workflow:self-build-demo-dogfood",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-build-demo-dogfood.yml",
-          "evidencePath": ".github/workflows/self-build-demo-dogfood.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-build-demo-media-qualification",
-          "name": "workflow:self-build-demo-media-qualification",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-build-demo-media-qualification.yml",
-          "evidencePath": ".github/workflows/self-build-demo-media-qualification.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-build-fixture",
-          "name": "workflow:self-build-fixture",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-build-fixture.yml",
-          "evidencePath": ".github/workflows/self-build-fixture.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-build-public-consumer-dogfood",
-          "name": "workflow:self-build-public-consumer-dogfood",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-build-public-consumer-dogfood.yml",
-          "evidencePath": ".github/workflows/self-build-public-consumer-dogfood.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-build-stable-candidate-qualification",
-          "name": "workflow:self-build-stable-candidate-qualification",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-build-stable-candidate-qualification.yml",
-          "evidencePath": ".github/workflows/self-build-stable-candidate-qualification.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-build-stable-dogfood",
-          "name": "workflow:self-build-stable-dogfood",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-build-stable-dogfood.yml",
-          "evidencePath": ".github/workflows/self-build-stable-dogfood.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-build-verify",
-          "name": "workflow:self-build-verify",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-build-verify.yml",
-          "evidencePath": ".github/workflows/self-build-verify.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-ops-bootstrap-dogfood",
-          "name": "workflow:self-ops-bootstrap-dogfood",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-ops-bootstrap-dogfood.yml",
-          "evidencePath": ".github/workflows/self-ops-bootstrap-dogfood.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-ops-dev-delivery",
-          "name": "workflow:self-ops-dev-delivery",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-ops-dev-delivery.yml",
-          "evidencePath": ".github/workflows/self-ops-dev-delivery.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-ops-governance-audit",
-          "name": "workflow:self-ops-governance-audit",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-ops-governance-audit.yml",
-          "evidencePath": ".github/workflows/self-ops-governance-audit.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-ops-housekeeping-daily",
-          "name": "workflow:self-ops-housekeeping-daily",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-ops-housekeeping-daily.yml",
-          "evidencePath": ".github/workflows/self-ops-housekeeping-daily.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-ops-housekeeping-monthly",
-          "name": "workflow:self-ops-housekeeping-monthly",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-ops-housekeeping-monthly.yml",
-          "evidencePath": ".github/workflows/self-ops-housekeeping-monthly.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-ops-housekeeping-weekly",
-          "name": "workflow:self-ops-housekeeping-weekly",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-ops-housekeeping-weekly.yml",
-          "evidencePath": ".github/workflows/self-ops-housekeeping-weekly.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-ops-merge-queue",
-          "name": "workflow:self-ops-merge-queue",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-ops-merge-queue.yml",
-          "evidencePath": ".github/workflows/self-ops-merge-queue.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-ops-patrol-daily",
-          "name": "workflow:self-ops-patrol-daily",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-ops-patrol-daily.yml",
-          "evidencePath": ".github/workflows/self-ops-patrol-daily.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-ops-patrol-monthly",
-          "name": "workflow:self-ops-patrol-monthly",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-ops-patrol-monthly.yml",
-          "evidencePath": ".github/workflows/self-ops-patrol-monthly.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-ops-patrol-weekly",
-          "name": "workflow:self-ops-patrol-weekly",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-ops-patrol-weekly.yml",
-          "evidencePath": ".github/workflows/self-ops-patrol-weekly.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-ops-promotion-recovery",
-          "name": "workflow:self-ops-promotion-recovery",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-ops-promotion-recovery.yml",
-          "evidencePath": ".github/workflows/self-ops-promotion-recovery.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-ops-runner-smoke",
-          "name": "workflow:self-ops-runner-smoke",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-ops-runner-smoke.yml",
-          "evidencePath": ".github/workflows/self-ops-runner-smoke.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-ops-stable-candidate-patrol",
-          "name": "workflow:self-ops-stable-candidate-patrol",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-ops-stable-candidate-patrol.yml",
-          "evidencePath": ".github/workflows/self-ops-stable-candidate-patrol.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-release-binary-assets",
-          "name": "workflow:self-release-binary-assets",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-release-binary-assets.yml",
-          "evidencePath": ".github/workflows/self-release-binary-assets.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-release-line-open",
-          "name": "workflow:self-release-line-open",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-release-line-open.yml",
-          "evidencePath": ".github/workflows/self-release-line-open.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-release-next-development",
-          "name": "workflow:self-release-next-development",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-release-next-development.yml",
-          "evidencePath": ".github/workflows/self-release-next-development.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-release-npm-dry-run",
-          "name": "workflow:self-release-npm-dry-run",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-release-npm-dry-run.yml",
-          "evidencePath": ".github/workflows/self-release-npm-dry-run.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-release-promote",
-          "name": "workflow:self-release-promote",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-release-promote.yml",
-          "evidencePath": ".github/workflows/self-release-promote.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-release-rehearsal-dogfood",
-          "name": "workflow:self-release-rehearsal-dogfood",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-release-rehearsal-dogfood.yml",
-          "evidencePath": ".github/workflows/self-release-rehearsal-dogfood.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:self-release-tail-dogfood",
-          "name": "workflow:self-release-tail-dogfood",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/self-release-tail-dogfood.yml",
-          "evidencePath": ".github/workflows/self-release-tail-dogfood.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -6971,11 +6687,12 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 5,
+          "inputCount": 6,
           "inputs": [
             "branch",
             "heartbeat-seconds",
             "lease-seconds",
+            "pipeline-attempt",
             "runtime-sha",
             "token"
           ],
@@ -7067,12 +6784,13 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 5,
+          "inputCount": 6,
           "inputs": [
             "branch",
             "project-cut-proof-root",
             "request-json",
             "runtime-sha",
+            "status-token",
             "token"
           ],
           "reverseAuditSource": "actions/*/action.yml"
@@ -8526,6 +8244,128 @@
           "reverseAuditSource": "actions/*/action.yml"
         },
         {
+          "id": "action:publication/pipeline/apply",
+          "name": "action:publication/pipeline/apply",
+          "kind": "action",
+          "sourcePath": "actions/publication/pipeline/apply/action.yml",
+          "evidencePath": "actions/publication/pipeline/apply/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "context",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:publication/pipeline/build",
+          "name": "action:publication/pipeline/build",
+          "kind": "action",
+          "sourcePath": "actions/publication/pipeline/build/action.yml",
+          "evidencePath": "actions/publication/pipeline/build/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "context",
+            "platform"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:publication/pipeline/prepare",
+          "name": "action:publication/pipeline/prepare",
+          "kind": "action",
+          "sourcePath": "actions/publication/pipeline/prepare/action.yml",
+          "evidencePath": "actions/publication/pipeline/prepare/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 3,
+          "inputs": [
+            "attempt",
+            "definition-sha",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:publication/pipeline/prepare-qualification",
+          "name": "action:publication/pipeline/prepare-qualification",
+          "kind": "action",
+          "sourcePath": "actions/publication/pipeline/prepare-qualification/action.yml",
+          "evidencePath": "actions/publication/pipeline/prepare-qualification/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "context",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:publication/pipeline/qualify",
+          "name": "action:publication/pipeline/qualify",
+          "kind": "action",
+          "sourcePath": "actions/publication/pipeline/qualify/action.yml",
+          "evidencePath": "actions/publication/pipeline/qualify/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "context",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:publication/pipeline/seal-qualification",
+          "name": "action:publication/pipeline/seal-qualification",
+          "kind": "action",
+          "sourcePath": "actions/publication/pipeline/seal-qualification/action.yml",
+          "evidencePath": "actions/publication/pipeline/seal-qualification/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 3,
+          "inputs": [
+            "bundle-path",
+            "context",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:publication/pipeline/settle",
+          "name": "action:publication/pipeline/settle",
+          "kind": "action",
+          "sourcePath": "actions/publication/pipeline/settle/action.yml",
+          "evidencePath": "actions/publication/pipeline/settle/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 3,
+          "inputs": [
+            "context",
+            "pr-token",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
           "id": "action:publication/settlement/retain",
           "name": "action:publication/settlement/retain",
           "kind": "action",
@@ -8558,6 +8398,59 @@
           "inputs": [
             "candidate-sha",
             "runtime-sha"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:publication/version/build",
+          "name": "action:publication/version/build",
+          "kind": "action",
+          "sourcePath": "actions/publication/version/build/action.yml",
+          "evidencePath": "actions/publication/version/build/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "context",
+            "platform"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:publication/version/materialize-development",
+          "name": "action:publication/version/materialize-development",
+          "kind": "action",
+          "sourcePath": "actions/publication/version/materialize-development/action.yml",
+          "evidencePath": "actions/publication/version/materialize-development/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 3,
+          "inputs": [
+            "context",
+            "pr-token",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:publication/version/materialize-publication",
+          "name": "action:publication/version/materialize-publication",
+          "kind": "action",
+          "sourcePath": "actions/publication/version/materialize-publication/action.yml",
+          "evidencePath": "actions/publication/version/materialize-publication/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 3,
+          "inputs": [
+            "context",
+            "operation",
+            "token"
           ],
           "reverseAuditSource": "actions/*/action.yml"
         },
@@ -8883,7 +8776,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 32,
+          "inputCount": 34,
           "inputs": [
             "artifact-paths",
             "candidate-build-summary-path",
@@ -8906,6 +8799,7 @@
             "repository",
             "required-artifacts-path",
             "required-status-check",
+            "resume-discussion-id",
             "resume-transaction-id",
             "runtime-commit",
             "runtime-tree",
@@ -8913,6 +8807,7 @@
             "sealed-bundle-root",
             "source-sha",
             "stage-capsules-path",
+            "standalone-binary-distribution",
             "state-path",
             "target-ref",
             "target-sha",
@@ -9533,6 +9428,66 @@
           "reverseAuditSource": "actions/*/action.yml"
         },
         {
+          "id": "action:release/transaction/inspect",
+          "name": "action:release/transaction/inspect",
+          "kind": "action",
+          "sourcePath": "actions/release/transaction/inspect/action.yml",
+          "evidencePath": "actions/release/transaction/inspect/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "session-json",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:release/transaction/open",
+          "name": "action:release/transaction/open",
+          "kind": "action",
+          "sourcePath": "actions/release/transaction/open/action.yml",
+          "evidencePath": "actions/release/transaction/open/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 7,
+          "inputs": [
+            "discussion-id",
+            "dry-run",
+            "expected-nodes-json",
+            "intent-key",
+            "predecessor",
+            "source-json",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:release/transaction/record",
+          "name": "action:release/transaction/record",
+          "kind": "action",
+          "sourcePath": "actions/release/transaction/record/action.yml",
+          "evidencePath": "actions/release/transaction/record/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 6,
+          "inputs": [
+            "node",
+            "payload-json",
+            "sequence",
+            "session-json",
+            "status",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
           "id": "action:runtime/dependencies/install",
           "name": "action:runtime/dependencies/install",
           "kind": "action",
@@ -9593,9 +9548,11 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 9,
+          "inputCount": 11,
           "inputs": [
             "contract-lock",
+            "pipeline-attempt",
+            "recovery-attempt",
             "resume-run-id",
             "runtime-ref",
             "selection",
@@ -10287,6 +10244,95 @@
             "head-repository",
             "require-trusted",
             "untrusted-policy"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:workflow/pipeline/build",
+          "name": "action:workflow/pipeline/build",
+          "kind": "action",
+          "sourcePath": "actions/workflow/pipeline/build/action.yml",
+          "evidencePath": "actions/workflow/pipeline/build/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "context",
+            "platform"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:workflow/pipeline/control",
+          "name": "action:workflow/pipeline/control",
+          "kind": "action",
+          "sourcePath": "actions/workflow/pipeline/control/action.yml",
+          "evidencePath": "actions/workflow/pipeline/control/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 3,
+          "inputs": [
+            "config-path",
+            "queue-token",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:workflow/pipeline/record-build",
+          "name": "action:workflow/pipeline/record-build",
+          "kind": "action",
+          "sourcePath": "actions/workflow/pipeline/record-build/action.yml",
+          "evidencePath": "actions/workflow/pipeline/record-build/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "context",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:workflow/pipeline/recover",
+          "name": "action:workflow/pipeline/recover",
+          "kind": "action",
+          "sourcePath": "actions/workflow/pipeline/recover/action.yml",
+          "evidencePath": "actions/workflow/pipeline/recover/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 4,
+          "inputs": [
+            "attempt",
+            "definition-sha",
+            "queue-token",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:workflow/pipeline/wake",
+          "name": "action:workflow/pipeline/wake",
+          "kind": "action",
+          "sourcePath": "actions/workflow/pipeline/wake/action.yml",
+          "evidencePath": "actions/workflow/pipeline/wake/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 3,
+          "inputs": [
+            "attempt",
+            "stable-wait",
+            "token"
           ],
           "reverseAuditSource": "actions/*/action.yml"
         },
@@ -11052,6 +11098,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:release-discussions",
+          "name": "site-page:manual:release-discussions",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:release-flow",
           "name": "site-page:manual:release-flow",
           "kind": "site-page",
@@ -11460,11 +11518,44 @@
         "public": true
       },
       {
-        "id": "control:.github/workflows/self-release-promote.yml",
-        "name": "control:.github/workflows/self-release-promote.yml",
+        "id": "control:.github/workflows/buildchain.yml",
+        "name": "control:.github/workflows/buildchain.yml",
         "kind": "workflow",
-        "sourcePath": ".github/workflows/self-release-promote.yml",
-        "evidencePath": ".github/workflows/self-release-promote.yml",
+        "sourcePath": ".github/workflows/buildchain.yml",
+        "evidencePath": ".github/workflows/buildchain.yml",
+        "availability": "shipped",
+        "visibility": "public",
+        "participantFacing": true,
+        "public": true
+      },
+      {
+        "id": "control:.github/workflows/buildchain-recover.yml",
+        "name": "control:.github/workflows/buildchain-recover.yml",
+        "kind": "workflow",
+        "sourcePath": ".github/workflows/buildchain-recover.yml",
+        "evidencePath": ".github/workflows/buildchain-recover.yml",
+        "availability": "shipped",
+        "visibility": "public",
+        "participantFacing": true,
+        "public": true
+      },
+      {
+        "id": "control:.github/workflows/public-ops-pipeline.yml",
+        "name": "control:.github/workflows/public-ops-pipeline.yml",
+        "kind": "workflow",
+        "sourcePath": ".github/workflows/public-ops-pipeline.yml",
+        "evidencePath": ".github/workflows/public-ops-pipeline.yml",
+        "availability": "shipped",
+        "visibility": "public",
+        "participantFacing": true,
+        "public": true
+      },
+      {
+        "id": "control:.github/workflows/public-ops-recover.yml",
+        "name": "control:.github/workflows/public-ops-recover.yml",
+        "kind": "workflow",
+        "sourcePath": ".github/workflows/public-ops-recover.yml",
+        "evidencePath": ".github/workflows/public-ops-recover.yml",
         "availability": "shipped",
         "visibility": "public",
         "participantFacing": true,
@@ -11563,7 +11654,7 @@
         "name": "Buildchain standalone binary distribution",
         "kind": "binary-distribution",
         "sourcePath": "scripts/build-standalone-binary.mjs",
-        "evidencePath": ".github/workflows/self-build-binary-distribution.yml",
+        "evidencePath": ".github/workflows/.release-pipeline-products.yml",
         "availability": "shipped",
         "visibility": "public",
         "participantFacing": true,

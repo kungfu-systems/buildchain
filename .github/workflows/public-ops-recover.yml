@@ -1,0 +1,87 @@
+name: Buildchain recovery
+on:
+  workflow_call:
+    inputs:
+      attempt:
+        description: Exact Buildchain attempt to recover.
+        type: string
+        required: true
+      runtime-ref:
+        description: Optional repaired runtime.
+        type: string
+        required: false
+        default: ""
+permissions:
+  contents: read
+jobs:
+  runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          recovery-attempt: ${{ inputs.attempt }}
+          runtime-ref: ${{ inputs.runtime-ref }}
+          token: ${{ github.token }}
+  control:
+    name: Buildchain recovery controller
+    needs: runtime
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      actions: write
+      checks: read
+      contents: write
+      discussions: write
+      pull-requests: write
+    outputs:
+      operation: ${{ steps.control.outputs.operation }}
+      context: ${{ steps.control.outputs.context }}
+      matrix: ${{ steps.control.outputs.matrix }}
+      request: ${{ steps.control.outputs.request }}
+      attempt: ${{ steps.control.outputs.attempt }}
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - id: queue-credential
+        uses: ./.buildchain/runtime/actions/providers/github/token
+        with:
+          client-id: ${{ vars.BUILDCHAIN_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BUILDCHAIN_APP_PRIVATE_KEY }}
+          fallback-token: ${{ secrets.BUILDCHAIN_AUTOMATION_TOKEN }}
+          failure-policy: strict
+          permission-pull-requests: write
+      - id: control
+        uses: ./.buildchain/runtime/actions/workflow/pipeline/recover
+        with:
+          attempt: ${{ inputs.attempt }}
+          definition-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          queue-token: ${{ steps.queue-credential.outputs.token }}
+  execute:
+    needs: [runtime, control]
+    uses: ./.github/workflows/.ops-pipeline-execute.yml
+    with:
+      operation: ${{ needs.control.outputs.operation }}
+      runtime-selection: ${{ needs.runtime.outputs.selection }}
+      context: ${{ needs.control.outputs.context }}
+      matrix: ${{ needs.control.outputs.matrix }}
+      request: ${{ needs.control.outputs.request }}
+      attempt: ${{ needs.control.outputs.attempt }}
+    secrets: inherit
+    permissions:
+      actions: write
+      attestations: write
+      checks: write
+      contents: write
+      discussions: write
+      id-token: write
+      pull-requests: write
+      statuses: write

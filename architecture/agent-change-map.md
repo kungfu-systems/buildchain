@@ -108,7 +108,6 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - tests: `tests/release-propagation.test.mjs`
 - tests: `tests/web-surface.test.mjs`
 - workflows: `.github/workflows/public-release-web.yml`
-- workflows: `.github/workflows/self-ops-bootstrap-dogfood.yml`
 
 ### Current top twenty maintenance hotspots
 
@@ -121,7 +120,6 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - `tests/dev-delivery-minimal-request.test.mjs`
 - `tests/build-configuration.test.mjs`
 - `.github/workflows/build.yml`
-- `.github/workflows/self-build-fixture.yml`
 - `scripts/generate-channel-promotion-workflow.mjs`
 - `tests/github-governance-authority.test.mjs`
 - `tests/maintainability.test.mjs`
@@ -132,8 +130,19 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - `.github/workflows/public-build-stage-capsule-canary.yml`
 - `.github/workflows/public-release-oci-compose-preview.yml`
 - `.github/workflows/public-release-promote.yml`
-- `.github/workflows/self-build-verify.yml`
-- `.github/workflows/self-release-promote.yml`
+- `.github/workflows/.release-binary-assets.yml`
+- `.github/workflows/public-ops-dev-auto-merge.yml`
+- `tests/release-topology.test.mjs`
+- `scripts/check-release-topology.mjs`
+- `packages/core/governance/buildchain-publication-authority.js`
+- `scripts/check-universal-workflow-bootstrap.mjs`
+- `packages/core/providers/github/discussions/materials.js`
+- `tests/controller-evidence.test.mjs`
+- `tests/floating-consumer-policy-contract.test.mjs`
+- `tests/macos-credential-island.test.mjs`
+- `tests/minimal-consumer-contract.test.mjs`
+- `tests/native-artifact-signing-authority.test.mjs`
+- `tests/workflow-taxonomy.test.mjs`
 
 ## action-process-runtime
 
@@ -437,6 +446,38 @@ Owner: Buildchain build signing transactions maintainers
 ### Minimal validation
 
 - `node --test tests/signing-authority-transactions.test.mjs tests/native-artifact-signing-authority.test.mjs`
+
+## business-attempt-journal
+
+Owner: Buildchain pipeline maintainers
+
+### Implementation
+
+- `packages/core/workflow/attempt/identity.js`
+- `packages/core/workflow/attempt/materials.js`
+- `packages/core/workflow/attempt/reader-entry.js`
+- `packages/core/workflow/attempt/reader.js`
+- `packages/core/workflow/attempt/records.js`
+- `packages/core/workflow/attempt/store.js`
+
+### Contracts
+
+- `architecture/decisions/0006-business-attempt-journal.md`
+
+### Tests
+
+- `tests/business-attempt-materials.test.mjs`
+- `tests/business-attempt-store.test.mjs`
+- `tests/business-attempt.test.mjs`
+
+### Generated outputs
+
+- `dist/readers/business-attempt.cjs`
+
+### Minimal validation
+
+- `node --test tests/business-attempt*.test.mjs`
+- `node scripts/build-release-discussion-reader.mjs --check`
 
 ## cli-capability-adapters
 
@@ -1004,6 +1045,223 @@ Owner: Buildchain architecture maintainers
 ### Minimal validation
 
 - `node --test tests/internal-architecture.test.mjs tests/maintainability.test.mjs tests/maintainability-governance.test.mjs`
+
+## minimal-consumer-contract
+
+Owner: Buildchain consumer contract maintainers
+
+### Implementation
+
+- `packages/core/consumer/contract/entries.js`
+- `packages/core/consumer/contract/examples.js`
+- `packages/core/consumer/contract/identity.js`
+- `packages/core/consumer/contract/inspection.js`
+- `packages/core/consumer/contract/plan.js`
+- `packages/core/consumer/contract/products.js`
+- `packages/core/consumer/contract/reader.js`
+- `packages/core/consumer/contract/shape.js`
+- `scripts/generate-minimal-consumer-contract.mjs`
+
+### Contracts
+
+- `architecture/decisions/0005-minimal-consumer-contract.md`
+
+### Tests
+
+- `tests/minimal-consumer-contract.test.mjs`
+- `tests/consumer-product-config.test.mjs`
+
+### Generated outputs
+
+- `architecture/minimal-consumer-migration.json`
+- `templates/minimal-consumer`
+
+### Minimal validation
+
+- `node --test tests/minimal-consumer-contract.test.mjs`
+- `node scripts/generate-minimal-consumer-contract.mjs --check`
+
+## minimal-consumer-pipeline
+
+Owner: Buildchain pipeline maintainers
+
+### Implementation
+
+- `packages/core/providers/github/attempt-index.js`
+- `packages/core/providers/github/attempt-journal.js`
+- `packages/core/providers/github/pipeline-checkout.js`
+- `packages/core/providers/github/pipeline-events.js`
+- `packages/core/providers/github/pipeline-integration.js`
+- `packages/core/providers/github/pipeline-policy.js`
+- `packages/core/providers/github/pipeline-run-entry.js`
+- `packages/core/providers/github/pipeline-runs.js`
+- `packages/core/providers/github/pipeline-source.js`
+- `packages/core/providers/github/pipeline-version-artifacts.js`
+- `packages/core/providers/github/pipeline-version-readback.js`
+- `packages/core/providers/github/pipeline-worker.js`
+- `packages/core/publication/pipeline/actions.js`
+- `packages/core/publication/pipeline/apply.js`
+- `packages/core/publication/pipeline/build-segments.js`
+- `packages/core/publication/pipeline/capsules.js`
+- `packages/core/publication/pipeline/context.js`
+- `packages/core/publication/pipeline/development-anchor.js`
+- `packages/core/publication/pipeline/development-current.js`
+- `packages/core/publication/pipeline/development-pr.js`
+- `packages/core/publication/pipeline/development-proof.js`
+- `packages/core/publication/pipeline/development-transition.js`
+- `packages/core/publication/pipeline/distribution.js`
+- `packages/core/publication/pipeline/documents.js`
+- `packages/core/publication/pipeline/effects.js`
+- `packages/core/publication/pipeline/files.js`
+- `packages/core/publication/pipeline/imported-materials.js`
+- `packages/core/publication/pipeline/journal.js`
+- `packages/core/publication/pipeline/next-development.js`
+- `packages/core/publication/pipeline/pack.js`
+- `packages/core/publication/pipeline/package-policy.js`
+- `packages/core/publication/pipeline/plan.js`
+- `packages/core/publication/pipeline/prepare.js`
+- `packages/core/publication/pipeline/qualification.js`
+- `packages/core/publication/pipeline/qualify.js`
+- `packages/core/publication/pipeline/recovery-admission.js`
+- `packages/core/publication/pipeline/recovery-build-download.js`
+- `packages/core/publication/pipeline/recovery-build-plan.js`
+- `packages/core/publication/pipeline/recovery-build-readback.js`
+- `packages/core/publication/pipeline/recovery-capsules.js`
+- `packages/core/publication/pipeline/recovery-import.js`
+- `packages/core/publication/pipeline/recovery-inspection.js`
+- `packages/core/publication/pipeline/recovery-materials.js`
+- `packages/core/publication/pipeline/recovery-plan.js`
+- `packages/core/publication/pipeline/recovery-prepare.js`
+- `packages/core/publication/pipeline/recovery-qualification.js`
+- `packages/core/publication/pipeline/recovery-readback.js`
+- `packages/core/publication/pipeline/recovery-signing.js`
+- `packages/core/publication/pipeline/sealed-products.js`
+- `packages/core/publication/pipeline/settle.js`
+- `packages/core/publication/pipeline/signing.js`
+- `packages/core/publication/pipeline/source-plan.js`
+- `packages/core/publication/pipeline/version-actions.js`
+- `packages/core/publication/pipeline/version-build.js`
+- `packages/core/publication/pipeline/version-context.js`
+- `packages/core/publication/pipeline/version-material.js`
+- `packages/core/publication/pipeline/version-preparation.js`
+- `packages/core/publication/pipeline/version-regeneration.js`
+- `packages/core/publication/pipeline/version-source-guard.js`
+- `packages/core/publication/pipeline/version.js`
+- `packages/core/publication/pipeline/worker.js`
+- `packages/core/workflow/attempt/journal.js`
+- `packages/core/workflow/commands/pipeline-build.mjs`
+- `packages/core/workflow/pipeline/action-output.js`
+- `packages/core/workflow/pipeline/actions.js`
+- `packages/core/workflow/pipeline/build-control.js`
+- `packages/core/workflow/pipeline/build-evidence.js`
+- `packages/core/workflow/pipeline/build-qualification.js`
+- `packages/core/workflow/pipeline/build-result.js`
+- `packages/core/workflow/pipeline/build.js`
+- `packages/core/workflow/pipeline/cancellation.js`
+- `packages/core/workflow/pipeline/channel-control.js`
+- `packages/core/workflow/pipeline/controller.js`
+- `packages/core/workflow/pipeline/delivery-control.js`
+- `packages/core/workflow/pipeline/delivery-observation.js`
+- `packages/core/workflow/pipeline/delivery-request.js`
+- `packages/core/workflow/pipeline/events.js`
+- `packages/core/workflow/pipeline/fence.js`
+- `packages/core/workflow/pipeline/group-control.js`
+- `packages/core/workflow/pipeline/guard-build.js`
+- `packages/core/workflow/pipeline/guard.js`
+- `packages/core/workflow/pipeline/host.js`
+- `packages/core/workflow/pipeline/materials.js`
+- `packages/core/workflow/pipeline/notifications.js`
+- `packages/core/workflow/pipeline/parent-notification.js`
+- `packages/core/workflow/pipeline/platforms.js`
+- `packages/core/workflow/pipeline/progress.js`
+- `packages/core/workflow/pipeline/projection.js`
+- `packages/core/workflow/pipeline/reconcile.js`
+- `packages/core/workflow/pipeline/recovery-action.js`
+- `packages/core/workflow/pipeline/recovery-admission.js`
+- `packages/core/workflow/pipeline/recovery-build-control.js`
+- `packages/core/workflow/pipeline/recovery-build-evidence.js`
+- `packages/core/workflow/pipeline/recovery-build.js`
+- `packages/core/workflow/pipeline/recovery-controller.js`
+- `packages/core/workflow/pipeline/recovery-integration.js`
+- `packages/core/workflow/pipeline/recovery-merge-proof.js`
+- `packages/core/workflow/pipeline/recovery-ownership-settlement.js`
+- `packages/core/workflow/pipeline/recovery-ownership.js`
+- `packages/core/workflow/pipeline/recovery-plan.js`
+- `packages/core/workflow/pipeline/recovery-runtime.js`
+- `packages/core/workflow/pipeline/recovery-session.js`
+- `packages/core/workflow/pipeline/recovery-transition.js`
+- `packages/core/workflow/pipeline/recovery-unrecorded-build.js`
+- `packages/core/workflow/pipeline/runtime-source.js`
+- `packages/core/workflow/pipeline/selection.js`
+- `packages/core/workflow/pipeline/session.js`
+- `packages/core/workflow/pipeline/settlement.js`
+- `packages/core/workflow/pipeline/wake.js`
+- `packages/core/workflow/pipeline/web-status.js`
+
+### Contracts
+
+- `architecture/decisions/0007-hosted-pipeline-controller.md`
+- `architecture/decisions/0009-pipeline-version-preparation.md`
+
+### Tests
+
+- `tests/business-attempt-journal.test.mjs`
+- `tests/github-attempt-journal.test.mjs`
+- `tests/pipeline-build-qualification.test.mjs`
+- `tests/pipeline-build.test.mjs`
+- `tests/pipeline-cancellation.test.mjs`
+- `tests/pipeline-channel.test.mjs`
+- `tests/pipeline-controller.test.mjs`
+- `tests/pipeline-delivery-request.test.mjs`
+- `tests/pipeline-distribution.test.mjs`
+- `tests/pipeline-events.test.mjs`
+- `tests/pipeline-fence.test.mjs`
+- `tests/pipeline-guard.test.mjs`
+- `tests/pipeline-index.test.mjs`
+- `tests/pipeline-integration.test.mjs`
+- `tests/pipeline-next-development.test.mjs`
+- `tests/pipeline-npm-channel.test.mjs`
+- `tests/pipeline-policy.test.mjs`
+- `tests/pipeline-progress.test.mjs`
+- `tests/pipeline-projection.test.mjs`
+- `tests/pipeline-publication-artifacts.test.mjs`
+- `tests/pipeline-publication-effects.test.mjs`
+- `tests/pipeline-publication-journal.test.mjs`
+- `tests/pipeline-publication-pack.test.mjs`
+- `tests/pipeline-publication-plan.test.mjs`
+- `tests/pipeline-publication-providers.test.mjs`
+- `tests/pipeline-publication-recovery-admission.test.mjs`
+- `tests/pipeline-publication-recovery-apply.test.mjs`
+- `tests/pipeline-publication-recovery-build.test.mjs`
+- `tests/pipeline-publication-recovery-signing.test.mjs`
+- `tests/pipeline-publication-version.test.mjs`
+- `tests/pipeline-reconcile.test.mjs`
+- `tests/pipeline-recovery-admission.test.mjs`
+- `tests/pipeline-recovery-build.test.mjs`
+- `tests/pipeline-recovery-controller.test.mjs`
+- `tests/pipeline-recovery-delivery.test.mjs`
+- `tests/pipeline-recovery-interruption.test.mjs`
+- `tests/pipeline-recovery-ownership.test.mjs`
+- `tests/pipeline-recovery-runtime-continuation.test.mjs`
+- `tests/pipeline-recovery-session.test.mjs`
+- `tests/pipeline-runs.test.mjs`
+- `tests/pipeline-runtime.test.mjs`
+- `tests/pipeline-settlement.test.mjs`
+- `tests/pipeline-source.test.mjs`
+- `tests/pipeline-version-artifacts.test.mjs`
+- `tests/pipeline-version-build.test.mjs`
+- `tests/pipeline-version-context.test.mjs`
+- `tests/pipeline-version-regeneration.test.mjs`
+- `tests/pipeline-web-status.test.mjs`
+- `tests/pipeline-worker.test.mjs`
+
+### Generated outputs
+
+- None.
+
+### Minimal validation
+
+- `node --test tests/pipeline-*.test.mjs tests/business-attempt-journal.test.mjs tests/github-attempt-journal.test.mjs`
 
 ## npm-publication-transaction
 
@@ -1629,6 +1887,49 @@ Owner: Buildchain publication promotion transaction maintainers
 
 - `node --test tests/release-candidate-promote.test.mjs tests/product-publication-topology.test.mjs tests/publication-settlement.test.mjs`
 
+## release-discussion-transactions
+
+Owner: Buildchain release maintainers
+
+### Implementation
+
+- `packages/core/providers/github/discussions/materials.js`
+- `packages/core/providers/github/discussions/transport.js`
+- `packages/core/release/discussion/actions.js`
+- `packages/core/release/discussion/binary.js`
+- `packages/core/release/discussion/checkpoints.js`
+- `packages/core/release/discussion/envelope.js`
+- `packages/core/release/discussion/evidence.js`
+- `packages/core/release/discussion/presentation.js`
+- `packages/core/release/discussion/publication.js`
+- `packages/core/release/discussion/qualification.js`
+- `packages/core/release/discussion/reader-entry.js`
+- `packages/core/release/discussion/reader.js`
+- `packages/core/release/discussion/recovery.js`
+- `packages/core/release/discussion/session.js`
+- `packages/core/release/discussion/store.js`
+- `packages/core/release/discussion/threads.js`
+
+### Contracts
+
+- `contracts/release-discussion-v1.schema.json`
+
+### Tests
+
+- `tests/release-discussion-materials.test.mjs`
+- `tests/release-discussion-session.test.mjs`
+- `tests/release-discussion-threads.test.mjs`
+- `tests/release-discussion.test.mjs`
+
+### Generated outputs
+
+- `dist/readers/release-discussion.cjs`
+
+### Minimal validation
+
+- `node --test tests/release-discussion*.test.mjs`
+- `node scripts/build-release-discussion-reader.mjs --check`
+
 ## release-line-bootstrap
 
 Owner: Buildchain maintainers
@@ -1954,9 +2255,11 @@ Owner: Buildchain runtime maintainers
 
 - `packages/core/runtime/entry/actions.js`
 - `packages/core/runtime/entry/activation.js`
+- `packages/core/runtime/entry/attempt.js`
 - `packages/core/runtime/entry/github.js`
 - `packages/core/runtime/entry/recovery.js`
 - `packages/core/runtime/entry/selection.js`
+- `packages/core/runtime/entry/source.js`
 - `scripts/check-runtime-entry.mjs`
 
 ### Contracts
@@ -1966,10 +2269,11 @@ Owner: Buildchain runtime maintainers
 
 ### Tests
 
-- `tests/runtime-entry-selection.test.mjs`
+- `tests/pipeline-recovery-runtime-continuation.test.mjs`
 - `tests/runtime-entry-activation.test.mjs`
-- `tests/runtime-entry-provider.test.mjs`
 - `tests/runtime-entry-architecture.test.mjs`
+- `tests/runtime-entry-provider.test.mjs`
+- `tests/runtime-entry-selection.test.mjs`
 
 ### Generated outputs
 
@@ -2234,7 +2538,6 @@ Owner: Buildchain adopter delivery maintainers
 - `contracts/fixtures/v4-adopter-delivery-v1/gate-unknown-selector.json`
 - `contracts/fixtures/v4-adopter-delivery-v1/offline-vectors.json`
 - `.github/workflows/public-build-adopter-qualification.yml`
-- `.github/workflows/self-build-adopter-dogfood.yml`
 - `docs/v4-adopter-delivery.md`
 
 ### Tests
@@ -2457,7 +2760,6 @@ Owner: Buildchain protected delivery maintainers
 - `contracts/dev-delivery-authority-v2.schema.json`
 - `dist/site/schemas/dev-delivery-authority-v2.schema.json`
 - `.github/workflows/public-ops-dev-auto-merge.yml`
-- `.github/workflows/self-ops-dev-delivery.yml`
 - `templates/native-dev-delivery.yml`
 - `docs/dev-delivery-warrant.md`
 - `docs/dev-delivery-qualification-landing-adr.md`
@@ -2498,7 +2800,6 @@ Owner: Buildchain publication rehearsal maintainers
 
 - `architecture/publication-rehearsal-parity.json`
 - `contracts/v4-publication-rehearsal-capsule-v1.schema.json`
-- `.github/workflows/self-release-rehearsal-dogfood.yml`
 - `docs/v4-publication-rehearsal.md`
 
 ### Tests
@@ -2529,7 +2830,6 @@ Owner: Buildchain workflow maintainers
 - `architecture/universal-workflow-fault-campaign.json`
 - `architecture/universal-workflow-capability-policy.json`
 - `.github/workflows/public-ops-bootstrap.yml`
-- `.github/workflows/self-ops-bootstrap-dogfood.yml`
 
 ### Tests
 

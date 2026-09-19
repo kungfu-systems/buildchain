@@ -90,6 +90,12 @@ on:
       promotion-override-used:
         description: Admitted override-used.
         value: ${{ jobs.resolve-promotion.outputs.override-used }}
+      discussion-id:
+        description: Release transaction discussion-id.
+        value: ${{ jobs.invoke.outputs.discussion-id }}
+      discussion-url:
+        description: Release transaction discussion-url.
+        value: ${{ jobs.invoke.outputs.discussion-url }}
       promoted-sha:
         description: Promoted channel SHA
         value: ${{ jobs.invoke.outputs.promoted-sha }}

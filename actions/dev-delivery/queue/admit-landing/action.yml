@@ -16,6 +16,9 @@ inputs:
   token:
     description: Admitted token.
     required: true
+  status-token:
+    description: GitHub Actions credential for the qualified source status.
+    required: false
 outputs:
   evaluated-count:
     description: Verified evaluated-count.

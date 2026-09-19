@@ -1,0 +1,12 @@
+name: Execute declared product commands without provider credentials.
+description: Execute declared product commands without provider credentials.
+inputs:
+  context:
+    description: "Internally admitted exact build source."
+    required: true
+  platform:
+    description: "Declared platform."
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

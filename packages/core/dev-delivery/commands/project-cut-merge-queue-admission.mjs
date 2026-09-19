@@ -61,19 +61,32 @@ function git(
   {
     env = {},
     input = undefined,
+    inputFile = undefined,
+    outputFile = undefined,
     encoding = "utf8",
     reason = "git-failed",
   } = {},
 ) {
-  const result = spawnSync("git", args, {
-    cwd,
-    env: { ...process.env, ...env },
-    input,
-    encoding,
-    maxBuffer: 64 * 1024 * 1024,
-  });
+  let result, inputDescriptor, outputDescriptor;
+  try {
+    if (inputFile) inputDescriptor = fs.openSync(inputFile, "r");
+    if (outputFile) outputDescriptor = fs.openSync(outputFile, "w");
+    result = spawnSync("git", args, {
+      cwd,
+      env: { ...process.env, ...env },
+      input,
+      encoding,
+      stdio: [inputDescriptor ?? "pipe", outputDescriptor ?? "pipe", "pipe"],
+      maxBuffer: 64 * 1024 * 1024,
+    });
+  } finally {
+    for (const descriptor of [inputDescriptor, outputDescriptor])
+      if (descriptor !== undefined) fs.closeSync(descriptor);
+  }
   if (result.status !== 0) {
-    const detail = String(result.stderr || result.stdout || "").trim();
+    const detail = String(
+      result.stderr || result.error?.message || result.stdout || "",
+    ).trim();
     throw new ProjectCutAdmissionError(
       reason,
       `git ${args.join(" ")} failed${detail ? `: ${detail}` : ""}`,
@@ -135,7 +148,7 @@ function linearSourceCommits(cwd, fork, head) {
 
 function patchId(cwd, patch) {
   const output = git(cwd, ["patch-id", "--stable"], {
-    input: patch,
+    inputFile: patch,
     encoding: "utf8",
     reason: "patch-id-failed",
   });
@@ -184,30 +197,41 @@ function replayProjectCut(cwd, base, head) {
       env: indexEnvironment,
       reason: "base-tree-unreadable",
     });
-    const sourcePatch = git(
+    // Generated bundles can exceed the metadata-output bound. Git streams the
+    // exact patches through private files; patch identity and replay stay intact.
+    const sourcePatch = path.join(temporary, "source.patch");
+    git(
       cwd,
       ["diff", "--binary", "--full-index", "--no-ext-diff", fork, head],
       {
-        encoding: null,
+        outputFile: sourcePatch,
         reason: "source-patch-unreadable",
       },
     );
-    const emptySourcePatch = sourcePatch.length === 0;
+    const emptySourcePatch = fs.statSync(sourcePatch).size === 0;
     if (emptySourcePatch && commits.length !== 1)
-      throw new ProjectCutAdmissionError("empty-source-composition", "an empty source composition must be exactly one linear commit");
-    if (!emptySourcePatch) git(cwd, ["apply", "--cached", "--3way", "--whitespace=nowarn", "-"], {
-        env: indexEnvironment, input: sourcePatch, encoding: "utf8", reason: "project-cut-conflict",
+      throw new ProjectCutAdmissionError(
+        "empty-source-composition",
+        "an empty source composition must be exactly one linear commit",
+      );
+    if (!emptySourcePatch)
+      git(cwd, ["apply", "--cached", "--3way", "--whitespace=nowarn", "-"], {
+        env: indexEnvironment,
+        inputFile: sourcePatch,
+        encoding: "utf8",
+        reason: "project-cut-conflict",
       });
     const candidateTreeOid = git(cwd, ["write-tree"], {
       env: indexEnvironment,
       reason: "candidate-tree-unreadable",
     });
-    const replayPatch = git(
+    const replayPatch = path.join(temporary, "replay.patch");
+    git(
       cwd,
       ["diff", "--cached", "--binary", "--full-index", "--no-ext-diff", base],
       {
         env: indexEnvironment,
-        encoding: null,
+        outputFile: replayPatch,
         reason: "replay-patch-unreadable",
       },
     );
@@ -226,9 +250,12 @@ function replayProjectCut(cwd, base, head) {
         reason: "replay-paths-unreadable",
       },
     );
-    const compositionDrifted = emptySourcePatch ? replayPatch.length !== 0 ||
-      sourceNames !== "" || replayNames !== "" : patchId(cwd, sourcePatch) !==
-      patchId(cwd, replayPatch) || sourceNames !== replayNames;
+    const compositionDrifted = emptySourcePatch
+      ? fs.statSync(replayPatch).size !== 0 ||
+        sourceNames !== "" ||
+        replayNames !== ""
+      : patchId(cwd, sourcePatch) !== patchId(cwd, replayPatch) ||
+        sourceNames !== replayNames;
     if (compositionDrifted) {
       throw new ProjectCutAdmissionError(
         "composition-drift",

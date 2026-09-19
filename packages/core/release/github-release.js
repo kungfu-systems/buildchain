@@ -302,6 +302,7 @@ export async function publishGitHubReleaseEvidence({
   declarationPath,
   qualificationRoot = "",
   failureAfterCapability = "",
+  checkpoint: retainCheckpoint,
 } = {}) {
   const assetPaths = collectGitHubReleaseEvidenceAssets({
     publishEvidencePath,
@@ -349,8 +350,9 @@ export async function publishGitHubReleaseEvidence({
       }),
       ...createGitHubProviderAdapters(octokit, materialized.documents),
     }),
-    checkpoint: (checkpoint) => {
+    checkpoint: async (checkpoint) => {
       writeReleaseTailTransaction(resolvedStatePath, checkpoint);
+      if (retainCheckpoint) await retainCheckpoint(checkpoint);
       if (
         failureAfterCapability &&
         checkpoint.receipts.some(

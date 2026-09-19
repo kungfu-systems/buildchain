@@ -341,11 +341,35 @@
         "settlement": {
           "responsibility": "Retain immutable publication completion and verify its terminal receipt independently.",
           "operations": ["retain", "verify"]
+        },
+        "pipeline": {
+          "responsibility": "Prepare, independently qualify, publish and settle declared products inside one business attempt.",
+          "operations": [
+            "prepare",
+            "build",
+            "qualify",
+            "prepare-qualification",
+            "seal-qualification",
+            "apply",
+            "settle"
+          ]
+        },
+        "version": {
+          "responsibility": "Regenerate declared version data in credentialless product jobs and materialize independently qualified publication or development sources.",
+          "operations": [
+            "build",
+            "materialize-publication",
+            "materialize-development"
+          ]
         }
       }
     },
     "release": {
       "groups": {
+        "transaction": {
+          "responsibility": "Initialize release intent, append independently owned progress and inspect one durable Discussion across workflow recovery.",
+          "operations": ["open", "record", "inspect"]
+        },
         "binary": {
           "responsibility": "Resolve coordinates and publish admitted binary assets.",
           "operations": ["coordinates", "publish"]
@@ -512,6 +536,10 @@
         "settlement": {
           "responsibility": "Seal candidate terminal evidence and reconcile successful protected backflow.",
           "operations": ["seal"]
+        },
+        "pipeline": {
+          "responsibility": "Reconcile source-bound business attempts through protected delivery and product verification.",
+          "operations": ["control", "build", "record-build", "wake", "recover"]
         }
       }
     },

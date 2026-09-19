@@ -1,3 +1,5 @@
+import { compileConsumerPlan } from "../packages/core/consumer/contract/plan.js";
+import { materializePipelineVersion } from "../packages/core/publication/pipeline/version.js";
 import { compactProductionReleasePrSummary } from "../packages/core/web/release-pr-summary.js";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -138,13 +140,12 @@ test("qualification verifies the invocation before checkout and admits the contr
   const positions = names.map(name => graph.steps.findIndex(step => step.name === name));
   assert.ok(positions.every((position, index) => position >= 0 && (!index || positions[index - 1] < position)), JSON.stringify({ names, positions }));
 });
-test("self promotion enters the public API at the same source commit", () => {
-  const workflow = readWorkflow(".github/workflows/self-release-promote.yml");
-  assert.equal(workflow.jobs.promote.uses, "kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4");
-  assert.equal(workflow.jobs["promote-stable"], undefined);
-  assert.deepEqual(Object.keys(workflow.jobs.promote.with), ["request-json", "runtime-selection"]);
-});
-test("SETTLE consumes APPLY evidence and emits the sole terminal receipt projection", () => {
+test("self promotion delegates the published pipeline with only a config path", () => {
+  const workflow = readWorkflow(".github/workflows/buildchain.yml");
+  assert.equal(workflow.jobs.buildchain.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha");
+  assert.deepEqual(Object.keys(workflow.jobs), ["buildchain"]);
+  assert.deepEqual(Object.keys(workflow.jobs.buildchain.with), ["config-path"]);
+});test("SETTLE consumes APPLY evidence and emits the sole terminal receipt projection", () => {
   const graph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "settle");
   assert.deepEqual(graph.job.needs, ["qualify", "apply", "execution-runtime"]);
   assert.equal(graph.job.permissions.contents, "read");
@@ -203,26 +204,15 @@ test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () 
   assert.doesNotMatch(workflow + nodes, /product\.verify|gate\.catalog|dev-patrol|alpha-pr|release-pr/);
 });
 
-test("build fixture keeps project settings in TOML and seals exact candidate bytes", () => {
-  const workflow = fs.readFileSync(path.join(root, ".github/workflows/self-build-fixture.yml"), "utf8");
+test("candidate packaging retains source-tree binding independently from the retired fixture caller", () => {
   const config = fs.readFileSync(path.join(root, "fixtures/libnode-shaped/buildchain.toml"), "utf8");
-  assert.match(workflow, /config-path: fixtures\/libnode-shaped\/buildchain.toml/u);
-  assert.doesNotMatch(workflow, /artifact-transfer-mode:|buildchain-ref:|publish-source-ref:|publish-anchor-request-json:/u);
   assert.match(config, /environment = "github-hosted-container"/u);
   assert.match(config, /release_candidate = true/u);
-  assert.match(workflow, /uses: kungfu-systems\/buildchain\/.github\/workflows\/build.yml@v4/u);
-  assert.match(workflow, /ref: \$\{\{ fromJSON\(needs\.execution-runtime\.outputs\.selection\)\.source\.sha \}\}/u);
-  assert.match(workflow, /resume-run-id: \$\{\{ inputs\.resume-run-id \}\}/u);
-  const graph = inspectWorkflowJob(".github/workflows/self-build-fixture.yml", "buildchain-package-candidate");
-  assert.match(graph.job.steps.find(step => step.id === "node").with["passport-artifact"], /needs\.libnode-shaped\.outputs\.release-candidate-artifact/u);
-  const download = graph.steps.findIndex(step => step.name === "Download exact Release Candidate Passport");
-  const pack = graph.steps.findIndex(step => step.id === "package");
-  assert.ok(download >= 0 && download < pack);
-  const source = graph.modules.get("packages/core/publication/candidate/package-binding.js");
-  assert.match(graph.modules.get("packages/core/publication/candidate/package.js"), /\["show", "-s", "--format=%T", "HEAD"\]/u);
+  const source = fs.readFileSync(path.join(root, "packages/core/publication/candidate/package-binding.js"), "utf8");
+  const packaging = fs.readFileSync(path.join(root, "packages/core/publication/candidate/package.js"), "utf8");
+  assert.match(packaging, /\["show", "-s", "--format=%T", "HEAD"\]/u);
   assert.match(source, /tree === passport.source.treeHash/u);
-});
-test("canonical publisher carries no issue-reporting mutation authority", () => {
+});test("canonical publisher carries no issue-reporting mutation authority", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/.release-promote.yml"),
     "utf8",
@@ -303,16 +293,11 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(docs, /publish-rematerialize-on-resume: true/);
 });
 
-test("buildchain ref promotion delegates alpha evidence to the canonical publisher", () => {
-  const workflow = readWorkflow(".github/workflows/self-release-promote.yml");
-  assert.equal(workflow.jobs.promote.uses, "kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4");
-  const request = workflow.jobs.promote.with["request-json"];
-  assert.match(request, /"release-candidate-workflow-file": "self-build-fixture\.yml"/);
-  assert.match(request, /"resume-candidate-run-id":/);
-  assert.doesNotMatch(request, /declarative-release-tail/);
-  assert.match(request, /"release-passport-impact-json": "\.buildchain\/release-impact\.json"/);
-});
-test("QUALIFY receives the rooted transient runtime authorization and publication channel", () => {
+test("self alpha promotion is declared as a product channel without caller-supplied evidence", () => {
+  const plan = compileConsumerPlan(fs.readFileSync(path.join(root, ".buildchain/buildchain.toml"), "utf8"));
+  assert.deepEqual(plan.channels.find(route => route.operation === "alpha"), {from: "dev/v4/v4.1", to: "alpha/v4/v4.1", operation: "alpha"});
+  assert.equal(plan.stable.impact_file, ".buildchain/release-impact.json");
+});test("QUALIFY receives the rooted transient runtime authorization and publication channel", () => {
   const graph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "qualify");
   const candidate = graph.steps.find(step => step.uses?.endsWith("/release/promotion/qualify-candidate"));
   assert.equal(candidate.with["request-json"], "${{ inputs.request-json }}");
@@ -1212,33 +1197,27 @@ test("expected artifact JSON normalizes supported checks", () => {
   );
 });
 
-test("buildchain semver version state includes generated site contract version", () => {
-  const summary = validateBuildchainConfig(root, {
-    requireVersionState: true,
-    requireLifecycleStages: ["install", "verify", "publish"],
-  });
+test("buildchain semver version state retains generated contract material", () => {
+  const plan = compileConsumerPlan(fs.readFileSync(path.join(root, ".buildchain/buildchain.toml"), "utf8"));
   assert.deepEqual(
-    summary.versionFiles.map((file) => `${file.path}#${file.key}`),
+    plan.version.files.map((file) => `${file.path}#${file.key}`),
     [
       "package.json#version",
       ".buildchain/release-impact.json#release.version",
-      "dist/site/buildchain-contract.json#product.version",
       "dist/site/buildchain-site.json#package.version",
       "dist/site/site-manifest.json#package.version",
       "dist/site/publication-registry.json#package.version",
       "dist/site/kfd-upstream-aggregate.json#product.version",
     ],
   );
-  assert.ok(
-    summary.lifecycleStages.some((stage) => stage.name === "version-state"),
-  );
-  const versionFiles = discoverConfiguredVersionStateFiles(root, loadBuildchainConfig(root));
+  assert.ok(plan.version.derived_files.includes("dist/site/buildchain-contract.json"));
+  const versionFiles = Object.fromEntries(plan.version.files.map(file => [file.path, fs.readFileSync(path.join(root, file.path), "utf8")]));
   const currentImpact = JSON.parse(fs.readFileSync(path.join(root, ".buildchain/release-impact.json"), "utf8"));
   const currentVersion = String(currentImpact.release.version);
   const currentMatch = currentVersion.match(/^(\d+)\.(\d+)\.(\d+)/);
   assert.ok(currentMatch);
   const nextVersion = `${currentMatch[1]}.${currentMatch[2]}.${Number(currentMatch[3]) + 1}-alpha.0`;
-  const updated = updateConfiguredVersionStateContents(versionFiles, nextVersion);
+  const updated = materializePipelineVersion(plan.version, versionFiles, nextVersion).changes;
   const releaseImpact = JSON.parse(
     updated.find((file) => file.path === ".buildchain/release-impact.json").content,
   );
@@ -1254,17 +1233,13 @@ test("generated release model publishes the generic major alpha channel contract
   assert.match(releaseModel.floatingTags, /highest minor in major X with a published alpha/);
 });
 
-test("Buildchain independently dogfoods zero-input alpha and stable TOML builds", () => {
-  for (const channel of ["alpha", "stable"]) {
-    const workflow = fs.readFileSync(path.join(root, `.github/workflows/self-build-${channel}-dogfood.yml`), "utf8");
-    assert.match(workflow, /workflows:\s*- Buildchain Ref Promotion/u);
-    assert.ok(workflow.includes(`build.yml@${channel === "alpha" ? "v4-alpha" : "v4"}`));
-    assert.doesNotMatch(workflow, /steps:|buildchain-channel:|working-directory:|runner-preset:/u);
-    assert.doesNotMatch(workflow, /with:|config-path:/u);
-    assert.deepEqual(Object.keys(readWorkflow(`.github/workflows/self-build-${channel}-dogfood.yml`).jobs), [`${channel}-consumer`]);
-  }
-});
-test("self-dogfood never bridges an adjacent major or bypasses contract compatibility", () => {
+test("self dogfood uses the canonical generated pair for either published channel", () => {
+  const normal = readWorkflow(".github/workflows/buildchain.yml");
+  assert.equal(normal.jobs.buildchain.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha");
+  assert.equal(normal.jobs.buildchain.with["config-path"], ".buildchain/minimal-consumer.toml");
+  assert.equal(normal.jobs.buildchain.steps, undefined);
+  assert.equal(normal.jobs.buildchain["runs-on"], undefined);
+});test("self-dogfood never bridges an adjacent major or bypasses contract compatibility", () => {
   assert.deepEqual(
     resolveSelfDogfoodMajor({
       packageVersion: "2.14.18-alpha.5",
@@ -2548,14 +2523,9 @@ test("run-lifecycle action samples a configured lifecycle stage from the bundled
   }
 });
 
-test("self promotion classifies finalization from rooted state instead of display titles", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/self-release-promote.yml"),
-    "utf8",
-  );
-  assert.match(workflow, /^  classify-workflow-run:/m);
-  const graph = inspectWorkflowJob(".github/workflows/self-release-promote.yml", "classify-workflow-run");
-  assert.match([...graph.modules.values()].join("\n"), /selectFinalizedProductPublicationVersion/u);
-  assert.match(workflow, /needs\.classify-workflow-run\.outputs\.action == 'promote'/u);
-  assert.doesNotMatch(workflow, /workflow_run\.display_title/u);
+test("version preparation binds the retained source and contract instead of workflow display titles", () => {
+  const source = fs.readFileSync(path.join(root, "packages/core/publication/pipeline/version-context.js"), "utf8");
+  assert.match(source, /recordDigest\(admitted.identity\) !== recordDigest\(parent.source\)/u);
+  assert.match(source, /recordDigest\(admitted.plan\) !== publication.plan.contractRoot/u);
+  assert.doesNotMatch(source, /display_title/u);
 });

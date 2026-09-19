@@ -135,7 +135,11 @@ impl ReleaseInvocation {
             ));
         }
         if self.publisher.repository != "kungfu-systems/buildchain"
-            || self.publisher.workflow != ".github/workflows/.release-promote.yml"
+            || ![
+                ".github/workflows/.release-promote.yml",
+                ".github/workflows/.release-pipeline-products.yml",
+            ]
+            .contains(&self.publisher.workflow.as_str())
             || self.publisher.job != "apply"
             || !git_sha(&self.publisher.workflow_sha)
         {
@@ -309,6 +313,31 @@ mod tests {
         for name in ["alpha", "stable"] {
             let invocation = serde_json::from_value(fixture["invocations"][name].clone()).unwrap();
             assert!(project_release_invocation(invocation).is_ok(), "{name}");
+        }
+    }
+
+    #[test]
+    fn pipeline_publisher_is_one_exact_canonical_apply_identity() {
+        let fixture: serde_json::Value = serde_json::from_slice(include_bytes!(
+            "../../../architecture/release-invocation-fixtures.json"
+        ))
+        .unwrap();
+        let mut value = fixture["invocations"]["alpha"].clone();
+        value["publisher"]["workflow"] =
+            serde_json::json!(".github/workflows/.release-pipeline-products.yml");
+        assert!(project_release_invocation(serde_json::from_value(value.clone()).unwrap()).is_ok());
+        for (field, invalid) in [
+            ("repository", "example/consumer"),
+            ("job", "qualify"),
+            ("workflow", ".github/workflows/buildchain.yml"),
+            ("workflowSha", "v4"),
+        ] {
+            let mut changed = value.clone();
+            changed["publisher"][field] = serde_json::json!(invalid);
+            assert!(
+                project_release_invocation(serde_json::from_value(changed).unwrap()).is_err(),
+                "{field}"
+            );
         }
     }
 }

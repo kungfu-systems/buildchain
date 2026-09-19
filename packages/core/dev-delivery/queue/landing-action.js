@@ -3,9 +3,31 @@ import { deliveryActionContext } from "../native/action-context.js";
 import { admissionPolicyRequest } from "../admission/request.js";
 import { runAdmissionTransaction } from "../admission/transaction.js";
 import { enforceLanding } from "./completion.js";
+import { guardPipelineAdmission } from "../../workflow/pipeline/guard.js";
+import { githubJsonClient } from "../../providers/github/json-client.js";
+import { publishPipelineBuildStatus } from "../../workflow/pipeline/guard-build.js";
+import { publishIntegratedPipelineStatus } from "../../workflow/pipeline/integration-status.js";
+import { githubPipelineIntegration } from "../../providers/github/pipeline-integration.js";
+import { githubPipelineSource } from "../../providers/github/pipeline-source.js";
+import { githubPipelineRuns } from "../../providers/github/pipeline-runs.js";
+import { GitHubClient } from "../admission/github-client.js";
 export async function admitLandingAction(core, env) {
   const context = deliveryActionContext(core, env);
   const request = JSON.parse(core.getInput("request-json", { required: true }));
+  const admitted = await guardPipelineAdmission(request, {
+    repository: env.GITHUB_REPOSITORY,
+    token: core.getInput("token", { required: true }),
+    publishBuildStatus: (build) =>
+      publishPipelineBuildStatus(
+        request,
+        build,
+        githubJsonClient({
+          token: core.getInput("status-token", { required: true }),
+          userAgent: "buildchain-qualified-status",
+        }),
+        env.GITHUB_REPOSITORY,
+      ),
+  });
   const result = await runAdmissionTransaction(
     {
       ...admissionPolicyRequest(request, {
@@ -40,6 +62,37 @@ export async function admitLandingAction(core, env) {
     await core.summary.addRaw(result.summary).write();
   if (!result.ok)
     throw new Error("Targeted PR was not admitted at its expected head");
+  if (admitted) {
+    const repository = env.GITHUB_REPOSITORY;
+    const token = core.getInput("token", { required: true });
+    const read = githubJsonClient({
+      token,
+      userAgent: "buildchain-integration-status",
+    });
+    const [owner, repo] = repository.split("/");
+    const queue = new GitHubClient({ repository: { owner, repo }, token });
+    await publishIntegratedPipelineStatus(
+      {
+        ...admitted.history.at(-1),
+        intent: admitted.intent,
+      },
+      {
+        repository,
+        request: read,
+        queue: (branch) => queue.getMergeQueueState(branch),
+        integration: githubPipelineIntegration(
+          read,
+          repository,
+          githubPipelineSource(read, repository),
+          githubPipelineRuns(read, repository),
+        ),
+        status: githubJsonClient({
+          token: core.getInput("status-token", { required: true }),
+          userAgent: "buildchain-qualified-integration-status",
+        }),
+      },
+    );
+  }
 }
 export function completeDeliveryAction(core) {
   enforceLanding({

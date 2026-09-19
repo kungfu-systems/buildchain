@@ -1613,468 +1613,196 @@
       }
     },
     {
-      "laneId": ".github/workflows/self-build-adopter-dogfood.yml#dogfood",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "manual",
+      "laneId": ".github/workflows/.ops-pipeline-delivery.yml#delivery",
+      "authorityClass": "merge-critical-admission",
+      "triggerClass": "reusable",
       "concurrencyPolicy": {
         "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-build-alpha-dogfood.yml#alpha-consumer",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "ref-scoped",
         "cancelInProgress": false
       },
       "expectedRunnerMinutes": 360,
       "cancellationBehavior": "finish-started",
       "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-build-binary-distribution.yml#binary",
-      "authorityClass": "evidence",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-build-binary-distribution.yml#dispatch-publication",
-      "authorityClass": "evidence",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-build-binary-distribution.yml#passport",
-      "authorityClass": "evidence",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 45,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-build-binary-distribution.yml#preflight",
-      "authorityClass": "evidence",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-build-channel-verify.yml#verify",
-      "authorityClass": "merge-critical-admission",
-      "triggerClass": "pull-request",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
         "mergeCritical": true,
-        "metric": "protected delivery dependency budget",
+        "metric": "minimal pipeline bounded hosted execution",
         "expectedContributionSeconds": 21600,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
+        "rationale": "Owned runtime, metadata or product job boundary. Product matrix uses only declared platforms; native Warrant transfer waits for exact provider terminality. This is a conservative timeout budget, not measured latency."
       }
     },
     {
-      "laneId": ".github/workflows/self-build-demo-dogfood.yml#dogfood",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "ref-scoped",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "finish-started",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-build-demo-dogfood.yml#exact-binary",
+      "laneId": ".github/workflows/public-ops-pipeline.yml#runtime",
       "authorityClass": "evidence",
-      "triggerClass": "mixed",
+      "triggerClass": "reusable",
       "concurrencyPolicy": {
-        "mode": "ref-scoped",
+        "mode": "none",
         "cancelInProgress": false
       },
-      "expectedRunnerMinutes": 20,
+      "expectedRunnerMinutes": 5,
       "cancellationBehavior": "finish-started",
       "sloImpact": {
         "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
+        "metric": "minimal pipeline bounded hosted execution",
+        "expectedContributionSeconds": 300,
+        "rationale": "Owned runtime, metadata or product job boundary. Product matrix uses only declared platforms; native Warrant transfer waits for exact provider terminality. This is a conservative timeout budget, not measured latency."
       }
     },
     {
-      "laneId": ".github/workflows/self-build-demo-media-qualification.yml#qualify",
+      "laneId": ".github/workflows/public-ops-pipeline.yml#control",
       "authorityClass": "merge-critical-admission",
-      "triggerClass": "mixed",
+      "triggerClass": "reusable",
       "concurrencyPolicy": {
         "mode": "none",
         "cancelInProgress": false
       },
       "expectedRunnerMinutes": 20,
-      "cancellationBehavior": "provider-default",
+      "cancellationBehavior": "finish-started",
       "sloImpact": {
         "mergeCritical": true,
-        "metric": "protected delivery dependency budget",
+        "metric": "minimal pipeline bounded hosted execution",
         "expectedContributionSeconds": 1200,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
+        "rationale": "Owned runtime, metadata or product job boundary. Product matrix uses only declared platforms; native Warrant transfer waits for exact provider terminality. This is a conservative timeout budget, not measured latency."
       }
     },
     {
-      "laneId": ".github/workflows/self-build-fixture.yml#buildchain-package-candidate",
+      "laneId": ".github/workflows/.ops-pipeline-execute.yml#build",
+      "authorityClass": "merge-critical-required",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 60,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": true,
+        "metric": "minimal pipeline bounded hosted execution",
+        "expectedContributionSeconds": 3600,
+        "rationale": "Owned runtime, metadata or product job boundary. Product matrix uses only declared platforms; native Warrant transfer waits for exact provider terminality. This is a conservative timeout budget, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.ops-pipeline-execute.yml#record-build",
+      "authorityClass": "merge-critical-required",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 15,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": true,
+        "metric": "minimal pipeline bounded hosted execution",
+        "expectedContributionSeconds": 900,
+        "rationale": "Owned runtime, metadata or product job boundary. Product matrix uses only declared platforms; native Warrant transfer waits for exact provider terminality. This is a conservative timeout budget, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.ops-pipeline-execute.yml#delivery",
       "authorityClass": "merge-critical-admission",
-      "triggerClass": "mixed",
+      "triggerClass": "reusable",
       "concurrencyPolicy": {
         "mode": "none",
         "cancelInProgress": false
       },
       "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
+      "cancellationBehavior": "finish-started",
       "sloImpact": {
         "mergeCritical": true,
-        "metric": "protected delivery dependency budget",
+        "metric": "minimal pipeline bounded hosted execution",
         "expectedContributionSeconds": 21600,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
+        "rationale": "Owned runtime, metadata or product job boundary. Product matrix uses only declared platforms; native Warrant transfer waits for exact provider terminality. This is a conservative timeout budget, not measured latency."
       }
     },
     {
-      "laneId": ".github/workflows/self-build-fixture.yml#libnode-shaped",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": true,
-        "metric": "protected delivery dependency budget",
-        "expectedContributionSeconds": 21600,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-build-public-consumer-dogfood.yml#dogfood",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": true,
-        "metric": "protected delivery dependency budget",
-        "expectedContributionSeconds": 21600,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-build-stable-candidate-qualification.yml#qualify",
+      "laneId": ".github/workflows/.ops-pipeline-execute.yml#record-delivery",
       "authorityClass": "evidence",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "ref-scoped",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "finish-started",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-build-stable-dogfood.yml#stable-consumer",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "ref-scoped",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 20,
-      "cancellationBehavior": "finish-started",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "Published stable TOML build qualification latency",
-        "expectedContributionSeconds": 0,
-        "rationale": "Independent thin public stable fixture caller permits producer-first channel upgrades without duplicating build orchestration."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-build-verify.yml#build-backbone",
-      "authorityClass": "merge-critical-admission",
-      "triggerClass": "mixed",
+      "triggerClass": "reusable",
       "concurrencyPolicy": {
         "mode": "none",
         "cancelInProgress": false
       },
-      "expectedRunnerMinutes": 20,
-      "cancellationBehavior": "provider-default",
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
       "sloImpact": {
-        "mergeCritical": true,
-        "metric": "protected delivery dependency budget",
+        "mergeCritical": false,
+        "metric": "minimal pipeline bounded hosted execution",
+        "expectedContributionSeconds": 300,
+        "rationale": "Owned runtime, metadata or product job boundary. Product matrix uses only declared platforms; native Warrant transfer waits for exact provider terminality. This is a conservative timeout budget, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-pipeline-products.yml#prepare",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 15,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "declared product publication and retained follow-ups",
+        "expectedContributionSeconds": 900,
+        "rationale": "Post-merge product publication serializes provider writers per repository. At most five declared hosted platforms each have a sixty-minute build limit; independent signing and publisher jobs have explicit timeouts. These are conservative bounds, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-pipeline-products.yml#build",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 300,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "declared product publication and retained follow-ups",
+        "expectedContributionSeconds": 18000,
+        "rationale": "Post-merge product publication serializes provider writers per repository. At most five declared hosted platforms each have a sixty-minute build limit; independent signing and publisher jobs have explicit timeouts. These are conservative bounds, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-pipeline-products.yml#qualify",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 20,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "declared product publication and retained follow-ups",
         "expectedContributionSeconds": 1200,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
+        "rationale": "Post-merge product publication serializes provider writers per repository. At most five declared hosted platforms each have a sixty-minute build limit; independent signing and publisher jobs have explicit timeouts. These are conservative bounds, not measured latency."
       }
     },
     {
-      "laneId": ".github/workflows/self-build-verify.yml#check",
-      "authorityClass": "merge-critical-admission",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": true,
-        "metric": "protected delivery dependency budget",
-        "expectedContributionSeconds": 21600,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-build-verify.yml#stage-capsule-checkpoints",
-      "authorityClass": "merge-critical-admission",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": true,
-        "metric": "protected delivery dependency budget",
-        "expectedContributionSeconds": 21600,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-bootstrap-dogfood.yml#prepare",
-      "authorityClass": "merge-critical-admission",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": true,
-        "metric": "protected delivery dependency budget",
-        "expectedContributionSeconds": 21600,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-bootstrap-dogfood.yml#primary-alpha",
+      "laneId": ".github/workflows/.release-pipeline-products.yml#apply",
       "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
+      "triggerClass": "reusable",
       "concurrencyPolicy": {
-        "mode": "none",
+        "mode": "ref-scoped",
         "cancelInProgress": false
       },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": true,
-        "metric": "protected delivery dependency budget",
-        "expectedContributionSeconds": 21600,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-bootstrap-dogfood.yml#primary-conformance",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": true,
-        "metric": "protected delivery dependency budget",
-        "expectedContributionSeconds": 21600,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-bootstrap-dogfood.yml#primary-stable",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": true,
-        "metric": "protected delivery dependency budget",
-        "expectedContributionSeconds": 21600,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-bootstrap-dogfood.yml#reconcile",
-      "authorityClass": "merge-critical-admission",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": true,
-        "metric": "protected delivery dependency budget",
-        "expectedContributionSeconds": 21600,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-bootstrap-dogfood.yml#recovery-alpha",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": true,
-        "metric": "protected delivery dependency budget",
-        "expectedContributionSeconds": 21600,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-bootstrap-dogfood.yml#recovery-conformance",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": true,
-        "metric": "protected delivery dependency budget",
-        "expectedContributionSeconds": 21600,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-bootstrap-dogfood.yml#recovery-stable",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": true,
-        "metric": "protected delivery dependency budget",
-        "expectedContributionSeconds": 21600,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-dev-delivery.yml#deliver",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
+      "expectedRunnerMinutes": 30,
+      "cancellationBehavior": "finish-started",
       "sloImpact": {
         "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
+        "metric": "declared product publication and retained follow-ups",
+        "expectedContributionSeconds": 1800,
+        "rationale": "Post-merge product publication serializes provider writers per repository. At most five declared hosted platforms each have a sixty-minute build limit; independent signing and publisher jobs have explicit timeouts. These are conservative bounds, not measured latency."
       }
     },
     {
-      "laneId": ".github/workflows/self-ops-governance-audit.yml#audit",
-      "authorityClass": "merge-critical-admission",
-      "triggerClass": "mixed",
+      "laneId": ".github/workflows/.release-pipeline-products.yml#settle",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
       "concurrencyPolicy": {
         "mode": "ref-scoped",
         "cancelInProgress": false
@@ -2082,486 +1810,214 @@
       "expectedRunnerMinutes": 20,
       "cancellationBehavior": "finish-started",
       "sloImpact": {
-        "mergeCritical": true,
-        "metric": "protected delivery dependency budget",
+        "mergeCritical": false,
+        "metric": "declared product publication and retained follow-ups",
         "expectedContributionSeconds": 1200,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
+        "rationale": "Post-merge product publication serializes provider writers per repository. At most five declared hosted platforms each have a sixty-minute build limit; independent signing and publisher jobs have explicit timeouts. These are conservative bounds, not measured latency."
       }
     },
     {
-      "laneId": ".github/workflows/self-ops-housekeeping-daily.yml#apply",
+      "laneId": ".github/workflows/.ops-pipeline-execute.yml#publication",
       "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
+      "triggerClass": "reusable",
       "concurrencyPolicy": {
         "mode": "none",
         "cancelInProgress": false
       },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
+      "expectedRunnerMinutes": 385,
+      "cancellationBehavior": "finish-started",
       "sloImpact": {
         "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
+        "metric": "declared product publication and retained follow-ups",
+        "expectedContributionSeconds": 23100,
+        "rationale": "Post-merge product publication serializes provider writers per repository. At most five declared hosted platforms each have a sixty-minute build limit; independent signing and publisher jobs have explicit timeouts. These are conservative bounds, not measured latency."
       }
     },
     {
-      "laneId": ".github/workflows/self-ops-housekeeping-daily.yml#invalid-apply-gate",
-      "authorityClass": "post-merge-advisory",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-housekeeping-daily.yml#report",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-housekeeping-monthly.yml#apply",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-housekeeping-monthly.yml#invalid-apply-gate",
-      "authorityClass": "post-merge-advisory",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-housekeeping-monthly.yml#report",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-housekeeping-weekly.yml#apply",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-housekeeping-weekly.yml#invalid-apply-gate",
-      "authorityClass": "post-merge-advisory",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-housekeeping-weekly.yml#report",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-merge-queue.yml#reconcile",
+      "laneId": ".github/workflows/public-ops-recover.yml#runtime",
       "authorityClass": "evidence",
-      "triggerClass": "mixed",
+      "triggerClass": "reusable",
       "concurrencyPolicy": {
         "mode": "none",
         "cancelInProgress": false
       },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
       "sloImpact": {
         "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
+        "metric": "minimal pipeline bounded hosted execution",
+        "expectedContributionSeconds": 300,
+        "rationale": "Owned runtime, metadata or product job boundary. Product matrix uses only declared platforms; native Warrant transfer waits for exact provider terminality. This is a conservative timeout budget, not measured latency."
       }
     },
     {
-      "laneId": ".github/workflows/self-ops-patrol-daily.yml#patrol",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-patrol-monthly.yml#patrol",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-patrol-weekly.yml#patrol",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-promotion-recovery.yml#resume",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "manual",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-runner-smoke.yml#smoke",
-      "authorityClass": "evidence",
-      "triggerClass": "manual",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-ops-stable-candidate-patrol.yml#patrol",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-release-binary-assets.yml#publish",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "manual",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-release-binary-assets.yml#resolve",
-      "authorityClass": "release",
-      "triggerClass": "manual",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-release-line-open.yml#bootstrap",
-      "authorityClass": "release",
-      "triggerClass": "manual",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-release-next-development.yml#review",
+      "laneId": ".github/workflows/public-ops-recover.yml#control",
       "authorityClass": "merge-critical-admission",
-      "triggerClass": "mixed",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 20,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": true,
+        "metric": "minimal pipeline bounded hosted execution",
+        "expectedContributionSeconds": 1200,
+        "rationale": "Owned runtime, metadata or product job boundary. Product matrix uses only declared platforms; native Warrant transfer waits for exact provider terminality. This is a conservative timeout budget, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/public-ops-pipeline.yml#execute",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 825,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "shared normal or recovery execution timeout bound",
+        "expectedContributionSeconds": 49500,
+        "rationale": "Delegates to the same isolated product, native delivery and publication jobs. Recovery schedules only qualified missing work; this inherited conservative timeout sum is not measured latency or a new parallel lane family."
+      }
+    },
+    {
+      "laneId": ".github/workflows/public-ops-recover.yml#execute",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 825,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "shared normal or recovery execution timeout bound",
+        "expectedContributionSeconds": 49500,
+        "rationale": "Delegates to the same isolated product, native delivery and publication jobs. Recovery schedules only qualified missing work; this inherited conservative timeout sum is not measured latency or a new parallel lane family."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-pipeline-products.yml#materialize",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
       "concurrencyPolicy": {
         "mode": "ref-scoped",
         "cancelInProgress": false
       },
-      "expectedRunnerMinutes": 3,
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "declared version regeneration before publication or next-development materialization",
+        "expectedContributionSeconds": 300,
+        "rationale": "One shared internal component executes each declared product platform for version-derived files, then independently verifies actual job completion and archive digests before Git writes. Up to five product runners each have a sixty-minute ceiling, and materialization has twenty minutes; the component can run once for publication and once for next development. Parent reusable jobs delegate without a separate product runner. Bounds are declared capacity, not measured latency; per-repository publication concurrency retains a single provider writer."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-pipeline-products.yml#development",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "declared version regeneration before publication or next-development materialization",
+        "expectedContributionSeconds": 300,
+        "rationale": "One shared internal component executes each declared product platform for version-derived files, then independently verifies actual job completion and archive digests before Git writes. Up to five product runners each have a sixty-minute ceiling, and materialization has twenty minutes; the component can run once for publication and once for next development. Parent reusable jobs delegate without a separate product runner. Bounds are declared capacity, not measured latency; per-repository publication concurrency retains a single provider writer."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-pipeline-version.yml#build",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 300,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "declared version regeneration before publication or next-development materialization",
+        "expectedContributionSeconds": 18000,
+        "rationale": "One shared internal component executes each declared product platform for version-derived files, then independently verifies actual job completion and archive digests before Git writes. Up to five product runners each have a sixty-minute ceiling, and materialization has twenty minutes; the component can run once for publication and once for next development. Parent reusable jobs delegate without a separate product runner. Bounds are declared capacity, not measured latency; per-repository publication concurrency retains a single provider writer."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-pipeline-version.yml#materialize",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 20,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "declared version regeneration before publication or next-development materialization",
+        "expectedContributionSeconds": 1200,
+        "rationale": "One shared internal component executes each declared product platform for version-derived files, then independently verifies actual job completion and archive digests before Git writes. Up to five product runners each have a sixty-minute ceiling, and materialization has twenty minutes; the component can run once for publication and once for next development. Parent reusable jobs delegate without a separate product runner. Bounds are declared capacity, not measured latency; per-repository publication concurrency retains a single provider writer."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.ops-pipeline-execute.yml#stable-recheck",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 20,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "bounded stable qualification recheck",
+        "expectedContributionSeconds": 1200,
+        "rationale": "Wait at most fifteen minutes outside the publication lock, then wake the same native Attempt through the normal entry to collect fresh qualification. Twenty minutes includes runtime preparation; this is a conservative timeout budget, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/buildchain.yml#buildchain",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 360,
       "cancellationBehavior": "finish-started",
       "sloImpact": {
         "mergeCritical": true,
-        "metric": "generated next-development independent review latency",
-        "expectedContributionSeconds": 180,
-        "rationale": "Only successful same-repository version PRs regenerate from the protected base and read completed publication evidence; ordinary source PRs skip the lane. Native queue checks remain final merge authority."
+        "metric": "delegated pipeline execution ceiling",
+        "expectedContributionSeconds": 21600,
+        "rationale": "Generated caller delegates to the published pipeline. Runtime jobs own bounded admission, execution, cancellation and provider settlement. Six-hour budget is conservative, not measured latency or an additional self controller."
       }
     },
     {
-      "laneId": ".github/workflows/self-release-npm-dry-run.yml#dry-run",
-      "authorityClass": "release",
+      "laneId": ".github/workflows/buildchain-recover.yml#buildchain",
+      "authorityClass": "governed-delegation",
       "triggerClass": "manual",
       "concurrencyPolicy": {
         "mode": "none",
         "cancelInProgress": false
       },
       "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-release-promote.yml#classify-workflow-run",
-      "authorityClass": "release",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-release-promote.yml#promote",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-release-promote.yml#reject-invalid-candidate-recovery",
-      "authorityClass": "release",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-release-promote.yml#reject-invalid-durable-recovery",
-      "authorityClass": "release",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-release-promote.yml#reject-manual-apply",
-      "authorityClass": "release",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-release-rehearsal-dogfood.yml#rehearsal",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
+      "cancellationBehavior": "finish-started",
       "sloImpact": {
         "mergeCritical": true,
-        "metric": "protected delivery dependency budget",
+        "metric": "delegated pipeline execution ceiling",
         "expectedContributionSeconds": 21600,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
-      }
-    },
-    {
-      "laneId": ".github/workflows/self-release-tail-dogfood.yml#publish",
-      "authorityClass": "governed-delegation",
-      "triggerClass": "manual",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 360,
-      "cancellationBehavior": "provider-default",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "capability execution budget",
-        "expectedContributionSeconds": 0,
-        "rationale": "Current 4.1 capability node. Budget uses the declared job timeout or the conservative six-hour provider ceiling; it is not a measured latency or a new claim of required-check authority."
+        "rationale": "Generated caller delegates to the published pipeline. Runtime jobs own bounded admission, execution, cancellation and provider settlement. Six-hour budget is conservative, not measured latency or an additional self controller."
       }
     }
   ],
@@ -2634,17 +2090,7 @@
     {
       "laneIds": [
         ".github/workflows/public-build-adopter-qualification.yml#execution-runtime",
-        ".github/workflows/public-ops-release-governance.yml#execution-runtime",
-        ".github/workflows/self-build-binary-distribution.yml#execution-runtime",
-        ".github/workflows/self-build-demo-media-qualification.yml#execution-runtime",
-        ".github/workflows/self-build-fixture.yml#execution-runtime",
-        ".github/workflows/self-build-verify.yml#execution-runtime",
-        ".github/workflows/self-ops-bootstrap-dogfood.yml#execution-runtime",
-        ".github/workflows/self-ops-housekeeping-daily.yml#execution-runtime",
-        ".github/workflows/self-ops-housekeeping-monthly.yml#execution-runtime",
-        ".github/workflows/self-ops-housekeeping-weekly.yml#execution-runtime",
-        ".github/workflows/self-ops-merge-queue.yml#execution-runtime",
-        ".github/workflows/self-release-promote.yml#execution-runtime"
+        ".github/workflows/public-ops-release-governance.yml#execution-runtime"
       ],
       "authorityClass": "governed-delegation",
       "triggerClass": "mixed",
@@ -2669,69 +2115,6 @@
       "triggerClass": "manual",
       "concurrencyPolicy": {
         "mode": "ref-scoped",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 5,
-      "cancellationBehavior": "finish-started",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "runtime entry preparation",
-        "expectedContributionSeconds": 300,
-        "rationale": "Five-minute upper bound for central entry selection; no business execution or provider mutation."
-      }
-    },
-    {
-      "laneIds": [
-        ".github/workflows/self-build-channel-verify.yml#execution-runtime"
-      ],
-      "authorityClass": "governed-delegation",
-      "triggerClass": "pull-request",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 5,
-      "cancellationBehavior": "finish-started",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "runtime entry preparation",
-        "expectedContributionSeconds": 300,
-        "rationale": "Five-minute upper bound for central entry selection; no business execution or provider mutation."
-      }
-    },
-    {
-      "laneIds": [
-        ".github/workflows/self-build-demo-dogfood.yml#execution-runtime",
-        ".github/workflows/self-build-stable-candidate-qualification.yml#execution-runtime",
-        ".github/workflows/self-ops-governance-audit.yml#execution-runtime",
-        ".github/workflows/self-release-next-development.yml#execution-runtime"
-      ],
-      "authorityClass": "governed-delegation",
-      "triggerClass": "mixed",
-      "concurrencyPolicy": {
-        "mode": "ref-scoped",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 5,
-      "cancellationBehavior": "finish-started",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "runtime entry preparation",
-        "expectedContributionSeconds": 300,
-        "rationale": "Five-minute upper bound for central entry selection; no business execution or provider mutation."
-      }
-    },
-    {
-      "laneIds": [
-        ".github/workflows/self-ops-runner-smoke.yml#execution-runtime",
-        ".github/workflows/self-release-binary-assets.yml#execution-runtime",
-        ".github/workflows/self-release-line-open.yml#execution-runtime",
-        ".github/workflows/self-release-npm-dry-run.yml#execution-runtime"
-      ],
-      "authorityClass": "governed-delegation",
-      "triggerClass": "manual",
-      "concurrencyPolicy": {
-        "mode": "none",
         "cancelInProgress": false
       },
       "expectedRunnerMinutes": 5,

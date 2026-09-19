@@ -3,8 +3,7 @@ on:
   workflow_call:
     inputs:
       request-json:
-        description: Complete normalized buildchain.promotion-invocation/v1 produced by the public promotion
-          API.
+        description: Complete normalized buildchain.promotion-invocation/v1 produced by the public promotion API.
         type: string
         required: true
       runtime-ref:
@@ -30,8 +29,7 @@ on:
         description: Optional consumer-owned credential exposed only to the final publication commit command
         required: false
       BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY:
-        description: Optional consumer-owned private signing material exposed only to the final publication
-          commit command
+        description: Optional consumer-owned private signing material exposed only to the final publication commit command
         required: false
       KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:
         description: Private key for the dedicated read-only GitHub governance auditor App
@@ -55,6 +53,12 @@ on:
         description: Optional GitHub App private key used to mint a Buildchain issue-report token
         required: false
     outputs:
+      discussion-id:
+        description: Release transaction discussion-id.
+        value: ${{ jobs.apply.outputs.discussion-id }}
+      discussion-url:
+        description: Release transaction discussion-url.
+        value: ${{ jobs.apply.outputs.discussion-url }}
       promoted-sha:
         description: Promoted channel SHA
         value: ${{ jobs.apply.outputs.promoted-sha || jobs.qualify.outputs.current-sha }}
@@ -175,6 +179,7 @@ jobs:
     permissions:
       actions: read
       contents: read
+      discussions: read
       pull-requests: read
     outputs:
       action: ${{ steps.node.outputs.action }}
@@ -241,6 +246,8 @@ jobs:
       release-invocation-root: ${{ steps.node.outputs.release-invocation-root }}
       release-transaction-root: ${{ steps.node.outputs.release-transaction-root }}
       release-receipt-root: ${{ steps.node.outputs.release-receipt-root }}
+      discussion-id: ${{ steps.node.outputs.discussion-id }}
+      discussion-url: ${{ steps.node.outputs.discussion-url }}
     steps:
       - name: Checkout the admitted protected channel state
         uses: actions/checkout@v7.0.0

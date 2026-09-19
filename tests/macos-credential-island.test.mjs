@@ -772,10 +772,6 @@ test("public action and workflow keep credentials outside the build matrix", () 
     path.join(root, ".github/workflows/build.yml"),
     "utf8",
   );
-  const fixtureWorkflow = fs.readFileSync(
-    path.join(root, ".github/workflows/self-build-fixture.yml"),
-    "utf8",
-  );
   const nativeBuildJob = workflow.match(
     /\n  build-native:[\s\S]+?(?=\n  build-container:)/u,
   )?.[0];

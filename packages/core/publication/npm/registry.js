@@ -19,17 +19,23 @@ export function runNpm({ cwd, args, env, allowFailure = false }) {
   return result;
 }
 
-function parseNpmView(stdout) {
+export function parseNpmView(stdout) {
   const raw = String(stdout || "").trim();
-  if (!raw) {
-    return undefined;
-  }
-  const parsed = JSON.parse(raw);
+  if (!raw) throw new Error("npm view omitted its exact package response");
+  const value = JSON.parse(raw);
+  if (Array.isArray(value) && value.length !== 1)
+    throw new Error("npm view must return exactly one package version");
+  const parsed = Array.isArray(value) ? value[0] : value;
+  if (typeof parsed === "string" && parsed)
+    return { integrity: parsed, shasum: "" };
   const dist = parsed?.dist || parsed;
-  return {
+  const result = {
     integrity: dist?.integrity || parsed?.["dist.integrity"] || "",
     shasum: dist?.shasum || parsed?.["dist.shasum"] || "",
   };
+  if (!result.integrity && !result.shasum)
+    throw new Error("npm view omitted the exact package integrity");
+  return result;
 }
 
 export function publishedDigest({ cwd, name, version, registry, env }) {
@@ -54,8 +60,5 @@ export function publishedDigest({ cwd, name, version, registry, env }) {
     throw new Error(`npm view ${name}@${version} failed\n${output}`.trim());
   }
   const view = parseNpmView(result.stdout);
-  if (!view) {
-    return undefined;
-  }
   return view.integrity || (view.shasum ? `sha1:${view.shasum}` : "");
 }

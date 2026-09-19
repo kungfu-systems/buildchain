@@ -1,0 +1,19 @@
+name: Release transaction inspect
+description: Initialize release intent, append independently owned progress and inspect one durable Discussion across workflow recovery.
+inputs:
+  token:
+    description: Consumer repository token with discussions permission.
+    required: true
+  session-json:
+    description: Initialized release Discussion session.
+    required: true
+outputs:
+  status:
+    description: Release transaction status.
+  handoff-json:
+    description: Release transaction handoff-json.
+  state-json:
+    description: Release transaction state-json.
+runs:
+  using: node24
+  main: dist/index.js

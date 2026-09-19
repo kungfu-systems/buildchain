@@ -1040,6 +1040,60 @@ importers:
         specifier: 6.0.1
         version: 6.0.1
 
+  actions/publication/pipeline/apply:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
+  actions/publication/pipeline/build:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
+  actions/publication/pipeline/prepare:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
+  actions/publication/pipeline/prepare-qualification:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
+  actions/publication/pipeline/seal-qualification:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
+  actions/publication/pipeline/settle:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
   actions/publication/settlement/retain:
     dependencies:
       '@actions/core':
@@ -1050,6 +1104,33 @@ importers:
         version: 6.0.1
 
   actions/publication/settlement/verify:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
+  actions/publication/version/build:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
+  actions/publication/version/materialize-development:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
+  actions/publication/version/materialize-publication:
     dependencies:
       '@actions/core':
         specifier: 1.11.1
@@ -1259,6 +1340,33 @@ importers:
         specifier: 6.0.1
         version: 6.0.1
 
+  actions/release/transaction/inspect:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
+  actions/release/transaction/open:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
+  actions/release/transaction/record:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
   actions/runtime/dependencies/install:
     dependencies:
       '@actions/core':
@@ -1458,6 +1566,51 @@ importers:
         version: 6.0.1
 
   actions/workflow/event/admit:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
+  actions/workflow/pipeline/build:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
+  actions/workflow/pipeline/control:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
+  actions/workflow/pipeline/record-build:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
+  actions/workflow/pipeline/recover:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
+  actions/workflow/pipeline/wake:
     dependencies:
       '@actions/core':
         specifier: 1.11.1

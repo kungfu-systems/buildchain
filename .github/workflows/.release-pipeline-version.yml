@@ -1,0 +1,104 @@
+name: Internal pipeline version preparation
+on:
+  workflow_call:
+    inputs:
+      context:
+        type: string
+        required: true
+      operation:
+        type: string
+        required: true
+      matrix:
+        type: string
+        required: true
+      purpose:
+        type: string
+        required: true
+      runtime-selection:
+        type: string
+        required: true
+    secrets:
+      BUILDCHAIN_APP_PRIVATE_KEY:
+        required: false
+      BUILDCHAIN_AUTOMATION_TOKEN:
+        required: false
+    outputs:
+      stable-wait:
+        value: ${{ jobs.materialize.outputs.stable-wait }}
+      operation:
+        value: ${{ jobs.materialize.outputs.operation }}
+      context:
+        value: ${{ jobs.materialize.outputs.context }}
+      matrix:
+        value: ${{ jobs.materialize.outputs.matrix }}
+permissions:
+  contents: read
+jobs:
+  build:
+    name: Prepare version (${{ inputs.purpose }}, ${{ matrix.platform }})
+    if: inputs.operation == 'regenerate'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(inputs.matrix) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ inputs.runtime-selection }}
+          token: ${{ github.token }}
+      - uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ fromJSON(inputs.context).preparation.source.repository }}
+          ref: ${{ fromJSON(inputs.context).preparation.source.commit }}
+          path: .buildchain/product
+          persist-credentials: false
+      - uses: ./.buildchain/runtime/actions/publication/version/build
+        with:
+          context: ${{ inputs.context }}
+          platform: ${{ matrix.platform }}
+  materialize:
+    name: ${{ inputs.purpose == 'development' && 'Materialize next development' || 'Materialize publication' }}
+    needs: build
+    if: always() && (inputs.operation != 'regenerate' || needs.build.result == 'success')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: write
+    outputs:
+      stable-wait: ${{ steps.publication.outputs.stable-wait }}
+      operation: ${{ steps.publication.outputs.operation }}
+      context: ${{ steps.publication.outputs.context }}
+      matrix: ${{ steps.publication.outputs.matrix }}
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ inputs.runtime-selection }}
+          token: ${{ github.token }}
+      - id: credential
+        if: inputs.purpose == 'development'
+        uses: ./.buildchain/runtime/actions/providers/github/token
+        with:
+          client-id: ${{ vars.BUILDCHAIN_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BUILDCHAIN_APP_PRIVATE_KEY }}
+          fallback-token: ${{ secrets.BUILDCHAIN_AUTOMATION_TOKEN }}
+          failure-policy: strict
+          permission-contents: write
+          permission-pull-requests: write
+      - id: publication
+        if: inputs.purpose == 'publication'
+        uses: ./.buildchain/runtime/actions/publication/version/materialize-publication
+        with:
+          context: ${{ inputs.context }}
+          operation: ${{ inputs.operation }}
+          token: ${{ github.token }}
+      - if: inputs.purpose == 'development'
+        uses: ./.buildchain/runtime/actions/publication/version/materialize-development
+        with:
+          context: ${{ inputs.context }}
+          token: ${{ github.token }}
+          pr-token: ${{ steps.credential.outputs.token }}

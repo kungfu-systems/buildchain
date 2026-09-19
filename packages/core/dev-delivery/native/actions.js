@@ -5,6 +5,8 @@ import {
   qualifyTransferredNative,
 } from "./transactions.js";
 import { admitProviderFinalizer } from "./finalizer-admission.js";
+import { guardPipelineAdmission } from "../../workflow/pipeline/guard.js";
+import { replaceNativeActionProcess } from "./process-entry.js";
 function request(core, env) {
   const candidate = JSON.parse(
     core.getInput("request-json", { required: true }),
@@ -22,6 +24,7 @@ function outputs(core, result) {
     core.setOutput(name, value);
 }
 export async function executeDeliveryNativeAction(core, env) {
+  replaceNativeActionProcess();
   const context = deliveryActionContext(core, env);
   const input = request(core, env);
   outputs(
@@ -41,11 +44,16 @@ export async function executeDeliveryNativeAction(core, env) {
 }
 export async function qualifyTransferredNativeAction(core, env) {
   const context = deliveryActionContext(core, env);
+  const input = request(core, env);
+  await guardPipelineAdmission(input.request, {
+    repository: env.GITHUB_REPOSITORY,
+    token: core.getInput("token", { required: true }),
+  });
   outputs(
     core,
     await qualifyTransferredNative({
       ...context,
-      candidate: request(core, env).candidate,
+      candidate: input.candidate,
       sourceProofRoot: core.getInput("source-proof-root", { required: true }),
       token: core.getInput("token", { required: true }),
       apiUrl: env.GITHUB_API_URL || "https://api.github.com",

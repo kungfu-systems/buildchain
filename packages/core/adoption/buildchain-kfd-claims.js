@@ -58,7 +58,10 @@ const WORKFLOW_AND_ACTION_FILES = Object.freeze([
   ".github/workflows/.build.yml",
   ".github/workflows/.release-promote.yml",
   ".github/workflows/public-release-promote.yml",
-  ".github/workflows/self-release-promote.yml",
+  ".github/workflows/buildchain.yml",
+  ".github/workflows/buildchain-recover.yml",
+  ".github/workflows/public-ops-pipeline.yml",
+  ".github/workflows/public-ops-recover.yml",
   ".github/workflows/public-release-artifact-attestation.yml",
   "actions/build/artifact/prepare-attestation/action.yml",
   "actions/build/artifact/prepare-attestation/index.js",
@@ -75,7 +78,6 @@ const EXTRA_KFD1_FILES = Object.freeze([
   "packages/core/index.js",
   "packages/core/build/homebrew.js",
   "packages/core/build/build-facts.js",
-  "packages/core/adoption/kfd3-surface-register.js",
   "packages/core/release/release-propagation.js",
   "scripts/generate-site-bundle.mjs",
   "packages/core/release/commands/ensure-github-release.mjs",
@@ -446,7 +448,7 @@ export function createBuildchainKfdSurfaceRegistry({ root = process.cwd() } = {}
     {
       name: "Buildchain standalone binary distribution",
       artifactPath: "dist/binary",
-      evidencePath: ".github/workflows/self-build-binary-distribution.yml",
+      evidencePath: ".github/workflows/.release-pipeline-products.yml",
       distribution: normalizeKfd3DistributionDeclaration({
         registrar: "shifu",
         tasks: ["binary:build"],
@@ -529,7 +531,6 @@ export function createBuildchainKfdClaimRegistry({ root = process.cwd(), sourceS
 
 export function createBuildchainKfd1Witness({ root = process.cwd(), sourceSha = "" } = {}) {
   const registry = createBuildchainKfdClaimRegistry({ root, sourceSha });
-  const registrySha256 = sha256Json(registry);
   const paths = uniquePaths([
     ...publicDocumentationFiles(root),
     ...SCHEMA_AND_STANDARD_FILES,
@@ -545,7 +546,7 @@ export function createBuildchainKfd1Witness({ root = process.cwd(), sourceSha = 
     contractWorld: {
       id: "buildchain-runtime-contract-world",
       schemaId: "kungfu-buildchain-runtime-contract-world",
-      digest: `sha256:${registrySha256}`,
+      digest: `sha256:${sha256Json(registry)}`,
       owner: "Buildchain maintainers",
       selfHosted: true,
     },
@@ -584,7 +585,6 @@ export function createBuildchainKfd3PrebuildWitness({ root = process.cwd(), sour
   const registry = createBuildchainKfdClaimRegistry({ root, sourceSha });
   const surfaces = createBuildchainKfdSurfaceRegistry({ root });
   const reverseAudit = publicSurfaceAuditEvidence(root);
-  const digest = `sha256:${sha256Json(registry)}`;
   return {
     schemaVersion: 1,
     id: "buildchain-collaboration-interface",
@@ -596,7 +596,7 @@ export function createBuildchainKfd3PrebuildWitness({ root = process.cwd(), sour
       path: "dist/site/kfd-claims.json",
       sha256: fileExists(root, "dist/site/kfd-claims.json") ? sha256File(root, "dist/site/kfd-claims.json") : "",
     },
-    collaborationInterfaceDigest: digest,
+    collaborationInterfaceDigest: `sha256:${sha256Json(registry)}`,
     collaborationInterface: {
       schemaVersion: 1,
       contract: BUILDCHAIN_KFD_COLLABORATION_INTERFACE_CONTRACT,

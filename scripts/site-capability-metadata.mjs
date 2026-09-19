@@ -231,6 +231,7 @@ export function nodeApiMeta(exportName) {
     "./v4-tail-reseal": { group: "release-passport-trust", summary: "Effect-pure retained Stage Capsule validation and explicit Warrant-, credential-, and release-tail-fenced macOS reseal planning APIs." },
     "./tail-reseal": { group: "release-passport-trust", summary: "Effect-pure retained Stage Capsule validation and explicit Warrant-, credential-, and release-tail-fenced macOS reseal planning APIs." },
     "./v4-tail-reseal-receipt": { group: "release-passport-trust", summary: "Four-platform byte readback, standard candidate Passport binding, and terminal v4 tail-reseal receipt APIs." },
+    "./release-discussion-reader": { group: "release-passport-trust", summary: "Standalone historical decoder for append-only release Discussion intent, attempt lineage and recovery handoff." },
     "./tail-reseal-receipt": { group: "release-passport-trust", summary: "Four-platform byte readback, standard candidate Passport binding, and terminal v4 tail-reseal receipt APIs." },
     "./v4-publication-rehearsal": { group: "release-passport-trust", summary: "Content-addressed v4 publication rehearsal capsules, shared production release-tail execution, replay, provider observation, and fail-closed verification APIs." },
     "./publication-rehearsal": { group: "release-passport-trust", summary: "Content-addressed v4 publication rehearsal capsules, shared production release-tail execution, replay, provider observation, and fail-closed verification APIs." },

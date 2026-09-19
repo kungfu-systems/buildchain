@@ -1,161 +1,165 @@
-schema = 1
+# Product build and verification plan for the published minimal consumer entry.
+schema = 2
+
+[[products]]
+id = "buildchain"
+type = "npm"
+platforms = [ "linux-x64" ]
+install = [ "node scripts/prepare-product-toolchain.mjs", "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
+build = [ "corepack pnpm@11.7.0 run build", "corepack pnpm@11.7.0 run generate:site" ]
+verify = [ "corepack pnpm@11.7.0 run check", "node scripts/verify-product-platform.mjs" ]
+
+[[products.artifacts]]
+id = "package"
+path = "."
+kind = "npm-package"
+
+[[products.targets]]
+provider = "npm"
+access = "public"
+artifacts = [ "package" ]
+
+[[products]]
+id = "buildchain-linux"
+type = "binary"
+platforms = [ "linux-x64" ]
+install = [ "node scripts/prepare-product-toolchain.mjs", "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile" ]
+build = [ "node scripts/build-standalone-binary.mjs" ]
+verify = [ "node scripts/verify-standalone-product.mjs" ]
+
+[[products.artifacts]]
+id = "binary"
+path = "dist/binary/buildchain-x86_64-unknown-linux-gnu.tar.gz"
+kind = "archive"
+filename = "buildchain-x86_64-unknown-linux-gnu.tar.gz"
+
+[[products.targets]]
+provider = "github-release"
+artifacts = [ "binary" ]
+
+[[products]]
+id = "buildchain-macos"
+type = "binary"
+platforms = [ "macos-arm64" ]
+install = [ "brew install go", "node scripts/prepare-product-toolchain.mjs", "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
+build = [ "corepack pnpm@11.7.0 run build", "corepack pnpm@11.7.0 run generate:site", "node scripts/build-standalone-binary.mjs" ]
+verify = [ "corepack pnpm@11.7.0 run check", "node scripts/verify-product-platform.mjs", "node scripts/verify-standalone-product.mjs" ]
+
+[[products.artifacts]]
+id = "binary"
+path = "dist/binary/buildchain-aarch64-apple-darwin.tar.gz"
+kind = "archive"
+filename = "buildchain-aarch64-apple-darwin.tar.gz"
+
+[[products.targets]]
+provider = "github-release"
+artifacts = [ "binary" ]
+
+[[products]]
+id = "buildchain-windows"
+type = "binary"
+platforms = [ "windows-x64" ]
+install = [ "node scripts/prepare-product-toolchain.mjs", "go version", "corepack enable pnpm", "corepack pnpm@11.7.0 install --frozen-lockfile", "rustup component add --toolchain 1.96.0 rustfmt clippy", "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown" ]
+build = [ "corepack pnpm@11.7.0 run build", "corepack pnpm@11.7.0 run generate:site", "node scripts/build-standalone-binary.mjs" ]
+verify = [ "corepack pnpm@11.7.0 run check", "node scripts/verify-product-platform.mjs", "node scripts/verify-standalone-product.mjs" ]
+
+[[products.artifacts]]
+id = "binary"
+path = "dist/binary/buildchain-x86_64-pc-windows-msvc.zip"
+kind = "archive"
+filename = "buildchain-x86_64-pc-windows-msvc.zip"
+
+[[products.targets]]
+provider = "github-release"
+artifacts = [ "binary" ]
 
 [version]
-required = true
-derived_files = [
-  "dist/site/kfd-claims.json",
-  "dist/site/public-surface-audit.json",
-  "dist/site/workflow-registry.json",
-]
+strategy = "semver"
+derived_files = [ "dist/site/buildchain-contract.json", "dist/site/kfd-claims.json", "dist/site/public-surface-audit.json", "dist/site/workflow-registry.json" ]
 
 [[version.files]]
-type = "json"
 path = "package.json"
 key = "version"
+format = "json"
 
 [[version.files]]
-type = "json"
 path = ".buildchain/release-impact.json"
 key = "release.version"
+format = "json"
 
 [[version.files]]
-type = "json"
-path = "dist/site/buildchain-contract.json"
-key = "product.version"
-
-[[version.files]]
-type = "json"
 path = "dist/site/buildchain-site.json"
 key = "package.version"
+format = "json"
 
 [[version.files]]
-type = "json"
 path = "dist/site/site-manifest.json"
 key = "package.version"
+format = "json"
 
 [[version.files]]
-type = "json"
 path = "dist/site/publication-registry.json"
 key = "package.version"
+format = "json"
 
 [[version.files]]
-type = "json"
 path = "dist/site/kfd-upstream-aggregate.json"
 key = "product.version"
+format = "json"
 
-[lifecycle.install]
-command = "corepack enable pnpm && corepack pnpm@11.7.0 install --frozen-lockfile"
+[[channels]]
+from = "feature/*"
+to = "dev/v4/v4.1"
+operation = "develop"
 
-[lifecycle.build]
-command = "corepack pnpm@11.7.0 run build && corepack pnpm@11.7.0 run generate:site"
+[[channels]]
+from = "fix/*"
+to = "dev/v4/v4.1"
+operation = "develop"
 
-[lifecycle.verify]
-commands = [
-  "rustup component add --toolchain 1.96.0 rustfmt clippy",
-  "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown",
-  "corepack pnpm@11.7.0 run check",
-]
+[[channels]]
+from = "chore/*"
+to = "dev/v4/v4.1"
+operation = "develop"
 
-[lifecycle.version-state]
-command = "node scripts/generate-site-bundle.mjs"
+[[channels]]
+from = "docs/*"
+to = "dev/v4/v4.1"
+operation = "develop"
 
-[lifecycle.publish]
-command = "node packages/core/publication/commands/npm-publish-transaction.mjs"
+[[channels]]
+from = "ci/*"
+to = "dev/v4/v4.1"
+operation = "develop"
 
-[publish]
-shared_alpha_authority_major = 4
+[[channels]]
+from = "refactor/*"
+to = "dev/v4/v4.1"
+operation = "develop"
 
-[publication_rehearsal]
-contract = "buildchain-v4-publication-rehearsal-capsule/v1"
-capsule_path = "contracts/fixtures/v4-publication-rehearsal-v1/capsule.json"
-candidate_root = "contracts/fixtures/v4-publication-rehearsal-v1/candidate"
-state_path = ".buildchain/publication-rehearsal/state.json"
-evidence_path = ".buildchain/publication-rehearsal/evidence.json"
-effect_default = "disabled"
+[[channels]]
+from = "dev/v4/v4.1"
+to = "alpha/v4/v4.1"
+operation = "alpha"
 
-[governance.dev.merge_queue]
-mode = "enabled"
-required_workflows = [".github/workflows/self-build-verify.yml"]
-check_response_timeout_minutes = 120
-max_entries_to_build = 1
+[[channels]]
+from = "alpha/v4/v4.1"
+to = "release/v4/v4.1"
+operation = "stable"
 
-[release.stable]
-strategy = "latest-qualified-alpha"
-timezone = "Asia/Shanghai"
-publish_at = "03:00"
-minimum_soak_seconds = 3600
-required_checks = [
-  "alpha-release",
-  "status:buildchain-canary/buildchain-zero-input",
-]
-auto_promote = true
-auto_merge = true
+[[channels]]
+from = "release/v4/v4.1"
+to = "publish-gate/major"
+operation = "major"
 
-[[facts.version_sources]]
-id = "package"
-type = "json"
-path = "package.json"
-key = "version"
+[review]
+minimum_approvals = 1
+code_owners = true
+merge_queue = true
 
-[[facts.modules]]
-id = "buildchain-core"
-root = "packages/core"
-scope = "node-api"
-version_source = "package"
-lifecycle = "version-state"
-outputs = [
-  "dist/site/buildchain-site.json",
-  "dist/site/manual-registry.json",
-  "dist/site/node-api-registry.json",
-]
-
-[[facts.products]]
-id = "buildchain"
-module_facts = [".buildchain/facts/buildchain-core.json"]
-artifacts = [
-  "dist/site/buildchain-site.json",
-  "dist/site/site-manifest.json",
-]
-
-[badges]
-release_passport = "https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json"
-kfd_1 = "declared"
-kfd_2 = "declared"
-kfd_3 = "declared"
-kfd_4 = "declared"
-platforms = ["macOS", "Linux", "Windows"]
-workflows = ["self-build-verify.yml", "self-release-promote.yml", "self-build-binary-distribution.yml"]
-
-[kfd.upstream]
-auto_discover = false
-
-[[kfd.upstream.components]]
-id = "kfd"
-package = "@kungfu-tech/kfd"
-repository = "kungfu-systems/kfd"
-kfd_1 = "exported-witness"
-kfd_2 = "exported-claim"
-kfd_3 = "exported-collaboration-interface"
-kfd_4 = "schema-metadata"
-evidence = [
-  "package:kfd.release.json",
-  "package:.buildchain/kfd-1/contract-world.witness.json",
-  "package:.buildchain/kfd-2/public-release-trust.claim.json",
-  "package:.buildchain/kfd-2/kfd-foundation.trust-claims.json",
-  "package:.buildchain/kfd-2/kfd-foundation.trust-assessment.json",
-  "package:.buildchain/kfd-3/collaboration-interface.json",
-  "package:standards.json",
-]
-
-[build.tools]
-rust = "1.96.0"
-go = "1.25.x"
-
-[build.artifacts]
-name = "buildchain"
-paths = ["dist/site", "actions/build/lifecycle/run/dist"]
-min_files = 1
-retention_days = 7
-
-[build.contract]
-drift_issue_mode = "off"
+[stable]
+minimum_interval_seconds = 0
+minimum_soak_seconds = 0
+product_paths = [ ".buildchain/stable-release-policy.json", ".github/workflows/", "actions/", "packages/", "scripts/" ]
+impact_file = ".buildchain/release-impact.json"
+require_published_entry = true

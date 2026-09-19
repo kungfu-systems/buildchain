@@ -1,0 +1,29 @@
+name: Recover an exact source-bound business attempt.
+description: Recover an exact source-bound business attempt.
+inputs:
+  attempt:
+    description: Exact predecessor attempt.
+    required: true
+  definition-sha:
+    description: Actual hosted recovery entry definition SHA.
+    required: true
+  token:
+    description: "Scoped provider credential."
+    required: true
+  queue-token:
+    description: "App or explicit automation credential that can trigger merge-group workflows."
+    default: ""
+outputs:
+  operation:
+    description: Internally selected operation.
+  context:
+    description: Internally selected context.
+  matrix:
+    description: Internally selected matrix.
+  request:
+    description: Internally selected request.
+  attempt:
+    description: Internally selected attempt.
+runs:
+  using: node24
+  main: dist/index.js

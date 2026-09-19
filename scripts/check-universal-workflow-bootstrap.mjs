@@ -43,10 +43,8 @@ assert.doesNotMatch(read(contract.bootstrap.publicWorkflow), /admission-policy-j
 const template = parse(contract.bootstrap.consumerTemplate);
 assert.equal(template.jobs.bootstrap.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4");
 assert.equal(template.jobs.bootstrap.with["runtime-ref"], "${{ inputs.runtime-ref }}");
-const dogfood = parse(contract.bootstrap.selfDogfoodWorkflow);
-for (const channel of ["conformance", "alpha", "stable"]) for (const mode of ["primary", "recovery"]) {
-  const job = dogfood.jobs[`${mode}-${channel}`];
-  assert.equal(job.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4");
-  assert.equal(job.with["runtime-ref"], mode === "primary" ? "${{ inputs.runtime-ref }}" : "${{ inputs.recovery-runtime-ref }}");
-}
+assert.equal(contract.bootstrap.selfDogfoodActive, false);
+assert.equal(fs.existsSync(path.join(root, contract.bootstrap.selfDogfoodWorkflow)), false,
+  "The retired bootstrap self controller must not coexist with the minimal pipeline");
+assert.equal(contract.bootstrap.selfDogfoodSupersededBy, ".github/workflows/buildchain.yml");
 console.log(JSON.stringify({ ok: true, reusableWorkflowCount: reusable.length, runtimeAcquisitionOwners: 1 }));

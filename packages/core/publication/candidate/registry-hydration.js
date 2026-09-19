@@ -1,3 +1,4 @@
+import { readNpmPackResult } from "../npm/pack-result.js";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -117,7 +118,7 @@ export function hydratePublishedPublicationRegistry({
   for (const version of publishedVersions) {
     const packageDir = path.join(resolvedOutputDir, `.package-${version}`);
     fs.mkdirSync(packageDir, { recursive: true });
-    const packed = JSON.parse(
+    const pack = readNpmPackResult(
       commandRunner(
         "npm",
         [
@@ -132,7 +133,6 @@ export function hydratePublishedPublicationRegistry({
         { cwd: resolvedCwd },
       ),
     );
-    const pack = Array.isArray(packed) ? packed[0] : packed;
     if (!pack?.filename || !pack?.integrity) {
       throw new Error(
         `npm pack did not report filename and integrity for ${packageName}@${version}`,

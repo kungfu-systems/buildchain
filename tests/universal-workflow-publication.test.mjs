@@ -15,7 +15,7 @@ test("real universal promotion materializes one rooted product intent before APP
   );
   const intent = engine.indexOf("await materializeProductPublicationIntent(");
   const apply = engine.indexOf(
-    "await promoteReleaseCandidate(publicationRequest",
+    "await publishWithDiscussion(publicationRequest",
   );
   assert.ok(intent >= 0 && apply > intent);
   assert.match(

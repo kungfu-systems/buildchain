@@ -47,13 +47,19 @@
       "packages/core/workflow/engine/release-promotion.js",
       "packages/core/workflow/settlement/actions.js",
       "packages/core/workflow/universal-self-dogfood.js",
-      "packages/core/workflow/universal-workflow-bootstrap.js"
+      "packages/core/workflow/universal-workflow-bootstrap.js",
+      "packages/core/release/discussion/qualification.js",
+      "packages/core/release/discussion/store.js",
+      "packages/core/release/discussion/envelope.js",
+      "packages/core/release/discussion/reader.js"
     ],
     "runtimeEntry": "architecture/runtime-entry.json",
     "runtimeRecovery": "same-public-entry-with-transient-runtime",
     "entryRecovery": "upgrade-public-entry-and-full-rerun",
     "executionAuthority": "selected-runtime",
-    "entryRepairRequiresNewRelease": true
+    "entryRepairRequiresNewRelease": true,
+    "selfDogfoodActive": false,
+    "selfDogfoodSupersededBy": ".github/workflows/buildchain.yml"
   },
   "capabilityAdapters": [
     {
@@ -73,6 +79,12 @@
       "execution": "exact-candidate-canonical-projection",
       "payloadSchema": "kungfu-buildchain-v4-release-invocation/v1",
       "providerEffects": false
+    },
+    {
+      "id": "release-discussion",
+      "execution": "consumer-discussion-transport",
+      "payloadSchema": "buildchain.release-discussion-request/v1",
+      "providerEffects": true
     }
   ],
   "complexityBudget": {
@@ -98,15 +110,20 @@
     "pages": "write",
     "pull-requests": "write",
     "security-events": "write",
-    "statuses": "write"
+    "statuses": "write",
+    "discussions": "write"
   },
   "inventoryWorkflows": [
     ".github/workflows/.build-demo-adapter.yml",
     ".github/workflows/.build-gate-profile.yml",
     ".github/workflows/.build.yml",
     ".github/workflows/.ops-git-sync.yml",
+    ".github/workflows/.ops-pipeline-delivery.yml",
+    ".github/workflows/.ops-pipeline-execute.yml",
     ".github/workflows/.release-authority.yml",
     ".github/workflows/.release-binary-assets.yml",
+    ".github/workflows/.release-pipeline-products.yml",
+    ".github/workflows/.release-pipeline-version.yml",
     ".github/workflows/.release-promote.yml",
     ".github/workflows/build.yml",
     ".github/workflows/public-build-adopter-qualification.yml",
@@ -124,6 +141,8 @@
     ".github/workflows/public-ops-patrol-monthly.yml",
     ".github/workflows/public-ops-patrol-weekly.yml",
     ".github/workflows/public-ops-patrol.yml",
+    ".github/workflows/public-ops-pipeline.yml",
+    ".github/workflows/public-ops-recover.yml",
     ".github/workflows/public-ops-release-governance.yml",
     ".github/workflows/public-ops-stable-candidate-patrol.yml",
     ".github/workflows/public-ops-tail-reseal.yml",
@@ -147,8 +166,12 @@
     ".github/workflows/.build-gate-profile.yml",
     ".github/workflows/.build.yml",
     ".github/workflows/.ops-git-sync.yml",
+    ".github/workflows/.ops-pipeline-delivery.yml",
+    ".github/workflows/.ops-pipeline-execute.yml",
     ".github/workflows/.release-authority.yml",
     ".github/workflows/.release-binary-assets.yml",
+    ".github/workflows/.release-pipeline-products.yml",
+    ".github/workflows/.release-pipeline-version.yml",
     ".github/workflows/.release-promote.yml",
     ".github/workflows/build.yml",
     ".github/workflows/public-build-adopter-qualification.yml",
@@ -165,6 +188,8 @@
     ".github/workflows/public-ops-patrol-monthly.yml",
     ".github/workflows/public-ops-patrol-weekly.yml",
     ".github/workflows/public-ops-patrol.yml",
+    ".github/workflows/public-ops-pipeline.yml",
+    ".github/workflows/public-ops-recover.yml",
     ".github/workflows/public-ops-release-governance.yml",
     ".github/workflows/public-ops-stable-candidate-patrol.yml",
     ".github/workflows/public-ops-tail-reseal.yml",

@@ -1,0 +1,35 @@
+name: Release transaction open
+description: Initialize release intent, append independently owned progress and inspect one durable Discussion across workflow recovery.
+inputs:
+  token:
+    description: Consumer repository token with discussions permission.
+    required: true
+  intent-key:
+    description: Stable release intent key.
+    required: true
+  source-json:
+    description: Immutable release source identity.
+    required: true
+  expected-nodes-json:
+    description: Complete declared semantic node list.
+    required: true
+  discussion-id:
+    description: Existing Discussion ID for recovery.
+    required: false
+  predecessor:
+    description: Previous workflow attempt identity.
+    required: false
+  dry-run:
+    description: Preview without provider access.
+    required: false
+    default: "false"
+outputs:
+  session-json:
+    description: Release transaction session-json.
+  discussion-id:
+    description: Release transaction discussion-id.
+  discussion-url:
+    description: Release transaction discussion-url.
+runs:
+  using: node24
+  main: dist/index.js

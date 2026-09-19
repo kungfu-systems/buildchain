@@ -8,89 +8,79 @@ import {
 } from "../packages/core/dev-delivery/dev-delivery-provider-heartbeat.js";
 import { coordinateExactProviderAttemptAfterHeartbeatLoss } from "../packages/core/dev-delivery/native/heartbeat.js";
 
-const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
+import { ROOT, admission, jobs } from "./helpers/provider-heartbeat.mjs";
 
-function admission() {
-  return {
-    observation: {
-      repository: "kungfu-systems/buildchain",
-      protectedBase: "dev/v4/v4.0",
-      stateRoot: ROOT("1"),
-      activeWarrant: {
-        candidateId: ROOT("2"),
-        fencingToken: ROOT("3"),
-        generation: 4,
-        issuedAt: "2026-08-15T00:00:00.000Z",
-        heartbeatAt: "2026-08-15T00:00:00.000Z",
-        expiresAt: "2026-08-15T00:01:00.000Z",
-      },
-    },
-  };
-}
-
-function jobs(completed, callerPath = "") {
-  const providerName = (name) =>
-    callerPath ? `${callerPath} / ${name}` : name;
-  return {
-    jobs: [
+test("terminal jobs are observed promptly without accelerating durable heartbeats", async () => {
+  for (const [cadence, terminalAt, expectedBeats] of [
+    [300, 1000, 1],
+    [10, 22000, 3],
+  ]) {
+    let elapsed = 0;
+    const beats = [];
+    const waits = [];
+    const timestamp = (offset) =>
+      new Date(Date.parse("2026-08-15T00:00:01Z") + offset).toISOString();
+    const result = await runDevDeliveryProviderHeartbeat(
       {
-        id: 10,
-        name: providerName("Reserve exact delivery candidate"),
-        status: "completed",
-        conclusion: "success",
-        runner_name: "GitHub Actions 10",
-        runner_group_name: "GitHub Actions",
-        labels: ["ubuntu-24.04", "X64"],
-        started_at: "2026-08-15T00:00:00.000Z",
-        completed_at: "2026-08-15T00:00:05.000Z",
+        admission: admission(),
+        workflowRunId: 90,
+        workflowRunAttempt: 2,
+        leaseSeconds: 3600,
+        heartbeatSeconds: cadence,
       },
       {
-        id: 11,
-        name: providerName("Credentialless native execution"),
-        status: completed ? "completed" : "in_progress",
-        conclusion: completed ? "success" : null,
-        runner_name: "GitHub Actions 11",
-        runner_group_name: "GitHub Actions",
-        labels: ["ubuntu-24.04", "X64"],
-        started_at: "2026-08-15T00:00:00.000Z",
-        completed_at: completed ? "2026-08-15T00:00:20.000Z" : null,
+        now: () => timestamp(elapsed),
+        wait: async (milliseconds) => {
+          waits.push(milliseconds);
+          elapsed += milliseconds;
+        },
+        readJobs: async () => jobs(elapsed >= terminalAt),
+        heartbeat: async ({ expectedOldStateRoot }) => {
+          beats.push(elapsed);
+          const nextStateRoot = ROOT((beats.length + 3).toString(16));
+          const expiresAt = timestamp(elapsed + 3600000);
+          const receipt = {
+            action: "heartbeat",
+            candidateId: ROOT("2"),
+            fencingToken: ROOT("3"),
+            leaseGeneration: 4,
+            expectedOldStateRoot,
+            nextStateRoot,
+            expiresAt,
+          };
+          return {
+            before: { stateRoot: expectedOldStateRoot },
+            after: { stateRoot: nextStateRoot },
+            receipt,
+            receiptRoot: devDeliveryContentRoot(receipt),
+            observation: {
+              stateRoot: nextStateRoot,
+              activeWarrant: {
+                candidateId: ROOT("2"),
+                fencingToken: ROOT("3"),
+                generation: 4,
+                heartbeatAt: timestamp(elapsed),
+                expiresAt,
+              },
+            },
+          };
+        },
       },
-      {
-        id: 12,
-        name: providerName("Credentialless native evidence seal"),
-        status: completed ? "completed" : "queued",
-        conclusion: completed ? "success" : null,
-        runner_name: completed ? "GitHub Actions 12" : "",
-        runner_group_name: completed ? "GitHub Actions" : "",
-        labels: completed ? ["X64", "ubuntu-24.04"] : [],
-        started_at: completed ? "2026-08-15T00:00:21.000Z" : null,
-        completed_at: completed ? "2026-08-15T00:00:25.000Z" : null,
-      },
-      {
-        id: 13,
-        name: providerName("Credentialed independent Warrant heartbeat"),
-        status: completed ? "completed" : "in_progress",
-        conclusion: completed ? "success" : null,
-        runner_name: "GitHub Actions 13",
-        runner_group_name: "GitHub Actions",
-        labels: ["macos-15", "ARM64"],
-        started_at: "2026-08-15T00:00:01.000Z",
-        completed_at: completed ? "2026-08-15T00:00:26.000Z" : null,
-      },
-      {
-        id: 14,
-        name: providerName("Credentialed provider finalizer"),
-        status: "in_progress",
-        conclusion: null,
-        runner_name: "GitHub Actions 14",
-        runner_group_name: "GitHub Actions",
-        labels: ["ubuntu-24.04", "X64"],
-        started_at: "2026-08-15T00:00:27.000Z",
-        completed_at: null,
-      },
-    ],
-  };
-}
+    );
+    assert.equal(result.heartbeatCount, expectedBeats);
+    assert.deepEqual(
+      beats,
+      Array.from(
+        { length: expectedBeats },
+        (_, index) => index * cadence * 1000,
+      ),
+    );
+    assert.ok(waits.every((milliseconds) => milliseconds <= 5000));
+    assert.ok(elapsed - terminalAt < 5000);
+    assert.equal(result.heartbeatSeconds, cadence);
+    assert.equal(result.sealJob.status, "completed");
+  }
+});
 
 test("public reusable caller job names drive heartbeat execution and final verification", async () => {
   let stateRoot = ROOT("1");

@@ -1,0 +1,28 @@
+name: Qualify and sign pipeline products
+description: Independently qualify retained product bytes and sign their exact publication identity.
+inputs:
+  context:
+    description: Internal source-bound publication context.
+    required: true
+  token:
+    description: Scoped qualification credential.
+    required: true
+runs:
+  using: composite
+  steps:
+    - id: prepare
+      uses: ./.buildchain/runtime/actions/publication/pipeline/prepare-qualification
+      with:
+        context: ${{ inputs.context }}
+        token: ${{ inputs.token }}
+    - id: attest
+      uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6
+      with:
+        subject-path: ${{ steps.prepare.outputs.subject-path }}
+        predicate-type: ${{ steps.prepare.outputs.predicate-type }}
+        predicate-path: ${{ steps.prepare.outputs.predicate-path }}
+    - uses: ./.buildchain/runtime/actions/publication/pipeline/seal-qualification
+      with:
+        context: ${{ inputs.context }}
+        token: ${{ inputs.token }}
+        bundle-path: ${{ steps.attest.outputs.bundle-path }}

@@ -4,9 +4,7 @@
   "title": "Buildchain promotion invocation",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "schema"
-  ],
+  "required": ["schema"],
   "properties": {
     "schema": {
       "const": "buildchain.promotion-invocation/v1",
@@ -498,6 +496,11 @@
       "type": "boolean",
       "description": "Plan only; do not publish or move refs",
       "default": false
+    },
+    "resume-discussion-id": {
+      "type": "string",
+      "default": "",
+      "description": "Existing consumer release Discussion ID; restore its retained candidate through the selected runtime."
     }
   }
 }

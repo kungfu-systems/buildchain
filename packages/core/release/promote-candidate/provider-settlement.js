@@ -18,12 +18,16 @@ export async function applyAndSettle({
   providerRequest,
   publicationPlan,
   documents,
+  observeNode = (_node, effect) => effect(),
 }) {
+  providerRequest.discussionCheckpoint = request.discussionCheckpoint;
   let productProviderResult;
   try {
-    productProviderResult = await applyProductPublication(
-      providerRequest,
-      documents.productPublicationPlan,
+    productProviderResult = await observeNode("publication", () =>
+      applyProductPublication(
+        providerRequest,
+        documents.productPublicationPlan,
+      ),
     );
   } catch (error) {
     if (error.providerProjection)
@@ -37,26 +41,35 @@ export async function applyAndSettle({
     ".buildchain/release-tail/product-provider-result.json",
     productProviderResult,
   );
-  const result = await publishGitHubReleaseEvidence({
-    octokit,
-    repository,
-    sourceSha: productProviderResult.promotedSha,
-    version: documents.version,
-    tag: documents.tag,
-    channel,
-    publishEvidencePath: documents.evidencePath,
-    releasePassportPath: documents.passportPath,
-    releasePassportOutputDir: path.dirname(documents.passportPath),
-    additionalAssetPaths: [
-      ...request["artifact-paths"],
-      ...(providerRequest.publicationIntent.artifactKind === "oci"
-        ? [".buildchain/release-tail/oci-publication-readback.json"]
-        : []),
-    ],
-    statePath: request["state-path"] || ".buildchain/release-tail/state.json",
-    qualificationRoot: qualification.receiptRoot,
-    failureAfterCapability: request["failure-after-capability"],
-  });
+  const result = await observeNode("github-release", () =>
+    publishGitHubReleaseEvidence({
+      octokit,
+      repository,
+      sourceSha: productProviderResult.promotedSha,
+      version: documents.version,
+      tag: documents.tag,
+      channel,
+      publishEvidencePath: documents.evidencePath,
+      releasePassportPath: documents.passportPath,
+      releasePassportOutputDir: path.dirname(documents.passportPath),
+      additionalAssetPaths: [
+        ...request["artifact-paths"],
+        ...(request.discussionReaderPath ? [request.discussionReaderPath] : []),
+        ...(request.discussionLocatorPath
+          ? [request.discussionLocatorPath]
+          : []),
+        ...(providerRequest.publicationIntent.artifactKind === "oci"
+          ? [".buildchain/release-tail/oci-publication-readback.json"]
+          : []),
+      ],
+      statePath: request["state-path"] || ".buildchain/release-tail/state.json",
+      qualificationRoot: qualification.receiptRoot,
+      failureAfterCapability: request["failure-after-capability"],
+      checkpoint: request.discussionCheckpoint
+        ? (state) => request.discussionCheckpoint("github-release", state)
+        : undefined,
+    }),
+  );
   const releaseReceipt = createReleaseReceipt({
     schema: RELEASE_RECEIPT_CONTRACT,
     transactionRoot: documents.releaseTransaction.transactionRoot,

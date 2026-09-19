@@ -46,7 +46,9 @@
     "relativeOrSelfInvocationAllowed": false,
     "directQualificationInvocationAllowed": false,
     "candidateBranchOverrideAllowed": false,
-    "recursionRecovery": "floating-selector-with-trusted-runtime-input"
+    "recursionRecovery": "floating-selector-with-trusted-runtime-input",
+    "active": false,
+    "supersededBy": ".github/workflows/buildchain.yml"
   },
   "faultCampaign": [
     "corrupt",

@@ -68,13 +68,14 @@ export async function heartbeatDeliveryAttempt(options) {
       heartbeatSeconds: options.heartbeatSeconds,
     },
     {
-      heartbeat: ({
+      heartbeat: async ({
         expectedOldStateRoot,
         fencingToken,
         leaseGeneration,
         leaseSeconds,
-      }) =>
-        runDevDeliveryCommand({
+      }) => {
+        await options.beforeHeartbeat?.();
+        return runDevDeliveryCommand({
           command: "heartbeat",
           repository: options.repository,
           branch: options.branch,
@@ -85,7 +86,8 @@ export async function heartbeatDeliveryAttempt(options) {
           execute: true,
           token: options.token,
           apiUrl: options.apiUrl,
-        }),
+        });
+      },
       readJobs: () =>
         githubJson(
           options.apiUrl,

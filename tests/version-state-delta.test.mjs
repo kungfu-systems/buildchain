@@ -6,6 +6,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import test from "node:test";
 import { verifyVersionStateDelta } from "../packages/core/release/version-state/verification.js";
 import { planVersionProjection } from "../packages/core/build/verification/discovery.js";
+import { discoverStaticModuleClosure } from "../scripts/check-release-topology.mjs";
 
 function fixture(t) {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-delta-test-"));
@@ -35,15 +36,12 @@ function fixture(t) {
     );
     return git("rev-parse", "HEAD");
   };
-  for (const file of [
-    "consumer/buildchain-config.js",
-    "build/build-configuration.js",
-    "contracts/buildchain-layout.js",
-    "runtime/spawn-command.js",
-  ])
+  for (const file of discoverStaticModuleClosure([
+    "packages/core/consumer/buildchain-config.js",
+  ]))
     write(
-      `packages/core/${file}`,
-      fs.readFileSync(new URL(`../packages/core/${file}`, import.meta.url)),
+      file,
+      fs.readFileSync(new URL(`../${file}`, import.meta.url)),
     );
   write("package.json", '{"type":"module","version":"4.0.2-alpha.34"}\n');
   write(

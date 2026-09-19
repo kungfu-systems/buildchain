@@ -116,50 +116,6 @@
       "rationale": "Buildchain Artifact Signing Authority: owned release public workflow with one canonical implementation."
     },
     {
-      "id": "auditable-demo",
-      "role": "self",
-      "category": "build",
-      "purpose": "demo-dogfood",
-      "summary": "Buildchain Declarative Demo Dogfood",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Buildchain Declarative Demo Dogfood: owned build self workflow with one canonical implementation."
-    },
-    {
-      "id": "auditable-demo-media-profile-qualification",
-      "role": "self",
-      "category": "build",
-      "purpose": "demo-media-qualification",
-      "summary": "Auditable Demo Media Profile Qualification",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Auditable Demo Media Profile Qualification: owned build self workflow with one canonical implementation."
-    },
-    {
-      "id": "binary-distribution",
-      "role": "self",
-      "category": "build",
-      "purpose": "binary-distribution",
-      "summary": "Binary Distribution",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Binary Distribution: owned build self workflow with one canonical implementation."
-    },
-    {
-      "id": "binary-release-assets",
-      "role": "self",
-      "category": "release",
-      "purpose": "binary-assets",
-      "summary": "Binary Release Assets",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Binary Release Assets: owned release self workflow with one canonical implementation."
-    },
-    {
       "id": "bootstrap",
       "role": "public",
       "category": "ops",
@@ -183,50 +139,6 @@
       "path": ".github/workflows/build.yml"
     },
     {
-      "id": "build-surface-fixture",
-      "role": "self",
-      "category": "build",
-      "purpose": "fixture",
-      "summary": "Build Surface Fixture",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Build Surface Fixture: owned build self workflow with one canonical implementation."
-    },
-    {
-      "id": "buildchain-alpha-self-dogfood",
-      "role": "self",
-      "category": "build",
-      "purpose": "alpha-dogfood",
-      "summary": "Buildchain Alpha Self-Dogfood",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Buildchain Alpha Self-Dogfood: owned build self workflow with one canonical implementation."
-    },
-    {
-      "id": "buildchain-stable-self-dogfood",
-      "role": "self",
-      "category": "build",
-      "purpose": "stable-dogfood",
-      "summary": "Buildchain Stable Self-Dogfood",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Buildchain Stable Self-Dogfood: owned build self workflow with one canonical implementation."
-    },
-    {
-      "id": "buildchain-dev-delivery",
-      "role": "self",
-      "category": "ops",
-      "purpose": "dev-delivery",
-      "summary": "Buildchain Dev Delivery",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Buildchain Dev Delivery: owned ops self workflow with one canonical implementation."
-    },
-    {
       "id": "buildchain-patrol",
       "role": "public",
       "category": "ops",
@@ -236,83 +148,6 @@
       "status": "active",
       "invocation": "reusable",
       "rationale": "Buildchain Patrol: owned ops public workflow with one canonical implementation."
-    },
-    {
-      "id": "buildchain-patrol-daily",
-      "role": "self",
-      "category": "ops",
-      "purpose": "patrol-daily",
-      "summary": "Buildchain Dogfood Patrol Daily",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Buildchain Dogfood Patrol Daily: owned ops self workflow with one canonical implementation."
-    },
-    {
-      "id": "buildchain-patrol-monthly",
-      "role": "self",
-      "category": "ops",
-      "purpose": "patrol-monthly",
-      "summary": "Buildchain Dogfood Patrol Monthly",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Buildchain Dogfood Patrol Monthly: owned ops self workflow with one canonical implementation."
-    },
-    {
-      "id": "buildchain-patrol-weekly",
-      "role": "self",
-      "category": "ops",
-      "purpose": "patrol-weekly",
-      "summary": "Buildchain Dogfood Patrol Weekly",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Buildchain Dogfood Patrol Weekly: owned ops self workflow with one canonical implementation."
-    },
-    {
-      "id": "buildchain-ref-promotion",
-      "role": "self",
-      "category": "release",
-      "purpose": "promote",
-      "summary": "Buildchain Ref Promotion",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Buildchain Ref Promotion: owned release self workflow with one canonical implementation."
-    },
-    {
-      "id": "buildchain-ref-promotion-recovery",
-      "role": "self",
-      "category": "ops",
-      "purpose": "promotion-recovery",
-      "summary": "Buildchain Ref Promotion Recovery",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Buildchain Ref Promotion Recovery: owned ops self workflow with one canonical implementation."
-    },
-    {
-      "id": "buildchain-stable-candidate-patrol",
-      "role": "self",
-      "category": "ops",
-      "purpose": "stable-candidate-patrol",
-      "summary": "Buildchain Dogfood Stable Candidate Patrol",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Buildchain Dogfood Stable Candidate Patrol: owned ops self workflow with one canonical implementation."
-    },
-    {
-      "id": "buildchain-stable-candidate-qualification",
-      "role": "self",
-      "category": "build",
-      "purpose": "stable-candidate-qualification",
-      "summary": "Buildchain Stable Candidate Qualification",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Buildchain Stable Candidate Qualification: owned build self workflow with one canonical implementation."
     },
     {
       "id": "check",
@@ -359,17 +194,6 @@
       "rationale": "Dev Delivery Warrant Close: owned ops public workflow with one canonical implementation."
     },
     {
-      "id": "dev-merge-queue-governance",
-      "role": "self",
-      "category": "ops",
-      "purpose": "merge-queue",
-      "summary": "Dev Merge Queue Governance",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Dev Merge Queue Governance: owned ops self workflow with one canonical implementation."
-    },
-    {
       "id": "dev-pr-auto-merge",
       "role": "public",
       "category": "ops",
@@ -403,39 +227,6 @@
       "rationale": "Engineering Housekeeper: owned ops public workflow with one canonical implementation."
     },
     {
-      "id": "engineering-housekeeper-daily",
-      "role": "self",
-      "category": "ops",
-      "purpose": "housekeeping-daily",
-      "summary": "Engineering Housekeeper Daily",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Engineering Housekeeper Daily: owned ops self workflow with one canonical implementation."
-    },
-    {
-      "id": "engineering-housekeeper-monthly",
-      "role": "self",
-      "category": "ops",
-      "purpose": "housekeeping-monthly",
-      "summary": "Engineering Housekeeper Monthly",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Engineering Housekeeper Monthly: owned ops self workflow with one canonical implementation."
-    },
-    {
-      "id": "engineering-housekeeper-weekly",
-      "role": "self",
-      "category": "ops",
-      "purpose": "housekeeping-weekly",
-      "summary": "Engineering Housekeeper Weekly",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Engineering Housekeeper Weekly: owned ops self workflow with one canonical implementation."
-    },
-    {
       "id": "github-artifact-attestation",
       "role": "public",
       "category": "release",
@@ -445,39 +236,6 @@
       "status": "active",
       "invocation": "reusable",
       "rationale": "Buildchain GitHub Artifact Attestation: owned release public workflow with one canonical implementation."
-    },
-    {
-      "id": "github-governance-audit",
-      "role": "self",
-      "category": "ops",
-      "purpose": "governance-audit",
-      "summary": "GitHub Governance Authority Audit",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "GitHub Governance Authority Audit: owned ops self workflow with one canonical implementation."
-    },
-    {
-      "id": "next-development-review",
-      "role": "self",
-      "category": "release",
-      "purpose": "next-development",
-      "summary": "Next Development Review",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Next Development Review: owned release self workflow with one canonical implementation."
-    },
-    {
-      "id": "npm-publish",
-      "role": "self",
-      "category": "release",
-      "purpose": "npm-dry-run",
-      "summary": "Publish npm package",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Publish npm package: owned release self workflow with one canonical implementation."
     },
     {
       "id": "paper-release",
@@ -568,17 +326,6 @@
       "rationale": "Release Governance Reconcile: owned ops public workflow with one canonical implementation."
     },
     {
-      "id": "release-line-bootstrap",
-      "role": "self",
-      "category": "release",
-      "purpose": "line-open",
-      "summary": "Release Line Bootstrap",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Release Line Bootstrap: owned release self workflow with one canonical implementation."
-    },
-    {
       "id": "release-propagation",
       "role": "public",
       "category": "release",
@@ -601,17 +348,6 @@
       "rationale": "Declarative Release Tail: owned release public workflow with one canonical implementation."
     },
     {
-      "id": "self-hosted-runner-smoke",
-      "role": "self",
-      "category": "ops",
-      "purpose": "runner-smoke",
-      "summary": "Self-hosted Runner Smoke",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Self-hosted Runner Smoke: owned ops self workflow with one canonical implementation."
-    },
-    {
       "id": "stable-candidate-patrol",
       "role": "public",
       "category": "ops",
@@ -623,17 +359,6 @@
       "rationale": "Buildchain Stable Candidate Patrol: owned ops public workflow with one canonical implementation."
     },
     {
-      "id": "universal-bootstrap-dogfood",
-      "role": "self",
-      "category": "ops",
-      "purpose": "bootstrap-dogfood",
-      "summary": "Universal Bootstrap Train-First Self-Dogfood",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Universal Bootstrap Train-First Self-Dogfood: owned ops self workflow with one canonical implementation."
-    },
-    {
       "id": "v4-adopter-delivery",
       "role": "public",
       "category": "build",
@@ -643,50 +368,6 @@
       "status": "active",
       "invocation": "reusable",
       "rationale": "V4 Adopter Delivery: owned build public workflow with one canonical implementation."
-    },
-    {
-      "id": "v4-adopter-delivery-dogfood",
-      "role": "self",
-      "category": "build",
-      "purpose": "adopter-dogfood",
-      "summary": "V4 Adopter Delivery Dogfood",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "V4 Adopter Delivery Dogfood: owned build self workflow with one canonical implementation."
-    },
-    {
-      "id": "v4-declarative-release-tail-dogfood",
-      "role": "self",
-      "category": "release",
-      "purpose": "tail-dogfood",
-      "summary": "V4 Declarative Release Tail Dogfood",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "V4 Declarative Release Tail Dogfood: owned release self workflow with one canonical implementation."
-    },
-    {
-      "id": "v4-public-consumer-dogfood",
-      "role": "self",
-      "category": "build",
-      "purpose": "public-consumer-dogfood",
-      "summary": "V4 Public Consumer Dogfood",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "V4 Public Consumer Dogfood: owned build self workflow with one canonical implementation."
-    },
-    {
-      "id": "v4-publication-rehearsal-dogfood",
-      "role": "self",
-      "category": "release",
-      "purpose": "rehearsal-dogfood",
-      "summary": "V4 Publication Rehearsal Dogfood",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "V4 Publication Rehearsal Dogfood: owned release self workflow with one canonical implementation."
     },
     {
       "id": "v4-stage-capsule-canary",
@@ -711,17 +392,6 @@
       "rationale": "V4 Retained Candidate Tail Reseal: owned ops public workflow with one canonical implementation."
     },
     {
-      "id": "verify",
-      "role": "self",
-      "category": "build",
-      "purpose": "verify",
-      "summary": "Verify",
-      "owner": "kungfu-origin",
-      "status": "active",
-      "invocation": "repository",
-      "rationale": "Verify: owned build self workflow with one canonical implementation."
-    },
-    {
       "id": "oci-compose-preview",
       "role": "public",
       "category": "release",
@@ -733,15 +403,94 @@
       "rationale": "Buildchain OCI Compose Preview: owned release public workflow with one canonical implementation."
     },
     {
-      "id": "channel-verify",
+      "id": "pipeline",
+      "role": "public",
+      "category": "ops",
+      "purpose": "pipeline",
+      "summary": "Buildchain pipeline",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "rationale": "Buildchain pipeline: owned normal pipeline and internal credential boundaries."
+    },
+    {
+      "id": ".pipeline-delivery",
+      "role": "component",
+      "category": "ops",
+      "purpose": "pipeline-delivery",
+      "summary": "Internal pipeline delivery",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "rationale": "Internal pipeline delivery: owned normal pipeline and internal credential boundaries."
+    },
+    {
+      "id": ".pipeline-products",
+      "role": "component",
+      "category": "release",
+      "purpose": "pipeline-products",
+      "summary": "Internal pipeline product publication",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "rationale": "Separate product execution, qualification/signing, canonical APPLY and protected follow-ups without consumer orchestration."
+    },
+    {
+      "id": "recover",
+      "role": "public",
+      "category": "ops",
+      "purpose": "recover",
+      "summary": "Buildchain recovery",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "rationale": "Recover one exact attempt with an optional repaired runtime through the same internal product and delivery jobs."
+    },
+    {
+      "id": ".pipeline-execute",
+      "role": "component",
+      "category": "ops",
+      "purpose": "pipeline-execute",
+      "summary": "Internal pipeline execution",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "rationale": "Share credentialless product execution and protected delivery between normal and recovery public entries."
+    },
+    {
+      "id": ".pipeline-version",
+      "role": "component",
+      "category": "release",
+      "purpose": "pipeline-version",
+      "summary": "Internal pipeline version preparation",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "rationale": "Regenerate declared version material in credentialless product jobs and independently qualify it before publication or protected next-development Git writes."
+    },
+    {
+      "id": "buildchain",
       "role": "self",
-      "category": "build",
-      "purpose": "channel-verify",
-      "summary": "Release - Verify",
+      "category": "ops",
+      "purpose": "pipeline",
+      "summary": "Buildchain pipeline",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "repository",
-      "rationale": "Verify exact release PR lineage without retired prebuild, dependency discovery, version mutation or approval adapters."
+      "rationale": "Generated minimal consumer caller; all orchestration belongs to the published runtime.",
+      "path": ".github/workflows/buildchain.yml"
+    },
+    {
+      "id": "buildchain-recover",
+      "role": "self",
+      "category": "ops",
+      "purpose": "recovery",
+      "summary": "Buildchain recovery",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "rationale": "Generated minimal consumer caller; all orchestration belongs to the published runtime.",
+      "path": ".github/workflows/buildchain-recover.yml"
     }
   ]
 }

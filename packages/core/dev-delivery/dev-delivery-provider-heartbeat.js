@@ -207,29 +207,32 @@ export async function runDevDeliveryProviderHeartbeat(
   const startedAt = timestamp(now(), "provider heartbeat startedAt");
   let previousStateRoot = initial.stateRoot;
   const heartbeats = [];
+  let untilHeartbeat = 0;
   let jobs;
   try {
     while (true) {
-      const result = await heartbeat({
-        expectedOldStateRoot: previousStateRoot,
-        fencingToken: initial.fencingToken,
-        leaseGeneration: initial.generation,
-        leaseSeconds: duration,
-      });
-      const entry = heartbeatEntry(result, previousStateRoot);
-      heartbeats.push(entry);
-      previousStateRoot = entry.nextStateRoot;
+      if (untilHeartbeat === 0) {
+        const result = await heartbeat({
+          expectedOldStateRoot: previousStateRoot,
+          fencingToken: initial.fencingToken,
+          leaseGeneration: initial.generation,
+          leaseSeconds: duration,
+        });
+        const entry = heartbeatEntry(result, previousStateRoot);
+        heartbeats.push(entry);
+        previousStateRoot = entry.nextStateRoot;
+        untilHeartbeat = cadence * 1000;
+      }
       jobs = providerJobs(
         await readJobs(),
         { nativeJobName, sealJobName },
         { allowMissingSeal: true },
       );
-      if (!jobs) {
-        await wait(cadence * 1000);
-        continue;
-      }
-      if (terminal(jobs.native) && terminal(jobs.seal)) break;
-      await wait(cadence * 1000);
+      if (jobs && terminal(jobs.native) && terminal(jobs.seal)) break;
+      // Terminal detection must not wait for the next durable lease renewal.
+      const interval = Math.min(untilHeartbeat, 5000);
+      await wait(interval);
+      untilHeartbeat -= interval;
     }
   } catch (error) {
     await onHeartbeatLoss({

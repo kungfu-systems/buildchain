@@ -1,0 +1,30 @@
+name: Buildchain pipeline
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft, closed, labeled, unlabeled, edited, enqueued, dequeued]
+  pull_request_review:
+    types: [submitted, dismissed]
+  pull_request_target:
+    types: [closed]
+  merge_group:
+    types: [checks_requested]
+  push:
+  repository_dispatch:
+    types: [buildchain-attempt-wake]
+permissions:
+  contents: read
+jobs:
+  buildchain:
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha
+    with:
+      config-path: .buildchain/minimal-consumer.toml
+    secrets: inherit
+    permissions:
+      actions: write
+      attestations: write
+      checks: write
+      contents: write
+      discussions: write
+      id-token: write
+      pull-requests: write
+      statuses: write

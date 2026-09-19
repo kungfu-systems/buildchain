@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-14
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-11
+  generated_at: 2026-09-14
   visible_context: Repository contribution rules and implementation naming and release transition changes.
   invisible_context_boundary: No private credentials or unpublished external release state.
 ---
@@ -39,7 +39,7 @@ sensitive material in issues or pull requests.
 
 - Node.js 24
 - Corepack with pnpm 11
-- Go 1.25 for workflow validation paths that exercise Go setup
+- Go 1.25 or newer in major 1 for product verification
 
 Buildchain's reusable workflow consumers may build with npm, yarn, pnpm, CMake,
 Conan, Python, Docker, or other tools through lifecycle commands. This
@@ -91,17 +91,16 @@ category vocabulary is enforced by `architecture/workflow-taxonomy.json`:
 | --- | --- | --- |
 | Public | `public-<category>-<purpose>.yml` | Consumer entry |
 | Component | `.<category>-<purpose>.yml` | Advanced reusable component |
-| Self | `self-<category>-<purpose>.yml` | Buildchain repository automation |
+| Self | `buildchain.yml`, `buildchain-recover.yml` | Generated normal and recovery callers |
 
 Categories are only `build`, `release`, and `ops`. Register the identity, role,
 category, purpose, owner, lifecycle status, invocation, and rationale before
 adding its derived filename. The [Workflow Catalog](docs/workflow-catalog.md)
-lists every canonical API and component path; self workflows have one
-event entry. Retired paths have no generated aliases. A matching prefix alone does not admit an unregistered workflow.
+lists every canonical API and component path; self automation has only the generated normal and recovery entries. Retired paths have no generated aliases. A matching prefix alone does not admit an unregistered workflow.
 
 Run `pnpm run generate:workflows`, `pnpm run check:workflows`, then the full
-`pnpm run check`. The required Verify lifecycle runs this gate on PRs, merge
-queue candidates, and pushes. Policy, enforcement, and ownership changes require
+`pnpm run check`. The product verification commands run this gate through the shared pipeline on PRs, merge
+queue candidates, and protected source qualification. Policy, enforcement, and ownership changes require
 independent `@kungfu-origin` review. A development merge does not publish a floating channel. Consumers adopt the
 new API only after that channel publishes it and their contract locks are refreshed.
 
@@ -145,21 +144,18 @@ release/vX/vX.Y -> publish-gate/major
   them for direct ad-hoc commits. Work from `feature/*`, `fix/*`, `chore/*`,
   `docs/*`, `ci/*`, or `refactor/*` branches and open a PR into the target dev
   line.
-- Repositories may call
-  `.github/workflows/public-ops-dev-auto-merge.yml` from their own scheduled or manual
-  wrapper to merge ready, conflict-free dev PRs. The wrapper is policy-gated:
-  required checks, ready/block labels, same-repository heads, approvals,
-  branch prefixes, max merges, and dry-run are all declared inputs.
-- Ordinary build callers use `build.yml@v4` or `build.yml@v4-alpha` with
-  project settings in `buildchain.toml`. Every public workflow uses the central
-  runtime entry: transient `runtime-ref`, contract lock, then entry default.
-  Validate the implementation before protected Dev, publish Alpha, and qualify
-  the published consumer entry. See `docs/runtime-entry.md`.
-- Merging into `alpha/*`, `release/*`, or `publish-gate/major` expresses a
-  release intent. Buildchain promotion then creates version-state commits,
-  exact tags, floating tags, npm publish evidence, and next-alpha state.
-- Manual promotion dispatch is dry-run only; non-dry-run promotion follows a
-  successful protected workflow path.
+- The generated `buildchain.yml` caller invokes `public-ops-pipeline.yml` using
+  a published floating entry. Product build, verification, artifacts, channels
+  and review policy are declared in the schema-2 TOML.
+- The published runtime owns source qualification, protected review and merge,
+  version materialization, publication, provider readback and next-development.
+- Recover an interrupted operation through `buildchain-recover.yml` using its
+  exact attempt and, when required, one transient repaired runtime. Recovery
+  does not accept replacement source, artifact or provider-effect parameters.
+- During this repository's protected cutover, both generated callers use
+  `@v4-alpha` and the protected `.buildchain/minimal-consumer.toml` policy path;
+  see `AGENTS.md` for target-policy admission, stable qualification and final
+  default-path cleanup requirements.
 
 See [`docs/release-governance.md`](docs/release-governance.md),
 [`docs/release-flow.md`](docs/release-flow.md), and

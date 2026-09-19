@@ -1,0 +1,45 @@
+schema = 2
+
+[[products]]
+id = "main"
+type = "paper"
+platforms = ["linux-x64"]
+build = ["node src/build.mjs"]
+verify = ["node src/verify.mjs"]
+
+[[products.artifacts]]
+id = "main"
+path = "dist/paper.pdf"
+kind = "pdf"
+
+[[products.targets]]
+provider = "github-release"
+artifacts = ["main"]
+
+[version]
+strategy = "semver"
+
+[[version.files]]
+path = "package.json"
+format = "json"
+key = "version"
+
+[[channels]]
+from = "feature/*"
+to = "dev/v1/v1.0"
+operation = "develop"
+
+[[channels]]
+from = "dev/v1/v1.0"
+to = "alpha/v1/v1.0"
+operation = "alpha"
+
+[[channels]]
+from = "alpha/v1/v1.0"
+to = "release/v1/v1.0"
+operation = "stable"
+
+[review]
+minimum_approvals = 1
+code_owners = true
+merge_queue = true

@@ -1257,6 +1257,7 @@ export function createGithubRulesetGovernanceRolloutPlan({
       dismiss_stale_reviews_on_push: true,
       require_code_owner_review: true,
       require_last_push_approval: true,
+      require_extra_approval_for_unattributed_changes: true,
       required_approving_review_count: requiredApprovals,
       required_review_thread_resolution: true,
     },

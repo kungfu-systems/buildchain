@@ -21,4 +21,5 @@
 /scripts/generate-workflow-taxonomy.mjs @kungfu-origin
 /scripts/check-workflows.sh @kungfu-origin
 /tests/workflow-taxonomy.test.mjs @kungfu-origin
-/.github/workflows/self-build-verify.yml @kungfu-origin
+/.github/workflows/buildchain.yml @kungfu-origin
+/.github/workflows/buildchain-recover.yml @kungfu-origin

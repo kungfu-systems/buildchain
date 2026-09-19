@@ -60,7 +60,9 @@
       "id": "self-dogfood-caller",
       "injectionTarget": ".github/workflows/self-ops-bootstrap-dogfood.yml",
       "recoveryRoute": "upgrade-entry-and-full-rerun",
-      "recoveryTarget": "templates/universal-buildchain-bootstrap.yml"
+      "recoveryTarget": "templates/universal-buildchain-bootstrap.yml",
+      "retired": true,
+      "retirementReason": "Standalone self caller removed; retained campaign does not qualify the minimal pipeline."
     }
   ]
 }

@@ -110,20 +110,7 @@ test("self-dogfood rejects foreign heads, changed bases and malformed caller coo
     /exact immutable/,
   );
 });
-test("self-dogfood uses one public entry for primary and repaired runtime after review", () => {
-  const w = YAML.parse(
-    fs.readFileSync(".github/workflows/self-ops-bootstrap-dogfood.yml", "utf8"),
-  );
-  for (const channel of ["conformance", "alpha", "stable"]) {
-    assert.equal(
-      w.jobs[`primary-${channel}`].uses,
-      "kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4",
-    );
-    assert.equal(
-      w.jobs[`recovery-${channel}`].uses,
-      "kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4",
-    );
-  }
+test("retained bootstrap preparation requires readiness before request generation", () => {
   const action = YAML.parse(
     fs.readFileSync(
       "actions/workflow/dogfood/prepare/action.yml",

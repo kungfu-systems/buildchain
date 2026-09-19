@@ -1,3 +1,4 @@
+import { readNpmPackResult } from "../packages/core/publication/npm/pack-result.js";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -31,18 +32,14 @@ function pack(cwd, destination, environment) {
     ["pack", "--json", "--ignore-scripts", "--pack-destination", destination],
     { cwd, env: environment, shell: process.platform === "win32" },
   );
-  const [{ filename }] = JSON.parse(output);
+  const { filename } = readNpmPackResult(output);
   return path.join(destination, filename);
 }
 
 function extractPackage(tarball, destination) {
   fs.mkdirSync(destination, { recursive: true });
   const archive = path.relative(destination, tarball).split(path.sep).join("/");
-  run(
-    "tar",
-    ["-xzf", archive, "--strip-components=1"],
-    { cwd: destination },
-  );
+  run("tar", ["-xzf", archive, "--strip-components=1"], { cwd: destination });
 }
 
 function replacePointer(target, pointer, value) {
@@ -122,7 +119,10 @@ test("an independent non-KFD specification package replays through the common ga
 
     const gateModule = await import(
       pathToFileURL(
-        path.join(buildchainPackage, "packages/core/adoption/adopter-delivery-gate.js"),
+        path.join(
+          buildchainPackage,
+          "packages/core/adoption/adopter-delivery-gate.js",
+        ),
       )
     );
     const passportModule = await import(

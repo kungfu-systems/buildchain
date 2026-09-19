@@ -293,6 +293,7 @@ test("stable gate collector admits public-build policy through the existing repo
     candidateVersion: "4.1.1-alpha.0",
     policyInput: JSON.stringify(policy),
     impactInput: JSON.stringify({
+      release: { version: "4.1.1-alpha.0" },
       summary: "Repair stable qualification",
       surfaceImpacts: [{ id: "release" }],
     }),

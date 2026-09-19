@@ -1,0 +1,12 @@
+name: Read exact product jobs and retain their source-bound result.
+description: Read exact product jobs and retain their source-bound result.
+inputs:
+  context:
+    description: "Internally admitted build execution."
+    required: true
+  token:
+    description: "Scoped provider credential."
+    required: true
+runs:
+  using: node24
+  main: dist/index.js
