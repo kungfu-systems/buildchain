@@ -90,6 +90,7 @@
       "actions/release/promotion/apply/action.yml",
       "actions/release/promotion/settle/action.yml",
       "packages/core/publication/pipeline/apply.js",
+      "packages/core/publication/pipeline/context.js",
       "packages/core/publication/pipeline/recovery-admission.js",
       "packages/core/publication/settlement/transaction.js",
       "packages/core/release/promote-candidate/provider-settlement.js",
@@ -178,6 +179,7 @@
         "packages/core/providers/github/discussions/transport.js",
         "packages/core/providers/github/graphql-errors.js",
         "packages/core/providers/github/json-client.js",
+        "packages/core/providers/github/pipeline-context-artifacts.js",
         "packages/core/providers/github/pipeline-entry-runs.js",
         "packages/core/providers/github/pipeline-integration.js",
         "packages/core/providers/github/pipeline-policy.js",
@@ -399,7 +401,7 @@
         "packages/core/workflow/pipeline/wake.js",
         "packages/core/workflow/pipeline/web-status.js"
       ],
-      "root": "sha256:d95f03e3906b482b6ab0486d531865162e62961f2398058f6aecb380500f5314"
+      "root": "sha256:215601023b2a038d11e5db4b7ece23b6a0dd848318617d2884975f3cf3e2f7de"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/runtime/domain-wasm.js",
@@ -663,20 +665,20 @@
             "repository_dispatch"
           ],
           "jobs": [
-            "buildchain|reusable-call|kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha|write|write|-|contents-write,oidc-write"
+            "buildchain|reusable-call|kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4|write|write|-|contents-write,oidc-write"
           ],
           "reusableEdges": [
-            "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha"
+            "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4"
           ]
         },
         {
           "path": ".github/workflows/buildchain-recover.yml",
           "triggers": ["workflow_dispatch"],
           "jobs": [
-            "buildchain|reusable-call|kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4-alpha|write|write|-|contents-write,oidc-write"
+            "buildchain|reusable-call|kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4|write|write|-|contents-write,oidc-write"
           ],
           "reusableEdges": [
-            "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4-alpha"
+            "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4"
           ]
         }
       ],

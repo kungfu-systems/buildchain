@@ -6,14 +6,18 @@ import { buildPipelineVersionMaterial } from "./version-build.js";
 import { qualifyPipelineVersionContext } from "./version-context.js";
 import { preparePipelinePublication } from "./prepare.js";
 import { settlePipelinePublication } from "./settle.js";
+import {
+  readPipelineContext,
+  writePipelineContext,
+} from "../../providers/github/pipeline-context-artifacts.js";
 
-const contextInput = (core) =>
-  JSON.parse(core.getInput("context", { required: true }));
+const contextInput = (core, env) =>
+  readPipelineContext(core.getInput("context", { required: true }), env);
 const directory = (env) =>
   path.join(env.GITHUB_WORKSPACE, ".buildchain/version-material");
 
 export async function buildPipelineVersionAction(core, env) {
-  const context = contextInput(core);
+  const context = await contextInput(core, env);
   if (
     context.schema !== "buildchain.pipeline-version-context/v1" ||
     context.runId !== Number(env.GITHUB_RUN_ID) ||
@@ -36,7 +40,7 @@ export async function buildPipelineVersionAction(core, env) {
 }
 
 export async function materializePipelinePublicationAction(core, env) {
-  const context = contextInput(core);
+  const context = await contextInput(core, env);
   const operation = core.getInput("operation", { required: true });
   let result = { operation, context };
   if (operation === "regenerate") {
@@ -58,7 +62,12 @@ export async function materializePipelinePublicationAction(core, env) {
   }
   core.setOutput("operation", result.operation);
   core.setOutput("stable-wait", result.wait ? JSON.stringify(result.wait) : "");
-  core.setOutput("context", JSON.stringify(result.context || {}));
+  core.setOutput(
+    "context",
+    operation === "regenerate"
+      ? await writePipelineContext(result.context || {}, env)
+      : core.getInput("context", { required: true }),
+  );
   core.setOutput(
     "matrix",
     JSON.stringify({ include: result.context?.platforms || [] }),
@@ -66,7 +75,7 @@ export async function materializePipelinePublicationAction(core, env) {
 }
 
 export async function materializePipelineDevelopmentAction(core, env) {
-  const context = contextInput(core);
+  const context = await contextInput(core, env);
   if (context.preparation.purpose !== "development")
     throw new Error(
       "Development materialization received a different version purpose",

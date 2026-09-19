@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-14
+last_reviewed: 2026-09-19
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-14
+  generated_at: 2026-09-19
   visible_context: Repository contribution rules and implementation naming and release transition changes.
   invisible_context_boundary: No private credentials or unpublished external release state.
 ---
@@ -152,10 +152,10 @@ release/vX/vX.Y -> publish-gate/major
 - Recover an interrupted operation through `buildchain-recover.yml` using its
   exact attempt and, when required, one transient repaired runtime. Recovery
   does not accept replacement source, artifact or provider-effect parameters.
-- During this repository's protected cutover, both generated callers use
-  `@v4-alpha` and the protected `.buildchain/minimal-consumer.toml` policy path;
-  see `AGENTS.md` for target-policy admission, stable qualification and final
-  default-path cleanup requirements.
+- Both generated callers use the published `@v4` entry and the default
+  `.buildchain/buildchain.toml` policy path. Adopt the stable contract lock only
+  after the published entry has qualified; see `AGENTS.md` for target-policy
+  admission requirements.
 
 See [`docs/release-governance.md`](docs/release-governance.md),
 [`docs/release-flow.md`](docs/release-flow.md), and
@@ -182,3 +182,8 @@ Stable completion under `semver/auto` prepares the next patch at `alpha.0` from
 the exact current protected development commit. See the generated
 [next-development contract](docs/next-development-transition.md) for retry,
 independent review, and publication-preservation behavior.
+
+Stable eligibility is checked before publication. Once the native publication
+phase has succeeded, distribution and next-development continue from the retained
+publication, source and runtime. Later Alpha PR events do not restart that gate;
+the follow-up stages still verify their original publication and protected merge.

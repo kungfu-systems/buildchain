@@ -10,7 +10,7 @@ const recovery = readWorkflow(".github/workflows/buildchain-recover.yml");
 
 function renderInputs(workflow, inputs) {
   const context = JSON.parse(JSON.stringify({ inputs }), data.reviver);
-  return Object.fromEntries(Object.entries(workflow.jobs.buildchain.with).map(([key, value]) => [
+  return Object.fromEntries(Object.entries(workflow.jobs.buildchain.with || {}).map(([key, value]) => [
     key,
     value.replace(/\$\{\{\s*([\s\S]*?)\s*\}\}/gu, (_, expression) => {
       const parsed = new Parser(new Lexer(expression).lex().tokens, ["inputs"], []).parse();
@@ -22,8 +22,8 @@ function renderInputs(workflow, inputs) {
 test("automatic delivery needs no dispatch inputs or consumer-rendered publication request", () => {
   assert.equal(promotion.on.workflow_dispatch, undefined);
   const rendered = renderInputs(promotion, null);
-  assert.deepEqual(normalInputs(rendered), { configPath: ".buildchain/minimal-consumer.toml" });
-  assert.deepEqual(Object.keys(rendered), ["config-path"]);
+  assert.deepEqual(normalInputs(rendered), { configPath: ".buildchain/buildchain.toml" });
+  assert.deepEqual(Object.keys(rendered), []);
 });
 
 test("recovery expressions preserve the exact attempt and optional repair selector", () => {

@@ -8,7 +8,11 @@ import {
 } from "../../release/release-invocation.js";
 import { githubPipelineProductRelease } from "../../providers/github/pipeline-product-release.js";
 import { pipelineNpmProvider } from "../npm/pipeline-provider.js";
-import { publicationContext, uniquePublicationMaterial } from "./context.js";
+import {
+  publicationContext,
+  uniquePublicationMaterial,
+  completedPublicationRecovery,
+} from "./context.js";
 import { restorePipelineProducts } from "./sealed-products.js";
 import {
   pipelineReleaseDocuments,
@@ -34,16 +38,14 @@ export async function applyPipelinePublication(
   } = {},
 ) {
   const { journal, archive } = await publicationContext(context, host);
-  const wait = await preparePipelineStableQualification(
-    context.plan,
-    host,
-    journal,
-    {
+  const completed = await completedPublicationRecovery(context, journal);
+  const wait =
+    !completed &&
+    (await preparePipelineStableQualification(context.plan, host, journal, {
       attempt: context.attempt,
       generation: context.generation,
       phase: "publish",
-    },
-  );
+    }));
   if (wait) return { operation: "wait", wait };
   const retained = await uniquePublicationMaterial(
     journal,
@@ -113,7 +115,13 @@ export async function applyPipelinePublication(
   const provider = {
     observe: (effect) => providerFor(effect).observe(effect),
     matches: (effect, value) => providerFor(effect).matches(effect, value),
-    apply: (effect) => providerFor(effect).apply(effect),
+    apply: (effect) => {
+      if (completed)
+        throw new Error(
+          "Completed publication recovery cannot perform new provider effects",
+        );
+      return providerFor(effect).apply(effect);
+    },
   };
   const receipts = await journal.materials("publication/effect/");
   const effects = pipelinePublicationEffects({

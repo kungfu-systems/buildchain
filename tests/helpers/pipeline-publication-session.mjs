@@ -2,11 +2,18 @@ import { createHash } from "node:crypto";
 import { pipelineHostFixture } from "./pipeline-host.mjs";
 import { openPipelineSession } from "../../packages/core/workflow/pipeline/session.js";
 
-export async function publicationFixture({ derivedFiles = {} } = {}) {
+export async function publicationFixture({
+  derivedFiles = {},
+  channel = "alpha",
+  stablePolicy,
+} = {}) {
   const f = pipelineHostFixture();
+  if (stablePolicy) f.admission.plan.stable = stablePolicy;
   if (Object.keys(derivedFiles).length)
     f.admission.plan.version.derived_files = Object.keys(derivedFiles);
-  f.admission.route = f.admission.plan.channels[1];
+  f.admission.route = f.admission.plan.channels.find(
+    (route) => route.operation === channel,
+  );
   f.admission.live.targetBranch = f.admission.route.to;
   const session = await openPipelineSession(
     { admission: f.admission, ...f.host },

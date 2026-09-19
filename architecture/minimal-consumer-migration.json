@@ -1,6 +1,6 @@
 {
   "schema": "buildchain.consumer-migration/v1",
-  "stage": "self-cutover-in-progress; final-release-qualification-pending",
+  "stage": "self-default-entry; final-release-qualification-pending",
   "workflows": [
     {
       "path": ".github/workflows/build.yml",
@@ -124,7 +124,7 @@
       "calls": [
         {
           "id": "buildchain",
-          "uses": "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4-alpha",
+          "uses": "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4",
           "inputs": ["attempt", "runtime-ref"],
           "destination": "internal.workflow-composition"
         }
@@ -148,8 +148,8 @@
       "calls": [
         {
           "id": "buildchain",
-          "uses": "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha",
-          "inputs": ["config-path"],
+          "uses": "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4",
+          "inputs": [],
           "destination": "internal.workflow-composition"
         }
       ]
@@ -5136,17 +5136,6 @@
       "kind": "consumer-source",
       "destination": "retain-product-source; move-orchestration-into-runtime",
       "commandReferences": []
-    },
-    {
-      "path": ".buildchain/minimal-consumer.toml",
-      "kind": "config",
-      "destination": "closed-toml-plan",
-      "commandReferences": [
-        "scripts/build-standalone-binary.mjs",
-        "scripts/prepare-product-toolchain.mjs",
-        "scripts/verify-product-platform.mjs",
-        "scripts/verify-standalone-product.mjs"
-      ]
     },
     {
       "path": ".buildchain/release-impact.json",

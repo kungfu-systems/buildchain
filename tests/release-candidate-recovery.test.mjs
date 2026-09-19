@@ -917,7 +917,7 @@ test("workflow recovery resumes through the same canonical publisher transaction
   assert.match(recovery, /^  buildchain:/m);
   assert.match(
     recovery,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-recover\.yml@v4-alpha/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-recover\.yml@v4(?:\n|$)/,
   );
   assert.doesNotMatch(recovery, /^  (?:alpha|stable|install|publish):/m);
   assert.match(advanced, /actions\/release\/promotion\/qualify/);
@@ -935,7 +935,7 @@ test("workflow recovery resumes through the same canonical publisher transaction
   assert.match(applyNode, /Resume the same transaction journal/);
   assert.match(
     refPromotion,
-    /^  buildchain:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-pipeline\.yml@v4-alpha/m,
+    /^  buildchain:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-pipeline\.yml@v4(?:\n|$)/m,
   );
   assert.doesNotMatch(refPromotion, /^  promote-stable:/m);
   assert.doesNotMatch(advanced, /gh run rerun/);

@@ -115,7 +115,7 @@ test("adopter CLI remains callable while self uses the ordinary pipeline", () =>
   );
   assert.match(
     caller,
-    /kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-pipeline\.yml@v4-alpha/,
+    /kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-pipeline\.yml@v4(?:\n|$)/,
   );
   assert.doesNotMatch(caller, /(?:uses:\s*\.\/|runs-on:|steps:|BUILDCHAIN_)/);
 });

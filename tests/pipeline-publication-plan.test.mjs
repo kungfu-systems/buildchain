@@ -73,7 +73,7 @@ test("Rust version selection retains alpha and materializes stable; anchored aut
 test("publication retains the exact stable policy independently of later configuration mutation", () => {
   const request = input();
   request.contract.stable = compileConsumerPlan(
-    fs.readFileSync(".buildchain/minimal-consumer.toml", "utf8"),
+    fs.readFileSync(".buildchain/buildchain.toml", "utf8"),
   ).stable;
   const plan = planPipelinePublication(request);
   assert.deepEqual(plan.stablePolicy, request.contract.stable);
@@ -94,7 +94,7 @@ test("publication retains the exact stable policy independently of later configu
 test("Alpha stays available and an unadmitted context cannot read stable provider data", async () => {
   const request = input();
   request.contract.stable = compileConsumerPlan(
-    fs.readFileSync(".buildchain/minimal-consumer.toml", "utf8"),
+    fs.readFileSync(".buildchain/buildchain.toml", "utf8"),
   ).stable;
   const alpha = planPipelinePublication(request);
   assert.equal(await assertPipelineStableQualification(alpha), null);
