@@ -3,8 +3,8 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 281,
-  "fencingCounter": 68,
+  "generation": 282,
+  "fencingCounter": 69,
   "policy": {
     "agingSeconds": 900,
     "maxPriority": 2,
@@ -12,7 +12,50 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": null,
+  "activeWarrant": {
+    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
+    "phase": "provisional",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v4/v4.1",
+    "candidateId": "sha256:aadbfb363385e97791888b35fdfcb1c966c5382776261ab2a604b54088c3b0c9",
+    "pullRequestNumber": 3858,
+    "sourceHead": "1ef1d780d8cf174652da26e0fc3be859d4bba2b7",
+    "sourceRoot": "sha256:b7da393c025d9f1007f19e1030cf1c3fc1b5050b480e45225a1be95fbb7eaca5",
+    "sourceIdentityRoot": "sha256:29956dedc020f9c0a64a3f62bb5b5c581ef609a497ccfc3d6c643a539082e9a5",
+    "sourcePatchRoot": "sha256:ca70300df65a8ad1e0cd1dd76e3b5447e2fc29e45608b69330549883456760ac",
+    "sourceProofRoot": "sha256:dd51d78b4cd287e5b8eeaee87746ee1ea31103aea295f3d4491ff8cb80396ac2",
+    "planRoot": "sha256:16003a60f6625710d3c99699b921a48c2624662c3055793f643b909f1054f8a6",
+    "closureRoot": "sha256:b7e08cd8424808de7fab9f6d220edda5e72808b7dd72d59d2192865cd342c9f4",
+    "dependencyRoot": "sha256:33f483257f2b135d0c653ea5850d435153e75fa24f73d5fd4d0899916e57ff80",
+    "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
+    "environmentRoot": "sha256:249fdffbc70291460b8a6d4bdef1eba4698e8811dd543d86875eab8adcea7d99",
+    "nativeCommandContract": {
+      "schema": "kungfu.buildchain.native-command-contract/v1",
+      "runner": "bash-lc",
+      "command": "node ../runtime/packages/core/workflow/commands/pipeline-build.mjs --platform linux-x64 --config-path '.buildchain/minimal-consumer.toml'",
+      "commandRoot": "sha256:a05dcdae36757162da44421de801bae64f605b54d3e6fd15552a18e0b5f14801"
+    },
+    "affectedPaths": [
+      ".buildchain/alpha-contract-lock.json",
+      "actions/publication/pipeline/apply/dist/index.js",
+      "actions/publication/pipeline/prepare/dist/index.js",
+      "actions/publication/version/materialize-publication/dist/index.js",
+      "architecture/maintainability-policy.json",
+      "packages/core/publication/pipeline/stable-entry.js",
+      "tests/pipeline-stable-entry.test.mjs",
+      "tests/self-version-regeneration.test.mjs"
+    ],
+    "shardEvidenceRoots": [],
+    "sourceWorkflowRunId": 35426369460,
+    "deliveryClass": "native-proof-required",
+    "priority": "ordinary",
+    "generation": 69,
+    "expectedOldStateRoot": "sha256:21f3d77d3e5f177c497a72a69b677c4b4b19e3106676d15fa65719dc123db332",
+    "issuedAt": "2026-09-19T06:47:56.994Z",
+    "expiresAt": "2026-09-19T07:47:56.994Z",
+    "fencingToken": "sha256:c3e36b39ad6e4d3c2be2e026e8e4c4cbb04314a3011ab03f618ccc4107eb09c2",
+    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission."
+  },
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -9959,10 +10002,10 @@
       "sourceWorkflowRunId": 35426369460,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-19T06:47:53.597Z",
-      "updatedAt": "2026-09-19T06:47:53.597Z",
+      "updatedAt": "2026-09-19T06:47:56.994Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
+      "status": "selected",
       "terminal": null,
       "affectedPaths": [
         ".buildchain/alpha-contract-lock.json",
@@ -9977,6 +10020,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-19T06:47:53.597Z",
-  "stateRoot": "sha256:21f3d77d3e5f177c497a72a69b677c4b4b19e3106676d15fa65719dc123db332"
+  "updatedAt": "2026-09-19T06:47:56.994Z",
+  "stateRoot": "sha256:2eec198f039047e9467a61d60e45cb7a0914c5f2c99c79f9ade4898fc565b30c"
 }
