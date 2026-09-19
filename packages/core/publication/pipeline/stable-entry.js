@@ -114,7 +114,11 @@ async function inspectEntryRun(listed, plan, source, host) {
   const consumer = await pipelineEntryRun(run, plan, source, host);
   if (!consumer) return null;
   if (
-    !jobs.some((job) => /(?:^| \/ )Build product \([^)]+\)$/u.test(job.name)) &&
+    !jobs.some(
+      (job) =>
+        job.conclusion !== "skipped" &&
+        /(?:^| \/ )Build product \([^)]+\)$/u.test(job.name),
+    ) &&
     run.conclusion === "success"
   )
     return null;

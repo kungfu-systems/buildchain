@@ -476,7 +476,17 @@ test("failed or cancelled setup cannot fall back to an older green build, while 
       ? { workflow_runs: [f.state.run, structuredClone(newer)] }
       : request(endpoint, options);
   f.host.runs.read = async (id, attempt) =>
-    id === 101 ? { run: structuredClone(newer), jobs: [] } : read(id, attempt);
+    id === 101
+      ? {
+          run: structuredClone(newer),
+          jobs: [
+            {
+              name: "buildchain / execute / Build product (${{ matrix.platform }})",
+              conclusion: "skipped",
+            },
+          ],
+        }
+      : read(id, attempt);
   for (const conclusion of ["failure", "cancelled"]) {
     newer.conclusion = conclusion;
     const result = await readPipelineStableEntry(f.plan, f.source, f.host);
