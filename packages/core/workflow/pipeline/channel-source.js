@@ -1,6 +1,5 @@
 import { recordDigest } from "../../release/discussion/envelope.js";
-import { selectProductPublicationIntent } from "../../release/product-publication.js";
-import { pipelineExpectedProducts } from "../../publication/pipeline/plan.js";
+import { selectPipelinePublicationProducts } from "../../publication/pipeline/plan.js";
 import { githubPipelineVersion } from "../../providers/github/pipeline-version.js";
 
 // This read-only qualification must precede both required checks and queue
@@ -24,14 +23,13 @@ export async function qualifyPipelineChannelSource(source, branch, host) {
     host.request,
     host.repository,
   ).inspect(source, plan.version);
-  const selection = selectProductPublicationIntent({
+  const { selection } = selectPipelinePublicationProducts(plan, {
     channel: route.operation === "alpha" ? "alpha" : "stable",
     targetRef: branch,
     sourceSha: source.commit,
     sourceTimestamp: version.sourceTimestamp,
     repository: source.repository,
     artifactKind: "custom",
-    requiredArtifactsRoot: recordDigest(pipelineExpectedProducts(plan)),
     candidateVersion: version.version,
     observedVersions: [],
   });

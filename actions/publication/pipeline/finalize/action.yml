@@ -1,0 +1,15 @@
+name: Pipeline native finalize
+description: Finalize independently signed products in a credentialless product job.
+inputs:
+  context:
+    description: Internal source-bound publication context.
+    required: true
+  token:
+    description: Scoped consumer provider credential.
+    required: true
+  platform:
+    description: Declared native product platform.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

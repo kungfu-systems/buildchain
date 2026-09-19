@@ -7,6 +7,8 @@ import { createNativeChildEnvironment } from "../../dev-delivery/native/executio
 import { recordDigest } from "../../release/discussion/envelope.js";
 import { verifyPipelinePublicationPlan } from "./plan.js";
 import { assertPipelinePackagePolicy } from "./package-policy.js";
+import { inspectNativeInstaller } from "./installer.js";
+import { sealPipelineNativeInputs } from "./native-inputs.js";
 import {
   publicationPath,
   publicationFile,
@@ -73,6 +75,7 @@ function archiveNames(file, suffix) {
 
 export function inspectPipelineFileArtifact(directory, expected) {
   const file = publicationPath(directory, expected.path);
+  if (expected.kind === "installer") return inspectNativeInstaller(file);
   if (expected.kind === "pdf") {
     const bytes = fs.readFileSync(file);
     if (
@@ -143,38 +146,26 @@ export function packPipelineProducts({
       ...(packed.package ? { package: packed.package } : {}),
     };
   });
+  const nativeSigning = sealPipelineNativeInputs({
+    cwd,
+    output,
+    plan,
+    platform,
+    source,
+    artifacts,
+  });
   const body = {
-    schema: "buildchain.pipeline-publication-products/v1",
+    schema: `buildchain.pipeline-publication-products/v${nativeSigning ? 2 : 1}`,
     planRoot: plan.root,
     source,
     platform,
     artifacts,
+    ...(nativeSigning ? { nativeSigning } : {}),
   };
   const manifest = { ...body, root: recordDigest(body) };
   writeImmutablePublicationFile(
     path.join(output, "manifest.json"),
     `${JSON.stringify(manifest, null, 2)}\n`,
   );
-  return manifest;
-}
-
-export function verifyPipelineProductFiles(directory, manifest) {
-  const { root, ...body } = manifest;
-  if (
-    body.schema !== "buildchain.pipeline-publication-products/v1" ||
-    root !== recordDigest(body)
-  )
-    throw new Error("Publication manifest root does not match retained bytes");
-  for (const artifact of manifest.artifacts) {
-    const observed = publicationFile(publicationPath(directory, artifact.file));
-    if (
-      observed.size !== artifact.size ||
-      observed.digest !== artifact.digest ||
-      (artifact.package && observed.integrity !== artifact.package.integrity)
-    )
-      throw new Error(
-        "Publication artifact changed after its manifest was sealed",
-      );
-  }
   return manifest;
 }

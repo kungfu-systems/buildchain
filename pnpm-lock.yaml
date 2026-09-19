@@ -1058,6 +1058,24 @@ importers:
         specifier: 6.0.1
         version: 6.0.1
 
+  actions/publication/pipeline/finalize:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
+  actions/publication/pipeline/native-control:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
   actions/publication/pipeline/prepare:
     dependencies:
       '@actions/core':

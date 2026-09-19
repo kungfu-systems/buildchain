@@ -1,3 +1,4 @@
+import { loadMacosSigningInput } from "./input.js";
 import * as core from "@actions/core";
 import { signAsync } from "@electron/osx-sign/dist/cjs/index.js";
 import { spawnSync } from "node:child_process";
@@ -19,7 +20,6 @@ import {
   entitlementsForProfile,
   findEmbeddedWheels,
   inspectExtractedWheel,
-  loadMacosSigningInput,
   parseIdentityListing,
   parseNotarySubmission,
   requirePattern,

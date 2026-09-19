@@ -5,8 +5,12 @@ import { recordDigest } from "../../release/discussion/envelope.js";
 import { readPipelineCaller } from "./pipeline-run-entry.js";
 import { publicationPath } from "../../publication/pipeline/files.js";
 
-export const pipelinePublicationArtifactName = (plan, platform) =>
-  `buildchain-products-${plan.root.slice(7)}-${platform}`;
+export const pipelinePublicationArtifactName = (
+  plan,
+  platform,
+  stage = "unsigned",
+) =>
+  `buildchain-${stage === "finalized" ? "final-products" : "products"}-${plan.root.slice(7)}-${platform}`;
 
 export function githubPipelinePublicationArtifacts({
   request,
@@ -14,15 +18,28 @@ export function githubPipelinePublicationArtifacts({
   repository,
   token,
   client = artifact,
+  stage = "unsigned",
 }) {
+  if (!["unsigned", "finalized"].includes(stage))
+    throw new Error("Publication artifact stage is not supported");
   const prefix = `/repos/${repository}/actions`;
   async function upload(plan, manifest, directory) {
+    if (
+      (stage === "finalized") !==
+      (manifest.nativeSigning?.phase === "finalized")
+    )
+      throw new Error(
+        "Publication upload differs from its native finalization stage",
+      );
     const paths = [
       publicationPath(directory, "manifest.json"),
       ...manifest.artifacts.map(({ file }) => publicationPath(directory, file)),
+      ...(manifest.nativeSigning?.files || []).map(({ file }) =>
+        publicationPath(directory, file),
+      ),
     ];
     const result = await client.uploadArtifact(
-      pipelinePublicationArtifactName(plan, manifest.platform),
+      pipelinePublicationArtifactName(plan, manifest.platform, stage),
       paths,
       directory,
       { retentionDays: 30, compressionLevel: 0 },
@@ -43,7 +60,11 @@ export function githubPipelinePublicationArtifacts({
       repository,
     );
     const declared = [
-      ...new Set(plan.outputs.map(({ platform }) => platform)),
+      ...new Set(
+        (stage === "finalized" ? plan.nativeSigning || [] : plan.outputs).map(
+          ({ platform }) => platform,
+        ),
+      ),
     ].sort();
     const platforms = selectedPlatforms || declared;
     if (
@@ -53,7 +74,7 @@ export function githubPipelinePublicationArtifacts({
     )
       throw new Error("Publication subset must name unique declared platforms");
     const selected = platforms.map((platform) => {
-      const name = `Build publication (${platform})`;
+      const name = `${stage === "finalized" ? "Finalize" : "Build"} publication (${platform})`;
       const matches = jobs.filter(
         (job) => job.name === name || job.name.endsWith(` / ${name}`),
       );
@@ -81,7 +102,7 @@ export function githubPipelinePublicationArtifacts({
     const assets = platforms.map((platform) => {
       const matches = response.artifacts.filter(
         (asset) =>
-          asset.name === pipelinePublicationArtifactName(plan, platform),
+          asset.name === pipelinePublicationArtifactName(plan, platform, stage),
       );
       if (
         matches.length !== 1 ||
@@ -108,7 +129,10 @@ export function githubPipelinePublicationArtifacts({
     if (again.run.head_sha !== run.head_sha)
       throw new Error("Publication provider source changed during readback");
     const body = {
-      schema: "buildchain.pipeline-publication-build-readback/v1",
+      schema:
+        stage === "finalized"
+          ? "buildchain.pipeline-native-finalization-readback/v1"
+          : "buildchain.pipeline-publication-build-readback/v1",
       outcome: "success",
       planRoot: plan.root,
       source: materialization.source,

@@ -13,6 +13,8 @@ export function assertRecoveryProductContract(
   if (
     original.version !== plan.version ||
     original.contractRoot !== plan.contractRoot ||
+    recordDigest(original.nativeSigning || []) !==
+      recordDigest(plan.nativeSigning || []) ||
     recordDigest(original.outputs) !== recordDigest(plan.outputs) ||
     recordDigest(original.source) !== recordDigest(plan.source) ||
     recordDigest(source) !== recordDigest(materialization.source)
@@ -96,7 +98,13 @@ export async function planRecoveryPublicationBuild(
     );
     comparisons.push(comparison);
     if (!comparison.compatible) continue;
-    const platforms = await completedPlatforms(context, [...remaining], host);
+    const candidates = [...remaining].filter(
+      (platform) =>
+        !plan.nativeSigning?.some((rule) => rule.platform === platform) ||
+        context.plan.runtime.commit === host.runtime.sha,
+    );
+    if (!candidates.length) continue;
+    const platforms = await completedPlatforms(context, candidates, host);
     if (!platforms.length) continue;
     const { build } = await provider.buildReadback(context, platforms);
     segments.push({

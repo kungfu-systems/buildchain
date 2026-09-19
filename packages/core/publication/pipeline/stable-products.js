@@ -12,12 +12,13 @@ import {
 import { verifyPipelineSigning } from "./signing.js";
 import { reobservePublicationBuild } from "./recovery-build-readback.js";
 import { writeImmutablePublicationFile } from "./files.js";
+import { reobservePipelineNativeQualification } from "./native-recovery.js";
 
 function assertPublishedPlan(stablePlan, source, values) {
   const { plan, qualification: qualified, release } = values;
   verifyPipelinePublicationPlan(plan);
   if (
-    plan.evidenceVersion !== 1 ||
+    plan.evidenceVersion !== (plan.nativeSigning?.length ? 2 : 1) ||
     plan.channel !== "alpha" ||
     plan.version !== stablePlan.candidateVersion ||
     plan.tag !== source.candidate.tag ||
@@ -25,7 +26,8 @@ function assertPublishedPlan(stablePlan, source, values) {
     plan.route.operation !== "alpha" ||
     plan.route.to !== stablePlan.route.from ||
     plan.route.from !== stablePlan.developmentBranch ||
-    recordDigest(plan.outputs) !== recordDigest(stablePlan.outputs) ||
+    (plan.outputDeclarationRoot || recordDigest(plan.outputs)) !==
+      (stablePlan.outputDeclarationRoot || recordDigest(stablePlan.outputs)) ||
     recordDigest(qualified.source) !== recordDigest(source.source) ||
     recordDigest(release.source) !== recordDigest(source.source)
   )
@@ -282,9 +284,15 @@ export async function readPipelineStableProducts(
       execute,
     );
     await reobservePublicationBuild(qualified.build, qualified.source, host);
+    const nativeJobs = await reobservePipelineNativeQualification(
+      qualified,
+      plan,
+      host,
+      host.signingHost,
+    );
     const signer = await signingRun(plan, qualified, host);
     const completedAt = completionTime(
-      [...jobs, signer],
+      [...jobs, ...nativeJobs, signer],
       qualified,
       source.candidate,
     );

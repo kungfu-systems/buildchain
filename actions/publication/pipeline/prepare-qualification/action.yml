@@ -7,6 +7,9 @@ inputs:
   token:
     description: Scoped provider credential.
     required: true
+  authority-token:
+    description: Scoped readback credential for products requiring native signing.
+    required: false
 outputs:
   subject-path:
     description: Internal subject-path result.

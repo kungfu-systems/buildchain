@@ -18,6 +18,7 @@ export async function prepareRecoveredSigning(
   journal,
   archive,
   directory,
+  signingHost,
 ) {
   const prepared = await uniquePublicationMaterial(
     journal,
@@ -43,6 +44,7 @@ export async function prepareRecoveredSigning(
     archive,
     host,
     directory,
+    signingHost,
   });
   await journal.fence();
   await journal.record(

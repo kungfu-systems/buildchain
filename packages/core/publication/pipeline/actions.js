@@ -11,6 +11,7 @@ import {
 import { applyPipelinePublication } from "./apply.js";
 import { settlePipelinePublication } from "./settle.js";
 import { githubJsonClient } from "../../providers/github/json-client.js";
+import { pipelineSigningHost } from "./native-actions.js";
 
 const contextInput = (core) =>
   JSON.parse(core.getInput("context", { required: true }));
@@ -19,6 +20,8 @@ const directory = (env) =>
 
 export async function preparePipelinePublicationAction(core, env) {
   const host = await pipelineHost(core, env, "Prepare publication");
+  if (core.getInput("authority-token"))
+    host.signingHost = pipelineSigningHost(core);
   const result = await preparePipelinePublication(
     core.getInput("attempt", { required: true }),
     core.getInput("definition-sha", { required: true }),
@@ -58,10 +61,12 @@ export async function buildPipelinePublicationAction(core, env) {
 
 export async function preparePipelineQualificationAction(core, env) {
   const host = await pipelineHost(core, env, "Qualify and sign products");
+  const context = contextInput(core);
   const prepared = await preparePipelineQualification(
-    contextInput(core),
+    context,
     host,
     directory(env),
+    context.plan.nativeSigning?.length ? pipelineSigningHost(core) : undefined,
   );
   core.setOutput("subject-path", prepared.subjectPath);
   core.setOutput("predicate-path", prepared.predicatePath);

@@ -491,6 +491,17 @@
       "invocation": "repository",
       "rationale": "Generated minimal consumer caller; all orchestration belongs to the published runtime.",
       "path": ".github/workflows/buildchain-recover.yml"
+    },
+    {
+      "id": ".pipeline-native",
+      "role": "component",
+      "category": "release",
+      "purpose": "pipeline-native",
+      "summary": "Internal pipeline native signing and product finalization",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "rationale": "Separate the credential-bearing signing controller from credentialless product finalization while preserving exact publication source and recovery lineage."
     }
   ]
 }

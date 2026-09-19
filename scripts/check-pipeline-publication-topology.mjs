@@ -15,6 +15,7 @@ export function assertPipelinePublicationTopology(
     ".github/workflows/.release-pipeline-version.yml",
     ".github/workflows/buildchain.yml",
     ".github/workflows/buildchain-recover.yml",
+    ".github/workflows/.release-pipeline-native.yml",
   ]);
   const pipelineTopology = discoverReleaseTopology(
     pipeline.workflowPaths,
@@ -36,6 +37,12 @@ export function assertPipelinePublicationTopology(
         module,
       ),
     );
+  const native = ".github/workflows/.release-pipeline-native.yml";
+  for (const [job, module] of [
+    ["control", "packages/core/publication/pipeline/native-control.js"],
+    ["finalize", "packages/core/publication/pipeline/native-publish.js"],
+  ])
+    assert.ok(inspectWorkflowJob(native, job, root).modules.has(module));
   const version = ".github/workflows/.release-pipeline-version.yml";
   assert.ok(
     inspectWorkflowJob(version, "build", root).modules.has(

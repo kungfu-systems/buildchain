@@ -7,13 +7,15 @@ import path from "node:path";
 import { recordDigest } from "../../release/discussion/envelope.js";
 import { createDomainPublicationQualificationReceipt } from "../publication-qualification.js";
 import { verifyPipelinePublicationPlan } from "./plan.js";
-import {
-  inspectPipelineFileArtifact,
-  verifyPipelineProductFiles,
-} from "./pack.js";
+import { inspectPipelineFileArtifact } from "./pack.js";
+import { verifyPipelineProductFiles } from "./files.js";
 import { publicationPath } from "./files.js";
 import { assertPipelinePackagePolicy } from "./package-policy.js";
 import { readNpmPackageJsonFromTarball } from "../../release/candidate/payloads.js";
+import {
+  qualifyNativeFinalizedBundle,
+  verifyNativeFinalizationReadback,
+} from "./native-qualification.js";
 
 function productDescriptor(artifact) {
   const { file, size, digest, package: pkg, ...descriptor } = artifact;
@@ -50,15 +52,7 @@ export function inspectPipelinePublicationArtifacts(directory, manifest, plan) {
   }
 }
 
-export function qualifyPipelineProducts({
-  plan,
-  source,
-  bundles,
-  build,
-  policyRoot,
-  now = new Date(),
-}) {
-  verifyPipelinePublicationPlan(plan);
+function verifyUnsignedProductReadback({ plan, source, bundles, build }) {
   if (build.schema === PUBLICATION_BUILD_AGGREGATE)
     verifyPublicationBuildAggregate(build, {
       plan,
@@ -103,9 +97,45 @@ export function qualifyPipelineProducts({
     throw new Error(
       "Publication readback must cover exactly the retained provider artifacts",
     );
+}
+
+export function qualifyPipelineProducts({
+  plan,
+  source,
+  bundles,
+  build,
+  policyRoot,
+  native,
+  now = new Date(),
+}) {
+  verifyPipelinePublicationPlan(plan);
+  if (plan.nativeSigning?.length && !native)
+    throw new Error(
+      "Native publication requires independently admitted signing and finalization evidence",
+    );
+  if (native) {
+    if (!plan.nativeSigning?.length)
+      throw new Error(
+        "Unsigned publication cannot admit undeclared native signing",
+      );
+    verifyNativeFinalizationReadback(plan, source, native.finalized);
+    const platforms = [
+      ...new Set(plan.nativeSigning.map((rule) => rule.platform)),
+    ].sort();
+    if (
+      recordDigest(native.signers.map((signer) => signer.platform).sort()) !==
+      recordDigest(platforms)
+    )
+      throw new Error(
+        "Native publication requires one independently observed signer per platform",
+      );
+  }
+  verifyUnsignedProductReadback({ plan, source, bundles, build });
   const descriptors = [],
-    artifacts = [];
-  for (const { directory, manifest, providerArtifact } of bundles) {
+    artifacts = [],
+    nativeProofs = [];
+  for (const unsigned of bundles) {
+    const { directory, manifest, providerArtifact } = unsigned;
     const producer = publicationArtifactProducer(build, providerArtifact.id);
     if (
       manifest.planRoot !== producer.build.planRoot ||
@@ -118,12 +148,34 @@ export function qualifyPipelineProducts({
         "Publication artifact is not bound to the exact admitted source run",
       );
     inspectPipelinePublicationArtifacts(directory, manifest, plan);
-    descriptors.push(...manifest.artifacts.map(productDescriptor));
+    let selected = unsigned;
+    if (
+      plan.nativeSigning?.some((rule) => rule.platform === manifest.platform)
+    ) {
+      const admitted = qualifyNativeFinalizedBundle({
+        plan,
+        source,
+        unsigned,
+        producerPlan: producer.plan || plan,
+        finalized: native.finalized,
+        signer: native.signers.find(
+          (signer) => signer.platform === manifest.platform,
+        ),
+      });
+      selected = admitted.bundle;
+      nativeProofs.push(admitted.proof);
+      inspectPipelinePublicationArtifacts(
+        selected.directory,
+        selected.manifest,
+        plan,
+      );
+    }
+    descriptors.push(...selected.manifest.artifacts.map(productDescriptor));
     artifacts.push(
-      ...manifest.artifacts.map((artifact) => ({
+      ...selected.manifest.artifacts.map((artifact) => ({
         ...artifact,
-        manifestRoot: manifest.root,
-        providerArtifactId: providerArtifact.id,
+        manifestRoot: selected.manifest.root,
+        providerArtifactId: selected.providerArtifact.id,
       })),
     );
   }
@@ -143,10 +195,22 @@ export function qualifyPipelineProducts({
     throw new Error(
       "Multi-platform npm publication requires distinct declared package names",
     );
+  const nativeBody = nativeProofs.length
+    ? {
+        schema: "buildchain.pipeline-native-qualification/v1",
+        platforms: nativeProofs.sort((a, b) =>
+          a.platform.localeCompare(b.platform),
+        ),
+      }
+    : undefined;
+  const nativeEvidence = nativeBody
+    ? { ...nativeBody, root: recordDigest(nativeBody) }
+    : undefined;
   const candidateRoot = recordDigest({
     planRoot: plan.root,
     source,
     artifacts,
+    ...(nativeEvidence ? { nativeRoot: nativeEvidence.root } : {}),
   });
   const qualification = createDomainPublicationQualificationReceipt({
     repository: source.repository,
@@ -164,12 +228,13 @@ export function qualifyPipelineProducts({
     expiresAt: new Date(now.getTime() + 60 * 60 * 1000).toISOString(),
   });
   const body = {
-    schema: "buildchain.pipeline-publication-qualification/v1",
+    schema: `buildchain.pipeline-publication-qualification/v${nativeEvidence ? 2 : 1}`,
     planRoot: plan.root,
     source,
     build,
     artifacts,
     qualification,
+    ...(nativeEvidence ? { native: nativeEvidence } : {}),
   };
   return { ...body, root: recordDigest(body) };
 }

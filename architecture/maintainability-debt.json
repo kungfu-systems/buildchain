@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 38590,
-    "current": 30529
+    "measuredExcess": 38251,
+    "current": 30190
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -316,7 +316,7 @@
           "lines": 816
         },
         "current": {
-          "lines": 812
+          "lines": 618
         },
         "target": {
           "lines": 600
@@ -1870,48 +1870,10 @@
           "lines": 916
         },
         "current": {
-          "lines": 827
+          "lines": 829
         },
         "target": {
           "lines": 600
-        }
-      },
-      "tests/native-artifact-signing-authority.test.mjs": {
-        "baseline": {
-          "lines": 744,
-          "functions": {
-            "<anonymous@233>@233": {
-              "lines": 229
-            },
-            "<anonymous@223>@223": {
-              "lines": 229
-            },
-            "<anonymous@221>@221": {
-              "lines": 229
-            }
-          }
-        },
-        "current": {
-          "lines": 698,
-          "functions": {
-            "<anonymous@221>@221": {
-              "lines": 229
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "<anonymous@233>@233": {
-              "lines": 180
-            },
-            "<anonymous@223>@223": {
-              "lines": 180
-            },
-            "<anonymous@221>@221": {
-              "lines": 180
-            }
-          }
         }
       },
       "tests/paper.test.mjs": {

@@ -7,6 +7,9 @@ inputs:
   token:
     description: Scoped provider credential.
     required: true
+  authority-token:
+    description: Optional independent native signing authority readback credential.
+    required: false
   operation:
     description: Retained internal publication operation.
     required: true

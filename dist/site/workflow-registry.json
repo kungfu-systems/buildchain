@@ -422,6 +422,41 @@
       "nonDuplicationRationale": "Canonical workflow owns one declared API or orchestration responsibility."
     },
     {
+      "id": ".release-pipeline-native",
+      "path": ".github/workflows/.release-pipeline-native.yml",
+      "reusable": true,
+      "inputs": [
+        "context",
+        "runtime-selection"
+      ],
+      "inputCount": 2,
+      "secrets": [
+        "BUILDCHAIN_AUTOMATION_TOKEN"
+      ],
+      "secretCount": 1,
+      "outputs": [],
+      "outputCount": 0,
+      "taxonomy": {
+        "id": ".pipeline-native",
+        "role": "component",
+        "category": "release",
+        "purpose": "pipeline-native",
+        "status": "active",
+        "canonicalPath": ".github/workflows/.release-pipeline-native.yml",
+        "compatibilityAlias": false
+      },
+      "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "Canonical workflow owns one declared API or orchestration responsibility."
+    },
+    {
       "id": ".release-pipeline-products",
       "path": ".github/workflows/.release-pipeline-products.yml",
       "reusable": true,
@@ -6030,11 +6065,11 @@
     },
     {
       "apiRole": "implementation",
-      "id": "publication/pipeline/prepare",
-      "path": "actions/publication/pipeline/prepare/action.yml",
+      "id": "publication/pipeline/finalize",
+      "path": "actions/publication/pipeline/finalize/action.yml",
       "inputs": [
-        "attempt",
-        "definition-sha",
+        "context",
+        "platform",
         "token"
       ],
       "inputCount": 3,
@@ -6050,13 +6085,55 @@
     },
     {
       "apiRole": "implementation",
-      "id": "publication/pipeline/prepare-qualification",
-      "path": "actions/publication/pipeline/prepare-qualification/action.yml",
+      "id": "publication/pipeline/native-control",
+      "path": "actions/publication/pipeline/native-control/action.yml",
       "inputs": [
+        "authority-token",
         "context",
         "token"
       ],
-      "inputCount": 2,
+      "inputCount": 3,
+      "capabilityGroup": "release-passport-trust",
+      "status": "active",
+      "owner": "buildchain-actions",
+      "maturity": "stable",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
+    },
+    {
+      "apiRole": "implementation",
+      "id": "publication/pipeline/prepare",
+      "path": "actions/publication/pipeline/prepare/action.yml",
+      "inputs": [
+        "attempt",
+        "authority-token",
+        "definition-sha",
+        "token"
+      ],
+      "inputCount": 4,
+      "capabilityGroup": "release-passport-trust",
+      "status": "active",
+      "owner": "buildchain-actions",
+      "maturity": "stable",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "One capability node owns the composite or JavaScript adapter boundary."
+    },
+    {
+      "apiRole": "implementation",
+      "id": "publication/pipeline/prepare-qualification",
+      "path": "actions/publication/pipeline/prepare-qualification/action.yml",
+      "inputs": [
+        "authority-token",
+        "context",
+        "token"
+      ],
+      "inputCount": 3,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",
@@ -6072,10 +6149,11 @@
       "id": "publication/pipeline/qualify",
       "path": "actions/publication/pipeline/qualify/action.yml",
       "inputs": [
+        "authority-token",
         "context",
         "token"
       ],
-      "inputCount": 2,
+      "inputCount": 3,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",
@@ -6210,11 +6288,12 @@
       "id": "publication/version/materialize-publication",
       "path": "actions/publication/version/materialize-publication/action.yml",
       "inputs": [
+        "authority-token",
         "context",
         "operation",
         "token"
       ],
-      "inputCount": 3,
+      "inputCount": 4,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",

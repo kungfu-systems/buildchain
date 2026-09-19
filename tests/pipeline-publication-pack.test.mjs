@@ -7,10 +7,8 @@ import { execFileSync } from "node:child_process";
 import { compileConsumerPlan } from "../packages/core/consumer/contract/plan.js";
 import { buildPipelineProducts } from "../packages/core/workflow/pipeline/build.js";
 import { planPipelinePublication } from "../packages/core/publication/pipeline/plan.js";
-import {
-  packPipelineProducts,
-  verifyPipelineProductFiles,
-} from "../packages/core/publication/pipeline/pack.js";
+import { packPipelineProducts } from "../packages/core/publication/pipeline/pack.js";
+import { verifyPipelineProductFiles } from "../packages/core/publication/pipeline/files.js";
 import { publicationPath } from "../packages/core/publication/pipeline/files.js";
 import { qualifyPipelineProducts } from "../packages/core/publication/pipeline/qualification.js";
 import { recordDigest } from "../packages/core/release/discussion/envelope.js";

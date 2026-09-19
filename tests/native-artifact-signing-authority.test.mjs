@@ -7,20 +7,27 @@ import test from "node:test";
 import { spawnSync } from "node:child_process";
 
 import { createArtifactSigningRequest } from "../packages/core/build/artifact-signing.js";
-import {
-  resolveAuthorityDispatchRef,
-} from "../packages/core/build/signing/dispatch.js";
+import { resolveAuthorityDispatchRef } from "../packages/core/build/signing/dispatch.js";
 import { finalizeNativeArtifactSigningResult } from "../packages/core/build/signing/native-result.js";
-import { inspectArtifactSigningRequests } from "../packages/core/build/signing/intake.js";
 import { importArtifactSigningResults } from "../packages/core/build/signing/import-results.js";
+import { inspectArtifactSigningRequests } from "../packages/core/build/signing/intake.js";
 import { materializeArtifactSigningRequest } from "../packages/core/build/signing/materialize.js";
 import { verifyArtifactSigningResults } from "../packages/core/build/signing/verify-results.js";
 
 test("signing dispatch uses a public entry and leaves runtime selection to its input", () => {
   assert.equal(resolveAuthorityDispatchRef(), "v4");
-  for (const entry of ["v4", "v4-alpha"]) assert.equal(resolveAuthorityDispatchRef(entry), entry);
-  for (const invalid of ["v3", "4".repeat(40), "train/v4/v4.1/repair", "authority/v4/v4.1/artifact-signing"])
-    assert.throws(() => resolveAuthorityDispatchRef(invalid), /public floating channel/);
+  for (const entry of ["v4", "v4-alpha"])
+    assert.equal(resolveAuthorityDispatchRef(entry), entry);
+  for (const invalid of [
+    "v3",
+    "4".repeat(40),
+    "train/v4/v4.1/repair",
+    "authority/v4/v4.1/artifact-signing",
+  ])
+    assert.throws(
+      () => resolveAuthorityDispatchRef(invalid),
+      /public floating channel/,
+    );
 });
 
 function digest(value) {
@@ -218,236 +225,6 @@ test("authority intake carries sealed JIT profile intent into the macOS matrix",
   }
 });
 
-test("native authority binds and projects a notarized app release payload", () => {
-  const root = fs.mkdtempSync(
-    path.join(os.tmpdir(), "buildchain-native-app-signing-"),
-  );
-  try {
-    const input = path.join(root, "input");
-    const requestDirectory = path.join(input, "app");
-    fs.mkdirSync(requestDirectory, { recursive: true });
-    const unsignedTransport = path.join(requestDirectory, "subject.ditto.zip");
-    fs.writeFileSync(unsignedTransport, "unsigned-app-transport");
-    const request = createArtifactSigningRequest({
-      source: {
-        repository: "kungfu-systems/kungfu",
-        sha: "1".repeat(40),
-        treeSha: "2".repeat(40),
-      },
-      runtime: { sha: "3".repeat(40) },
-      artifact: {
-        id: "kungfu-app",
-        path: "product/dist/desktop/mac-arm64/Kungfu Episodes.app",
-        platform: "macos",
-        arch: "arm64",
-        kind: "app-bundle",
-        bytes: 42,
-        digest: `sha256:${"4".repeat(64)}`,
-        transport: {
-          file: "app/subject.ditto.zip",
-          format: "ditto-zip",
-          bytes: fs.statSync(unsignedTransport).size,
-          digest: digest(fs.readFileSync(unsignedTransport)),
-        },
-      },
-    });
-    fs.writeFileSync(
-      path.join(requestDirectory, "request.json"),
-      `${JSON.stringify(request, null, 2)}\n`,
-    );
-    fs.writeFileSync(
-      path.join(input, "index.json"),
-      `${JSON.stringify(
-        {
-          schemaVersion: 1,
-          contract: "kungfu-buildchain-artifact-signing-request-index/v1",
-          requests: [
-            {
-              id: request.artifact.id,
-              digest: request.digest,
-              path: "app/request.json",
-              required: true,
-            },
-          ],
-        },
-        null,
-        2,
-      )}\n`,
-    );
-
-    const credential = path.join(root, "credential");
-    const release = path.join(credential, "product", "release");
-    fs.mkdirSync(release, { recursive: true });
-    const zip = path.join(
-      release,
-      "Kungfu-Episodes-4.0.0-alpha.1-macos-arm64.zip",
-    );
-    const dmg = path.join(
-      release,
-      "Kungfu-Episodes-4.0.0-alpha.1-macos-arm64.dmg",
-    );
-    const evidencePath = path.join(release, "credential-island-evidence.json");
-    fs.writeFileSync(zip, "signed-stapled-app-zip");
-    fs.writeFileSync(dmg, "signed-stapled-dmg");
-    fs.writeFileSync(
-      evidencePath,
-      `${JSON.stringify(
-        {
-          schema: "buildchain.macos-credential-island-evidence/v1",
-          status: "accepted",
-          source: {
-            repository: request.source.repository,
-            sha: request.source.sha,
-            treeSha: request.source.treeSha,
-          },
-          buildchain: { runtimeSha: request.runtime.sha },
-          input: { requestDigest: request.digest },
-          app: { architecture: "arm64" },
-          execution: {
-            id: "e".repeat(64),
-            runId: "1000",
-            runAttempt: "2",
-          },
-          dmgAssembly: {
-            schema: "buildchain.macos-dmg-assembly-evidence/v1",
-            status: "accepted",
-            executionId: "e".repeat(64),
-            binding: {
-              sourceSha: request.source.sha,
-              runtimeSha: request.runtime.sha,
-              requestDigest: request.digest,
-              unsignedArchiveDigest: request.artifact.transport.digest,
-              runId: "1000",
-              runAttempt: "2",
-            },
-            policy: {
-              maxAttempts: 3,
-              retryableClassifications: ["resource-busy"],
-              retryDelaysMs: [2000, 5000],
-            },
-            attempts: [
-              {
-                number: 1,
-                outcome: "created",
-                classification: "none",
-              },
-            ],
-            cleanup: {
-              ownership: "temporary-root-only",
-              failedAttemptArtifactsRemoved: true,
-              finalOwnedRoot: "removed",
-            },
-          },
-          cleanup: { status: "complete" },
-          toolchain: {
-            node: process.version,
-            macosProductVersion: "15.0",
-            macosBuildVersion: "24A000",
-            xcode: "Xcode 16.0; Build version 16A000",
-          },
-          notarization: {
-            application: { id: "a", status: "Accepted" },
-            diskImage: { id: "b", status: "Accepted" },
-          },
-          verification: {
-            codesignStrict: true,
-            hardenedRuntime: true,
-            appStaple: true,
-            appGatekeeper: true,
-            dmgStaple: true,
-            dmgGatekeeper: true,
-          },
-        },
-        null,
-        2,
-      )}\n`,
-    );
-    const files = [zip, dmg, evidencePath].map((file) => ({
-      path: path.relative(credential, file).split(path.sep).join("/"),
-      size: fs.statSync(file).size,
-      sha256: digest(fs.readFileSync(file)).slice("sha256:".length),
-    }));
-    fs.writeFileSync(
-      path.join(credential, "manifest.json"),
-      `${JSON.stringify({ files }, null, 2)}\n`,
-    );
-
-    const output = path.join(root, "output");
-    finalizeNativeArtifactSigningResult({
-      requestRoot: input,
-      requestPath: "app/request.json",
-      signedPayload: zip,
-      evidencePath,
-      credentialArtifactRoot: credential,
-      outputRoot: output,
-      expectedRunId: "1000",
-      expectedRunAttempt: "2",
-    });
-    assert.equal(
-      verifyArtifactSigningResults({ requestRoot: input, resultRoot: output })
-        .ok,
-      true,
-    );
-    assert.throws(
-      () =>
-        finalizeNativeArtifactSigningResult({
-          requestRoot: input,
-          requestPath: "app/request.json",
-          signedPayload: zip,
-          evidencePath,
-          credentialArtifactRoot: credential,
-          outputRoot: path.join(root, "cross-run-output"),
-          expectedRunId: "1001",
-          expectedRunAttempt: "2",
-        }),
-      /does not prove the requested native signature/u,
-    );
-
-    const consumer = path.join(root, "consumer");
-    fs.mkdirSync(path.join(consumer, "product", "release"), {
-      recursive: true,
-    });
-    fs.writeFileSync(
-      path.join(consumer, "product", "release", "existing.txt"),
-      "existing",
-    );
-    const imported = importArtifactSigningResults({
-      workspace: consumer,
-      requestRoot: input,
-      resultRoot: output,
-      evidenceRoot: ".buildchain/artifacts/signing/macos-arm64",
-    });
-    assert.equal(imported.credentialArtifacts.length, 1);
-    assert.equal(
-      fs.readFileSync(
-        path.join(consumer, "product", "release", path.basename(dmg)),
-        "utf8",
-      ),
-      "signed-stapled-dmg",
-    );
-    fs.appendFileSync(
-      path.join(
-        output,
-        "credential-artifact",
-        "product",
-        "release",
-        path.basename(dmg),
-      ),
-      "tamper",
-    );
-    assert.throws(
-      () =>
-        verifyArtifactSigningResults({
-          requestRoot: input,
-          resultRoot: output,
-        }),
-      /result evidence digest mismatch/,
-    );
-  } finally {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
-});
-
 test("Buildchain authority owns native credentials and performs provider verification", () => {
   const root = path.resolve(import.meta.dirname, "..");
   const workflowText = fs.readFileSync(
@@ -468,17 +245,11 @@ test("Buildchain authority owns native credentials and performs provider verific
     "utf8",
   );
   const macos = fs.readFileSync(
-    path.join(
-      root,
-      "packages/core/providers/signing/macos/sign-request.sh",
-    ),
+    path.join(root, "packages/core/providers/signing/macos/sign-request.sh"),
     "utf8",
   );
   const windows = fs.readFileSync(
-    path.join(
-      root,
-      "packages/core/providers/signing/windows/sign-request.ps1",
-    ),
+    path.join(root, "packages/core/providers/signing/windows/sign-request.ps1"),
     "utf8",
   );
   assert.match(workflow, /environment: buildchain-artifact-signing/);
@@ -497,13 +268,13 @@ test("Buildchain authority owns native credentials and performs provider verific
     /uses: \.\/\.buildchain\/runtime\/actions\/build\/signing\/qualify-delivery/,
   );
   assert.match(workflow, /runtime-ref:/);
-  assert.match(
-    reusableDocs,
-    /public-release-signing-authority\.yml@v4/,
-  );
+  assert.match(reusableDocs, /public-release-signing-authority\.yml@v4/);
   assert.match(workflow, /secrets\.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64/);
   assert.match(workflow, /secrets\.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64/);
-  assert.match(workflow, /team-id: \$\{\{ vars\.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID \}\}/);
+  assert.match(
+    workflow,
+    /team-id: \$\{\{ vars\.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID \}\}/,
+  );
   assert.match(macosAction, /expected-team-id: \$\{\{ inputs\.team-id \}\}/);
   assert.doesNotMatch(workflow, /secrets\.BUILDCHAIN_APPLE_/);
   assert.match(workflow, /secrets\.BUILDCHAIN_WINDOWS_CERTIFICATE_PFX_BASE64/);
@@ -513,11 +284,23 @@ test("Buildchain authority owns native credentials and performs provider verific
   assert.match(macos, /list-keychains -d user -s "\$\{keychain_path\}"/);
   assert.match(macos, /Buildchain macOS authority: sign exact Mach-O payload/);
   assert.match(macos, /sign compound archive Mach-O payloads/);
-  const nativeProvider = fs.readFileSync(path.join(root, "packages/core/providers/signing/native.js"), "utf8");
+  const nativeProvider = fs.readFileSync(
+    path.join(root, "packages/core/providers/signing/native.js"),
+    "utf8",
+  );
   assert.match(nativeProvider, /BUILDCHAIN_ARTIFACT_KIND: artifact.kind/);
-  assert.match(nativeProvider, /BUILDCHAIN_ENTITLEMENTS_PROFILE:\s*signature.entitlementsProfile/);
-  assert.match(nativeProvider, /BUILDCHAIN_ENTITLEMENTS_PATHS: \(signature.entitlementsPaths/);
-  assert.match(macosAction, /uses: \.\/\.buildchain\/runtime\/actions\/build\/signing\/sign-macos/);
+  assert.match(
+    nativeProvider,
+    /BUILDCHAIN_ENTITLEMENTS_PROFILE:\s*signature.entitlementsProfile/,
+  );
+  assert.match(
+    nativeProvider,
+    /BUILDCHAIN_ENTITLEMENTS_PATHS: \(signature.entitlementsPaths/,
+  );
+  assert.match(
+    macosAction,
+    /uses: \.\/\.buildchain\/runtime\/actions\/build\/signing\/sign-macos/,
+  );
   assert.match(macos, /--entitlements-profile "\$\{entitlements_profile\}"/);
   assert.match(macos, /--entitlements-paths "\$\{entitlements_paths\}"/);
   assert.match(

@@ -1,0 +1,15 @@
+name: Pipeline native native-control
+description: Control independent native signing without executing product commands.
+inputs:
+  context:
+    description: Internal source-bound publication context.
+    required: true
+  token:
+    description: Scoped consumer provider credential.
+    required: true
+  authority-token:
+    description: Scoped central signing dispatch and readback credential.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

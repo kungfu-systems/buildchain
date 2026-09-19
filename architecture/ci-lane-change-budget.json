@@ -2019,6 +2019,57 @@
         "expectedContributionSeconds": 21600,
         "rationale": "Generated caller delegates to the published pipeline. Runtime jobs own bounded admission, execution, cancellation and provider settlement. Six-hour budget is conservative, not measured latency or an additional self controller."
       }
+    },
+    {
+      "laneId": ".github/workflows/.release-pipeline-native.yml#control",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 360,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "required native signing and product finalization",
+        "expectedContributionSeconds": 21600,
+        "rationale": "One fenced controller dispatches the existing signing authority and retains independently verified results; no consumer commands or Apple credentials run here. Conservative timeout bound, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-pipeline-native.yml#finalize",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 720,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "required native signing and product finalization",
+        "expectedContributionSeconds": 43200,
+        "rationale": "At most two declared macOS platforms each use the contract timeout capped at 360 minutes; product commands receive no signing credentials and must preserve signed bytes. Conservative timeout bound, not measured latency."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-pipeline-products.yml#native",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 1080,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "required native signing and product finalization",
+        "expectedContributionSeconds": 64800,
+        "rationale": "Reusable call delegates to the registered controller and two bounded finalizers; inherits the publication worker fence and never cancels started credential work. Conservative timeout bound, not measured latency."
+      }
     }
   ],
   "declarationFamilies": [

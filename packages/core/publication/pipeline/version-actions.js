@@ -6,6 +6,7 @@ import { buildPipelineVersionMaterial } from "./version-build.js";
 import { qualifyPipelineVersionContext } from "./version-context.js";
 import { preparePipelinePublication } from "./prepare.js";
 import { settlePipelinePublication } from "./settle.js";
+import { pipelineSigningHost } from "./native-actions.js";
 
 const contextInput = (core) =>
   JSON.parse(core.getInput("context", { required: true }));
@@ -45,6 +46,8 @@ export async function materializePipelinePublicationAction(core, env) {
         "Publication materialization received a different version purpose",
       );
     const host = await pipelineHost(core, env, "Materialize publication");
+    if (core.getInput("authority-token"))
+      host.signingHost = pipelineSigningHost(core);
     await qualifyPipelineVersionContext(context, host, directory(env));
     result = await preparePipelinePublication(
       context.attempt,

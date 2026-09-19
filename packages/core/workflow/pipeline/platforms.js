@@ -17,5 +17,21 @@ export function pipelinePlatforms(plan) {
     platforms.some((platform) => !Object.hasOwn(RUNNERS, platform))
   )
     throw new Error("Pipeline product platform has no admitted hosted runner");
-  return platforms.map((platform) => ({ platform, runner: RUNNERS[platform] }));
+  return platforms.map((platform) => {
+    const budgets = plan.products
+      .filter((product) => product.platforms.includes(platform))
+      .map((product) => product.timeout_minutes)
+      .filter((value) => value !== undefined);
+    if (
+      budgets.some(
+        (value) => !Number.isInteger(value) || value < 1 || value > 360,
+      )
+    )
+      throw new Error("Pipeline build timeout exceeds its admitted bound");
+    return {
+      platform,
+      runner: RUNNERS[platform],
+      ...(budgets.length ? { timeoutMinutes: Math.max(...budgets) } : {}),
+    };
+  });
 }

@@ -159,6 +159,22 @@ function assertNoCredentialMaterial(value, path = "request") {
   }
 }
 
+function artifactBundleIdentity(artifact, kind) {
+  if (artifact.bundleId === undefined) return {};
+  const bundleId = nonEmptyString(
+    artifact.bundleId,
+    "application bundle identifier",
+  );
+  if (
+    kind !== "app-bundle" ||
+    !/^[A-Za-z0-9][A-Za-z0-9.-]{0,254}$/u.test(bundleId)
+  )
+    throw new Error(
+      "application bundle identifier requires a valid app-bundle identity",
+    );
+  return { bundleId };
+}
+
 export function listArtifactSigningProfiles() {
   return Object.values(PROFILE_REGISTRY).map((profile) => ({
     ...profile,
@@ -275,6 +291,7 @@ export function createArtifactSigningRequest({
       path: nonEmptyString(artifact.path, "artifact path"),
       kind,
       platform,
+      ...artifactBundleIdentity(artifact, kind),
       ...(artifact.arch
         ? { arch: nonEmptyString(artifact.arch, "artifact architecture") }
         : {}),

@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import fs from "node:fs";
+import { parse, stringify } from "smol-toml";
+import { recordDigest } from "../packages/core/release/discussion/envelope.js";
 import { compileConsumerPlan } from "../packages/core/consumer/contract/plan.js";
 import {
   planPipelinePublication,
@@ -15,6 +17,97 @@ import {
 } from "../packages/core/publication/pipeline/version.js";
 
 const sha = "a".repeat(40);
+
+test("asset names use the materialized alpha or stable version and exact platform", () => {
+  const request = input("binary");
+  const product = request.contract.products[0];
+  product.platforms = ["macos-arm64", "macos-x64"];
+  product.artifacts[0].filename = "Kungfu-{version}-{platform}.tar.gz";
+  const declarationRoots = [];
+  for (const [route, version] of [
+    [1, "1.0.0-alpha.1"],
+    [2, "1.0.0"],
+  ]) {
+    request.route = request.contract.channels[route];
+    const plan = planPipelinePublication(request);
+    assert.deepEqual(
+      plan.outputs.map((item) => item.filename),
+      [
+        `Kungfu-${version}-macos-arm64.tar.gz`,
+        `Kungfu-${version}-macos-x64.tar.gz`,
+      ],
+    );
+    assert.equal(
+      plan.versionSelection.requiredArtifactsRoot,
+      recordDigest(plan.outputs),
+    );
+    verifyPipelinePublicationPlan(plan);
+    declarationRoots.push(plan.outputDeclarationRoot);
+  }
+  assert.equal(
+    declarationRoots[0],
+    recordDigest(pipelineExpectedProducts(request.contract)),
+  );
+  assert.equal(declarationRoots[0], declarationRoots[1]);
+  assert.equal(
+    product.artifacts[0].filename,
+    "Kungfu-{version}-{platform}.tar.gz",
+  );
+});
+
+test("filename templates reject arbitrary expressions and unsafe resolved names", () => {
+  const config = parse(
+    fs.readFileSync(
+      "templates/minimal-consumer/binary/.buildchain/buildchain.toml",
+      "utf8",
+    ),
+  );
+  const artifact = config.products[0].artifacts[0];
+  artifact.filename = "Kungfu-{version}-{platform}.tar.gz";
+  const plan = compileConsumerPlan(stringify(config));
+  assert.equal(
+    pipelineExpectedProducts(plan, "1.0.0+build.1")[0].filename,
+    "Kungfu-1.0.0+build.1-linux-x64.tar.gz",
+  );
+  for (const filename of [
+    "{secret}.tar.gz",
+    "${version}.tar.gz",
+    "../{version}.tar.gz",
+    "$(env).tar.gz",
+    "a/{version}.tar.gz",
+    "Kungfu-{version}.tar.gz\n",
+    1,
+  ]) {
+    artifact.filename = filename;
+    assert.throws(
+      () => compileConsumerPlan(stringify(config)),
+      /filename.*invalid string/,
+    );
+  }
+  for (const version of ["../escape", "{version}", "a".repeat(255)])
+    assert.throws(
+      () => pipelineExpectedProducts(plan, version),
+      /filename expansion/,
+    );
+});
+
+test("materialization cannot make distinct declared asset names collide", () => {
+  const request = input("binary");
+  const product = request.contract.products[0];
+  product.artifacts[0].filename = "Kungfu-{version}.tar.gz";
+  product.artifacts.push({
+    ...product.artifacts[0],
+    id: "second",
+    filename: "Kungfu-1.0.0.tar.gz",
+  });
+  product.targets[0].artifacts.push("second");
+  request.route = request.contract.channels[2];
+  assert.throws(
+    () => planPipelinePublication(request),
+    /filenames must be unique/,
+  );
+});
+
 function input(type = "npm") {
   const contract = compileConsumerPlan(
     fs.readFileSync(

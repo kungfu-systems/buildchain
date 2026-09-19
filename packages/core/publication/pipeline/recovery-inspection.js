@@ -164,7 +164,7 @@ export async function inspectRecoveryPublication(
   const originalPlan = retained
     ? publicationLineageMaterial(
         materials,
-        "buildchain.pipeline-publication-plan/v1",
+        plan.schema,
         (value) => value.root === retained.qualified.planRoot,
       )
     : plan;
