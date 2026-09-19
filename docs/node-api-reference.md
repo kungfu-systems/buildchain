@@ -1404,6 +1404,14 @@ Target: `./packages/core/build/artifact-signing.js`. Public symbols: 10.
 | `validateArtifactSigningReceipt` | function: function validateArtifactSigningReceipt(receipt, { request } = {}) | receipt, { request } = {} | unknown | May throw an Error on rejected input or failed operations; follow the linked source contract. | none-detected-by-static-source-scan | `import { validateArtifactSigningReceipt } from "@kungfu-tech/buildchain/artifact-signing";` | `packages/core/build/artifact-signing.js:449` |
 | `validateArtifactSigningRequest` | function: function validateArtifactSigningRequest(request) | request | unknown | May throw an Error on rejected input or failed operations; follow the linked source contract. | none-detected-by-static-source-scan | `import { validateArtifactSigningRequest } from "@kungfu-tech/buildchain/artifact-signing";` | `packages/core/build/artifact-signing.js:369` |
 
+## `@kungfu-tech/buildchain/auditable-demo-transport`
+
+Target: `./packages/core/build/demo/transport-smoke.js`. Public symbols: 1.
+
+| Symbol | Kind and signature | Parameters | Return | Errors | Side effects | Example | Source |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `runTransportSmoke` | function: function runTransportSmoke({ artifactRoot, scenarioPath }) | { artifactRoot, scenarioPath } | unknown | Errors from called operations may propagate; no narrower throw contract is declared in source. | local-filesystem-write, subprocess | `import { runTransportSmoke } from "@kungfu-tech/buildchain/auditable-demo-transport";` | `packages/core/build/demo/transport-smoke.js:74` |
+
 ## `@kungfu-tech/buildchain/artifact-signing-result`
 
 Target: `./packages/core/build/artifact-signing-result.js`. Public symbols: 5.

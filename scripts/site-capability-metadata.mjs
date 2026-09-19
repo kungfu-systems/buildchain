@@ -216,6 +216,7 @@ export function nodeApiMeta(exportName) {
     "./artifact-passport": { group: "release-passport-trust", summary: "Artifact passport digest and evidence helper APIs." },
     "./artifact-verification-envelope": { group: "release-passport-trust", summary: "Sealed exact-root, lifecycle, identity, and existing KFD assessment inputs for KFX admission." },
     "./artifact-signing": { group: "reusable-build", summary: "Credential-free artifact signing declarations, source-bound requests, authority receipts, profile resolution, and fail-closed validation APIs." },
+    "./auditable-demo-transport": { group: "reusable-build", summary: "Credential-free pre-upload demo transport smoke using the exact binary, isolated environment, and restored executable closure; grants no publication authority." },
     "./artifact-signing-result": { group: "release-passport-trust", summary: "Immutable signed-result, final-payload, receipt, evidence-root, and provider-verification binding APIs." },
     "./detached-artifact-signature": { group: "release-passport-trust", summary: "Buildchain-authority Ed25519 detached signature and verification APIs for arbitrary binary artifacts." },
     "./anchored-version-material": { group: "reusable-build", summary: "Anchored/manual derived version material preflight, exact-tree binding, and digest evidence APIs." },

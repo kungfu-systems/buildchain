@@ -10,7 +10,7 @@ import test from "node:test";
 import { adaptCapture } from "../packages/core/build/demo/capture.js";
 import { materializeDemo } from "../packages/core/build/demo/materialization.js";
 import { prepareArtifact, validateScenario } from "../packages/core/build/demo/scenario.js";
-import { runTransportSmoke } from "../packages/core/build/demo/transport-smoke.js";
+import { runTransportSmoke } from "@kungfu-tech/buildchain/auditable-demo-transport";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 function temporary(t) {

@@ -119,7 +119,6 @@ const requiredPaths = [
   "packages/core/build/commands/shifu-gate-profile.mjs",
   "packages/core/build/commands/auditable-demo.mjs",
   "packages/core/build/commands/auditable-demo-platform.mjs",
-  "packages/core/build/commands/auditable-demo-transport-smoke.mjs",
   "packages/core/providers/demo/capture-worker.py",
   "packages/core/build/commands/resolve-artifact-coordinates.mjs",
   "packages/core/providers/commands/artifact-relay-s3.mjs",

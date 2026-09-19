@@ -5486,6 +5486,7 @@
         "packages/core/build/artifact-verification-envelope.js",
         "packages/core/build/build-facts.js",
         "packages/core/build/commands/stage-capsule-qualification.mjs",
+        "packages/core/build/demo/transport-smoke.js",
         "packages/core/build/detached-artifact-signature.js",
         "packages/core/build/github-artifact-attestation.js",
         "packages/core/build/homebrew.js",

@@ -4985,6 +4985,36 @@
       ]
     },
     {
+      "id": "packages/core/build/demo/transport-smoke.js#runTransportSmoke",
+      "name": "runTransportSmoke",
+      "kind": "function",
+      "signature": "function runTransportSmoke({ artifactRoot, scenarioPath })",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ artifactRoot, scenarioPath }"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "local-filesystem-write",
+        "subprocess"
+      ],
+      "source": {
+        "path": "packages/core/build/demo/transport-smoke.js",
+        "line": 74
+      },
+      "example": "import { runTransportSmoke } from \"@kungfu-tech/buildchain/auditable-demo-transport\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/build/detached-artifact-signature.js#DETACHED_ARTIFACT_SIGNATURE_CONTRACT",
       "name": "DETACHED_ARTIFACT_SIGNATURE_CONTRACT",
       "kind": "constant",
@@ -27685,6 +27715,29 @@
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
+      "specifier": "@kungfu-tech/buildchain/auditable-demo-transport",
+      "export": "./auditable-demo-transport",
+      "target": "./packages/core/build/demo/transport-smoke.js",
+      "digest": "sha256:c2d881eb84662e40481b04a5fa4d1bbf207195af4a7cf13526eb1a6b6df625c8",
+      "summary": "Credential-free pre-upload demo transport smoke using the exact binary, isolated environment, and restored executable closure; grants no publication authority.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 1,
+      "symbolIds": [
+        "packages/core/build/demo/transport-smoke.js#runTransportSmoke"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "4.1.0-alpha.0",
+      "compatibilityPromise": "current-contract-only",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-contract-change-review",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/artifact-signing-result",
       "export": "./artifact-signing-result",
       "target": "./packages/core/build/artifact-signing-result.js",
@@ -30102,7 +30155,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:49f3155a2ff338585e81438dcc59243ba4c771646002ba97aa37250da7d41358"
+      "digest": "sha256:32a80ece29536cae9b3035c28ed2cae26fd6f5d422797ed4d552d62f772609c3"
     },
     {
       "id": "build-facts",

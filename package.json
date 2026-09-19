@@ -19,6 +19,7 @@
     "./artifact-verification-envelope": "./packages/core/build/artifact-verification-envelope.js",
     "./github-artifact-attestation": "./packages/core/build/github-artifact-attestation.js",
     "./artifact-signing": "./packages/core/build/artifact-signing.js",
+    "./auditable-demo-transport": "./packages/core/build/demo/transport-smoke.js",
     "./artifact-signing-result": "./packages/core/build/artifact-signing-result.js",
     "./detached-artifact-signature": "./packages/core/build/detached-artifact-signature.js",
     "./anchored-version-material": "./packages/core/build/anchored-version-material.js",

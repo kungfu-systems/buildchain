@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "e8b50b0f58d64425293b8c01b7ca38710e3beb8054312adcf0e49e467c856d02",
+    "sha256": "e38e1aef9ffd11a42d94886c0c5021c4504e85ebf94b4224a546415c25e11736",
     "summary": {
       "cliCommandCount": 117,
       "workflowCount": 45,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "e8b50b0f58d64425293b8c01b7ca38710e3beb8054312adcf0e49e467c856d02",
+      "sha256": "e38e1aef9ffd11a42d94886c0c5021c4504e85ebf94b4224a546415c25e11736",
       "summary": {
         "cliCommandCount": 117,
         "workflowCount": 45,
@@ -1243,6 +1243,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./artifact-signing"
+        },
+        {
+          "id": "export:./auditable-demo-transport",
+          "name": "@kungfu-tech/buildchain/auditable-demo-transport",
+          "kind": "package-export",
+          "sourcePath": "packages/core/build/demo/transport-smoke.js",
+          "evidencePath": "packages/core/build/demo/transport-smoke.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./auditable-demo-transport"
         },
         {
           "id": "export:./artifact-signing-result",
@@ -11742,6 +11754,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 731
+    "publicSurfaceCount": 732
   }
 }
