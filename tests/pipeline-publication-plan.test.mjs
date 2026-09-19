@@ -18,6 +18,46 @@ import {
 
 const sha = "a".repeat(40);
 
+test("GitHub discovery is explicit, rooted, and separate from product maturity", () => {
+  const source = fs.readFileSync(
+    "templates/minimal-consumer/binary/.buildchain/buildchain.toml",
+    "utf8",
+  );
+  const config = parse(source);
+  config.github_release = { prerelease: "never", latest: "newest-product" };
+  const request = input("binary");
+  request.contract = compileConsumerPlan(stringify(config));
+  const plan = planPipelinePublication(request);
+  assert.equal(plan.channel, "alpha");
+  assert.equal(plan.schema, "buildchain.pipeline-publication-plan/v3");
+  assert.deepEqual(plan.githubRelease, config.github_release);
+  verifyPipelinePublicationPlan(plan);
+  assert.throws(
+    () =>
+      verifyPipelinePublicationPlan({
+        ...plan,
+        githubRelease: { prerelease: "never", latest: "never" },
+      }),
+    /retained root/,
+  );
+  assert.equal(
+    planPipelinePublication(input("binary")).githubRelease,
+    undefined,
+  );
+  for (const policy of [
+    { prerelease: "channel", latest: "newest-product" },
+    { prerelease: false, latest: "never" },
+    { prerelease: "never", latest: "anything" },
+    { prerelease: "never", latest: "never", command: "publish" },
+  ]) {
+    config.github_release = policy;
+    assert.throws(
+      () => compileConsumerPlan(stringify(config)),
+      /github_release/,
+    );
+  }
+});
+
 test("asset names use the materialized alpha or stable version and exact platform", () => {
   const request = input("binary");
   const product = request.contract.products[0];

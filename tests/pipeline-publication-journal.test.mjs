@@ -236,13 +236,19 @@ test("recovery adopts original materials and the derived publisher/source in one
 });
 
 test("signed recovery selection preserves the declared native plan schema and signature inventory", async () => {
-  for (const version of [1, 2]) {
+  for (const [version, native] of [
+    [1, false],
+    [2, true],
+    [3, false],
+    [3, true],
+  ]) {
     const rooted = (body) => ({ ...body, root: recordDigest(body) });
     const plan = rooted({
       schema: `buildchain.pipeline-publication-plan/v${version}`,
       publisher: { workflowSha: "a".repeat(40), repository: "example/runtime" },
-      ...(version === 2
-        ? { nativeSigning: [{ id: "required-signature" }] }
+      ...(native ? { nativeSigning: [{ id: "required-signature" }] } : {}),
+      ...(version === 3
+        ? { githubRelease: { prerelease: "never", latest: "newest-product" } }
         : {}),
     });
     const staleBody = {
@@ -264,7 +270,7 @@ test("signed recovery selection preserves the declared native plan schema and si
         "publication/qualified/original",
         {
           qualified: {
-            schema: `buildchain.pipeline-publication-qualification/v${version}`,
+            schema: `buildchain.pipeline-publication-qualification/v${native ? 2 : 1}`,
             planRoot: plan.root,
           },
           signing: { materializationRoot: source.root },
@@ -303,7 +309,19 @@ test("signed recovery selection preserves the declared native plan schema and si
       recoveryPublicationMaterial(materials, "publication/predecessor-plan/"),
       stale,
     );
-    if (version === 2) {
+    if (version === 3) {
+      const changed = {
+        ...stale,
+        githubRelease: { prerelease: "never", latest: "never" },
+      };
+      delete changed.root;
+      values.set("publication/plan/stale", rooted(changed));
+      await assert.rejects(
+        readRecoveryPublicationMaterials(session, host),
+        /changed more than the publisher entry/,
+      );
+    }
+    if (native) {
       const changed = { ...stale, nativeSigning: [] };
       delete changed.root;
       values.set("publication/plan/stale", rooted(changed));

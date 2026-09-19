@@ -72,7 +72,13 @@ export function pipelinePublicationEffects({
     id: "release-visibility",
     kind: "release-visibility",
     tag: plan.tag,
-    prerelease: plan.channel === "alpha",
+    prerelease:
+      plan.githubRelease?.prerelease === "never"
+        ? false
+        : plan.channel === "alpha",
+    ...(plan.githubRelease?.latest === "newest-product"
+      ? { latest: "newest-product" }
+      : {}),
   });
   return effects.map((effect) => {
     if (effect.kind === "npm-package") {

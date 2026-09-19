@@ -81,12 +81,19 @@ function signedRecoveryMaterials(materials) {
     "publication/qualified/",
   );
   if (!retained?.signing) return materials;
+  const discoveryPlan = plans.find(
+    (item) =>
+      item.value.root === retained.qualified.planRoot &&
+      item.value.githubRelease,
+  );
   const plan = publicationLineageMaterial(
     materials,
-    retained.qualified.schema ===
-      "buildchain.pipeline-publication-qualification/v2"
-      ? "buildchain.pipeline-publication-plan/v2"
-      : "buildchain.pipeline-publication-plan/v1",
+    discoveryPlan
+      ? "buildchain.pipeline-publication-plan/v3"
+      : retained.qualified.schema ===
+          "buildchain.pipeline-publication-qualification/v2"
+        ? "buildchain.pipeline-publication-plan/v2"
+        : "buildchain.pipeline-publication-plan/v1",
     (value) => value.root === retained.qualified.planRoot,
   );
   const materialization = publicationLineageMaterial(

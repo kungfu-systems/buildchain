@@ -18,6 +18,10 @@ export function githubPipelineProductRelease({
   const [owner, repo] = repository.split("/");
   const prefix = `/repos/${repository}`;
   const marker = `Buildchain release transaction ${documents.transaction.transactionRoot}`;
+  const prerelease =
+    plan.githubRelease?.prerelease === "never"
+      ? false
+      : plan.channel === "alpha";
   const payload = pipelineProductPayload({
     qualified,
     documents,
@@ -59,7 +63,7 @@ export function githubPipelineProductRelease({
           name: plan.tag,
           body: marker,
           draft: true,
-          prerelease: plan.channel === "alpha",
+          prerelease,
           make_latest: "false",
         });
       } catch (error) {
@@ -79,7 +83,7 @@ export function githubPipelineProductRelease({
       value &&
       (value.tag_name !== plan.tag ||
         value.body !== marker ||
-        value.prerelease !== (plan.channel === "alpha"))
+        value.prerelease !== prerelease)
     )
       throw new Error(
         "Existing GitHub Release belongs to a different immutable transaction",
@@ -87,6 +91,14 @@ export function githubPipelineProductRelease({
     return value;
   }
   const findRelease = () => findPipelineRelease(github, owner, repo, plan.tag);
+  const visibility = githubProductVisibility({
+    github,
+    request,
+    release,
+    owner,
+    repo,
+    prefix,
+  });
   async function asset(effect) {
     const published = await release();
     if (!published) return { state: "absent" };
@@ -124,17 +136,8 @@ export function githubPipelineProductRelease({
     async observe(effect) {
       if (effect.kind === "exact-tag") return tag();
       if (effect.kind === "release-asset") return asset(effect);
-      if (effect.kind === "release-visibility") {
-        const value = await release();
-        return value && !value.draft
-          ? {
-              state: "present",
-              id: value.id,
-              tag: value.tag_name,
-              prerelease: value.prerelease,
-            }
-          : { state: "absent" };
-      }
+      if (effect.kind === "release-visibility")
+        return visibility.observe(effect);
       throw new Error("Unsupported GitHub product publication operation");
     },
     matches(effect, observed) {
@@ -146,12 +149,9 @@ export function githubPipelineProductRelease({
           observed.digest === sha256(bytes) && observed.size === bytes.length
         );
       }
-      return (
-        effect.kind === "release-visibility" &&
-        observed.tag === effect.tag &&
-        observed.prerelease === effect.prerelease
-      );
+      return visibility.matches(effect, observed);
     },
+    canApply: visibility.canApply,
     async apply(effect) {
       if (effect.kind === "exact-tag")
         return request(`${prefix}/git/refs`, {
@@ -169,16 +169,115 @@ export function githubPipelineProductRelease({
           headers: { "content-type": "application/octet-stream" },
         });
       if (effect.kind === "release-visibility")
-        return github.rest.repos.updateRelease({
-          owner,
-          repo,
-          release_id: value.id,
-          draft: false,
-          make_latest: "false",
-        });
+        return visibility.apply(effect, value);
       throw new Error("Unsupported GitHub product publication operation");
     },
   };
+}
+
+function githubProductVisibility({
+  github,
+  request,
+  release,
+  owner,
+  repo,
+  prefix,
+}) {
+  async function discovery(value) {
+    const latest = await request(`${prefix}/releases/latest`, {
+      allow404: true,
+    });
+    const newest = await newestPipelineProduct(github, owner, repo);
+    return {
+      latest: latest?.id === value.id && latest?.tag_name === value.tag_name,
+      newestProduct:
+        newest?.id === value.id && newest?.tag_name === value.tag_name,
+    };
+  }
+  return {
+    async observe(effect) {
+      const value = await release();
+      return value && !value.draft
+        ? {
+            state: "present",
+            id: value.id,
+            tag: value.tag_name,
+            prerelease: value.prerelease,
+            ...(effect.latest === "newest-product"
+              ? await discovery(value)
+              : {}),
+          }
+        : { state: "absent" };
+    },
+    matches(effect, observed) {
+      return (
+        effect.kind === "release-visibility" &&
+        observed.tag === effect.tag &&
+        observed.prerelease === effect.prerelease &&
+        (effect.latest !== "newest-product" ||
+          (observed.latest === true && observed.newestProduct === true))
+      );
+    },
+    canApply(effect, observed) {
+      return (
+        effect.kind === "release-visibility" &&
+        effect.latest === "newest-product" &&
+        observed.state === "present" &&
+        observed.tag === effect.tag &&
+        observed.prerelease === effect.prerelease &&
+        observed.newestProduct === true
+      );
+    },
+    async apply(effect, value) {
+      if (
+        effect.latest === "newest-product" &&
+        !value.draft &&
+        !(await discovery(value)).newestProduct
+      )
+        throw new Error(
+          "Refusing to move GitHub Latest backward from a newer product release",
+        );
+      return github.rest.repos.updateRelease({
+        owner,
+        repo,
+        release_id: value.id,
+        draft: false,
+        make_latest: effect.latest === "newest-product" ? "true" : "false",
+      });
+    },
+  };
+}
+
+async function newestPipelineProduct(github, owner, repo) {
+  let pages = 0;
+  const products = await github.paginate(
+    github.rest.repos.listReleases,
+    { owner, repo, per_page: 100 },
+    (response) => {
+      if (++pages > 100)
+        throw new Error("Release inventory exceeds its bounded readback");
+      return response.data.filter(
+        (value) =>
+          value.draft === false &&
+          /^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(value.tag_name),
+      );
+    },
+  );
+  for (const product of products)
+    if (
+      !Number.isSafeInteger(product.id) ||
+      !Number.isFinite(
+        Date.parse(product.published_at || product.created_at || ""),
+      )
+    )
+      throw new Error(
+        "Product discovery requires exact release identity and publication time",
+      );
+  return products.sort(
+    (a, b) =>
+      Date.parse(b.published_at || b.created_at) -
+        Date.parse(a.published_at || a.created_at) || b.id - a.id,
+  )[0];
 }
 
 async function findPipelineRelease(github, owner, repo, tag) {

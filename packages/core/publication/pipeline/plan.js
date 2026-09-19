@@ -152,7 +152,7 @@ export function planPipelinePublication({
     );
   const nativeSigning = pipelineNativeSigning(contract);
   const body = {
-    schema: `buildchain.pipeline-publication-plan/v${nativeSigning.length ? 2 : 1}`,
+    schema: `buildchain.pipeline-publication-plan/v${contract.github_release ? 3 : nativeSigning.length ? 2 : 1}`,
     evidenceVersion: nativeSigning.length ? 2 : 1,
     attempt,
     generation,
@@ -168,6 +168,9 @@ export function planPipelinePublication({
     route,
     sourceTimestamp,
     versionPolicy: contract.version,
+    ...(contract.github_release
+      ? { githubRelease: structuredClone(contract.github_release) }
+      : {}),
     ...(contract.stable
       ? { stablePolicy: structuredClone(contract.stable) }
       : {}),
@@ -190,7 +193,15 @@ export function verifyPipelinePublicationPlan(plan) {
   const native =
     Array.isArray(body.nativeSigning) && body.nativeSigning.length > 0;
   if (
-    body.schema !== `buildchain.pipeline-publication-plan/v${native ? 2 : 1}` ||
+    body.schema !==
+      `buildchain.pipeline-publication-plan/v${body.githubRelease ? 3 : native ? 2 : 1}` ||
+    (body.githubRelease &&
+      (Object.keys(body.githubRelease).sort().join(",") !==
+        "latest,prerelease" ||
+        !["channel", "never"].includes(body.githubRelease.prerelease) ||
+        !["never", "newest-product"].includes(body.githubRelease.latest) ||
+        (body.githubRelease.latest === "newest-product" &&
+          body.githubRelease.prerelease !== "never"))) ||
     (Object.hasOwn(body, "nativeSigning") &&
       (!native || body.evidenceVersion !== 2)) ||
     (body.outputDeclarationRoot !== undefined &&
