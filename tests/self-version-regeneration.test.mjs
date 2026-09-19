@@ -23,7 +23,10 @@ test("self version policy admits regenerated contract digests for development an
   );
   const contractPath = "dist/site/buildchain-contract.json";
   const contract = JSON.parse(files[contractPath]);
-  const stable = contract.product.version.split("-")[0];
+  const [major, minor, patch] = contract.product.version
+    .split("-")[0]
+    .split(".");
+  const stable = `${major}.${minor}.${Number(patch) + 1}`;
   for (const version of [`${stable}-alpha.999`, stable]) {
     const preparation = {
       root: `sha256:${"a".repeat(64)}`,
@@ -41,7 +44,9 @@ test("self version policy admits regenerated contract digests for development an
     assert.equal(regenerated.compatibilityDigest, contract.compatibilityDigest);
     const observed = {
       ...files,
-      ...Object.fromEntries(planned.changes.map(({ path, content }) => [path, content])),
+      ...Object.fromEntries(
+        planned.changes.map(({ path, content }) => [path, content]),
+      ),
       [contractPath]: `${JSON.stringify(regenerated, null, 2)}\n`,
     };
     const material = collectPipelineVersionMaterial(
