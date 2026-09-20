@@ -3,34 +3,14 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { verifyInfraContractEvidenceBundle } from "../../providers/commands/infra-contract-core.mjs";
 import { verifyBuildchainLogEvents } from "../../observability/logging.js";
+import { verifyReleasePassport } from "../release-passport.js";
+import { verifyPublicationAdmission } from "../../publication/publication-authority.js";
 import {
-  explainReleaseLineDryRun,
-  formatReleaseLineDryRun,
-} from "../release-line-dry-run.js";
-import {
-  planReleaseLineBootstrap,
-  writeReleaseLineBootstrapVersionState,
-} from "../release-line-bootstrap.js";
-import { collectGitHubReleasePassport } from "../passport/collection.js";
-import { explainReleasePassport, verifyReleasePassport } from "../release-passport.js";
-import {
-  createPublicationAdmission,
-  createRunnerProvenance,
-  verifyPublicationAdmission,
-} from "../../publication/publication-authority.js";
-import {
-  createGitHubArtifactAttestationPolicy,
   createGitHubArtifactAttestationVerificationPlan,
   verifyGitHubArtifactAttestationEvidence,
 } from "../../build/github-artifact-attestation.js";
-import {
-  explainArtifactPassport,
-  verifyArtifactPassport,
-} from "../../build/artifact-passport.js";
-import {
-  projectArtifactVerificationEnvelopeToKfx,
-  verifyArtifactVerificationEnvelope,
-} from "../../build/artifact-verification-envelope.js";
+import { verifyArtifactPassport } from "../../build/artifact-passport.js";
+import { verifyArtifactVerificationEnvelope } from "../../build/artifact-verification-envelope.js";
 import {
   artifactEnvelopeOptions,
   printJson,
@@ -38,7 +18,6 @@ import {
   readFlag,
   readJsonInput,
   readRepeatedFlag,
-  writeJsonFile,
 } from "../../contracts/cli/options.mjs";
 
 async function verifyGitHubArtifactAttestationCommand({

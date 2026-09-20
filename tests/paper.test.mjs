@@ -7,15 +7,46 @@ import path from "node:path";
 import test from "node:test";
 import { materializeCommandShim } from "./helpers/command-shim.mjs";
 
-import { PAPER_AGENT_ENTRY_CONTRACT, PAPER_AGENT_ENTRY_SECTION_END, PAPER_AGENT_ENTRY_SECTION_START, collectPaperAgentEntry } from "../packages/core/paper/paper-agent-entry.js";
-import { PAPER_MIGRATION_CONTRACT, PAPER_NPM_BOOTSTRAP_CONTRACT, PAPER_PROVISIONING_CONTRACT, PAPER_STATE_ORDER, PAPER_VISIBILITY_CONTRACT } from "../packages/core/paper/operations/identity.js";
-import { collectPaperFleetAudit, planPaperFleetUpdate, paperFleetTransitionWorkspace, writePaperFleetUpdate } from "../packages/core/paper/paper-fleet.js";
+import {
+  PAPER_AGENT_ENTRY_CONTRACT,
+  PAPER_AGENT_ENTRY_SECTION_END,
+  PAPER_AGENT_ENTRY_SECTION_START,
+  collectPaperAgentEntry,
+} from "../packages/core/paper/paper-agent-entry.js";
+import {
+  PAPER_MIGRATION_CONTRACT,
+  PAPER_NPM_BOOTSTRAP_CONTRACT,
+  PAPER_PROVISIONING_CONTRACT,
+  PAPER_STATE_ORDER,
+  PAPER_VISIBILITY_CONTRACT,
+} from "../packages/core/paper/operations/identity.js";
+import {
+  collectPaperFleetAudit,
+  planPaperFleetUpdate,
+  paperFleetTransitionWorkspace,
+  writePaperFleetUpdate,
+} from "../packages/core/paper/paper-fleet.js";
 import { collectPaperPreflight } from "../packages/core/paper/paper.js";
 import { collectPaperStatus } from "../packages/core/paper/operations/status.js";
-import { createPaperAlphaPlan, createPaperResumePlan } from "../packages/core/paper/operations/plans.js";
-import { createPaperWorkStartPlan, createPaperWorkSubmitPlan, executePaperWorkStart, executePaperWorkSubmitPush } from "../packages/core/paper/paper-work.js";
-import { executePaperNpmBootstrap } from "../packages/core/paper/operations/bootstrap.js";
-import { planPaperMigration, planPaperScaffold, writePaperMigration, writePaperScaffold } from "../packages/core/paper/operations/scaffold.js";
+
+import {
+  createPaperWorkStartPlan,
+  createPaperWorkSubmitPlan,
+  executePaperWorkStart,
+  executePaperWorkSubmitPush,
+} from "../packages/core/paper/paper-work.js";
+
+import {
+  planPaperMigration,
+  writePaperMigration,
+  planPaperScaffold,
+  writePaperScaffold,
+} from "../packages/core/paper/operations/scaffold.js";
+import {
+  legacyPaperVersion,
+  writeLegacyPaperFixture,
+  refreshLegacyPaperFixture,
+} from "./helpers/legacy-paper-fixture.mjs";
 import { resolvePaperRuntimeGitSha } from "../packages/core/paper/operations/runtime.js";
 
 test("paper fleet lock refresh temporarily admits the pinned source runtime", () => {
@@ -45,7 +76,7 @@ import { evaluatePaperGithubGovernance } from "../packages/core/paper/commands/p
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
-const packageVersion = JSON.parse(fs.readFileSync(path.join(root, "package.json"))).version;
+const packageVersion = legacyPaperVersion;
 
 function tempDir(name) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `buildchain-paper-${name}-`));
@@ -132,7 +163,8 @@ test("installed Paper runtime does not inherit the consumer Git head", () => {
       buildchainRoot: packageRoot,
       buildchainVersion: "3.0.4-alpha.1",
     });
-    assert.equal(fleet.runtime.sha, sourceSha);
+    assert.equal(fleet.runtime.sha, undefined);
+    assert.equal(fleet.runtime.source, "not-observed");
   } finally {
     process.env.PATH = originalPath;
   }
@@ -160,256 +192,37 @@ function candidateFile(cwd, relativePath, contents) {
   };
 }
 
-test("paper scaffold is idempotent, validates locally, and never overwrites a conflict", () => {
-  const cwd = tempDir("scaffold");
-  const firstPlan = planPaperScaffold(scaffoldOptions(cwd));
-  assert.equal(firstPlan.ok, true);
-  assert.equal(firstPlan.summary.create, 19);
-  assert.equal(JSON.stringify(firstPlan).includes("_plannedFiles"), false);
-  const firstWrite = writePaperScaffold(firstPlan);
-  assert.equal(firstWrite.ok, true);
-  assert.equal(firstWrite.written.length, 19);
-  assert.equal(
-    fs.readFileSync(path.join(cwd, "pnpm-workspace.yaml"), "utf8"),
-    `minimumReleaseAgeExclude:\n  - '@kungfu-tech/buildchain@${packageVersion}'\n`,
-  );
-  const provisioning = JSON.parse(
-    fs.readFileSync(
-      path.join(cwd, ".buildchain", "paper", "provisioning-authority.json"),
-      "utf8",
-    ),
-  );
-  assert.equal(provisioning.contract, PAPER_PROVISIONING_CONTRACT);
-  assert.equal(provisioning.runtime.ref, packageVersion.includes("-") ? "v4-alpha" : "v4");
-  assert.equal(
-    provisioning.admission.acceptedSha,
-    provisioning.runtime.resolvedSha,
-  );
-  assert.equal(
-    provisioning.policy.repositoryActions.defaultWorkflowPermissions,
-    "read",
-  );
-  assert.equal(
-    provisioning.policy.repositoryActions.canApprovePullRequestReviews,
-    false,
-  );
-  assert.equal(provisioning.policy.generatedWrites.githubTokenFallback, false);
-  assert.equal(provisioning.policy.release.versionState, "not-required");
-  assert.equal(provisioning.trustedPublisher.workflow, "public-release-paper.yml");
-  const releaseWorkflow = fs.readFileSync(
-    path.join(cwd, ".github", "workflows", "public-release-paper.yml"),
-    "utf8",
-  );
-  assert.match(
-    releaseWorkflow,
-    /public-release-paper\.yml@v4\n/,
-  );
-  assert.match(
-    releaseWorkflow,
-    /public-release-paper\.yml@v4-alpha/,
-  );
-  assert.match(
-    releaseWorkflow,
-    /permissions:\n      actions: read\n      checks: write\n      contents: read\n      id-token: write\n      issues: write\n      pull-requests: write/,
-  );
-  assert.match(
-    releaseWorkflow,
-    /KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY: \$\{\{ secrets\.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY \}\}/,
-  );
-  assert.match(
-    releaseWorkflow,
-    /BUILDCHAIN_PROMOTION_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/,
-  );
-
+test("retained schema-1 fixture migrates to the shared pipeline while preserving original locks and source", () => {
+  const cwd = tempDir("historical-migration");
+  writeLegacyPaperFixture(scaffoldOptions(cwd));
   initGit(cwd);
-  const validation = JSON.parse(
-    execFileSync(
-      process.execPath,
-      [
-        bin,
-        "validate",
-        "--cwd",
-        cwd,
-        "--require-lifecycle-stages",
-        "build,verify",
-      ],
-      { cwd: root, encoding: "utf8" },
-    ),
+  configureGit(cwd);
+  commitAll(cwd, "fixture: retained schema-1 source");
+  const preserve = [
+    "paper/main.tex",
+    ".buildchain/contract-lock.json",
+    ".buildchain/alpha-contract-lock.json",
+  ];
+  const before = preserve.map((file) =>
+    fs.readFileSync(path.join(cwd, file), "utf8"),
   );
-  assert.equal(validation.project.type, "publication-artifact");
-  assert.equal(validation.publish.package, "@example/paper-contract-test");
-
-  const secondWrite = writePaperScaffold(
-    planPaperScaffold(scaffoldOptions(cwd)),
-  );
-  assert.equal(secondWrite.ok, true);
-  assert.equal(secondWrite.idempotent, true);
-  assert.deepEqual(secondWrite.written, []);
-
-  const readmePath = path.join(cwd, "README.md");
-  fs.appendFileSync(readmePath, "\nRepository-owned note.\n");
-  fs.rmSync(path.join(cwd, "docs", "MAP.md"));
-  const conflictPlan = planPaperScaffold(scaffoldOptions(cwd));
-  assert.equal(conflictPlan.ok, false);
-  assert.deepEqual(
-    conflictPlan.conflicts.map((entry) => entry.path),
-    ["README.md"],
-  );
-  const blockedWrite = writePaperScaffold(conflictPlan);
-  assert.equal(blockedWrite.ok, false);
-  assert.equal(fs.existsSync(path.join(cwd, "docs", "MAP.md")), false);
-  assert.match(fs.readFileSync(readmePath, "utf8"), /Repository-owned note/);
-
-  const cleanCwd = tempDir("preflight");
-  writePaperScaffold(planPaperScaffold(scaffoldOptions(cleanCwd)));
-  initGit(cleanCwd);
-  const preflight = collectPaperPreflight({
-    cwd: cleanCwd,
-    buildchainRoot: root,
-    buildchainVersion: packageVersion,
-    offline: true,
-  });
-  assert.equal(preflight.localReady, true);
-  assert.equal(preflight.ok, true);
-  assert.equal(preflight.readyForExternalMutation, false);
-  assert.equal(preflight.provisioning.valid, true);
-  assert.equal(
-    preflight.provisioning.authorityDigest,
-    provisioning.authorityDigest,
-  );
-  assert.equal(
-    preflight.checks.find((entry) => entry.id === "runtime.contract-lock")
-      .status,
-    "pass",
-  );
-  assert.equal(
-    preflight.checks.find((entry) => entry.id === "runtime.exact-source")
-      .status,
-    "pass",
-  );
-  assert.equal(
-    preflight.checks.find((entry) => entry.id === "provisioning.authority")
-      .status,
-    "pass",
-  );
-});
-
-test("paper migration converges existing repositories without rewriting content or config", () => {
-  const cwd = tempDir("migration");
-  writePaperScaffold(planPaperScaffold(scaffoldOptions(cwd)));
-  initGit(cwd);
-  execFileSync("git", ["config", "user.name", "Buildchain Test"], { cwd });
-  execFileSync("git", ["config", "user.email", "buildchain@example.test"], {
-    cwd,
-  });
-  execFileSync("git", ["add", "."], { cwd });
-  execFileSync("git", ["commit", "-q", "-m", "fixture: existing paper"], {
-    cwd,
-  });
-
-  const configPath = path.join(cwd, ".buildchain", "buildchain.toml");
-  const originalConfig = fs
-    .readFileSync(configPath, "utf8")
-    .replace(/\n\[lifecycle\.build\]\ncommand = "make pdf"\n/, "\n");
-  fs.writeFileSync(configPath, originalConfig);
-  fs.rmSync(
-    path.join(cwd, ".buildchain", "paper", "provisioning-authority.json"),
-  );
-  fs.writeFileSync(
-    path.join(cwd, ".github", "workflows", "verify.yml"),
-    "jobs:\n  check:\n    uses: kungfu-systems/buildchain/.github/workflows/public-build-check.yml@v2-alpha\n",
-  );
-  const runtimeSha = execFileSync("git", ["-C", root, "rev-parse", "HEAD"], {
-    encoding: "utf8",
-  }).trim();
-  for (const workflow of [
-    path.join(cwd, ".github", "workflows", "build.yml"),
-    path.join(cwd, ".github", "workflows", "public-release-paper.yml"),
-  ]) {
-    fs.writeFileSync(
-      workflow,
-      fs.readFileSync(workflow, "utf8").replaceAll(runtimeSha, "v2"),
-    );
-  }
-  fs.writeFileSync(
-    path.join(cwd, "pnpm-workspace.yaml"),
-    "packages:\n  - '.'\nminimumReleaseAgeExclude:\n  - '@example/keep@1.0.0'\n  - '@kungfu-tech/buildchain@3.0.4-alpha.4'\ncatalog:\n  example: 1.0.0\n",
-  );
-  execFileSync("git", ["add", "."], { cwd });
-  execFileSync("git", ["commit", "-q", "-m", "fixture: legacy authority"], {
-    cwd,
-  });
-
-  const contentBefore = fs.readFileSync(
-    path.join(cwd, "paper", "main.tex"),
-    "utf8",
-  );
-  const configBefore = fs.readFileSync(configPath, "utf8");
-  const plan = planPaperMigration({
-    cwd,
-    buildchainRoot: root,
-    buildchainVersion: packageVersion,
-  });
-  assert.equal(plan.contract, PAPER_MIGRATION_CONTRACT);
+  const plan = planPaperMigration({ cwd, buildchainRoot: root });
   assert.equal(plan.ok, true);
-  assert.equal(plan.summary.create, 1);
-  assert.ok(plan.summary.update >= 2);
-  const migrated = writePaperMigration(plan);
-  assert.equal(migrated.ok, true);
+  assert.equal(writePaperMigration(plan).ok, true);
+  for (const [index, file] of preserve.entries())
+    assert.equal(fs.readFileSync(path.join(cwd, file), "utf8"), before[index]);
+  assert.equal(collectPaperPreflight({ cwd }).ok, true);
   assert.equal(
-    fs.readFileSync(path.join(cwd, "paper", "main.tex"), "utf8"),
-    contentBefore,
-  );
-  assert.equal(fs.readFileSync(configPath, "utf8"), configBefore);
-  assert.equal(
-    fs.readFileSync(path.join(cwd, "pnpm-workspace.yaml"), "utf8"),
-    `packages:\n  - '.'\nminimumReleaseAgeExclude:\n  - '@example/keep@1.0.0'\n  - '@kungfu-tech/buildchain@${packageVersion}'\ncatalog:\n  example: 1.0.0\n`,
-  );
-  assert.match(
-    fs.readFileSync(
-      path.join(cwd, ".github", "workflows", "verify.yml"),
-      "utf8",
+    fs.existsSync(
+      path.join(cwd, ".buildchain/paper/provisioning-authority.json"),
     ),
-    /check\.yml@v4-alpha/,
-  );
-  assert.match(
-    fs.readFileSync(
-      path.join(cwd, ".github", "workflows", "verify.yml"),
-      "utf8",
-    ),
-    /public-build-check\.yml@v4-alpha/,
-  );
-  const migratedLock = JSON.parse(
-    fs.readFileSync(
-      path.join(cwd, ".buildchain", "contract-lock.json"),
-      "utf8",
-    ),
-  );
-  assert.equal(migratedLock.buildchain.ref, "v4");
-  assert.notEqual(
-    migratedLock.buildchain.acceptedAt,
-    "1970-01-01T00:00:00.000Z",
-  );
-  const preflight = collectPaperPreflight({
-    cwd,
-    buildchainRoot: root,
-    buildchainVersion: packageVersion,
-    offline: true,
-  });
-  assert.equal(
-    preflight.checks.find((entry) => entry.id === "config.publication").status,
-    "pass",
-  );
-  assert.equal(
-    preflight.checks.find((entry) => entry.id === "provisioning.authority")
-      .status,
-    "pass",
+    false,
   );
 });
 
 test("paper agent entry is managed, preserves repository instructions, and fails closed in CI", () => {
   const cwd = tempDir("agent-entry");
-  writePaperScaffold(planPaperScaffold(scaffoldOptions(cwd)));
+  writeLegacyPaperFixture(scaffoldOptions(cwd));
   initGit(cwd);
   configureGit(cwd);
   commitAll(cwd, "fixture: scaffold paper agent entry");
@@ -434,14 +247,7 @@ test("paper agent entry is managed, preserves repository instructions, and fails
     `Repository-owned instruction.\n\n${originalAgents}`,
   );
   commitAll(cwd, "docs: retain repository-owned instruction");
-  const migration = planPaperMigration({
-    cwd,
-    buildchainRoot: root,
-    buildchainVersion: packageVersion,
-    buildchainSha: runtimeSha,
-  });
-  assert.equal(migration.ok, true);
-  writePaperMigration(migration);
+  refreshLegacyPaperFixture(cwd);
   const migratedAgents = fs.readFileSync(agentsPath, "utf8");
   assert.match(migratedAgents, /^Repository-owned instruction\./);
   assert.equal(
@@ -459,10 +265,18 @@ test("paper agent entry is managed, preserves repository instructions, and fails
   const cliEntry = spawnSync(
     process.execPath,
     [bin, "paper", "agent", "verify", "--cwd", cwd, "--offline", "--json"],
-    { cwd: root, encoding: "utf8", env: { ...process.env, BUILDCHAIN_RUNTIME_SHA: runtimeSha } },
+    {
+      cwd: root,
+      encoding: "utf8",
+      env: { ...process.env, BUILDCHAIN_RUNTIME_SHA: runtimeSha },
+    },
   );
-  assert.equal(cliEntry.status, 0, cliEntry.stderr || cliEntry.stdout);
-  assert.equal(JSON.parse(cliEntry.stdout).ok, true);
+  assert.notEqual(
+    cliEntry.status,
+    0,
+    "A retained schema-1 fixture does not qualify the current runtime",
+  );
+  assert.equal(JSON.parse(cliEntry.stdout).ok, false);
 
   const acceptedCi = collectPaperAgentEntry({
     cwd,
@@ -579,13 +393,13 @@ test("paper agent entry is managed, preserves repository instructions, and fails
         buildchainVersion: packageVersion,
         buildchainSha: runtimeSha,
       }),
-    /incomplete Buildchain Paper agent-entry managed section/,
+    /Incomplete or ambiguous legacy Buildchain instructions/,
   );
 });
 
 test("paper status reports all explicit states and never infers publication from generated files", () => {
   const cwd = tempDir("status");
-  writePaperScaffold(planPaperScaffold(scaffoldOptions(cwd)));
+  writeLegacyPaperFixture(scaffoldOptions(cwd));
   initGit(cwd);
 
   const initial = collectPaperStatus({ cwd });
@@ -738,107 +552,9 @@ test("paper status reports all explicit states and never infers publication from
   assert.equal(complete.transaction.publicationState, "alpha-complete");
 });
 
-test("paper Alpha and resume plans preserve protected workflow boundaries", () => {
-  const cwd = tempDir("plans");
-  writePaperScaffold(planPaperScaffold(scaffoldOptions(cwd)));
-  initGit(cwd);
-  const alpha = createPaperAlphaPlan({ cwd });
-  assert.equal(alpha.source.ref, "dev/v0/v0.1");
-  assert.equal(alpha.target.ref, "alpha/v0/v0.1");
-  assert.equal(alpha.mutation.directPublish, false);
-  assert.equal(alpha.mutation.directMerge, false);
-  assert.match(alpha.mutation.command, /gh pr create/);
-
-  const noTransaction = createPaperResumePlan({ cwd });
-  assert.equal(noTransaction.resumable, false);
-  assert.equal(noTransaction.reason, "no-release-transaction");
-  assert.match(noTransaction.nextActions[0].command, /paper alpha/);
-});
-
-test("paper Alpha plans prefer remote-tracking channel truth over stale local branches", () => {
-  const cwd = tempDir("alpha-remote-truth");
-  writePaperScaffold(planPaperScaffold(scaffoldOptions(cwd)));
-  initGit(cwd);
-  execFileSync("git", ["config", "user.name", "Buildchain Test"], { cwd });
-  execFileSync("git", ["config", "user.email", "buildchain@example.test"], {
-    cwd,
-  });
-  execFileSync("git", ["add", "."], { cwd });
-  execFileSync("git", ["commit", "-qm", "test: initialize paper"], { cwd });
-  execFileSync("git", ["branch", "dev/v0/v0.1"], { cwd });
-  execFileSync(
-    "git",
-    ["update-ref", "refs/remotes/origin/dev/v0/v0.1", "HEAD"],
-    { cwd },
-  );
-  fs.writeFileSync(path.join(cwd, "remote-only.txt"), "remote\n");
-  execFileSync("git", ["add", "remote-only.txt"], { cwd });
-  execFileSync("git", ["commit", "-qm", "test: advance remote truth"], { cwd });
-  execFileSync(
-    "git",
-    ["update-ref", "refs/remotes/origin/dev/v0/v0.1", "HEAD"],
-    { cwd },
-  );
-  execFileSync(
-    "git",
-    ["update-ref", "refs/remotes/origin/alpha/v0/v0.1", "HEAD^"],
-    { cwd },
-  );
-
-  const alpha = createPaperAlphaPlan({ cwd });
-  assert.equal(
-    alpha.source.sha,
-    execFileSync("git", ["rev-parse", "HEAD"], {
-      cwd,
-      encoding: "utf8",
-    }).trim(),
-  );
-  assert.equal(alpha.source.observation, "origin-tracking-ref");
-  assert.equal(alpha.source.observedRef, "refs/remotes/origin/dev/v0/v0.1");
-  assert.equal(alpha.target.observation, "origin-tracking-ref");
-  assert.equal(alpha.target.observedRef, "refs/remotes/origin/alpha/v0/v0.1");
-});
-
-test("paper npm bootstrap dry-run uses only a minimal temporary package", () => {
-  const cwd = tempDir("npm-bootstrap");
-  writePaperScaffold(planPaperScaffold(scaffoldOptions(cwd)));
-  const result = executePaperNpmBootstrap({
-    cwd,
-    offline: true,
-  });
-  assert.equal(result.contract, PAPER_NPM_BOOTSTRAP_CONTRACT);
-  assert.equal(result.dryRun, true);
-  assert.equal(result.externalMutation, false);
-  assert.equal(result.dryRunChecks.minimalPackageOnly, true);
-  assert.equal(result.dryRunChecks.pack.status, "pass");
-  assert.equal(result.dryRunChecks.publish.status, "pass");
-  assert.equal(
-    fs.existsSync(path.join(cwd, ".buildchain", "paper", "npm-bootstrap.json")),
-    false,
-  );
-  assert.throws(
-    () =>
-      executePaperNpmBootstrap({
-        cwd,
-        registry: "https://registry.example.test/",
-        offline: true,
-      }),
-    /requires the official registry/,
-  );
-  assert.throws(
-    () =>
-      executePaperNpmBootstrap({
-        cwd,
-        bootstrapVersion: "0.0.0-bootstrap.1",
-        offline: true,
-      }),
-    /version is fixed at 0\.0\.0-bootstrap\.0/,
-  );
-});
-
-test("paper provisioning authority rejects caller drift and requires exact npm trust", () => {
+test("legacy Paper provisioning receipt inspection still rejects caller drift", () => {
   const cwd = tempDir("authority-drift");
-  writePaperScaffold(planPaperScaffold(scaffoldOptions(cwd)));
+  writeLegacyPaperFixture(scaffoldOptions(cwd));
   initGit(cwd);
   const releasePath = path.join(
     cwd,
@@ -859,85 +575,6 @@ test("paper provisioning authority rejects caller drift and requires exact npm t
       .status,
     "fail",
   );
-
-  const trustedCwd = tempDir("exact-trust");
-  writePaperScaffold(planPaperScaffold(scaffoldOptions(trustedCwd)));
-  const fakeBin = path.join(trustedCwd, "fake-bin");
-  fs.mkdirSync(fakeBin);
-  const fakeNpm = path.join(fakeBin, "npm");
-  materializeCommandShim(
-    fakeNpm,
-    `#!/bin/sh
-case "$1 $2" in
-  "view @example/paper-contract-test") printf '"0.0.0-bootstrap.0"\\n' ;;
-  "whoami --registry=https://registry.npmjs.org/") printf 'paper-owner\\n' ;;
-  "pack --dry-run") printf '[{"files":[{"path":"package.json"}]}]\\n' ;;
-  "publish --dry-run") printf '{}\\n' ;;
-  "trust github") printf '{}\\n' ;;
-  "trust list")
-    printf '%s\\n' "\${FAKE_NPM_TRUST_JSON:-[]}"
-    ;;
-  *) echo "unexpected npm invocation: $*" >&2; exit 2 ;;
-esac
-`,
-  );
-  const originalPath = process.env.PATH;
-  const originalTrust = process.env.FAKE_NPM_TRUST_JSON;
-  process.env.PATH = `${fakeBin}${path.delimiter}${originalPath}`;
-  try {
-    process.env.FAKE_NPM_TRUST_JSON = JSON.stringify([
-      {
-        type: "github",
-        repository: "example/another-paper",
-        workflow: "public-release-paper.yml",
-        environment: "",
-      },
-    ]);
-    const mismatch = executePaperNpmBootstrap({
-      cwd: trustedCwd,
-      execute: true,
-      confirmedPackage: "@example/paper-contract-test",
-    });
-    assert.equal(mismatch.ok, false);
-    assert.equal(mismatch.trust.status, "failed");
-    assert.equal(mismatch.trust.exactBinding, false);
-
-    process.env.FAKE_NPM_TRUST_JSON = JSON.stringify([
-      {
-        type: "github",
-        repository: "example/paper-contract-test",
-        workflow: "public-release-paper.yml",
-        environment: "",
-      },
-    ]);
-    const exact = executePaperNpmBootstrap({
-      cwd: trustedCwd,
-      execute: true,
-      confirmedPackage: "@example/paper-contract-test",
-    });
-    assert.equal(exact.ok, true);
-    assert.equal(exact.package.existsAfter, true);
-    assert.equal(exact.trust.status, "configured");
-    assert.equal(exact.trust.exactBinding, true);
-    assert.equal(
-      exact.authority.digest,
-      JSON.parse(
-        fs.readFileSync(
-          path.join(
-            trustedCwd,
-            ".buildchain",
-            "paper",
-            "provisioning-authority.json",
-          ),
-          "utf8",
-        ),
-      ).authorityDigest,
-    );
-  } finally {
-    process.env.PATH = originalPath;
-    if (originalTrust === undefined) delete process.env.FAKE_NPM_TRUST_JSON;
-    else process.env.FAKE_NPM_TRUST_JSON = originalTrust;
-  }
 });
 
 test("paper work plans start from exact remote dev truth and submit without force", () => {
@@ -946,7 +583,11 @@ test("paper work plans start from exact remote dev truth and submit without forc
     ...scaffoldOptions(cwd),
     repository: "kungfu-systems/paper-work-plan",
   };
-  writePaperScaffold(planPaperScaffold(options));
+  assert.equal(writePaperScaffold(planPaperScaffold(options)).ok, true);
+  assert.equal(
+    fs.existsSync(path.join(cwd, ".buildchain/paper/agent-entry.json")),
+    false,
+  );
   initGit(cwd);
   configureGit(cwd);
   commitAll(cwd, "test: initialize paper");
@@ -1004,91 +645,48 @@ test("paper work plans start from exact remote dev truth and submit without forc
   assert.equal(pushed.pushed, true);
 });
 
-test("paper fleet audit and update converge data-driven worktrees only", () => {
+test("paper fleet migrates retained consumers to the shared pair and rejects unknown workflow drift", () => {
   const fleetRoot = tempDir("fleet");
   const repositories = ["paper-one", "paper-two"].map((name) => {
     const cwd = path.join(fleetRoot, name);
     fs.mkdirSync(cwd);
-    writePaperScaffold(
-      planPaperScaffold({
-        ...scaffoldOptions(cwd),
-        name,
-        packageName: `@example/${name}`,
-        repository: `kungfu-systems/${name}`,
-      }),
-    );
+    writeLegacyPaperFixture({
+      ...scaffoldOptions(cwd),
+      name,
+      packageName: `@example/${name}`,
+      repository: `kungfu-systems/${name}`,
+    });
     fs.writeFileSync(
       path.join(cwd, "pnpm-lock.yaml"),
       `lockfileVersion: '9.0'\n# @kungfu-tech/buildchain ${packageVersion}\n`,
     );
     initGit(cwd);
     configureGit(cwd);
-    commitAll(cwd, "test: initialize paper");
+    commitAll(cwd, "fixture: retained paper");
     attachCanonicalTestOrigin(cwd, `kungfu-systems/${name}`);
     execFileSync("git", ["branch", "-M", "feature/fleet-update"], { cwd });
     return cwd;
   });
-
-  const current = collectPaperFleetAudit({
+  const options = {
     root: fleetRoot,
     buildchainRoot: root,
     buildchainVersion: packageVersion,
-  });
-  assert.equal(current.summary.repositories, 2);
-  assert.equal(current.summary.current, 2, JSON.stringify(current, null, 2));
-  assert.match(current.auditRoot, /^sha256:[0-9a-f]{64}$/);
-
-  const verifyPath = path.join(
-    repositories[1],
-    ".github",
-    "workflows",
-    "verify.yml",
-  );
-  fs.writeFileSync(
-    verifyPath,
-    "jobs:\n  check:\n    uses: kungfu-systems/buildchain/.github/workflows/public-build-check.yml@v2-alpha\n",
-  );
-  commitAll(repositories[1], "test: add legacy workflow drift");
-  const legacyWorkflow = collectPaperFleetAudit({
-    root: fleetRoot,
-    buildchainRoot: root,
-    buildchainVersion: packageVersion,
-  });
-  assert.equal(
-    legacyWorkflow.repositories[1].checks.find(
-      (entry) => entry.id === "workflows.buildchain-v2-absent",
-    ).status,
-    "fail",
-  );
-  fs.writeFileSync(
-    verifyPath,
-    fs
-      .readFileSync(verifyPath, "utf8")
-      .replace("@v2-alpha", `@${packageVersion}`),
-  );
-  commitAll(repositories[1], "test: repair legacy workflow drift");
-
-  const packagePath = path.join(repositories[0], "package.json");
-  const driftedPackage = JSON.parse(fs.readFileSync(packagePath, "utf8"));
-  driftedPackage.devDependencies["@kungfu-tech/buildchain"] = "2.12.0-alpha.1";
-  fs.writeFileSync(packagePath, `${JSON.stringify(driftedPackage, null, 2)}\n`);
-  commitAll(repositories[0], "test: add legacy runtime drift");
-
-  const plan = planPaperFleetUpdate({
-    root: fleetRoot,
-    buildchainRoot: root,
-    buildchainVersion: packageVersion,
-  });
+  };
+  const before = collectPaperFleetAudit(options);
+  assert.equal(before.summary.repositories, 2);
+  assert.equal(before.summary.current, 0);
+  const plan = planPaperFleetUpdate(options);
   assert.equal(plan.ok, true);
-  assert.equal(plan.plans.length, 2);
-  const updated = writePaperFleetUpdate(plan);
-  assert.equal(updated.ok, true);
-  assert.equal(
-    JSON.parse(fs.readFileSync(packagePath, "utf8")).devDependencies[
-      "@kungfu-tech/buildchain"
-    ],
-    packageVersion,
-  );
+  assert.equal(writePaperFleetUpdate(plan).ok, true);
+  for (const cwd of repositories)
+    commitAll(cwd, "fixture: migrate shared contract");
+  const after = collectPaperFleetAudit(options);
+  assert.equal(after.summary.current, 2, JSON.stringify(after));
+  const extra = path.join(repositories[1], ".github/workflows/unowned.yml");
+  fs.writeFileSync(extra, "jobs: {}\n");
+  commitAll(repositories[1], "fixture: unowned workflow");
+  assert.equal(planPaperFleetUpdate(options).ok, false);
+  assert.equal(collectPaperFleetAudit(options).summary.current, 1);
 });
 
 test("paper fleet governance accepts classic exact-branch protection and requires release", () => {
@@ -1168,12 +766,39 @@ test("paper CLI emits stable JSON errors and every route", () => {
     "paper fleet update",
     "paper agent verify",
     "paper preflight",
-    "paper bootstrap npm",
-    "paper build",
-    "paper alpha",
     "paper status",
-    "paper resume",
   ]) {
     assert.match(help, new RegExp(route.replaceAll(" ", "\\s+")));
   }
+});
+
+test("retired Paper publication routes reject before external tooling and are absent from help", () => {
+  const cwd = tempDir("retired-publication-routes");
+  const fakeBin = path.join(cwd, "fake-bin");
+  fs.mkdirSync(fakeBin);
+  const marker = path.join(cwd, "external-call");
+  for (const tool of ["npm", "gh", "git"])
+    materializeCommandShim(
+      path.join(fakeBin, tool),
+      `#!/bin/sh\nprintf '%s\\n' invoked >> '${marker}'\nexit 97\n`,
+    );
+  const env = { ...process.env, PATH: fakeBin };
+  for (const args of [["bootstrap", "npm"], ["build"], ["alpha"], ["resume"]]) {
+    const result = spawnSync(
+      process.execPath,
+      [bin, "paper", ...args, "--cwd", cwd, "--execute", "--json"],
+      { cwd: root, env, encoding: "utf8" },
+    );
+    assert.equal(result.status, 1, result.stderr);
+    assert.match(
+      JSON.parse(result.stdout).error.message,
+      /Unknown Paper command/,
+    );
+  }
+  assert.equal(fs.existsSync(marker), false);
+  const help = execFileSync(process.execPath, [bin, "paper", "--help"], {
+    cwd: root,
+    encoding: "utf8",
+  });
+  assert.doesNotMatch(help, /paper (?:bootstrap|build|alpha|resume)\b/u);
 });

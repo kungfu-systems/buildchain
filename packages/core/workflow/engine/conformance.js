@@ -52,7 +52,7 @@ export function executeBootstrapConformance(
     const source = fs.readFileSync(path.join(runtimeRoot, relative), "utf8");
     if (
       relative !== architecture.bootstrap.publicWorkflow &&
-      !/(?:\.\/)?\.github\/workflows\/public-ops-bootstrap\.yml/u.test(source)
+      !/(?:\.\/)?\.github\/workflows\/\.ops-bootstrap\.yml/u.test(source)
     )
       fail(`candidate Bootstrap facade is not governed: ${relative}`);
   }

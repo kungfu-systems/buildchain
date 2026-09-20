@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import { consumerWorkflows } from "../packages/core/consumer/contract/entries.js";
+import { validateConsumerWiring } from "../packages/core/consumer/contract/local-validation.js";
+import { inspectConsumerContract } from "../packages/core/consumer/contract/inspection.js";
+import { standardConsumerExample } from "../packages/core/consumer/contract/examples.js";
 import fs from "node:fs";
 import { execFileSync } from "node:child_process";
 import os from "node:os";
@@ -8,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import {
   checkWorkflowTaxonomy,
+  discoverWorkflowFiles,
   readWorkflowTaxonomy,
   renderWorkflowCatalog,
   TAXONOMY_DOC,
@@ -54,11 +58,131 @@ function rejected(root, pattern) {
   assert.equal(result.ok, false);
   assert.match(result.errors.join("\n"), pattern);
 }
+function consumerFiles(root) {
+  return {
+    ...standardConsumerExample("npm"),
+    ...Object.fromEntries(
+      [TAXONOMY_PATH, ...discoverWorkflowFiles(root)].map((file) => [
+        file,
+        fs.readFileSync(path.join(root, file), "utf8"),
+      ]),
+    ),
+  };
+}
 
 test("the repository has exactly one canonical file per declared workflow", () => {
   const result = checkWorkflowTaxonomy(repository);
   assert.equal(result.ok, true, result.errors.join("\n"));
   assert.equal(result.fileCount, result.canonicalCount);
+});
+
+test("consumer validation admits registered implementation libraries without a repository identity exception", (t) => {
+  const root = fixture(t);
+  assert.equal(fs.existsSync(path.join(root, ".git")), false);
+  const result = validateConsumerWiring(root, ".buildchain/buildchain.toml");
+  assert.equal(result.channel, "v4");
+  const inspection = inspectConsumerContract(consumerFiles(root));
+  assert.equal(inspection.ok, true, inspection.issues.join("\n"));
+  assert.deepEqual(
+    result.workflows.sort(),
+    Object.keys(consumerWorkflows()).sort(),
+  );
+  fs.appendFileSync(
+    path.join(root, ".github/workflows/buildchain.yml"),
+    "env:\n  HIDDEN: true\n",
+  );
+  assert.throws(
+    () => validateConsumerWiring(root, ".buildchain/buildchain.toml"),
+    /workflow bytes differ/,
+  );
+});
+
+for (const kind of ["unregistered", "component-event", "extra-root"])
+  test(`implementation inventory cannot conceal ${kind} consumer wiring`, (t) => {
+    const root = fixture(t);
+    if (kind === "unregistered") {
+      fs.writeFileSync(
+        path.join(root, ".github/workflows/.hidden.yml"),
+        "on: workflow_call\njobs: {}\n",
+      );
+    } else if (kind === "component-event") {
+      const component = readWorkflowTaxonomy(root).entries.find(
+        (entry) => entry.role === "component",
+      );
+      fs.writeFileSync(
+        path.join(root, workflowPath(component)),
+        "on:\n  workflow_call: {}\n  push: {}\njobs: {}\n",
+      );
+    } else {
+      editPolicy(root, (policy) => {
+        const entry = {
+          ...policy.entries.find((item) => item.id === "buildchain"),
+          id: "shadow",
+          purpose: "shadow",
+        };
+        delete entry.path;
+        policy.entries.push(entry);
+        fs.writeFileSync(
+          path.join(root, workflowPath(entry)),
+          "on: push\njobs: {}\n",
+        );
+      });
+    }
+    assert.throws(
+      () => validateConsumerWiring(root, ".buildchain/buildchain.toml"),
+      /unregistered workflow|repository event triggers|repository event roots/,
+    );
+    assert.match(
+      inspectConsumerContract(consumerFiles(root)).issues.join("\n"),
+      /unregistered workflow|repository event triggers|repository event roots/,
+    );
+  });
+
+test("public consumer contracts contain only normal pipeline and exact-attempt recovery", () => {
+  const entries = readWorkflowTaxonomy(repository).entries;
+  assert.deepEqual(
+    entries
+      .filter((entry) => entry.role === "public")
+      .map(workflowPath)
+      .sort(),
+    [
+      ".github/workflows/public-ops-pipeline.yml",
+      ".github/workflows/public-ops-recover.yml",
+    ],
+  );
+  assert.equal(
+    entries.find((entry) => entry.id === "artifact-signing-authority").role,
+    "component",
+  );
+});
+
+test("registering a product-specific public entry fails even with a valid file and catalog", (t) => {
+  const root = fixture(t);
+  const policy = editPolicy(root, (value) => {
+    const entry = value.entries.find((item) => item.id === "paper-release");
+    const old = workflowPath(entry);
+    entry.role = "public";
+    fs.renameSync(path.join(root, old), path.join(root, workflowPath(entry)));
+  });
+  fs.writeFileSync(
+    path.join(root, TAXONOMY_DOC),
+    renderWorkflowCatalog(policy),
+  );
+  rejected(
+    root,
+    /consumer public entries must be exactly pipeline and recover/,
+  );
+});
+
+test("removing recovery cannot leave a seemingly valid one-entry consumer contract", (t) => {
+  const root = fixture(t);
+  editPolicy(root, (policy) => {
+    policy.entries = policy.entries.filter((entry) => entry.id !== "recover");
+  });
+  rejected(
+    root,
+    /consumer public entries must be exactly pipeline and recover/,
+  );
 });
 
 for (const token of ["v4", "v5", "v12"]) {
@@ -275,7 +399,7 @@ test("repository dispatch and handoff parameters cannot retain removed filenames
   const file = path.join(root, ".github/workflows/buildchain.yml");
   fs.appendFileSync(
     file,
-    "  invalid-handoff:\n    uses: ./.github/workflows/public-ops-dev-auto-merge.yml\n    with:\n      source-workflow-id: verify.yml\n",
+    "  invalid-handoff:\n    uses: ./.github/workflows/.ops-dev-auto-merge.yml\n    with:\n      source-workflow-id: verify.yml\n",
   );
   rejected(root, /dangling repository workflow reference verify.yml/);
 });
@@ -322,9 +446,10 @@ test("workflow hotspot routes retain the same logical identities as debt metrics
 });
 
 test("installed normal and recovery entries preserve the generated public contract", () => {
-  for (const [file, expected] of Object.entries(
-    consumerWorkflows("v4-alpha", ".buildchain/minimal-consumer.toml"),
-  )) {
-    assert.equal(fs.readFileSync(path.join(repository, file), "utf8"), expected);
+  for (const [file, expected] of Object.entries(consumerWorkflows())) {
+    assert.equal(
+      fs.readFileSync(path.join(repository, file), "utf8"),
+      expected,
+    );
   }
 });

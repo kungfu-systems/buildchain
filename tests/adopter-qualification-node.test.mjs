@@ -8,7 +8,7 @@ import {createCrossPlatformAdopterReport,qualifyCrossPlatformAdopters,CROSS_PLAT
 const sha='a'.repeat(40),root='sha256:'+'b'.repeat(64);
 test('adopter rejects partial external selection and unsafe identities before checkout',()=>{
  const base={sourceSha:sha,repository:'org/self',runtimeSha:sha};
- for(const input of [{consumer:'demo','consumer-repository':'org/other'},{consumer:'../bad'},{consumer:'demo','consumer-repository':'org/other','consumer-ref':'main','invocation-source-path':'.github/workflows/build.yml'}])assert.throws(()=>selectAdopter({...base,request:input}),/External adopter|stable lowercase/);
+ for(const input of [{consumer:'demo','consumer-repository':'org/other'},{consumer:'../bad'},{consumer:'demo','consumer-repository':'org/other','consumer-ref':'main','invocation-source-path':'.github/workflows/.build-candidate.yml'}])assert.throws(()=>selectAdopter({...base,request:input}),/External adopter|stable lowercase/);
  assert.deepEqual(selectAdopter({...base,request:{consumer:'demo'}}),{repository:'org/self',sha});
 });
 test('adopter files reject traversal and symlink substitution',t=>{

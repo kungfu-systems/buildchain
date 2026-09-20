@@ -652,12 +652,10 @@ export {
   verifyPublicationSealedBundle,
 } from "./publication/publication-sealed-bundle.js";
 
-export { PAPER_ALPHA_PLAN_CONTRACT, PAPER_BUILD_PLAN_CONTRACT, PAPER_MIGRATION_CONTRACT, PAPER_NPM_BOOTSTRAP_CONTRACT, PAPER_PREFLIGHT_CONTRACT, PAPER_RESUME_PLAN_CONTRACT, PAPER_SCAFFOLD_CONTRACT, PAPER_STATE_ORDER, PAPER_STATUS_CONTRACT, PAPER_VISIBILITY_CONTRACT } from "./paper/operations/identity.js";
+export { PAPER_MIGRATION_CONTRACT, PAPER_NPM_BOOTSTRAP_CONTRACT, PAPER_PREFLIGHT_CONTRACT, PAPER_SCAFFOLD_CONTRACT, PAPER_STATE_ORDER, PAPER_STATUS_CONTRACT, PAPER_VISIBILITY_CONTRACT } from "./paper/operations/identity.js";
 export { PAPER_PATHS, resolvePaperRepository } from "./paper/paper-repository.js";
 export { collectPaperPreflight } from "./paper/paper.js";
 export { collectPaperStatus } from "./paper/operations/status.js";
-export { createPaperAlphaPlan, createPaperBuildPlan, createPaperResumePlan } from "./paper/operations/plans.js";
-export { executePaperNpmBootstrap } from "./paper/operations/bootstrap.js";
 export { planPaperMigration, planPaperScaffold, writePaperMigration, writePaperScaffold } from "./paper/operations/scaffold.js"; export * from "./paper/paper-work.js"; export * from "./paper/paper-fleet.js";
 
 export {

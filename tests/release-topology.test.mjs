@@ -389,7 +389,7 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
     "utf8",
   );
   const publicWrapper = fs.readFileSync(
-    path.join(root, ".github/workflows/public-release-promote.yml"),
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
     "utf8",
   );
   const recovery = fs.readFileSync(
@@ -458,7 +458,7 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
   );
   assert.match(
     recovery,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-recover\.yml@v4-alpha/u,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-recover\.yml@v4(?:\n|$)/u,
   );
 });
 

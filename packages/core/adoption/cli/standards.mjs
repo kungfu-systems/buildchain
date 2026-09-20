@@ -1,23 +1,10 @@
 import path from "node:path";
-import {
-  checkKfdUpstreamFacts,
-  collectKfdAggregate,
-  collectKfdStatus,
-  collectKfdUpstreamFacts,
-  kfd1,
-  kfd2,
-  layout as buildchainLayout,
-  listKfdUpstreamRoles,
-  listKfdSchemas,
-  normalizeKfdStandardId,
-  readKfdSchema,
-} from "../kfd.js";
+import { kfd1, kfd2, readKfdSchema } from "../kfd.js";
 import {
   printJson,
   readBooleanFlag,
   readFlag,
   readJsonInput,
-  readRepeatedFlag,
   readRepeatedJsonInputs,
   writeJsonFile,
 } from "../../contracts/cli/options.mjs";

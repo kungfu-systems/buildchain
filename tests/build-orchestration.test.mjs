@@ -29,7 +29,7 @@ function fixture(t, nested = false) {
   git("init", "--quiet"); git("add", ".");
   git("-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "--quiet", "-m", "fixture");
   const { plan } = resolveBuildConfiguration({ root: source, locator: nested ? "packages/library/buildchain.toml" : "", repository: "kungfu-systems/buildchain",
-    workflowRef: "kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha", workflowSha: "a".repeat(40), sourceSha: git("rev-parse", "HEAD"), sourceRef: "refs/heads/dev/v4/v4.0" });
+    workflowRef: "kungfu-systems/buildchain/.github/workflows/.build-candidate.yml@v4-alpha", workflowSha: "a".repeat(40), sourceSha: git("rev-parse", "HEAD"), sourceRef: "refs/heads/dev/v4/v4.0" });
   plan.source.tree_sha = git("rev-parse", "HEAD^{tree}");
   plan.run = { repository: "test/project", id: "123", attempt: "1" };
   plan.transfer = { mode: "github-artifacts" };

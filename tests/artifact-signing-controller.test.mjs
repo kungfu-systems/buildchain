@@ -297,7 +297,7 @@ test("dispatch accepts only the exact fresh authority run and exact runtime SHA"
     conclusion: "success",
     html_url: "https://github.com/kungfu-systems/buildchain/actions/runs/900",
     created_at: "2026-08-03T00:00:00.000Z",
-    path: ".github/workflows/public-release-signing-authority.yml@refs/heads/authority/v3/v3.0/artifact-signing",
+    path: ".github/workflows/.release-signing-authority.yml@refs/heads/authority/v3/v3.0/artifact-signing",
     repository: { full_name: "kungfu-systems/buildchain" },
   };
   let dispatches = 0;
@@ -339,7 +339,7 @@ test("dispatch accepts only the exact fresh authority run and exact runtime SHA"
   assert.equal(result.status, "succeeded");
   assert.equal(
     validateArtifactSigningAuthorityRun(
-      { ...run, path: ".github/workflows/public-release-signing-authority.yml" },
+      { ...run, path: ".github/workflows/.release-signing-authority.yml" },
       {
         authorityRepository: "kungfu-systems/buildchain",
         authorityRuntimeSha,

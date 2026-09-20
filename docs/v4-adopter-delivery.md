@@ -8,24 +8,24 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-10
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-10
+  generated_at: 2026-09-20
   visible_context: Current adopter runtime, public workflow, composite actions and local execution tests.
   invisible_context_boundary: No hosted cross-platform execution or publication was performed for this documentation.
 ---
 
-# Public Adopter Delivery
+# Internal adopter qualification
 
-The public entry is `kungfu-systems/buildchain/.github/workflows/public-build-adopter-qualification.yml`.
-Consumers call its floating `@v4` or `@v4-alpha` channel and retain matching dual
-contract locks. The workflow owns the Linux, macOS and Windows job matrix;
-`actions/adoption` owns admission, conformance and reconciliation;
-`packages/core/adoption` owns driver coordination and exact readback.
+The internal `.build-adopter-qualification.yml` component owns its platform
+qualification jobs. `actions/adoption` owns admission, conformance and
+reconciliation; `packages/core/adoption` owns driver coordination and readback.
+Consumers use the shared normal/recovery pair and do not add an adopter-specific
+caller or qualification request to their TOML. See [Getting started](getting-started.md).
 
-## Public contract
+## Driver contract
 
 The [input schema](../contracts/v4-adopter-delivery-v1.schema.json) requires an
 exact protocol driver and artifact profile. Built-in driver selectors are
@@ -53,11 +53,11 @@ rooted evidence fail. The API has two operations: `run` and `verify`.
 ## Configuration
 
 The closed JSON input owns `driverSelector`, `artifactProfileSelector`, `request`
-and `context`. The public workflow's `input-path` names that document; CLI
+and `context`. The internal component's `input-path` names that document; CLI
 `--input`, `--readback` and `--output` arguments locate the request and evidence.
 Build configuration contains no duplicate Adopter Delivery declaration.
 
-Paths must stay inside the consumer repository. Workflow inputs name `consumer`
+For internal qualification, paths stay inside the admitted source. Component inputs name `consumer`
 and `input-path`. External qualification additionally requires the complete
 `consumer-repository`, exact `consumer-ref` and `invocation-source-path` tuple.
 The admission node verifies the checked-out source and defining runtime before
@@ -75,7 +75,7 @@ use the same runtime; each consumer must use the same source and input across
 platforms. Missing, duplicate, inconsistent or modified reports fail.
 Qualification has no production, provider or release authority.
 
-Buildchain's [thin dogfood caller](../.github/workflows/self-build-adopter-dogfood.yml)
-uses the same public entry. Historical parity research remains historical
-evidence; current qualification does not download old Buildchain packages or
-require an old release's bootstrap lineage.
+The former standalone adopter dogfood caller is historical. Current self product
+verification is declared in TOML and runs through the normal pipeline.
+Historical parity research remains historical evidence; it does not create an
+additional consumer public API or prove current hosted qualification.

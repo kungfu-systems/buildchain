@@ -13,7 +13,7 @@ export const GITHUB_ARTIFACT_ATTESTATION_VERIFICATION_CONTRACT =
 export const GITHUB_ARTIFACT_ATTESTATION_PREDICATE_TYPE =
   "https://buildchain.libkungfu.dev/attestations/github-artifact/v1";
 export const GITHUB_ARTIFACT_ATTESTATION_WORKFLOW =
-  ".github/workflows/public-release-artifact-attestation.yml";
+  ".github/workflows/.release-artifact-attestation.yml";
 
 const SHA256 = /^sha256:([0-9a-f]{64})$/;
 const COMMIT = /^[0-9a-f]{40}$/;
@@ -127,7 +127,7 @@ function normalizeSigner(value) {
   if (signerRepository !== "kungfu-systems/buildchain") {
     throw new Error("policy.signer.repository must be kungfu-systems/buildchain");
   }
-  if (workflowPath !== GITHUB_ARTIFACT_ATTESTATION_WORKFLOW) {
+  if (![GITHUB_ARTIFACT_ATTESTATION_WORKFLOW, ".github/workflows/public-release-artifact-attestation.yml"].includes(workflowPath)) {
     throw new Error(`policy.signer.workflowPath must be ${GITHUB_ARTIFACT_ATTESTATION_WORKFLOW}`);
   }
   return {

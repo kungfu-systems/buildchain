@@ -28,7 +28,7 @@ test("v4 floating policy contract check accepts the repository wiring", () => {
 });
 
 test("public adopter delivery uploads the exact receipt returned by its admission node", () => {
-  const file = ".github/workflows/public-build-adopter-qualification.yml";
+  const file = ".github/workflows/.build-adopter-qualification.yml";
   const workflow = readWorkflow(file);
   const graphs = Object.keys(workflow.jobs).map(id => inspectWorkflowJob(file, id));
   const graph = graphs.find(item => item.actions.has("actions/adoption/adopter/admit"));
@@ -69,7 +69,7 @@ test("alpha promotion wiring admits a consumer that accepted the selected runtim
   );
   t.after(() => fs.rmSync(consumerRoot, { recursive: true, force: true }));
   fs.mkdirSync(path.join(consumerRoot, ".github/workflows"), { recursive: true });
-  fs.writeFileSync(path.join(consumerRoot, ".github/workflows/release.yml"), "jobs:\n  promote:\n    uses: kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4-alpha\n");
+  fs.writeFileSync(path.join(consumerRoot, ".github/workflows/release.yml"), "jobs:\n  promote:\n    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha\n");
   writeCurrentRuntimeLocks(consumerRoot);
   const authority = resolveFloatingConsumerPolicyAuthority({
     runtimeRoot: root,
@@ -79,7 +79,7 @@ test("alpha promotion wiring admits a consumer that accepted the selected runtim
     root: consumerRoot,
     repository: "kungfu-systems/example",
     sourceSha: "a".repeat(40),
-    invokedWorkflow: ".github/workflows/public-release-promote.yml",
+    invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
     invocationSourcePath: ".github/workflows/release.yml",
     expectedInvocationChannel: "alpha",
     resolvedWorkflowSha: "b".repeat(40),
@@ -98,7 +98,7 @@ test("bounded recovery is a one-way adapter into the same public publisher", () 
   const relative = ".github/workflows/buildchain-recover.yml";
   const workflow = fs.readFileSync(path.join(root, relative), "utf8");
   const publicPromotion = fs.readFileSync(
-    path.join(root, ".github/workflows/public-release-promote.yml"),
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
     "utf8",
   );
   const authority = resolveFloatingConsumerPolicyAuthority({
@@ -118,7 +118,7 @@ test("bounded recovery is a one-way adapter into the same public publisher", () 
       invocationRoot,
       ".github",
       "workflows",
-      "public-release-promote.yml",
+      ".release-candidate-promote.yml",
     ),
     [
       "jobs:",
@@ -137,7 +137,7 @@ test("bounded recovery is a one-way adapter into the same public publisher", () 
       repository: "kungfu-systems/buildchain",
       sourceSha: "a".repeat(40),
       invokedWorkflow: ".github/workflows/.release-promote.yml",
-      invocationSourcePath: ".github/workflows/public-release-promote.yml",
+      invocationSourcePath: ".github/workflows/.release-candidate-promote.yml",
       expectedInvocationChannel: "stable",
       resolvedWorkflowSha: "b".repeat(40),
       resolvedRuntimeSha: "c".repeat(40),
@@ -153,7 +153,7 @@ test("bounded recovery is a one-way adapter into the same public publisher", () 
   }
   assert.match(workflow, /^  workflow_dispatch:/mu);
   const caller = readWorkflow(relative).jobs.buildchain;
-  assert.equal(caller.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4-alpha");
+  assert.equal(caller.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4");
   assert.deepEqual(Object.keys(caller.with), ["attempt", "runtime-ref"]);
   assert.doesNotMatch(workflow, /request-json|publish-transaction-override|resume-candidate-run-id/u);
 });
@@ -214,12 +214,13 @@ test("generated consumer workflow persists v4 and declares both contract locks",
     );
     initBuildchainRepo({ cwd, type: "package", packageManager: "npm" });
     const workflow = fs.readFileSync(
-      path.join(cwd, ".github/workflows/build.yml"),
+      path.join(cwd, ".github/workflows/buildchain.yml"),
       "utf8",
     );
     assert.match(workflow, /@v4/u);
-    assert.match(workflow, /\.buildchain\/contract-lock\.json/u);
-    assert.match(workflow, /\.buildchain\/alpha-contract-lock\.json/u);
+    const instructions = fs.readFileSync(path.join(cwd, "AGENTS.md"), "utf8");
+    assert.match(instructions, /\.buildchain\/contract-lock\.json/u);
+    assert.match(instructions, /\.buildchain\/alpha-contract-lock\.json/u);
   } finally {
     fs.rmSync(cwd, { recursive: true, force: true });
   }

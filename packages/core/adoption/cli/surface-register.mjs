@@ -10,9 +10,7 @@ import {
   printJson,
   readBooleanFlag,
   readFlag,
-  readJsonInput,
   readRepeatedFlag,
-  readRepeatedJsonInputs,
   writeJsonFile,
 } from "../../contracts/cli/options.mjs";
 

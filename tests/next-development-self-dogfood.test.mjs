@@ -67,7 +67,7 @@ test("checkpoint uses the public owner/repo route and real adapter before a tran
   const result = await checkpoint();
   assert.equal(
     result.route.publicWorkflow,
-    "kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha",
+    "kungfu-systems/buildchain/.github/workflows/.build-candidate.yml@v4-alpha",
   );
   assert.equal(result.route.runtimeSha, RUNTIME_SHA);
   assert.equal(result.semver.controller.transition.state.status, "planned");
@@ -215,7 +215,7 @@ test("floating v4 production coordinate is mandatory", async () => {
   });
   const pinned = structuredClone(evidence);
   pinned.adoption.coordinate =
-    "kungfu-systems/buildchain/.github/workflows/build.yml@" + RUNTIME_SHA;
+    "kungfu-systems/buildchain/.github/workflows/.build-candidate.yml@" + RUNTIME_SHA;
   pinned.evidenceRoot = nextDevelopmentRoot(
     Object.fromEntries(
       Object.entries(pinned).filter(([key]) => key !== "evidenceRoot"),

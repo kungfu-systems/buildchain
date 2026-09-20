@@ -164,7 +164,7 @@ export function validateSelfDogfoodRoute(route) {
     targetRepository !== "kungfu-systems/buildchain" ||
     route.runtimeRef !== "v4-alpha" ||
     route.publicWorkflow !==
-      `${targetRepository}/.github/workflows/build.yml@v4-alpha` ||
+      `${targetRepository}/.github/workflows/.build-candidate.yml@v4-alpha` ||
     route.protectedDevBranch !== PROTECTED_DEV_BRANCH ||
     JSON.stringify(route.hostedReadbackPaths) !==
       JSON.stringify(HOSTED_READBACK_PATHS)

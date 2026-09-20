@@ -68,7 +68,69 @@ export async function readRecoveryPublicationMaterials(session, host) {
     throw new Error(
       "Expanded publication recovery inventory exceeds its bound",
     );
-  return result;
+  return signedRecoveryMaterials(result);
+}
+
+function signedRecoveryMaterials(materials) {
+  const plans = materials.filter((item) =>
+    item.id.startsWith("publication/plan/"),
+  );
+  if (new Set(plans.map((item) => item.value.root)).size < 2) return materials;
+  const retained = recoveryPublicationMaterial(
+    materials,
+    "publication/qualified/",
+  );
+  if (!retained?.signing) return materials;
+  const plan = publicationLineageMaterial(
+    materials,
+    "buildchain.pipeline-publication-plan/v1",
+    (value) => value.root === retained.qualified.planRoot,
+  );
+  const materialization = publicationLineageMaterial(
+    materials,
+    "buildchain.pipeline-version-materialization/v1",
+    (value) => value.root === retained.signing.materializationRoot,
+  );
+  const planIdentity = ({
+    root,
+    publisher: { workflowSha, ...publisher },
+    ...body
+  }) => recordDigest({ ...body, publisher });
+  const sourceIdentity = ({ root, planRoot, ...body }) => recordDigest(body);
+  for (const item of plans)
+    if (planIdentity(item.value) !== planIdentity(plan))
+      throw new Error(
+        "Conflicting recovery plans changed more than the publisher entry",
+      );
+  // Preserve every original reference and member ID. Only a signed lineage
+  // can classify the otherwise identical, unsigned rederivation as history.
+  return materials.map((item) => {
+    let name;
+    if (
+      item.id.startsWith("publication/plan/") &&
+      item.value.root !== plan.root
+    )
+      name = "plan";
+    if (
+      item.id.startsWith("publication/materialization/") &&
+      item.value.root !== materialization.root
+    ) {
+      if (sourceIdentity(item.value) !== sourceIdentity(materialization))
+        throw new Error(
+          "Conflicting recovery materializations changed retained source",
+        );
+      name = "materialization";
+    }
+    return name
+      ? {
+          ...item,
+          id: item.id.replace(
+            `publication/${name}/`,
+            `publication/predecessor-${name}/`,
+          ),
+        }
+      : item;
+  });
 }
 
 export function recoveryPublicationMaterial(

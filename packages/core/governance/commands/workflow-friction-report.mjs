@@ -5,7 +5,7 @@ import { recordBuildchainControlPlaneOutcome } from "../../observability/logging
 import { pathToFileURL } from "node:url";
 import { writeGitHubOutputs } from "../../providers/commands/github-output.mjs";
 
-const DEFAULT_BUILD_WORKFLOW_FILE = "build.yml";
+const DEFAULT_BUILD_WORKFLOW_FILE = ".build-candidate.yml";
 const DEFAULT_BUILD_WORKFLOW_NAME = "Build";
 
 class GitHubApiError extends Error {

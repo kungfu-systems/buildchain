@@ -7,13 +7,14 @@ source_level: local-files
 confidence: high
 sensitivity: public
 evidence_grade: A
-review_state: self-reviewed
-last_reviewed: 2026-09-11
+review_state: unreviewed
+last_reviewed: 2026-09-20
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-08-02
+  generated_at: 2026-09-20
   invisible_context_boundary: No hidden model build, parameter count, or private corpus is asserted.
+  visible_context: Current two-entry consumer contract and retained internal implementation references.
 ---
 
 # Auditable Demo Pipeline
@@ -25,19 +26,11 @@ two distinct evidence products:
 2. an optional rendered media bundle that can exist only after that exact Gate
    bundle passes.
 
-The public reusable workflow is
-`.github/workflows/.build-demo-adapter.yml`. It is consumer-neutral: Buildchain
-does not know how a Kungfu, library, service, or application artifact should be
-interpreted. The consumer owns a small checked-in executable adapter.
-
-For standalone binary CLIs, the higher-level first-class surface is
-`.github/workflows/public-build-demo.yml`. A consumer checks in only
-`.buildchain/auditable-demo.json`, builds and uploads its exact same-run binary
-plus metadata, and passes the producer-owned artifact name and digest to that
-workflow. Buildchain then owns capture, Gate adaptation, independent native
-1080p and 720p rendering, Release Passport construction, content-addressed
-materialization, and the protected README update pull request. No
-product-specific capture, adapter, passport, or materializer is required.
+The internal `.build-demo-adapter.yml` and `.build-demo.yml` components own
+adapter execution and standalone CLI demo qualification. Their artifact, scenario,
+Gate, renderer and materializer ports are runtime implementation details.
+Consumers use the shared normal/recovery pair and do not copy a separate demo
+workflow or pass artifact handoff parameters into consumer YAML.
 
 ## Declarative Standalone Binary Scenarios
 
@@ -108,39 +101,14 @@ It retains ANSI terminal bytes with the real PTY read timestamps, verifies
 declared stdout and JSON file facts, enforces the total deadline while a step is
 running, and removes the disposable workspace before emitting evidence.
 
-Both manual validation and alpha or release refreshes call the same reusable
-workflow. Manual callers select Gate-only or full rendering and can explicitly
-request a materialization PR. Release callers select full rendering and the
-same materializer automatically; there is no separate release-only recording
-implementation. Publication requires a dedicated update token and target
-branch. The token is an explicit bounded capability, while actor identity,
-first-party/System classification, KFD compliance, Product System metadata,
-package metadata, registry history, scans, and generated evidence grant no
-authority.
+Internal callers select Gate-only or full rendering under the same capture and
+materialization contracts. An admitted materialization capability, independent
+Gate result and exact retained bytes remain necessary for any write. Product
+metadata and generated evidence do not grant mutation authority.
 
-```yaml
-jobs:
-  demo:
-    needs: exact-binary
-    uses: kungfu-systems/buildchain/.github/workflows/public-build-demo.yml@v4
-    with:
-      source-ref: ${{ github.sha }}
-      binary-artifact-name: ${{ needs.exact-binary.outputs.artifact-name }}
-      binary-artifact-digest: ${{ needs.exact-binary.outputs.artifact-digest }}
-      scenario-path: .buildchain/auditable-demo.json
-      renderer-image: ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:RENDERER_DIGEST
-      render-media: true
-      render-failure-advisory: false
-      media-profile: responsive-web-delivery-v1
-      materialize: true
-      materialize-base-ref: dev/v1/v1.0
-    secrets:
-      DEMO_UPDATE_TOKEN: ${{ secrets.DEMO_UPDATE_TOKEN }}
-```
-
-Buildchain recursively consumes this surface in
-`.github/workflows/self-build-demo-dogfood.yml` using its own exact standalone binary
-and the beginner bootstrap scenario in `.buildchain/auditable-demo.json`.
+Buildchain retains its scenario in `.buildchain/auditable-demo.json`. The former
+standalone self-demo caller is retired. Existing media is historical evidence;
+a source or document change does not regenerate or qualify that media.
 
 ## Authority Boundary
 

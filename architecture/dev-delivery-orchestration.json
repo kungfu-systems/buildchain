@@ -1,7 +1,7 @@
 {
   "schema": "buildchain.dev-delivery-orchestration/v2",
-  "workflow": ".github/workflows/public-ops-dev-auto-merge.yml",
-  "terminalWorkflow": ".github/workflows/public-ops-warrant-close.yml",
+  "workflow": ".github/workflows/.ops-dev-auto-merge.yml",
+  "terminalWorkflow": ".github/workflows/.ops-warrant-close.yml",
   "maxOrchestrationLines": 660,
   "nodes": [
     {

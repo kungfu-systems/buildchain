@@ -28,7 +28,7 @@ test("stable and alpha each require a coherent shell runtime lock triad", () => 
     ["alpha", "-alpha"],
   ]) {
     const result = evaluateBuildchainChannelBinding({
-      workflowShellRef: `kungfu-systems/buildchain/.github/workflows/build.yml@v7${suffix}`,
+      workflowShellRef: `kungfu-systems/buildchain/.github/workflows/.build-candidate.yml@v7${suffix}`,
       runtimeRef: `v7${suffix}`,
       lockRef: `v7${suffix}`,
     });

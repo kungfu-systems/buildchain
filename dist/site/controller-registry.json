@@ -8,8 +8,8 @@
       "id": "source-check",
       "version": 1,
       "workflow": {
-        "id": "public-build-check",
-        "path": ".github/workflows/public-build-check.yml"
+        "id": ".build-check",
+        "path": ".github/workflows/.build-check.yml"
       },
       "inputs": {
         "contract-lock": {
@@ -98,7 +98,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:3f2f0e2f9f8a21ea3db046cb477f2534711de29745e3f40be959eef398a2e692"
+      "digest": "sha256:eeb5323004b7ef68187e300352f0bb8d646ed8ba8720181abbbc3ff59c91f0e8"
     },
     {
       "schemaVersion": 1,
@@ -373,8 +373,8 @@
       "id": "web-surface",
       "version": 1,
       "workflow": {
-        "id": "public-release-web",
-        "path": ".github/workflows/public-release-web.yml"
+        "id": ".release-web",
+        "path": ".github/workflows/.release-web.yml"
       },
       "inputs": {
         "artifact-path": {
@@ -577,7 +577,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:8818db80d272797d84488cd5db915014edf0081b78afa8a52561f54e0deee908"
+      "digest": "sha256:ffef96c7b7bbcec02f9cc2b9e25df2e8c23945e4154fda489b2c357aa865202c"
     },
     {
       "schemaVersion": 1,
@@ -585,8 +585,8 @@
       "id": "publication-artifact",
       "version": 1,
       "workflow": {
-        "id": "public-build-publication",
-        "path": ".github/workflows/public-build-publication.yml"
+        "id": ".build-publication",
+        "path": ".github/workflows/.build-publication.yml"
       },
       "inputs": {
         "artifact-name": {
@@ -708,7 +708,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:8807dfdad8dc0ae15b51616049804b8a44936d37e364d209e099f680385d81af"
+      "digest": "sha256:2c320c01ed604bcfb14175aefbd7dd6c961f04e3fc52cb0f02f50b08db725f2d"
     },
     {
       "schemaVersion": 1,
@@ -716,8 +716,8 @@
       "id": "paper-release",
       "version": 1,
       "workflow": {
-        "id": "public-release-paper",
-        "path": ".github/workflows/public-release-paper.yml"
+        "id": ".release-paper",
+        "path": ".github/workflows/.release-paper.yml"
       },
       "inputs": {
         "BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID": {
@@ -877,7 +877,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:f98dae8ad9a494e651690ac128cf4b1b4a6df55cfb255ecca24dae60d0d205fa"
+      "digest": "sha256:1a98258cc22ecd79ebca7acb5bba5fbd4daef8af34439003ef586b4f8e84744e"
     },
     {
       "schemaVersion": 1,
@@ -885,8 +885,8 @@
       "id": "release-candidate-promotion",
       "version": 1,
       "workflow": {
-        "id": ".release-promote",
-        "path": ".github/workflows/.release-promote.yml"
+        "id": ".release-candidate-promote",
+        "path": ".github/workflows/.release-candidate-promote.yml"
       },
       "inputs": {
         "BUILDCHAIN_ISSUE_APP_ID": {
@@ -987,7 +987,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:699a18f875d395d830bb07c511ec7e6e9dff1ac97a057004a0e58c51d065ce19"
+      "digest": "sha256:b24b12bd41b968aef7694e41d0186cd130a748f6142b196e9e98dd30b026058d"
     },
     {
       "schemaVersion": 1,
@@ -995,8 +995,8 @@
       "id": "release-propagation",
       "version": 1,
       "workflow": {
-        "id": "public-release-propagation",
-        "path": ".github/workflows/public-release-propagation.yml"
+        "id": ".release-propagation",
+        "path": ".github/workflows/.release-propagation.yml"
       },
       "inputs": {
         "agent-work-context-json": {
@@ -1135,8 +1135,8 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:bf6c18f33642654314281e4f1aaf49c16d3a8e765e62c7162ad53beaef630c76"
+      "digest": "sha256:8f495bf2d183158c3e38da53f0f8cf1f7cb44aae8ba05f4ca2447b1a08b2ffea"
     }
   ],
-  "digest": "sha256:e4a23fdcb6c8f3483e8c5dc70f813cec94313597f6196189d0f14e2c084ea7f4"
+  "digest": "sha256:0c3b9ae5e97d89cc801f5553954141844fe668c7643df3920597e20a830b423e"
 }

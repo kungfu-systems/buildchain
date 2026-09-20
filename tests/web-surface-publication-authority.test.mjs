@@ -228,7 +228,7 @@ test("independent authority emits web-production capability from the managed can
   const candidate = createWebSurfacePublicationCandidate(candidateEvidence);
   const registry = createPublicationAuthorityRegistry({
     descriptors: [{
-      workflowPath: ".github/workflows/public-release-web.yml",
+      workflowPath: ".github/workflows/.release-web.yml",
       authorityClass: "product-publication",
       publicationCapable: true,
       capabilityIds: ["web-production"],
@@ -238,7 +238,7 @@ test("independent authority emits web-production capability from the managed can
       runnerPolicy: "qualified-measured",
     }],
     workflows: [{
-      path: ".github/workflows/public-release-web.yml",
+      path: ".github/workflows/.release-web.yml",
       text: "permissions:\n  contents: read\njobs:\n  production-apply:\n    environment: production\n    permissions:\n      id-token: write\n",
     }],
   });
@@ -260,8 +260,8 @@ test("independent authority emits web-production capability from the managed can
   ].map((id, index) => ({ id, status: "pass", digest: String(index + 1).repeat(64) }));
   const controlPlaneAudit = createPublicationControlPlaneAudit({
     repository: "kungfu-systems/site",
-    workflowPath: ".github/workflows/public-release-web.yml",
-    publisherWorkflowPath: ".github/workflows/public-release-web.yml",
+    workflowPath: ".github/workflows/.release-web.yml",
+    publisherWorkflowPath: ".github/workflows/.release-web.yml",
     environment: "production",
     facts,
     observedAt: "2026-07-16T00:00:00.000Z",
@@ -276,8 +276,8 @@ test("independent authority emits web-production capability from the managed can
   const gate = publicationGateAggregateBindings(gateAggregate);
   const admission = createPublicationAdmission({
     registryDigest: registry.registryDigest,
-    workflowPath: ".github/workflows/public-release-web.yml",
-    publisherWorkflowPath: ".github/workflows/public-release-web.yml",
+    workflowPath: ".github/workflows/.release-web.yml",
+    publisherWorkflowPath: ".github/workflows/.release-web.yml",
     repository: "kungfu-systems/site",
     sourceSha: SOURCE_SHA,
     runtimeSha: RUNTIME_SHA,

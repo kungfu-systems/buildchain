@@ -104,7 +104,7 @@ test("Web feedback preserves deployment coordinates and updates the existing pre
 test("Web deployment keeps credential and failure boundaries in jobs while tokens use secret ports", () => {
   const workflow = YAML.parse(
     fs.readFileSync(
-      path.join(root, ".github/workflows/public-release-web.yml"),
+      path.join(root, ".github/workflows/.release-web.yml"),
       "utf8",
     ),
   );

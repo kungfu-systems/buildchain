@@ -19,7 +19,6 @@ const fixturePaths = [
   "packages/core/build/stage-capsule/canary.js",
   "packages/core/build/verification/source.js",
   ".buildchain/buildchain.toml",
-  ".buildchain/minimal-consumer.toml",
   "scripts/verify-product-platform.mjs",
   ".gitattributes",
   ".github/workflows",
@@ -59,11 +58,6 @@ function mutate(relative, transform) {
     "test mutation must change the exercised source",
   );
   fs.writeFileSync(file, after);
-  if (relative === ".buildchain/buildchain.toml")
-    fs.writeFileSync(
-      path.join(targetRoot, ".buildchain/minimal-consumer.toml"),
-      after,
-    );
   return targetRoot;
 }
 
@@ -73,7 +67,7 @@ test("the tracked v4 dogfood path is one thin public consumer caller", () => {
     ok: true,
     caller: ".github/workflows/buildchain.yml",
     reusable: ".github/workflows/public-ops-pipeline.yml",
-    historicalCanary: ".github/workflows/public-build-stage-capsule-canary.yml",
+    historicalCanary: ".github/workflows/.build-stage-capsule-canary.yml",
     validationRef: protectedDogfoodRef,
     productionAuthority: "v4-native",
   });
@@ -98,6 +92,33 @@ test("the gate rejects copied orchestration and relative reusable calls", () => 
   assert.throws(
     () => checkPublicDogfoodContract(relative),
     /generated caller drift/u,
+  );
+});
+
+test("self callers require stable defaults and reject the retired transition config", () => {
+  for (const [before, after] of [
+    ["public-ops-pipeline.yml@v4\n", "public-ops-pipeline.yml@v4-alpha\n"],
+    [
+      "    secrets: inherit",
+      "    with:\n      config-path: .buildchain/alternate.toml\n    secrets: inherit",
+    ],
+  ]) {
+    const target = mutate(".github/workflows/buildchain.yml", (text) =>
+      text.replace(before, after),
+    );
+    assert.throws(
+      () => checkPublicDogfoodContract(target),
+      /generated caller drift/u,
+    );
+  }
+  const duplicate = fixture();
+  fs.copyFileSync(
+    path.join(duplicate, ".buildchain/buildchain.toml"),
+    path.join(duplicate, ".buildchain/minimal-consumer.toml"),
+  );
+  assert.throws(
+    () => checkPublicDogfoodContract(duplicate),
+    /retired transition config/u,
   );
 });
 

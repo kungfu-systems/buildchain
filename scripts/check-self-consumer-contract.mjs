@@ -2,12 +2,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse as yaml } from "yaml";
-import { compileConsumerPlan } from "../packages/core/consumer/contract/plan.js";
+import * as consumerPlan from "../packages/core/consumer/contract/plan.js";
 import { consumerWorkflows } from "../packages/core/consumer/contract/entries.js";
 import { workflowPath } from "../packages/core/workflow/workflow-taxonomy.mjs";
 
-export const SELF_ENTRY_CHANNEL = "v4-alpha";
-export const SELF_CONFIG_PATH = ".buildchain/minimal-consumer.toml";
+export const SELF_ENTRY_CHANNEL = "v4";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PLATFORMS = ["linux-x64", "macos-arm64", "windows-x64"];
 
@@ -19,10 +18,11 @@ export function checkSelfConsumerContract(root = ROOT) {
   const fail = (message) => {
     throw new Error(`self-consumer-contract: ${message}`);
   };
-  const plan = compileConsumerPlan(read(SELF_CONFIG_PATH));
-  if (read(SELF_CONFIG_PATH) !== read(".buildchain/buildchain.toml"))
-    fail("transition config must match the canonical product plan");
-  const callers = consumerWorkflows(SELF_ENTRY_CHANNEL, SELF_CONFIG_PATH);
+  const plan = consumerPlan.compileConsumerPlan(read(consumerPlan.CONFIG_PATH));
+  const retired = path.join(root, ".buildchain/minimal-consumer.toml");
+  if (fs.lstatSync(retired, { throwIfNoEntry: false }))
+    fail("retired transition config must not remain in the self consumer tree");
+  const callers = consumerWorkflows();
   for (const [file, bytes] of Object.entries(callers))
     if (read(file) !== bytes) fail(`${file}: generated caller drift`);
   const taxonomy = JSON.parse(read("architecture/workflow-taxonomy.json"));

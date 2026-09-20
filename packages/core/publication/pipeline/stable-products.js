@@ -17,7 +17,6 @@ function assertPublishedPlan(stablePlan, source, values) {
   const { plan, qualification: qualified, release } = values;
   verifyPipelinePublicationPlan(plan);
   if (
-    plan.evidenceVersion !== 1 ||
     plan.channel !== "alpha" ||
     plan.version !== stablePlan.candidateVersion ||
     plan.tag !== source.candidate.tag ||
@@ -31,17 +30,6 @@ function assertPublishedPlan(stablePlan, source, values) {
   )
     throw new Error(
       "Published product evidence differs from the exact Alpha contract or source",
-    );
-  if (
-    plan.publisher.repository !== "kungfu-systems/buildchain" ||
-    plan.publisher.workflow !==
-      ".github/workflows/.release-pipeline-products.yml" ||
-    plan.publisher.job !== "apply" ||
-    !/^[0-9a-f]{40}$/u.test(plan.publisher.workflowSha || "") ||
-    plan.runtime.repository !== "kungfu-systems/buildchain"
-  )
-    throw new Error(
-      "Published product evidence requires the central publisher",
     );
   const issued = Date.parse(qualified.qualification?.issuedAt);
   if (
@@ -200,7 +188,11 @@ function completionTime(jobs, qualified, candidate) {
   return new Date(Math.max(...values)).toISOString();
 }
 
-function verifyPublishedDocuments(values, bundle, directory, host, execute) {
+export function verifyPublishedDocuments(
+  values,
+  bundle,
+  { directory, token, execute },
+) {
   const {
     plan,
     qualification: qualified,
@@ -208,6 +200,18 @@ function verifyPublishedDocuments(values, bundle, directory, host, execute) {
     release,
     invocation,
   } = values;
+  if (
+    plan.evidenceVersion !== 1 ||
+    plan.publisher.repository !== "kungfu-systems/buildchain" ||
+    plan.publisher.workflow !==
+      ".github/workflows/.release-pipeline-products.yml" ||
+    plan.publisher.job !== "apply" ||
+    !/^[0-9a-f]{40}$/u.test(plan.publisher.workflowSha || "") ||
+    plan.runtime.repository !== "kungfu-systems/buildchain"
+  )
+    throw new Error(
+      "Published product evidence requires the central publisher",
+    );
   const materialization = release.versionMaterialization;
   const signing = verifyPipelineSigning({
     plan,
@@ -218,7 +222,7 @@ function verifyPublishedDocuments(values, bundle, directory, host, execute) {
       bundle,
     ),
     directory: path.join(directory, "signature"),
-    token: host.token,
+    token,
     // Historical evidence is checked at issue time. It never supplies fresh
     // Stable publisher admission or extends the original receipt's lifetime.
     evaluatedAt: qualified.qualification.issuedAt,
@@ -274,13 +278,11 @@ export async function readPipelineStableProducts(
     path.join(fs.realpathSync(os.tmpdir()), "buildchain-stable-products-"),
   );
   try {
-    const signing = verifyPublishedDocuments(
-      evidence.values,
-      evidence.bundle,
+    const signing = verifyPublishedDocuments(evidence.values, evidence.bundle, {
       directory,
-      host,
+      token: host.token,
       execute,
-    );
+    });
     await reobservePublicationBuild(qualified.build, qualified.source, host);
     const signer = await signingRun(plan, qualified, host);
     const completedAt = completionTime(

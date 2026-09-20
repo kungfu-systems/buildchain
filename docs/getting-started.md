@@ -6,163 +6,104 @@ doc_type: technical-guide
 source_level: local-files
 confidence: high
 sensitivity: public
-evidence_grade: A
+evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-08
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-08
-  invisible_context: not asserted
+  generated_at: 2026-09-20
+  visible_context: Schema-2 initializer, shared caller generator and local validation code.
+  invisible_context_boundary: Initialization does not prove hosted publication or provider authorization.
 ---
 
 # Buildchain Golden Path
 
-This path is for a repository maintainer adopting Buildchain for the first
-time. It takes about 15–30 minutes and ends with five inspectable outcomes: an
-exact package pin, a declared project type, a valid local configuration, a thin
-reusable workflow caller, and a Release Passport inspection.
+A consumer owns its product source and one schema-2 TOML declaration.
+Buildchain generates two product-independent YAML callers: normal execution
+and exact-attempt recovery. The published runtime owns delivery and publication.
 
-Use this page for the first successful pass. Move to the advanced manuals only
-after the local checks below are green.
+## Install and initialize
 
-## 1. Create a clean consumer and install an exact version
+In an existing npm product repository with a version in `package.json`:
 
-```bash
-consumer_dir="$(mktemp -d)"
-cd "$consumer_dir"
-npm init -y
-buildchain_version="$(npm view @kungfu-tech/buildchain version)"
-pnpm add -D "@kungfu-tech/buildchain@$buildchain_version"
-pnpm exec buildchain --version
+```sh
+pnpm add -D --save-exact @kungfu-tech/buildchain
+pnpm exec buildchain init --type npm --package-manager pnpm
 ```
 
-The package manager records the exact resolved version in `package.json` and
-the lockfile. Review that version before committing it; do not leave a floating
-range in a release repository.
+Use `--type binary` for a CMake product or `--type paper` for a PDF product.
+`package`, `native`, and `publication-artifact` select the corresponding product
+kind. `anchored-package` selects an npm product whose version is changed by a
+reviewed source update rather than automatic version rewriting.
 
-## 2. Choose the project type and initialize
+Initialization writes:
 
-Start with `package` for a Node package. Other supported types are `native`,
-`web-surface`, `infra-contract`, `publication-artifact`, and
-`anchored-package`.
+- `.buildchain/buildchain.toml`: products, artifacts, publication targets,
+  version files, channel routes and protected review policy;
+- `.github/workflows/buildchain.yml`: the normal `public-ops-pipeline.yml` caller;
+- `.github/workflows/buildchain-recover.yml`: the `public-ops-recover.yml` caller;
+- a managed consumer section in `AGENTS.md`;
+- `release.json` as version source when a binary or Paper product has no package version.
 
-```bash
-pnpm exec buildchain init --type package --package-manager pnpm
-```
+Both YAML files are byte-identical across npm, binary and Paper projects.
+Edit product install, build, verification and artifact declarations in TOML to
+match your existing source. Keep the generated caller bytes unchanged. There
+are no consumer publication commands, hidden controller scripts or provider
+request payloads to maintain.
 
-Inspect the two generated files before continuing:
+## Validate locally
 
-```bash
-sed -n '1,220p' .buildchain/buildchain.toml
-sed -n '1,220p' .github/workflows/build.yml
-```
-
-`buildchain.toml` owns repository lifecycle declarations. The workflow is a
-thin caller of Buildchain's reusable workflow; it is not a second release
-implementation.
-
-## 3. Validate the local contract
-
-```bash
-pnpm exec buildchain validate \
-  --require-version-state \
-  --require-lifecycle-stages install,build,verify
+```sh
+pnpm exec buildchain validate --require-version-state
 pnpm exec buildchain doctor --json
 ```
 
-If the generated lifecycle commands do not match the repository, edit only
-`.buildchain/buildchain.toml`, then rerun both checks. See
-[Lifecycle Protocol](lifecycle-protocol.md) for the normative fields.
+For npm products, `--require-lifecycle-stages install,build,verify` also checks
+that every product declares those commands. Binary and Paper products can omit
+an install stage. Run your product's declared build and verification commands
+before opening the first PR.
 
-## 4. Inspect the reusable workflow and release dry-run
+`validate` checks the schema, declared version sources and both caller files.
+`doctor` also checks the Git repository and, for npm products, package-manager
+discovery. Local success establishes configuration validity; hosted qualification
+and publication have their own source-bound results.
 
-The generated caller contains one reusable `uses:` edge and no inputs.
-Project choices belong in `.buildchain/buildchain.toml`; `@v4` or `@v4-alpha`
-selects the runtime channel:
+## Use the normal release path
 
-```bash
-rg -n 'uses:' .github/workflows/build.yml
-pnpm exec buildchain release --dry-run \
-  --target-ref alpha/v4/v4.0 \
-  --json
-```
+Commit the generated files and product source. Complete repository permissions,
+branch protection, independent reviewer configuration and provider authorization
+once. When present, tool-maintained stable and Alpha contract locks select the
+published runtime. Without a lock, the published entry uses its own exact runtime
+commit; initialization does not invent a lock or require one to select that default.
+Existing npm Trusted Publishing remains in use; normal releases do not require
+an interactive npm login or a manually supplied publishing token.
 
-The dry-run explains legal source refs, tags, version state, and publication
-effects. It does not move refs, edit files, or publish packages.
+Open a PR along a route declared in TOML: a feature branch into development,
+development into Alpha, or Alpha into release. The same normal caller handles
+build, protected delivery, publication, provider readback and next-development.
+Follow the workflow's actual result and published Release Passport.
 
-## 5. Create and inspect a local Release Passport example
+For an interrupted attempt, run `buildchain-recover.yml` with its exact attempt.
+Supply a repaired runtime only when a runtime repair is needed. Do not supply
+replacement source, artifacts or provider-effect parameters.
 
-This example creates a source-bound local Passport through the public Node API,
-then reads it through the CLI. It is learning evidence, not publication
-authority.
+## Migrating old callers
 
-```bash
-mkdir -p .buildchain/golden-path
-node --input-type=module <<'EOF'
-import fs from "node:fs";
-import { createReleasePassport } from "@kungfu-tech/buildchain";
+Schema-1 product-specific workflow callers are not generated by this initializer.
+The old `web-surface` and `infra-contract` initialization modes are outside the
+current schema-2 npm/binary/Paper pipeline; initialization rejects them before
+writing files. Their internal product modules remain available to maintainers.
 
-const passport = createReleasePassport({
-  repository: "example/consumer",
-  tag: "v0.1.0-alpha.0",
-  sourceSha: "a".repeat(40),
-  assets: [{ name: "consumer.tgz", sha256: "b".repeat(64) }],
-});
-fs.writeFileSync(
-  ".buildchain/golden-path/buildchain.release.json",
-  `${JSON.stringify(passport, null, 2)}\n`,
-);
-EOF
+Existing unrelated workflows or conflicting files stop initialization before
+any write. `--force` replaces the declared generated files only; it does not
+delete other workflows or follow symlinks. Move product commands into TOML and
+remove obsolete consumer orchestration as part of an explicit migration.
 
-pnpm exec buildchain inspect release \
-  --passport .buildchain/golden-path/buildchain.release.json \
-  --json
-```
+See the [standard examples](../templates/minimal-consumer/),
+[workflow catalog](workflow-catalog.md), [CLI reference](cli-reference.md), and
+[Release Passport](release-passport.md).
 
-For a real release, the protected Buildchain workflow creates the Passport from
-the exact source, artifact, controller, and publication evidence. See
-[Release Passport](release-passport.md); do not promote this local example.
-
-## You are done when
-
-- the dependency and lockfile contain one exact Buildchain version;
-- `.buildchain/buildchain.toml` declares the intended project type and lifecycle;
-- `validate` and `doctor` succeed;
-- `.github/workflows/build.yml` remains a thin reusable-workflow caller;
-- the release dry-run and local Passport inspection both return structured output.
-
-The repository test `pnpm run check:golden-path` reproduces this path in a new
-temporary consumer using the locally packed Buildchain package.
-
-## Choose the next manual
-
-| Intent | Next page |
-| --- | --- |
-| Change lifecycle commands or version files | [Lifecycle Protocol](lifecycle-protocol.md) |
-| Configure native matrices, runners, caches, or artifacts | [Reusable Build Surface](reusable-build-surface.md) |
-| Look up a command | [Generated CLI Reference](cli-reference.md) |
-| Import the Node toolkit | [Generated Node API Reference](node-api-reference.md) |
-| Understand protected branches and tags | [Release Flow](release-flow.md) |
-| Verify published evidence | [Release Passport](release-passport.md) |
-
-## Troubleshooting
-
-- `already exists`: initialization is no-overwrite by default. Inspect the
-  existing files; use `--force` only for an intentional replacement.
-- missing lifecycle stage: add the named stage to
-  `.buildchain/buildchain.toml`; do not weaken the validation command.
-- package release-age policy: add a temporary, package-and-version-specific
-  `minimumReleaseAgeExclude`, then remove it after the normal window.
-- unsure about syntax: run `buildchain <path> --help`. Help is intercepted
-  before command dispatch and is side-effect free at every governed path.
-
-## Small glossary
-
-- **project type**: the repository shape selected by `buildchain init`.
-- **lifecycle**: repository-owned install, build, verify, and publish commands.
-- **reusable workflow**: Buildchain-owned GitHub Actions control plane called by
-  a thin consumer workflow.
-- **Release Passport**: source- and artifact-bound release evidence, not a
-  release trigger.
-- **train ref**: a temporary validation runtime; never a production dependency.
+`pnpm run check:golden-path` packs the local package, installs it in a temporary
+consumer, initializes and validates the shared caller pair, and executes the
+fixture product build and check. It performs no hosted publication.

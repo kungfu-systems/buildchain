@@ -1,6 +1,6 @@
 ---
 status: draft
-period: 2026-08-07
+period: ongoing
 theme: buildchain-release-tail-provider-plane
 doc_type: architecture
 source_level: local-files
@@ -8,64 +8,43 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-20
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-08-07
+  generated_at: 2026-09-20
   visible_context: Buildchain release-tail declaration, provider adapters, durable transaction implementation, CLI, Action, reusable workflow, tests, and frozen consumer inventory.
   invisible_context_boundary: Did not read credentials, private provider state, signed URLs, unpublished release assets, or production receipts.
 ---
 
 # Declarative release-tail provider plane
 
-Buildchain owns the final release tail as one versioned transaction. A consumer
-supplies a sealed capability declaration and data-only provider bindings; it
-does not supply shell, JavaScript, executable paths, callbacks, or plugins.
-The frozen boundary and migration inventory remain in
-[`release-tail-contract.md`](./release-tail-contract.md).
+Buildchain owns release effects and their readback. Consumers declare product
+artifacts and publication targets in schema-2 TOML, then use the shared normal
+and exact-attempt recovery callers. They do not maintain release-tail provider
+bindings, transaction payloads, state artifacts or additional workflows.
 
-## Public entry points
+## Consumer entry points
 
-- Node: `@kungfu-tech/buildchain/release-tail-provider-plane`,
-  `release-tail-provider-adapters`, and `release-tail-compatibility`.
-- CLI: `buildchain release-tail plan|init|status|verify|compat`.
-- Action: `kungfu-systems/buildchain/actions/release/tail/settle@<exact-ref>`.
-- reusable workflow: `kungfu-systems/buildchain/.github/workflows/public-release-tail.yml@<exact-ref>`.
+- `buildchain.yml` invokes `public-ops-pipeline.yml@v4`.
+- `buildchain-recover.yml` invokes `public-ops-recover.yml@v4`.
 
-The Action is the provider-executing entry point. The CLI compiles, initializes,
-inspects, verifies, and diagnoses bounded v3 compatibility using the same core
-transaction format. The reusable workflow checks out an exact Buildchain ref
-and invokes the packaged Action; callers cannot inject an execution command.
+Generate both through [init](getting-started.md). Request publication through a
+protected channel PR; recover an interrupted operation by its exact attempt.
+The runtime owns source, artifact and provider-effect selection.
 
-The reusable workflow is permission-neutral: it inherits the calling job's
-GitHub token permissions and never elevates them. A rehearsal caller can remain
-`contents: read` and must pass `execute: false`. An effectful production caller
-owns and declares its provider authority explicitly:
+## Internal provider implementation
 
-<!-- release-tail-production-caller-contract -->
+The Node modules `release-tail-provider-plane` and `release-tail-provider-adapters`,
+the `release-tail` diagnostic CLI, `actions/release/tail/settle`, and the internal
+`.release-tail.yml` workflow implement and inspect bounded release transactions.
+They are maintenance interfaces, not additional consumer wiring.
 
-```yaml
-name: Production release tail
-
-on:
-  workflow_dispatch:
-
-jobs:
-  release-tail:
-    permissions:
-      contents: write
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-tail.yml@v4
-    with:
-      declaration-path: .buildchain/release-tail/declaration.json
-      provider-bindings-path: .buildchain/release-tail/provider-bindings.json
-      execute: true
-```
-
-Omitting caller write authority cannot be repaired by the reusable workflow;
-GitHub rejects or constrains the call before provider execution. `execute:
-false` remains a plan/rehearsal boundary and does not authorize production
-mutation even when a caller token has broader ambient permissions.
+The internal reusable workflow is permission-neutral. Its owning runtime job
+supplies explicit provider permissions, while rehearsal runs retain read-only
+permissions and no production execution authority. A rehearsal or simulation
+result cannot authorize publication. Provider credentials remain separate from
+consumer commands and serialized transaction data.
 
 ## Inputs and secrets
 
@@ -117,18 +96,12 @@ resume boundary and evidence source, not a disposable log.
 
 ## Buildchain self-promotion route
 
-Buildchain invokes `./.github/workflows/public-release-promote.yml` at the same
-commit as its caller. Admission independently verifies the defining repository,
-exact committed workflow bytes and both consumer lock roots. External consumers
-use the public floating-channel API after publication. See
-[Promotion request](release-promotion-request.md).
+Buildchain uses the same generated normal and recovery callers as other consumers.
+The published runtime selects its internal publication jobs, binds their source
+and artifacts, and performs provider readback. Its product publisher is
+`.release-pipeline-products.yml`; consumer YAML does not call that component.
 
-The promotion action executes one declaration-driven GitHub Release transaction.
-Its plan, provider observations and receipts bind the exact subject and asset
-roots. A completed-transaction recovery explicitly verifies the existing public
-Passport and immutable assets before reusing or repairing evidence. A provider
-failure cannot select a different publication implementation.
-
-Release metadata follows the declared tag and channel. The old mode selector and
-custom title/notes ports are removed. Retired shell-hook compatibility commands
-are absent; the current typed request rejects undeclared fields.
+Completed-publication recovery verifies the existing publication and immutable
+assets before continuing. A provider failure cannot select replacement product
+bytes or a different source. Internal transaction fixtures and retained historical
+receipts remain evidence of their original execution, not extra current callers.

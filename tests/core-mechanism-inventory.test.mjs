@@ -9,7 +9,8 @@ test("current core mechanism inventory closes every required evidence dimension"
   assert.equal(report.dependencyCycles, 0);
   assert(report.sourceCoordinates >= 55);
   assert(report.authorityCoordinates >= 41);
-  assert(report.publicSurfaces >= 45);
+  assert(report.publicSurfaces + report.internalSurfaces >= 45);
+  assert(report.internalSurfaces > 0);
   assert.deepEqual(report.surfaceKinds, [
     "action",
     "cli",
@@ -49,5 +50,26 @@ test("reverse-discovered orphaned or ambiguously owned mechanism coordinates fai
   assert.throws(
     () => checkCoreMechanismInventory({ inventory }),
     /testPaths is empty/u,
+  );
+});
+
+test("mechanism surface admission retains internal coverage and rejects public role substitution", () => {
+  const inventory = JSON.parse(
+    fs.readFileSync("architecture/core-mechanisms.json", "utf8"),
+  );
+  const mechanism = inventory.mechanisms.find(
+    (entry) => entry.internalSurfaces?.length,
+  );
+  const internal = mechanism.internalSurfaces.shift();
+  mechanism.publicSurfaces.push(internal);
+  assert.throws(
+    () => checkCoreMechanismInventory({ inventory }),
+    /public surface is absent or has a different role/,
+  );
+  mechanism.publicSurfaces.pop();
+  mechanism.internalSurfaces.push("workflow:missing-internal-component");
+  assert.throws(
+    () => checkCoreMechanismInventory({ inventory }),
+    /internal surface is absent/,
   );
 });

@@ -54,8 +54,8 @@ test("self normal delivery delegates one public pipeline without a dispatch cont
   const workflow = readWorkflow(".github/workflows/buildchain.yml");
   assert.equal(workflow.on.workflow_dispatch, undefined);
   assert.deepEqual(Object.keys(workflow.jobs), ["buildchain"]);
-  assert.equal(workflow.jobs.buildchain.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha");
-  assert.deepEqual(Object.keys(workflow.jobs.buildchain.with), ["config-path"]);
+  assert.equal(workflow.jobs.buildchain.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4");
+  assert.equal(workflow.jobs.buildchain.with, undefined);
 });
 
 test("universal inspection preserves the consumer capability independently from runtime selection", () => {
@@ -69,7 +69,7 @@ test("recovery forwards only attempt and the optional runtime to the public decl
   assert.deepEqual(nestedKeys(recovery, "    with:"), declaredInputs);
   const caller = readWorkflow(".github/workflows/buildchain-recover.yml");
   assert.deepEqual(Object.keys(caller.jobs), ["buildchain"]);
-  assert.equal(caller.jobs.buildchain.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4-alpha");
+  assert.equal(caller.jobs.buildchain.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4");
   assert.equal(caller.jobs.buildchain.with.attempt, "${{ inputs.attempt }}");
   assert.equal(caller.jobs.buildchain.with["runtime-ref"], "${{ inputs.runtime-ref }}");
   for (const source of [promotion, recovery]) {

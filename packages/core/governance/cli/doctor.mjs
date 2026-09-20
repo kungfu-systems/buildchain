@@ -1,24 +1,14 @@
-import { spawn, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { validateBuildchainConfig } from "../../consumer/buildchain-config.js";
+import { validateConsumerWiring } from "../../consumer/contract/local-validation.js";
 import { detectPackageManager } from "../../build/package-manager.js";
-import {
-  BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
-  formatDiagnosticsSummaryTable,
-  startProcessSampler,
-  summarizeDiagnosticsArtifacts,
-  summarizeProcessSamples,
-  validateAnchoredPackageRelease,
-} from "../../observability/diagnostics.js";
+import { validateAnchoredPackageRelease } from "../../observability/diagnostics.js";
 import {
   printJson,
   readBooleanFlag,
   readFlag,
-  readJsonInput,
-  readRepeatedFlag,
-  readRepeatedJsonInputs,
-  writeJsonFile,
 } from "../../contracts/cli/options.mjs";
 
 export function checkStatus(ok, id, message, details = {}) {
@@ -51,19 +41,25 @@ export function runDoctor({
   } catch (error) {
     checks.push(checkStatus(false, "config.valid", error.message));
   }
-  try {
-    const manager = detectPackageManager(resolvedCwd);
-    checks.push(
-      checkStatus(
-        true,
-        "package-manager.detected",
-        `package manager: ${manager.name}`,
-        manager,
-      ),
-    );
-  } catch (error) {
-    checks.push(checkStatus(false, "package-manager.detected", error.message));
-  }
+  if (
+    validation?.config.schema !== 2 ||
+    validation.products.some((product) => product.type === "npm")
+  )
+    try {
+      const manager = detectPackageManager(resolvedCwd);
+      checks.push(
+        checkStatus(
+          true,
+          "package-manager.detected",
+          `package manager: ${manager.name}`,
+          manager,
+        ),
+      );
+    } catch (error) {
+      checks.push(
+        checkStatus(false, "package-manager.detected", error.message),
+      );
+    }
   const git = spawnSync("git", ["rev-parse", "--is-inside-work-tree"], {
     cwd: resolvedCwd,
     encoding: "utf8",
@@ -75,23 +71,43 @@ export function runDoctor({
       "directory is a git repository",
     ),
   );
-  const workflowPath = path.join(
-    resolvedCwd,
-    ".github",
-    "workflows",
-    "build.yml",
-  );
-  checks.push(
-    checkStatus(
-      fs.existsSync(workflowPath),
-      "workflow.build",
-      "reusable workflow caller exists",
-      {
-        path: ".github/workflows/build.yml",
-      },
-    ),
-  );
+  if (validation?.config.schema === 2) {
+    try {
+      const wiring = validateConsumerWiring(
+        resolvedCwd,
+        validation.config.path,
+      );
+      checks.push(
+        checkStatus(
+          true,
+          "workflow.consumer-pair",
+          "shared consumer callers match the published contract",
+          wiring,
+        ),
+      );
+    } catch (error) {
+      checks.push(checkStatus(false, "workflow.consumer-pair", error.message));
+    }
+  } else {
+    const workflowPath = path.join(
+      resolvedCwd,
+      ".github",
+      "workflows",
+      "build.yml",
+    );
+    checks.push(
+      checkStatus(
+        fs.existsSync(workflowPath),
+        "workflow.build",
+        "reusable workflow caller exists",
+        {
+          path: ".github/workflows/build.yml",
+        },
+      ),
+    );
+  }
   if (
+    validation?.config.schema !== 2 &&
     validation?.version?.strategy === "anchored" &&
     validation.version.next === "manual"
   ) {

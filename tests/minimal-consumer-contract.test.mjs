@@ -46,7 +46,7 @@ test("ordinary task branches retain protected develop routes without admitting c
 
 test("self product migration retains full source qualification on each checkpoint platform", () => {
   const plan = compileConsumerPlan(
-    fs.readFileSync(".buildchain/minimal-consumer.toml", "utf8"),
+    fs.readFileSync(".buildchain/buildchain.toml", "utf8"),
   );
   const declaration = JSON.parse(
     fs.readFileSync("architecture/platform-stage-checkpoints.json", "utf8"),
@@ -79,7 +79,7 @@ test("self product migration retains full source qualification on each checkpoin
 
 test("stable eligibility preserves required evidence without a self release delay", () => {
   const self = compileConsumerPlan(
-    fs.readFileSync(".buildchain/minimal-consumer.toml", "utf8"),
+    fs.readFileSync(".buildchain/buildchain.toml", "utf8"),
   );
   const previous = JSON.parse(
     fs.readFileSync(".buildchain/stable-release-policy.json", "utf8"),
@@ -290,19 +290,23 @@ test("compiler records commands as data and binds original bytes to the exact co
   assert.notEqual(changed.identity.configDigest, lock.configDigest);
 });
 
-test("full consumer tree inspection rejects scripts and extra workflow wiring", () => {
-  for (const source of [
-    "npm publish",
+test("consumer invocation inspection rejects reachable orchestration and extra workflow wiring", () => {
+  for (const command of [
+    ...["npm", "pnpm", "yarn"].map((manager) => `${manager} publish`),
     "gh run download 42",
     "buildchain dev warrant settle",
-    "const fencingToken = 1",
+    "internal-tool --fencingToken 1",
     "actions/download-artifact@v5",
-    "request-json",
-    'JSON.stringify({schema: "buildchain.dev-delivery-warrant/v1"})',
+    "internal-tool --request-json plan.json",
+    "node .buildchain/runtime/publisher.mjs",
   ]) {
     const files = example();
-    files["src/hidden.mjs"] = source;
-    assert.equal(inspectConsumerContract(files).ok, false, source);
+    files["src/build.mjs"] = "import './hidden.mjs';";
+    files["src/hidden.mjs"] =
+      `import {execSync} from 'node:child_process';execSync(${JSON.stringify(command)});`;
+    const inspection = inspectConsumerContract(files);
+    assert.equal(inspection.ok, false, command);
+    assert.ok(inspection.controlIssues.length, command);
   }
   const files = example();
   files[".github/workflows/paper.yml"] = "jobs: {}";
@@ -312,6 +316,17 @@ test("full consumer tree inspection rejects scripts and extra workflow wiring", 
   );
   files[".github/workflows/buildchain.yml"] += "env:\n  STATE: '{}'\n";
   assert.match(inspectConsumerContract(files).issues.join("\n"), /thin caller/);
+});
+
+test("unresolved product code stays diagnostic and never becomes a static closure proof", () => {
+  const files = example();
+  files["src/build.mjs"] =
+    "import { execFileSync } from 'node:child_process'; execFileSync(process.env.PRODUCT_TOOL, []);";
+  const inspection = inspectConsumerContract(files);
+  assert.equal(inspection.ok, false);
+  assert.deepEqual(inspection.controlIssues, []);
+  assert.ok(inspection.issues.length);
+  assert.equal(inspection.commandClosures[0].commandEdgesResolved, false);
 });
 
 test("isolated examples execute only product build and verify and produce real product bytes", () => {

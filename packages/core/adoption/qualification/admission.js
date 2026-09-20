@@ -83,7 +83,7 @@ export function admitAdopterPolicy({
     invocationRoot: consumerRoot,
     repository,
     sourceSha: consumerSha,
-    invokedWorkflow: ".github/workflows/public-build-adopter-qualification.yml",
+    invokedWorkflow: ".github/workflows/.build-adopter-qualification.yml",
     invocationSourcePath,
     resolvedWorkflowSha: runtimeSha,
     resolvedRuntimeSha: runtimeSha,

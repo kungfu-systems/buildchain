@@ -1,20 +1,20 @@
 ---
-status: draft
+status: active
 period: ongoing
 theme: release-discussion-transactions
-doc_type: implementation-contract
-source_level: user-consensus
-confidence: medium
+doc_type: technical-reference
+source_level: local-files
+confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-12
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-12
-  visible_context: Release workflow implementation and agreed consumer Discussion transaction model.
-  invisible_context_boundary: Hosted token qualification and alpha publication are not claimed by this document.
+  generated_at: 2026-09-20
+  visible_context: Schema-2 consumer contract, pipeline and recovery entries, and internal release implementations.
+  invisible_context_boundary: No unobserved hosted publication or external consumer migration is claimed.
 ---
 
 # Release Discussion transactions
@@ -26,29 +26,15 @@ operations receive the exact Discussion ID. Categories have repository-specific
 IDs. Enable Discussions and retain the Announcements category before executing a
 release. A preview performs no Discussion reads or writes.
 
-The caller grants `discussions: write` to the reusable workflow job alongside its
-existing release permissions. The called workflow uses the consumer's automatic
-`GITHUB_TOKEN`. Checking out Buildchain does not change that repository or token.
-A reusable workflow cannot elevate the permissions granted by its caller.
+The generated normal and recovery callers declare the required permissions,
+including `discussions: write`. Consumers use the shared caller pair; they do not
+write a separate Discussion workflow or pass transaction envelopes. The runtime
+uses the consumer repository's scoped authority. Checking out Buildchain does not
+change that repository identity, and a reusable workflow cannot elevate its
+caller's permission grant.
 
-```yaml
-jobs:
-  release:
-    permissions:
-      contents: write
-      discussions: write
-      actions: write
-      id-token: write
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4
-    with:
-      request-json: ${{ inputs.request-json }}
-      runtime-ref: ${{ inputs.runtime-ref || '' }}
-```
-
-This fragment illustrates the additional Discussion permission; retain other
-permissions required by the consumer's publication provider. The platform
-contracts are documented in GitHub's [reusable workflow reference](https://docs.github.com/en/actions/reference/workflows-and-actions/reusing-workflow-configurations)
-and [Discussions API guide](https://docs.github.com/en/graphql/guides/using-the-graphql-api-for-discussions).
+See [the minimal consumer contract](getting-started.md) for installation and
+[attempt recovery](bootstrap-recovery.md) for the only manual recovery input.
 
 ## Records and concurrency
 
@@ -152,42 +138,25 @@ same Discussion. It neither rewrites X's records nor changes the release intent.
 presentation, declared evidence and recovery contracts. `threads.js` checks
 provider placement; `presentation.js` renders contextual Markdown; `evidence.js`
 builds bounded attachment descriptors and diagnostic reports. `packages/core/providers/github/discussions` owns GitHub
-transport and immutable material IO. The existing public promotion workflow
-owns job boundaries; the Rust publication state machine still owns publication
+transport and immutable material IO. Internal pipeline and publication workflows
+own job boundaries; the Rust publication state machine still owns publication
 decisions and provider-effect ordering.
 
-The public Bootstrap API also exposes the `release-discussion` capability for
-consumer transport qualification and read-only diagnosis. Buildchain's existing
-Bootstrap dogfood caller accepts this request through its manual
-`request-json` input, preserving the same public entry and central
-runtime preparation as other consumers.
+## First publication and recovery
 
-## First publication with a selected runtime
+A legal channel PR expresses publication intent. The shared normal pipeline
+qualifies the exact protected source, materializes the version, builds declared
+products and performs publication through internal provider jobs. There is no
+consumer publication request JSON or separate self-release dispatch.
 
-For Buildchain self-publication, dispatch `self-release-promote.yml` with the exact
-protected alpha `sha`, its `target-ref`, `dry-run: "false"`, and the desired
-`runtime-ref`. Leave recovery selectors empty for a first publication. The public
-publisher still verifies the protected source and obtains fresh hosted admission.
-`recover-durable-transaction` is reserved for an existing partial publication;
-it is not required merely because the selected runtime differs from the entry.
+For interruption recovery, select the exact attempt in `buildchain-recover.yml`.
+An optional repaired runtime may continue from its immutable records and sealed
+material. The runtime resolves the original Discussion and internal transaction;
+the consumer does not choose replacement Discussion, candidate-run, source or
+transaction coordinates.
 
-## Resume by Discussion
-
-Pass `resume-discussion-id` in the public promotion request and select the repaired
-train through `runtime-ref`. Keep the protected target ref and source coordinates.
-The qualifier restores content-addressed candidate material, verifies original
-qualification, then re-observes providers before any remaining publication effect.
-Do not combine this selector with candidate-run or transaction-id recovery.
-
-When standalone binary distribution is requested, the intent also requires the
-`binary-distribution` node. Its separate workflow resolves the immutable locator
-from the public release, captures the active attempt, and appends provider readback
-to that attempt. A result arriving after recovery stays on the older attempt.
-The terminal publication receipt remains independently verifiable even while
-next-development or binary distribution is incomplete.
-
-The manual Bootstrap caller inherits the declared repository workflow permissions;
-the typed capability request must declare its own subset. `verifyMaterials: true`
-on a qualification request additionally tests draft Release asset retention using
-`contents: write`. The initial injected failure is intentional and leaves durable
-records for a subsequent runtime recovery probe.
+Publication, binary distribution and next-development have separate evidence.
+A terminal publication receipt does not imply the later required nodes have
+completed. Late provider results remain attached to their original attempt and
+cannot settle a successor. Historical receipts and their retained readers stay
+immutable when the current public entry changes.

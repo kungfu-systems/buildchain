@@ -11,7 +11,7 @@ const SHA = "a".repeat(40);
 const OLD_SHA = "b".repeat(40);
 const DEV = ".github/workflows/dev-verify-patrol.yml";
 const PREFLIGHT = ".github/workflows/alpha-promotion-preflight.yml";
-const BUILD = ".github/workflows/build.yml";
+const BUILD = ".github/workflows/.build-candidate.yml";
 const ACTIVE_RUN_STATUSES = [
   "in_progress",
   "pending",

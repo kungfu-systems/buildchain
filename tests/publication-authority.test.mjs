@@ -717,7 +717,7 @@ test("control-plane snapshot audit covers all external publication authorities",
 test("control-plane snapshot explicitly qualifies caller-bound npm publishing without an Environment", () => {
   const receipt = evaluatePublicationControlPlaneSnapshot({
     repository: "kungfu-systems/buildchain",
-    workflowPath: ".github/workflows/public-release-promote.yml",
+    workflowPath: ".github/workflows/.release-candidate-promote.yml",
     publisherWorkflowPath: ".github/workflows/self-release-promote.yml",
     environment: "none",
     branch: "dev/v2/v2.12",
@@ -740,7 +740,7 @@ test("control-plane snapshot qualifies an exact provider-enforced protected-bran
   const sourceSha = "a".repeat(40);
   const common = {
     repository: "kungfu-systems/buildchain",
-    workflowPath: ".github/workflows/public-release-promote.yml",
+    workflowPath: ".github/workflows/.release-candidate-promote.yml",
     publisherWorkflowPath: ".github/workflows/self-release-promote.yml",
     environment: "none",
     branch: "alpha/v2/v2.12",

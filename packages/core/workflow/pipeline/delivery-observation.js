@@ -65,9 +65,13 @@ export async function observePipelineWorker(session, current, queue, host) {
         run,
       };
   }
+  // Retained executions keep the workflow identity that actually produced them.
+  // The old path is read-only evidence, never a new dispatch or consumer alias.
   const entries = (run.referenced_workflows || []).filter((entry) =>
-    entry.path?.startsWith(
-      "kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@",
+    [".ops-dev-auto-merge.yml", "public-ops-dev-auto-merge.yml"].some((file) =>
+      entry.path?.startsWith(
+        `kungfu-systems/buildchain/.github/workflows/${file}@`,
+      ),
     ),
   );
   if (entries.length !== 1) return null;

@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 38590,
-    "current": 30529
+    "measuredExcess": 37783,
+    "current": 29722
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -327,7 +327,7 @@
           "lines": 1887
         },
         "current": {
-          "lines": 1806
+          "lines": 1815
         },
         "target": {
           "lines": 600
@@ -342,14 +342,17 @@
             },
             "createBuildchainContractWorld@189": {
               "lines": 681
+            },
+            "createBuildchainContractWorld@198": {
+              "lines": 681
             }
           }
         },
         "current": {
-          "lines": 904,
+          "lines": 935,
           "functions": {
-            "createBuildchainContractWorld@189": {
-              "lines": 517
+            "createBuildchainContractWorld@198": {
+              "lines": 539
             }
           }
         },
@@ -360,6 +363,9 @@
               "lines": 180
             },
             "createBuildchainContractWorld@189": {
+              "lines": 180
+            },
+            "createBuildchainContractWorld@198": {
               "lines": 180
             }
           }
@@ -569,7 +575,7 @@
           "lines": 705
         },
         "current": {
-          "lines": 669
+          "lines": 667
         },
         "target": {
           "lines": 600
@@ -626,58 +632,6 @@
               "complexity": 25
             },
             "<anonymous@1828>@1828": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/paper/commands/paper.mjs": {
-        "baseline": {
-          "lines": 644,
-          "functions": {
-            "humanSummary@91": {
-              "complexity": 28
-            }
-          }
-        },
-        "current": {
-          "lines": 632,
-          "functions": {
-            "humanSummary@91": {
-              "complexity": 28
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "humanSummary@91": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/paper/paper-npm-bootstrap.js": {
-        "baseline": {
-          "functions": {
-            "executePaperNpmBootstrap@1": {
-              "lines": 490,
-              "complexity": 58
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "executePaperNpmBootstrap@1": {
-              "lines": 490,
-              "complexity": 58
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "executePaperNpmBootstrap@1": {
-              "lines": 180,
               "complexity": 25
             }
           }
@@ -1220,12 +1174,15 @@
           "functions": {
             "evaluateMaintainability@279": {
               "complexity": 29
+            },
+            "evaluateMaintainability@286": {
+              "complexity": 29
             }
           }
         },
         "current": {
           "functions": {
-            "evaluateMaintainability@279": {
+            "evaluateMaintainability@286": {
               "complexity": 29
             }
           }
@@ -1233,6 +1190,9 @@
         "target": {
           "functions": {
             "evaluateMaintainability@279": {
+              "complexity": 25
+            },
+            "evaluateMaintainability@286": {
               "complexity": 25
             }
           }
@@ -1248,10 +1208,10 @@
           }
         },
         "current": {
-          "lines": 1410,
+          "lines": 1411,
           "functions": {
             "buildSiteBundle@729": {
-              "lines": 627
+              "lines": 628
             }
           }
         },
@@ -1611,13 +1571,16 @@
             },
             "<anonymous@1377>@1377": {
               "lines": 206
+            },
+            "<anonymous@1378>@1378": {
+              "lines": 206
             }
           }
         },
         "current": {
-          "lines": 2531,
+          "lines": 2532,
           "functions": {
-            "<anonymous@1377>@1377": {
+            "<anonymous@1378>@1378": {
               "lines": 206
             }
           }
@@ -1635,6 +1598,9 @@
               "lines": 180
             },
             "<anonymous@1377>@1377": {
+              "lines": 180
+            },
+            "<anonymous@1378>@1378": {
               "lines": 180
             }
           }
@@ -1678,13 +1644,19 @@
           "functions": {
             "<anonymous@2363>@2363": {
               "lines": 253
+            },
+            "<anonymous@2285>@2285": {
+              "lines": 253
+            },
+            "<anonymous@2287>@2287": {
+              "lines": 253
             }
           }
         },
         "current": {
-          "lines": 2840,
+          "lines": 2764,
           "functions": {
-            "<anonymous@2363>@2363": {
+            "<anonymous@2287>@2287": {
               "lines": 253
             }
           }
@@ -1693,6 +1665,12 @@
           "lines": 600,
           "functions": {
             "<anonymous@2363>@2363": {
+              "lines": 180
+            },
+            "<anonymous@2285>@2285": {
+              "lines": 180
+            },
+            "<anonymous@2287>@2287": {
               "lines": 180
             }
           }
@@ -1810,7 +1788,7 @@
           "lines": 714
         },
         "current": {
-          "lines": 675
+          "lines": 678
         },
         "target": {
           "lines": 600
@@ -1892,7 +1870,7 @@
           }
         },
         "current": {
-          "lines": 698,
+          "lines": 696,
           "functions": {
             "<anonymous@221>@221": {
               "lines": 229
@@ -1919,7 +1897,7 @@
           "lines": 1202
         },
         "current": {
-          "lines": 1179
+          "lines": 804
         },
         "target": {
           "lines": 600
@@ -2139,7 +2117,7 @@
           "lines": 773
         },
         "current": {
-          "lines": 749
+          "lines": 707
         },
         "target": {
           "lines": 600
@@ -2213,7 +2191,7 @@
       }
     },
     "workflows": {
-      ".github/workflows/public-release-web.yml": {
+      ".github/workflows/.release-web.yml": {
         "baseline": {
           "lines": 2020,
           "jobs": 14
@@ -2230,38 +2208,26 @@
     }
   },
   "hotspots": [
-    "tests/internal-architecture.test.mjs",
     "tests/build-surface-promotion.test.mjs",
+    "tests/internal-architecture.test.mjs",
     "tests/build-surface.test.mjs",
-    "tests/buildchain-ref-promotion-recovery-entry.test.mjs",
-    "scripts/check-inventory.mjs",
-    ".github/workflows/.build.yml",
-    "tests/dev-delivery-minimal-request.test.mjs",
-    "tests/build-configuration.test.mjs",
-    ".github/workflows/build.yml",
-    "scripts/generate-channel-promotion-workflow.mjs",
-    "tests/github-governance-authority.test.mjs",
-    "tests/maintainability.test.mjs",
-    "tests/oci-publication.test.mjs",
-    "tests/release-candidate-recovery.test.mjs",
-    ".github/workflows/.release-promote.yml",
-    ".github/workflows/public-build-adopter-qualification.yml",
-    ".github/workflows/public-build-stage-capsule-canary.yml",
-    ".github/workflows/public-release-oci-compose-preview.yml",
-    ".github/workflows/public-release-promote.yml",
-    ".github/workflows/.release-binary-assets.yml",
-    ".github/workflows/public-ops-dev-auto-merge.yml",
     "tests/release-topology.test.mjs",
-    "scripts/check-release-topology.mjs",
+    "scripts/check-inventory.mjs",
+    "tests/build-configuration.test.mjs",
+    "tests/dev-delivery-minimal-request.test.mjs",
+    "tests/workflow-taxonomy.test.mjs",
     "packages/core/governance/buildchain-publication-authority.js",
-    "scripts/check-universal-workflow-bootstrap.mjs",
-    "packages/core/providers/github/discussions/materials.js",
-    "tests/controller-evidence.test.mjs",
-    "tests/floating-consumer-policy-contract.test.mjs",
-    "tests/macos-credential-island.test.mjs",
     "tests/minimal-consumer-contract.test.mjs",
+    "scripts/check-release-topology.mjs",
+    "tests/floating-consumer-policy-contract.test.mjs",
+    "scripts/check-universal-workflow-bootstrap.mjs",
+    "tests/adopter-delivery.test.mjs",
+    "tests/buildchain-ref-promotion-recovery-entry.test.mjs",
+    "tests/controller-evidence.test.mjs",
+    "tests/github-governance-authority.test.mjs",
+    "tests/macos-credential-island.test.mjs",
     "tests/native-artifact-signing-authority.test.mjs",
-    "tests/workflow-taxonomy.test.mjs"
+    "tests/release-candidate-recovery.test.mjs"
   ],
   "burnDownSlices": [
     {

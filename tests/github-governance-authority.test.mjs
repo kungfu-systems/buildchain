@@ -39,10 +39,10 @@ const CODEOWNERS = `* @kungfu-origin
 /.github/workflows/.release-authority.yml @kungfu-origin
 /.github/workflows/.release-promote.yml @kungfu-origin
 /.github/workflows/self-release-promote.yml @kungfu-origin
-/.github/workflows/public-release-paper.yml @kungfu-origin
-/.github/workflows/public-release-paper.yml @kungfu-origin
+/.github/workflows/.release-paper.yml @kungfu-origin
+/.github/workflows/.release-paper.yml @kungfu-origin
 /.github/workflows/self-release-line-open.yml @kungfu-origin
-/.github/workflows/public-release-promote.yml @kungfu-origin
+/.github/workflows/.release-candidate-promote.yml @kungfu-origin
 /actions/release/promotion/ref/action.yml @kungfu-origin
 /actions/release/promotion/ref/dist/index.js @kungfu-origin
 /actions/release/promotion/ref/index.js @kungfu-origin
@@ -1099,7 +1099,7 @@ test("publication authority recollects live App-authenticated governance instead
   assert.match(source, /audit.inventory\?\.targetCount !== 1/);
   assert.match(source, /verifyGithubGovernanceReceipt/);
   assert.doesNotMatch(source, /JSON.parse\(serialized\)/);
-  for (const name of [".release-binary-assets", "public-release-web", "public-release-paper"]) {
+  for (const name of [".release-binary-assets", ".release-web", ".release-paper"]) {
     const workflow = readWorkflow(`.github/workflows/${name}.yml`);
     const authorities = Object.values(workflow.jobs).filter(job => job.uses === "./.github/workflows/.release-authority.yml");
     assert.ok(authorities.length, name);

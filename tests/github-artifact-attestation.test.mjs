@@ -8,6 +8,7 @@ import test from "node:test";
 import {
   GITHUB_ARTIFACT_ATTESTATION_EVIDENCE_CONTRACT,
   GITHUB_ARTIFACT_ATTESTATION_PREDICATE_TYPE,
+  normalizeGitHubArtifactAttestationPolicy,
   createGitHubArtifactAttestationEvidence,
   createGitHubArtifactAttestationPolicy,
   createGitHubArtifactAttestationVerificationPlan,
@@ -22,6 +23,23 @@ const SOURCE_SHA = "1".repeat(40);
 const SOURCE_TREE_SHA = "2".repeat(40);
 const BUILDCHAIN_SHA = "3".repeat(40);
 const SIGNER_SHA = "4".repeat(40);
+
+test("retained attestation policies preserve the historical signer path and root", () => {
+  const current = fixture();
+  try {
+    const policy = createGitHubArtifactAttestationPolicy({
+      ...current.policy,
+      signer: {
+        ...current.policy.signer,
+        workflowPath: ".github/workflows/public-release-artifact-attestation.yml",
+      },
+    });
+    assert.deepEqual(normalizeGitHubArtifactAttestationPolicy(policy), policy);
+    assert.equal(policy.signer.workflowDigest, SIGNER_SHA);
+  } finally {
+    fs.rmSync(current.root, { recursive: true, force: true });
+  }
+});
 
 function writeJson(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -69,7 +87,7 @@ function fixture() {
     },
     signer: {
       repository: "kungfu-systems/buildchain",
-      workflowPath: ".github/workflows/public-release-artifact-attestation.yml",
+      workflowPath: ".github/workflows/.release-artifact-attestation.yml",
       workflowDigest: SIGNER_SHA,
     },
     build: {
@@ -191,7 +209,7 @@ test("final Linux build manifest creates the exact v3 attestation policy", () =>
 });
 
 test("reusable signer verifies the actual certificate identity before retaining evidence", () => {
-  const graph = inspectWorkflowJob(".github/workflows/public-release-artifact-attestation.yml", "attest");
+  const graph = inspectWorkflowJob(".github/workflows/.release-artifact-attestation.yml", "attest");
   const source = graph.modules.get("packages/core/providers/github/artifact-attestation.js");
   const transaction = graph.modules.get("packages/core/build/github-attestation/transaction.js");
   assert.ok(transaction.indexOf("verify({") < transaction.indexOf("fs.copyFileSync(bundlePath"));

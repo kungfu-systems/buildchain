@@ -144,7 +144,7 @@ test("sealed authority accepts exact publication-artifact evidence and rejects b
   const { evidence, candidate } = fixture();
   const registry = createPublicationAuthorityRegistry({
     descriptors: [{
-      workflowPath: ".github/workflows/public-release-paper.yml",
+      workflowPath: ".github/workflows/.release-paper.yml",
       authorityClass: "product-publication",
       publicationCapable: true,
       capabilityIds: ["npm-publish", "github-release"],
@@ -154,7 +154,7 @@ test("sealed authority accepts exact publication-artifact evidence and rejects b
       runnerPolicy: "ephemeral",
     }],
     workflows: [{
-      path: ".github/workflows/public-release-paper.yml",
+      path: ".github/workflows/.release-paper.yml",
       text: "permissions:\n  contents: write\n  id-token: write\n",
     }],
   });
@@ -174,8 +174,8 @@ test("sealed authority accepts exact publication-artifact evidence and rejects b
   });
   const controlPlaneAudit = createPublicationControlPlaneAudit({
     repository: evidence.repository,
-    workflowPath: ".github/workflows/public-release-paper.yml",
-    publisherWorkflowPath: ".github/workflows/public-release-paper.yml",
+    workflowPath: ".github/workflows/.release-paper.yml",
+    publisherWorkflowPath: ".github/workflows/.release-paper.yml",
     environment: "none",
     facts: ["actions-policy", "branch-policy", "environment-policy", "oidc-policy", "publisher-policy", "runner-policy"]
       .map((id, index) => ({ id, status: "pass", digest: String(index + 1).repeat(64) })),
@@ -184,8 +184,8 @@ test("sealed authority accepts exact publication-artifact evidence and rejects b
   });
   const admission = createPublicationAdmission({
     registryDigest: registry.registryDigest,
-    workflowPath: ".github/workflows/public-release-paper.yml",
-    publisherWorkflowPath: ".github/workflows/public-release-paper.yml",
+    workflowPath: ".github/workflows/.release-paper.yml",
+    publisherWorkflowPath: ".github/workflows/.release-paper.yml",
     repository: evidence.repository,
     sourceSha,
     runtimeSha,

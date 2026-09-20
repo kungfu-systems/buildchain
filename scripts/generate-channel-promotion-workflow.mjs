@@ -41,4 +41,4 @@ export function generateChannelPromotionWorkflow(source) {
   }, { lineWidth: 0, aliasDuplicateObjects: false });
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))
-  writeWorkflowSource(root, ".github/workflows/public-release-promote.yml", generateChannelPromotionWorkflow(fs.readFileSync(path.join(root, ".github/workflows/.release-promote.yml"), "utf8")));
+  writeWorkflowSource(root, ".github/workflows/.release-candidate-promote.yml", generateChannelPromotionWorkflow(fs.readFileSync(path.join(root, ".github/workflows/.release-promote.yml"), "utf8")));

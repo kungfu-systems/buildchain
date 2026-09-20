@@ -41,7 +41,7 @@ function managed(extra = {}) {
     autoAdmissionKind: "release-candidate",
     evidenceRepository: "acme/project",
     publisherWorkflowPath:
-      ".github/workflows/public-release-promote.yml",
+      ".github/workflows/.release-candidate-promote.yml",
     publicationTarget: "npm:@acme/project",
     packageName: "@acme/project",
     autoNoGate: true,

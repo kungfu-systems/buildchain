@@ -100,7 +100,7 @@ test("distributed source admission runs without source modules or installed depe
 
 test("distributed runtime entry rejects unsafe lock input before provider access", (t) => {
   const f = installation(t, "runtime/selection/resolve");
-  const result = f.run({"contract-lock":"../outside.json", "workflow-sha":"b".repeat(40), "workflow-ref":"kungfu-systems/buildchain/.github/workflows/build.yml@v4",token:"test"});
+  const result = f.run({"contract-lock":"../outside.json", "workflow-sha":"b".repeat(40), "workflow-ref":"kungfu-systems/buildchain/.github/workflows/.build-candidate.yml@v4",token:"test"});
   assert.equal(result.status,1,result.stderr+result.stdout);
   assert.match(result.stdout,/Contract lock path must be relative/);
 });

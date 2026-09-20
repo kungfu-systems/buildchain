@@ -968,7 +968,7 @@ buildchain infra-contract ...
 - Syntax:
 
 ```text
-buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|publication-artifact|anchored-package] [--force] [--package-manager pnpm|npm|yarn] [--runner-preset <preset>] [--artifact-name <name>]
+buildchain init [--cwd <dir>] [--type npm|binary|paper|package|native|publication-artifact|anchored-package] [--force] [--package-manager pnpm|npm|yarn] [--runner-preset <preset>] [--artifact-name <name>]
 ```
 
 ## `inspect`
@@ -1737,39 +1737,6 @@ buildchain paper
 buildchain paper agent verify [--cwd <dir>] [--offline] [--json]
 ```
 
-### `buildchain paper alpha`
-
-- Help: `buildchain paper alpha --help`
-- Canonical id: `paper-alpha`
-- Options: `--cwd`, `--execute`, `--json`, `--source-ref`, `--target-ref`
-- Syntax:
-
-```text
-buildchain paper alpha [--cwd <dir>] [--source-ref <ref>] [--target-ref <ref>] [--execute] [--json]
-```
-
-### `buildchain paper bootstrap npm`
-
-- Help: `buildchain paper bootstrap npm --help`
-- Canonical id: `paper-bootstrap-npm`
-- Options: `--confirm-public-package`, `--cwd`, `--execute`, `--json`
-- Syntax:
-
-```text
-buildchain paper bootstrap npm [--cwd <dir>] [--execute] [--confirm-public-package <name>] [--json]
-```
-
-### `buildchain paper build`
-
-- Help: `buildchain paper build --help`
-- Canonical id: `paper-build`
-- Options: `--cwd`, `--execute`, `--json`
-- Syntax:
-
-```text
-buildchain paper build [--cwd <dir>] [--execute] [--json]
-```
-
 ### `buildchain paper fleet audit`
 
 - Help: `buildchain paper fleet audit --help`
@@ -1814,17 +1781,6 @@ buildchain paper migrate [--cwd <dir>] [--write] [--json]
 buildchain paper preflight [--cwd <dir>] [--offline] [--json]
 ```
 
-### `buildchain paper resume`
-
-- Help: `buildchain paper resume --help`
-- Canonical id: `paper-resume`
-- Options: `--cwd`, `--execute`, `--json`, `--runtime-ref`
-- Syntax:
-
-```text
-buildchain paper resume [--cwd <dir>] [--runtime-ref <ref>] [--execute] [--json]
-```
-
 ### `buildchain paper scaffold`
 
 - Help: `buildchain paper scaffold --help`
@@ -1833,7 +1789,7 @@ buildchain paper resume [--cwd <dir>] [--runtime-ref <ref>] [--execute] [--json]
 - Syntax:
 
 ```text
-buildchain paper scaffold --package <name> --repository <owner/repo> [--write] [--json]
+buildchain paper scaffold --repository <owner/repo> [--package <name>] [--write] [--json]
 ```
 
 ### `buildchain paper status`

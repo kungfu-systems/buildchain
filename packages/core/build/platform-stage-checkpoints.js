@@ -225,7 +225,7 @@ export function validatePlatformStageCheckpointDeclaration(value) {
   tokens([...stageIds].sort(), "$/declaration/stageIds");
   exactKeys(
     value.projections,
-    ["protectedWorkflow", "generatedTemplate", "agentGuidance", "manual"],
+    ["protectedWorkflow", "productVerification", "agentGuidance", "manual"],
     "$/declaration/projections",
   );
   exactKeys(

@@ -249,7 +249,7 @@ test("contract world exposes KFD-2 release trust passport audit", () => {
   assert.match(surface.guarantees.join("\n"), /Unbound public claims fail/i);
 });
 
-test("contract world exposes web-surface floating contract lock gate", () => {
+test("contract world classifies web implementation and exposes exactly two consumer workflows", () => {
   const contract = createBuildchainContractWorld({
     root: path.resolve(import.meta.dirname, ".."),
     packageJson: { name: "@kungfu-tech/buildchain", version: "2.8.0" },
@@ -257,8 +257,13 @@ test("contract world exposes web-surface floating contract lock gate", () => {
   const surface = contract.surfaces.find((entry) => entry.id === "web-surface");
 
   assert.ok(surface);
-  assert.equal(surface.path, ".github/workflows/public-release-web.yml");
-  assert.match(surface.publicRef, /\.github\/workflows\/public-release-web\.yml@v2/);
+  assert.equal(surface.apiRole, "implementation");
+  assert.deepEqual(
+    contract.surfaces.filter((entry) => entry.kind === "workflow" && entry.apiRole === "public").map((entry) => entry.id).sort(),
+    ["attempt-recovery", "pipeline"],
+  );
+  assert.equal(surface.path, ".github/workflows/.release-web.yml");
+  assert.match(surface.publicRef, /\.github\/workflows\/\.release-web\.yml@v2/);
   assert.ok(surface.optionalInputs.includes("contract-lock"));
   assert.ok(surface.optionalInputs.includes("runtime-ref"));
   assert.doesNotMatch(surface.optionalInputs.join("\n"), /buildchain-contract-/);
@@ -293,7 +298,7 @@ test("contract world exposes declarative standalone binary demo consumption", ()
   });
   const surface = contract.surfaces.find((entry) => entry.id === "declarative-auditable-demo");
   assert.ok(surface);
-  assert.equal(surface.path, ".github/workflows/public-build-demo.yml");
+  assert.equal(surface.path, ".github/workflows/.build-demo.yml");
   assert.ok(surface.requiredInputs.includes("binary-artifact-digest"));
   assert.ok(surface.requiredOutputs.includes("publication-pr-url"));
   assert.equal(surface.breakingDefaults.executionBoundary, "exact-binary-network-none-secret-free-60-seconds");

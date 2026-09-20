@@ -101,7 +101,7 @@
       "surfaces": [
         "cli:dev",
         "export:./dev-delivery-warrant",
-        "workflow:public-ops-dev-auto-merge"
+        "workflow:.ops-dev-auto-merge"
       ],
       "migrationPhase": "legacy-retired"
     },
@@ -112,7 +112,7 @@
       "surfaces": [
         "cli:candidate",
         "export:./release-candidate",
-        "workflow:public-release-promote"
+        "workflow:.release-candidate-promote"
       ],
       "migrationPhase": "legacy-retired"
     },
@@ -129,7 +129,7 @@
       "sourceInventoryId": "stable-candidate-ledger",
       "surfaces": [
         "export:./stable-candidate-ledger",
-        "workflow:public-ops-stable-candidate-patrol"
+        "workflow:.ops-stable-candidate-patrol"
       ],
       "migrationPhase": "legacy-retired"
     },
@@ -181,7 +181,7 @@
       "surfaces": [
         "export:./engineering-housekeeper",
         "export:./engineering-housekeeper-github",
-        "workflow:public-ops-housekeeping"
+        "workflow:.ops-housekeeping"
       ],
       "migrationPhase": "legacy-retired"
     },
@@ -200,7 +200,7 @@
         "export:./release-tail-provider-plane",
         "cli:release-tail",
         "action:release/tail/settle",
-        "workflow:public-release-tail"
+        "workflow:.release-tail"
       ],
       "migrationPhase": "legacy-retired"
     }

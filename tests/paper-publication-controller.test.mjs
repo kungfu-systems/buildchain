@@ -154,7 +154,7 @@ test("Paper settlement cannot qualify a changed candidate or substituted or abse
 });
 test("Paper API always settles an admitted plan and exposes its own final receipt", () => {
   const workflow = YAML.parse(
-    fs.readFileSync(".github/workflows/public-release-paper.yml", "utf8"),
+    fs.readFileSync(".github/workflows/.release-paper.yml", "utf8"),
   );
   const settle = workflow.jobs.publish.steps.find(
     (step) => step.id === "settle-publication",

@@ -8,16 +8,22 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-14
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-14
+  generated_at: 2026-09-20
   visible_context: User-directed zero-delay self release policy, required provider evidence and regression tests.
   invisible_context_boundary: No credentials, private logs, or unpublished consumer content were used.
 ---
 
 # Stable Candidate Patrol
+
+This page describes the retained internal `.ops-stable-candidate-patrol.yml`
+mechanism. Current consumer release intent is a legal channel PR through the
+normal pipeline. Consumers do not add a scheduled stable caller or provider-token
+inputs. The policy and ledger fields below belong to internal or historical
+qualification, not schema-2 TOML extensions.
 
 Buildchain can treat every exact alpha as an independent stable candidate. A
 new alpha creates a new candidate; it does not silently revoke an older alpha
@@ -102,68 +108,10 @@ release fact. Repositories that intentionally disable GitHub Releases omit
 `alpha-release` and declare their own exact-SHA workflow/status evidence; tag
 commit time remains the earliest possible soak start.
 
-`publish_at` and `timezone` are the auditable policy declaration. GitHub only
-starts scheduled workflows from caller-owned cron, so the thin caller keeps the
-matching UTC trigger:
-
-```yaml
-name: Stable Candidate Patrol
-
-on:
-  schedule:
-    - cron: "0 19 * * *" # 03:00 Asia/Shanghai
-  workflow_dispatch:
-    inputs:
-      release-now:
-        description: Exact alpha selected by explicit human authority
-        required: false
-        default: ""
-
-permissions:
-  contents: write
-  pull-requests: write
-  checks: read
-  statuses: read
-
-jobs:
-  stable:
-    uses: kungfu-systems/buildchain/.github/workflows/public-ops-stable-candidate-patrol.yml@v4
-    with:
-      release-now: ${{ inputs.release-now }}
-      dry-run: false
-    secrets:
-      promotion-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
-      approval-token: ${{ secrets.BUILDCHAIN_APPROVAL_TOKEN }}
-```
-
-The promotion token must be repository-owned and capable of creating the
-machine ledger branch, exact source-lock branch, and pull request. Repositories
-that require an approving review can pass an independent repository-owned App,
-bot, or human service-account token as `approval-token`. The approval identity
-must differ from the promotion token identity that opens the PR. When no
-`approval-token` is passed, `auto-approve: true` falls back to the caller
-`github.token` and therefore requires GitHub Actions approval permission. The
-generated PR may use auto-merge, but it never bypasses the target branch
-checks. Callers can select `merge-method: merge`, `squash`, or `rebase`; the
-default is `merge` for compatibility. Unsupported values fail closed before
-GitHub is called.
-
-Before enabling `auto-approve` and `auto-merge`, the caller repository must
-provide one approval path and enable auto-merge:
-
-- pass an independent `approval-token`; or enable **Actions > General >
-  Workflow permissions > Allow GitHub Actions to create and approve pull
-  requests**, so the caller `github.token` can approve independently from the
-  promotion token that opened the PR;
-- **General > Pull Requests > Allow auto-merge**, so Patrol can arm the
-  protected merge while required reviews and checks are still pending.
-
-GitHub rejects approval from the same identity that opened the pull request;
-Patrol propagates that review failure instead of reporting success.
-
-Patrol treats a GraphQL refusal to enable auto-merge as a hard failure. A run
-must not report publication authority when GitHub accepted the HTTP request but
-returned a GraphQL error in the response body.
+The retained scheduling policy does not add a consumer-owned cron workflow.
+Any internal patrol mutation must use independently admitted write authority,
+revalidate its exact candidate and honor protected reviews/checks. An HTTP-success
+response with GraphQL errors is not accepted publication or landing authority.
 
 ## Exact-source stable promotion
 
@@ -181,8 +129,7 @@ passport, registry, tag, and floating-ref checks still run.
 
 ## Hold, revoke, and immediate release
 
-Persistent repository controls can be supplied as reusable-workflow inputs or
-repository variables:
+The internal component retains these persistent control ports:
 
 ```text
 BUILDCHAIN_STABLE_HOLD=true

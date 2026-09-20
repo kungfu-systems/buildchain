@@ -5,7 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 import YAML from 'yaml';
 import {scanFloatingConsumerPolicy,verifyFloatingConsumerPolicyReceipt} from '../packages/core/consumer/floating-consumer-policy.js';
-const workflow='.github/workflows/public-release-promote.yml',digest='sha256:'+'d'.repeat(64);
+const workflow='.github/workflows/.release-candidate-promote.yml',digest='sha256:'+'d'.repeat(64);
 const policy=JSON.parse(fs.readFileSync('architecture/floating-consumer-policy.json','utf8'));
 function fixture(t,repository){
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'public-invocation-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
@@ -23,8 +23,8 @@ for(const repository of ['kungfu-systems/buildchain','consumer/project'])test(`$
 test('self normal and recovery callers expose only their generated public inputs',()=>{
  const normal=YAML.parse(fs.readFileSync('.github/workflows/buildchain.yml','utf8'));
  const recovery=YAML.parse(fs.readFileSync('.github/workflows/buildchain-recover.yml','utf8'));
- assert.equal(normal.jobs.buildchain.uses,'kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha');
- assert.equal(recovery.jobs.buildchain.uses,'kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4-alpha');
- assert.deepEqual(Object.keys(normal.jobs.buildchain.with),['config-path']);
+ assert.equal(normal.jobs.buildchain.uses,'kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4');
+ assert.equal(recovery.jobs.buildchain.uses,'kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4');
+ assert.equal(normal.jobs.buildchain.with,undefined);
  assert.deepEqual(Object.keys(recovery.jobs.buildchain.with),['attempt','runtime-ref']);
 });

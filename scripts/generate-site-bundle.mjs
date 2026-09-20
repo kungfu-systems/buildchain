@@ -887,8 +887,9 @@ function buildSiteBundle() {
         ["self-hosted-runner-smoke", "compatibility-fixture"],
       ]);
       const engineeringHousekeeper = semanticId.startsWith("engineering-housekeeper");
+      if (classification?.role === "component") statusById.set(semanticId, "repository-internal");
       return {
-        ...entry,
+        ...entry, apiRole: classification?.role === "public" ? "public" : "implementation",
         ...(classification ? { taxonomy: { id: classification.id, role: classification.role, category: classification.category, purpose: classification.purpose, status: classification.status, canonicalPath: workflowPath(classification), ...(classification.role === "self" && classification.migration ? { contractPath: classification.migration.previousPath } : {}), compatibilityAlias: entry.path !== workflowPath(classification) } } : {}),
         surface: surfaceById.get(semanticId) || (entry.path.includes("/.") ? "reusable-workflow" : "repository-workflow"),
         capabilityGroup: workflowCapabilityGroup({

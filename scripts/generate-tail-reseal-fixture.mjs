@@ -19,8 +19,8 @@ export function tailResealFixturePolicyReceipt(fixture, policy) {
   try {
     fs.mkdirSync(path.join(root, ".github/workflows"), { recursive: true });
     fs.writeFileSync(
-      path.join(root, ".github/workflows/build.yml"),
-      "jobs:\n  build:\n    uses: kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml@v4-alpha\n",
+      path.join(root, ".github/workflows/.build-candidate.yml"),
+      "jobs:\n  build:\n    uses: kungfu-systems/buildchain/.github/workflows/.build-stage-capsule-canary.yml@v4-alpha\n",
     );
     fs.mkdirSync(path.join(root, ".buildchain"), { recursive: true });
     for (const [file, ref, resolvedSha] of [
@@ -51,7 +51,7 @@ export function tailResealFixturePolicyReceipt(fixture, policy) {
       root,
       repository: fixture.repository,
       sourceSha: fixture.source.sha,
-      invokedWorkflow: "public-build-stage-capsule-canary.yml",
+      invokedWorkflow: ".build-stage-capsule-canary.yml",
       expectedInvocationChannel: "alpha",
       resolvedRuntimeSha: fixture.runtime.sha,
       policy,

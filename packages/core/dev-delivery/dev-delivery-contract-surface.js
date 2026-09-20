@@ -2,8 +2,8 @@ export function devDeliveryWorkflowContractSurface(pkg, majorLine) {
   return {
     id: "dev-pr-auto-merge",
     kind: "workflow",
-    path: ".github/workflows/public-ops-dev-auto-merge.yml",
-    publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/public-ops-dev-auto-merge.yml@${majorLine}`,
+    path: ".github/workflows/.ops-dev-auto-merge.yml",
+    publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/.ops-dev-auto-merge.yml@${majorLine}`,
     breakingDefaults: {
       runtimeSelectorDefault: "consumer-contract-lock-or-entry",
       authorityMode: "two-phase-delivery-warrant",

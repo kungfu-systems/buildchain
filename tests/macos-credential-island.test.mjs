@@ -769,7 +769,7 @@ test("public action and workflow keep credentials outside the build matrix", () 
     "utf8",
   );
   const publicWorkflow = fs.readFileSync(
-    path.join(root, ".github/workflows/build.yml"),
+    path.join(root, ".github/workflows/.build-candidate.yml"),
     "utf8",
   );
   const nativeBuildJob = workflow.match(

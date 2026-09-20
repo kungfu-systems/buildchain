@@ -1,18 +1,19 @@
-import YAML from "yaml";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { nextDevelopmentAgentInstructions } from "../packages/core/release/next-development-projection.js";
 import {
-  createBuildchainContractWorld,
-  finalizeBuildchainContractWorld,
-} from "../packages/core/contracts/buildchain-contract.js";
-import { collectPaperAgentEntry } from "../packages/core/paper/paper-agent-entry.js";
-import { collectPaperPreflight } from "../packages/core/paper/paper.js";
-import { planPaperMigration, planPaperScaffold, writePaperMigration, writePaperScaffold } from "../packages/core/paper/operations/scaffold.js";
+  collectPaperPreflight,
+  collectPaperSourcePolicy,
+} from "../packages/core/paper/paper.js";
+import { writeLegacyPaperFixture } from "./helpers/legacy-paper-fixture.mjs";
+import { consumerWorkflows } from "../packages/core/consumer/contract/entries.js";
+import {
+  planPaperMigration,
+  writePaperMigration,
+} from "../packages/core/paper/operations/scaffold.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const tagCommit = "a".repeat(40);
@@ -117,290 +118,89 @@ test("npm Paper runtime resolves exact official lightweight and annotated versio
   );
 });
 
-const version = JSON.parse(
-  fs.readFileSync(path.join(root, "package.json")),
-).version;
-function git(cwd, ...args) {
-  return execFileSync("git", args, {
-    cwd,
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  }).trim();
-}
-function init(cwd) {
-  git(cwd, "init", "-q");
-  git(cwd, "config", "user.name", "Buildchain Test");
-  git(cwd, "config", "user.email", "test@example.test");
+function retainedFixture(t) {
+  const cwd = fs.mkdtempSync(
+    path.join(os.tmpdir(), "paper-retained-migration-"),
+  );
+  t.after(() => fs.rmSync(cwd, { recursive: true, force: true }));
+  writeLegacyPaperFixture({ cwd });
+  execFileSync("git", ["init", "-q", cwd]);
+  commit(cwd);
+  return cwd;
 }
 function commit(cwd) {
-  git(cwd, "add", ".");
-  git(cwd, "commit", "-qm", "fixture: paper source");
-}
-function channelFixture(version) {
-  const channel = version.includes("-") ? "alpha" : "stable";
-  const runtimeRoot = fs.mkdtempSync(
-    path.join(os.tmpdir(), `paper-v4-${channel}-`),
+  execFileSync("git", ["add", "."], { cwd });
+  execFileSync(
+    "git",
+    [
+      "-c",
+      "user.name=Fixture",
+      "-c",
+      "user.email=fixture@example.test",
+      "commit",
+      "-qm",
+      "fixture: Paper source",
+    ],
+    { cwd },
   );
-  init(runtimeRoot);
-  const world = createBuildchainContractWorld({ root });
-  world.product.version = version;
-  fs.mkdirSync(path.join(runtimeRoot, "dist/site"), { recursive: true });
-  fs.writeFileSync(
-    path.join(runtimeRoot, "package.json"),
-    JSON.stringify({ name: "@kungfu-tech/buildchain", version }),
-  );
-  fs.writeFileSync(
-    path.join(runtimeRoot, "dist/site/buildchain-contract.json"),
-    JSON.stringify(finalizeBuildchainContractWorld(world)),
-  );
-  commit(runtimeRoot);
-  return runtimeRoot;
 }
 
-function fixture() {
-  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "paper-v4-consumer-"));
-  writePaperScaffold(
-    planPaperScaffold({
-      cwd,
-      buildchainRoot: root,
-      buildchainVersion: version,
-      name: "paper-example",
-      title: "Existing paper",
-      packageName: "@example/paper-example",
-      repository: "example/paper-example",
-    }),
-  );
-  const ignorePath = path.join(cwd, ".gitignore");
-  fs.writeFileSync(
-    ignorePath,
-    fs.readFileSync(ignorePath, "utf8").replace(/^node_modules\/\n/m, ""),
-  );
-  init(cwd);
+test("retained Paper guidance migrates to shared consumer instructions while preserving surrounding text", (t) => {
+  const cwd = retainedFixture(t),
+    agents = path.join(cwd, "AGENTS.md");
+  const note = "Repository-owned note: old runtime examples are historical.\n";
+  fs.writeFileSync(agents, note + fs.readFileSync(agents, "utf8"));
   commit(cwd);
-  const stableRoot = channelFixture("4.0.1");
-  const alphaRoot = channelFixture("4.0.2-alpha.40");
-  return {
-    cwd,
-    stableRoot,
-    alphaRoot,
-    alphaRuntime: {
-      buildchainRoot: root,
-      buildchainVersion: "4.0.2-alpha.40",
-      buildchainSha: git(alphaRoot, "rev-parse", "HEAD"),
-    },
-    options: {
-      cwd,
-      buildchainRoot: root,
-      buildchainVersion: version,
-      stableBuildchainRoot: stableRoot,
-      alphaBuildchainRoot: alphaRoot,
-    },
-  };
-}
-
-test("generated v4 Verify grants the public callee read permissions without write authority", () => {
-  const { cwd, options } = fixture();
-  const permissions = text => YAML.parse(text).permissions;
-  assert.deepEqual(
-    permissions(
-      fs.readFileSync(path.join(cwd, ".github/workflows/verify.yml"), "utf8"),
-    ),
-    { actions: "read", contents: "read", "pull-requests": "read" },
+  const result = writePaperMigration(
+    planPaperMigration({ cwd, buildchainRoot: root }),
   );
-  assert.equal(writePaperMigration(planPaperMigration(options)).ok, true);
-  const caller = permissions(
-    fs.readFileSync(path.join(cwd, ".github/workflows/verify.yml"), "utf8"),
-  );
-  const callee = permissions(
-    fs.readFileSync(path.join(root, ".github/workflows/public-build-check.yml"), "utf8"),
-  );
-  assert.deepEqual(caller, callee);
-  assert(Object.values(caller).every((permission) => permission === "read"));
-});
-
-test("Paper guidance resolves installed script and official ADR without rewriting surrounding instructions", () => {
-  const { cwd, options } = fixture();
-  const file = path.join(cwd, "AGENTS.md");
-  const note =
-    "Local note: `architecture/decisions/0002-next-development-transition.md` and node packages/core/release/commands/next-development-transition.mjs remain literal examples.\n";
-  fs.writeFileSync(file, note + fs.readFileSync(file, "utf8"));
-  commit(cwd);
-  assert.equal(writePaperMigration(planPaperMigration(options)).ok, true);
-  const text = fs.readFileSync(file, "utf8");
+  assert.equal(result.ok, true);
+  const text = fs.readFileSync(agents, "utf8");
   assert(text.startsWith(note));
-  const section = text.split(
-    "<!-- buildchain:next-development:v1:start -->",
-  )[1];
-  const script = section.match(
-    /node node_modules\/@kungfu-tech\/buildchain\/(packages\/core\/release\/commands\/[^ ]+) materialize/,
-  )[1];
-  assert(fs.existsSync(path.join(root, script)));
-  const adr = section.match(
-    /https:\/\/github.com\/kungfu-systems\/buildchain\/blob\/v4\/(architecture\/[^)]+)\)/,
-  )[1];
-  assert(fs.existsSync(path.join(root, adr)));
-  assert.match(
-    nextDevelopmentAgentInstructions(),
-    /node packages\/core\/release\/commands\/next-development-transition.mjs materialize/,
+  assert.match(text, /buildchain:consumer:start/);
+  assert.doesNotMatch(
+    text,
+    /buildchain:next-development:v1|buildchain:paper-agent-entry:v1/,
   );
-  assert.doesNotMatch(section, /\nnode scripts\//);
+  for (const [file, bytes] of Object.entries(consumerWorkflows()))
+    assert.equal(fs.readFileSync(path.join(cwd, file), "utf8"), bytes);
 });
 
-test("v4 paper migration preserves content and binds floating callers to distinct channel locks", () => {
-  const { cwd, stableRoot, alphaRoot, options } = fixture();
-  const paper = fs.readFileSync(path.join(cwd, "paper/main.tex"), "utf8");
-  const plan = planPaperMigration(options);
-  assert.equal(plan.ok, true);
-  assert.equal(writePaperMigration(plan).ok, true);
-  fs.mkdirSync(path.join(cwd, "node_modules"));
-  fs.writeFileSync(path.join(cwd, "node_modules", "installed"), "fixture");
-  assert.equal(
-    git(cwd, "check-ignore", "node_modules/installed"),
-    "node_modules/installed",
-  );
-  assert.equal(
-    fs.readFileSync(path.join(cwd, "paper/main.tex"), "utf8"),
-    paper,
-  );
-  for (const name of ["build.yml", "verify.yml", "public-release-paper.yml"]) {
-    const text = fs.readFileSync(
-      path.join(cwd, ".github/workflows", name),
-      "utf8",
+test("Paper migration cannot retarget tool-maintained runtime locks through retired channel-root inputs", (t) => {
+  const cwd = retainedFixture(t);
+  for (const field of ["stableBuildchainRoot", "alphaBuildchainRoot"])
+    assert.throws(
+      () =>
+        planPaperMigration({
+          cwd,
+          buildchainRoot: root,
+          [field]: "/not-a-runtime-root",
+        }),
+      /retired channel-root/,
     );
-    assert.match(text, /@v4-alpha/);
-    assert.doesNotMatch(
-      text,
-      /buildchain[^\n]*@[0-9a-f]{40}|buildchain-ref: [0-9a-f]{40}|@v3/,
-    );
-    if (name === "public-release-paper.yml") {
-      assert.match(text, /@v4\n/);
-      assert.match(text, /startsWith\(github.ref_name, 'release\/'\)/);
-    }
-  }
-  const stable = JSON.parse(
-    fs.readFileSync(path.join(cwd, ".buildchain/contract-lock.json")),
-  );
-  const alpha = JSON.parse(
-    fs.readFileSync(path.join(cwd, ".buildchain/alpha-contract-lock.json")),
-  );
-  assert.equal(stable.buildchain.ref, "v4");
   assert.equal(
-    stable.buildchain.resolvedSha,
-    git(stableRoot, "rev-parse", "HEAD"),
-  );
-  assert.equal(alpha.buildchain.ref, "v4-alpha");
-  assert.equal(
-    alpha.buildchain.resolvedSha,
-    git(alphaRoot, "rev-parse", "HEAD"),
-  );
-  const preflight = collectPaperPreflight({
-    cwd,
-    buildchainRoot: root,
-    offline: true,
-  });
-  assert.equal(
-    preflight.checks.find((check) => check.id === "provisioning.authority")
-      .status,
-    "pass",
-    JSON.stringify(preflight),
-  );
-  assert.equal(preflight.checks.some(check => check.id === "agent-entry.runtime-source"), false);
-  commit(cwd);
-  assert.equal(
-    planPaperMigration(options).changes.every(
-      (change) => change.action === "unchanged",
-    ),
-    true,
-  );
-  fs.appendFileSync(path.join(cwd, ".buildchain/contract-lock.json"), "\n");
-  const rejected = collectPaperPreflight({
-    cwd,
-    buildchainRoot: root,
-    offline: true,
-  });
-  assert.equal(
-    rejected.checks.find((check) => check.id === "provisioning.authority")
-      .status,
-    "fail",
+    execFileSync("git", ["status", "--porcelain"], { cwd, encoding: "utf8" }),
+    "",
   );
 });
 
-test("v4 paper migration rejects a dirty or wrong-channel explicit root", () => {
-  const { stableRoot, options } = fixture();
-  fs.appendFileSync(path.join(stableRoot, "package.json"), "\n");
-  assert.throws(() => planPaperMigration(options), /committed runtime bytes/);
-  fs.writeFileSync(
-    path.join(stableRoot, "package.json"),
-    JSON.stringify({
-      name: "@kungfu-tech/buildchain",
-      version: "4.0.2-alpha.40",
-    }),
-  );
-  commit(stableRoot);
-  assert.throws(() => planPaperMigration(options), /does not belong to v4/);
-});
-
-test("Paper CI checks source policy independently of selected runtime", () => {
-  const { cwd, stableRoot, alphaRoot, options } = fixture();
-  writePaperMigration(planPaperMigration(options));
-  const env = {
-    GITHUB_EVENT_NAME: "pull_request",
-    GITHUB_HEAD_REF: "feature/paper",
-    GITHUB_BASE_REF: "dev/v0/v0.1",
-  };
-  for (const runtimeRoot of [alphaRoot, stableRoot]) {
-    assert.equal(
-      collectPaperAgentEntry({
-        cwd,
-        mode: "ci",
-        env,
-        buildchainSha: git(runtimeRoot, "rev-parse", "HEAD"),
-      }).ok,
-      true,
-    );
-  }
+test("migrated Paper source policy requires the shared contract without a repository agent-entry controller", (t) => {
+  const cwd = retainedFixture(t);
+  writePaperMigration(planPaperMigration({ cwd, buildchainRoot: root }));
   assert.equal(
-    collectPaperAgentEntry({
-      cwd,
-      mode: "ci",
-      env,
-      buildchainSha: "a".repeat(40),
-    }).ok,
-    true,
+    fs.existsSync(path.join(cwd, ".buildchain/paper/agent-entry.json")),
+    false,
   );
-});
-
-test("Paper source admission never rechecks runtime SHA; provisioning remains rooted", () => {
-  const { cwd, alphaRuntime, options } = fixture();
-  writePaperMigration(planPaperMigration(options));
-  for (const agentEntryMode of ["ci", "local"]) {
-    const result = collectPaperPreflight({
-      cwd,
-      ...alphaRuntime,
-      buildchainSha: "b".repeat(40),
-      offline: true,
-      agentEntryMode,
-    });
-    assert.equal(
-      result.checks.some(({ id }) => id === "agent-entry.runtime-source"),
-      false,
-      JSON.stringify(result),
-    );
-  }
-  const lockPath = path.join(cwd, ".buildchain/alpha-contract-lock.json");
-  const lock = JSON.parse(fs.readFileSync(lockPath));
-  lock.buildchain.majorLine = "v3";
-  fs.writeFileSync(lockPath, JSON.stringify(lock));
-  const rejected = collectPaperPreflight({
-    cwd,
-    ...alphaRuntime,
-    buildchainSha: "b".repeat(40),
-    offline: true,
-    agentEntryMode: "ci",
-  });
+  const sourcePolicy = collectPaperSourcePolicy({ cwd });
+  assert.equal(sourcePolicy.ok, true);
+  assert.equal(sourcePolicy.localOnly, true);
   assert.equal(
-    rejected.checks.find(({ id }) => id === "provisioning.authority")
-      .status,
-    "fail",
+    collectPaperPreflight({ cwd, offline: false }).publication.status,
+    "not-observed",
   );
+  fs.appendFileSync(
+    path.join(cwd, ".github/workflows/buildchain.yml"),
+    "# unowned caller change\n",
+  );
+  assert.equal(collectPaperSourcePolicy({ cwd }).ok, false);
 });

@@ -374,7 +374,7 @@ test("queue admission accepts blocked state but requires exact Project Cut proof
 });
 
 test("reusable admission reaches immutable Warrant and Project Cut verification", () => {
-  const graph = inspectWorkflowJob(".github/workflows/public-ops-dev-auto-merge.yml", "admission");
+  const graph = inspectWorkflowJob(".github/workflows/.ops-dev-auto-merge.yml", "admission");
   assert.ok(graph.workflow.on.workflow_call.inputs["project-cut-proof-json"]);
   const qualification = graph.steps.find(step => step.uses?.endsWith("/dev-delivery/candidate/qualify-source"));
   assert.ok(qualification);
