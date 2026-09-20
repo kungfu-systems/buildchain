@@ -220,9 +220,9 @@ test("clean-process rehearsal runs for each declared platform", () => {
 
 test("workflow, product verification, and Agent guidance project the declaration", () => {
   const workflow = readWorkflow(declaration.projections.protectedWorkflow);
-  assert.equal(
+  assert.match(
     workflow.jobs.buildchain.uses,
-    "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4",
+    /^kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-pipeline\.yml@v4(?:-alpha)?$/u,
   );
   const config = fs.readFileSync(
     path.join(root, ".buildchain/buildchain.toml"),

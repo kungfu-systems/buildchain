@@ -22,7 +22,13 @@ export function checkSelfConsumerContract(root = ROOT) {
   const retired = path.join(root, ".buildchain/minimal-consumer.toml");
   if (fs.lstatSync(retired, { throwIfNoEntry: false }))
     fail("retired transition config must not remain in the self consumer tree");
-  const callers = consumerWorkflows();
+  const uses = yaml(read(".github/workflows/buildchain.yml"))?.jobs?.buildchain
+    ?.uses;
+  const channel =
+    typeof uses === "string" && uses.endsWith("@v4-alpha")
+      ? "v4-alpha"
+      : SELF_ENTRY_CHANNEL;
+  const callers = consumerWorkflows(channel);
   for (const [file, bytes] of Object.entries(callers))
     if (read(file) !== bytes) fail(`${file}: generated caller drift`);
   const taxonomy = JSON.parse(read("architecture/workflow-taxonomy.json"));
@@ -113,7 +119,7 @@ export function checkSelfConsumerContract(root = ROOT) {
     fail("cross-platform LF checkout contract is missing");
   return {
     ok: true,
-    channel: SELF_ENTRY_CHANNEL,
+    channel,
     callers: Object.keys(callers),
     plan,
   };
