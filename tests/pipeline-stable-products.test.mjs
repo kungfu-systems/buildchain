@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import fs from "node:fs";
 import http from "node:http";
+import os from "node:os";
 import { verifyReleasePassport } from "../packages/core/release/release-passport.js";
 import { signedPublicationFixture } from "./helpers/pipeline-publication-signed.mjs";
 import {
@@ -227,6 +228,11 @@ function changeDocument(state, name, mutate) {
 
 test("public Passport reader verifies current signed metadata and retains explicit verification limits", async (t) => {
   const f = await fixture(t);
+  const temporaryRoot = path.join(f.f.root, "temporary");
+  const temporaryAlias = path.join(f.f.root, "temporary-alias");
+  fs.mkdirSync(temporaryRoot);
+  fs.symlinkSync(temporaryRoot, temporaryAlias, "junction");
+  t.mock.method(os, "tmpdir", () => temporaryAlias);
   for (const { name, bytes } of f.state.assets)
     fs.writeFileSync(path.join(f.f.root, name), bytes);
   const input = {

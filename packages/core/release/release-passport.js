@@ -12,7 +12,7 @@ import { createReleaseCheckReport } from "./passport/report.js";
 
 async function verifyPipelinePassport(location, release, checkedAt, execute) {
   const directory = fs.mkdtempSync(
-    path.join(os.tmpdir(), "buildchain-passport-"),
+    path.join(fs.realpathSync(os.tmpdir()), "buildchain-passport-"),
   );
   const report = {
     schemaVersion: 1,
