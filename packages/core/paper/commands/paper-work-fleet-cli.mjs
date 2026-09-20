@@ -376,7 +376,7 @@ function runScaffold(options) {
     buildchainRef: readFlag(
       options.args,
       "buildchain-ref",
-      options.buildchainRef,
+      "v4",
     ),
     buildchainSha: options.buildchainSha,
     name: readFlag(options.args, "name", path.basename(options.cwd)),

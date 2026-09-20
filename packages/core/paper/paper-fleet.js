@@ -1,9 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
-import { planPaperMigration, writePaperMigration } from "./operations/scaffold.js";
-import { resolvePaperRuntimeGitSha } from "./operations/runtime.js";
 import {
-  PAPER_PATHS,
+  planPaperMigration,
+  writePaperMigration,
+} from "./operations/scaffold.js";
+import { paperConsumerStatus } from "./consumer-status.js";
+import {
   PAPER_WORK_BRANCH_PATTERN,
   paperWorkSource,
   readJson,
@@ -46,21 +48,6 @@ function plannedManagedSurfaces(options) {
   }
 }
 
-function legacyBuildchainWorkflowRefs(cwd) {
-  const workflowRoot = path.resolve(cwd, ".github", "workflows");
-  if (!fs.existsSync(workflowRoot)) return [];
-  return fs
-    .readdirSync(workflowRoot, { withFileTypes: true })
-    .filter((entry) => entry.isFile() && /\.ya?ml$/i.test(entry.name))
-    .filter((entry) =>
-      /uses:\s*kungfu-systems\/buildchain\/[^\s]+@v2(?:[-.][^\s]+)?/i.test(
-        fs.readFileSync(path.join(workflowRoot, entry.name), "utf8"),
-      ),
-    )
-    .map((entry) => `.github/workflows/${entry.name}`)
-    .sort();
-}
-
 function paperFleetEntry({
   cwd,
   buildchainRoot,
@@ -69,7 +56,6 @@ function paperFleetEntry({
 }) {
   const source = paperWorkSource(cwd);
   const packageJson = readJson(path.resolve(cwd, "package.json")).value || {};
-  const pinPath = path.resolve(cwd, PAPER_PATHS.versionPin);
   const lockPath = path.resolve(cwd, "pnpm-lock.yaml");
   const expected = plannedManagedSurfaces({
     cwd,
@@ -93,7 +79,12 @@ function paperFleetEntry({
   const lockText = fs.existsSync(lockPath)
     ? fs.readFileSync(lockPath, "utf8")
     : "";
-  const legacyWorkflows = legacyBuildchainWorkflowRefs(cwd);
+  let consumer;
+  try {
+    consumer = paperConsumerStatus(cwd);
+  } catch {
+    consumer = null;
+  }
   const checks = [
     workCheck(
       "repository.canonical-origin",
@@ -103,35 +94,31 @@ function paperFleetEntry({
     ),
     workCheck(
       "package.buildchain-runtime",
-      dependency === buildchainVersion && /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(dependency),
-      "package.json pins the exact Buildchain semantic runtime.",
+      !dependency ||
+        (dependency === buildchainVersion &&
+          /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(dependency)),
+      "An optional local Buildchain CLI dependency pins the selected version.",
       "buildchain paper migrate --write --json",
     ),
     workCheck(
       "package.pnpm-lock",
-      Boolean(lockText) &&
-        lockText.includes("@kungfu-tech/buildchain") &&
-        lockText.includes(buildchainVersion),
+      !dependency ||
+        (Boolean(lockText) &&
+          lockText.includes("@kungfu-tech/buildchain") &&
+          lockText.includes(buildchainVersion)),
       "pnpm-lock.yaml binds the Buildchain dependency.",
       "pnpm install --lockfile-only",
     ),
     workCheck(
-      "runtime.version-pin",
-      fs.existsSync(pinPath) &&
-        fs.readFileSync(pinPath, "utf8").trim() === buildchainVersion,
-      "The repository version pin equals the exact Buildchain runtime.",
+      "consumer.shared-contract",
+      consumer?.ok === true,
+      "Schema-2 product policy and the shared caller pair are valid.",
       "buildchain paper migrate --write --json",
     ),
     workCheck(
       "managed-surfaces.current",
       !expected.error && managed.every((entry) => entry.status === "current"),
       "Every Buildchain-owned paper control surface matches the selected runtime.",
-      "buildchain paper migrate --write --json",
-    ),
-    workCheck(
-      "workflows.buildchain-v2-absent",
-      legacyWorkflows.length === 0,
-      "No workflow calls a Buildchain v2 reusable surface.",
       "buildchain paper migrate --write --json",
     ),
   ];
@@ -146,7 +133,6 @@ function paperFleetEntry({
     buildchainDependency: dependency,
     expectedError: expected.error,
     managed,
-    legacyWorkflows,
     checks,
     ok: checks.every((entry) => entry.status === "pass"),
   };
@@ -185,9 +171,8 @@ export function collectPaperFleetAudit({
     root: resolvedRoot,
     runtime: {
       version: buildchainVersion,
-      sha:
-        buildchainSha ||
-        resolvePaperRuntimeGitSha(buildchainRoot, buildchainVersion),
+      entry: "v4",
+      source: "not-observed",
     },
     summary: {
       repositories: entries.length,

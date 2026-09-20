@@ -152,9 +152,9 @@ function providerAttemptFor(sourceHead, mergeGroupHead) {
     schema: "kungfu.buildchain.github-landing-provider-attempt/v1",
     repository: "kungfu-systems/buildchain",
     workflowId: 700,
-    workflowPath: ".github/workflows/public-ops-dev-auto-merge.yml",
+    workflowPath: ".github/workflows/.ops-dev-auto-merge.yml",
     workflowRef:
-      "kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@refs/tags/v4-alpha",
+      "kungfu-systems/buildchain/.github/workflows/.ops-dev-auto-merge.yml@refs/tags/v4-alpha",
     workflowSha: "c".repeat(40),
     event: "merge_group",
     runId: 1500,
@@ -961,7 +961,7 @@ assert.ok(schema.$defs.providerFailureSettlement.properties.schema.const ===
         "kungfu.buildchain.provider-failure-settlement/v1", "DA-15: schema.$defs.providerFailureSettlement.properties.schema.const ===\n        \"kungfu.buildchain.provider-failure-settlement/v1\"");
 assert.ok(packageManifest.exports["./dev-delivery-authority"] ===
         "./packages/core/dev-delivery/dev-delivery-authority-landing.js", "DA-15: packageManifest.exports[\"./dev-delivery-authority\"] ===\n        \"./packages/core/dev-delivery/dev-delivery-authority-landing.js\"");
-assert.ok(template.uses.endsWith("/public-ops-dev-auto-merge.yml@v4-alpha"), "DA-15: template.uses.endsWith(\"/public-ops-dev-auto-merge.yml@v4-alpha\")");
+assert.ok(template.uses.endsWith("/.ops-dev-auto-merge.yml@v4-alpha"), "DA-15: template.uses.endsWith(\"/.ops-dev-auto-merge.yml@v4-alpha\")");
 assert.ok(executeWorkflowMapping(template, dispatchContext, ["runtime-ref"])[
         "runtime-ref"
       ] === "", "DA-15: executeWorkflowMapping(template, dispatchContext, [\"runtime-ref\"])[\n        \"runtime-ref\"\n      ] === \"\"");

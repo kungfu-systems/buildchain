@@ -1,3 +1,4 @@
+import { paperConsumerStatus } from "./consumer-status.js";
 import path from "node:path";
 import {
   paperConfig,
@@ -44,15 +45,52 @@ import {
   paperPreflightNextActions,
 } from "./operations/preflight-checks.js";
 export function collectPaperSourcePolicy({ cwd = process.cwd() } = {}) {
+  const consumer = paperConsumerStatus(cwd);
+  if (consumer) return consumer;
   const agentEntry = collectPaperAgentEntry({ cwd, mode: "ci" });
   const provisioning = validatePaperProvisioningAuthority(cwd);
-  const checks = [...agentEntry.checks, { id: "provisioning.authority", status: provisioning.valid ? "pass" : "fail", message: provisioning.errors.join("; ") }];
-  try { validateBuildchainConfig(cwd, { requireLifecycleStages: ["verify"] }); }
-  catch (error) { checks.push({ id: "config.publication", status: "fail", message: error.message }); }
-  return { ok: checks.every(check => check.status === "pass" || check.status === "skip"), checks };
+  const checks = [
+    ...agentEntry.checks,
+    {
+      id: "provisioning.authority",
+      status: provisioning.valid ? "pass" : "fail",
+      message: provisioning.errors.join("; "),
+    },
+  ];
+  try {
+    validateBuildchainConfig(cwd, { requireLifecycleStages: ["verify"] });
+  } catch (error) {
+    checks.push({
+      id: "config.publication",
+      status: "fail",
+      message: error.message,
+    });
+  }
+  return {
+    ok: checks.every(
+      (check) => check.status === "pass" || check.status === "skip",
+    ),
+    checks,
+  };
 }
 
-export function collectPaperPreflight({
+export function collectPaperPreflight(options = {}) {
+  const consumer = paperConsumerStatus(
+    path.resolve(options.cwd || process.cwd()),
+  );
+  if (!consumer) return collectLegacyPaperPreflight(options);
+  const result =
+    options.agentEntryMode && options.agentEntryMode !== "contract"
+      ? collectPaperAgentEntry({
+          cwd: consumer.cwd,
+          mode: options.agentEntryMode,
+          env: options.env,
+        })
+      : consumer;
+  return { ...result, contract: PAPER_PREFLIGHT_CONTRACT };
+}
+
+function collectLegacyPaperPreflight({
   cwd = process.cwd(),
   buildchainRoot = process.cwd(),
   buildchainVersion = "",

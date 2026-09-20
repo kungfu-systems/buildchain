@@ -1,22 +1,27 @@
 ---
-status: active
+status: historical
 period: ongoing
 theme: buildchain-v4-production-release
-doc_type: runbook
+doc_type: historical-reference
 source_level: repository-contracts + protected-provider-readback
 confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-08
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-08
-  invisible_context: Provider credentials and private provider state were not read.
+  generated_at: 2026-09-20
+  visible_context: Reclassified the retained v4.0 protocol and linked current pipeline guidance; historical body preserved.
+  invisible_context_boundary: No current provider state or credentials were inspected for this documentation change.
 ---
 
-# Buildchain v4 production release
+# Historical Buildchain v4.0 production release
+
+This document preserves the retired v4.0 workflow protocol. Current release
+operations use the shared pipeline and exact-attempt recovery described in
+[release governance](release-governance.md) and [release flow](release-flow.md).
 
 Buildchain v4 is the production release authority for the `v4.0` line. The
 protected source path is:

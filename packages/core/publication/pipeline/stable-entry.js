@@ -113,16 +113,21 @@ async function inspectEntryRun(listed, plan, source, host) {
   const { run, jobs } = await host.runs.read(listed.id, listed.run_attempt);
   const consumer = await pipelineEntryRun(run, plan, source, host);
   if (!consumer) return null;
+  const productJobs = jobs.filter((job) =>
+    /(?:^| \/ )Build product \([^)]+\)$/u.test(job.name),
+  );
+  const check = await pipelineEntryCheck(run, host);
+  // Controller-only PR notifications are not new product qualifications. A
+  // failed controller must not displace an earlier actual build. Conversely,
+  // any admitted native receipt or product job (even cancelled/skipped setup)
+  // keeps the execution in scope and must qualify its original full evidence.
   if (
-    !jobs.some(
-      (job) =>
-        job.conclusion !== "skipped" &&
-        /(?:^| \/ )Build product \([^)]+\)$/u.test(job.name),
-    ) &&
-    run.conclusion === "success"
+    !check &&
+    (!productJobs.length ||
+      (run.conclusion === "success" &&
+        productJobs.every((job) => job.conclusion === "skipped")))
   )
     return null;
-  const check = await pipelineEntryCheck(run, host);
   if (!check)
     return {
       status: "missing",

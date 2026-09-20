@@ -1,10 +1,7 @@
 import { runReleasePropagationCli } from "../commands/release-propagation.mjs";
 import { runReleaseTailCli } from "../commands/release-tail.mjs";
 import { runTailResealCli } from "../commands/tail-reseal.mjs";
-import {
-  TRUST_RELEASE_COMMANDS,
-  dispatchTrustReleaseCommand,
-} from "./trust-release.mjs";
+import { dispatchTrustReleaseCommand } from "./trust-release.mjs";
 import { packageVersion } from "../../contracts/cli/context.mjs";
 import { runScript } from "../../workflow/cli/process.mjs";
 

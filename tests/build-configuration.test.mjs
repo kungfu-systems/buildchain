@@ -21,7 +21,7 @@ function fixture(t, relative = "buildchain.toml", extra = "") {
   return root;
 }
 function resolve(root, overrides = {}) {
-  return resolveBuildConfiguration({ root, repository: "kungfu-systems/buildchain", workflowRef: "kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha", workflowSha: "a".repeat(40), sourceSha: "b".repeat(40), sourceRef: "refs/heads/dev/v4/v4.0", ...overrides });
+  return resolveBuildConfiguration({ root, repository: "kungfu-systems/buildchain", workflowRef: "kungfu-systems/buildchain/.github/workflows/.build-candidate.yml@v4-alpha", workflowSha: "a".repeat(40), sourceSha: "b".repeat(40), sourceRef: "refs/heads/dev/v4/v4.0", ...overrides });
 }
 
 test("root verification declares Go and Rust prerequisites", () => {
@@ -148,10 +148,10 @@ test("governed environments are selected, never overwritten by consumer bytes", 
 
 test("stable identity derives its matching lock and opaque selectors fail closed", (t) => {
   const root = fixture(t);
-  const { plan } = resolve(root, { workflowRef: "kungfu-systems/buildchain/.github/workflows/build.yml@v4" });
+  const { plan } = resolve(root, { workflowRef: "kungfu-systems/buildchain/.github/workflows/.build-candidate.yml@v4" });
   assert.equal(plan.contract.lock_path, ".buildchain/contract-lock.json");
   assert.equal(plan.identity.major, "4");
-  assert.throws(() => resolve(root, { workflowRef: "kungfu-systems/buildchain/.github/workflows/build.yml@train/v4/v4.0/test" }), /floating channel/);
+  assert.throws(() => resolve(root, { workflowRef: "kungfu-systems/buildchain/.github/workflows/.build-candidate.yml@train/v4/v4.0/test" }), /floating channel/);
   fs.writeFileSync(path.join(root, "buildchain.toml"), 'schema = 1\n[lifecycle.build]\ncommand = "build"\n');
   assert.equal(resolve(root).plan.lifecycle.install.required, false);
   assert.equal(resolve(root).plan.lifecycle.build.required, true);

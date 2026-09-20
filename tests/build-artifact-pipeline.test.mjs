@@ -37,7 +37,7 @@ test("real lifecycle artifacts survive transfer and isolated finalization; provi
   const { createControllerPlan } = await import("../packages/core/observability/controller-evidence.js");
   const { artifactNames } = await import("../packages/core/build/artifact/contracts.js");
   const { plan } = resolveBuildConfiguration({ root: source, repository: "kungfu-systems/buildchain",
-    workflowRef: "kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha", workflowSha: "a".repeat(40),
+    workflowRef: "kungfu-systems/buildchain/.github/workflows/.build-candidate.yml@v4-alpha", workflowSha: "a".repeat(40),
     sourceSha: git("rev-parse", "HEAD"), sourceRef: "refs/heads/dev/v4/v4.0" });
   plan.source.tree_sha = git("rev-parse", "HEAD^{tree}");
   plan.run = { repository: "test/project", id: "123", attempt: "1" };

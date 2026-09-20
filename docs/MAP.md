@@ -8,12 +8,13 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-10
-  invisible_context: not asserted
+  generated_at: 2026-09-20
+  visible_context: Current consumer contract and release and recovery manuals.
+  invisible_context_boundary: No unobserved hosted qualification or external consumer migration.
 ---
 
 # Documentation Map
@@ -28,13 +29,19 @@ running artifact), *use* (consume / extend) - and a **status**:
 - `stable` - current and holds.
 - `draft` - exists, rough or incomplete.
 - `to write` - planned; the material exists but is not yet a single doc.
-- `retired` - intentionally not part of the active Buildchain v3 surface.
+- `retired` - intentionally not part of the active consumer surface.
+
+The current consumer contract is the shared normal/recovery caller pair plus
+schema-2 TOML. Start with [Getting started](getting-started.md),
+[Release governance](release-governance.md), and [Attempt recovery](bootstrap-recovery.md).
+The mechanism documents below also describe internal components and historical
+qualification; their implementation ports are not additional consumer APIs.
 
 ## Start by Role or Intent
 
 | Role or intent | First entry | Then |
 | --- | --- | --- |
-| First-time repository adopter | [Golden Path](getting-started.md) | [Lifecycle Protocol](lifecycle-protocol.md) only when the generated defaults need changes |
+| First-time repository adopter | [Golden Path](getting-started.md) | [CLI guide](cli.md) for schema-2 product commands and version declarations |
 | CLI operator or agent | [Generated CLI Reference](cli-reference.md) | [CLI guide](cli.md) for concepts and worked examples |
 | Node toolkit developer | [Generated Node API Reference](node-api-reference.md) | [Core package guide](../packages/core/README.md) for recipes |
 | Workflow contributor | [Workflow Catalog](workflow-catalog.md) | [Contribution rules](../CONTRIBUTING.md#workflow-organization) and the [exact registry](../architecture/workflow-taxonomy.json) |
@@ -112,7 +119,7 @@ replace them.
 | How do I install a standalone binary or npm package? | [`install.md`](install.md) | use | stable |
 | How do I run or look up the `buildchain` CLI? | [`cli-reference.md`](cli-reference.md) + [`cli.md`](cli.md) | use | stable |
 | How do I import Buildchain toolkit APIs from JavaScript build code? | [`node-api-reference.md`](node-api-reference.md) + [`../packages/core/README.md`](../packages/core/README.md) | use | stable |
-| How do I initialize a new repository? | [`getting-started.md`](getting-started.md) + [`lifecycle-protocol.md`](lifecycle-protocol.md) | use | stable |
+| How do I initialize a new repository? | [`getting-started.md`](getting-started.md) | use | stable |
 | Why does Buildchain use branch-driven release governance? | [`release-governance.md`](release-governance.md) | why | stable |
 | What freezes the v4 dependency direction, writer authority, complexity budgets, exceptions, and N-1 qualification? | [`../architecture/architecture-constitution.md`](../architecture/architecture-constitution.md) | why/verify | preview |
 | How will Delivery Warrant move from the v3 writer through shadow, v4 read, single-writer cutover, and legacy removal? | [`../architecture/delivery-warrant-shadow-bootstrap-plan.md`](../architecture/delivery-warrant-shadow-bootstrap-plan.md) | why/verify | preview |
@@ -123,19 +130,19 @@ replace them.
 | How does a late macOS signing failure reuse an exact retained v4 Alpha candidate and rerun only the fenced release tail? | [`v4-tail-reseal.md`](v4-tail-reseal.md) | use/verify | preview |
 | How do Rust and JavaScript read the same retained Delivery Warrant traces and emit one semantic projection? | [`v4-canonical-contracts.md`](v4-canonical-contracts.md#shared-delivery-warrant-fixture-runner) | use/verify | preview |
 | How does an explicit caller try the qualified v4 read projection and roll back without moving v3 writer authority? | [`v4-delivery-warrant-read-candidate.md`](v4-delivery-warrant-read-candidate.md) | use/verify | preview |
-| How do protected dev branches and scheduled ready-PR merging work? | [`release-governance.md`](release-governance.md#protected-dev-branches) | use | stable |
+| How do protected development review and merge queues work? | [`release-governance.md`](release-governance.md#protected-dev-branches) | use | stable |
 | How do slow required checks land reliably on a busy dev channel? | [`release-governance.md`](release-governance.md#protected-dev-branches) + [`cli.md`](cli.md#commands) | use | preview |
 | How does the durable fair Dev Delivery Warrant Queue prevent slow-candidate starvation?                                                       | [`dev-delivery-warrant.md`](dev-delivery-warrant.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | use/verify | preview |
 | How are bounded Qualification Leases separated from exclusive merge-group Landing authority? | [`dev-delivery-qualification-landing-adr.md`](dev-delivery-qualification-landing-adr.md) + [`dev-delivery-warrant.md`](dev-delivery-warrant.md) | use/verify | preview |
 | How do I coalesce rapid Dev changes, preserve release runner priority, and retry only transient failed jobs? | [`dev-qualification-patrol.md`](dev-qualification-patrol.md) | use/verify | preview |
-| How do I run daily, weekly, or monthly repository patrols? | [`release-governance.md`](release-governance.md#buildchain-patrol) | use | stable |
+| Who owns event routing, patrol and publication orchestration? | [`release-governance.md`](release-governance.md#consumer-contract) | use | stable |
 | How do I report or safely apply branch and pull-request engineering hygiene? | [`engineering-housekeeper.md`](engineering-housekeeper.md) | use/verify | preview |
 | How does Buildchain decide patch, minor, and major release lines? | [`versioning.md`](versioning.md) | why | stable |
 | What exact branch/tag state machine runs on alpha, release, and major gate? | [`release-flow.md`](release-flow.md) | verify | stable |
 | How does a completed Alpha remain successful while the following development version is prepared? | [`next-development-transition.md`](next-development-transition.md), [`../architecture/decisions/0002-next-development-transition.md`](../architecture/decisions/0002-next-development-transition.md) | verify/use | preview |
 | What did Buildchain migrate or retire from old action repositories? | [`migration-inventory.md`](migration-inventory.md) | verify | stable |
 | What is the active action and workflow source of truth? | [`ownership.md`](ownership.md) | verify | stable |
-| How do I declare version files and custom lifecycle commands? | [`lifecycle-protocol.md`](lifecycle-protocol.md) | use | stable |
+| How do I declare schema-2 version files and product commands? | [`cli.md`](cli.md) + [`getting-started.md`](getting-started.md) | use | stable |
 | How does publish evidence, recovery, and finalization work? | [`publish-transaction.md`](publish-transaction.md) | verify | stable |
 | How are consumer-owned release-tail commands inventoried and replaced by declarative capabilities? | [`release-tail-contract.md`](release-tail-contract.md) | verify | draft |
 | How do I simulate, replay, or explicitly authorize a provider-facing publication rehearsal without creating release authority? | [`v4-publication-rehearsal.md`](v4-publication-rehearsal.md) | use/verify | preview |
@@ -168,14 +175,14 @@ replace them.
 | How do self-hosted runners relay large artifacts through S3 before GitHub artifacts? | [`reusable-build-surface.md`](reusable-build-surface.md#artifact-transfer-relay) | use | stable |
 | How do self-hosted runners reuse local Git checkout caches without weakening source locks? | [`reusable-build-surface.md`](reusable-build-surface.md#locked-source-checkout-cache) | use | stable |
 | How do ephemeral GitHub-hosted runners share exact dependency or compiler caches without fixed-runner affinity? | [`cli.md`](cli.md#commands) | use/verify | preview |
-| How do I validate an unreleased Buildchain runtime train while keeping `@v3`? | [`runtime-train-validation.md`](runtime-train-validation.md) | use | stable |
+| How do I validate an unreleased Buildchain runtime train? | [`runtime-train-validation.md`](runtime-train-validation.md) | use | stable |
 | How do v4 consumers keep floating selectors while proving exact runtime and lock identity? | [`reusable-build-surface.md`](reusable-build-surface.md#v4-floating-consumer-admission) | verify/use | preview |
 | How does the public entry select a runtime and recover with a repaired train? | [`runtime-entry.md`](runtime-entry.md) | use/verify | preview |
-| How do I automatically qualify alpha candidates and publish the newest non-revoked qualified candidate at a fixed window? | [`stable-candidate-patrol.md`](stable-candidate-patrol.md) | use | preview |
-| How do I deploy a site/app preview, staging, or production surface? | [`web-surface-deployments.md`](web-surface-deployments.md) | use | stable |
+| How does the retained internal stable-candidate ledger work? | [`stable-candidate-patrol.md`](stable-candidate-patrol.md) | verify | internal |
+| How does the internal web deployment engine separate preview, staging and production authority? | [`web-surface-deployments.md`](web-surface-deployments.md) | verify | internal |
 | How do I publish observed infrastructure contracts for downstream consumers? | [`infra-contract.md`](infra-contract.md) | use | preview |
 | How do I operate a repeatable, disabled-by-default, budget-fail-closed AWS Windows JIT campaign? | [`aws-us-elastic-runner-burst-plane.md`](aws-us-elastic-runner-burst-plane.md#phase-2-operator-workflow) | use/verify | preview |
-| How do I use the active actions directly? | [`../actions/build/lifecycle/validate/README.md`](../actions/build/lifecycle/validate/README.md), [`../actions/build/lifecycle/run/README.md`](../actions/build/lifecycle/run/README.md), [`../actions/release/promotion/ref/README.md`](../actions/release/promotion/ref/README.md), [`../actions/release/promotion/candidate/README.md`](../actions/release/promotion/candidate/README.md), [`../actions/governance/incident/report/README.md`](../actions/governance/incident/report/README.md), [`../actions/build/artifact/prepare-attestation/README.md`](../actions/build/artifact/prepare-attestation/README.md), [`../actions/build/artifact/seal-attestation/README.md`](../actions/build/artifact/seal-attestation/README.md), [`../actions/build/credential/macos-island/README.md`](../actions/build/credential/macos-island/README.md), [`../actions/release/tail/settle/README.md`](../actions/release/tail/settle/README.md); `dist/site/workflow-registry.json#actions` is authoritative for the action inventory. | use | stable |
+| Where are internal action implementations documented? | [`../actions/build/lifecycle/validate/README.md`](../actions/build/lifecycle/validate/README.md), [`../actions/build/lifecycle/run/README.md`](../actions/build/lifecycle/run/README.md), [`../actions/release/promotion/ref/README.md`](../actions/release/promotion/ref/README.md), [`../actions/release/promotion/candidate/README.md`](../actions/release/promotion/candidate/README.md), [`../actions/governance/incident/report/README.md`](../actions/governance/incident/report/README.md), [`../actions/build/artifact/prepare-attestation/README.md`](../actions/build/artifact/prepare-attestation/README.md), [`../actions/build/artifact/seal-attestation/README.md`](../actions/build/artifact/seal-attestation/README.md), [`../actions/build/credential/macos-island/README.md`](../actions/build/credential/macos-island/README.md), [`../actions/release/tail/settle/README.md`](../actions/release/tail/settle/README.md); `dist/site/workflow-registry.json#actions` is authoritative for the action inventory. | use | stable |
 | Where are shared build stages maintained? | [resolve-build-plan](../actions/build/lifecycle/plan/action.yml), [prepare-build-environment](../actions/build/lifecycle/prepare/action.yml), [run-build-stage](../actions/build/lifecycle/stage/action.yml), [transfer-build-artifact](../actions/build/artifact/transfer/action.yml), [sign-build-artifact](../actions/build/artifact/sign/action.yml), [attest-build-artifact](../actions/build/artifact/attest/action.yml), [finalize-build-result](../actions/build/artifact/finalize/action.yml); [ownership](../architecture/build-orchestration.json) | contribute | active |
 | How can a consumer workflow report a Buildchain-owned failure back to Buildchain? | [`consumer-issue-reporting.md`](consumer-issue-reporting.md) + [`../actions/governance/incident/report/README.md`](../actions/governance/incident/report/README.md) | use | stable |
 | What do the fixture repositories demonstrate? | [`../fixtures/libnode-shaped/README.md`](../fixtures/libnode-shaped/README.md), [`../fixtures/publish-transaction-shaped/README.md`](../fixtures/publish-transaction-shaped/README.md), [`../fixtures/web-surface-shaped/README.md`](../fixtures/web-surface-shaped/README.md), [`../fixtures/publication-artifact-shaped/README.md`](../fixtures/publication-artifact-shaped/README.md) | verify | stable |
@@ -191,22 +198,23 @@ replace them.
   [`release-governance.md`](release-governance.md) and
   [`release-flow.md`](release-flow.md).
 - **Buildchain self-dogfood / released alpha canary / stable compatibility lane** ->
-  [`release-governance.md`](release-governance.md#buildchain-alpha-self-dogfood).
+  [`release-governance.md`](release-governance.md#buildchain-public-build-self-dogfood).
 - **qualified alpha ledger / scheduled stable selection / hold and revoke** ->
   [`stable-candidate-patrol.md`](stable-candidate-patrol.md).
 - **v3.1 vs v3.2 / when to open a new minor line** ->
   [`versioning.md`](versioning.md).
 - **dry-run / what would happen if this channel PR merges** -> [`cli.md`](cli.md)
   and [`release-flow.md`](release-flow.md).
-- **protected dev branches / scheduled ready-PR merge / daily-weekly-monthly patrol** ->
+- **protected dev branches / normal pipeline / internal orchestration** ->
   [`release-governance.md`](release-governance.md#protected-dev-branches) and
-  [`release-governance.md`](release-governance.md#buildchain-patrol).
+  [`release-governance.md`](release-governance.md#consumer-contract).
 - **Dev qualification coalescing / release-priority runners / failed-job retry** ->
   [`dev-qualification-patrol.md`](dev-qualification-patrol.md).
-- **pnpm / npm / yarn / package-manager adapters** ->
-  [`lifecycle-protocol.md`](lifecycle-protocol.md).
-- **pip / Conan / CMake / custom commands** -> [`lifecycle-protocol.md`](lifecycle-protocol.md)
-  and [`reusable-build-surface.md`](reusable-build-surface.md).
+- **pnpm / npm / yarn / product commands** ->
+  [`cli.md`](cli.md) and [`getting-started.md`](getting-started.md).
+- **CMake / custom product commands** -> [`cli.md`](cli.md) and
+  [`reusable-build-surface.md`](reusable-build-surface.md).
+- **Historical schema-1 lifecycle engine** -> [`lifecycle-protocol.md`](lifecycle-protocol.md).
 - **libnode / native artifacts / self-hosted runner matrix** ->
   [`reusable-build-surface.md`](reusable-build-surface.md) and
   [`../fixtures/libnode-shaped/README.md`](../fixtures/libnode-shaped/README.md).

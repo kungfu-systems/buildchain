@@ -1,14 +1,12 @@
 import path from "node:path";
 import { collectPaperAgentEntry } from "./paper-agent-entry.js";
 import {
-  PAPER_PATHS,
   PAPER_WORK_BRANCH_PATTERN,
   gitResult,
   gitValue,
   normalizedWorkBranch,
   paperDevelopmentRef,
   paperWorkSource,
-  readJson,
   remoteBranchObservation,
   rootedPlan,
   workCheck,
@@ -30,12 +28,7 @@ function failedActions(checks) {
 }
 
 function agentEntryForWork(cwd, buildchainSha) {
-  const policy = readJson(path.resolve(cwd, PAPER_PATHS.agentEntry)).value;
-  return collectPaperAgentEntry({
-    cwd,
-    buildchainSha: buildchainSha || policy?.runtime?.sourceSha || "",
-    mode: "contract",
-  });
+  return collectPaperAgentEntry({ cwd, buildchainSha, mode: "contract" });
 }
 
 export function createPaperWorkStartPlan({
@@ -74,7 +67,7 @@ export function createPaperWorkStartPlan({
     workCheck(
       "agent-entry.current",
       agentEntry.ok,
-      "The mandatory Buildchain Paper agent-entry contract is current.",
+      "The Paper product configuration and shared consumer wiring are current.",
       "buildchain paper migrate --write --json",
     ),
     workCheck(
@@ -252,7 +245,7 @@ export function createPaperWorkSubmitPlan({
     workCheck(
       "agent-entry.current",
       agentEntry.ok,
-      "The mandatory Buildchain Paper agent-entry contract is current.",
+      "The Paper product configuration and shared consumer wiring are current.",
       "buildchain paper migrate --write --json",
     ),
     workCheck(

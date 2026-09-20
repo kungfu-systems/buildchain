@@ -5,6 +5,7 @@ import { parse as yaml } from "yaml";
 import { format } from "prettier";
 import { standardConsumerExample } from "../packages/core/consumer/contract/examples.js";
 import { inspectConsumerContract } from "../packages/core/consumer/contract/inspection.js";
+import { validateConsumerWiring } from "../packages/core/consumer/contract/local-validation.js";
 import { workflowPath } from "../packages/core/workflow/workflow-taxonomy.mjs";
 
 const root = process.cwd(),
@@ -12,6 +13,25 @@ const root = process.cwd(),
 const tracked = execFileSync("git", ["ls-files", "-z"], { encoding: "utf8" })
   .split("\0")
   .filter(Boolean);
+
+if (check) {
+  const files = Object.create(null);
+  for (const file of tracked)
+    Object.defineProperty(files, file, {
+      enumerable: true,
+      get: () => fs.readFileSync(path.join(root, file), "utf8"),
+    });
+  const { channel } = validateConsumerWiring(root);
+  const inspection = inspectConsumerContract(files, { channel });
+  if (inspection.controlIssues.length)
+    throw new Error(inspection.controlIssues.join("\n"));
+  const unresolved = inspection.commandClosures.filter(
+    (closure) => !closure.commandEdgesResolved,
+  ).length;
+  console.log(
+    `Self control wiring verified; ${unresolved} product graphs remain unresolved and require read-only runtime execution.`,
+  );
+}
 
 function output(file, value) {
   const target = path.join(root, file);

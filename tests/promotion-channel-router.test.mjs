@@ -27,7 +27,7 @@ test("generated promotion API forwards one selected runtime and every declared b
   const source=fs.readFileSync(".github/workflows/.release-promote.yml","utf8");
   const generated=generateChannelPromotionWorkflow(source);
   const api=YAML.parse(generated), component=YAML.parse(source);
-  assert.deepEqual(api,YAML.parse(fs.readFileSync(".github/workflows/public-release-promote.yml","utf8")));
+  assert.deepEqual(api,YAML.parse(fs.readFileSync(".github/workflows/.release-candidate-promote.yml","utf8")));
   assert.deepEqual(Object.keys(api.on.workflow_call.inputs),["request-json","runtime-ref","contract-lock","runtime-selection"]);
   for(const output of Object.keys(component.on.workflow_call.outputs)) assert.equal(api.on.workflow_call.outputs[output].value,`\${{ jobs.invoke.outputs.${output} }}`);
   assert.deepEqual(api.jobs.invoke.with, {"request-json":"${{ needs.consumer-admission.outputs.invocation-json }}", "runtime-selection":"${{ needs.execution-runtime.outputs.selection }}"});

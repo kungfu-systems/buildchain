@@ -28,7 +28,7 @@ runs:
       uses: ./.buildchain/runtime/actions/consumer/policy/admit
       with:
         directory: .buildchain/consumer
-        workflow: .github/workflows/public-build-stage-capsule-canary.yml
+        workflow: .github/workflows/.build-stage-capsule-canary.yml
         workflow-sha: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
     - name: Upload rooted consumer admission receipt
       uses: actions/upload-artifact@v7.0.1

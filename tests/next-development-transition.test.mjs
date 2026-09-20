@@ -23,7 +23,7 @@ import {
   materializeNextDevelopmentTransition,
   validateNextDevelopmentTransition,
 } from "../packages/core/release/next-development-transition.js";
-import { paperAgentEntryFiles } from "../packages/core/paper/paper-agent-entry.js";
+import { consumerAgentInstructions } from "../packages/core/adoption/consumer-init.js";
 import { initBuildchainRepo } from "../packages/core/adoption/commands/init-repo.mjs";
 import { generateNextDevelopmentGuidance } from "../scripts/generate-next-development-guidance.mjs";
 
@@ -479,31 +479,24 @@ test("fresh templates, Paper Agent guidance, and generated manual share one cont
       '{"name":"widget","version":"0.1.0"}\n',
     );
     initBuildchainRepo({ cwd, type, packageManager: "pnpm" });
-    assert.doesNotThrow(() =>
-      assertNextDevelopmentConfig(loadBuildchainConfig(cwd).config),
-    );
+    const config = loadBuildchainConfig(cwd).config;
+    assert.equal(config.schema, 2);
+    assert.equal(config.version.strategy, type === "anchored-package" ? "anchored" : "semver");
+    assert.equal(config.next_development, undefined);
     assert.match(
       fs.readFileSync(path.join(cwd, "AGENTS.md"), "utf8"),
-      new RegExp(NEXT_DEVELOPMENT_AGENT_SECTION_START),
+      /buildchain:consumer:start/,
     );
     const workflow = fs.readFileSync(
-      path.join(cwd, ".github", "workflows", "build.yml"),
+      path.join(cwd, ".github", "workflows", "buildchain.yml"),
       "utf8",
     );
-    assert.match(workflow, new RegExp(NEXT_DEVELOPMENT_TRANSITION_CONTRACT));
-    assert.match(workflow, new RegExp(NEXT_DEVELOPMENT_INVARIANT));
+    assert.match(workflow, /public-ops-pipeline\.yml@v4/);
+    assert.doesNotMatch(workflow, /next-development|request-json/);
   }
-  const paper = tempDir("paper-agent");
-  const files = paperAgentEntryFiles({
-    cwd: paper,
-    buildchainVersion: "4.0.9-alpha.1",
-    buildchainSha: "a".repeat(40),
-    developmentRef: "dev/v4/v4.0",
-  });
-  assert.match(
-    files.get("AGENTS.md"),
-    new RegExp(NEXT_DEVELOPMENT_AGENT_SECTION_START),
-  );
+  const instructions = consumerAgentInstructions();
+  assert.match(instructions, /buildchain:consumer:start/);
+  assert.doesNotMatch(instructions, /next-development:v1|materialize|request-json/);
   assert.equal(
     fs.readFileSync(
       path.join(repositoryRoot, "docs/next-development-transition.md"),

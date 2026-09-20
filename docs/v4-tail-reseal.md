@@ -1,4 +1,27 @@
-# V4 retained-candidate tail reseal
+---
+status: active
+period: ongoing
+theme: retained-candidate-tail-reseal
+doc_type: technical-reference
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: B
+review_state: unreviewed
+last_reviewed: 2026-09-20
+ai_provenance:
+  model_family: GPT-6
+  product: Codex
+  generated_at: 2026-09-20
+  visible_context: Internal tail-reseal contract, workflow taxonomy and shared recovery entry.
+  invisible_context_boundary: No hosted recovery or publication is claimed.
+---
+
+# Internal retained-candidate tail reseal
+
+Consumers recover through `buildchain-recover.yml` with an exact attempt and an
+optional repaired runtime. The request schema, ports and commands below describe
+internal mechanisms; they are not consumer setup or recovery inputs.
 
 Buildchain v4 can recover one narrowly defined late Alpha failure without
 rebuilding a qualified four-platform candidate. The recovery is not a cache hit
@@ -19,18 +42,14 @@ mismatch rejects reuse and requires a normal candidate build.
 - `install`, `build`, `verify`, `package`, and the ordinary platform matrix are
   skipped only when all 16 per-platform Stage Capsule decisions prove exact
   reuse. Capsule reuse has no external effects.
-- Only `macos-arm64:signing-finalization` may change payload bytes. The public
-  workflow verifies the retained macOS bytes before the effect and verifies the
+- Only `macos-arm64:signing-finalization` may change payload bytes. The internal
+  component verifies the retained macOS bytes before the effect and verifies the
   resealed bytes plus signing and release-tail readbacks afterward.
 - The signing token exists only in the macOS credential-island step. It is not
   stored in a Capsule, request, artifact, log, Passport, or receipt.
 - A successful run emits the existing
   `kungfu-buildchain-release-candidate-passport` contract. Tail reseal does not
   create a second candidate or release artifact class.
-- Durable callers use `@v4-alpha` during Alpha evaluation or `@v4` after stable
-  promotion. Exact SHAs are runtime evidence from `job.workflow_sha`, never a
-  persisted selector.
-
 ## CLI and Node API
 
 Plan locally from the deterministic data contract:
@@ -53,21 +72,16 @@ The Node exports are `@kungfu-tech/buildchain/v4-tail-reseal` for request and
 plan logic and `@kungfu-tech/buildchain/v4-tail-reseal-receipt` for terminal
 receipt creation and verification.
 
-## Reusable workflow
+## Internal component
 
-Consumers invoke
-`kungfu-systems/buildchain/.github/workflows/public-ops-tail-reseal.yml@v4-alpha` from a
-trusted, same-repository workflow. The caller supplies the rooted request, the
-original candidate consumer-policy receipt, a reviewed macOS finalization
-command, and the explicitly named signing secret. The command must write:
+`.ops-tail-reseal.yml` receives the runtime-admitted rooted request, original
+candidate policy receipt and explicitly scoped signing authority. Only its
+admitted signing-finalization tail may issue the provider effect. Its readback
+files bind the exact signing and release-tail provider roots. The component
+downloads retained material by exact authority identity and digest; a Stage
+Capsule cannot replay credentials or provider authority.
 
-- `.buildchain/tail-reseal/signing-provider-readback.json`
-- `.buildchain/tail-reseal/release-tail-provider-readback.json`
-
-Their byte digests must equal the roots fixed in the request. The workflow
-downloads the signing result by exact authority repository, run, artifact name,
-and archive digest; no credential or provider effect is replayed from a Stage
-Capsule.
+Consumers do not supply a signing command or call this component directly.
 
 The v3-to-v4 invariant mapping is recorded in
 [`architecture/tail-reseal-parity.json`](../architecture/tail-reseal-parity.json).

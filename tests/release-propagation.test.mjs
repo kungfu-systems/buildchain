@@ -34,7 +34,7 @@ import { withWorkRoot } from "../packages/core/release/release-propagation-work.
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
 const fixture = path.join(root, "fixtures", "release-propagation-shaped");
-const workflowPath = path.join(root, ".github", "workflows", "public-release-propagation.yml");
+const workflowPath = path.join(root, ".github", "workflows", ".release-propagation.yml");
 
 function packageCaptureConfig() {
   return {

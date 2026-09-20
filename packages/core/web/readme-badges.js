@@ -457,7 +457,7 @@ function normalizePackageRepository(repository) {
 function discoverWorkflowFacts({ cwd, repository, badgeConfig = {} }) {
   const workflowDir = path.join(cwd, ".github", "workflows");
   const configured = normalizeStringArray(badgeConfig.workflows);
-  const defaults = ["verify.yml", "build.yml", "buildchain-ref-promotion.yml"];
+  const defaults = ["verify.yml", ".build-candidate.yml", "buildchain-ref-promotion.yml"];
   const names = configured.length > 0 ? configured : defaults;
   if (!fs.existsSync(workflowDir)) {
     return [];

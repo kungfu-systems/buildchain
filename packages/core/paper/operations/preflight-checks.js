@@ -197,73 +197,13 @@ export function paperPreflightPublicationChecks({ npm, status }) {
     },
   ];
 }
-export function paperPreflightNextActions({
-  validationError,
-  source,
-  lockEvaluation,
-  npm,
-  repositoryActions,
-  generatedWriteAuthority,
-  status,
-}) {
-  const actions = [];
-  if (validationError) {
-    actions.push({
-      id: "repair-config",
-      command: "buildchain validate --require-lifecycle-stages verify",
-      description: validationError,
-    });
-  }
-  if (!source.clean) {
-    actions.push({
-      id: "commit-source",
-      command: "git status --short",
+export function paperPreflightNextActions() {
+  return [
+    {
+      id: "migrate-consumer-contract",
+      command: "buildchain paper migrate --json",
       description:
-        "Review and commit the exact source before deterministic publication.",
-    });
-  }
-  if (!lockEvaluation.compatible) {
-    actions.push({
-      id: "refresh-contract-lock",
-      command: "buildchain paper scaffold --json",
-      description:
-        "Review the current runtime contract and resolve the contract-lock difference without overwriting repository files.",
-    });
-  }
-  if (npm.package.exists === false || npm.trust.configured === false) {
-    actions.push({
-      id: "bootstrap-npm",
-      command: "buildchain paper bootstrap npm --json",
-      description:
-        "Run the public-package bootstrap and Trusted Publishing dry-run.",
-    });
-  }
-  if (
-    repositoryActions.status === "observed" &&
-    (repositoryActions.defaultWorkflowPermissions !== "read" ||
-      repositoryActions.canApprovePullRequestReviews !== false)
-  ) {
-    actions.push({
-      id: "constrain-repository-actions",
-      command: "",
-      description:
-        "Set default workflow permissions to read and disable Actions pull-request approval through the repository provisioner.",
-    });
-  }
-  if (generatedWriteAuthority.configured === false) {
-    actions.push({
-      id: "configure-generated-write-authority",
-      command: "",
-      description:
-        "Install a least-privilege GitHub App or configure an equivalent narrow generated-write token without exposing its value.",
-    });
-  }
-  if (status.deterministicBuild.status !== "qualifying") {
-    actions.push({
-      id: "build-paper",
-      command: "buildchain paper build --execute --json",
-      description: "Run the existing qualifying two-clean-build gate.",
-    });
-  }
-  return actions;
+        "Review migration of this legacy Paper repository to schema 2 and the shared normal/recovery caller pair. Historical receipts remain unchanged.",
+    },
+  ];
 }

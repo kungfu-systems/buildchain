@@ -14,7 +14,7 @@ function repository(value, label) {
   return normalized;
 }
 
-const AUTHORITY_WORKFLOW = "public-release-signing-authority.yml";
+const AUTHORITY_WORKFLOW = ".release-signing-authority.yml";
 
 export function resolveAuthorityDispatchRef(value = "v4") {
   if (!["v4", "v4-alpha"].includes(value))

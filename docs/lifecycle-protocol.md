@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 period: ongoing
 theme: buildchain-lifecycle-protocol
 doc_type: technical-reference
@@ -8,15 +8,23 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-31
+last_reviewed: 2026-09-20
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-07-31
+  generated_at: 2026-09-20
   invisible_context: not asserted
 ---
 
-# Lifecycle Protocol
+# Legacy lifecycle protocol
+
+This page retains the schema-1 lifecycle engine reference and older migration
+examples. It is not the schema-2 consumer configuration contract. Current
+consumers declare products, install/build/verify commands, artifacts, targets,
+version files and channels in `.buildchain/buildchain.toml`; see
+[Getting started](getting-started.md) and the [CLI guide](cli.md).
+Publication, proof reuse and recovery are runtime-owned, not lifecycle hooks to
+copy into a new consumer.
 
 Buildchain uses `.buildchain/buildchain.toml` as the v3 repository configuration format.
 The file is optional for simple JavaScript repositories, but it is the preferred
@@ -202,59 +210,13 @@ git diff --check
 """
 ```
 
-`lifecycle.check` is the repository-owned source-acceptance gate. It should
-validate the checked-out source revision without entering the build, artifact,
-or release lifecycle. Consumers can run it on GitHub-hosted Linux through
-`.github/workflows/public-build-check.yml@v3` with `mode: source`; the reusable workflow runs
-only `lifecycle.install` and `lifecycle.check`. The default `mode: verify`
-continues to run `lifecycle.install` and `lifecycle.verify` for existing callers.
-Both executed stages receive `BUILDCHAIN_CHECK_MODE=source` or
-`BUILDCHAIN_CHECK_MODE=verify`, so a repository whose normal install path can
-compile native tooling can select a provisioning-only install path for source
-acceptance without weakening promotion installs.
-The reusable job name remains `check`, and `upload-artifacts: false` disables
-evidence upload without changing the job conclusion used by branch protection.
+The historical `lifecycle.check` source-acceptance stage is retained by the
+internal `.build-check.yml` implementation. Its exact source-proof reuse contract
+is an implementation detail. Current consumers do not supply JSON path sets,
+required check contexts or a separate source-check reusable workflow.
 
-Repositories with an expensive `lifecycle.check` may opt into exact source
-qualification proof reuse for merge groups. Set `source-proof-reuse: true` and
-provide non-empty JSON arrays for the policy, closure, dependency, and required
-context inputs. A successful pull-request run seals its exact source head, base,
-patch, runtime, plan, path-set roots, required contexts, controller receipt, and
-workflow run into a content-addressed artifact. The corresponding merge-group
-run downloads only an unexpired artifact from a successful run of the same
-caller workflow and pull request, recomputes every predicate, and records a
-merge-group-bound reuse decision. Reuse additionally requires the synthetic
-merge-group commit to have exactly the qualified base and proved PR head as its
-two parents; grouped or otherwise changed composition falls back. Exact
-verification skips package setup and the duplicate lifecycle commands while
-retaining the stable `check / check` context and an explicit non-executed
-lifecycle evidence manifest.
-
-The opt-in pull-request producer checks out `pull_request.head.sha`, not the
-ephemeral pull-request merge ref. This keeps the controller receipt, proof
-artifact name, and sealed source identity on the same exact PR head that the
-merge-group verifier binds as its second parent. Other check modes and callers
-retain their existing checkout behavior.
-
-The optimization is fail closed. A missing artifact, API or download error,
-base advance, source change, runtime change, contract change, configured path
-change, file blob change, required-context change, malformed proof, or
-non-qualifying producer receipt runs the full `lifecycle.install` plus
-`lifecycle.check` path. Existing callers remain unchanged because proof reuse is
-disabled by default.
-
-```yaml
-jobs:
-  source-acceptance:
-    uses: kungfu-systems/buildchain/.github/workflows/public-build-check.yml@<exact-sha>
-    with:
-      mode: source
-      source-proof-reuse: true
-      source-proof-policy-paths-json: '[".github/workflows/source.yml"]'
-      source-proof-closure-paths-json: '[".buildchain/buildchain.toml","scripts/source-check.mjs"]'
-      source-proof-dependency-paths-json: '["pnpm-lock.yaml"]'
-      source-proof-required-contexts-json: '["Candidate source acceptance / check"]'
-```
+The remaining examples describe the historical engine's environment and lifecycle
+model; these fields must not be merged into a schema-2 product declaration.
 
 Shared environment variables can be declared once:
 

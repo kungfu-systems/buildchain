@@ -18,6 +18,11 @@ function checkout(t, verify) {
     { recursive: true },
   );
   fs.mkdirSync(path.join(cwd, "src"));
+  fs.cpSync(
+    new URL("../templates/minimal-consumer/npm/.github", import.meta.url),
+    path.join(cwd, ".github"),
+    { recursive: true },
+  );
   fs.writeFileSync(
     path.join(cwd, "src/build.mjs"),
     "import fs from 'node:fs'; fs.writeFileSync('built.txt', 'built');\n",
@@ -54,16 +59,20 @@ function checkout(t, verify) {
   return { cwd, source, platform: "linux-x64" };
 }
 
-test("real product subprocesses receive no provider credential or authority output file", async (t) => {
-  const request = checkout(
-    t,
-    `import assert from 'node:assert/strict';
+test("generated product descendants receive no provider credential or authority output file", async (t) => {
+  const descendant = `import assert from 'node:assert/strict';
 import fs from 'node:fs';
 assert.equal(fs.readFileSync('built.txt', 'utf8'), 'built');
-assert.equal(process.env.GITHUB_TOKEN, undefined);
-assert.equal(process.env.GH_TOKEN, undefined);
-assert.equal(process.env.ACTIONS_RUNTIME_TOKEN, undefined);
-fs.writeFileSync(process.env.GITHUB_OUTPUT, 'qualified=true');
+for (const key of ['GITHUB_TOKEN', 'GH_TOKEN', 'ACTIONS_RUNTIME_TOKEN', 'NODE_AUTH_TOKEN', 'ACTIONS_ID_TOKEN_REQUEST_TOKEN', 'BUILDCHAIN_WARRANT_RESULT'])
+  assert.equal(process.env[key], undefined, key);
+fs.writeFileSync(process.env.GITHUB_OUTPUT, 'qualified=true\\nrequest-json={"candidateRoot":"forged"}\\n');
+`;
+  const request = checkout(
+    t,
+    `import fs from 'node:fs';
+import {execFileSync} from 'node:child_process';
+fs.writeFileSync('generated-product-test.mjs', ${JSON.stringify(descendant)});
+execFileSync(process.execPath, ['generated-product-test.mjs'], {stdio:'inherit'});
 `,
   );
   const output = path.join(request.cwd, "authority-output");
@@ -74,6 +83,9 @@ fs.writeFileSync(process.env.GITHUB_OUTPUT, 'qualified=true');
       GITHUB_TOKEN: "test-secret",
       GH_TOKEN: "test-secret",
       ACTIONS_RUNTIME_TOKEN: "test-secret",
+      NODE_AUTH_TOKEN: "test-secret",
+      ACTIONS_ID_TOKEN_REQUEST_TOKEN: "test-secret",
+      BUILDCHAIN_WARRANT_RESULT: "test-authority",
       GITHUB_OUTPUT: output,
     },
   });
@@ -92,6 +104,15 @@ test("product verification exit failure and tracked drift never produce success"
     "process.exit(0);\n",
   );
   await assert.rejects(buildPipelineSource(request), /tracked modifications/);
+});
+
+test("hidden publication commands are rejected before product execution", async (t) => {
+  const request = checkout(
+    t,
+    "import { spawnSync as run } from 'node:child_process'; run('npm', ['publish']);\n",
+  );
+  await assert.rejects(buildPipelineSource(request), /internal-orchestration/u);
+  assert.equal(fs.existsSync(path.join(request.cwd, "built.txt")), false);
 });
 
 test("a successful product command cannot change tracked source after admission", async (t) => {

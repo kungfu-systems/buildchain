@@ -39,7 +39,7 @@ runs:
       uses: ./.buildchain/runtime/actions/consumer/policy/admit
       with:
         directory: .
-        workflow: .github/workflows/public-build-publication.yml
+        workflow: .github/workflows/.build-publication.yml
         workflow-sha: ${{ inputs.workflow-sha }}
         runtime-sha: ${{ inputs.runtime-sha }}
         stable-lock-path: ${{

@@ -1,10 +1,7 @@
 import { initializeCliRuntime } from "../../contracts/cli/context.mjs";
 import { BUILDCHAIN_USAGE } from "../commands/buildchain-cli-help.mjs";
 import { formatCliHelp } from "../../contracts/cli-reference.js";
-import {
-  TRUST_RELEASE_COMMANDS,
-  dispatchTrustReleaseCommand,
-} from "../../release/cli/trust-release.mjs";
+import { TRUST_RELEASE_COMMANDS } from "../../release/cli/trust-release.mjs";
 import { dispatchRegisteredCommand } from "../../contracts/command-registry.mjs";
 import { handleAdopterDeliveryCommand } from "../../adoption/cli/dispatch.mjs";
 import { handleKfdCommand } from "../../adoption/cli/kfd.mjs";

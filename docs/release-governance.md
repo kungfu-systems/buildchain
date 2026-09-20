@@ -1,1021 +1,173 @@
 ---
-status: draft
+status: active
 period: ongoing
 theme: buildchain-release-governance
 doc_type: technical-reference
 source_level: local-files
 confidence: high
 sensitivity: public
-evidence_grade: A
+evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-14
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-14
-  visible_context: User-directed zero-delay self release policy, required provider evidence and regression tests.
-  invisible_context_boundary: No external consumer changes or completed stable publication is claimed.
+  generated_at: 2026-09-20
+  visible_context: Schema-2 consumer contract, pipeline and recovery entries, and internal release implementations.
+  invisible_context_boundary: No unobserved hosted publication or external consumer migration is claimed.
 ---
 
 # Release Governance
 
-Buildchain v3 preserves the release semantics of the older ABV workflow while
-moving the implementation into one modern repository.
+A reviewed channel PR expresses delivery or release intent. Buildchain manages
+source qualification, protected landing, version material, publication, provider
+readback and recovery through one normal pipeline.
 
-The central idea is simple: a reviewed merge into a release channel is the
-release intent. Automation must then create the version-state commit, exact tag,
-floating tag, and next alpha state that make that intent true in Git.
+## Consumer contract
+
+Consumers maintain three files: `.buildchain/buildchain.toml`, the generated
+`buildchain.yml`, and the generated `buildchain-recover.yml`. Tool-maintained
+contract locks and one-time provider permissions are separate setup facts.
+
+The only public reusable workflows are `public-ops-pipeline.yml` and
+`public-ops-recover.yml`. npm packages, binary assets and Paper PDFs share these
+entries. Their product differences are declared in TOML and ordinary product
+source. See [Getting started](getting-started.md).
+
+Internal actions and workflows are implementation details. Consumers do not add
+patrol, promotion, attestation, candidate or product-specific release callers;
+they do not pass Warrant, proof, payload handoff or arbitrary request JSON.
 
 ## Design Problem
 
-Kungfu release automation has to keep four facts aligned:
-
-1. The source tree that was reviewed.
-2. The package version recorded in manifests such as `package.json` or
-   `lerna.json`.
-3. The exact immutable release or prerelease tag.
-4. The floating channel refs that consumers actually use.
-
-If any one of these facts is updated by hand, the system can split:
-
-- a consumer can fetch `v3.0` and receive a tree whose package version still
-  says the previous release;
-- a maintainer can move `v3` without producing an exact `v3.0.N` audit tag;
-- an alpha can be promoted to production even though the release tree is not the
-  same tree that was tested;
-- a protected branch merge can succeed while the follow-up version commit is
-  missing, or a flow-internal generated `dev`/`alpha`/`release` ref update can
-  fail after publish because the automation identity was not declared in the
-  branch-protection review bypass allowance.
-
-The older ABV workflow addressed this by letting GitHub PRs drive release
-state. Buildchain keeps that choice because it makes release intent reviewable,
-observable, and recoverable from Git history.
-
-## What ABV Contributed
-
-The old ABV model was not just "bump a version number." It encoded a governance
-loop:
-
-- release branches are named as channels: `dev`, `alpha`, `release`, and the
-  administrative `publish-gate/major`;
-- a PR from one channel to the next is the release request;
-- verify jobs check that the branch pair is valid before merge;
-- a maintainer review is required before the branch moves;
-- after merge, automation writes the version change and moves tags;
-- exact tags and floating refs are aligned with the resulting commit;
-- the next development channel is prepared automatically.
-
-ABV also kept the version-state mutation in the repository. For JavaScript
-repositories that usually meant changing `lerna.json` and/or `package.json`.
-That commit is important because the tag alone is not enough evidence: the
-source tree should also declare the version that the tag advertises.
-
-Buildchain v3 treats that as a hard semantic requirement for its own release
-line.
-
-## Buildchain Implementation
-
-Buildchain implements the same governance loop with:
-
-- `.github/workflows/self-build-release-verify-compat.yml` for PR verification;
-- `.github/workflows/self-release-promote.yml` for post-verify ref
-  promotion; this workflow dogfoods the declarative
-  `public-release-promote.yml` wrapper and does not hand-wire resolver,
-  artifact download, publish-gate, or promote action steps;
-- Buildchain self promotion enables `release-passport-buildchain-self-kfd`, so
-  the promote action generates KFD-1 witnesses, KFD-2 public claim JSON, and
-  KFD-3 collaboration-interface witnesses from the final version-state workspace
-  before release passport finalization. The witness hashes therefore bind to the
-  exact published package and site facts from
-  `packages/core/adoption/buildchain-kfd-claims.js` instead of relying on prose release
-  notes;
-- `actions/release/promotion/ref` for branch, tag, version-state, and
-  governance checks;
-- package-manager adapters that can update version state for pnpm, npm, and
-  yarn style repositories;
-- `buildchain.toml` lifecycle configuration for repositories whose version
-  state or verification commands are not Node package-manager defaults.
-
-The implementation is intentionally stricter than a local release script:
-
-- manual workflow dispatch can only do dry-run promotion;
-- non-dry-run promotion must be driven by a completed `Verify` workflow;
-- target branch protection details must be readable, and branch protection must
-  apply to administrators as well as regular contributors;
-- `alpha/vX/vX.Y` and `release/vX/vX.Y` branch protection must require both the
-  general `check` context and the Release Verify aggregate `verify` context, so
-  an invalid channel pair cannot merge even when repository checks pass;
-- release targets keep those checks non-strict with respect to source-branch
-  ancestry: generated channel bookkeeping intentionally makes the source and
-  target histories diverge, while the pair-specific `verify` context validates
-  the legal channel transition;
-- alpha promotion must come from a merged same-repository PR from
-  `dev/vX/vX.Y` to `alpha/vX/vX.Y`;
-- release promotion must come from a merged same-repository PR from
-  `alpha/vX/vX.Y` to `release/vX/vX.Y`;
-- major promotion must come from a merged same-repository PR from
-  `release/vX/vX.Y` to `publish-gate/major`;
-- release promotion requires an existing same-patch alpha tag and checks the
-  release source tree against that tested alpha tree;
-- generated version-state commits are verified before refs move.
-
-## Reconciling a protected line without rebuilding
-
-The public `build.yml` channel router ends with a top-level job named
-`Summarize build contract`. Keeping this aggregate at the public router boundary
-prevents its required check context from changing when the internal reusable
-build workflow gains another nesting layer.
-
-For an already-tested pull request whose protected target still requires an
-older Buildchain aggregate context, inspect the exact candidate SHA first:
-
-```bash
-GH_TOKEN="$(gh auth token)" npx @kungfu-tech/buildchain@latest \
-  release-governance reconcile \
-  --repository kungfu-systems/example \
-  --branch release/v3/v3.0 \
-  --candidate-sha <tested-pr-head-sha> \
-  --json
-```
-
-The dry run reads the successful checks emitted for that SHA and reports the
-exact expected/actual context pair. It chooses the shallowest successful
-`Summarize build contract` context, so a new top-level router aggregate wins
-over the nested internal build summary. To apply the plan, rerun the same
-command with `--apply` using a token that can update branch protection.
-
-Reconciliation changes only the required-status-check subresource. It replaces
-stale Buildchain aggregate contexts, preserves unrelated checks and strictness,
-and does not modify review requirements, administrator enforcement,
-conversation resolution, force-push policy, or deletion policy. The candidate
-must still be the head of a pull request targeting the named managed branch;
-the command fails closed otherwise. This lets a previously successful candidate
-continue from the same SHA without another native build or an administrator
-merge bypass.
-
-Repositories may also expose a small caller workflow around
-`.github/workflows/public-ops-release-governance.yml@v3`. Pass `branch`,
-`candidate-sha`, and `apply`, and provide `governance-token` through the caller's
-secrets. The reusable workflow uploads the JSON reconciliation receipt.
-
-Exact publication planning installs the checked-out promotion source's declared
-dependencies before version-state verification. This keeps the pre-authority
-version plan on the same package-manager boundary as the later promotion job,
-including repositories whose verification commands import production packages.
-The planning pass may materialize and verify declared derived files locally,
-but dry-run never creates Git blobs, trees, commits, refs, or tags.
-
-Promotion intents are serialized globally per caller repository with
-`cancel-in-progress: false`. A queued intent re-reads its protected target ref
-before checkout, dependency installation, release-candidate resolution, or any
-publish-gate/ref mutation. If the ref already points at a newer SHA, that older
-intent is no longer release authority: the workflow records the requested and
-current SHAs, proves that the current target is ahead of the requested commit,
-and completes as a `target-ref-advanced` superseded no-op. Diverged or behind
-comparisons are not superseded transactions and still fail closed.
-Missing refs, unreadable repository state, invalid channels, governance
-failures, and artifact mismatches still fail closed. The promote action repeats
-the target check at the mutation boundary, so a ref that advances after the
-workflow preflight cannot receive a second set of publication side effects.
+A release must agree on the reviewed source, version material, exact tags,
+published bytes and floating channel refs. A successful test or a merged PR
+proves only its own stage. Buildchain records source and runtime identities and
+reads providers back before accepting publication or terminal settlement.
 
 ## Version Lines
 
-Kungfu uses Python-like version lines where a minor line can represent a
-long-lived product train. A line such as `v3.0` can produce many production
-patch releases:
+| Intent | Source | Target |
+| --- | --- | --- |
+| Development | `feature/*`, `fix/*`, `chore/*`, `docs/*`, `ci/*`, `refactor/*` | configured `dev/vX/vX.Y` |
+| Alpha | `dev/vX/vX.Y` | `alpha/vX/vX.Y` |
+| Stable | `alpha/vX/vX.Y` | `release/vX/vX.Y` |
+| Major | `release/vX/vX.Y` | `publish-gate/major` |
 
-```text
-v3.0.0
-v3.0.1
-v3.0.2
-...
-v3.0.1234
-```
+The schema-2 channel declaration admits only legal branch pairs. `dev` is a
+protected development channel; work is proposed from an isolated task branch.
+`publish-gate/major` is an explicit major-release decision, not a development trunk.
 
-This is why Buildchain maintains both exact and floating refs:
+## Buildchain Implementation
 
-- `v3.0.2` is immutable release evidence;
-- `v3.0` is the latest production release on the `3.0` line;
-- `v3` is the selected stable major-line entrypoint;
-- `v3.0.3-alpha.0` is immutable alpha evidence;
-- `v3.0-alpha` is the latest test channel for the `3.0` line.
-- `v3-alpha` is the latest test channel on the highest published alpha minor in major `3`.
+The generated normal entry handles source events and invokes the shared runtime.
+The runtime owns internal build, delivery and publication jobs while retaining
+independent reviews, merge queues, credential isolation and exact-source checks.
+An internal split across several jobs or workflows does not add consumer wiring.
 
-A release does not mean "minor is complete." It means "this patch on this minor
-line is now production."
-
-GitHub repository rules must preserve that distinction. Exact tags such as
-`v3.0.2` and `v3.0.3-alpha.0` should be immutable. Floating channel tags such as
-`v3`, `v3.0`, `v3.0-alpha`, and `v3-alpha` must remain movable by the Buildchain promotion
-token after governance checks and publish evidence pass. A tag ruleset that
-protects every `refs/tags/v*` ref is too broad because it also locks the
-floating channel tags that Buildchain is required to update. Prefer exact-tag
-patterns such as `refs/tags/v*.*.*` for immutable release evidence, while
-leaving floating channel tags under Buildchain automation control.
-
-## Alpha Semantics
-
-An alpha merge is:
-
-```text
-dev/vX/vX.Y -> alpha/vX/vX.Y
-```
-
-Buildchain then:
-
-1. Computes the next prerelease for the minor line.
-2. Writes version state such as `vX.Y.Z-alpha.N`.
-3. Verifies the generated version-state tree.
-4. Creates or reuses the exact alpha tag.
-5. Moves `alpha/vX/vX.Y` to the generated alpha commit.
-6. Moves `dev/vX/vX.Y` to the same generated alpha commit when this is a
-   fast-forward update.
-7. Moves `vX.Y-alpha` to the same generated alpha commit.
-8. Moves `vX-alpha` only when `X.Y` is the highest minor in major `X` with a published alpha; older minor alpha work records a skip and cannot move the major channel backwards.
-
-The npm channel follows the same ownership rule. The highest alpha minor publishes
-with dist-tag `alpha`; maintenance alphas on an older minor publish with the
-line-specific dist-tag `vX.Y-alpha` so they cannot roll the global `alpha`
-channel backward. Exact prerelease versions remain installable directly.
-
-This keeps the test channel self-describing. If a consumer checks out
-`v3.0-alpha` or `v3-alpha`, the manifests and exact alpha tag agree. The major
-alpha ref removes routine consumer edits when Buildchain opens a newer minor,
-while exact tags and SHAs remain the reproducible audit choice.
-
-### Buildchain public build self-dogfood
-
-Two independent thin workflows continuously qualify the published channels.
-`self-build-alpha-dogfood.yml` calls `build.yml@v4-alpha` with zero inputs and
-runs the root project's real install, build, and verify lifecycle.
-`self-build-stable-dogfood.yml` calls `build.yml@v4` with zero inputs and runs
-the same root lifecycle on Linux, macOS, and Windows. Project settings
-live in TOML; the selected runtime records its execution SHA and configuration
-root into the build receipts. Separate workflow validation allows each channel
-to advance independently during a breaking producer-first release.
-
-Buildchain's generic artifact-signing contract seals source-, tree-, runtime-,
-platform-, and digest-bound requests from ordinary credential-free build jobs.
-Provider-specific authority jobs consume only those sealed payloads. Apple
-Developer ID, Windows Authenticode, and detached cryptographic signatures share
-the request/receipt model, while each profile retains its honest platform
-semantics and fail-closed verification requirements.
-
-The authority verifies the complete result set on GitHub-hosted infrastructure
-before delivery. The consumer controller also performs final result verification,
-exact-byte import, manifest recomputation, and deterministic-artifact replacement
-on a GitHub-hosted lane. Self-hosted build runners do not download authority
-result payloads, and aggregate/release evidence fails closed until this
-finalization succeeds.
-
-The central `buildchain-artifact-signing` environment reuses the established
-macOS Credential Island names (`BUILDCHAIN_MACOS_CERTIFICATE_*`,
-`BUILDCHAIN_MACOS_NOTARY_API_*`, and
-`BUILDCHAIN_MACOS_EXPECTED_TEAM_ID`). Those authority-only values are never
-declared by or forwarded through a consumer repository. Windows and detached
-providers follow the same central-environment boundary.
-
-The reusable build trust gate reads `job.workflow_ref`, which identifies the
-called workflow and its selected ref. It does not infer the runtime from
-`github.workflow_ref`, because GitHub defines that context as the caller
-workflow identity during a reusable call.
-
-The router selects `.buildchain/alpha-contract-lock.json` for alpha and
-`.buildchain/contract-lock.json` for stable. The alpha lock records the exact
-reviewed alpha SHA and compatibility digest; it does not replace the stable
-consumer lock. A later alpha with only compatible additive drift continues,
-while a changed breaking digest fails until the new alpha contract is reviewed.
-
-The evidence job resolves `v3-alpha` and `v3` through the GitHub refs API,
-compares those immutable SHAs with the reusable workflow outputs, verifies the
-`alpha` and `stable` classifications, and uploads a JSON evidence artifact.
-The canary runs after successful Buildchain ref promotion, on a daily fallback
-schedule, and on manual dispatch. It shares the release-promotion concurrency
-group, so another promotion cannot move the floating refs between runtime
-resolution and evidence comparison.
-
-This is a post-publication consumer canary, not a release bootstrap. Source
-verification still runs the current commit, and
-`self-release-promote.yml` still passes the verified exact SHA into the
-promotion workflow. Patrol, dev-merge, repair, and promotion defaults remain on
-stable or exact refs so a broken alpha cannot prevent Buildchain from publishing
-its fix. When Buildchain opens a new major, inventory validation requires this
-workflow's fixed GitHub `uses` refs to move from `vN`/`vN-alpha` to the new
-major; GitHub does not allow expressions in a reusable-workflow `uses` ref.
-
-If `dev/vX/vX.Y` has already advanced before generated alpha version-state
-bookkeeping can sync back, Buildchain records `skipped-non-fast-forward` for the
-dev sync and still completes the exact and floating alpha tags for the reviewed
-alpha commit. Later dev changes must go through their own dev-to-alpha
-promotion instead of rewinding dev. The normal path is direct: after alpha
-merges, Buildchain applies the generated version-state commit to alpha and then
-fast-forwards dev to the same commit without a human version-state PR.
-
-If alpha finalization is resumed after generated version-state bookkeeping was
-partially applied, Buildchain accepts the current alpha head as the generated
-commit, or as a historical merge commit that contains the recorded release
-material. An already-created exact alpha tag may point at the transaction
-release/material SHA or at the finalized alpha head; missing floating alpha
-tags are retried before the transaction becomes `complete`.
-
-## Release Semantics
-
-A release merge is:
-
-```text
-alpha/vX/vX.Y -> release/vX/vX.Y
-```
-
-Buildchain then:
-
-1. Finds the same-patch alpha tag that was tested.
-2. Checks that the release source tree matches that alpha tag tree, excluding
-   only generated version-state differences.
-3. Writes final release version state such as `vX.Y.Z`.
-4. Verifies the generated release tree.
-5. Creates or reuses the exact release tag `vX.Y.Z`.
-6. Moves `release/vX/vX.Y` to the exact release commit.
-7. Moves `vX.Y` to the exact release commit.
-8. Moves `vX` when this minor line should be the stable major entrypoint.
-9. Prepares the next alpha version-state commit, such as
-   `vX.Y.(Z+1)-alpha.0`.
-10. Moves `alpha/vX/vX.Y`, `dev/vX/vX.Y`, and `vX.Y-alpha` to that next alpha
-    commit.
-11. Moves `vX-alpha` to that next alpha only when this remains the highest published alpha minor.
-
-The historical alpha tree comparison remains the default stable source gate.
-A promote-only stable run may accept a broader reviewed release PR only when
-the downloaded RC passport proves that the PR's exact target tree is the tree
-that completed the PR-stage build. Buildchain also requires the target commit
-to belong to a merged same-repository PR into the selected release branch and
-records the accepted commit, tree, RC source, alpha source, and PR as promotion
-evidence. A stale passport, a different target tree, a generated final release
-commit, or an unreviewed target commit still falls through to the normal
-alpha-tree and declared version-state checks.
-
-The production channel and the test channel therefore intentionally diverge
-after release: production stays on the release commit, while alpha/dev continue
-at the next prerelease commit.
-
-### Stable Release Evidence Gate
-
-Buildchain's own stable channel has an additional pre-publication gate. It is
-evaluated after the PR-stage release candidate has been resolved and before the
-publish-gate ref, package registry, exact stable tag, or floating stable refs
-are mutated. Train refs and alpha promotion do not execute this gate.
-
-All alpha and release promotions first run a metadata-only release-candidate
-preflight after queued-intent revalidation. The preflight uses the same resolver
-and exact target SHA as the publication job, but does not download payloads or
-install the candidate repository dependencies. Missing channel PRs, stale
-workflow runs, expired passport pairs, and insufficient payload artifact sets
-therefore fail before the full promotion job starts. The publication job still
-downloads and validates the exact evidence again at the trust boundary; the
-preflight moves failure earlier without weakening the final check.
-
-The policy is versioned in `.buildchain/stable-release-policy.json`. A stable
-candidate is allowed only when all of these facts are true:
-
-- the candidate resolves to an immutable exact alpha tag and its GitHub
-  prerelease timestamp;
-- the preceding stable-to-alpha comparison contains a product or public
-  contract path, not only version, test, evidence, or retrospective changes;
-- the version-bound impact record has a non-empty summary and at least one
-  surface impact;
-- the `Build Surface Fixture` release-candidate run succeeded;
-- Buildchain's zero-input `Buildchain Alpha Self-Dogfood` completed on all three
-  platforms, and `github-actions[bot]` attested the exact published alpha runtime
-  through `buildchain-canary/buildchain-zero-input`;
-- the status target is the repository-owned alpha dogfood workflow, its summary
-  archive matches the provider digest, and the summary binds the source run,
-  attempt, exact candidate runtime and all install/build/verify stages; overrides,
-  another candidate and incomplete artifacts are rejected.
-
-The machine report is written to
-`.buildchain/release-passport/stable-release-gate.json`. A passing report is
-uploaded with the stable release passport. A blocked run writes the same report
-before failing, so the missing or stale condition is inspectable without
-opening a publication transaction.
-
-The `public-build` canary uses the build summary as runtime evidence. It does
-not infer the runtime from the consumer source commit or a run display name.
-Generic `commit-status` consumer canaries remain supported for repositories that
-explicitly declare them; their runtime input or workflow-owned run-name binding
-continues to apply.
-
-Buildchain sets both the minimum stable interval and canary soak duration to
-zero. A candidate can proceed as soon as its required evidence is valid; no
-fixed cooldown, soak window or scheduled release time delays this delivery.
-Changing the canary set, attestors or product path boundary remains a reviewed
-policy change.
-
-Repositories that want a predictable scheduled stable window can use
-[`Stable Candidate Patrol`](stable-candidate-patrol.md). It persists each exact
-alpha independently, qualifies it after repository-declared checks and soak,
-and selects the newest qualified non-revoked candidate. A newer soaking alpha
-does not invalidate an older qualified candidate. The selected tree enters the
-existing strict `publish-gate/release/<line>/<version> -> release/<line>` PR
-path, so scheduled selection changes release intent timing without weakening
-source locks, review, verification, publish transactions, or passports.
-
-If release finalization is resumed after generated version-state bookkeeping was
-partially applied, Buildchain applies the same recovery rule: the current
-release head may be the generated commit, or a historical merge commit that
-contains the recorded release material, existing exact tags and alpha/dev refs
-are accepted when they match the transaction, and missing floating `vX.Y` or
-`vX` tags are retried idempotently before completion.
-
-Once the durable release transaction is `complete` and the exact/floating
-stable refs have moved, next-alpha preparation is post-release bookkeeping. A
-failure there records `deferred-post-release-bookkeeping` and
-`next-anchor-required` instead of retroactively reporting the stable release as
-failed. Generated next-alpha merges use the current dev tree as their base and
-overlay only declared version-state paths, preserving concurrent dev changes.
-
-## Major Gate Semantics
-
-A major gate merge is:
-
-```text
-release/vX/vX.Y -> publish-gate/major
-```
-
-`publish-gate/major` is the explicit replacement for the older ABV `main`
-channel. The name is intentionally operational: it is a gate for a rare
-administrator decision, not the active trunk. Keeping this decision in the same
-PR UI as alpha and release promotion keeps the human workflow simple while
-avoiding the misleading meaning of `main`. The older `major-gate` branch name is
-a compatibility alias only.
-
-Buildchain then:
-
-1. Verifies the source is a merged same-repository PR from a protected release
-   line into `publish-gate/major`.
-2. Writes the next major production version state, such as `v(X+1).0.0`.
-3. Creates or reuses the exact release tag `v(X+1).0.0`.
-4. Moves `publish-gate/major` and `release/v(X+1)/v(X+1).0` to that release commit.
-5. Moves `v(X+1).0` and `v(X+1)` to that release commit.
-6. Prepares the next alpha version-state commit, such as
-   `v(X+1).0.1-alpha.0`.
-7. Moves `alpha/v(X+1)/v(X+1).0`, `dev/v(X+1)/v(X+1).0`, and
-   `v(X+1).0-alpha` to that next alpha commit.
-
-Checking out `publish-gate/major` should therefore look like a frozen release
-state, not like a branch where day-to-day source work continues. Day-to-day
-source work continues on `dev/vX/vX.Y`.
+The TOML compiler is closed: products declare install/build/verify commands,
+artifacts and supported publication targets; version files and channel policy
+are explicit. Consumer commands do not implement registry publication, evidence
+packaging, provider readback, event routing or recovery. The schema is described
+in the [CLI manual](cli.md) and [product publication guide](publication-artifacts.md).
 
 ## Protected Dev Branches
 
-`dev/vX/vX.Y` is a protected development channel, not a scratch branch. Normal
-source changes should be made on work branches such as `feature/*`, `fix/*`,
-`chore/*`, `docs/*`, `ci/*`, or `refactor/*`, then reviewed through a pull
-request into the target dev line.
+The declared review policy requires independent approval, Code Owners and a
+protected merge queue. The runtime validates current source/base identity and
+the provider's review/check state before landing. A queue admission or a pending
+check is not a merged delivery. Repeated, stale and out-of-order events remain
+bound to their own source and attempt.
 
-This keeps the earliest development channel audit-friendly:
+Buildchain's Warrant, fencing and native-proof mechanisms are internal scheduling
+and authority boundaries. Their [implementation contract](dev-delivery-warrant.md)
+and [node orchestration](dev-delivery-orchestration.md) do not require additional
+consumer scripts or allow a caller to forge proof or bypass protection.
 
-- the version line being changed is visible in the PR base branch;
-- CI and required checks run before the channel moves;
-- branch protection can prevent direct pushes and stale merges;
-- later `dev -> alpha -> release` promotion inherits a reviewable source
-  lineage instead of trying to reconstruct how the dev branch changed.
+One-time permission or provider setup must preserve these review and credential
+boundaries. It does not become a recurring consumer runtime step.
 
-When required checks take longer than the normal dev-channel commit interval,
-classic strict up-to-date protection can become a non-converging retry loop:
-each base update invalidates a completed check set and rebasing restarts the
-same slow checks. Buildchain supports GitHub merge queues for that channel
-shape. The queue validates the projected merged result and serializes the final
-ref update, so concurrent channel movement no longer invalidates the candidate.
+## Alpha Semantics
 
-GitHub Merge Queue does not by itself decide which candidate may spend a long
-native proof before enqueue. Repositories with that workload use the
-[Dev Delivery Warrant Queue](dev-delivery-warrant.md) as the durable,
-FIFO-aging scheduling and fencing authority before native queue admission. A
-selected Warrant owns one complete delivery attempt and later candidates remain
-visibly queued; GitHub still owns the exact `merge_group` proof and final ref
-mutation. Workflow concurrency remains only a process critical section and is
-not fairness or ownership authority.
+A legal development-to-alpha PR requests a fresh prerelease. The runtime owns
+version materialization, product qualification and publication. Exact alpha tags
+and published package versions are immutable evidence; floating alpha refs
+identify the published channel. A later alpha is a new publication, not a rewrite
+or repair of an earlier failed version.
 
-Every required workflow must handle both `pull_request` and `merge_group`
-before the queue is enabled. Queue runs do not provide
-`github.event.pull_request`; required workflows must use the checked-out
-`github.sha` or event-neutral source facts. The governance command is dry-run by
-default and refuses to enable a queue when a declared required workflow lacks
-either trigger or still reads the pull-request-only payload directly:
+### Buildchain public build self-dogfood
 
-```bash
-buildchain dev merge-queue \
-  --repository owner/repository \
-  --branch dev/v4/v4.0 \
-  --workflow .github/workflows/source-acceptance.yml \
-  --workflow .github/workflows/affected-native-pr.yml \
-  --bypass-app dedicated-release-app
-```
+Buildchain consumes the same generated normal/recovery pair and schema-2 policy.
+Its product commands verify Node, Rust and the required Linux/macOS/Windows
+artifacts. Runtime locks, source identities and hosted evidence remain separate;
+self-consumption has no repository-specific runtime-selection exception.
 
-After reviewing the plan, repeat with `--apply`. Buildchain creates or updates
-an exact-branch `merge_queue` ruleset first, then changes only the classic
-required-status-check policy from strict to loose. Reviews, administrator
-enforcement, conversation resolution, required check identities, force-push
-protection, and deletion protection remain owned by the existing branch
-protection. The ruleset uses the first merge method that the repository itself
-allows, and fails closed when the repository has no enabled merge method.
-Re-running the command is idempotent.
+## Release Semantics
 
-The repository policy can be declared once instead of repeated as CLI flags:
+A legal alpha-to-release PR requests stable publication. The runtime validates
+its source, admitted material and version-bound evidence before provider effects.
+Existing published payloads and receipt bytes remain immutable on recovery.
 
-```toml
-[governance.dev.merge_queue]
-mode = "inherit"
-required_workflows = [".github/workflows/self-build-verify.yml"]
-```
+### Stable Release Evidence Gate
 
-`enabled` explicitly requires Buildchain to create or update an exact-branch
-queue; `inherit` copies queue parameters and bypass actors from the repository's
-current default dev branch; `disabled` prevents automatic queue creation. An
-absent declaration behaves as `inherit` during release-line bootstrap so a new
-major or minor line does not silently lose governance already active on the
-previous line. Required status-check identities still come from the new
-branch's own classic protection rather than being copied from the old branch.
+The stable policy requires product impact and qualified published-entry evidence
+bound to the selected source/runtime. `.buildchain/buildchain.toml` declares the
+current policy, with supporting version-bound impact in
+`.buildchain/release-impact.json`. Buildchain currently declares both minimum
+interval and soak as zero: valid evidence can proceed without a fixed delay.
 
-Merge-queue rules also reject generated post-publish version-state ref updates.
-When the sealed promotion workflow uses a dedicated GitHub App, user, or team
-already declared by release governance, repeat `--bypass-app`, `--bypass-user`,
-or `--bypass-team` to project that exact actor into the ruleset. Bypass actors
-are never inferred and broad repository or organization roles are not accepted.
-This keeps ordinary feature PRs on the predecessor-aligned queue path while the
-sealed publication authority can finish its machine-verified bookkeeping. The
-dry-run receipt exposes the exact actor IDs before `--apply` changes GitHub.
+The [stable-entry implementation](../packages/core/publication/pipeline/stable-entry.js)
+checks the published entry; an old standalone dogfood workflow name or a green
+local test is not a substitute. Publication and its later distribution and
+next-development stages retain separate completion facts.
 
-Buildchain provides the reusable
-`.github/workflows/public-ops-dev-auto-merge.yml` workflow for repositories that want a
-scheduled or manual "merge ready dev PRs" pass. The consumer repository owns
-the trigger schedule, but the merge decision is declared through workflow
-inputs: target dev branch, required status/check names, ready and block labels,
-allowed work-branch prefixes, review requirements, maximum merges per run,
-merge method, and dry-run mode.
+Stable completion prepares the next patch's `alpha.0` using the current protected
+development source and declared version paths. Concurrent development must be
+preserved. See [Next-development transition](next-development-transition.md).
 
-Agent delivery uses the targeted Buildchain command instead of relying on a
-scheduled scan:
+## Major Gate Semantics
 
-```sh
-buildchain dev pr-admit \
-  --repository kungfu-systems/example \
-  --branch dev/v3/v3.0 \
-  --pull-request 123 \
-  --expected-head 0123456789abcdef0123456789abcdef01234567
-```
+A release-to-major-gate PR is the reviewed intent to publish the next major.
+The runtime applies the same exact source, version, provider and protected-ref
+boundaries. A branch name or manual workflow dispatch alone is not authority.
 
-The default is a mutation-free plan. After reviewing it, add `--execute` to
-establish the configured readiness label for only that PR and exact head, read
-the state back, and attempt native queue admission. Repeating execute is
-idempotent: an exact matching queue entry is adopted, not submitted again. A
-stale head or base, fork, draft, block label, missing approval, failed check,
-active predecessor, or rejected enqueue exits nonzero. Execute mode also
-creates or updates an exact-head PR comment and named commit status containing
-the current state, reason, receipt root, and copyable next action. The JSON
-receipt remains the complete content-addressed evidence.
+## Failure and recovery
 
-GitHub auto-merge is observed but is never readiness or admission authority.
-Approval plus green checks plus auto-merge enabled does not qualify a PR that
-lacks explicit Buildchain delivery intent. The targeted workflow interface
-exposes the same contract through `expected-pr-number` and
-`expected-head-sha`; cadence patrol runs leave those inputs empty.
+Use `buildchain-recover.yml` with the exact `attempt`. Supply the optional
+`runtime-ref` only when a repaired runtime is needed. Recovery restores original
+material and reads providers before remaining effects; it does not replace
+source or published payloads. Consumers do not supply run/Discussion/transaction
+selector combinations or custom recovery scripts.
 
-The workflow defaults are conservative. A PR is skipped unless it targets the
-configured dev line, is not a draft, has the ready label, has no block label,
-comes from the same repository, uses an allowed work-branch prefix, has a
-current approval, is mergeable, and has the configured required checks passing.
-`landing-mode: auto` reads the target branch's native merge-queue state. When a
-queue exists, Buildchain never calls the direct merge endpoint: it admits at
-most one PR against the observed target-branch SHA and immutable PR head, then
-calls GraphQL `enqueuePullRequest` with `expectedHeadOid`. GitHub's
-`merge_group` checks remain the final authority for the projected merge.
-
-The admission receipt records the expected and observed base/head SHAs, policy
-checks, decision, reason, and active predecessor. Buildchain re-reads the base,
-head, mergeability, and native queue immediately before enqueueing. Base or
-head drift fails closed, an active queue entry blocks admission, and a rejected
-ready predecessor leaves its PR open while later PRs receive
-`blocked-by-predecessor`. Workflow concurrency serializes Buildchain-owned
-admission runs; GitHub still owns the atomic queue and protected-ref update.
-Repositories may explicitly select `landing-mode: direct` only when the target
-branch has no native queue. Queue presence always disables the direct path.
-
-For slow candidates on a frequently advancing dev line, the optional
-[Dev Delivery Warrant Queue](dev-delivery-warrant.md) adds durable FIFO plus
-aging scheduling before native queue admission. It separates reusable source
-qualification from exact merge-group integration, uses expected-old Git-ref
-updates and fenced leases, and keeps the PR head unchanged when only dev moves.
-The reusable caller supports `off`, read-only `shadow`, and fail-closed
-`required` rollout modes. GitHub Merge Queue remains the final protected-ref
-authority in every mode.
-
-The canonical consumer required check context is `check / check`, matching the
-reusable workflow call plus its `check` job. Buildchain's own `Verify` workflow
-emits the repository-local context `check`, so Buildchain self-promotion,
-release-line bootstrap, and dogfood patrol wrappers pass `check` explicitly.
-Release governance preserves the exact context emitted by the repository and
-records branch-protection policy before/after facts; it does not rewrite one
-context shape into the other. Consumer repositories can keep their context
-stable while changing the actual verification command declaratively in
-`buildchain.toml`:
-
-Before a release caller is merged, consumers should also verify its exact
-reusable-workflow call contract. The checker reads the caller and an already
-checked-out exact Buildchain commit; it never resolves a floating ref or starts
-a release. It rejects unknown or missing inputs and secrets, literal type
-drift, insufficient permissions, untrusted event classes, and a caller pin that
-does not equal the checked callee commit. Defaults, workflow bytes, and the
-complete interface are bound into `contractRoot`; the receipt additionally
-binds the caller commit/tree and both workflow digests.
-
-```sh
-node .buildchain/runtime/packages/core/contracts/commands/workflow-call-contract.mjs check \
-  --caller-root . \
-  --caller-workflow .github/workflows/self-release-new-version-compat.yml \
-  --caller-repository kungfu-systems/example \
-  --job promote \
-  --callee-root .buildchain/runtime \
-  --callee-workflow .github/workflows/public-release-promote.yml \
-  --callee-repository kungfu-systems/buildchain \
-  --trusted-event workflow_dispatch \
-  --trusted-event pull_request:closed \
-  --expected-contract-root "$(cat .buildchain/release-call-contract-root)" \
-  --output .buildchain/workflow-call-receipts/release-new-version.json
-```
-
-Use the runtime prepared by the central entry for this offline contract audit.
-The caller persists a floating entry; its resolved API definition is distinct
-from the selected execution runtime. To accept an intentional contract change,
-review the full diagnostic and source coordinates before replacing the committed
-contract root. This audit does not add a runtime-SHA equality gate to execution.
-Local pre-commit rehearsal may add `--allow-dirty`; that result is marked
-`receiptReusable: false` and cannot replace the clean exact-source receipt.
-
-```toml
-[lifecycle.install]
-command = "cargo fetch --locked"
-
-[lifecycle.verify]
-command = "cargo test --workspace --locked"
-```
-
-Consumers that want Buildchain to own the check wrapper can call
-`.github/workflows/public-build-check.yml@v4`. The wrapper runs the declared
-`lifecycle.install` and `lifecycle.verify` stages and fails the `check` job when
-either declaration is missing or the command exits non-zero.
-
-Development pull requests that need source acceptance without product build or
-artifact verification can opt into `mode: source`. That mode runs only
-`lifecycle.install` and `lifecycle.check` on GitHub-hosted `ubuntu-24.04` while
-preserving the stable `check / check` required-check context. Existing callers
-remain on `mode: verify` by default, and callers may set
-`upload-artifacts: false` without weakening the job conclusion.
-
-Typical consumer wrapper:
-
-```yaml
-name: Merge Ready Dev PRs
-
-on:
-  schedule:
-    - cron: "17 * * * *"
-  workflow_dispatch:
-    inputs:
-      dry-run:
-        type: boolean
-        default: true
-
-jobs:
-  merge-dev:
-    uses: kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@v3
-    permissions:
-      contents: write
-      pull-requests: write
-      checks: read
-      statuses: write
-    with:
-      target-branch: dev/v3/v3.0
-      required-status-checks: check / check
-      queue-admission-context: Queue admission lease
-      ready-label: ready
-      block-labels: blocked,do-not-merge
-      max-merges: 1
-      landing-mode: auto
-      dry-run: ${{ inputs.dry-run || false }}
-```
-
-When the protected branch requires a merge-group-only queue lease, the wrapper
-posts that configured context as a temporary success status on the exact PR
-head only after the ready, review, and required-check gates pass. It then
-enqueues with `expectedHeadOid`; a rejected enqueue rewrites the temporary
-status to failure, while the merge group must still produce its own final check.
-
-## Buildchain Patrol
-
-`public-ops-dev-auto-merge.yml` remains the focused merge primitive. For repositories
-that want a stable day-to-day operations contract, Buildchain also exposes a
-patrol workflow family:
-
-| Workflow                                         | Intended cadence                   | Default intent                                                                             |
-| ------------------------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------------------ |
-| `.github/workflows/public-ops-patrol-daily.yml`             | daily                              | lightweight inspection plus ready dev PR maintenance                                       |
-| `.github/workflows/public-ops-patrol-weekly.yml`            | weekly                             | release-state, passport, gate, and stale-state health checks as they are added             |
-| `.github/workflows/public-ops-patrol-monthly.yml`           | monthly                            | governance, permission, branch-protection, and workflow drift checks as they are added     |
-| `.github/workflows/public-ops-observed-evidence.yml` | caller-selected schedule           | validated immutable observation plus atomic last-known-good publication; no per-refresh PR |
-| `.github/workflows/public-ops-stable-candidate-patrol.yml`  | repository-selected release window | qualify immutable alpha candidates and open the exact source-lock stable PR                |
-
-The cadence names describe patrol intensity, not release cadence:
-
-- daily patrol can run every day without implying a daily release;
-- weekly patrol is for medium-cost maintenance and audit checks;
-- monthly patrol is for structural drift checks that should not block ordinary
-  development velocity.
-
-Every cadence result is typed `runKind: cadence-patrol` with
-`qualification: false`. A run with no open candidates reports
-`no-op-no-candidates`; a run where every candidate is skipped reports
-`no-op-all-skipped`. Either no-op can keep maintenance green, but neither is a
-delivery qualification, a targeted admission receipt, or evidence that an
-expected PR entered the merge queue.
-
-Stable Candidate Patrol is separate from those maintenance cadences because its
-caller-owned cron is a release-intent window. Its candidate ledger and selection
-remain generic; registry-specific side effects still run through the normal
-repository `lifecycle.publish` transaction. See
-[`stable-candidate-patrol.md`](stable-candidate-patrol.md).
-
-Observed data that is mechanically regenerated and path-scoped uses the
-separate [`Observed Evidence Patrol`](observed-evidence-patrol.md) contract.
-Its one-time mechanism changes remain reviewed, while steady-state snapshot
-refreshes publish directly from trusted default-branch schedule/manual callers.
-
-Consumers should schedule thin callers and keep their YAML declarative. For
-example:
-
-```yaml
-name: Buildchain Daily Patrol
-
-on:
-  schedule:
-    - cron: "17 2 * * *"
-  workflow_dispatch:
-
-jobs:
-  patrol:
-    uses: kungfu-systems/buildchain/.github/workflows/public-ops-patrol-daily.yml@v3
-    with:
-      dry-run: false
-      max-actions: 1
-```
-
-Weekly and monthly callers use the matching wrapper:
-
-```yaml
-jobs:
-  patrol:
-    uses: kungfu-systems/buildchain/.github/workflows/public-ops-patrol-weekly.yml@v3
-    with:
-      dry-run: true
-```
-
-All three wrappers default to the `v3` floating Buildchain runtime. When
-`target-branch` is omitted, the caller's current/default branch selects the
-active semver dev line, so consumers do not pin patrol to a stale minor branch.
-The separate workflow names keep consumer schedules readable and stable while
-Buildchain adds new checks behind the cadence wrappers.
-
-Branch and pull-request residue uses the separate
-[`Engineering Housekeeper`](engineering-housekeeper.md) contract. Its reusable
-surface remains report-first, while Buildchain's committed daily, weekly, and
-monthly callers run unattended apply across all discovered protected mainlines.
-Only the positive temporary-development allowlist is mutable; unknown branch
-families remain report-only. Every apply still requires the caller's explicit
-two-part policy inputs, exact provider-state revalidation, scoped job
-permissions, and rooted plan/report/receipt evidence.
-
-## Package-Manager Adapters
-
-Old ABV assumed JavaScript repositories with root version state and often
-Lerna. Buildchain keeps the version-state contract but does not assume every
-repository is yarn/Lerna.
-
-The promotion action discovers and updates:
-
-- root `package.json`;
-- `lerna.json`;
-- package manifests from `package.json` workspaces;
-- package manifests from `lerna.json` packages;
-- package manifests from `pnpm-workspace.yaml`.
-
-It then runs the repository's detected package manager semantics where needed:
-
-- pnpm repositories use pnpm-oriented workspace discovery;
-- npm repositories use npm/package-lock semantics where present;
-- yarn repositories use yarn-style metadata where present.
-
-For Buildchain itself, version state is required. For a consumer repository that
-has no package manifest, the same action can degrade to ref-only behavior only
-when that is explicitly allowed by the caller.
-
-## Lifecycle Configuration
-
-`.buildchain/buildchain.toml` is the v3 user configuration format. It lets a repository
-declare version-state files and lifecycle commands without pretending every
-project is a Node workspace. Supported version files include JSON, TOML, and
-regex-based files such as `CMakeLists.txt` or `conanfile.py`.
-
-The promotion action consumes `version.files`, optional anchored/manual
-`version.derived_files`, and `lifecycle.verify`.
-The verify stage runs after generated version-state changes are applied locally
-and before any release refs move. If `verification-command` is passed directly
-to the action, that explicit command overrides `lifecycle.verify`.
-
-Anchored/manual repositories may use `version.derived_files` for committed
-version witnesses that are regenerated by `lifecycle.version-state`. The
-release-candidate build verifies those witnesses before heavy builds and records
-their digests with the exact alpha and release tree identities. Promotion then
-accepts only declared version files, the anchor manifest, and those derived
-files as differences from the tested alpha tree; release passports preserve the
-same material binding.
-
-Protected release-line branches keep their normal human review gate. Managed
-`dev/vN/vN.M`, `alpha/vN/vN.M`, and `release/vN/vN.M` branches are configured
-with one required approving review, required GitHub Actions checks, administrator
-enforcement, conversation resolution, no force pushes, and no deletions. Each
-target uses the exact check set, GitHub App identity, and strictness declared by
-the governance authority descriptor. The
-reusable `public-release-promote.yml` wrapper defaults
-`branch-protection-bypass-apps` to `github-actions`, which lets the workflow's
-automation identity apply generated version-state or post-publish channel
-bookkeeping after the reviewed channel PR has merged. Direct
-`promote-buildchain-ref` callers may opt into that one controlled bypass with
-`branch-protection-bypass-apps: github-actions`; every other App slug and all
-user or team bypass actors are rejected. Before
-patching a protected generated bookkeeping ref, the action creates the
-full configured required-check set on the exact generated version-state commit, so strict
-status checks are satisfied by machine-verifiable Buildchain evidence rather
-than a human PR. The protected ref PATCH itself uses the generated ref update
-token; the reusable wrapper binds it to the run-scoped `github.token`. If direct generated
-release finalization bookkeeping is still rejected, Buildchain creates or
-reuses a same-repository `buildchain/version-state/*` PR and records
-`finalization-needed=true` in the durable transaction output. Strict alpha
-follows the same provider-enforced PR path for its alpha and dev bookkeeping.
-The PR remains subject to the declared review, required checks, and merge-queue
-policy; publication resumes idempotently after that protected transaction
-lands.
-
-For a stable release, the wrapper also checks out the exact current development
-channel into `.buildchain/reconciliation/dev`. When the prepared next-alpha
-commit cannot fast-forward dev because reviewed work landed concurrently, the
-promotion action applies the next version to that checkout, regenerates every
-declared derived version-state file, reruns the verification lifecycle, and
-only then creates the two-parent reconciliation commit. A checkout/current-ref
-SHA mismatch blocks reconciliation instead of committing stale projections.
-Buildchain's own promotion workflow accepts only
-`BUILDCHAIN_PROMOTION_BYPASS_APPS=github-actions`, defaulting to that exact App
-when the variable is absent. Buildchain's release-line bootstrap uses the
-administrator-scoped promotion token only to configure protection; branch
-creation and generated ref updates use the run-scoped token. New channel
-protection binds required checks to GitHub Actions App id `15368`, enables Code
-Owner, stale-review, and latest-push review gates, and admits no user or team
-bypass actor.
+New work uses a new attempt/version. Historical incomplete attempts and already
+published versions are not silently retargeted to new source. See
+[Consumer recovery](bootstrap-recovery.md) and [Release discussions](release-discussions.md).
 
 ## What This Guarantees
 
-When the loop succeeds, maintainers and consumers can rely on these facts:
-
-- every production release has an exact tag such as `v3.0.2`;
-- every production minor line has a floating tag such as `v3.0`;
-- every selected stable major has a floating tag such as `v3`;
-- every next-major release is driven by a reviewed `release -> publish-gate/major` PR,
-  not a hidden manual button;
-- every test channel has an exact alpha tag such as `v3.0.3-alpha.0`;
-- every alpha minor line has a floating tag such as `v3.0-alpha`;
-- every major with a published alpha has a cross-minor floating tag such as `v3-alpha`, owned by its highest published alpha minor;
-- version manifests match the tag visible from the same commit;
-- production releases are derived from the alpha tree that was tested;
-- manual non-dry-run promotion cannot bypass PR review and verification;
-- flow-internal automation bypasses apply only to declared GitHub Apps, users,
-  or teams on Buildchain-managed channel branch protection, while one-review
-  protection remains enforced for humans;
-- admin users cannot make a channel promotion valid by temporarily bypassing
-  branch protection.
-
-This is the practical meaning of "governance closed loop" in Buildchain: the
-decision, code, version state, and Git refs close over the same evidence chain.
+Successful terminal evidence binds the intended protected source, selected
+runtime, artifacts, provider observations and required stage results. Exact tags,
+registry integrity and immutable Release assets must agree with their recorded
+publication. An existing asset may be reused only when its bytes agree; an
+immutable collision is a failure, not permission to replace it.
 
 ## What This Does Not Do
 
-Buildchain release promotion does not embed registry clients or product-specific
-publish logic. When publish transactions are enabled, `promote-buildchain-ref`
-can run the consumer's `lifecycle.publish` command and own the transaction,
-evidence validation, durable recovery state, and ref finalization order. The
-consumer repository still owns registry truth: npm, PyPI, OCI, S3, Conan, CMake
-packaging, download pages, dist-tags, and similar side effects must be
-implemented by project lifecycle commands that emit Buildchain publish evidence.
-
-Durable transaction recovery is also bound to the exact publication version
-planned for the current run. An unfinished transaction may be resumed from the
-current source or its history only when its recorded version matches that plan;
-an older failed transaction that happens to be an ancestor cannot reserve its
-old exact tag for a newer package publication.
-
-The exact tag is also part of the durable transaction identity. If an anchored
-package publication completed registry side effects under a stale internal tag
-selection, a retry may rebind the unfinished `published` or `finalizing`
-transaction to the newly planned internal tag only when the package version,
-source, release material, target, complete artifact set, and evidence all still
-match; the stale tag must not point at the transaction, and the requested tag
-must be absent or already point at accepted release material. This preserves an
-immutable tag that represents a completed transaction while allowing a tag
-collision discovered after registry publication to recover without republishing.
-
-For package publish transactions, the immutable public version tag points to
-the transaction `source_sha`, so registry source metadata such as npm `gitHead`
-and the Git tag identify the same source commit. Protected branches and mutable
-channel tags continue to point to the generated `release_sha`. Recovery accepts
-older completed transactions whose exact tags already point to recorded release
-or release-material SHAs, but new tags are source-bound.
-
-Every Buildchain publish model that can run registry side effects must bind the
-publish entrypoint to an immutable `publish-gate/*` source lock. The reusable
-`public-release-promote.yml@v3` wrapper creates or updates that gate ref and
-passes `require-publish-source-lock`, `publish-source-ref`,
-`publish-source-sha`, and `publish-source-locked` to
-`promote-buildchain-ref`. Direct action callers must pass the same four inputs
-from the reusable build outputs. Workflows that only collect passports or run
-dry-run package checks do not move publish refs and are not publish-gate
-publication models. A dry-run of `public-release-promote.yml` computes and
-reports the exact `publish-gate/*` source lock that a real promotion would use,
-but does not read, create, or move that ref.
-
-Semver GitHub Release publication is owned by `promote-buildchain-ref`, not by
-consumer shell glue. Consumers normally use the `public-release-promote.yml`
-generated channel router, where GitHub Release publication is enabled by default and can be
-disabled with `github-release: false`; the wrapper passes that declaration to
-the action. After the publish transaction reaches `complete`, Buildchain creates
-or updates the public GitHub Release and uploads the generated
-`buildchain.release.json`, release-passport assets, and publish evidence. The
-authoritative publication channel controls GitHub metadata: alpha is marked
-`prerelease=true` and `make_latest=false`; release/stable/major is marked latest.
-Semver tag syntax remains the fallback for ordinary callers without explicit
-publication intent. For anchored/manual package releases, the public
-release tag defaults to `v<publishedVersion>` while the internal exact
-transaction tag remains in the release passport and release-state ref. This is
-the supported path for downstream
-`release.published` propagation across semver, major, and promote-only release
-candidate publication models.
-
-Published GitHub Release assets are immutable evidence. A repeated promotion
-preserves an existing asset when its SHA-256 digest matches the regenerated
-bytes, uploads only missing assets, and fails with an immutable-release
-collision when a same-name asset has different bytes. It never deletes and
-replaces an existing asset during retry or duplicate workflow delivery.
-An explicit candidate recovery whose validated receipt records an already
-complete transaction instead verifies the existing public Release Passport
-bundle and preserves its Buildchain-owned evidence generation. Product payload
-bytes remain digest-bound to the restored candidate, and missing product assets
-alone may be filled from that sealed bundle. This exception is unavailable to
-ordinary reruns or receipts from earlier transaction states.
-
-Product payloads are included only through the explicit
-`github-release-payload-patterns` input. Patterns match basenames inside the
-downloaded PR-stage RC payload bundle; zero matches or duplicate public
-basenames fail closed. This preserves the exact PR-built bytes instead of
-rebuilding archives during promotion.
-
-Consumers with a signed well-known discovery document can additionally provide
-`publication-commit-command`. The advanced promotion workflow validates its
-topology before any publish-gate or release mutation, then runs it only after
-the GitHub Release and its immutable payload/passport assets exist. The command
-must publicly read back the exact new payload root and emit
-`kungfu-buildchain-publication-commit-evidence/v1`; that evidence is copied
-into the controller artifact and exposed as workflow outputs. The previous
-authority must remain valid on every failure. Deferred standalone binary
-distribution is incompatible with this mode because the discovery authority
-must be the final product mutation.
-
-Buildchain also does not maintain bare exact tags such as `1.0.0`. The supported
-exact release and alpha refs are v-prefixed:
-
-```text
-v3.0.0
-v3.0.1-alpha.0
-```
+Local checks do not prove hosted review, publication or recovery. Publication
+completion does not by itself prove next-development or binary distribution.
+A dispatch, queued job, generated envelope or successful API response is not
+terminal provider evidence. The runtime must retain and verify those facts.
 
 ## Operational Reading Order
 
-When debugging or extending release behavior, read in this order:
+1. [Release flow](release-flow.md) and [consumer setup](getting-started.md).
+2. [Public pipeline](../.github/workflows/public-ops-pipeline.yml) and
+   [attempt recovery](../.github/workflows/public-ops-recover.yml).
+3. [Pipeline implementation](../packages/core/workflow/pipeline/).
+4. [Publication implementation](../packages/core/publication/pipeline/).
+5. [Release discussions](release-discussions.md), [publish transactions](publish-transaction.md)
+   and [next-development](next-development-transition.md) for internal evidence.
 
-1. `docs/release-flow.md`
-2. `.github/workflows/self-build-release-verify-compat.yml`
-3. `.github/workflows/self-release-promote.yml`
-4. `.github/workflows/public-release-promote.yml`
-5. `.github/workflows/.release-promote.yml`
-6. `actions/release/promotion/ref/README.md`
-7. `actions/release/promotion/ref/src/`
-8. `docs/migration-inventory.md`
-
-That path gives the policy first, the workflow trigger second, and the action
-implementation last.
+Earlier v3 wrappers, lifecycle publication scripts and self-only promotion
+workflows are retired consumer interfaces. Historical implementation records
+remain in Git; they are not alternate setup instructions for this contract.

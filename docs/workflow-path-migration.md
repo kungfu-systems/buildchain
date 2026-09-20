@@ -1,5 +1,5 @@
 ---
-status: draft
+status: historical
 period: ongoing
 theme: workflow-path-migration
 doc_type: migration-guide
@@ -8,22 +8,28 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-06
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-05
+  generated_at: 2026-09-20
   visible_context: Exact GitHub channel refs and workflow files on 23 organization default branches
   invisible_context_boundary: Other branches, private or unlisted consumers and future floating ref updates were not established by this audit
 ---
 
 # Version-prefixed workflow path migration
 
+This page retains the dated 2026-09-05/06 migration observations. Its paths and
+channel readbacks are historical, not current consumer instructions. The current
+contract uses `public-ops-pipeline.yml` and `public-ops-recover.yml`; see
+[Getting started](getting-started.md). Former product-specific public workflows
+are now internal components, with no consumer compatibility aliases.
+
 This source change retires three filenames. Their reusable capabilities, inputs,
 outputs, jobs and permission envelopes remain at the canonical paths below.
 Keep the existing channel selector and dual contract-lock policy when migrating.
 
-| Retired path | Canonical path |
+| Retired path at that migration | Replacement observed at that migration |
 | --- | --- |
 | `v4-adopter-delivery.yml` | `public-build-adopter-qualification.yml` |
 | `v4-stage-capsule-canary.yml` | `public-build-stage-capsule-canary.yml` |

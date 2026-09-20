@@ -146,23 +146,23 @@ const requiredPaths = [
   ".buildchain/alpha-contract-lock.json",
   ".buildchain/release-impact.json",
   ".github/actionlint.yaml",
-  ".github/workflows/public-ops-release-governance.yml",
-  ".github/workflows/public-ops-dev-auto-merge.yml",
-  ".github/workflows/public-ops-patrol.yml",
-  ".github/workflows/public-ops-patrol-daily.yml",
-  ".github/workflows/public-ops-patrol-weekly.yml",
-  ".github/workflows/public-ops-patrol-monthly.yml",
-  ".github/workflows/public-ops-observed-evidence.yml",
-  ".github/workflows/public-release-promote.yml",
+  ".github/workflows/.ops-release-governance.yml",
+  ".github/workflows/.ops-dev-auto-merge.yml",
+  ".github/workflows/.ops-patrol.yml",
+  ".github/workflows/.ops-patrol-daily.yml",
+  ".github/workflows/.ops-patrol-weekly.yml",
+  ".github/workflows/.ops-patrol-monthly.yml",
+  ".github/workflows/.ops-observed-evidence.yml",
+  ".github/workflows/.release-candidate-promote.yml",
   ".github/workflows/.release-promote.yml",
-  ".github/workflows/public-release-propagation.yml",
-  ".github/workflows/public-release-paper.yml",
+  ".github/workflows/.release-propagation.yml",
+  ".github/workflows/.release-paper.yml",
   ".github/workflows/.release-binary-assets.yml",
   ".github/workflows/.build.yml",
   ".github/workflows/.build-gate-profile.yml",
   ".github/workflows/.build-demo-adapter.yml",
-  ".github/workflows/public-build-demo.yml",
-  ".github/workflows/build.yml",
+  ".github/workflows/.build-demo.yml",
+  ".github/workflows/.build-candidate.yml",
   "fixtures/libnode-shaped/buildchain.toml",
   "fixtures/libnode-shaped/.github/workflows/build.yml",
   "fixtures/libnode-shaped/package.json",
@@ -281,7 +281,7 @@ for (const requiredSnippet of [
   }
 }
 const channelBuildWorkflow = fs.readFileSync(
-  path.join(root, ".github/workflows/build.yml"),
+  path.join(root, ".github/workflows/.build-candidate.yml"),
   "utf8",
 );
 const advancedPromotionWorkflow = fs.readFileSync(
@@ -289,7 +289,7 @@ const advancedPromotionWorkflow = fs.readFileSync(
   "utf8",
 );
 const channelPromotionWorkflow = fs.readFileSync(
-  path.join(root, ".github/workflows/public-release-promote.yml"),
+  path.join(root, ".github/workflows/.release-candidate-promote.yml"),
   "utf8",
 );
 assertPromotionInventory(root);
@@ -306,7 +306,7 @@ const actionlintConfig = fs.readFileSync(
   "utf8",
 );
 for (const requiredSnippet of [
-  ".github/workflows/build.yml:",
+  ".github/workflows/.build-candidate.yml:",
   ".github/workflows/.build.yml:",
   ".github/workflows/.build-gate-profile.yml:",
   'property "workflow_ref" is not defined in object type',
@@ -859,25 +859,25 @@ for (const requiredSnippet of [
 }
 const reusableBuildSurfaceDoc = fs.readFileSync(path.join(root, "docs/reusable-build-surface.md"), "utf8");
 for (const requiredSnippet of [
-  "config-path",
-  "buildchain.toml",
-  ".buildchain/contract-lock.json",
-  ".buildchain/alpha-contract-lock.json",
-  "architecture/build-environments.json",
-  "build.contract",
-  "cache roots",
-  "exact consumer source",
-  "run-build-stage",
-  "transfer-build-artifact",
+  ".buildchain/buildchain.toml",
+  "schema = 2",
+  "[[products]]",
+  "public-ops-pipeline.yml@v4",
+  "public-ops-recover.yml@v4",
+  "Without a lock",
+  "exact Git commit, tree and TOML blob",
+  "without provider credentials",
+  "original attempt",
+  "Consumers do not call",
 ]) {
   if (!reusableBuildSurfaceDoc.includes(requiredSnippet)) {
-    throw new Error(`reusable build surface doc missing contract lock snippet: ${requiredSnippet}`);
+    throw new Error(`consumer build surface doc missing schema-2 contract snippet: ${requiredSnippet}`);
   }
 }
 for (const [docName, docSource] of Object.entries({ "docs/cli.md": cliDoc, "docs/install.md": installDoc })) {
   for (const requiredSnippet of [
     "minimumReleaseAgeExclude",
-    "@kungfu-tech/buildchain@4.0.0",
+    "@kungfu-tech/buildchain@4.1.3",
     "package/version-specific",
   ]) {
     if (!docSource.includes(requiredSnippet)) {

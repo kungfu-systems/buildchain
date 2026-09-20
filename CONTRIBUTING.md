@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-19
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-19
+  generated_at: 2026-09-20
   visible_context: Repository contribution rules and implementation naming and release transition changes.
   invisible_context_boundary: No private credentials or unpublished external release state.
 ---
@@ -89,14 +89,32 @@ category vocabulary is enforced by `architecture/workflow-taxonomy.json`:
 
 | Role | Filename | Scope |
 | --- | --- | --- |
-| Public | `public-<category>-<purpose>.yml` | Consumer entry |
-| Component | `.<category>-<purpose>.yml` | Advanced reusable component |
+| Public | `public-ops-pipeline.yml`, `public-ops-recover.yml` | Normal execution and exact-attempt recovery |
+| Component | `.<category>-<purpose>.yml` | Internal runtime topology or dispatch service |
 | Self | `buildchain.yml`, `buildchain-recover.yml` | Generated normal and recovery callers |
 
 Categories are only `build`, `release`, and `ops`. Register the identity, role,
 category, purpose, owner, lifecycle status, invocation, and rationale before
 adding its derived filename. The [Workflow Catalog](docs/workflow-catalog.md)
-lists every canonical API and component path; self automation has only the generated normal and recovery entries. Retired paths have no generated aliases. A matching prefix alone does not admit an unregistered workflow.
+lists every canonical API and component path. Consumers select only the two public
+entries; actions and product-specific components are internal. Self automation
+has only the generated normal and recovery entries. Retired paths have no generated aliases. A matching prefix alone does not admit an unregistered workflow.
+
+`validate`, `doctor`, and consumer source inspection check the generated caller
+bytes and the registered implementation inventory separately. A repository that
+also implements the runtime may retain its declared workflow libraries. Every
+library must pass the same taxonomy checks; an extra repository event root or
+unregistered workflow is rejected, including in Buildchain's own repository.
+
+Source inspection follows product commands, package scripts and reachable local
+modules, rejecting recognized publication or recovery control calls before a
+product runs. Unsupported syntax, dynamic code and external tools remain explicit
+unresolved diagnostics; passing the control checks is not proof of a complete
+static program graph. Product commands still run in the runtime's read-only jobs
+with filtered child environments and private command files. The required tests
+enforce this boundary for normal builds, publication builds and version generation.
+Independent provider qualification grants authority; a product's output cannot.
+This boundary does not claim to sandbox arbitrary hostile code on a local machine.
 
 Run `pnpm run generate:workflows`, `pnpm run check:workflows`, then the full
 `pnpm run check`. The product verification commands run this gate through the shared pipeline on PRs, merge

@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-13
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-13
+  generated_at: 2026-09-20
   visible_context: Buildchain 4.1 source, architecture registries and local validation.
   invisible_context_boundary: No unpublished release or external consumer qualification is claimed.
 ---
@@ -20,12 +20,14 @@ ai_provenance:
 # Code organization
 
 Buildchain 4.1 uses responsibility layers, then capability directories. The
-reusable workflow is the primary consumer API. This development line is
-`4.1.0-alpha.1`; these changes do not themselves publish an alpha release.
+normal pipeline and exact-attempt recovery workflows are the consumer API.
+Product choices belong in schema-2 TOML; other workflows and every action are
+internal implementation. Source changes require separate published qualification.
 
 ```text
 .github/workflows/                 Consumer APIs and hosted job topology
-  public-*.yml, build.yml           Public reusable contracts
+  public-ops-pipeline.yml, public-ops-recover.yml
+                                   The two public reusable contracts
   .*.yml                           Internal reusable job components
   buildchain.yml, buildchain-recover.yml
                                    Generated self normal and recovery callers

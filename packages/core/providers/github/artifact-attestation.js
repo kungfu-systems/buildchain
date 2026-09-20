@@ -10,7 +10,7 @@ export function verifyArtifactAttestationSigner(request, execute = command) {
       "--repo",
       request.repository,
       "--signer-workflow",
-      "kungfu-systems/buildchain/.github/workflows/public-release-artifact-attestation.yml",
+      "kungfu-systems/buildchain/.github/workflows/.release-artifact-attestation.yml",
       "--signer-digest",
       request.signerDigest,
       "--source-digest",

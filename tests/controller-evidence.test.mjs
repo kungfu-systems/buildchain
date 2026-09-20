@@ -31,21 +31,21 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 function registry() {
   return createControllerRegistry({
     workflows: [
-      { id: "check", path: ".github/workflows/public-build-check.yml", inputs: ["mode", "working-directory"] },
+      { id: "check", path: ".github/workflows/.build-check.yml", inputs: ["mode", "working-directory"] },
       {
         id: ".build",
         path: ".github/workflows/.build.yml",
         inputs: ["buildchain-ref", "build-command", "platforms-json", "working-directory"],
         secrets: ["BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN"],
       },
-      { id: "build", path: ".github/workflows/build.yml", inputs: ["buildchain-channel"] },
+      { id: "build", path: ".github/workflows/.build-candidate.yml", inputs: ["buildchain-channel"] },
       { id: ".gate-profile", path: ".github/workflows/.build-gate-profile.yml", inputs: ["profile"] },
-      { id: ".web-surface", path: ".github/workflows/public-release-web.yml", inputs: ["build-command"] },
-      { id: "publication-artifact", path: ".github/workflows/public-build-publication.yml", inputs: ["build-command"] },
-      { id: "paper-release", path: ".github/workflows/public-release-paper.yml", inputs: ["build-command"] },
-      { id: "release-candidate-promote", path: ".github/workflows/public-release-promote.yml", inputs: ["channel"] },
+      { id: ".web-surface", path: ".github/workflows/.release-web.yml", inputs: ["build-command"] },
+      { id: "publication-artifact", path: ".github/workflows/.build-publication.yml", inputs: ["build-command"] },
+      { id: "paper-release", path: ".github/workflows/.release-paper.yml", inputs: ["build-command"] },
+      { id: "release-candidate-promote", path: ".github/workflows/.release-candidate-promote.yml", inputs: ["channel"] },
       { id: ".release-candidate-promote", path: ".github/workflows/.release-promote.yml", inputs: ["channel"] },
-      { id: "release-propagation", path: ".github/workflows/public-release-propagation.yml", inputs: ["graph-json"] },
+      { id: "release-propagation", path: ".github/workflows/.release-propagation.yml", inputs: ["graph-json"] },
     ],
   });
 }
@@ -254,7 +254,7 @@ test("release propagation plans admit optional consumer stages recorded as skipp
 });
 
 test("release propagation workflow emits only stages declared by its controller descriptor", () => {
-  const graph = inspectWorkflowJob(".github/workflows/public-release-propagation.yml", "propagate");
+  const graph = inspectWorkflowJob(".github/workflows/.release-propagation.yml", "propagate");
   const receipt = graph.steps.filter(step => step.uses?.endsWith("/actions/release/propagation/report"));
   assert.equal(receipt.length, 1, "propagation must emit one controller receipt");
   const emitted = propagationControllerStages({ stages: {} }, { upload: "skipped", workUpload: "skipped", reconcile: "skipped" }).map(stage => stage.id);
@@ -275,7 +275,7 @@ test("build finalizer emits every stage declared by its controller descriptor", 
 });
 
 test("the facade forwards the source-bound backbone controller receipt", () => {
-  const workflow = fs.readFileSync(path.join(root, ".github/workflows/build.yml"), "utf8");
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build-candidate.yml"), "utf8");
   assert.match(workflow, /fromJSON\(jobs.build.outputs.result\).artifacts.controller_receipt.name/u);
   assert.equal(registry().controllers.some((entry) => entry.id === "build-channel-router"), false);
   assert.deepEqual(descriptor().inputs["configuration-root"], { classification: "included", source: "resolved-build-plan" });

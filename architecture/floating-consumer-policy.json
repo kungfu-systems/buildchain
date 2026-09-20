@@ -8,9 +8,9 @@
     "persistedSelectors": ["v4", "v4-alpha"],
     "publicWorkflowEntrypoints": [
       ".github/workflows/.build.yml",
-      ".github/workflows/public-build-publication.yml",
-      ".github/workflows/public-release-promote.yml",
-      ".github/workflows/public-build-stage-capsule-canary.yml"
+      ".github/workflows/.build-publication.yml",
+      ".github/workflows/.release-candidate-promote.yml",
+      ".github/workflows/.build-stage-capsule-canary.yml"
     ]
   },
   "contractLocks": {

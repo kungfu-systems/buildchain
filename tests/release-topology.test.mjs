@@ -389,7 +389,7 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
     "utf8",
   );
   const publicWrapper = fs.readFileSync(
-    path.join(root, ".github/workflows/public-release-promote.yml"),
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
     "utf8",
   );
   const recovery = fs.readFileSync(

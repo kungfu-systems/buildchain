@@ -40,14 +40,14 @@
     },
     {
       "id": ".declarative-auditable-demo",
-      "role": "public",
+      "role": "component",
       "category": "build",
       "purpose": "demo",
       "summary": "Buildchain Declarative Binary Auditable Demo",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Buildchain Declarative Binary Auditable Demo: owned build public workflow with one canonical implementation."
+      "rationale": "Internal build implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": ".gate-profile",
@@ -95,312 +95,311 @@
     },
     {
       "id": ".web-surface",
-      "role": "public",
+      "role": "component",
       "category": "release",
       "purpose": "web",
       "summary": "Buildchain Web Surface",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Buildchain Web Surface: owned release public workflow with one canonical implementation."
+      "rationale": "Internal release implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "artifact-signing-authority",
-      "role": "public",
+      "role": "component",
       "category": "release",
       "purpose": "signing-authority",
       "summary": "Buildchain Artifact Signing Authority",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "dispatch-service",
-      "rationale": "Buildchain Artifact Signing Authority: owned release public workflow with one canonical implementation."
+      "rationale": "Internal release implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "bootstrap",
-      "role": "public",
+      "role": "component",
       "category": "ops",
       "purpose": "bootstrap",
       "summary": "Buildchain Universal Bootstrap",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Buildchain Universal Bootstrap: owned ops public workflow with one canonical implementation."
+      "rationale": "Internal ops implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "build",
-      "role": "public",
+      "role": "component",
       "category": "build",
       "purpose": "candidate",
       "summary": "Buildchain Channel Build",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Buildchain Channel Build: owned build public workflow with one canonical implementation.",
-      "path": ".github/workflows/build.yml"
+      "rationale": "Internal build implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "buildchain-patrol",
-      "role": "public",
+      "role": "component",
       "category": "ops",
       "purpose": "patrol",
       "summary": "Buildchain Patrol",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Buildchain Patrol: owned ops public workflow with one canonical implementation."
+      "rationale": "Internal ops implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "check",
-      "role": "public",
+      "role": "component",
       "category": "build",
       "purpose": "check",
       "summary": "Buildchain Check",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Buildchain Check: owned build public workflow with one canonical implementation."
+      "rationale": "Internal build implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "dev-alpha-candidate-patrol",
-      "role": "public",
+      "role": "component",
       "category": "ops",
       "purpose": "alpha-candidate-patrol",
       "summary": "Buildchain Dev to Alpha Candidate Patrol",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Buildchain Dev to Alpha Candidate Patrol: owned ops public workflow with one canonical implementation."
+      "rationale": "Internal ops implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "dev-delivery-warrant-cancel",
-      "role": "public",
+      "role": "component",
       "category": "ops",
       "purpose": "warrant-cancel",
       "summary": "Dev Delivery Warrant Queued Candidate Cancel",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Dev Delivery Warrant Queued Candidate Cancel: owned ops public workflow with one canonical implementation."
+      "rationale": "Internal ops implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "dev-delivery-warrant-close",
-      "role": "public",
+      "role": "component",
       "category": "ops",
       "purpose": "warrant-close",
       "summary": "Dev Delivery Warrant Close",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Dev Delivery Warrant Close: owned ops public workflow with one canonical implementation."
+      "rationale": "Internal ops implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "dev-pr-auto-merge",
-      "role": "public",
+      "role": "component",
       "category": "ops",
       "purpose": "dev-auto-merge",
       "summary": "Dev PR Auto Merge",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Dev PR Auto Merge: owned ops public workflow with one canonical implementation."
+      "rationale": "Internal ops implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "dev-qualification-patrol",
-      "role": "public",
+      "role": "component",
       "category": "ops",
       "purpose": "dev-qualification-patrol",
       "summary": "Buildchain Dev Qualification Patrol",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Buildchain Dev Qualification Patrol: owned ops public workflow with one canonical implementation."
+      "rationale": "Internal ops implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "engineering-housekeeper",
-      "role": "public",
+      "role": "component",
       "category": "ops",
       "purpose": "housekeeping",
       "summary": "Engineering Housekeeper",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Engineering Housekeeper: owned ops public workflow with one canonical implementation."
+      "rationale": "Internal ops implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "github-artifact-attestation",
-      "role": "public",
+      "role": "component",
       "category": "release",
       "purpose": "artifact-attestation",
       "summary": "Buildchain GitHub Artifact Attestation",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Buildchain GitHub Artifact Attestation: owned release public workflow with one canonical implementation."
+      "rationale": "Internal release implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "paper-release",
-      "role": "public",
+      "role": "component",
       "category": "release",
       "purpose": "paper",
       "summary": "Buildchain Paper Release",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Buildchain Paper Release: owned release public workflow with one canonical implementation."
+      "rationale": "Internal release implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "patrol-daily",
-      "role": "public",
+      "role": "component",
       "category": "ops",
       "purpose": "patrol-daily",
       "summary": "Buildchain Patrol Daily",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Buildchain Patrol Daily: owned ops public workflow with one canonical implementation."
+      "rationale": "Internal ops implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "patrol-monthly",
-      "role": "public",
+      "role": "component",
       "category": "ops",
       "purpose": "patrol-monthly",
       "summary": "Buildchain Patrol Monthly",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Buildchain Patrol Monthly: owned ops public workflow with one canonical implementation."
+      "rationale": "Internal ops implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "patrol-observed-evidence",
-      "role": "public",
+      "role": "component",
       "category": "ops",
       "purpose": "observed-evidence",
       "summary": "Patrol Observed Evidence",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Patrol Observed Evidence: owned ops public workflow with one canonical implementation."
+      "rationale": "Internal ops implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "patrol-weekly",
-      "role": "public",
+      "role": "component",
       "category": "ops",
       "purpose": "patrol-weekly",
       "summary": "Buildchain Patrol Weekly",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Buildchain Patrol Weekly: owned ops public workflow with one canonical implementation."
+      "rationale": "Internal ops implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "publication-artifact",
-      "role": "public",
+      "role": "component",
       "category": "build",
       "purpose": "publication",
       "summary": "Buildchain Publication Artifact",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Buildchain Publication Artifact: owned build public workflow with one canonical implementation."
+      "rationale": "Internal build implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "release-candidate-promote",
-      "role": "public",
+      "role": "component",
       "category": "release",
-      "purpose": "promote",
+      "purpose": "candidate-promote",
       "summary": "Release Candidate Promote",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Release Candidate Promote: owned release public workflow with one canonical implementation."
+      "rationale": "Internal release implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "release-governance-reconcile",
-      "role": "public",
+      "role": "component",
       "category": "ops",
       "purpose": "release-governance",
       "summary": "Release Governance Reconcile",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Release Governance Reconcile: owned ops public workflow with one canonical implementation."
+      "rationale": "Internal ops implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "release-propagation",
-      "role": "public",
+      "role": "component",
       "category": "release",
       "purpose": "propagation",
       "summary": "Release Propagation",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Release Propagation: owned release public workflow with one canonical implementation."
+      "rationale": "Internal release implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "release-tail",
-      "role": "public",
+      "role": "component",
       "category": "release",
       "purpose": "tail",
       "summary": "Declarative Release Tail",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Declarative Release Tail: owned release public workflow with one canonical implementation."
+      "rationale": "Internal release implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "stable-candidate-patrol",
-      "role": "public",
+      "role": "component",
       "category": "ops",
       "purpose": "stable-candidate-patrol",
       "summary": "Buildchain Stable Candidate Patrol",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Buildchain Stable Candidate Patrol: owned ops public workflow with one canonical implementation."
+      "rationale": "Internal ops implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "v4-adopter-delivery",
-      "role": "public",
+      "role": "component",
       "category": "build",
       "purpose": "adopter-qualification",
       "summary": "V4 Adopter Delivery",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "V4 Adopter Delivery: owned build public workflow with one canonical implementation."
+      "rationale": "Internal build implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "v4-stage-capsule-canary",
-      "role": "public",
+      "role": "component",
       "category": "build",
       "purpose": "stage-capsule-canary",
       "summary": "V4 Stage Capsule Canary",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "V4 Stage Capsule Canary: owned build public workflow with one canonical implementation."
+      "rationale": "Internal build implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "v4-tail-reseal",
-      "role": "public",
+      "role": "component",
       "category": "ops",
       "purpose": "tail-reseal",
       "summary": "V4 Retained Candidate Tail Reseal",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "V4 Retained Candidate Tail Reseal: owned ops public workflow with one canonical implementation."
+      "rationale": "Internal ops implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "oci-compose-preview",
-      "role": "public",
+      "role": "component",
       "category": "release",
       "purpose": "oci-compose-preview",
       "summary": "Buildchain OCI Compose Preview",
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "rationale": "Buildchain OCI Compose Preview: owned release public workflow with one canonical implementation."
+      "rationale": "Internal release implementation, selected by the pipeline runtime; not a consumer entry."
     },
     {
       "id": "pipeline",

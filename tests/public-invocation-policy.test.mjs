@@ -5,7 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 import YAML from 'yaml';
 import {scanFloatingConsumerPolicy,verifyFloatingConsumerPolicyReceipt} from '../packages/core/consumer/floating-consumer-policy.js';
-const workflow='.github/workflows/public-release-promote.yml',digest='sha256:'+'d'.repeat(64);
+const workflow='.github/workflows/.release-candidate-promote.yml',digest='sha256:'+'d'.repeat(64);
 const policy=JSON.parse(fs.readFileSync('architecture/floating-consumer-policy.json','utf8'));
 function fixture(t,repository){
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'public-invocation-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));

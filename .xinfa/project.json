@@ -24,8 +24,8 @@
       "visibility": "public",
       "root": "repository",
       "paths": [
-        ".github/workflows/public-ops-patrol.yml",
-        ".github/workflows/public-ops-dev-auto-merge.yml",
+        ".github/workflows/.ops-patrol.yml",
+        ".github/workflows/.ops-dev-auto-merge.yml",
         "AGENTS.md",
         "CONTRIBUTING.md",
         "docs/release-governance.md",
@@ -88,7 +88,7 @@
       "visibility": "public",
       "revision": "sha256:6852f5d8b4663521d80031637e9dd5fe090e596254bebe8e5e56f35c6c83d41c",
       "provenance": {"kind": "project-source", "authority": "buildchain"},
-      "source": {"provider": "buildchain.files", "path": ".github/workflows/public-ops-dev-auto-merge.yml"},
+      "source": {"provider": "buildchain.files", "path": ".github/workflows/.ops-dev-auto-merge.yml"},
       "verification": {"mode": "non-claim", "status": "non-claim", "dependencies": [], "waiver": null}
     },
     {
@@ -97,7 +97,7 @@
       "visibility": "public",
       "revision": "sha256:42fbb71bd47bbf3f4b37946ed1b628d5fcffe9f2c6a414e04a4868ff4aa3eecd",
       "provenance": {"kind": "project-source", "authority": "buildchain"},
-      "source": {"provider": "buildchain.files", "path": ".github/workflows/public-ops-patrol.yml"},
+      "source": {"provider": "buildchain.files", "path": ".github/workflows/.ops-patrol.yml"},
       "verification": {"mode": "non-claim", "status": "non-claim", "dependencies": [], "waiver": null}
     },
     {

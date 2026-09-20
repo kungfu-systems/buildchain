@@ -2,7 +2,7 @@
   "schema": "buildchain.action-taxonomy/v1",
   "path": "actions/<capability>/<group>/<operation>",
   "rules": {
-    "workflowRole": "Reusable workflows own the consumer API and job authority boundaries.",
+    "workflowRole": "Only pipeline and recovery reusable workflows own the consumer API. Other workflows and every action are internal runtime nodes owning job and credential boundaries.",
     "compositeRole": "Composite actions compose external and internal uses only.",
     "javascriptRole": "JavaScript actions adapt declared inputs to named domain APIs; modules own business orchestration.",
     "reuseBoundary": "Share actions for coherent cross-workflow capabilities; share ordinary functions through core modules.",

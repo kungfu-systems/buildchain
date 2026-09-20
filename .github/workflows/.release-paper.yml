@@ -32,7 +32,7 @@ on:
         required: false
       publisher-workflow-path:
         description: Repository-local workflow path configured as the npm trusted publisher
-        default: .github/workflows/public-release-paper.yml
+        default: .github/workflows/.release-paper.yml
         type: string
         required: false
       artifact-name:
@@ -173,7 +173,7 @@ jobs:
     permissions:
       contents: read
       issues: write
-    uses: ./.github/workflows/public-build-publication.yml
+    uses: ./.github/workflows/.build-publication.yml
     with:
       working-directory: ${{ inputs.working-directory }}
       toolchain-type: ${{ inputs.toolchain-type }}
@@ -203,7 +203,7 @@ jobs:
       github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       auto-admission: true
       auto-admission-kind: publication-artifact
-      authority-workflow-path: .github/workflows/public-release-paper.yml
+      authority-workflow-path: .github/workflows/.release-paper.yml
       source-sha: ${{ inputs.target-sha || github.sha }}
       target-ref: ${{ inputs.target-ref || github.ref_name }}
       publisher-workflow-path: ${{ inputs.publisher-workflow-path }}

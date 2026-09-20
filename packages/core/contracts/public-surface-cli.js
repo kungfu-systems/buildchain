@@ -35,7 +35,6 @@ function kfdCommandId(sub, leaf) {
 }
 
 function paperCommandId(sub, leaf) {
-  if (sub === "bootstrap" && leaf === "npm") return "paper-bootstrap-npm";
   if (["work", "fleet"].includes(sub) && leaf) return `paper-${sub}-${leaf}`;
   return sub ? `paper-${sub}` : "paper";
 }

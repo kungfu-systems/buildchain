@@ -1,18 +1,10 @@
-import { spawn, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import crypto from "node:crypto";
-import {
-  createBuildchainLogger,
-  defaultBuildchainLogPath,
-  summarizeBuildchainLogEvents,
-} from "../logging.js";
+import { summarizeBuildchainLogEvents } from "../logging.js";
 import {
   printJson,
   readBooleanFlag,
   readFlag,
-  readJsonInput,
-  readRepeatedFlag,
-  readRepeatedJsonInputs,
-  writeJsonFile,
 } from "../../contracts/cli/options.mjs";
 import { cliLogger, defaultCliLogPath, readAttributes } from "./context.mjs";
 

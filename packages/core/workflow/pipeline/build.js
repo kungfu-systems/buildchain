@@ -3,12 +3,15 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { bindConsumerSource } from "../../consumer/contract/identity.js";
+import { inspectConsumerContract } from "../../consumer/contract/inspection.js";
+import { validateConsumerWiring } from "../../consumer/contract/local-validation.js";
 import { recordDigest } from "../../release/discussion/envelope.js";
 import { consumerCommandSession } from "../../runtime/consumer-shell.js";
 import { createNativeChildEnvironment } from "../../dev-delivery/native/execution.js";
 
 function inspectTrackedBytes(cwd, tree) {
   const root = fs.realpathSync(cwd);
+  const files = Object.create(null);
   const entries = execFileSync(
     "git",
     ["-C", root, "ls-tree", "-r", "-z", tree],
@@ -48,7 +51,13 @@ function inspectTrackedBytes(cwd, tree) {
       throw new Error(
         `Build tracked source bytes differ from the admitted tree: ${file}`,
       );
+    Object.defineProperty(files, file, {
+      enumerable: true,
+      get: () =>
+        link ? fs.readlinkSync(absolute) : fs.readFileSync(absolute, "utf8"),
+    });
   }
+  return files;
 }
 
 export function inspectPipelineSource(cwd, expected) {
@@ -82,7 +91,18 @@ export function inspectPipelineSource(cwd, expected) {
       "Build source has tracked modifications at its verification boundary",
     );
   // Index flags and local Git filters cannot qualify different product bytes.
-  inspectTrackedBytes(cwd, expected.tree);
+  const files = inspectTrackedBytes(cwd, expected.tree);
+  const { channel } = validateConsumerWiring(cwd, expected.configPath);
+  const inspection = inspectConsumerContract(files, {
+    channel,
+    configPath: expected.configPath,
+  });
+  if (inspection.controlIssues.length)
+    throw new Error(
+      `Consumer control wiring is invalid: ${inspection.controlIssues.join("; ")}`,
+    );
+  // Unresolved product language/tool edges are not a static safety proof.
+  // Execution remains confined to the runtime's read-only product jobs below.
   return plan;
 }
 

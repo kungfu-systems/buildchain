@@ -4,6 +4,7 @@ import path from "node:path";
 import { loadBuildchainConfig } from "../consumer/buildchain-config.js";
 import { spawnSyncCommand } from "../runtime/spawn-command.js";
 
+// Retained schema-1 reader coordinates. New callers come only from consumerWorkflows.
 export const PAPER_PATHS = Object.freeze({
   config: ".buildchain/buildchain.toml",
   agentEntry: ".buildchain/paper/agent-entry.json",
@@ -143,6 +144,21 @@ export function resolvePaperRepository(cwd = process.cwd()) {
 }
 
 export function paperDevelopmentRef(cwd) {
+  const loaded = loadBuildchainConfig(cwd);
+  if (loaded?.config.schema === 2) {
+    const targets = [
+      ...new Set(
+        loaded.config.channels
+          .filter((channel) => channel.operation === "develop")
+          .map((channel) => channel.to),
+      ),
+    ];
+    if (targets.length !== 1)
+      throw new Error(
+        "Paper work requires one unambiguous development target in TOML",
+      );
+    return targets[0];
+  }
   const configResult = paperConfig(cwd);
   if (configResult.error) throw new Error(configResult.error);
   const parsed = parsePaperVersion(

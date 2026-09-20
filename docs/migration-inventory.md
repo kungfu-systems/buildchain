@@ -8,21 +8,20 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-31
+last_reviewed: 2026-09-20
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-07-31
+  generated_at: 2026-09-20
   invisible_context: not asserted
 ---
 
 # Buildchain v2 Migration Inventory
 
-This historical inventory records the Buildchain v2 consolidation boundary.
-Buildchain v3 is now the active monorepo source of truth for Kungfu repository
-workflows, reusable build workflows, and Buildchain-native actions. The v2
-names below preserve the migration decisions that v3 inherited; they are not a
-current runtime baseline.
+This inventory records the dated Buildchain v2 consolidation boundary and its
+v3 successor. The original dispositions below remain historical. Current
+consumers follow the [minimal schema-2 contract](getting-started.md), using only
+the shared normal/recovery pair; historical wrappers are not compatibility APIs.
 Standalone `workflows` and `action-*` repositories are historical rollback
 anchors, not active Buildchain migration targets.
 
@@ -32,44 +31,17 @@ anchors, not active Buildchain migration targets.
 | --- | --- | --- |
 | `workflows` | `dev/v2/v2.0` | root `.github/workflows` sources migrated; reusable workflows linted by actionlint |
 
-## Reusable Workflow Boundaries
+## Historical reusable workflow boundaries
 
-The active Buildchain-native reusable surface is:
+The v2/v3 consolidation retired standalone PR orchestration and direct publish
+integrations in favor of the then-current reusable build/promotion engines.
+Those engines are now internal components. Their original migration history is
+retained in Git; a new consumer must not copy hidden build workflows, a custom
+`lifecycle.publish` hook or the former public promotion wrapper.
 
-| Workflow | Disposition |
-| --- | --- |
-| `.github/workflows/.build.yml` | active reusable build contract: runner presets, trusted event gate, publish source lock, lifecycle commands, deterministic artifacts, aggregate summary, and release manifest outputs |
-
-Hidden reusable workflow files from the old `workflows` repository are retained
-only when they still have an active compatibility or migration boundary. Retired
-PR orchestration paths are not kept in `.github/workflows`; they remain listed
-in the inventory as excluded legacy surfaces. In particular,
-`.batch-pull-request.yml` is removed with the retired batch PR action family,
-and the legacy `.release-new-version.yml` path is not the modern publish
-surface. New publish integrations should use `.build.yml`, `buildchain.toml`,
-`lifecycle.publish`, and publish transaction evidence.
-
-Release templates that previously performed direct publishing or deployment are
-now fail-closed when retained for compatibility discovery. They do not call
-legacy publish actions, `npm publish`, or deploy providers directly. Callers must
-migrate to `public-release-promote.yml@v3` or a project-owned
-`lifecycle.publish` command behind a publish-gate source lock, so floating
-`@v3` consumers cannot bypass source-lock drift protection.
-
-The public promotion workflow is now a generated dual-channel router. Existing
-callers remain source-compatible, while callers that want alpha workflow-shell
-fixes before stable promotion should add `buildchain-channel: auto` plus
-`buildchain-alpha-contract-lock-path` and
-`buildchain-stable-contract-lock-path`. Keep one common promotion declaration;
-do not duplicate alpha and stable jobs or call
-`.release-promote.yml` directly.
-
-Buildchain also keeps the workflow-file layout transition declarative in
-`.buildchain/promotion-shell-routing.json`. Stable `v2.14.13` contains the hidden
-advanced workflow, so the stable lane is pinned to that implementation's
-immutable release SHA and forwards the full internal identity surface. This is
-provider-owned compatibility state; consumers still keep the same single public
-promotion job.
+Current public workflow identities are `public-ops-pipeline.yml` and
+`public-ops-recover.yml`. Their source of truth is the workflow taxonomy and
+generated catalog. Product differences belong in TOML and product source.
 
 ## Migrated Actions
 
@@ -130,7 +102,7 @@ older standalone action repository.
 | `actions/build/lifecycle/run` | lifecycle command execution and deterministic artifact manifest generation |
 | `actions/build/lifecycle/validate` | `buildchain.toml` version-state and lifecycle preflight without executing lifecycle commands |
 
-## Current v3 Refs
+## Historical v3 Refs
 
 - Actions: `kungfu-systems/buildchain/actions/<name>@v3`
 - Reusable workflows: `kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v3`

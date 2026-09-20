@@ -8,7 +8,7 @@ const readWorkflow = (name) =>
   fs.readFileSync(path.resolve(".github/workflows", name), "utf8");
 
 const advanced = readWorkflow(".release-promote.yml");
-const publicWorkflow = readWorkflow("public-release-promote.yml");
+const publicWorkflow = readWorkflow(".release-candidate-promote.yml");
 const recovery = readWorkflow("buildchain-recover.yml");
 const selfPromotion = readWorkflow("buildchain.yml");
 
@@ -23,7 +23,7 @@ test("canonical publisher has one QUALIFY APPLY SETTLE execution topology", () =
 });
 
 test("legacy admission retains its publisher while self recovery uses the minimal entry", () => {
-  const api = parseWorkflow(".github/workflows/public-release-promote.yml");
+  const api = parseWorkflow(".github/workflows/.release-candidate-promote.yml");
   assert.equal(api.jobs.invoke.uses, "./.github/workflows/.release-promote.yml");
   assert.equal(api.jobs.invoke.with["request-json"], "${{ needs.consumer-admission.outputs.invocation-json }}");
   const recover = parseWorkflow(".github/workflows/buildchain-recover.yml");

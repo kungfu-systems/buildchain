@@ -201,11 +201,15 @@ test("matrix input rewriting cannot corrupt an output property name", () => {
   );
 });
 
-test("public Action registry rejects duplicate and missing executable nodes", () => {
+test("Action registry rejects consumer nodes, including duplicate and missing executables", () => {
   const actions = [{ directory: "actions/build/lifecycle/validate" }];
   assert.deepEqual(
-    inspectPublicActionNodes(actions, ["build/lifecycle/validate"]),
+    inspectPublicActionNodes(actions, []),
     [],
+  );
+  assert.match(
+    inspectPublicActionNodes(actions, ["build/lifecycle/validate"]).join("\n"),
+    /Actions are internal runtime nodes/,
   );
   assert.match(
     inspectPublicActionNodes(actions, [

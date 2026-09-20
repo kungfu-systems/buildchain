@@ -67,7 +67,7 @@ test("the tracked v4 dogfood path is one thin public consumer caller", () => {
     ok: true,
     caller: ".github/workflows/buildchain.yml",
     reusable: ".github/workflows/public-ops-pipeline.yml",
-    historicalCanary: ".github/workflows/public-build-stage-capsule-canary.yml",
+    historicalCanary: ".github/workflows/.build-stage-capsule-canary.yml",
     validationRef: protectedDogfoodRef,
     productionAuthority: "v4-native",
   });

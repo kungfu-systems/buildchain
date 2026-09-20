@@ -16,7 +16,6 @@ import {
   assertPublicationRehearsalConfig,
   publicationRehearsalAgentInstructions,
   publicationRehearsalToml,
-  publicationRehearsalWorkflow,
 } from "../packages/core/publication/publication-rehearsal-projection.js";
 import { releasePassportKfdAdopterSourceSha } from "../packages/core/adoption/adopter-delivery-passport.js";
 import { DOMAIN_PUBLICATION_REHEARSAL_CAPSULE_CONTRACT } from "../packages/core/publication/publication-rehearsal.js";
@@ -100,7 +99,7 @@ test("historical execute name rejects ambient semantics before delegating to v4"
   );
 });
 
-test("historical projection names emit only current v4 configuration and workflow inputs", () => {
+test("retained rehearsal configuration projection preserves its capsule data contract", () => {
   const toml = publicationRehearsalToml();
   const config = {
     publication_rehearsal: Object.fromEntries(
@@ -124,10 +123,7 @@ test("historical projection names emit only current v4 configuration and workflo
     publicationRehearsalAgentInstructions(),
     /production authority/u,
   );
-  const workflow = publicationRehearsalWorkflow("v4");
-  assert.match(workflow, /rehearsal-capsule-path:/u);
-  assert.match(workflow, /candidate-root:/u);
-  assert.doesNotMatch(workflow, /capsule-contract:/u);
+
 });
 
 test("release passport source compatibility helper remains tree-equivalence bounded", () => {
@@ -165,11 +161,11 @@ test("historical CLI, Action, and workflow inputs have bounded v4 routes", () =>
       "actions/release/promotion/ref/action.yml",
       "packages/core/release/promote-ref/action.js",
       "packages/core/build/plan/admission.js",
-      ".github/workflows/public-release-web.yml",
+      ".github/workflows/.release-web.yml",
       ".github/workflows/.release-promote.yml",
-      ".github/workflows/public-release-promote.yml",
-      ".github/workflows/public-ops-dev-auto-merge.yml",
-      ".github/workflows/public-release-tail.yml",
+      ".github/workflows/.release-candidate-promote.yml",
+      ".github/workflows/.ops-dev-auto-merge.yml",
+      ".github/workflows/.release-tail.yml",
     ].map((filePath) => [filePath, fs.readFileSync(filePath, "utf8")]),
   );
   assert.match(sources.get("packages/core/release/commands/release-tail.mjs"), /capsule-root/u);
@@ -185,15 +181,15 @@ test("historical CLI, Action, and workflow inputs have bounded v4 routes", () =>
     /expectedInvocationChannel: plan.identity.channel/u,
   );
   assert.match(
-    inspectWorkflowJob(".github/workflows/public-ops-dev-auto-merge.yml", "merge-dev-prs").modules.get("packages/core/dev-delivery/queue/completion.js"),
+    inspectWorkflowJob(".github/workflows/.ops-dev-auto-merge.yml", "merge-dev-prs").modules.get("packages/core/dev-delivery/queue/completion.js"),
     /Exact required Warrant qualified; landing is explicitly deferred/u,
   );
   assert.match(
-    sources.get(".github/workflows/public-release-tail.yml"),
+    sources.get(".github/workflows/.release-tail.yml"),
     /transaction-root:/u,
   );
   assert.match(
-    sources.get(".github/workflows/public-release-tail.yml"),
+    sources.get(".github/workflows/.release-tail.yml"),
     /evidence-root:/u,
   );
 });

@@ -26,7 +26,7 @@ export function sealManagedPublicationAdmission({
     );
   const suffix = binary ? ":binary-release-assets" : paper ? ":paper" : "";
   const defaults = {
-    "release-candidate": ".github/workflows/public-release-promote.yml",
+    "release-candidate": ".github/workflows/.release-candidate-promote.yml",
     "publication-artifact": ".github/workflows/public-release-paper-sealed.yml",
     "binary-release-assets": ".github/workflows/.release-binary-assets.yml",
   };

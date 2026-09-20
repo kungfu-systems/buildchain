@@ -57,15 +57,15 @@ const SCHEMA_AND_STANDARD_FILES = Object.freeze([
 const WORKFLOW_AND_ACTION_FILES = Object.freeze([
   ".github/workflows/.build.yml",
   ".github/workflows/.release-promote.yml",
-  ".github/workflows/public-release-promote.yml",
+  ".github/workflows/.release-candidate-promote.yml",
   ".github/workflows/buildchain.yml",
   ".github/workflows/buildchain-recover.yml",
   ".github/workflows/public-ops-pipeline.yml",
   ".github/workflows/public-ops-recover.yml",
-  ".github/workflows/public-release-artifact-attestation.yml",
+  ".github/workflows/.release-artifact-attestation.yml",
   "actions/build/artifact/prepare-attestation/action.yml",
   "actions/build/artifact/prepare-attestation/index.js",
-  ".github/workflows/public-release-propagation.yml",
+  ".github/workflows/.release-propagation.yml",
   "actions/build/credential/macos-island/action.yml",
   "actions/build/credential/macos-island/index.js",
   "actions/release/promotion/ref/action.yml",
@@ -354,7 +354,7 @@ export function createBuildchainPublicClaimDefinitions() {
         "packages/core/contracts/commands/buildchain-contract-lock.mjs",
         ".github/workflows/.build.yml",
         ".github/workflows/.release-promote.yml",
-        ".github/workflows/public-release-promote.yml",
+        ".github/workflows/.release-candidate-promote.yml",
         "docs/reusable-build-surface.md",
       ],
       artifactPaths: [
@@ -370,7 +370,7 @@ export function createBuildchainPublicClaimDefinitions() {
         "actions/release/promotion/ref/action.yml",
         "packages/core/release/commands/ensure-github-release.mjs",
         ".github/workflows/.release-promote.yml",
-        ".github/workflows/public-release-promote.yml",
+        ".github/workflows/.release-candidate-promote.yml",
         "docs/release-governance.md",
       ],
       artifactPaths: [
@@ -384,7 +384,7 @@ export function createBuildchainPublicClaimDefinitions() {
       sourcePaths: [
         "packages/core/release/release-propagation.js",
         "packages/core/release/commands/release-propagation.mjs",
-        ".github/workflows/public-release-propagation.yml",
+        ".github/workflows/.release-propagation.yml",
         "docs/release-propagation.md",
       ],
       artifactPaths: [
@@ -399,7 +399,7 @@ export function createBuildchainPublicClaimDefinitions() {
         "packages/core/publication/commands/npm-publish-transaction.mjs",
         "actions/release/promotion/ref/index.js",
         ".github/workflows/.release-promote.yml",
-        ".github/workflows/public-release-promote.yml",
+        ".github/workflows/.release-candidate-promote.yml",
         "docs/publish-transaction.md",
       ],
       artifactPaths: [

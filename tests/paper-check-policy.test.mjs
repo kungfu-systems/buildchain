@@ -95,7 +95,7 @@ test("malformed configuration fails closed", (t) => {
 });
 test("the public check reaches the required owned Paper policy node", () => {
   const workflow = fs.readFileSync(
-    path.join(repositoryRoot, ".github/workflows/public-build-check.yml"),
+    path.join(repositoryRoot, ".github/workflows/.build-check.yml"),
     "utf8",
   );
   const action = fs.readFileSync(

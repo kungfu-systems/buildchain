@@ -8,20 +8,24 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-10
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-10
+  generated_at: 2026-09-20
   visible_context: Buildchain 4.1 source, architecture registries and local validation.
   invisible_context_boundary: No unpublished release or external consumer qualification is claimed.
 ---
 
 # Buildchain
 
-Development: **4.1.0-alpha.0** on `dev/v4/v4.1`. This development version has
-not been published. See [Code organization](docs/code-organization.md) for the
-workflow → action → JavaScript/Rust implementation layers.
+Development continues on `dev/v4/v4.1`. The package version and published
+Release Passport identify source and release state. See
+[Code organization](docs/code-organization.md) for the workflow, action,
+JavaScript and Rust implementation layers.
+
+The retained animation below demonstrates an older initializer. For the current
+schema-2 caller pair, follow the [Golden Path](docs/getting-started.md).
 
 <!-- buildchain-auditable-demo:start -->
 
@@ -60,9 +64,7 @@ This exact standalone-binary scenario proves deterministic local bootstrap behav
 [![Buildchain Release Passport: passed](https://buildchain.libkungfu.dev/badges/v1/buildchain-release-passport/passed.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-0969da.svg)](https://github.com/kungfu-systems/buildchain/blob/HEAD/LICENSE)
 [![Platform: macOS | Linux | Windows](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-6e7781.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
-[![Verify](https://github.com/kungfu-systems/buildchain/actions/workflows/self-build-verify.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/self-build-verify.yml)
-[![Buildchain Ref Promotion](https://github.com/kungfu-systems/buildchain/actions/workflows/self-release-promote.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/self-release-promote.yml)
-[![Binary Distribution](https://github.com/kungfu-systems/buildchain/actions/workflows/self-build-binary-distribution.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/self-build-binary-distribution.yml)
+[![Buildchain pipeline](https://github.com/kungfu-systems/buildchain/actions/workflows/buildchain.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/buildchain.yml)
 <!-- buildchain:badges:end -->
 
 Buildchain Release Passport is a mature product release record for artifacts
@@ -86,7 +88,7 @@ The same mechanism releases Buildchain itself.
 | operating an advanced build or release | [Documentation Map](docs/MAP.md)                           | capability-, intent-, and maturity-based navigation to normative contracts                                           |
 
 Production release operators should also read the
-[Buildchain v4 production release runbook](docs/v4-production-release.md).
+[release governance guide](docs/release-governance.md).
 
 The Golden Path is the beginner lane. Advanced workflow, signing, publishing,
 and governance manuals remain separate so a first-time consumer does not need
@@ -231,154 +233,68 @@ writeDiagnosticsArtifact(".buildchain/artifacts/diagnostics.json", {
 });
 ```
 
-`buildchain lifecycle run` writes a small `diagnostics.json` next to the
-platform manifest. It includes lifecycle-wide observability, runner/tool/cache
-snapshots, Git state, and links to the larger manifest and artifact outputs.
-
-Consumers can report Buildchain-owned workflow failures directly to the
-Buildchain repository with a scoped issue-write token:
-
-```yaml
-- uses: kungfu-systems/buildchain/actions/governance/incident/report@v4
-  if: failure()
-  with:
-    token: ${{ steps.buildchain-issue-token.outputs.token }}
-    summary: "Reusable build failed before artifact finalization"
-    failure-code: reusable-build-failed
-    buildchain-ref: v4
-    diagnostics-path: .buildchain/artifacts/diagnostics.json
-```
-
-The action deduplicates by fingerprint, comments on existing open reports, and
-is fail-soft by default so issue reporting does not hide the original failure.
-Use `report-kind: workflow-friction` when Buildchain workflows should report
-their own repeated release friction back to the Buildchain issue tracker.
-
 ## Use Buildchain
 
-Bootstrap a repository:
+In an existing npm product with a versioned `package.json` and build/check scripts:
 
 ```bash
-npx @kungfu-tech/buildchain init --type package --package-manager pnpm
-npx @kungfu-tech/buildchain validate --require-version-state
-npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v4/v4.0
+pnpm add -D --save-exact @kungfu-tech/buildchain
+pnpm exec buildchain init --type npm --package-manager pnpm
+pnpm exec buildchain validate --require-version-state
+pnpm exec buildchain doctor --json
 ```
 
-Bootstrap and inspect a governed paper repository through one interface:
+Use `--type binary` for a CMake product or `--type paper` for an existing PDF
+product. The initializer writes the shared caller pair and product declarations;
+edit the TOML to match your product's build, verification and artifact paths.
+
+To create Paper source as well as the shared configuration:
 
 ```bash
-npx @kungfu-tech/buildchain paper scaffold \
+pnpm exec buildchain paper scaffold \
   --package @kungfu-tech/paper-example \
   --repository kungfu-systems/paper-example
-pnpm add -D @kungfu-tech/buildchain@<exact-v4-version>
-pnpm exec buildchain paper work start <topic>
-pnpm exec buildchain paper work submit
+pnpm exec buildchain paper scaffold \
+  --package @kungfu-tech/paper-example \
+  --repository kungfu-systems/paper-example --write
 pnpm exec buildchain paper preflight --offline
 pnpm exec buildchain paper status
 ```
 
-The paper surface is dry-run first. Add `--write` only to create missing
-scaffold files. `work start` and `work submit` validate the canonical remote,
-exact development SHA, clean source, safe branch, and fast-forward boundary
-before changing local or GitHub state. External mutations such as npm
-bootstrap, Alpha PR creation, and release resumption require `--execute`. See
-[`docs/publication-artifacts.md`](docs/publication-artifacts.md) for the
-evidence-state model and operator flow.
+Scaffolding first shows the planned files; `--write` creates them. Paper products
+publish PDFs as GitHub Release assets through the same pipeline as other products.
+See [Paper products and migration](docs/publication-artifacts.md) for source
+prerequisites and preservation of historical publication records.
 
-Buildchain supports package and non-package projects through
-`.buildchain/buildchain.toml`. Legacy root `buildchain.toml` files remain
-readable, but new consumers should keep Buildchain-owned files under
-`.buildchain/`:
+After one-time repository/provider setup, commit your product and generated
+configuration and open a protected channel PR. Buildchain handles delivery and
+publication. Recover an interrupted operation by selecting its exact attempt in
+`buildchain-recover.yml`. npm Trusted Publishing authenticates hosted npm releases.
 
-```text
-.buildchain/buildchain.toml
-.buildchain/contract-lock.json
-.buildchain/kfd/kfd-3/surfaces.json
-.buildchain/release-passport/buildchain.release.json
-```
+Product commands can use pnpm, npm, yarn, pip, Conan, CMake, Make or repository
+build scripts. They produce and verify product artifacts; the published runtime
+owns release orchestration and its evidence.
 
-Lifecycle commands can call pnpm, npm, yarn, pip, Conan, CMake, Make, custom
-scripts, or any other command that can run in the repository checkout.
+## Consumer workflow contract
 
-The KFD entrypoint is `buildchain kfd`. Buildchain provides concrete KFD-1
-contract-world, KFD-2 trust-claim, and KFD-3 collaboration-surface workflows,
-plus fail-closed product-evidence gates for KFD-4, KFD-5, and KFD-7. These
-gates preserve product-owned qualification and support decisions; they do not
-turn a schema-valid record into certification or shipped support.
+Every product uses the same two generated files:
 
-Reusable workflows are the primary consumer API. The generated action registry
-indexes the capability/group/operation hierarchy and marks direct action contracts.
-The direct consumer integration actions are:
+- `.github/workflows/buildchain.yml` calls `public-ops-pipeline.yml@v4`.
+- `.github/workflows/buildchain-recover.yml` calls `public-ops-recover.yml@v4`.
 
-- `actions/build/lifecycle/validate`
-- `actions/build/lifecycle/run`
-- `actions/release/promotion/ref`
-- `actions/governance/incident/report`
-- `actions/release/tail/settle`
-- `actions/release/promotion/candidate`
+Declare npm packages, binary archives or Paper PDFs in
+`.buildchain/buildchain.toml`. Their install, build and verification commands
+remain product code. Open the appropriate protected channel PR to request a
+release. The runtime manages publication, provider readback and completion.
+Recovery takes an exact attempt and, when needed, one temporary repaired runtime.
 
-Three additional release-authority components are also registered and versioned:
-
-- `actions/build/artifact/prepare-attestation`
-- `actions/build/artifact/seal-attestation`
-- `actions/build/credential/macos-island`
-
-Seven shared build components have explicit ownership in
-`architecture/build-orchestration.json`:
-
-- [`actions/build/lifecycle/plan`](actions/build/lifecycle/plan/action.yml)
-- [`actions/build/lifecycle/prepare`](actions/build/lifecycle/prepare/action.yml)
-- [`actions/build/lifecycle/stage`](actions/build/lifecycle/stage/action.yml)
-- [`actions/build/artifact/transfer`](actions/build/artifact/transfer/action.yml)
-- [`actions/build/artifact/sign`](actions/build/artifact/sign/action.yml)
-- [`actions/build/artifact/attest`](actions/build/artifact/attest/action.yml)
-- [`actions/build/artifact/finalize`](actions/build/artifact/finalize/action.yml)
-
-`dist/site/workflow-registry.json#actions` is the machine-readable inventory;
-this split keeps the older four-action consumer snapshot from being mistaken for
-the complete current registry.
-
-The active reusable workflow surfaces are:
-
-- `.github/workflows/.build-gate-profile.yml` for project-neutral Shifu Gate profile
-  planning, capability-aware runner dispatch, receipt validation, and one
-  stable aggregate check;
-- `.github/workflows/.build-demo-adapter.yml` for exact-artifact demo
-  qualification, transcript-bound renderer smoke, optional media rendering
-  from the exact passing Gate bundle, and opt-in content-addressed web-delivery
-  profiles with independently verified rendition roles;
-- `.github/workflows/public-build-demo.yml` for standalone binary
-  consumers that provide only a versioned multi-demo argv scenario and exact
-  same-run binary artifact coordinates; Buildchain owns isolated native
-  capture, Gate, Release Passport, materialization, and protected README PRs;
-- `.github/workflows/.build.yml` for deterministic multi-platform build and
-  artifact contracts;
-- `.github/workflows/build.yml` for the single-config channel router that uses
-  `vN-alpha` during development/prerelease work and `vN` for stable releases;
-- `.github/workflows/public-release-promote.yml` for post-merge
-  promote-only publication from a PR-stage release candidate, without a second
-  heavy build;
-- `.github/workflows/public-release-web.yml` for preview, staging, production, and
-  cleanup plans for site/app repositories;
-- `.github/workflows/self-release-promote.yml` for protected release
-  promotion and version-state transactions;
-- `.github/workflows/self-build-binary-distribution.yml` for Buildchain's own release
-  passport proof case.
-
-Stable consumers should reference actions and workflows through floating major
-refs after reviewing the exact release passport:
-
-```yaml
-uses: kungfu-systems/buildchain/actions/build/lifecycle/validate@v4
-```
-
-```yaml
-uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4
-```
-
-```yaml
-uses: kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4
-```
+The [workflow catalog](docs/workflow-catalog.md) distinguishes the two public
+entries from internal components. Consumers do not call internal workflows or
+actions, supply publication payloads, or implement their own release controller.
+The three [standard examples](templates/minimal-consumer/) share identical caller
+bytes; their TOML and product source differ. Tool-maintained locks bind the
+published runtime. Existing npm Trusted Publishing continues to authenticate
+publication in the hosted workflow.
 
 ## Release Model
 
@@ -461,8 +377,8 @@ The first screen should be derived from:
 - Lead: the opening paragraph that defines Buildchain Release Passport.
 - Trust signal: the start of `Install and Verify`, especially passport-first
   binary verification.
-- Use signal: the start of `Use Buildchain`, especially the reusable workflow
-  and action surfaces.
+- Use signal: the start of `Use Buildchain`, especially the shared normal and recovery
+  workflow callers.
 
 The package-owned site bundle exposes ordered `homepage.sections`,
 `homepage.displayPlan`, `homepage.rendererContract`, and a complete

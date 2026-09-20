@@ -204,6 +204,8 @@ export function inspectPublicActionNodes(actions, publicNodes) {
   const issues = [];
   if (!Array.isArray(publicNodes))
     return ["public Action registry must be an array"];
+  if (publicNodes.length)
+    issues.push("Actions are internal runtime nodes; consumers use pipeline and recovery workflows");
   const known = new Set(
     actions.map((action) => action.directory.replace(/^actions\//u, "")),
   );

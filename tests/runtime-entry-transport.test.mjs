@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { selectExecutionRuntimeAction } from "../packages/core/runtime/entry/actions.js";
 const sha=c=>c.repeat(40),digest="sha256:"+"d".repeat(64);
-const env={GITHUB_REPOSITORY:"consumer/project",GITHUB_SHA:sha("d"),GITHUB_REF:"refs/heads/main",GITHUB_ACTOR:"operator",GITHUB_EVENT_NAME:"workflow_dispatch",GITHUB_RUN_ID:"22",GITHUB_WORKFLOW_REF:"consumer/project/.github/workflows/build.yml@refs/heads/main"};
+const env={GITHUB_REPOSITORY:"consumer/project",GITHUB_SHA:sha("d"),GITHUB_REF:"refs/heads/main",GITHUB_ACTOR:"operator",GITHUB_EVENT_NAME:"workflow_dispatch",GITHUB_RUN_ID:"22",GITHUB_WORKFLOW_REF:"consumer/project/.github/workflows/.build-candidate.yml@refs/heads/main"};
 function harness({allowed=true,recovery=false}={}){
  const calls=[];
  const deps={githubFactory:()=>({}),providerFactory:(_github,context)=>({
@@ -10,9 +10,9 @@ function harness({allowed=true,recovery=false}={}){
   readLock:async file=>{calls.push(["lock",context.sourceSha,file]);return {schemaVersion:1,contract:"kungfu-buildchain-contract-lock",buildchain:{ref:"v4-alpha",resolvedSha:sha("b"),contractDigest:digest}};},
   resolveRef:async()=>{calls.push(["resolve"]);return sha("c");},
   readProtocol:async()=>({schema:"buildchain.runtime-entry/v1",protocol:1}),
-  readRun:async()=>({id:11,run_attempt:1,path:".github/workflows/build.yml",status:"completed",conclusion:"failure",repository:{full_name:env.GITHUB_REPOSITORY},head_repository:{full_name:env.GITHUB_REPOSITORY},head_sha:sha("e"),head_branch:"main"}),
+  readRun:async()=>({id:11,run_attempt:1,path:".github/workflows/.build-candidate.yml",status:"completed",conclusion:"failure",repository:{full_name:env.GITHUB_REPOSITORY},head_repository:{full_name:env.GITHUB_REPOSITORY},head_sha:sha("e"),head_branch:"main"}),
  })};
- async function run(values){const outputs={};const inputs={token:"test","workflow-sha":sha("a"),"workflow-ref":"kungfu-systems/buildchain/.github/workflows/build.yml@v4",...values};await selectExecutionRuntimeAction({getInput:name=>inputs[name]||"",setOutput:(name,value)=>outputs[name]=value},env,deps);return outputs;}
+ async function run(values){const outputs={};const inputs={token:"test","workflow-sha":sha("a"),"workflow-ref":"kungfu-systems/buildchain/.github/workflows/.build-candidate.yml@v4",...values};await selectExecutionRuntimeAction({getInput:name=>inputs[name]||"",setOutput:(name,value)=>outputs[name]=value},env,deps);return outputs;}
  return {run,calls};
 }
 test("nested workflows transport one resolved train without resolving it again",async()=>{

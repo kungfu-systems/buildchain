@@ -222,7 +222,7 @@ test("apply scopes preserve global ordering and use disjoint permissions surface
 });
 
 test("reusable workflow exposes typed evidence outputs and separated job permissions", () => {
-  const file = ".github/workflows/public-ops-housekeeping.yml", workflow = readWorkflow(file);
+  const file = ".github/workflows/.ops-housekeeping.yml", workflow = readWorkflow(file);
   const inputs = workflow.on.workflow_call.inputs;
   assert.equal(inputs.mode.default, "report");
   assert.equal(inputs["apply-enabled"].default, false);

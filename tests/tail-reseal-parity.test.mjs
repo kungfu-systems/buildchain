@@ -44,7 +44,7 @@ test("tail-reseal parity matrix roots the captured v3 authority and complete v4 
 });
 
 test("public tail workflow delegates to scoped nodes and keeps effects outside Capsule reuse", () => {
-  const workflow = read(".github/workflows/public-ops-tail-reseal.yml");
+  const workflow = read(".github/workflows/.ops-tail-reseal.yml");
   const nodes = ["plan", "platforms", "seal"]
     .map((phase) => read(`actions/release/reseal/${phase}/action.yml`))
     .join("\n");

@@ -1,18 +1,11 @@
 import {
-  BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
   formatDiagnosticsSummaryTable,
-  startProcessSampler,
   summarizeDiagnosticsArtifacts,
-  summarizeProcessSamples,
-  validateAnchoredPackageRelease,
 } from "../diagnostics.js";
 import {
   printJson,
   readBooleanFlag,
   readFlag,
-  readJsonInput,
-  readRepeatedFlag,
-  readRepeatedJsonInputs,
   writeJsonFile,
 } from "../../contracts/cli/options.mjs";
 function readDiagnosticsArtifactInputs(args) {

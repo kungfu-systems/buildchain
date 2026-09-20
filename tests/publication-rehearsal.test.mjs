@@ -1,4 +1,5 @@
-import { publicationRehearsalWorkflow } from "../packages/core/publication/publication-rehearsal-projection.js";
+import * as rehearsalProjection from "../packages/core/publication/publication-rehearsal-projection.js";
+import { consumerWorkflows } from "../packages/core/consumer/contract/entries.js";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import crypto from "node:crypto";
@@ -647,65 +648,22 @@ test("CLI and config expose the same effect-disabled rehearsal projection", () =
   assert.match(cli, /simulate or replay/u);
 });
 
-test("generated rehearsal consumer resolves the public contract without publication authority", () => {
-  const workflow = fs.readFileSync(
-    path.join(repositoryRoot, ".github/workflows/public-release-tail.yml"),
-    "utf8",
-  );
-  const dogfood = publicationRehearsalWorkflow("v4");
-  const caller = parseWorkflowDocument(dogfood);
-  const callee = parseWorkflowDocument(workflow);
-  assert.deepEqual(caller.triggers, ["workflow_dispatch"]);
-  assert.equal(caller.callJobs.length, 1);
-  const [call] = caller.callJobs;
-  assert.equal(call.uses, "kungfu-systems/buildchain/.github/workflows/public-release-tail.yml@v4");
-  assert.equal(call.with["buildchain-ref"], undefined);
-  assert.equal(call.with["rehearsal-mode"].value, "simulate");
-  assert.equal(call.with.execute, undefined);
-  assert.equal(caller.interface.permissions.contents, "read");
-  assert.deepEqual(callee.interface.permissions, {});
-
-  const declared = new Map(
-    callee.interface.inputs.map((entry) => [entry.name, entry]),
-  );
-  assert.equal(callee.interface.reusable, true);
-  for (const [name, supplied] of Object.entries(call.with)) {
-    const input = declared.get(name);
-    assert.ok(input, `caller input ${name} is declared by the local reusable`);
-    assert.ok(
-      supplied.kind === "expression" || supplied.kind === input.type,
-      `caller input ${name} matches reusable type ${input.type}`,
-    );
+test("rehearsal remains internal and cannot generate an extra consumer workflow", () => {
+  assert.equal(rehearsalProjection.publicationRehearsalWorkflow, undefined);
+  assert.equal(rehearsalProjection.PUBLICATION_REHEARSAL_WORKFLOW_PATH, undefined);
+  const pair = consumerWorkflows();
+  assert.deepEqual(Object.keys(pair).sort(), [
+    ".github/workflows/buildchain-recover.yml", ".github/workflows/buildchain.yml",
+  ]);
+  for (const source of Object.values(pair)) {
+    assert.doesNotMatch(source, /rehearsal|capsule|candidate-root|provider-bindings/);
+    const caller = parseWorkflowDocument(source);
+    assert.equal(caller.callJobs.length, 1);
+    assert.match(caller.callJobs[0].uses, /public-ops-(?:pipeline|recover)\.yml@v4$/);
   }
-  for (const input of callee.interface.inputs.filter((entry) => entry.required))
-    assert.ok(
-      input.name in call.with,
-      `required input ${input.name} is supplied`,
-    );
-
-  const workflowUses = parseYamlUses(workflow).map((entry) => entry.value);
-  assert.ok(
-    workflowUses.includes(
-      "./.buildchain/runtime/actions/release/tail/settle",
-    ),
-  );
-  const providerPlaneDoc = fs.readFileSync(
-    path.join(repositoryRoot, "docs/release-tail-provider-plane.md"),
-    "utf8",
-  );
-  const productionExample = providerPlaneDoc
-    .split("<!-- release-tail-production-caller-contract -->")[1]
-    ?.match(/```yaml\n([\s\S]*?)\n```/u)?.[1];
-  assert.ok(productionExample, "production caller contract is documented");
-  const productionCaller = parseWorkflowDocument(productionExample);
-  assert.equal(productionCaller.callJobs.length, 1);
-  const [productionCall] = productionCaller.callJobs;
-  assert.equal(productionCall.permissions.contents, "write");
-  assert.equal(productionCall.with.execute.value, true);
-  assert.match(
-    productionCall.uses,
-    /^kungfu-systems\/buildchain\/\.github\/workflows\/public-release-tail\.yml@v4$/u,
-  );
+  const internal = fs.readFileSync(path.join(repositoryRoot, ".github/workflows/.release-tail.yml"), "utf8");
+  assert.deepEqual(parseWorkflowDocument(internal).interface.permissions, {});
+  assert.ok(parseYamlUses(internal).some(entry => entry.value === "./.buildchain/runtime/actions/release/tail/settle"));
 });
 
 test("checked-in release-tail Action executes the dogfood capsule without authority", () => {

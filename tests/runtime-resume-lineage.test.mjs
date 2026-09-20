@@ -54,7 +54,7 @@ function cleanConsumer() {
   );
   write(
     path.join(root, ".github/workflows/release.yml"),
-    `on:\n  workflow_dispatch:\n    inputs:\n      buildchain-ref:\n        default: ""\npermissions:\n  id-token: write\njobs:\n  release:\n    uses: kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4-alpha\n    with:\n      buildchain-ref: \${{ inputs.buildchain-ref }}\n`,
+    `on:\n  workflow_dispatch:\n    inputs:\n      buildchain-ref:\n        default: ""\npermissions:\n  id-token: write\njobs:\n  release:\n    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha\n    with:\n      buildchain-ref: \${{ inputs.buildchain-ref }}\n`,
   );
   write(
     path.join(root, ".buildchain/contract-lock.json"),
@@ -406,7 +406,7 @@ test("source scan closes runtime selectors inside multiline workflow and action 
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const workflow = path.join(root, ".github/workflows/promotion.yml");
   const envelope = (value) =>
-    `jobs:\n  promote:\n    uses: ./.github/workflows/public-release-promote.yml\n    with:\n      request-json: |\n${value
+    `jobs:\n  promote:\n    uses: ./.github/workflows/.release-candidate-promote.yml\n    with:\n      request-json: |\n${value
       .split("\n")
       .map((line) => `        ${line}`)
       .join("\n")}\n`;

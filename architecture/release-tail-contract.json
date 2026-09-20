@@ -136,7 +136,7 @@
   },
   "reverseScan": {
     "workflowInputs": [
-      ".github/workflows/public-release-promote.yml",
+      ".github/workflows/.release-candidate-promote.yml",
       ".github/workflows/.release-promote.yml",
       ".github/workflows/.release-authority.yml"
     ],
@@ -243,7 +243,7 @@
   "ownedCallers": [
     {
       "id": "paper-release",
-      "workflow": ".github/workflows/public-release-paper.yml",
+      "workflow": ".github/workflows/.release-paper.yml",
       "action": "actions/paper/candidate/publish",
       "executableSurfaceIds": ["artifact-publication-command"]
     },

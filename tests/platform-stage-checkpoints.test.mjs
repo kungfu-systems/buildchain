@@ -218,7 +218,7 @@ test("clean-process rehearsal runs for each declared platform", () => {
   }
 });
 
-test("workflow, generated template, and Agent guidance project the declaration", () => {
+test("workflow, product verification, and Agent guidance project the declaration", () => {
   const workflow = readWorkflow(declaration.projections.protectedWorkflow);
   assert.equal(
     workflow.jobs.buildchain.uses,
@@ -230,12 +230,11 @@ test("workflow, generated template, and Agent guidance project the declaration",
   );
   assert.match(config, /node scripts\/verify-product-platform\.mjs/u);
   const productVerification = fs.readFileSync(
-    path.join(root, "scripts/verify-product-platform.mjs"),
+    path.join(root, declaration.projections.productVerification),
     "utf8",
   );
   assert.match(productVerification, /verifyStageCapsuleCheckpoints\(\{/u);
   for (const file of [
-    declaration.projections.generatedTemplate,
     declaration.projections.agentGuidance,
     declaration.projections.manual,
   ]) {
