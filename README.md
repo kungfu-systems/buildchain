@@ -88,7 +88,7 @@ The same mechanism releases Buildchain itself.
 | operating an advanced build or release | [Documentation Map](docs/MAP.md)                           | capability-, intent-, and maturity-based navigation to normative contracts                                           |
 
 Production release operators should also read the
-[Buildchain v4 production release runbook](docs/v4-production-release.md).
+[release governance guide](docs/release-governance.md).
 
 The Golden Path is the beginner lane. Advanced workflow, signing, publishing,
 and governance manuals remain separate so a first-time consumer does not need
