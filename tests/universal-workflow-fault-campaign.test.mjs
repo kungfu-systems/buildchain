@@ -28,5 +28,5 @@ test("self recovery retains the attempt and permits only a transient repaired ru
  assert.deepEqual(Object.keys(workflow.on.workflow_dispatch.inputs),["attempt","runtime-ref"]);
  assert.equal(workflow.jobs.buildchain.with.attempt,"${{ inputs.attempt }}");
  assert.equal(workflow.jobs.buildchain.with["runtime-ref"],"${{ inputs.runtime-ref }}");
- assert.equal(workflow.jobs.buildchain.uses,"kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4");
+ assert.match(workflow.jobs.buildchain.uses, /^kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-recover\.yml@v4(?:-alpha)?$/u);
 });

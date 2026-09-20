@@ -122,6 +122,10 @@ queue candidates, and protected source qualification. Policy, enforcement, and o
 independent `@kungfu-origin` review. A development merge does not publish a floating channel. Consumers adopt the
 new API only after that channel publishes it and their contract locks are refreshed.
 
+Qualify a new Alpha through the generated `@v4-alpha` caller pair and matching
+Alpha lock on an isolated qualification branch. Self checks accept either shared
+channel template as a complete pair, while initialization defaults to `@v4`.
+
 ## Generated files
 
 GitHub Actions consume committed bundles. When changing an action

@@ -27,13 +27,13 @@ test("legacy admission retains its publisher while self recovery uses the minima
   assert.equal(api.jobs.invoke.uses, "./.github/workflows/.release-promote.yml");
   assert.equal(api.jobs.invoke.with["request-json"], "${{ needs.consumer-admission.outputs.invocation-json }}");
   const recover = parseWorkflow(".github/workflows/buildchain-recover.yml");
-  assert.equal(recover.jobs.buildchain.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4");
+  assert.match(recover.jobs.buildchain.uses, /^kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-recover\.yml@v4(?:-alpha)?$/u);
 });
 
 test("Buildchain self-promotion uses the published minimal pipeline", () => {
   assert.match(
     selfPromotion,
-    /^  buildchain:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-pipeline\.yml@v4(?:\n|$)/m,
+    /^  buildchain:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-pipeline\.yml@v4(?:-alpha)?(?:\n|$)/m,
   );
   assert.doesNotMatch(selfPromotion, /^  promote-(?:alpha|stable):/m);
   assert.doesNotMatch(
