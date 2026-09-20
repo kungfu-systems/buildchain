@@ -1,6 +1,6 @@
 {
   "schema": "buildchain.consumer-migration/v1",
-  "stage": "self-default-entry; final-release-qualification-pending",
+  "stage": "self-default-entry",
   "workflows": [
     {
       "path": ".github/workflows/buildchain-recover.yml",

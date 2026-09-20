@@ -163,7 +163,7 @@ output(
   await format(
     JSON.stringify({
       schema: "buildchain.consumer-migration/v1",
-      stage: "self-default-entry; final-release-qualification-pending",
+      stage: "self-default-entry",
       workflows: workflowInventory(),
       consumerSources: consumerSourceInventory(),
     }),

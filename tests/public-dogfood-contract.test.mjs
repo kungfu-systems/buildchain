@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { consumerWorkflows } from "../packages/core/consumer/contract/entries.js";
 
 import {
   PUBLIC_DOGFOOD_ENTRY_REF,
@@ -44,6 +45,8 @@ function fixture() {
       filter: (file) => !file.split(path.sep).includes("dist"),
     });
   }
+  for (const [file, bytes] of Object.entries(consumerWorkflows()))
+    fs.writeFileSync(path.join(destination, file), bytes);
   return destination;
 }
 
@@ -95,7 +98,20 @@ test("the gate rejects copied orchestration and relative reusable calls", () => 
   );
 });
 
-test("self callers require stable defaults and reject the retired transition config", () => {
+test("self qualification accepts the shared Alpha caller pair", () => {
+  const target = fixture();
+  for (const [file, bytes] of Object.entries(consumerWorkflows("v4-alpha")))
+    fs.writeFileSync(path.join(target, file), bytes);
+  assert.equal(checkPublicDogfoodContract(target).ok, true);
+  const normal = ".github/workflows/buildchain.yml";
+  fs.writeFileSync(path.join(target, normal), consumerWorkflows()[normal]);
+  assert.throws(
+    () => checkPublicDogfoodContract(target),
+    /generated caller drift/u,
+  );
+});
+
+test("self callers reject mixed channels and the retired transition config", () => {
   for (const [before, after] of [
     ["public-ops-pipeline.yml@v4\n", "public-ops-pipeline.yml@v4-alpha\n"],
     [
