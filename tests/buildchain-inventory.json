@@ -114,7 +114,7 @@
         "heavyPackageManagersDeferred": true
       },
       "githubArtifactAttestation": {
-        "workflow": "public-release-artifact-attestation.yml",
+        "workflow": ".release-artifact-attestation.yml",
         "action": "actions/build/artifact/github-attest",
         "signerRunner": "ubuntu-24.04",
         "compilerIdentityPreserved": true,

@@ -18,7 +18,7 @@ function fakeGithubCli(requiredCheckConclusion, historicalSource, largeSourceCom
     ? `permissions:\n  contents: read\njobs:\n  promote:\n    # buildchain-publication-authority-job: legacy-promote\n    runs-on: ubuntu-24.04\n    permissions: {}\n  legacy-promote:\n    runs-on: ubuntu-24.04\n    permissions:\n      contents: write\n      id-token: write\n`
     : `permissions:\n  contents: read\njobs:\n  promote:\n    runs-on: ubuntu-24.04\n    permissions:\n      contents: read\n      id-token: write\n`;
   const responses = {
-    "repos/kungfu-systems/buildchain/contents/.github/workflows/public-release-promote.yml": {
+    "repos/kungfu-systems/buildchain/contents/.github/workflows/.release-candidate-promote.yml": {
       content: Buffer.from(workflow).toString("base64"),
     },
     "repos/kungfu-systems/buildchain": { default_branch: "dev/v2/v2.14" },

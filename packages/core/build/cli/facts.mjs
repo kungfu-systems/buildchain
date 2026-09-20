@@ -9,10 +9,7 @@ import {
   printJson,
   readBooleanFlag,
   readFlag,
-  readJsonInput,
   readRepeatedFlag,
-  readRepeatedJsonInputs,
-  writeJsonFile,
 } from "../../contracts/cli/options.mjs";
 import { runCompatibilityFactsCli } from "../../governance/cli/compatibility-facts.mjs";
 import { root } from "../../contracts/cli/context.mjs";

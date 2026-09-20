@@ -125,7 +125,7 @@ test("candidate dispatch binds an external adopter through the admitted source o
     fs.readFileSync(
       path.join(
         root,
-        ".github/workflows/public-build-adopter-qualification.yml",
+        ".github/workflows/.build-adopter-qualification.yml",
       ),
       "utf8",
     ),

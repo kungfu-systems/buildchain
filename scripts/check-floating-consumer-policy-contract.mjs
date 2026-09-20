@@ -116,10 +116,10 @@ export function checkFloatingConsumerPolicyContract() {
   assertOrdered("actions/publication/candidate/plan/action.yml", [
     "Admit source checkout", "Enforce v4 floating consumer policy", "Resolve controller identities",
   ]);
-  const publication = YAML.parse(read(".github/workflows/public-build-publication.yml"));
+  const publication = YAML.parse(read(".github/workflows/.build-publication.yml"));
   if (!Object.values(publication.jobs).some((job) => job.steps?.some((step) => step.uses?.endsWith("/actions/publication/candidate/plan"))))
     fail("publication does not invoke its consumer policy node");
-  const stageCanary = read(".github/workflows/public-build-stage-capsule-canary.yml");
+  const stageCanary = read(".github/workflows/.build-stage-capsule-canary.yml");
   if (
     !stageCanary.includes("consumer-admission:") ||
     !jobDependsOn(stageCanary, "qualify", "consumer-admission")
@@ -128,7 +128,7 @@ export function checkFloatingConsumerPolicyContract() {
       "Stage Capsule qualification is not transitively gated by consumer admission",
     );
   }
-  const promotion = read(".github/workflows/public-release-promote.yml");
+  const promotion = read(".github/workflows/.release-candidate-promote.yml");
   if (
     !promotion.includes("consumer-admission:") ||
     !jobDependsOn(promotion, "invoke", "consumer-admission")

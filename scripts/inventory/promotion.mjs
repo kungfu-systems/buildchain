@@ -8,7 +8,7 @@ import { generateChannelPromotionWorkflow } from "../generate-channel-promotion-
 
 export function assertPromotionInventory(root) {
   const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
-  const publicPath = ".github/workflows/public-release-promote.yml";
+  const publicPath = ".github/workflows/.release-candidate-promote.yml";
   const api = YAML.parse(read(publicPath));
   assert.equal(
     read(publicPath),

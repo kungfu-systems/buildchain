@@ -17,7 +17,7 @@ test("transport shares exact artifact references and fails on provider digest mi
 });
 
 test("the public facade projects the result and two useful artifact handles", () => {
-  const facade = readRepoText(".github/workflows/build.yml");
+  const facade = readRepoText(".github/workflows/.build-candidate.yml");
   assert.deepEqual(parseReusableWorkflowInterface(facade).outputs, ["controller-receipt-artifact", "release-candidate-artifact", "result"]);
   assert.equal((facade.match(/uses: \.\/\.github\/workflows\/\.build.yml/gu) || []).length, 1);
   assert.match(workflowJob("deliver"), /always\(\)/u);

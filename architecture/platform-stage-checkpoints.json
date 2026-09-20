@@ -106,7 +106,7 @@
   ],
   "projections": {
     "protectedWorkflow": ".github/workflows/buildchain.yml",
-    "generatedTemplate": "packages/core/adoption/commands/init-repo.mjs",
+    "productVerification": "scripts/verify-product-platform.mjs",
     "agentGuidance": "AGENTS.md",
     "manual": "docs/v4-stage-capsule.md"
   },

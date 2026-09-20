@@ -8,12 +8,13 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-06
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-06
-  invisible_context: not asserted
+  generated_at: 2026-09-20
+  visible_context: Schema-2 consumer initialization, CLI validation, and internal pipeline npm publication implementation.
+  invisible_context_boundary: Local validation does not prove provider authorization or hosted publication.
 ---
 
 # Buildchain CLI, npm Package, and Toolkit API
@@ -49,10 +50,10 @@ Consumers should pin the exact Buildchain version that was validated in their
 repository. When dogfooding a fresh Buildchain release immediately after it is
 published, pnpm may block the install through a minimum release-age policy. In
 that case, add a temporary package/version-specific `minimumReleaseAgeExclude`
-entry, such as `@kungfu-tech/buildchain@4.0.0`, and remove it once the package
+entry, such as `@kungfu-tech/buildchain@4.1.3`, and remove it once the package
 has aged past the normal policy window. Do not replace that with a broad
-registry or scope-wide exclude. Paper scaffold and migration maintain the
-exact current entry in `pnpm-workspace.yaml` before refreshing the lockfile.
+registry or scope-wide exclude. For an existing `pnpm-workspace.yaml`, Paper
+migration maintains an exclusion for the selected exact Buildchain version.
 
 Use the package API directly inside JavaScript build scripts:
 
@@ -135,121 +136,45 @@ with the exact signer/source policy and then verifies the retained bundle,
 predicate, platform manifest, Passport, and Buildchain evidence locally. See
 [`github-artifact-attestation.md`](github-artifact-attestation.md).
 
-### Governed paper lifecycle
+### Paper product source
 
-`buildchain paper` is the unified operator surface for one paper repository or
-a discovered fleet. Every subcommand returns a versioned JSON contract with
-`--json`:
+Paper uses the same schema-2 policy and two caller files as npm and binary
+products. For an existing source tree, use `buildchain init --type paper`.
+To create a new LaTeX source tree:
 
 ```bash
-buildchain paper scaffold --package @kungfu-tech/paper-example \
-  --repository kungfu-systems/paper-example
-buildchain paper migrate --json
-buildchain paper agent verify --json
-buildchain paper work start golden-path --json
-buildchain paper work submit --json
-buildchain paper fleet audit --root ../papers --json
-buildchain paper fleet update --root ../paper-worktrees --json
-buildchain paper preflight --offline --json
-buildchain paper bootstrap npm --json
-buildchain paper build --json
-buildchain paper alpha --json
+buildchain paper scaffold --name paper-example --title "Example Paper" \
+  --repository example/paper-example --json
+buildchain paper scaffold --name paper-example --title "Example Paper" \
+  --repository example/paper-example --write --json
+make pdf
+make check
+buildchain validate --require-lifecycle-stages build,verify
+buildchain paper preflight --json
 buildchain paper status --json
-buildchain paper resume --json
 ```
 
-The safety and authority boundary is explicit:
+Scaffold plans all files before writing. `--write` creates missing files only;
+conflicting content, extra workflows and symlinked write parents stop the whole
+write. Repeating an unchanged scaffold is idempotent. `--package` optionally
+names the private source package; its version is the product version authority.
+Title and homepage stay in that product manifest.
 
-- `scaffold` plans a 17-file, no-overwrite repository shape by default; add
-  `--write` to create only missing files.
-- `migrate` plans the Buildchain-owned authority, workflow, contract lock,
-  version pin, package, agent-entry policy, managed `AGENTS.md` section, and
-  required-check changes needed by an existing paper repository. It pins an
-  exact runtime dependency and adds pnpm-backed paper scripts. With v4, build
-  and verify callers use `@v4-alpha`; release callers select `@v4-alpha` for
-  Alpha and `@v4` for stable releases. Both channel contract locks and their
-  distinct resolved source coordinates are bound into provisioning authority.
-  Verify callers grant the reusable Check workflow its required read permissions.
-  Paper agent guidance resolves next-development scripts from the installed
-  Buildchain package and links to the upstream transition ADR.
-  Migration reads the other channel from its fetched Git tag. Installed-package
-  operators can supply `--stable-buildchain-root` or `--alpha-buildchain-root`
-  pointing to the corresponding exact source checkout instead.
-  Add `--write` only after reviewing exact old and new digests; paper content
-  and publication configuration are never rewritten. Refresh
-  `pnpm-lock.yaml` with `pnpm install --lockfile-only` after a write.
-- `agent verify` is the mandatory resume check on an existing work branch. It
-  verifies the digest-bound `.buildchain/paper/agent-entry.json`, the single
-  managed `AGENTS.md` section, exact package scripts and runtime dependency, runtime
-  source SHA, development target, and current branch lineage. `--ci` derives
-  the pull-request source and target from GitHub context and fails closed on a
-  non-work source branch or a target other than the configured development
-  line.
-- Installed npm runtimes resolve their source from registry `gitHead`, or from
-  the official exact version tag when that field is absent. Missing, malformed,
-  duplicate, or unexpected tag results fail closed; floating tags are never
-  used as the installed package's source identity.
-- `work start` derives the protected development branch from the configured
-  publication semver line and creates a safe local work branch only when the
-  worktree is clean, the sole `origin` is the canonical `kungfu-systems`
-  repository, and local HEAD equals the exact remotely observed development
-  SHA. It never fetches or merges silently.
-- `work submit` accepts only an allowed non-protected work branch that contains
-  the exact remote development commit. It rejects divergent remote work,
-  wrong-base pull requests, dirty trees, forks, and ambiguous remotes; execution
-  uses a normal non-force push and opens or reuses a PR to the derived
-  development branch.
-- `fleet audit` discovers `paper-*` repositories from a root and emits one
-  deterministic audit root over exact runtime, dependency, lockfile, workflow,
-  authority, and repository observations. `fleet update` reuses the migration
-  contract for every discovered repository, remains dry-run by default, and
-  refuses protected or non-work branches.
-- The scaffolded `.buildchain/paper/provisioning-authority.json` binds both
-  build/release caller workflow byte digests, the required verify caller, the
-  agent-entry policy and instructions, their exact reusable-workflow SHA, the
-  runtime SHA, contract-lock bytes, npm registry and trusted-publisher
-  coordinates, and the repository Actions/generated-write policy under one
-  digest. A floating Buildchain ref cannot change release policy after that
-  authority is accepted.
-- The reusable `public-build-check.yml` detects publication-artifact repositories and runs
-  `paper preflight --offline --ci` inside the existing required check context.
-  Skipping the local CLI therefore cannot admit a missing entry contract,
-  drifted Buildchain-owned surface, unsafe source branch, or wrong PR target.
-- `preflight` separates local readiness from readiness for external mutation.
-  `--offline` skips live GitHub and npm observations without treating them as
-  local failures. Live readiness requires default workflow permissions `read`,
-  Actions pull-request approval disabled, and GitHub App or equivalent narrow
-  generated-write credential metadata.
-- `bootstrap npm` always performs npm pack and publish dry-runs first. A real
-  public bootstrap requires both `--execute` and
-  `--confirm-public-package <exact-name>`, uses only the official npm registry,
-  fixes the bootstrap version at `0.0.0-bootstrap.0`, and returns only npm URLs
-  observed from command output. Success requires public package readback and
-  the exact repository/workflow/environment trusted-publisher binding. For
-  GitHub, the npm coordinate is the workflow filename (`public-release-paper.yml`),
-  not its `.github/workflows/` repository path.
-- `build` plans the two-clean-build reproducibility proof. Add `--execute` to
-  create and verify the sealed publication bundle.
-- `alpha` plans or opens the protected Alpha pull request; it never merges,
-  publishes, or advances a floating ref.
-- `status` reports only evidence found in the repository or external
-  observations. It never infers a later lifecycle state from an earlier one.
-- `resume` plans or dispatches the repository's thin release workflow; the
-  protected workflow remains the release authority.
+The generated TOML declares the PDF and a GitHub Release target. The generated
+`buildchain.yml` and `buildchain-recover.yml` are byte-identical to the other
+product templates. Open the appropriate protected channel PR to request
+publication. Recovery uses the common exact-attempt entry.
 
-The ordered evidence states are `scaffolded`, `governed`, `admitted`,
-`bootstrapped`, `trust-bound`, `content-ready`, `artifact-sealed`,
-`package-published`, `alpha-complete`, `staging-visible`, and
-`production-visible`. A state can be `satisfied`, `not-reached`, `blocked`, or
-`unknown`; consumers must not collapse those distinctions.
+For schema-2 Paper repositories, preflight and status inspect local configuration
+and caller bytes. Their `localOnly` result and `publication.status=not-observed`
+do not claim a successful hosted build, admission or release. They perform no
+npm login, bootstrap, trust setup or GitHub account operation. Provider permissions
+and any tool-maintained runtime locks belong to the common setup/runtime contract.
 
-The corresponding Node surface is
-`@kungfu-tech/buildchain/paper`. Planning and status functions are read-only;
-`writePaperScaffold()`, `writePaperMigration()`, and
-`writePaperFleetUpdate()` are the bounded local writers. Work plans expose
-separate rechecking executors for local branch creation and normal push, and
-`executePaperNpmBootstrap()` preserves the same confirmation boundary used by
-the CLI.
+The previous schema-1 npm-paper contract, three-workflow scaffold and repository
+provisioning authority are retired from new scaffolds. Existing paper repositories
+need a reviewed migration; historical publication receipts remain historical
+facts and do not become new runtime configuration.
 
 `buildchain layout` is the stable machine question for repository layout. Tools
 such as Shifu should call it instead of copying `.buildchain/` path constants:
@@ -267,8 +192,11 @@ not sufficient. The same contract is available through
 `createBuildchainLayoutDiscovery()` from
 `@kungfu-tech/buildchain/buildchain-layout`.
 
-`buildchain init` writes a starter `.buildchain/buildchain.toml` and a reusable workflow
-caller at `.github/workflows/build.yml`.
+`buildchain init` writes a schema-2 `.buildchain/buildchain.toml` and the shared
+`.github/workflows/buildchain.yml` / `buildchain-recover.yml` caller pair.
+Product build and verification belong in TOML. Publication and recovery stay in
+the published runtime; consumers do not call the internal commands below as
+release lifecycle hooks. See the [Golden Path](getting-started.md).
 
 `buildchain portable-cache plan` turns a consumer-owned, secret-free manifest
 into GitHub Actions cache inputs without letting each consumer invent key or
@@ -306,32 +234,21 @@ consumer's current build or tests. Roots must be workspace-relative or under
 segments. `cold-fallback-status=passed` qualifies a miss only after the current
 source has completed its normal build and test path.
 
-Supported presets:
+Supported initialization types:
 
-- `--type package` for Node package repositories with pnpm, npm, or yarn.
-- `--type native` for CMake-style native projects.
-- `--type web-surface` for preview/staging/production site or app deployments.
-- `--type infra-contract` for provider-agnostic infrastructure contract
-  validation, observation, contract publication, and downstream propagation
-  planning without default mutation. Provider adapters expose built-in command
-  plans by default, and only configured `[infra.commands]` hooks can execute.
-- `--type publication-artifact` for papers, reports, specifications, and other
-  publication repositories that produce PDFs, metadata, source bundles, and
-  site-consumable manifests without becoming web-surface repositories. The
-  scaffold uses Buildchain's pinned
-  `ghcr.io/kungfu-systems/build-images/latex-pdf-builder:v1.2.0` toolchain for
-  LaTeX PDF builds.
-- `--type distribution-index` for Homebrew taps and other index repositories
-  whose files are projections of upstream release passport evidence.
-- `--type anchored-package` for packages whose version is anchored to an
-  explicit upstream release manifest.
+- `npm` or `package`: an npm product with an existing versioned `package.json`.
+- `binary` or `native`: a CMake product producing an archive.
+- `paper` or `publication-artifact`: a product producing a PDF.
+- `anchored-package`: an npm product with reviewed, manually maintained version authority.
 
-The native preset includes an opt-in `[diagnostics.native]` profile with common
-tool/cache/artifact probes. Consumers can keep it enabled, adjust the tool and
-directory lists, or disable it if a repository does not need native diagnostics.
+These choices change TOML product declarations, never the two YAML templates.
+The old `web-surface`, `infra-contract` and distribution initialization modes
+are outside the current schema-2 product set and are rejected before writing.
+Internal libraries for those capabilities are separate from consumer initialization.
 
-`buildchain validate` parses `.buildchain/buildchain.toml`, checks configured version-state
-files, and can require named lifecycle stages:
+`buildchain validate` parses `.buildchain/buildchain.toml`, checks configured
+version files and the exact shared caller bytes, and can require named commands
+on every declared product:
 
 ```bash
 buildchain validate \
@@ -646,14 +563,15 @@ spend long stretches in low-concurrency compile, archive, link, or cache steps.
 buildchain doctor --json
 ```
 
-It validates `.buildchain/buildchain.toml`, package-manager detection, Git repository state,
-and the reusable workflow caller. For `version.strategy = "anchored"` with
-`version.next = "manual"`, it also embeds the anchored package release contract
-check: anchor manifest readability, configured version files, trusted
-publishing, package publish order, and required lifecycle stages. Add
-`--require-publish-source-lock` inside a publish job when the doctor report
-should also fail unless the job is running from a resolved `publish-gate/*`
-source lock.
+For schema-2 consumers it validates TOML, Git repository state, the exact normal
+and recovery caller pair, and package-manager discovery when an npm product is
+present. A mixed channel pair or a consumer-edited YAML fails validation.
+Binary and Paper products do not need an npm package manager merely to use
+Buildchain. The report grants no publication authority.
+
+The remaining source-lock and schema-1 checks below describe internal runtime
+and historical product tooling. They are not extra steps in the current
+consumer release path.
 
 Anchored/manual package publish jobs can run the narrower source-lock gate
 directly:
@@ -712,8 +630,10 @@ buildchain publication-artifact npm-package --json
 This command reads `project.type = "publication-artifact"`,
 `publication.version`, and `[publish] kind = "npm-paper-package"` plus
 `publish.package`; it writes `.buildchain/publication/npm-package` by default.
-The `public-release-paper.yml@v3` reusable workflow uses the same command before
-running the standard npm publish transaction.
+These are retained schema-1 package-generation fields. Current schema-2 Paper
+consumers declare PDF artifacts and a GitHub Release target in TOML; they do
+not add an npm publication workflow. Use the Paper migration command before
+using a legacy repository with the shared caller pair.
 
 The command writes `.buildchain/publication/publication-artifact.json`,
 `.buildchain/publication/publication-artifact-passport.json`, a source bundle,
@@ -1056,36 +976,27 @@ and package identity. See [`v4-adopter-delivery.md`](v4-adopter-delivery.md).
 
 ## npm Publish Gate
 
-Buildchain's own npm package is published from
-`.github/workflows/self-release-promote.yml`, inside the same publish
-transaction that promotes release refs:
+Buildchain consumes its own generated `buildchain.yml` entry, which invokes
+`public-ops-pipeline.yml@v4`. Its schema-2 TOML declares the npm package product,
+build/verification commands and npm target. A legal channel PR expresses the
+release intent; the runtime manages qualification, version materialization,
+publication, provider readback and follow-up development work.
 
-- `v4.0.3-alpha.0` publishes to npm with dist-tag `alpha`.
-- `v4.0.2` publishes to npm with dist-tag `latest`.
-- moving refs such as `v4`, `v4.0`, and `v4.0-alpha` do not match the publish
-  workflow and do not publish.
+The internal
+[`.release-pipeline-products.yml`](../.github/workflows/.release-pipeline-products.yml)
+workflow owns the separate product build, qualification, publication and
+settlement jobs. Its publication job runs on a GitHub-hosted runner with
+`id-token: write`. For the configured npm Trusted Publisher, the publish client
+uses GitHub Actions OIDC. Routine releases require no interactive npm login,
+bootstrap publication or manually supplied npm token.
 
-The promotion workflow uses npm Trusted Publishing through GitHub Actions OIDC.
-It runs on a GitHub-hosted runner with `id-token: write`, but it does not
-manually run the release-candidate resolver or promote action. Buildchain's own
-dogfood path calls the declarative `public-release-promote.yml` wrapper with
-channel, target ref/SHA, PR-stage workflow, artifact, status-check, and passport
-inputs. The wrapper generates the version-state commit, runs
-`lifecycle.verify`, runs `lifecycle.publish`, writes Buildchain publish
-evidence, validates that evidence, and only then moves exact tags and floating
-refs.
+The runtime publishes the admitted sealed package version and retains exact
+registry integrity and GitHub Release evidence. Prereleases use the `alpha`
+dist-tag; stable releases use `latest`. An ordinary source build or floating
+ref update alone is not publication authority.
 
-```bash
-node packages/core/publication/commands/npm-publish-transaction.mjs
-```
-
-Before the first real release, configure npm Trusted Publishing for:
-
-- package: `@kungfu-tech/buildchain`
-- repository: `kungfu-systems/buildchain`
-- workflow: `.github/workflows/self-release-promote.yml`
-
-No npm package is published by manual dispatch or ordinary branch builds.
-Manual dispatch on `.github/workflows/self-release-npm-dry-run.yml` remains dry-run only, so
-maintainers can verify package contents and npm publish shape before opening or
-merging the release PR.
+Consumers do not call the npm transaction CLI, select candidate run IDs, pass
+request JSON, or add a separate npm release workflow. If an existing attempt
+needs recovery, use `buildchain-recover.yml` with its exact attempt and an
+optional repaired runtime. If a failed alpha is abandoned, keep its historical
+state intact and publish a new admitted candidate/version.

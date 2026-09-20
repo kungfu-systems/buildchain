@@ -94,7 +94,7 @@ function workflowErrors(cwd, authority, workflow) {
   if (!fileDigestMatches(cwd, workflow.path, workflow.sourceDigest))
     return [`paper workflow source digest mismatch: ${workflow.path}`];
   const refs =
-    workflow.reusablePath === ".github/workflows/public-release-paper.yml"
+    [".github/workflows/public-release-paper.yml", ".github/workflows/.release-paper.yml"].includes(workflow.reusablePath)
       ? ["v4-alpha", "v4"]
       : ["v4-alpha"];
   const text = fs.readFileSync(path.resolve(cwd, workflow.path), "utf8");

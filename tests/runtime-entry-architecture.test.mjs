@@ -4,15 +4,14 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import YAML from "yaml";
-import { scaffoldBuildWorkflow, scaffoldVerifyWorkflow, scaffoldReleaseWorkflow } from "../packages/core/paper/operations/scaffold-workflows.js";
-import { publicationRehearsalWorkflow } from "../packages/core/publication/publication-rehearsal-projection.js";
+import { consumerWorkflows } from "../packages/core/consumer/contract/entries.js";
 import { auditRuntimeEntry } from "../scripts/check-runtime-entry.mjs";
 function fixture(t, steps) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "runtime-entry-architecture-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   function write(file, value) { fs.mkdirSync(path.dirname(path.join(root,file)),{recursive:true});fs.writeFileSync(path.join(root,file),YAML.stringify(value)); }
   write("actions/runtime/environment/prepare/action.yml", { runs: { using: "composite", steps: [{ uses: "actions/checkout@v7", with: { path: ".buildchain/runtime" } }] } });
-  write(".github/workflows/build.yml", { jobs: { build: { steps } } });
+  write(".github/workflows/.build-candidate.yml", { jobs: { build: { steps } } });
   return root;
 }
 const prepare = { uses: "$/actions/runtime/environment/prepare" };
@@ -41,8 +40,8 @@ test("business JavaScript cannot bypass preparation with git clone", t => {
 
 test("generated consumers use declared public inputs and a floating entry", () => {
   const repository = path.resolve(import.meta.dirname, "..");
-  for (const generate of [scaffoldBuildWorkflow, scaffoldVerifyWorkflow, scaffoldReleaseWorkflow, publicationRehearsalWorkflow]) {
-    const workflow = YAML.parse(generate("v4-alpha"));
+  for (const source of Object.values(consumerWorkflows("v4-alpha"))) {
+    const workflow = YAML.parse(source);
     for (const job of Object.values(workflow.jobs)) {
       const match = job.uses.match(/^kungfu-systems\/buildchain\/(.+)@v4-alpha$/u);
       assert.ok(match, job.uses);
@@ -50,7 +49,7 @@ test("generated consumers use declared public inputs and a floating entry", () =
       for (const input of Object.keys(job.with || {})) assert.ok(Object.hasOwn(entry.on.workflow_call.inputs, input), `${job.uses}: ${input}`);
     }
   }
-  assert.throws(() => publicationRehearsalWorkflow("train/v4/v4.1/repair"), /floating public entry/);
+  assert.throws(() => consumerWorkflows("train/v4/v4.1/repair"), /entry.channel/);
 });
 
 test("recovery selectors declare original-run read permission", () => {

@@ -56,7 +56,12 @@ export function verifyGoldenPath() {
           name: "buildchain-golden-path-consumer",
           version: "0.1.0",
           private: true,
-          scripts: { build: 'node -e ""', check: 'node -e ""' },
+          scripts: {
+            build:
+              "node -e \"require('fs').mkdirSync('dist',{recursive:true});require('fs').writeFileSync('dist/index.js','export const value = 1;')\"",
+            check:
+              "node -e \"require('assert').ok(require('fs').statSync('dist/index.js').size > 0)\"",
+          },
         },
         null,
         2,
@@ -88,34 +93,19 @@ export function verifyGoldenPath() {
       { cwd: consumer, json: true },
     );
     const workflow = fs.readFileSync(
-      path.join(consumer, ".github", "workflows", "build.yml"),
+      path.join(consumer, ".github", "workflows", "buildchain.yml"),
       "utf8",
     );
-    const releaseDryRun = run(
-      buildchain,
-      ["release", "--dry-run", "--target-ref", "alpha/v4/v4.0", "--json"],
-      { cwd: consumer, json: true },
-    );
-    const passportPath = path.join(
-      consumer,
-      ".buildchain",
-      "golden-path",
-      "buildchain.release.json",
-    );
-    fs.mkdirSync(path.dirname(passportPath), { recursive: true });
-    run(
-      process.execPath,
-      [
-        "--input-type=module",
-        "--eval",
-        `import fs from "node:fs"; import { createReleasePassport } from "@kungfu-tech/buildchain"; const value=createReleasePassport({repository:"example/consumer",tag:"v0.1.0-alpha.0",sourceSha:"a".repeat(40),assets:[{name:"consumer.tgz",sha256:"b".repeat(64)}]}); fs.writeFileSync(${JSON.stringify(passportPath)}, JSON.stringify(value,null,2)+"\\n");`,
-      ],
-      { cwd: consumer },
-    );
-    const inspection = run(
-      buildchain,
-      ["inspect", "release", "--passport", passportPath, "--json"],
-      { cwd: consumer, json: true },
+    run("git", ["init", "-q"], { cwd: consumer });
+    const doctor = run(buildchain, ["doctor", "--json"], {
+      cwd: consumer,
+      json: true,
+    });
+    run("npm", ["run", "build"], { cwd: consumer });
+    run("npm", ["run", "check"], { cwd: consumer });
+    const recovery = fs.readFileSync(
+      path.join(consumer, ".github/workflows/buildchain-recover.yml"),
+      "utf8",
     );
 
     assert(
@@ -133,7 +123,7 @@ export function verifyGoldenPath() {
       "Golden Path validation did not retain the required lifecycle stages",
     );
     assert(
-      /uses:\s+kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v4/.test(
+      /uses:\s+kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-pipeline\.yml@v4/.test(
         workflow,
       ),
       "Golden Path workflow is not a thin v4 reusable-workflow caller",
@@ -142,13 +132,18 @@ export function verifyGoldenPath() {
       !/\n\s+(?:inputs|with|steps):/.test(workflow),
       "Golden Path ordinary caller must have zero inputs and delegate its steps",
     );
+    assert(doctor.ok, "Golden Path doctor rejected the initialized consumer");
     assert(
-      releaseDryRun && typeof releaseDryRun === "object",
-      "Golden Path release dry-run did not return JSON",
+      validation.config.schema === 2 && validation.products[0].type === "npm",
+      "Golden Path did not validate the schema-2 product",
     );
     assert(
-      inspection && typeof inspection === "object",
-      "Golden Path Release Passport inspection did not return JSON",
+      /public-ops-recover\.yml@v4/.test(recovery),
+      "Golden Path recovery entry is not the shared caller",
+    );
+    assert(
+      Object.keys(validation.consumer || {}).length > 0,
+      "Golden Path validation did not inspect caller wiring",
     );
     return {
       contract: "kungfu-buildchain-golden-path-verification/v1",
@@ -156,9 +151,10 @@ export function verifyGoldenPath() {
       version,
       projectType: initialized.type,
       validationPath: validation.config?.path,
-      reusableWorkflow: ".github/workflows/build.yml",
-      releaseDryRun: true,
-      releasePassportInspection: true,
+      reusableWorkflows: validation.consumer.workflows,
+      productBuildAndVerification: true,
+      doctor: doctor.ok,
+      providerEffects: false,
     };
   } finally {
     fs.rmSync(temporary, { recursive: true, force: true });

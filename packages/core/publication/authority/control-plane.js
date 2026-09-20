@@ -1,8 +1,8 @@
 export function publicationControlPlaneRequest(request) {
   const kind = request.autoAdmissionKind;
   const defaults = {
-    "release-candidate": ".github/workflows/public-release-promote.yml",
-    "publication-artifact": ".github/workflows/public-release-paper.yml",
+    "release-candidate": ".github/workflows/.release-candidate-promote.yml",
+    "publication-artifact": ".github/workflows/.release-paper.yml",
     "binary-release-assets": ".github/workflows/.release-binary-assets.yml",
   };
   if (!defaults[kind])

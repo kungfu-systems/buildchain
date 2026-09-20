@@ -1,5 +1,5 @@
 ---
-status: draft
+status: active
 period: ongoing
 theme: buildchain-reusable-build
 doc_type: technical-reference
@@ -8,210 +8,92 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-09
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-09
-  invisible_context_boundary: No private credentials or unrelated repositories inspected.
+  generated_at: 2026-09-20
+  visible_context: Shared caller generator, schema-2 product plan, pipeline build node and internal signing workflow.
+  invisible_context_boundary: Local source inspection does not establish hosted release qualification or provider authorization.
 ---
 
-# Reusable Build Surface
+# Consumer build and verification
 
-A project declares its build in `buildchain.toml`. The reusable workflow owns
-job sequencing, admission, runner boundaries and evidence aggregation. Ordinary
-single-project calls have no inputs:
+A repository declares products in `.buildchain/buildchain.toml`. The shared
+`buildchain.yml` caller invokes `public-ops-pipeline.yml@v4`; the shared
+`buildchain-recover.yml` caller invokes `public-ops-recover.yml@v4`.
+Use [init](getting-started.md) to generate both callers. Their bytes are the same
+for npm packages, binary archives and Paper PDFs.
 
-```yaml
-permissions:
-  issues: write
-  actions: read
-  contents: read
-  id-token: write
-  attestations: write
-jobs:
-  build:
-    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4
-```
+## Product commands
 
-Use `@v4-alpha` for the alpha entry. The entry selects the execution runtime
-from a transient `runtime-ref`, the selected `contract-lock`, or its own commit
-by default. The build API also accepts `config-path` and `resume-run-id`;
-`runtime-selection` transports the entry decision through nested workflows.
-All project commands and build options remain in TOML.
-
-A new recovery dispatch can pass a repaired train and the original failed run
-ID through the same entry. It restores matching retained build outputs, executes
-remaining verification and reads back provider effects. An entry defect requires
-an upgraded published entry and a full run. See [Runtime entry](runtime-entry.md).
-
-## Project discovery
-
-At the repository root, exactly one of `.buildchain/buildchain.toml` and
-`buildchain.toml` must exist. Missing or ambiguous configurations fail before
-matrix scheduling. A nested project is selected with its configuration location:
-
-```yaml
-jobs:
-  native:
-    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha
-    with:
-      config-path: packages/native/.buildchain/buildchain.toml
-```
-
-The config location determines the project working directory. Planning and
-lifecycle execution discover the same file. Absolute paths, parent traversal,
-symlink escape, malformed TOML and unknown `[build]` keys fail closed. A
-configuration locator cannot carry a profile override or execution authority.
-
-## Project configuration
+Each schema-2 `[[products]]` entry declares its product type, supported platforms,
+install/build/verify commands, artifacts and publication targets. For example:
 
 ```toml
-schema = 1
+schema = 2
 
-[lifecycle.install]
-command = "corepack pnpm install --frozen-lockfile"
+[[products]]
+id = "library"
+type = "npm"
+platforms = ["linux-x64"]
+install = ["corepack pnpm install --frozen-lockfile"]
+build = ["corepack pnpm run build"]
+verify = ["corepack pnpm run check"]
 
-[lifecycle.build]
-command = "corepack pnpm build"
+[[products.artifacts]]
+id = "package"
+path = "."
+kind = "npm-package"
 
-[lifecycle.verify]
-command = "corepack pnpm test"
-
-[build]
-environment = "github-hosted"
-timeout_minutes = 120
-fail_fast = false
-
-[build.tools]
-node = "24"
-rust = "stable"
-go = "1.25.x" # optional; omitted toolchains are not installed
-
-[build.artifacts]
-name = "my-library"
-paths = ["dist"]
-required_paths = ["dist/library.js"]
-min_files = 1
-release_candidate = true
-retention_days = 14
-compression_level = 0
+[[products.targets]]
+provider = "npm"
+access = "public"
+artifacts = ["package"]
 ```
 
-Commands remain exclusively in `[lifecycle]`. The backbone explicitly invokes
-install, build and verify in that order on each platform. Build is required;
-install and verify are required when declared. Unneeded stages require no
-additional boolean setting. Per-stage lifecycle timeout declarations retain
-precedence over the build timeout fallback.
+This excerpt describes a product. The complete configuration also declares version
+sources, protected channel routes and review policy; use the
+[complete standard examples](../templates/minimal-consumer/) for those sections.
 
-Artifact paths and required file paths are relative to the selected project.
-Platform artifact names derive from the configured base name,
-platform and source SHA; callers do not supply naming templates. The final
-manifest checks `min_files`, `max_files`, `min_total_bytes` and `required_paths`.
+The runtime executes install, build and verify in order for each selected product.
+Commands run in the product directory inside the admitted checkout. They receive
+an environment without provider credentials, and their output cannot become a
+privileged action's authority output. Runner environment/path file commands can
+carry product toolchain settings between phases.
 
-Other optional project sections are:
+Build source verification binds the exact Git commit, tree and TOML blob, and
+checks tracked file bytes and modes before and after execution. A failed product
+command or source change fails that observation. Successful product execution is
+an input to the runtime's independent qualification and publication stages.
 
-| TOML section | Responsibility |
-| --- | --- |
-| `build.diagnostics` | Process sampling and expected parallelism |
-| `build.verification` | Consumer-produced verify substage evidence location |
-| `build.finalization` | Verification of final signed bytes and platform placement |
-| `build.transport_smoke` | Transport simulation scenario and artifact root |
-| `build.attestation` | Subject path and attested platform |
-| `build.macos_signing` | App path and sealed-input platform |
-| `build.contract` | Compatibility and drift reporting policies |
-| `build.evidence` | Repository files containing gate and candidate-family evidence |
+## Runtime selection and recovery
 
-Declarative signing targets continue to belong to `[signing.artifacts]`.
-Signing uses `public-release-signing-authority.yml@v4`, passes the selected runtime
-through its runtime parameter and retains the protected
-`buildchain-artifact-signing` environment.
-Credentials, authority profiles and signer identities cannot be supplied through
-that declaration. See [Release Candidate](release-candidate.md)
-and [GitHub Artifact Attestation](github-artifact-attestation.md).
+Caller source selects `v4` or `v4-alpha`. A tool-maintained contract lock, when
+present, selects its qualified runtime. Without a lock, the entry selects its own
+exact runtime commit. Source-persisted train or SHA overrides are not consumer
+configuration.
 
-## Governed environments
+For an interrupted operation, select its exact attempt in `buildchain-recover.yml`.
+An optional repaired runtime belongs to that recovery request. Source, artifacts,
+provider effects and prior receipts remain bound to the original attempt. See
+[the Golden Path](getting-started.md) for the normal protected PR flow.
 
-`build.environment` selects a profile in
-[`architecture/build-environments.json`](../architecture/build-environments.json)
-from the exact Buildchain runtime. Infrastructure owners maintain runner
-presets/platforms, Linux container images, mirrors, cache transport, artifact
-relay settings and credential-island environments there. Adding a runner label
-or provider role requires reviewing that profile; project TOML cannot redefine
-it. Secrets still cross explicit workflow secret/environment boundaries.
+## Internal implementation boundaries
 
-The profiles are `github-hosted`, `github-hosted-container`, `kungfu-hosted`,
-`kungfu-v4-native` and `kungfu-v4-self-hosted`. `kungfu-hosted` preserves the
-Kungfu release matrix on GitHub-hosted Ubuntu 24.04 x64 and ARM64, macOS 15
-ARM64 and Windows 2022 x64. It selects GCC 14 for Linux x64, full Git history
-and the required Windows sccache profile at
-`docs/shifu/windows-alpha-sccache.cache-profile.json`, bound to its reviewed
-digest in the environment registry. All four lanes transfer artifacts directly
-through GitHub; the profile adds no provider roles or signing authority.
-Existing profiles retain their runner and cache policies. The container profile
-uses the existing digest-pinned `kungfu-verify` image. Native and container jobs remain
-separate because GitHub selects `runs-on` and `container` before executing
-steps. Their shared behavior is owned by these composite actions:
+The [workflow catalog](workflow-catalog.md) identifies internal components.
+Consumers do not call their workflows/actions or supply material roots, provider
+payloads, Warrant state or direct artifact-download handoffs.
 
-| Action | Owner responsibility |
-| --- | --- |
-| `resolve-build-plan` | Admission and complete plan |
-| `prepare-build-environment` | Source and toolchains |
-| `run-build-stage` | Ordered lifecycle and diagnostics |
-| `transfer-build-artifact` | Exact artifact coordinates and transport |
-| `sign-build-artifact` | Isolated signing and final bytes |
-| `attest-build-artifact` | Provider identity and final-byte attestation |
-| `finalize-build-result` | Complete coverage and final result |
+The internal `.release-signing-authority.yml` owns native signing credentials and
+provider verification. Its protected `buildchain-artifact-signing` environment
+retains certificate/notary inputs; the credential job never checks out or executes
+consumer source. Ordinary artifact jobs receive no certificate or notary secrets.
+The signing adapters verify returned bytes and provider results before delivery.
+These implementation contracts do not add another consumer entry or imply that
+all internal product capabilities are schema-2 configuration options.
 
-The backbone has six jobs: `plan`, `build-native`, `build-container`, `sign`,
-`attest` and `deliver`. It owns install → build → verify order, job dependencies,
-permissions, signing control, credential-island placement and final aggregation.
-A composite's internal receipt inputs transport already resolved facts; they
-are not additional reusable-workflow configuration inputs.
-
-## Identity and admission
-
-The configuration resolver reads the exact consumer source without executing
-consumer commands. It emits a deterministic plan/root binding configuration
-bytes, source SHA, called-workflow SHA, selected environment, toolchain and
-cache roots. Trust checks run before project execution or privileged runners.
-
-Tracked consumer workflows use `@v4` or `@v4-alpha` and commit both
-`.buildchain/contract-lock.json` and `.buildchain/alpha-contract-lock.json`.
-The called channel selects its matching lock. Source-persisted train/SHA
-selectors and mismatched locks remain forbidden. Ordinary builds have no
-runtime-override path; specialized release/recovery entry points keep their
-separate, bounded admission contracts.
-
-Bootstrap owns its admitted release and recovery capabilities. It is not an
-alternate parameter envelope for ordinary builds and is not injected into the
-build backbone. Release promotion consumes an already sealed candidate and
-must verify the source, artifacts and receipts independently.
-
-## Evidence and failure behavior
-
-The backbone returns one rooted `result` containing source/runtime identity and
-exact provider references for payloads, diagnostics, summary, signing, attestation
-and candidate evidence. The public facade exposes that result plus the candidate
-and controller artifact names for direct `download-artifact` calls.
-Platform manifests include deterministic payload hashes; transport preserves
-hidden artifacts and provenance. Substage failure evidence is collected even
-when verify fails. Untrusted events cannot reach build runners.
-
-The `sign` matrix uses separate ordinary artifact and protected macOS credential
-instances. The credential instance never checks out or executes consumer source.
-A hosted artifact instance may use its platform when final-byte verification
-requires that operating system; it receives no certificate or notary inputs. Imported signed bytes undergo consumer verification before
-manifests are recomputed. Release builds produce candidates; registry publishing
-belongs to the protected release path.
-
-## Maintaining the contract
-
-Update the TOML parser and plan resolver, owner contracts, affected consumers
-and tests together. Run
-`pnpm run generate:workflows`, generated reference/site checks and the full
-`pnpm run check`. Breaking input removal is intentional: migrate old `with`
-settings to TOML and remove them from calls; no compatibility forwarding exists.
-
-The Buildchain fixture at `fixtures/libnode-shaped/buildchain.toml` exercises
-native macOS/Windows and Linux-container builds through this public contract.
+Maintainers changing product execution or credential boundaries must update the
+plan, implementation, source-bound tests, generated references and site bundle,
+and run the full repository check. Retained schema-1 build fixtures exercise
+internal implementation history; they are not current consumer templates.

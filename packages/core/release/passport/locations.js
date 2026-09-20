@@ -1,29 +1,32 @@
 import path from "node:path";
 import fs from "node:fs";
-import { readJsonFile } from "./files.js";
 import https from "node:https";
 import http from "node:http";
 import { nonEmptyString } from "./identity.js";
-export async function resolveSiblingJson(basePath, relativePath) {
+export async function resolveSiblingJson(basePath, relativePath, options) {
   if (!basePath || !relativePath) {
     return undefined;
   }
   if (/^https?:\/\//.test(relativePath)) {
-    return readJsonFromLocation(relativePath);
+    return readJsonFromLocation(relativePath, 0, options);
   }
   if (/^https?:\/\//.test(basePath)) {
-    return readJsonFromLocation(new URL(relativePath, basePath).toString());
+    return readJsonFromLocation(
+      new URL(relativePath, basePath).toString(),
+      0,
+      options,
+    );
   }
   const candidate = path.resolve(path.dirname(basePath), relativePath);
   if (!fs.existsSync(candidate)) {
     return undefined;
   }
-  return readJsonFile(candidate);
+  return readJsonFromLocation(candidate, 0, options);
 }
 export async function readJsonFromLocation(
   location,
   redirectCount = 0,
-  { timeoutMs = 15_000 } = {},
+  { timeoutMs = 15_000, raw = false } = {},
 ) {
   const input = nonEmptyString(location, "location");
   if (!Number.isInteger(timeoutMs) || timeoutMs <= 0) {
@@ -47,6 +50,7 @@ export async function readJsonFromLocation(
           response.resume();
           readJsonFromLocation(nextLocation, redirectCount + 1, {
             timeoutMs,
+            raw,
           }).then(resolve, reject);
           return;
         }
@@ -64,7 +68,7 @@ export async function readJsonFromLocation(
         });
         response.on("end", () => {
           try {
-            resolve(JSON.parse(body));
+            resolve(raw ? body : JSON.parse(body));
           } catch (error) {
             reject(error);
           }
@@ -78,5 +82,6 @@ export async function readJsonFromLocation(
       request.on("error", reject);
     });
   }
-  return readJsonFile(input);
+  const bytes = fs.readFileSync(input, "utf8");
+  return raw ? bytes : JSON.parse(bytes);
 }

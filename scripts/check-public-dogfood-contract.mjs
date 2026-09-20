@@ -11,7 +11,7 @@ const DEFAULT_ROOT = path.resolve(
   "..",
 );
 const CALLER_PATH = ".github/workflows/self-build-public-consumer-dogfood.yml";
-const REUSABLE_PATH = ".github/workflows/public-build-stage-capsule-canary.yml";
+const REUSABLE_PATH = ".github/workflows/.build-stage-capsule-canary.yml";
 export const PUBLIC_DOGFOOD_ENTRY_REF = "v4";
 const PRIVATE_CONSUMER = ["buildchain", "self", "dogfood"].join("-");
 const PRIVATE_SHADOW = ["kungfu", "shadow"].join("-");
@@ -201,7 +201,7 @@ function assertWorkflowInventory(root) {
       fail(`${relative} invokes the private qualification script directly`);
     if (
       relative !== CALLER_PATH &&
-      text.includes(".github/workflows/public-build-stage-capsule-canary.yml@")
+      text.includes(".github/workflows/.build-stage-capsule-canary.yml@")
     )
       fail(`${relative} creates a second v4 dogfood caller`);
     if (relative !== REUSABLE_PATH && relative !== CALLER_PATH)
@@ -275,7 +275,7 @@ function assertArchitecture(root) {
     !dogfood ||
     dogfood.callerWorkflow !== CALLER_PATH ||
     dogfood.reusableWorkflow !==
-      "kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml" ||
+      "kungfu-systems/buildchain/.github/workflows/.build-stage-capsule-canary.yml" ||
     dogfood.runtimeBinding !== "entry-selected-runtime" ||
     dogfood.consumerSourceBinding !== "github.sha" ||
     JSON.stringify(dogfood.executableStages) !==

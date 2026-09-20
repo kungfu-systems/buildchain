@@ -1,26 +1,32 @@
 ---
-status: preview
+status: active
 period: ongoing
 theme: dev-qualification-patrol
-doc_type: architecture-and-usage
+doc_type: technical-reference
 source_level: local-files
 confidence: high
 sensitivity: public
 evidence_grade: A
-review_state: self-reviewed
-last_reviewed: 2026-08-03
+review_state: unreviewed
+last_reviewed: 2026-09-20
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-08-03
-  visible_context: Existing Buildchain Shifu Gate receipts, Kungfu Dev Patrol, Alpha preflight, candidate patrol, and GitHub failed-job rerun semantics.
-  invisible_context_boundary: No credentials, private logs, or private configuration were used.
+  generated_at: 2026-09-20
+  visible_context: Current workflow taxonomy, shared consumer entry contract, and retained internal qualification controller.
+  invisible_context_boundary: No new hosted qualification or external consumer migration is claimed.
 ---
 
-# Dev Qualification Patrol
+# Internal Dev Qualification Patrol
 
-Buildchain provides a reusable controller for repositories whose development
-branch advances faster than a heavy cross-platform qualification workflow can
+This document describes the internal
+[`.ops-dev-qualification-patrol.yml`](../.github/workflows/.ops-dev-qualification-patrol.yml)
+component. Consumers use the generated normal and attempt recovery callers;
+they do not add a patrol workflow, schedule, dispatch payload, or controller
+script. See the [Golden Path](getting-started.md).
+
+The retained controller handles internal qualification for a development
+branch that advances faster than a heavy cross-platform qualification workflow can
 settle. The controller keeps no external queue. On every wakeup it derives the
 only pending item from the current source-branch head and maintains these
 states:
@@ -45,14 +51,13 @@ without consuming the shared native runners.
 
 ## Exact-source and priority contract
 
-Call `.github/workflows/public-ops-dev-qualification-patrol.yml` from a thin consumer
-workflow after the lightweight preflight, Dev Patrol, and declared priority
-workflows complete. Add an offset schedule as recovery for delayed or missed
-GitHub events. Repeated wakeups are idempotent.
+Internal orchestration owns wakeups from preflight, qualification and priority
+workflow completion. Repeated wakeups are idempotent. Event recovery belongs
+to the runtime; this component does not require an extra consumer caller.
 
 The controller requires a successful preflight whose `head_sha` equals the
 current source head. It dispatches the heavy workflow on the source branch and
-adds a controller-owned `source-sha` input. The consumer must reject the run
+adds a controller-owned `source-sha` input. The internal qualification adapter must reject the run
 before qualification if that input differs from the workflow event SHA. This
 closes the race where the branch advances between observation and workflow
 startup. The heavy reusable Gate workflow then receives the exact SHA as its
@@ -97,10 +102,10 @@ is false. Before writing, it re-resolves the branch and all workflow state and
 requires the action and source SHA to match the read-only observation. A race
 fails closed and the next event recomputes from current truth.
 
-Start a consumer in dry-run mode. Its observation and mutation decisions are
-retained as exact-source artifacts with a canonical decision root. Enabling
-mutation requires a repository token that can write Actions; no contents,
-pull-request, tag, release, package, or publication permission is used.
+The internal dry-run mode retains observation and mutation decisions as
+exact-source artifacts with a canonical decision root. Its separately scoped
+mutation credential can write Actions; it does not receive contents,
+pull-request, tag, release, package, or publication authority.
 
 The controller does not merge a PR, publish an Alpha, create a tag, create a
 release, or settle a Release Passport. Once Dev and Alpha preflight evidence

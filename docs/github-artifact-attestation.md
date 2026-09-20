@@ -1,6 +1,6 @@
 ---
 status: draft
-period: 2026-07
+period: ongoing
 theme: buildchain-linux-artifact-provenance
 doc_type: protocol
 source_level: code-and-official-docs
@@ -8,16 +8,22 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-20
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-07-24
-  visible_context: Buildchain source, tests, GitHub Actions documentation, and actions/attest documentation
-  invisible_context: Model internals and provider-side implementation details are not visible
+  generated_at: 2026-09-20
+  visible_context: Current Buildchain taxonomy and consumer contract, retained attestation implementation and protocol documentation.
+  invisible_context_boundary: No fresh provider attestation or hosted qualification is asserted by this documentation update.
 ---
 
 # GitHub-native Linux Artifact Attestation
+
+This is an internal protocol reference. Consumers use the generated normal and
+recovery callers described in the [Golden Path](getting-started.md); they do
+not add a promotion or attester workflow, prepare policy JSON, or select source
+and artifact roots. The retained internal component is
+[`.release-artifact-attestation.yml`](../.github/workflows/.release-artifact-attestation.yml).
 
 Buildchain can bind a Linux release artifact to its original compiler run, exact
 source revision, platform manifest, Release Passport, and an immutable
@@ -68,7 +74,7 @@ still binding both directions.
 
 ## GitHub Permissions and Runtime Pins
 
-Both caller and reusable workflow grant only:
+The internal attester invocation and its reusable component grant only:
 
 ```yaml
 permissions:
@@ -85,9 +91,11 @@ itself must also be called at its exact signer-bootstrap commit. The signer
 commit and the later Buildchain runtime commit are separately bound so the
 first v3 integration never relies on a mutable or self-referential workflow ref.
 
-## Prepare the Release Passport
+## Internal Release Passport preparation
 
-Create one input document for each Linux artifact and seal it as a policy:
+The runtime owns policy preparation. Maintainers can inspect the retained
+policy contract with the following low-level tooling; these commands are not
+consumer lifecycle steps. One input document describes each Linux artifact:
 
 ```bash
 buildchain create github-artifact-attestation-policy \
@@ -110,74 +118,17 @@ buildchain collect github-release \
   # ...the existing release inputs
 ```
 
-The build, Passport, and attestation jobs must stay in the same workflow run.
-The release-candidate build declares both the subject and the already-merged
-signer bootstrap commit. The Buildchain runtime remains the exact runtime ref
-used by the build workflow and may be a later commit:
+The retained attestation mechanism binds the original compiler execution,
+sealed candidate payload, platform manifest and Passport. Internal promotion
+stages only digest-matching data, invokes the internal signer, verifies provider
+identity, and retains the bundle, predicate, verification evidence and receipt.
+A same-name published asset with different bytes is rejected.
 
-```yaml
-with:
-  github-artifact-attestation-subject-path: dist/kungfu-linux-x64.tar.gz
-  github-artifact-attestation-signer-sha: <exact-signer-bootstrap-sha>
-  github-artifact-attestation-platform-id: linux-x64
-```
-
-For release promotion, prefer the integrated v3 route. The policy must already
-be present in the downloaded release-candidate payload:
-
-```yaml
-permissions:
-  actions: write
-  artifact-metadata: write
-  attestations: write
-  checks: write
-  contents: write
-  id-token: write
-  issues: write
-
-jobs:
-  promote:
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4
-    with:
-      github-release: true
-      release-passport: true
-      github-artifact-attestation-policy-json: .buildchain/release-candidate/payload/<artifact>/policy.json
-      github-artifact-attestation-environment: buildchain-artifact-attestation
-```
-
-Promotion binds the policy into the Passport, stages only digest-matching data,
-calls the public signer entry, verifies the provider identity a second time, and
-publishes immutable bundle, predicate, verification, evidence, and receipt
-assets beside the release artifact. A same-name Release asset with different
-bytes is rejected instead of overwritten.
-
-Low-level callers may call the reusable attester directly after their Passport
-job. The public entry selects the execution runtime through the same contract as
-build and release. Provider signer identity and subject digests remain mandatory:
-
-```yaml
-jobs:
-  attest-linux:
-    needs: [build-linux, release-passport]
-    permissions:
-      actions: read
-      artifact-metadata: write
-      attestations: write
-      contents: read
-      id-token: write
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-artifact-attestation.yml@v4
-    with:
-      evidence-run-id: ${{ github.run_id }}
-      source-sha: ${{ github.sha }}
-      subject-artifact-name: linux-release
-      subject-relative-path: libnode-linux-x64.tar.gz
-      platform-manifest-artifact-name: linux-platform-manifest
-      platform-manifest-relative-path: manifest.json
-      release-passport-artifact-name: release-passport
-      release-passport-relative-path: buildchain.release.json
-      policy-json: ${{ needs.release-passport.outputs.github-attestation-policy-json }}
-      evidence-artifact-name: linux-attestation-evidence
-```
+Signer bootstrap identity and the runtime used to build the product remain
+separate immutable facts. These fields are derived and checked inside the
+runtime. Neither `public-release-promote.yml` nor
+`public-release-artifact-attestation.yml` is a current consumer API; new wiring
+must not copy the former v3 input sets into an extra workflow.
 
 ## Verify Online and Offline
 
@@ -209,8 +160,7 @@ expected statement, or GitHub reports a self-hosted signer.
 
 ## Qualification Policy
 
-New protocol work qualifies on the Buildchain v3 alpha line first. The v2
-development branch is not a supported landing target. Production
-adoption waits for the exact v3 implementation commit to pass the repository
-suite and a real GitHub OIDC/Sigstore qualification run, including the negative
-cases above. A successful local fixture is necessary but not sufficient.
+Protocol changes land through the protected `dev/v4/v4.1` workflow and require
+qualification of the exact published runtime before consumer adoption. Local
+fixtures validate the protocol's negative cases; they do not substitute for a
+real GitHub OIDC/Sigstore qualification run or prove provider publication.

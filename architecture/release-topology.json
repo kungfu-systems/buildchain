@@ -16,30 +16,30 @@
       ".github/workflows/.release-pipeline-products.yml",
       ".github/workflows/.release-pipeline-version.yml",
       ".github/workflows/.release-promote.yml",
-      ".github/workflows/build.yml",
+      ".github/workflows/.build-candidate.yml",
       ".github/workflows/buildchain-recover.yml",
       ".github/workflows/buildchain.yml",
-      ".github/workflows/public-build-demo.yml",
-      ".github/workflows/public-ops-alpha-candidate-patrol.yml",
-      ".github/workflows/public-ops-dev-auto-merge.yml",
-      ".github/workflows/public-ops-observed-evidence.yml",
+      ".github/workflows/.build-demo.yml",
+      ".github/workflows/.ops-alpha-candidate-patrol.yml",
+      ".github/workflows/.ops-dev-auto-merge.yml",
+      ".github/workflows/.ops-observed-evidence.yml",
       ".github/workflows/public-ops-pipeline.yml",
       ".github/workflows/public-ops-recover.yml",
-      ".github/workflows/public-ops-stable-candidate-patrol.yml",
-      ".github/workflows/public-release-artifact-attestation.yml",
-      ".github/workflows/public-release-oci-compose-preview.yml",
-      ".github/workflows/public-release-paper.yml",
-      ".github/workflows/public-release-promote.yml",
-      ".github/workflows/public-release-propagation.yml",
-      ".github/workflows/public-release-tail.yml",
-      ".github/workflows/public-release-web.yml"
+      ".github/workflows/.ops-stable-candidate-patrol.yml",
+      ".github/workflows/.release-artifact-attestation.yml",
+      ".github/workflows/.release-oci-compose-preview.yml",
+      ".github/workflows/.release-paper.yml",
+      ".github/workflows/.release-candidate-promote.yml",
+      ".github/workflows/.release-propagation.yml",
+      ".github/workflows/.release-tail.yml",
+      ".github/workflows/.release-web.yml"
     ],
     "unknownTopologyPolicy": "fail-closed"
   },
   "semanticScope": {
     "workflowPaths": [
       ".github/workflows/.release-promote.yml",
-      ".github/workflows/public-release-promote.yml"
+      ".github/workflows/.release-candidate-promote.yml"
     ],
     "excludedMechanisms": [
       "Paper product release",
@@ -121,6 +121,11 @@
         "packages/core/consumer/buildchain-config.js",
         "packages/core/consumer/contract/entries.js",
         "packages/core/consumer/contract/identity.js",
+        "packages/core/consumer/contract/inspection.js",
+        "packages/core/consumer/contract/javascript-syntax.js",
+        "packages/core/consumer/contract/javascript-values.js",
+        "packages/core/consumer/contract/javascript.js",
+        "packages/core/consumer/contract/local-validation.js",
         "packages/core/consumer/contract/plan.js",
         "packages/core/consumer/contract/products.js",
         "packages/core/consumer/contract/reader.js",
@@ -399,9 +404,10 @@
         "packages/core/workflow/pipeline/session.js",
         "packages/core/workflow/pipeline/settlement.js",
         "packages/core/workflow/pipeline/wake.js",
-        "packages/core/workflow/pipeline/web-status.js"
+        "packages/core/workflow/pipeline/web-status.js",
+        "packages/core/workflow/workflow-taxonomy.mjs"
       ],
-      "root": "sha256:215601023b2a038d11e5db4b7ece23b6a0dd848318617d2884975f3cf3e2f7de"
+      "root": "sha256:3681d639714d1717f7a747ff5ddf08889f9b2320b387d64ecc99743d38d1529c"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/runtime/domain-wasm.js",
@@ -494,7 +500,7 @@
         "reusableEdges": []
       },
       {
-        "path": ".github/workflows/public-release-promote.yml",
+        "path": ".github/workflows/.release-candidate-promote.yml",
         "triggers": ["workflow_call"],
         "jobs": [
           "consumer-admission|runner|-|read|-|artifactUpload,jobOutput|-",
@@ -521,9 +527,7 @@
     }
   },
   "postPublicationScope": {
-    "workflowPaths": [
-      ".github/workflows/public-release-oci-compose-preview.yml"
-    ],
+    "workflowPaths": [".github/workflows/.release-oci-compose-preview.yml"],
     "authority": "exact-publication-plus-source-bound-qualification-and-expected-old-digest",
     "observedTopology": {
       "jobRecordFields": [
@@ -537,7 +541,7 @@
       ],
       "workflows": [
         {
-          "path": ".github/workflows/public-release-oci-compose-preview.yml",
+          "path": ".github/workflows/.release-oci-compose-preview.yml",
           "triggers": ["workflow_call"],
           "jobs": [
             "execution-runtime|runner|-|read|-|jobOutput|-",

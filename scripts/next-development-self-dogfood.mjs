@@ -66,7 +66,7 @@ export function validateSelfDogfoodCheckpoint(checkpoint) {
   if (
     checkpoint.route.runtimeRef !== "v4-alpha" ||
     checkpoint.route.publicWorkflow !==
-      `${targetRepository}/.github/workflows/build.yml@v4-alpha` ||
+      `${targetRepository}/.github/workflows/.build-candidate.yml@v4-alpha` ||
     targetRepository !== "kungfu-systems/buildchain"
   ) {
     throw new Error("checkpoint requires the public owner/repo v4-alpha route");
@@ -122,7 +122,7 @@ export async function createSelfDogfoodCheckpoint({
   const routeRepository = repository(targetRepository);
   const route = {
     repository: routeRepository,
-    publicWorkflow: `${routeRepository}/.github/workflows/build.yml@v4-alpha`,
+    publicWorkflow: `${routeRepository}/.github/workflows/.build-candidate.yml@v4-alpha`,
     runtimeRef: required(runtimeRef, "runtimeRef"),
     runtimeSha: exactSha(runtimeSha, "runtimeSha"),
     contractRoot: exactRoot(contractRoot, "contractRoot"),
@@ -239,7 +239,7 @@ export function validateSelfDogfoodEvidence(evidence) {
   validateAdapterEvidence(evidence.adapter, semver, anchored);
   if (
     evidence.adoption?.coordinate !==
-      "kungfu-systems/buildchain/.github/workflows/build.yml@v4" ||
+      "kungfu-systems/buildchain/.github/workflows/.build-candidate.yml@v4" ||
     evidence.adoption?.exactShaProductionPin !== false
   ) {
     throw new Error("Kungfu adoption must use the floating v4 coordinate");
@@ -367,7 +367,7 @@ export async function resumeSelfDogfoodCheckpoint(
       },
     },
     adoption: {
-      coordinate: "kungfu-systems/buildchain/.github/workflows/build.yml@v4",
+      coordinate: "kungfu-systems/buildchain/.github/workflows/.build-candidate.yml@v4",
       runtimeRef: "v4",
       exactShaProductionPin: false,
     },

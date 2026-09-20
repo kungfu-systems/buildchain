@@ -883,7 +883,7 @@ test("workflow recovery resumes through the same canonical publisher transaction
     "utf8",
   );
   const publicWorkflow = fs.readFileSync(
-    new URL("../.github/workflows/public-release-promote.yml", import.meta.url),
+    new URL("../.github/workflows/.release-candidate-promote.yml", import.meta.url),
     "utf8",
   );
   const recovery = fs.readFileSync(

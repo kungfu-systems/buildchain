@@ -1,3 +1,7 @@
+import {
+  applyPaperMigration,
+  paperFileTarget as scaffoldTarget,
+} from "./operations/migration.js";
 import fs from "node:fs";
 import path from "node:path";
 import {
@@ -8,12 +12,6 @@ import {
 } from "./paper-repository.js";
 function jsonText(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
-}
-
-export function paperDependencyIgnore(current = "") {
-  return /^(?:\/)?node_modules\/?\s*$/m.test(current)
-    ? current
-    : `${current}${current.endsWith("\n") || !current ? "" : "\n"}node_modules/\n`;
 }
 
 function texEscape(value) {
@@ -52,102 +50,95 @@ clean:
 `;
 }
 
-export function paperPackageScripts(current = {}) {
-  return {
-    ...current,
-    "buildchain:paper": "buildchain paper",
-    "paper:preflight": "buildchain paper preflight --json",
-    "paper:agent:verify": "buildchain paper agent verify --json",
-    "paper:work:start": "buildchain paper work start",
-    "paper:work:submit": "buildchain paper work submit",
-    "paper:status": "buildchain paper status --json",
-  };
-}
-
-export function managedPaperPackageJson(current, buildchainVersion) {
-  if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(buildchainVersion)) {
-    throw new Error(
-      "paper repositories require an exact Buildchain semantic version",
-    );
-  }
-  const packageManager = current.packageManager || "pnpm@11.7.0";
-  if (!packageManager.startsWith("pnpm@")) {
-    throw new Error("paper repositories require a pnpm packageManager");
-  }
-  return {
-    ...current,
-    private: true,
-    scripts: paperPackageScripts(current.scripts),
-    devDependencies: {
-      ...(current.devDependencies || {}),
-      "@kungfu-tech/buildchain": buildchainVersion,
-    },
-    packageManager,
-  };
-}
-
 export function scaffoldPackageJson({
   name,
+  title,
   packageName,
   repository,
+  version,
+  siteBaseUrl,
   buildchainVersion,
 }) {
   return jsonText({
-    ...managedPaperPackageJson(
-      {
-        name: packageName,
-        description: `${name} publication source repository.`,
-        repository: {
-          type: "git",
-          url: `git+https://github.com/${repository}.git`,
-        },
-        license: "Apache-2.0",
-      },
-      buildchainVersion,
-    ),
+    name: packageName,
+    version,
+    private: true,
+    description: title || `${name} publication source repository.`,
+    repository: {
+      type: "git",
+      url: `git+https://github.com/${repository}.git`,
+    },
+    ...(siteBaseUrl ? { homepage: siteBaseUrl } : {}),
+    license: "Apache-2.0",
+    scripts: { build: "make pdf", check: "make check" },
+    devDependencies: { "@kungfu-tech/buildchain": buildchainVersion },
+    packageManager: "pnpm@11.7.0",
   });
 }
 
-export function scaffoldReadme({ title, packageName }) {
-  return `# ${title}
+function paperDocument(body) {
+  return `---
+status: draft
+period: ongoing
+theme: paper-consumer
+doc_type: implementation-guide
+source_level: generated-template
+confidence: high
+sensitivity: public
+evidence_grade: B
+review_state: unreviewed
+last_reviewed: 2026-09-20
+ai_provenance:
+  model_family: GPT-6
+  product: Codex
+  generated_at: 2026-09-20
+  visible_context: Shared schema-2 Paper source scaffold and caller templates.
+  invisible_context_boundary: No hosted build or publication is claimed.
+---
 
-This repository is a Buildchain-governed publication artifact source.
+${body}`;
+}
+
+export function scaffoldReadme({ title }) {
+  return paperDocument(`# ${title}
+
+This repository owns the paper source, product build commands and review history.
 
 ## Local workflow
 
 \`\`\`sh
-pnpm paper:preflight
-pnpm paper:agent:verify
-pnpm paper:work:start -- <topic>
-pnpm paper:work:submit
 make pdf
+make check
+buildchain validate --require-lifecycle-stages build,verify
 \`\`\`
 
-The public package identity is \`${packageName}\`. Buildchain owns reproducible
-artifact generation, sealed publication, npm Trusted Publishing, and recovery;
-this repository owns the paper source and review history.
+Open a protected channel PR to request delivery or publication. The published
+Buildchain pipeline builds and publishes the PDF to GitHub Releases. The same
+normal and recovery callers serve npm, binary and Paper products. Recovery takes
+an exact attempt, with an optional temporary repaired runtime.
+
+The private package.json identifies this source repository and its version;
+it is not an npm publication target.
 
 See [docs/MAP.md](docs/MAP.md) for the repository map.
-`;
+`);
 }
 
 export function scaffoldMap() {
-  return `# Repository Map
+  return paperDocument(`# Repository Map
 
 - \`paper/main.tex\`: paper source entrypoint.
 - \`paper/references.bib\`: bibliography source.
-- \`AGENTS.md\`: mandatory managed entry instructions for people and coding agents.
-- \`.buildchain/paper/agent-entry.json\`: versioned, digest-bound local and CI entry policy.
-- \`.buildchain/buildchain.toml\`: publication identity, toolchain, package, and lifecycle contract.
-- \`.buildchain/contract-lock.json\`: accepted Buildchain runtime contract.
-- \`.github/workflows/build.yml\`: thin read-only build and reproducibility caller.
-- \`.github/workflows/verify.yml\`: thin required check that enforces the Paper entry and acceptance policy.
-- \`.github/workflows/public-release-paper.yml\`: thin protected sealed-release caller.
+- \`Makefile\`: product PDF build and verification commands.
+- \`package.json\`: source identity, title, version and optional homepage.
+- \`AGENTS.md\`: shared consumer instructions.
+- \`.buildchain/buildchain.toml\`: schema-2 product and channel policy.
+- \`.github/workflows/buildchain.yml\`: shared normal caller.
+- \`.github/workflows/buildchain-recover.yml\`: shared exact-attempt recovery caller.
 
-The repository does not own npm transaction logic, publication authority,
-release-state recovery, or site deployment mechanics. Those remain Buildchain,
-npm/GitHub, and downstream site responsibilities respectively.
-`;
+Tool-maintained contract locks bind the published runtime. Publication,
+provider readback and release recovery belong to that runtime.
+`);
 }
 
 export function scaffoldMainTex(title) {
@@ -175,6 +166,39 @@ Replace this section with the reviewed paper content.
 \\end{document}
 `;
 }
+function scaffoldRoot(cwd) {
+  let existing = path.resolve(cwd);
+  const missing = [];
+  while (!fs.existsSync(existing)) {
+    missing.unshift(path.basename(existing));
+    const parent = path.dirname(existing);
+    if (parent === existing)
+      throw new Error("Cannot resolve Paper scaffold parent");
+    existing = parent;
+  }
+  if (!fs.statSync(existing).isDirectory())
+    throw new Error("Paper scaffold root must be a directory");
+  return path.join(fs.realpathSync(existing), ...missing);
+}
+
+function additionalScaffoldWorkflows(cwd, paths) {
+  const directory = path.join(cwd, ".github/workflows");
+  if (!fs.existsSync(directory)) return [];
+  return fs
+    .readdirSync(directory, { withFileTypes: true })
+    .filter(
+      (entry) =>
+        !entry.isFile() ||
+        (/\.ya?ml$/iu.test(entry.name) &&
+          !paths.includes(`.github/workflows/${entry.name}`)),
+    )
+    .map((entry) => ({
+      path: `.github/workflows/${entry.name}`,
+      action: "conflict",
+      reason: "outside-shared-consumer-pair",
+    }));
+}
+
 function planPaperScaffold(
   runtime,
   {
@@ -182,7 +206,6 @@ function planPaperScaffold(
     buildchainRoot = process.cwd(),
     buildchainVersion = "",
     buildchainRef = "v4",
-    buildchainSha = "",
     name = path.basename(path.resolve(cwd)),
     title = "",
     packageName = "",
@@ -191,10 +214,12 @@ function planPaperScaffold(
     siteBaseUrl = "",
   } = {},
 ) {
-  const resolvedCwd = path.resolve(cwd);
+  const resolvedCwd = scaffoldRoot(cwd);
   const normalizedName = String(name || "").trim();
   if (!normalizedName) throw new Error("paper scaffold requires --name");
-  const normalizedPackage = runtime.normalizePackageName(packageName);
+  const normalizedPackage = runtime.normalizePackageName(
+    packageName || normalizedName,
+  );
   const normalizedRepository = normalizeRepository(repository);
   if (!normalizedRepository) {
     throw new Error("paper scaffold requires --repository <owner/repo>");
@@ -209,19 +234,14 @@ function planPaperScaffold(
     buildchainRoot,
     buildchainVersion,
   );
-  const runtimeSha =
-    buildchainSha ||
-    runtime.resolvePaperRuntimeGitSha(buildchainRoot, runtimeIdentity.version);
-  if (!runtime.GIT_SHA_PATTERN.test(runtimeSha)) {
+  if (buildchainRef !== "v4")
     throw new Error(
-      "paper scaffold cannot resolve the exact Buildchain runtime SHA; pass buildchainSha or use a published Buildchain package with npm gitHead provenance",
+      "Paper scaffold uses the shared published v4 caller; exact runtimes belong in tool-maintained locks",
     );
-  }
   const files = runtime.scaffoldFiles({
     buildchainRoot,
     buildchainVersion: runtimeIdentity.version,
     buildchainRef,
-    buildchainSha: runtimeSha,
     cwd: resolvedCwd,
     name: normalizedName,
     title: title || normalizedName,
@@ -231,7 +251,7 @@ function planPaperScaffold(
     siteBaseUrl,
   });
   const changes = [...files.entries()].map(([relativePath, content]) => {
-    const filePath = path.resolve(resolvedCwd, relativePath);
+    const filePath = scaffoldTarget(resolvedCwd, relativePath);
     const exists = fs.existsSync(filePath);
     if (!exists) {
       return {
@@ -267,6 +287,7 @@ function planPaperScaffold(
           content,
         };
   });
+  changes.push(...additionalScaffoldWorkflows(resolvedCwd, [...files.keys()]));
   const publicChanges = changes.map(({ content: _content, ...entry }) => entry);
   const conflicts = publicChanges.filter(
     (entry) => entry.action === "conflict",
@@ -286,8 +307,7 @@ function planPaperScaffold(
     },
     buildchain: {
       version: runtimeIdentity.version,
-      ref: runtimeSha,
-      resolvedSha: runtimeSha,
+      ref: "v4",
     },
     summary: {
       create: publicChanges.filter((entry) => entry.action === "create").length,
@@ -337,11 +357,18 @@ function writePaperScaffold(runtime, plan) {
     };
   }
   const resolvedCwd = path.resolve(plan.cwd);
+  if (
+    fs.lstatSync(resolvedCwd, { throwIfNoEntry: false })?.isSymbolicLink() ||
+    scaffoldRoot(resolvedCwd) !== resolvedCwd
+  )
+    throw new Error("Paper scaffold root changed after planning");
   const creates = plan._plannedFiles.filter(
     (entry) => entry.action === "create",
   );
-  for (const entry of creates) {
-    const target = path.resolve(resolvedCwd, entry.path);
+  for (const entry of plan._plannedFiles) {
+    const target = scaffoldTarget(resolvedCwd, entry.path);
+    if (entry.action === "unchanged" && !fs.existsSync(target))
+      throw new Error(`paper scaffold race detected at ${entry.path}`);
     if (fs.existsSync(target)) {
       const current = fs.statSync(target).isFile()
         ? fs.readFileSync(target, "utf8")
@@ -354,6 +381,13 @@ function writePaperScaffold(runtime, plan) {
       continue;
     }
   }
+  if (
+    additionalScaffoldWorkflows(
+      resolvedCwd,
+      plan._plannedFiles.map((entry) => entry.path),
+    ).length
+  )
+    throw new Error("paper scaffold workflow inventory changed after planning");
   const written = [];
   for (const entry of creates) {
     const target = path.resolve(resolvedCwd, entry.path);
@@ -370,8 +404,8 @@ function writePaperScaffold(runtime, plan) {
     idempotent: written.length === 0,
     nextActions: [
       {
-        id: "paper-preflight",
-        command: `buildchain paper preflight --cwd ${JSON.stringify(resolvedCwd)} --json`,
+        id: "consumer-validate",
+        command: `buildchain validate --cwd ${JSON.stringify(resolvedCwd)} --require-lifecycle-stages build,verify`,
         description:
           "Verify the generated repository before any external mutation.",
       },
@@ -390,7 +424,11 @@ function planPaperMigration(
     alphaBuildchainRoot = "",
   } = {},
 ) {
-  const resolvedCwd = path.resolve(cwd);
+  if (stableBuildchainRoot || alphaBuildchainRoot)
+    throw new Error(
+      "Paper migration rejects retired channel-root inputs; runtime locks are preserved by the shared setup contract",
+    );
+  const resolvedCwd = fs.realpathSync(cwd);
   const repositoryRoot = gitValue(resolvedCwd, [
     "rev-parse",
     "--show-toplevel",
@@ -402,6 +440,15 @@ function planPaperMigration(
   if (!repositoryRoot || repositoryPrefix) {
     throw new Error("paper migration must target the exact repository root");
   }
+  for (const relative of [
+    ".buildchain/buildchain.toml",
+    "package.json",
+    "AGENTS.md",
+    "pnpm-workspace.yaml",
+    ".github/workflows/buildchain.yml",
+    ".github/workflows/buildchain-recover.yml",
+  ])
+    scaffoldTarget(resolvedCwd, relative);
   const source = {
     head: gitValue(resolvedCwd, ["rev-parse", "HEAD"]),
     clean: gitResult(resolvedCwd, ["status", "--porcelain"]).stdout === "",
@@ -425,7 +472,7 @@ function planPaperMigration(
         path: relativePath,
         action: "conflict",
         currentSha256: "",
-        sha256: sha256Text(content),
+        sha256: content === null ? "" : sha256Text(content),
         content,
       };
     }
@@ -435,13 +482,17 @@ function planPaperMigration(
     return {
       path: relativePath,
       action:
-        current === undefined
-          ? "create"
-          : current === content
+        content === null
+          ? current === undefined
             ? "unchanged"
-            : "update",
+            : "remove"
+          : current === undefined
+            ? "create"
+            : current === content
+              ? "unchanged"
+              : "update",
       currentSha256: current === undefined ? "" : sha256Text(current),
-      sha256: sha256Text(content),
+      sha256: content === null ? "" : sha256Text(content),
       content,
     };
   });
@@ -458,6 +509,7 @@ function planPaperMigration(
     summary: {
       create: changes.filter((entry) => entry.action === "create").length,
       update: changes.filter((entry) => entry.action === "update").length,
+      remove: changes.filter((entry) => entry.action === "remove").length,
       unchanged: changes.filter((entry) => entry.action === "unchanged").length,
       conflict: conflicts.length,
     },
@@ -486,7 +538,7 @@ function planPaperMigration(
               id: "write-migration",
               command: "buildchain paper migrate --write --json",
               description:
-                "Write the reviewed Buildchain-owned control files without changing paper content or publication configuration.",
+                "Convert product configuration to the shared pipeline and retire the listed verified legacy control files; source content and historical receipts remain untouched.",
             },
             {
               id: "refresh-pnpm-lock",
@@ -503,72 +555,11 @@ function planPaperMigration(
   return result;
 }
 
-function writePaperMigration(runtime, plan) {
-  if (!plan || plan.contract !== runtime.PAPER_MIGRATION_CONTRACT) {
-    throw new Error("paper migration plan contract mismatch");
-  }
-  if (!plan.ok) {
-    return {
-      ...plan,
-      dryRun: false,
-      written: [],
-      updated: [],
-      ok: false,
-      errorCode: "paper-migration-blocked",
-    };
-  }
-  const written = [];
-  const updated = [];
-  for (const entry of plan._plannedFiles) {
-    if (entry.action === "unchanged") continue;
-    const target = path.resolve(plan.cwd, entry.path);
-    const exists = fs.existsSync(target);
-    const current =
-      exists && fs.statSync(target).isFile()
-        ? fs.readFileSync(target, "utf8")
-        : undefined;
-    const currentSha256 = current === undefined ? "" : sha256Text(current);
-    if (
-      (entry.action === "create" && exists) ||
-      (entry.action === "update" && currentSha256 !== entry.currentSha256)
-    ) {
-      throw new Error(
-        `paper migration race detected at ${entry.path}; no stale plan was applied`,
-      );
-    }
-  }
-  for (const entry of plan._plannedFiles) {
-    if (entry.action === "unchanged") continue;
-    const target = path.resolve(plan.cwd, entry.path);
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(target, entry.content, {
-      flag: entry.action === "create" ? "wx" : "w",
-    });
-    (entry.action === "create" ? written : updated).push(entry.path);
-  }
-  return {
-    ...plan,
-    ok: true,
-    dryRun: false,
-    written,
-    updated,
-    idempotent: written.length === 0 && updated.length === 0,
-    nextActions: [
-      {
-        id: "paper-preflight",
-        command: `buildchain paper preflight --cwd ${JSON.stringify(plan.cwd)} --offline --json`,
-        description:
-          "Verify the migrated repository before any external mutation.",
-      },
-    ],
-  };
-}
-
 export function createPaperScaffoldOperations(runtime) {
   return {
     planPaperMigration: (options) => planPaperMigration(runtime, options),
     planPaperScaffold: (options) => planPaperScaffold(runtime, options),
-    writePaperMigration: (plan) => writePaperMigration(runtime, plan),
+    writePaperMigration: applyPaperMigration,
     writePaperScaffold: (plan) => writePaperScaffold(runtime, plan),
   };
 }

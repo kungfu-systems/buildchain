@@ -41,7 +41,7 @@ async function workspace(fn) {
 }
 test("paper release has one public API with read-only candidate, independent authority and admitted publication", () => {
   const workflow = YAML.parse(
-    fs.readFileSync(".github/workflows/public-release-paper.yml", "utf8"),
+    fs.readFileSync(".github/workflows/.release-paper.yml", "utf8"),
   );
   assert.deepEqual(Object.keys(workflow.jobs), [
     "execution-runtime",

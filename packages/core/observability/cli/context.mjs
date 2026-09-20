@@ -1,16 +1,11 @@
 import {
   createBuildchainLogger,
   defaultBuildchainLogPath,
-  summarizeBuildchainLogEvents,
 } from "../logging.js";
 import {
-  printJson,
   readBooleanFlag,
   readFlag,
-  readJsonInput,
   readRepeatedFlag,
-  readRepeatedJsonInputs,
-  writeJsonFile,
 } from "../../contracts/cli/options.mjs";
 
 export function readAttributes(args) {

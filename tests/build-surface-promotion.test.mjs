@@ -88,7 +88,7 @@ test("promote action exposes generic publish source-lock gate", () => {
     path.join(root, "actions/release/promotion/ref/action.yml"),
     "utf8",
   );
-  const graph = inspectWorkflowJob(".github/workflows/public-release-paper.yml", "publish");
+  const graph = inspectWorkflowJob(".github/workflows/.release-paper.yml", "publish");
   const implementation = ["action-inputs.js", "action-outputs.js", "source-lock.js"].map(file => {
     const source = graph.modules.get(`packages/core/release/promote-ref/${file}`);
     assert.ok(source, file);
@@ -358,9 +358,10 @@ test("stable recovery keeps candidate bytes immutable while preparing the next a
 
 test("build docs keep ordinary source identity separate from release promotion", () => {
   const docs = fs.readFileSync(path.join(root, "docs/reusable-build-surface.md"), "utf8");
-  assert.match(docs, /source SHA, called-workflow SHA/);
-  assert.match(docs, /specialized release\/recovery entry points/);
-  assert.match(docs, /Release promotion consumes an already sealed candidate/);
+  assert.match(docs, /exact Git commit, tree and TOML blob/);
+  assert.match(docs, /exact attempt in `buildchain-recover\.yml`/);
+  assert.match(docs, /independent qualification and publication stages/);
+  assert.doesNotMatch(docs, /uses:.*(?:build\.yml|\.release-)/);
 });
 
 test("promote action docs describe publish source-lock inputs", () => {

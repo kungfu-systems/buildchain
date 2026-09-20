@@ -54,7 +54,7 @@ permissions:
   statuses: read
 jobs:
   patrol:
-    uses: ./.github/workflows/public-ops-patrol.yml
+    uses: ./.github/workflows/.ops-patrol.yml
     with:
       cadence: monthly
       mode: cadence-default

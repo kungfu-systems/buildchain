@@ -8,7 +8,7 @@ import { settleRecoveryOwnership } from "../packages/core/workflow/pipeline/reco
 import { openRecoveryAttempt } from "../packages/core/workflow/pipeline/recovery-session.js";
 import { planPipelineRecovery } from "../packages/core/workflow/pipeline/recovery-plan.js";
 
-async function fixture({ active = false, merged = false } = {}) {
+async function fixture({ active = false, merged = false, historical = false } = {}) {
   const f = await cancellationFixture({ active });
   let observed = await f.journal.read();
   const intent = observed.intent;
@@ -63,7 +63,7 @@ async function fixture({ active = false, merged = false } = {}) {
           status: "completed",
           referenced_workflows: [
             {
-              path: "kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@v4",
+              path: `kungfu-systems/buildchain/.github/workflows/${historical ? "public-ops-dev-auto-merge.yml" : ".ops-dev-auto-merge.yml"}@v4`,
             },
           ],
         },
@@ -153,6 +153,15 @@ for (const active of [false, true])
     assert.equal(f.writes(), 1);
     assert.deepEqual((await f.journal.read()).history[0].events, original);
   });
+
+test("recovery reads a retained worker under its original published workflow identity", async () => {
+  const f = await fixture({ active: true, historical: true });
+  const original = structuredClone(f.session.observed.history[0].events);
+  const result = await settleRecoveryOwnership(f.session, null, f.host);
+  assert.equal(result.candidate.status, "cancelled");
+  assert.equal(f.writes(), 1);
+  assert.deepEqual((await f.journal.read()).history[0].events, original);
+});
 
 test("merged recovery settles the qualified original Warrant with retained proof and never cancels it", async () => {
   const f = await fixture({ active: true, merged: true });

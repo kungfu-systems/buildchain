@@ -39,8 +39,6 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - sources: `packages/core/governance/issue-reporting.js`
 - sources: `packages/core/index.js`
 - sources: `packages/core/observability/diagnostics.js`
-- sources: `packages/core/paper/commands/paper.mjs`
-- sources: `packages/core/paper/paper-npm-bootstrap.js`
 - sources: `packages/core/providers/commands/infra-contract-core.mjs`
 - sources: `packages/core/providers/commands/infra-contract.mjs`
 - sources: `packages/core/publication/publication-artifact.js`
@@ -107,43 +105,30 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - tests: `tests/release-passport.test.mjs`
 - tests: `tests/release-propagation.test.mjs`
 - tests: `tests/web-surface.test.mjs`
-- workflows: `.github/workflows/public-release-web.yml`
+- workflows: `.github/workflows/.release-web.yml`
 
 ### Current top twenty maintenance hotspots
 
-- `tests/adopter-delivery.test.mjs`
-- `tests/internal-architecture.test.mjs`
 - `tests/build-surface-promotion.test.mjs`
+- `tests/internal-architecture.test.mjs`
 - `tests/build-surface.test.mjs`
-- `tests/buildchain-ref-promotion-recovery-entry.test.mjs`
-- `scripts/check-inventory.mjs`
-- `.github/workflows/.build.yml`
-- `tests/dev-delivery-minimal-request.test.mjs`
-- `tests/build-configuration.test.mjs`
-- `.github/workflows/build.yml`
-- `scripts/generate-channel-promotion-workflow.mjs`
-- `tests/github-governance-authority.test.mjs`
-- `tests/maintainability.test.mjs`
-- `tests/oci-publication.test.mjs`
-- `tests/release-candidate-recovery.test.mjs`
-- `.github/workflows/.release-promote.yml`
-- `.github/workflows/public-build-adopter-qualification.yml`
-- `.github/workflows/public-build-stage-capsule-canary.yml`
-- `.github/workflows/public-release-oci-compose-preview.yml`
-- `.github/workflows/public-release-promote.yml`
-- `.github/workflows/.release-binary-assets.yml`
-- `.github/workflows/public-ops-dev-auto-merge.yml`
 - `tests/release-topology.test.mjs`
-- `scripts/check-release-topology.mjs`
-- `packages/core/governance/buildchain-publication-authority.js`
-- `scripts/check-universal-workflow-bootstrap.mjs`
-- `packages/core/providers/github/discussions/materials.js`
-- `tests/controller-evidence.test.mjs`
-- `tests/floating-consumer-policy-contract.test.mjs`
-- `tests/macos-credential-island.test.mjs`
-- `tests/minimal-consumer-contract.test.mjs`
-- `tests/native-artifact-signing-authority.test.mjs`
+- `scripts/check-inventory.mjs`
+- `tests/build-configuration.test.mjs`
+- `tests/dev-delivery-minimal-request.test.mjs`
 - `tests/workflow-taxonomy.test.mjs`
+- `packages/core/governance/buildchain-publication-authority.js`
+- `tests/minimal-consumer-contract.test.mjs`
+- `scripts/check-release-topology.mjs`
+- `tests/floating-consumer-policy-contract.test.mjs`
+- `scripts/check-universal-workflow-bootstrap.mjs`
+- `tests/adopter-delivery.test.mjs`
+- `tests/buildchain-ref-promotion-recovery-entry.test.mjs`
+- `tests/controller-evidence.test.mjs`
+- `tests/github-governance-authority.test.mjs`
+- `tests/macos-credential-island.test.mjs`
+- `tests/native-artifact-signing-authority.test.mjs`
+- `tests/release-candidate-recovery.test.mjs`
 
 ## action-process-runtime
 
@@ -725,7 +710,7 @@ Owner: Buildchain release provider maintainers
 
 - `contracts/release-tail-capabilities-v1.schema.json`
 - `contracts/release-tail-provider-bindings-v1.schema.json`
-- `.github/workflows/public-release-tail.yml`
+- `.github/workflows/.release-tail.yml`
 - `actions/release/tail/settle/action.yml`
 - `docs/release-tail-provider-plane.md`
 
@@ -1053,10 +1038,13 @@ Owner: Buildchain consumer contract maintainers
 
 ### Implementation
 
+- `packages/core/adoption/commands/init-repo.mjs`
+- `packages/core/adoption/consumer-init.js`
 - `packages/core/consumer/contract/entries.js`
 - `packages/core/consumer/contract/examples.js`
 - `packages/core/consumer/contract/identity.js`
 - `packages/core/consumer/contract/inspection.js`
+- `packages/core/consumer/contract/local-validation.js`
 - `packages/core/consumer/contract/plan.js`
 - `packages/core/consumer/contract/products.js`
 - `packages/core/consumer/contract/reader.js`
@@ -1069,8 +1057,9 @@ Owner: Buildchain consumer contract maintainers
 
 ### Tests
 
-- `tests/minimal-consumer-contract.test.mjs`
+- `tests/consumer-init.test.mjs`
 - `tests/consumer-product-config.test.mjs`
+- `tests/minimal-consumer-contract.test.mjs`
 
 ### Generated outputs
 
@@ -1079,7 +1068,7 @@ Owner: Buildchain consumer contract maintainers
 
 ### Minimal validation
 
-- `node --test tests/minimal-consumer-contract.test.mjs`
+- `node --test tests/minimal-consumer-contract.test.mjs tests/consumer-product-config.test.mjs tests/consumer-init.test.mjs`
 - `node scripts/generate-minimal-consumer-contract.mjs --check`
 
 ## minimal-consumer-pipeline
@@ -1371,7 +1360,6 @@ Owner: Buildchain Paper maintainers
 - `packages/core/paper/commands/paper-work-fleet-cli.mjs`
 - `packages/core/paper/paper-agent-entry.js`
 - `packages/core/paper/paper-fleet.js`
-- `packages/core/paper/paper-npm-bootstrap.js`
 - `packages/core/paper/paper-repository.js`
 - `packages/core/paper/paper-runtime-channels.js`
 - `packages/core/paper/paper-scaffold-content.js`
@@ -1406,24 +1394,20 @@ Owner: Buildchain Paper maintainers
 
 ### Implementation
 
-- `packages/core/paper/operations/bootstrap.js`
+- `packages/core/paper/consumer-status.js`
 - `packages/core/paper/operations/files.js`
 - `packages/core/paper/operations/github-observation.js`
 - `packages/core/paper/operations/identity.js`
+- `packages/core/paper/operations/migration.js`
 - `packages/core/paper/operations/npm-observation.js`
-- `packages/core/paper/operations/plans.js`
 - `packages/core/paper/operations/preflight-checks.js`
 - `packages/core/paper/operations/provisioning-validation.js`
-- `packages/core/paper/operations/provisioning.js`
 - `packages/core/paper/operations/runtime-observation.js`
 - `packages/core/paper/operations/runtime.js`
-- `packages/core/paper/operations/scaffold-config.js`
-- `packages/core/paper/operations/scaffold-workflows.js`
 - `packages/core/paper/operations/scaffold.js`
 - `packages/core/paper/operations/status-facts.js`
 - `packages/core/paper/operations/status.js`
 - `packages/core/paper/operations/toolchain-observation.js`
-- `packages/core/paper/operations/workspace.js`
 
 ### Contracts
 
@@ -1432,6 +1416,8 @@ Owner: Buildchain Paper maintainers
 ### Tests
 
 - `tests/paper-check-policy.test.mjs`
+- `tests/paper-consumer-migration.test.mjs`
+- `tests/paper-consumer-scaffold.test.mjs`
 - `tests/paper-migration.test.mjs`
 - `tests/paper-publication-controller.test.mjs`
 - `tests/paper-publication-node.test.mjs`
@@ -2126,7 +2112,7 @@ Owner: Buildchain maintainers
 ### Contracts
 
 - `.github/workflows/.release-promote.yml`
-- `.github/workflows/public-release-promote.yml`
+- `.github/workflows/.release-candidate-promote.yml`
 
 ### Tests
 
@@ -2136,7 +2122,7 @@ Owner: Buildchain maintainers
 
 ### Generated outputs
 
-- `.github/workflows/public-release-promote.yml`
+- `.github/workflows/.release-candidate-promote.yml`
 
 ### Minimal validation
 
@@ -2191,7 +2177,7 @@ Owner: Buildchain workflow maintainers
 ### Contracts
 
 - `.github/workflows/.build.yml`
-- `.github/workflows/build.yml`
+- `.github/workflows/.build-candidate.yml`
 - `architecture/build-environments.json`
 - `actions/build/lifecycle/plan/action.yml`
 - `actions/build/lifecycle/prepare/action.yml`
@@ -2214,7 +2200,7 @@ Owner: Buildchain workflow maintainers
 
 ### Generated outputs
 
-- `.github/workflows/build.yml`
+- `.github/workflows/.build-candidate.yml`
 - `actions/build/lifecycle/run/dist/index.js`
 
 ### Minimal validation
@@ -2538,7 +2524,7 @@ Owner: Buildchain adopter delivery maintainers
 - `contracts/fixtures/v4-adopter-delivery-v1/gate-positive.json`
 - `contracts/fixtures/v4-adopter-delivery-v1/gate-unknown-selector.json`
 - `contracts/fixtures/v4-adopter-delivery-v1/offline-vectors.json`
-- `.github/workflows/public-build-adopter-qualification.yml`
+- `.github/workflows/.build-adopter-qualification.yml`
 - `docs/v4-adopter-delivery.md`
 
 ### Tests
@@ -2650,7 +2636,7 @@ Owner: Buildchain architecture maintainers
 - `architecture/tail-reseal-parity.json`
 - `contracts/v4-tail-reseal-v1.schema.json`
 - `contracts/fixtures/v4-tail-reseal-v1/valid.json`
-- `.github/workflows/public-ops-tail-reseal.yml`
+- `.github/workflows/.ops-tail-reseal.yml`
 - `docs/v4-stage-capsule.md`
 - `docs/v4-tail-reseal.md`
 
@@ -2760,7 +2746,7 @@ Owner: Buildchain protected delivery maintainers
 - `architecture/decisions/0003-two-phase-delivery-warrant.md`
 - `contracts/dev-delivery-authority-v2.schema.json`
 - `dist/site/schemas/dev-delivery-authority-v2.schema.json`
-- `.github/workflows/public-ops-dev-auto-merge.yml`
+- `.github/workflows/.ops-dev-auto-merge.yml`
 - `templates/native-dev-delivery.yml`
 - `docs/dev-delivery-warrant.md`
 - `docs/dev-delivery-qualification-landing-adr.md`
@@ -2830,7 +2816,7 @@ Owner: Buildchain workflow maintainers
 - `architecture/universal-workflow-bootstrap.json`
 - `architecture/universal-workflow-fault-campaign.json`
 - `architecture/universal-workflow-capability-policy.json`
-- `.github/workflows/public-ops-bootstrap.yml`
+- `.github/workflows/.ops-bootstrap.yml`
 
 ### Tests
 
@@ -2939,7 +2925,7 @@ Owner: Buildchain web-surface maintainers
 
 ### Contracts
 
-- `.github/workflows/public-release-web.yml`
+- `.github/workflows/.release-web.yml`
 
 ### Tests
 

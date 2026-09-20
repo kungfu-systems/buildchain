@@ -29,7 +29,7 @@ test("binary evidence requires an explicit exact current tag instead of a histor
   assert.equal(workflow.on.push, undefined);
 });
 
-test("current manuals and action references use v3 examples", () => {
+test("current manuals and action references do not restore the v2 baseline", () => {
   const currentDocuments = [
     "AGENTS.md",
     "CONTRIBUTING.md",
@@ -57,16 +57,16 @@ test("current manuals and action references use v3 examples", () => {
     assert.doesNotMatch(
       source(relativePath),
       staleBuildchainBaseline,
-      `${relativePath} must use v3 as the current Buildchain baseline`,
+      `${relativePath} must not restore the retired v2 baseline`,
     );
   }
 });
 
-test("the v2 inventory is explicitly historical and points to v3", () => {
+test("the v2 inventory is historical and directs new consumers to schema 2", () => {
   const inventory = source("docs/migration-inventory.md");
   assert.match(inventory, /status: historical/);
-  assert.match(inventory, /Buildchain v3 is now the active monorepo source of truth/);
-  assert.match(inventory, /## Current v3 Refs/);
+  assert.match(inventory, /\[minimal schema-2 contract\]\(getting-started\.md\)/);
+  assert.match(inventory, /`public-ops-pipeline\.yml` and\s+`public-ops-recover\.yml`/);
 });
 
 test("the v2 train-only Initiative-family release handoff is present on v3", () => {

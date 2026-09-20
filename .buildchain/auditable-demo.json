@@ -44,15 +44,15 @@
       "steps": [
         {
           "id": "initialize",
-          "argv": ["init", "--cwd", "./starter", "--type", "package", "--package-manager", "npm"],
+          "argv": ["init", "--cwd", ".", "--type", "binary"],
           "timeoutSeconds": 20,
           "expectedExitCodes": [0],
-          "stdoutIncludes": ["buildchain.toml", ".github/workflows/build.yml"],
+          "stdoutIncludes": ["buildchain.toml", ".github/workflows/buildchain.yml", ".github/workflows/buildchain-recover.yml"],
           "fileAssertions": []
         },
         {
           "id": "inspect-layout",
-          "argv": ["layout", "--cwd", "./starter", "--json"],
+          "argv": ["layout", "--cwd", ".", "--json"],
           "timeoutSeconds": 20,
           "expectedExitCodes": [0],
           "stdoutIncludes": ["kungfu-buildchain-layout-discovery"],

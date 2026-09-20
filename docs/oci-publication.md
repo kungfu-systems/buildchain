@@ -8,15 +8,21 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-07
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-06
+  generated_at: 2026-09-20
   invisible_context_boundary: No credentials or production registry state inspected.
+  visible_context: Current two-entry consumer contract and retained internal implementation references.
 ---
 
 # OCI image family publication
+
+This page describes retained internal OCI provider and qualification mechanisms.
+OCI is not an additional schema-2 product type or public reusable entry. Consumers
+do not install a Compose-preview workflow or pass provider evidence into YAML;
+the current minimal contract supports the declared npm, binary and Paper products.
 
 Compose preview uses the workflow's scoped `packages: write` token for GHCR
 requests. The separate `BUILDCHAIN_PROMOTION_TOKEN` serves GitHub governance
@@ -147,14 +153,11 @@ The receipt uses `schema: kungfu-buildchain-compose-qualification/v1` and binds
 requires `linux/amd64` and `linux/arm64` entries with `passed: true`; `evidence`
 contains nonempty `{path, sha256}` bindings to the actual JSON results.
 
-A thin consumer workflow listens to completion of that qualification workflow
-and calls `public-release-oci-compose-preview.yml@v4-alpha`, passing
-`BUILDCHAIN_PROMOTION_TOKEN`. The reusable workflow resolves its own exact
-runtime, enforces the dual floating-channel locks, verifies the public v4
-settlement, family and provider readback roots, and checks the live GitHub run's
-repository, source, workflow, event, attempt and successful conclusion. It never
-executes the consumer's artifact files. Only then does it copy the exact Compose
-manifest bytes to the declared alias and verify the public digest.
+The internal `.release-oci-compose-preview.yml` component resolves its admitted
+runtime and verifies settlement, family and provider readback roots plus the
+exact qualification run. It does not execute retained artifact files. Only then
+may its scoped provider authority copy the exact Compose manifest and read back
+the public digest. These inputs are internal provider ports.
 
 The expected-old digest is checked immediately before mutation. An already
 matching target is an idempotent success; any other drift blocks the move.

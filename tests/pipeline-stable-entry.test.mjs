@@ -501,6 +501,48 @@ test("failed or cancelled setup cannot fall back to an older green build, while 
   );
 });
 
+test("failed controller-only PR notifications do not replace a real product qualification", async () => {
+  const f = await fixture(),
+    request = f.host.request,
+    read = f.host.runs.read;
+  const newer = { ...f.state.run, id: 101, created_at: "2026-09-13T00:20:00Z" };
+  f.host.request = async (endpoint, options) =>
+    endpoint.includes("/actions/workflows/")
+      ? { workflow_runs: [f.state.run, structuredClone(newer)] }
+      : request(endpoint, options);
+  f.host.runs.read = async (id, attempt) =>
+    id === 101
+      ? {
+          run: structuredClone(newer),
+          jobs: [
+            { name: "buildchain / runtime", conclusion: "success" },
+            {
+              name: "buildchain / Buildchain pipeline controller",
+              conclusion: newer.conclusion,
+            },
+            { name: "buildchain / execute", conclusion: "skipped" },
+          ],
+        }
+      : read(id, attempt);
+  for (const conclusion of ["failure", "cancelled", "success"]) {
+    newer.conclusion = conclusion;
+    const result = await readPipelineStableEntry(f.plan, f.source, f.host);
+    assert.equal(result.runId, 100);
+    assert.equal(result.canary.status, "success");
+  }
+});
+
+test("a native product receipt cannot hide missing product jobs as a controller-only event", async () => {
+  const f = await fixture();
+  f.state.jobs = f.state.jobs.filter(
+    (job) => !job.name.startsWith("Build product"),
+  );
+  await assert.rejects(
+    readPipelineStableEntry(f.plan, f.source, f.host),
+    /one exact provider job/,
+  );
+});
+
 test("an omitted declared platform cannot be hidden by a green recorder", async () => {
   const f = await fixture({
     platforms: ["linux-x64", "macos-arm64", "windows-x64"],

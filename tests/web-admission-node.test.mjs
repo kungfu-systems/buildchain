@@ -6,7 +6,7 @@ const env = {
   BUILDCHAIN_REPOSITORY: "kungfu-systems/buildchain",
   BUILDCHAIN_WORKFLOW_SHA: sha,
   BUILDCHAIN_WORKFLOW_REF:
-    "kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v4",
+    "kungfu-systems/buildchain/.github/workflows/.release-web.yml@v4",
 };
 const context = {
   eventName: "pull_request",

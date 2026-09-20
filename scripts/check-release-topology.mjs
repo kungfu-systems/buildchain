@@ -532,7 +532,7 @@ export function checkReleaseTopology() {
   assertPipelinePublicationTopology(ledger, discoverReleaseTopology, root);
   const preview = ledger.postPublicationScope;
   assert.deepEqual(preview.workflowPaths, [
-    ".github/workflows/public-release-oci-compose-preview.yml",
+    ".github/workflows/.release-oci-compose-preview.yml",
   ]);
   const previewTopology = discoverReleaseTopology(
     preview.workflowPaths,

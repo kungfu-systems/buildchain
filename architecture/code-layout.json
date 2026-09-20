@@ -38,18 +38,8 @@
   },
   "cliEntrypoints": ["bin/buildchain.mjs"],
   "workflowRequestSchemas": {
-    ".github/workflows/public-release-promote.yml": "contracts/promotion-request-v1.schema.json",
+    ".github/workflows/.release-candidate-promote.yml": "contracts/promotion-request-v1.schema.json",
     ".github/workflows/.release-promote.yml": "contracts/promotion-invocation-v1.schema.json"
   },
-  "publicActionNodes": [
-    "build/artifact/prepare-attestation",
-    "build/artifact/seal-attestation",
-    "build/credential/macos-island",
-    "build/lifecycle/run",
-    "build/lifecycle/validate",
-    "governance/incident/report",
-    "release/promotion/candidate",
-    "release/promotion/ref",
-    "release/tail/settle"
-  ]
+  "publicActionNodes": []
 }

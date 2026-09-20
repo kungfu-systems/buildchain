@@ -16,6 +16,58 @@
       "contractVersion": 1,
       "stability": "stable",
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "pipeline",
+      "kind": "workflow",
+      "path": ".github/workflows/public-ops-pipeline.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4",
+      "breakingDefaults": {
+        "configurationAuthority": ".buildchain/buildchain.toml",
+        "schema": 2
+      },
+      "guarantees": [
+        "one product-independent generated caller admits normal repository events",
+        "the published runtime owns protected delivery, publication and provider readback"
+      ],
+      "apiRole": "public",
+      "requiredInputs": [],
+      "optionalInputs": [
+        "config-path"
+      ],
+      "requiredOutputs": [],
+      "breakingDigest": "sha256:a1ede254e9cab70bc882280de975dc10834f2104e6aaa37ff20c24be47347273",
+      "auditDigest": "sha256:c04c24758dfe4d274e6164f01121af6793e559e639e397b21c32bb2f7b992839"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "attempt-recovery",
+      "kind": "workflow",
+      "path": ".github/workflows/public-ops-recover.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4",
+      "breakingDefaults": {
+        "selector": "exact-attempt",
+        "repairedRuntime": "optional-transient-input"
+      },
+      "guarantees": [
+        "recovery retains original source, materials and immutable publication evidence",
+        "consumers cannot replace provider effects, artifacts or source through recovery inputs"
+      ],
+      "apiRole": "public",
+      "requiredInputs": [
+        "attempt"
+      ],
+      "optionalInputs": [
+        "runtime-ref"
+      ],
+      "requiredOutputs": [],
+      "breakingDigest": "sha256:0a90a435a4645329634687038b3fbd347b4dbcfa8a96ac2974076f1e5f330835",
+      "auditDigest": "sha256:68956da6c2f04f853dd294819a54954da6dafac1eb200f02d1e60f232bda67b2"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "reusable-build",
       "kind": "workflow",
       "path": ".github/workflows/.build.yml",
@@ -32,6 +84,7 @@
         "contract drift is checked before heavy build jobs for stable floating refs",
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
+      "apiRole": "implementation",
       "requiredInputs": [],
       "optionalInputs": [
         "config-path",
@@ -43,7 +96,7 @@
       "requiredOutputs": [
         "result"
       ],
-      "breakingDigest": "sha256:cda31fcfd64bd8a895216d9537910a9676736e70aef0fde8a1697b2c88222ed5",
+      "breakingDigest": "sha256:f8f6b7286b1afcca92ef357e48f7bb9cb5ce15c3b43108a0c5a7c66c2683fbe5",
       "auditDigest": "sha256:d6c7d523fa1d08350ca53483a7315111cf96eeb6623f3069f6c53a8487adeb74"
     },
     {
@@ -52,8 +105,8 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "channel-build-router",
       "kind": "workflow",
-      "path": ".github/workflows/build.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/build.yml@v4",
+      "path": ".github/workflows/.build-candidate.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.build-candidate.yml@v4",
       "breakingDefaults": {
         "configurationAuthority": "buildchain.toml",
         "runtimeIdentity": "entry-selected-complete-runtime",
@@ -66,6 +119,7 @@
         "stable and alpha select their matching repository contract locks",
         "source, runtime and configuration roots are bound before the build matrix"
       ],
+      "apiRole": "implementation",
       "requiredInputs": [],
       "optionalInputs": [
         "config-path",
@@ -79,7 +133,7 @@
         "release-candidate-artifact",
         "result"
       ],
-      "breakingDigest": "sha256:7574ae8fc694534860bd633efcc3caaffd121a5d7d778a1f96c560f1999434b3",
+      "breakingDigest": "sha256:fe7df253cf7ce886a6a4d2e8013f22cb7ac3ea34fd1f96eb36a061382cf074f2",
       "auditDigest": "sha256:0c88962bb6d63009f6fa9a3703daff9592915389a545be222f5d0f551e1407b6"
     },
     {
@@ -88,8 +142,8 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "dev-pr-auto-merge",
       "kind": "workflow",
-      "path": ".github/workflows/public-ops-dev-auto-merge.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@v4",
+      "path": ".github/workflows/.ops-dev-auto-merge.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.ops-dev-auto-merge.yml@v4",
       "breakingDefaults": {
         "runtimeSelectorDefault": "consumer-contract-lock-or-entry",
         "authorityMode": "two-phase-delivery-warrant",
@@ -112,6 +166,7 @@
         "the finalizer validates rooted heartbeat continuity and latest durable state before qualification, failure settlement, or landing",
         "durable consumers call the public floating workflow and may route a train or exact runtime only through trusted non-persistent dispatch input"
       ],
+      "apiRole": "implementation",
       "requiredInputs": [],
       "optionalInputs": [
         "active-lease-context",
@@ -180,7 +235,7 @@
         "warrant-state-commit",
         "warrant-state-root"
       ],
-      "breakingDigest": "sha256:1bd7d62abdf4f14c84010093aa044ff99eeabc92705d965e13043908cfec87ac",
+      "breakingDigest": "sha256:0b204b34647d5d40153d8e21b20d534fbb6cd94d81947c50047b9f363aea5d78",
       "auditDigest": "sha256:f7afcc8ec47039479e2345ac70ee7e50d91300657e5dc028a363af0374840110"
     },
     {
@@ -189,8 +244,8 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "release-candidate-promote",
       "kind": "workflow",
-      "path": ".github/workflows/public-release-promote.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4",
+      "path": ".github/workflows/.release-candidate-promote.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4",
       "breakingDefaults": {
         "channelDefault": "auto",
         "runtimeSelectionOwner": "actions/runtime/selection/resolve",
@@ -234,6 +289,7 @@
         "publish-gate source locks are created by the wrapper and enforced by promote-buildchain-ref before publish side effects",
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
+      "apiRole": "implementation",
       "requiredInputs": [
         "request-json"
       ],
@@ -289,7 +345,7 @@
         "release-tail-transaction-state",
         "release-transaction-root"
       ],
-      "breakingDigest": "sha256:c9727056289fc47fbd3bd5f1d0b39b9816f2d6828f3262587aec53e5062da7f1",
+      "breakingDigest": "sha256:75e4cd9606c4504fbf5b73ff9c40712616a22a083aceaf4ec80e44a83a4a40f3",
       "auditDigest": "sha256:ba4112f3b5f9c896f61462cebe3f5458a13d315499aced829bddc30830ff6969"
     },
     {
@@ -309,6 +365,7 @@
         "promotion reuses PR-stage release-candidate artifacts and does not run the heavy native build matrix",
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph"
       ],
+      "apiRole": "implementation",
       "requiredInputs": [
         "request-json"
       ],
@@ -352,7 +409,7 @@
         "release-tail-transaction-state",
         "release-transaction-root"
       ],
-      "breakingDigest": "sha256:64b800e0189286f5bc8615f8f1a0ee1ba2420a79dc6ec77b14e96619ef4dd094",
+      "breakingDigest": "sha256:b6b794cf432b69cbe6de9737b5c0a4e95367eb87f9244d63142b4fbb7e9ec7ef",
       "auditDigest": "sha256:212545ad11011e703d17bb346787362730167743c2110e81a8b32d6c0493d509"
     },
     {
@@ -361,8 +418,8 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "web-surface",
       "kind": "workflow",
-      "path": ".github/workflows/public-release-web.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v4",
+      "path": ".github/workflows/.release-web.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.release-web.yml@v4",
       "breakingDefaults": {
         "runtimeSelectionOwner": "actions/runtime/selection/resolve",
         "contractCompatibilityPolicy": "major-compatible",
@@ -376,6 +433,7 @@
         "effective channel and preview alias are injected before caller build and verify commands",
         "channel-aware artifact host facts are checked against the deploy plan before adapter side effects"
       ],
+      "apiRole": "implementation",
       "requiredInputs": [],
       "optionalInputs": [
         "artifact-path",
@@ -441,7 +499,7 @@
         "web-surface-url",
         "web-surface-urls-json"
       ],
-      "breakingDigest": "sha256:8d4c5471402f9cb3c0b8db5d2e75fcc6ea826aee0649066c9bbbb41a4a939a61",
+      "breakingDigest": "sha256:70d756760b0a3cf3c0ccdfd57cc9705c1e6a3e7fdec80f88846004c3538327e3",
       "auditDigest": "sha256:728c58f1fcba02b0cd6f90d51f1e2125f000bd4674d798136ce13fb65cc5ef2c"
     },
     {
@@ -470,6 +528,7 @@
         "Build Images owns encoding, Buildchain owns qualification and receipts, and site repositories own browser loading and accessibility behavior",
         "media qualification does not claim browser playback, responsive layout, reduced-motion behavior, accessibility, or production deployment"
       ],
+      "apiRole": "implementation",
       "requiredInputs": [
         "adapter-path",
         "renderer-image",
@@ -502,7 +561,7 @@
         "media-root",
         "source-sha"
       ],
-      "breakingDigest": "sha256:782074f938bedd8bf1cfe0e5428e1103c9471af93d4822c0cb7a677c659ff1a2",
+      "breakingDigest": "sha256:b22176cb621d6741cb220e530913881547b89f330b9641b890e1cc9fc84125cf",
       "auditDigest": "sha256:442381ba8ec8d2c4045b241abd0d50bdc9b8a97b05bdb37bc52407ffca2f3ca7"
     },
     {
@@ -511,8 +570,8 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "declarative-auditable-demo",
       "kind": "workflow",
-      "path": ".github/workflows/public-build-demo.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/public-build-demo.yml@v4",
+      "path": ".github/workflows/.build-demo.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.build-demo.yml@v4",
       "breakingDefaults": {
         "scenarioPathDefault": ".buildchain/auditable-demo.json",
         "renderMediaDefault": false,
@@ -530,6 +589,7 @@
         "manual, alpha, and release callers use the same capture, Gate, renderer, passport, and materializer implementation",
         "identity, compliance, Product System metadata, package metadata, registry history, scans, and generation grant no authority"
       ],
+      "apiRole": "implementation",
       "requiredInputs": [
         "binary-artifact-digest",
         "binary-artifact-name",
@@ -557,7 +617,7 @@
         "render-result",
         "source-sha"
       ],
-      "breakingDigest": "sha256:20412f25271537165e25d8a7d65e716701745570a419c482777a088466c5dd6f",
+      "breakingDigest": "sha256:ae5b8fa439775f040f19403e968b3f015994ac67c2d83b534f06a81c7436f609",
       "auditDigest": "sha256:1eb1d1d1f4dceaac923db3abe302cd65044bb800ccbae71aa56e8ea9aa39e468"
     },
     {
@@ -603,7 +663,8 @@
         "durable provider checkpoints resume completed capabilities without replay",
         "no consumer command, script, shell, checkout, or executable tail hook is accepted"
       ],
-      "breakingDigest": "sha256:930a8c3bb97347aea40ab19c4ee1dc29c1f4b75897e19bc0d56da1018fa382c8",
+      "apiRole": "implementation",
+      "breakingDigest": "sha256:fbe7b9c8fd9270cf287e6beca3d1946c8404d6313688c5841088ca3d4b7a76ad",
       "auditDigest": "sha256:5d3a78e4f2499a8638f20dd4adfa976d0bd82f4f4cdf619dce080c22b5188336"
     },
     {
@@ -672,7 +733,8 @@
         "publish transactions can require a resolved publish-gate source lock to prevent floating-ref drift",
         "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata bound to the authoritative publication channel and tag syntax retained as the fallback for ordinary callers"
       ],
-      "breakingDigest": "sha256:6147c0a8d5c36bfaa6021871574e1fc28192a3f1b8cfdae4d24ef3059ac1ebda",
+      "apiRole": "implementation",
+      "breakingDigest": "sha256:3e58655671ab83663c0794aed024051af4fefb6fc520a1165f5d9897e637990f",
       "auditDigest": "sha256:1b8f8615a114a6f352aeb79a0d25c8ed08b9305f07cabac7a2d4be76cd0ec705"
     },
     {
@@ -728,7 +790,8 @@
         "the app and DMG are notarized, stapled, Gatekeeper assessed, and bound to retained evidence",
         "temporary keychain and API key material are cleaned in both main and post phases"
       ],
-      "breakingDigest": "sha256:61866985864205770c70cbe14c3c60f479512a32c0b007b5fd6d8d65132ff8be",
+      "apiRole": "implementation",
+      "breakingDigest": "sha256:7019a65da43122a8530478ac44503d8af97649a729843c8890ad291289a9d859",
       "auditDigest": "sha256:60c44e35de1788c4c4c2529cb491914054df0b604539758e230ff31ad6dfdab2"
     },
     {
@@ -763,7 +826,8 @@
         "GitHub API 429 and 5xx failures are retried",
         "missing issue permissions produce a copyable summary fallback"
       ],
-      "breakingDigest": "sha256:575a2cb02cdb2e61bb2e84d5bbaaf64b430aa5d7936645660b592de4549d81b0",
+      "apiRole": "implementation",
+      "breakingDigest": "sha256:83c95972cae0db101fe104f0c60ebf7a69c8237758834872530236889b827bd5",
       "auditDigest": "sha256:10b766e026f8089235dfd6a9356cdbfa42c5dd290ba3003e5fcfd886432a0a34"
     },
     {
@@ -788,7 +852,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:baf6dea00db705099a4a04b317f8b1abcb8e515b28b4230dd24195a720feb9b7"
+      "auditDigest": "sha256:64b0f86dc69dcc5050c5a1853bda0eb75f6899eec70a033dac2ae329704e8d85"
     },
     {
       "contractVersion": 1,
@@ -837,7 +901,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:baf6dea00db705099a4a04b317f8b1abcb8e515b28b4230dd24195a720feb9b7"
+      "auditDigest": "sha256:64b0f86dc69dcc5050c5a1853bda0eb75f6899eec70a033dac2ae329704e8d85"
     },
     {
       "contractVersion": 1,
@@ -965,7 +1029,7 @@
         "CLI and JavaScript callers use the same Node API implementation"
       ],
       "breakingDigest": "sha256:bcd72ad6dfba8013c96f8b2f7b0a307d2e7713972a1219348f0d5ecc493939a0",
-      "auditDigest": "sha256:8e38effc20c682d27fc883f02eb7726ba0c5f5d2219c00d78d893d69679c20c0"
+      "auditDigest": "sha256:c07972b8b85795243706ff0f85d80390f363114f5aee958935dc5abc2f12f9f5"
     },
     {
       "contractVersion": 1,
@@ -987,7 +1051,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:495fc4a05520facb65242e381ac82a1d0f3acde58a40aad39147cc51466038f1"
+      "auditDigest": "sha256:1b705797924ccbef8915178e49e57dbdc756a6532b644370389687c682d87b93"
     },
     {
       "contractVersion": 1,
@@ -1009,7 +1073,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:de3ee2a5d0039eb772c49bd1636d882a83ef419cfa74604c4f5664ec85fffca4"
+      "auditDigest": "sha256:a6e6defa54f8aca442fc27ea5d3707eb7a83dafa8daae654e9101acae0256b2d"
     },
     {
       "contractVersion": 1,
@@ -1017,7 +1081,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "controller:source-check",
       "kind": "controller",
-      "path": ".github/workflows/public-build-check.yml",
+      "path": ".github/workflows/.build-check.yml",
       "requiredInputs": [],
       "requiredOutputs": [
         "controller-plan-json",
@@ -1029,7 +1093,7 @@
       "breakingDefaults": {
         "evidenceContract": "buildchain.controller-evidence/v1",
         "descriptorVersion": 1,
-        "workflowPath": ".github/workflows/public-build-check.yml",
+        "workflowPath": ".github/workflows/.build-check.yml",
         "requiredStages": [
           "resolve-runtime",
           "checkout-source",
@@ -1065,8 +1129,8 @@
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:3f2f0e2f9f8a21ea3db046cb477f2534711de29745e3f40be959eef398a2e692",
-        "registryDigest": "sha256:e4a23fdcb6c8f3483e8c5dc70f813cec94313597f6196189d0f14e2c084ea7f4",
+        "digest": "sha256:eeb5323004b7ef68187e300352f0bb8d646ed8ba8720181abbbc3ff59c91f0e8",
+        "registryDigest": "sha256:0c3b9ae5e97d89cc801f5553954141844fe668c7643df3920597e20a830b423e",
         "inputClassifications": {
           "contract-lock": {
             "classification": "included",
@@ -1128,7 +1192,8 @@
         "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
-      "breakingDigest": "sha256:c90592a71d859c9814e70cb1c8603d8240271e8049fe4e754fe4776b8f1b1a4c",
+      "apiRole": "implementation",
+      "breakingDigest": "sha256:5fafc5afb5f7e7ca77c5d1fa8e2323e8ba562b4da62aa50e7d2d935fde8d2a55",
       "auditDigest": "sha256:003787b94b61d80b06aee69603f3a49a869633e4eedb25161ec200ec777e4978"
     },
     {
@@ -1188,7 +1253,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:849a51ff18efbc2bf4668cd6ba6e08004caf5fc01de4676eade0f917d24c5fd1",
-        "registryDigest": "sha256:e4a23fdcb6c8f3483e8c5dc70f813cec94313597f6196189d0f14e2c084ea7f4",
+        "registryDigest": "sha256:0c3b9ae5e97d89cc801f5553954141844fe668c7643df3920597e20a830b423e",
         "inputClassifications": {
           "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64": {
             "classification": "redacted",
@@ -1246,7 +1311,8 @@
         "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
-      "breakingDigest": "sha256:6adb4adc805a741ec7e54a769c4bb89ef66805bb63ac99dfab06ba11f36d9381",
+      "apiRole": "implementation",
+      "breakingDigest": "sha256:53e3c1acd82720f4bc27d48ad11effe44bba1e515115462cac43814e12991e8d",
       "auditDigest": "sha256:d6c7d523fa1d08350ca53483a7315111cf96eeb6623f3069f6c53a8487adeb74"
     },
     {
@@ -1318,7 +1384,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:83fb2f980409ff9eb7091fc675b1f1ecd471d335945d8fa6003357f0af709dd5",
-        "registryDigest": "sha256:e4a23fdcb6c8f3483e8c5dc70f813cec94313597f6196189d0f14e2c084ea7f4",
+        "registryDigest": "sha256:0c3b9ae5e97d89cc801f5553954141844fe668c7643df3920597e20a830b423e",
         "inputClassifications": {
           "artifact-name": {
             "classification": "included",
@@ -1452,7 +1518,8 @@
         "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
-      "breakingDigest": "sha256:93d630270c6db2c6993f0965d44280e0f178159d8d74519c7752a38d5771d02e",
+      "apiRole": "implementation",
+      "breakingDigest": "sha256:f4a7a817dc67973d158b7bb5290197f57927762deb7171fc4e01051c11b32dc8",
       "auditDigest": "sha256:a85a81d1d2e43e945f9ad9fe514b38278d74e7851d1e6b471a2935a6c4648268"
     },
     {
@@ -1461,7 +1528,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "controller:web-surface",
       "kind": "controller",
-      "path": ".github/workflows/public-release-web.yml",
+      "path": ".github/workflows/.release-web.yml",
       "requiredInputs": [],
       "requiredOutputs": [
         "controller-plan-json",
@@ -1473,7 +1540,7 @@
       "breakingDefaults": {
         "evidenceContract": "buildchain.controller-evidence/v1",
         "descriptorVersion": 1,
-        "workflowPath": ".github/workflows/public-release-web.yml",
+        "workflowPath": ".github/workflows/.release-web.yml",
         "requiredStages": [
           "resolve-runtime",
           "plan",
@@ -1535,8 +1602,8 @@
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:8818db80d272797d84488cd5db915014edf0081b78afa8a52561f54e0deee908",
-        "registryDigest": "sha256:e4a23fdcb6c8f3483e8c5dc70f813cec94313597f6196189d0f14e2c084ea7f4",
+        "digest": "sha256:ffef96c7b7bbcec02f9cc2b9e25df2e8c23945e4154fda489b2c357aa865202c",
+        "registryDigest": "sha256:0c3b9ae5e97d89cc801f5553954141844fe668c7643df3920597e20a830b423e",
         "inputClassifications": {
           "artifact-path": {
             "classification": "digest-only",
@@ -1702,7 +1769,8 @@
         "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
-      "breakingDigest": "sha256:ad5e695f42245fdbe53afbef5311ae52f113c9016bec46eaff4476aeb158ec17",
+      "apiRole": "implementation",
+      "breakingDigest": "sha256:8bb348c4a879fb349c35b7c2282eecda930da59ac7e13ee8e65efd44eaeb322b",
       "auditDigest": "sha256:728c58f1fcba02b0cd6f90d51f1e2125f000bd4674d798136ce13fb65cc5ef2c"
     },
     {
@@ -1711,7 +1779,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "controller:publication-artifact",
       "kind": "controller",
-      "path": ".github/workflows/public-build-publication.yml",
+      "path": ".github/workflows/.build-publication.yml",
       "requiredInputs": [],
       "requiredOutputs": [
         "controller-plan-json",
@@ -1723,7 +1791,7 @@
       "breakingDefaults": {
         "evidenceContract": "buildchain.controller-evidence/v1",
         "descriptorVersion": 1,
-        "workflowPath": ".github/workflows/public-build-publication.yml",
+        "workflowPath": ".github/workflows/.build-publication.yml",
         "requiredStages": [
           "resolve-runtime",
           "build",
@@ -1767,8 +1835,8 @@
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:8807dfdad8dc0ae15b51616049804b8a44936d37e364d209e099f680385d81af",
-        "registryDigest": "sha256:e4a23fdcb6c8f3483e8c5dc70f813cec94313597f6196189d0f14e2c084ea7f4",
+        "digest": "sha256:2c320c01ed604bcfb14175aefbd7dd6c961f04e3fc52cb0f02f50b08db725f2d",
+        "registryDigest": "sha256:0c3b9ae5e97d89cc801f5553954141844fe668c7643df3920597e20a830b423e",
         "inputClassifications": {
           "artifact-name": {
             "classification": "included",
@@ -1862,7 +1930,8 @@
         "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
-      "breakingDigest": "sha256:64043b583051b8fc5320b5d6f2304120037fb6a14b8448edbf6e91908f719739",
+      "apiRole": "implementation",
+      "breakingDigest": "sha256:eabb9f16b7b5dbd68d8aa25e2bb4b489c80f75d91ee3f793d796c69f8a0420e7",
       "auditDigest": "sha256:8ffe778e9895143bb9fc6571dc7b04006eddc9def16691fae9b45bb4329d28c7"
     },
     {
@@ -1871,7 +1940,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "controller:paper-release",
       "kind": "controller",
-      "path": ".github/workflows/public-release-paper.yml",
+      "path": ".github/workflows/.release-paper.yml",
       "requiredInputs": [],
       "requiredOutputs": [
         "controller-plan-json",
@@ -1883,7 +1952,7 @@
       "breakingDefaults": {
         "evidenceContract": "buildchain.controller-evidence/v1",
         "descriptorVersion": 1,
-        "workflowPath": ".github/workflows/public-release-paper.yml",
+        "workflowPath": ".github/workflows/.release-paper.yml",
         "requiredStages": [
           "resolve-runtime",
           "build",
@@ -1938,8 +2007,8 @@
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:f98dae8ad9a494e651690ac128cf4b1b4a6df55cfb255ecca24dae60d0d205fa",
-        "registryDigest": "sha256:e4a23fdcb6c8f3483e8c5dc70f813cec94313597f6196189d0f14e2c084ea7f4",
+        "digest": "sha256:1a98258cc22ecd79ebca7acb5bba5fbd4daef8af34439003ef586b4f8e84744e",
+        "registryDigest": "sha256:0c3b9ae5e97d89cc801f5553954141844fe668c7643df3920597e20a830b423e",
         "inputClassifications": {
           "BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID": {
             "classification": "redacted",
@@ -2057,8 +2126,9 @@
         "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
-      "breakingDigest": "sha256:1175b298251f200a6290c7f46d79f70e5c703279d3a5c5e9776bb18d4e4f7b52",
-      "auditDigest": "sha256:0bd9ce9bff3b6e6472d153cdd291c97de83a78b5679d795a3016a38df4c6b364"
+      "apiRole": "implementation",
+      "breakingDigest": "sha256:e8c35104b8927d313d22fae5a929111be40a2bdbc78be29e05076b848e9f10e0",
+      "auditDigest": "sha256:1da565842d9833731ce131635cb4a061b20f13216d55057a3961714941b6ef26"
     },
     {
       "contractVersion": 1,
@@ -2066,7 +2136,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "controller:release-candidate-promotion",
       "kind": "controller",
-      "path": ".github/workflows/.release-promote.yml",
+      "path": ".github/workflows/.release-candidate-promote.yml",
       "requiredInputs": [],
       "requiredOutputs": [
         "controller-plan-json",
@@ -2078,7 +2148,7 @@
       "breakingDefaults": {
         "evidenceContract": "buildchain.controller-evidence/v1",
         "descriptorVersion": 1,
-        "workflowPath": ".github/workflows/.release-promote.yml",
+        "workflowPath": ".github/workflows/.release-candidate-promote.yml",
         "requiredStages": [
           "preflight",
           "admit-release-candidate",
@@ -2120,8 +2190,8 @@
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:699a18f875d395d830bb07c511ec7e6e9dff1ac97a057004a0e58c51d065ce19",
-        "registryDigest": "sha256:e4a23fdcb6c8f3483e8c5dc70f813cec94313597f6196189d0f14e2c084ea7f4",
+        "digest": "sha256:b24b12bd41b968aef7694e41d0186cd130a748f6142b196e9e98dd30b026058d",
+        "registryDigest": "sha256:0c3b9ae5e97d89cc801f5553954141844fe668c7643df3920597e20a830b423e",
         "inputClassifications": {
           "BUILDCHAIN_ISSUE_APP_ID": {
             "classification": "redacted",
@@ -2187,8 +2257,9 @@
         "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
-      "breakingDigest": "sha256:884bc7c4dccbc561b1d22a20cc5f7f50172c9691775aa2b84179e036a138cb20",
-      "auditDigest": "sha256:212545ad11011e703d17bb346787362730167743c2110e81a8b32d6c0493d509"
+      "apiRole": "implementation",
+      "breakingDigest": "sha256:c8852f18731c89f59dac050ffd10d2cd557879a7a2dca41e25020cc18f837e05",
+      "auditDigest": "sha256:ba4112f3b5f9c896f61462cebe3f5458a13d315499aced829bddc30830ff6969"
     },
     {
       "contractVersion": 1,
@@ -2196,7 +2267,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "controller:release-propagation",
       "kind": "controller",
-      "path": ".github/workflows/public-release-propagation.yml",
+      "path": ".github/workflows/.release-propagation.yml",
       "requiredInputs": [],
       "requiredOutputs": [
         "controller-plan-json",
@@ -2208,7 +2279,7 @@
       "breakingDefaults": {
         "evidenceContract": "buildchain.controller-evidence/v1",
         "descriptorVersion": 1,
-        "workflowPath": ".github/workflows/public-release-propagation.yml",
+        "workflowPath": ".github/workflows/.release-propagation.yml",
         "requiredStages": [
           "resolve-runtime",
           "plan",
@@ -2253,8 +2324,8 @@
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:bf6c18f33642654314281e4f1aaf49c16d3a8e765e62c7162ad53beaef630c76",
-        "registryDigest": "sha256:e4a23fdcb6c8f3483e8c5dc70f813cec94313597f6196189d0f14e2c084ea7f4",
+        "digest": "sha256:8f495bf2d183158c3e38da53f0f8cf1f7cb44aae8ba05f4ca2447b1a08b2ffea",
+        "registryDigest": "sha256:0c3b9ae5e97d89cc801f5553954141844fe668c7643df3920597e20a830b423e",
         "inputClassifications": {
           "agent-work-context-json": {
             "classification": "digest-only",
@@ -2348,13 +2419,14 @@
         "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
-      "breakingDigest": "sha256:63cbc80ea892431ee4780c358a60f4357ba95553c632dd86e1d62c18e375ecca",
+      "apiRole": "implementation",
+      "breakingDigest": "sha256:649e2bacb25844021f74486de42caf78b2710ecb913d956576ec0cd85fa518a0",
       "auditDigest": "sha256:64f8aa3f462050f332bba0880eabec68cb149239656f06c134dad17d1bb01318"
     }
   ],
   "compatibilityFactRegistryRoot": "sha256:ea8f656c9fd74aa2d2fb9b7807e7daa39a708f6a7cd37ab7d154eac7be5605a6",
   "compatibilityFactCutRoot": "sha256:58f33e498596505a26b6fc3c7ae5acef847ff699eee6c7e17a7b318a40bdf0d6",
   "compatibilityProofRegistryRoot": "sha256:2f6477405c7891b754b33ad6515d55618bd320e7cdc59330d7cc645e17201e72",
-  "compatibilityDigest": "sha256:81e32696723fe82fe29d2b2214cd56cf6c87bbeae5cff1a201de7ee7fd10ee9c",
-  "contractDigest": "sha256:5a0ea3cb3bf5ccd311b8432a3c959e7a7c6124e7a0f8dc0008981ef99f73891c"
+  "compatibilityDigest": "sha256:808c03915bf090ded3082642ffc5163e15bdd090b629344df9bfb65544041dd3",
+  "contractDigest": "sha256:2b2fd7b0c017503d11cb4c230de5386c8ab4a235107479c6cfa4b81778106014"
 }

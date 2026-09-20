@@ -34,15 +34,24 @@ function registrySurfaceIds(root) {
     (entry) => `cli:${entry.id}`,
   );
   const workflows = loadJson(root, "dist/site/workflow-registry.json");
-  const workflowIds = workflows.workflows.flatMap((entry) => [
-    `workflow:${entry.id}`,
-    ...(entry.taxonomy ? [`workflow:${entry.taxonomy.id}`] : []),
+  const workflowIds = workflows.workflows.flatMap((entry) =>
+    [entry.id, ...(entry.taxonomy ? [entry.taxonomy.id] : [])].map((id) => [
+      `workflow:${id}`,
+      entry.apiRole === "public" ? "public" : "internal",
+    ]),
+  );
+  const actionIds = workflows.actions.map((entry) => [
+    `action:${entry.id}`,
+    entry.apiRole === "public" ? "public" : "internal",
   ]);
-  const actionIds = workflows.actions.map((entry) => `action:${entry.id}`);
   const exports = Object.keys(loadJson(root, "package.json").exports).map(
     (entry) => `export:${entry}`,
   );
-  return new Set([...cli, ...workflowIds, ...actionIds, ...exports]);
+  return new Map(
+    [...cli, ...exports]
+      .map((id) => [id, "public"])
+      .concat(workflowIds, actionIds),
+  );
 }
 
 function listFiles(root, relativeRoot) {
@@ -99,12 +108,12 @@ function validateOwnership(mechanism, ownedSources, issues) {
 }
 
 function validateSurfaces(mechanism, surfaces, issues) {
-  for (const surface of mechanism.publicSurfaces || []) {
-    if (!surfaces.has(surface))
-      issues.push(
-        `${mechanism.id}: public surface is absent from generated/package registries: ${surface}`,
-      );
-  }
+  for (const role of ["public", "internal"])
+    for (const surface of mechanism[`${role}Surfaces`] || [])
+      if (surfaces.get(surface) !== role)
+        issues.push(
+          `${mechanism.id}: ${role} surface is absent or has a different role in generated/package registries: ${surface}`,
+        );
 }
 
 function validateGitRefStore(root, mechanism, issues) {
@@ -140,12 +149,15 @@ function validateReverseScanReferences(root, reverseScan, issues) {
 function validateSurfaceKinds(inventory, issues) {
   const surfaceKinds = new Set(
     (inventory.mechanisms || []).flatMap((mechanism) =>
-      (mechanism.publicSurfaces || []).map((surface) => surface.split(":")[0]),
+      [
+        ...(mechanism.publicSurfaces || []),
+        ...(mechanism.internalSurfaces || []),
+      ].map((surface) => surface.split(":")[0]),
     ),
   );
   for (const kind of ["action", "cli", "export", "workflow"]) {
     if (!surfaceKinds.has(kind))
-      issues.push(`reverse scan has no ${kind} public surface coverage`);
+      issues.push(`reverse scan has no ${kind} surface coverage`);
   }
   return surfaceKinds;
 }
@@ -327,6 +339,10 @@ function checkCoreMechanismInventory({
     sourceCoordinates: ownedSources.size,
     publicSurfaces: inventory.mechanisms.reduce(
       (sum, entry) => sum + entry.publicSurfaces.length,
+      0,
+    ),
+    internalSurfaces: inventory.mechanisms.reduce(
+      (sum, entry) => sum + (entry.internalSurfaces || []).length,
       0,
     ),
     dependencyCycles: inventory.maintainability.dependencyCycles,

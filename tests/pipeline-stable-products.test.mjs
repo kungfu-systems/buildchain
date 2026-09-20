@@ -2,6 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createHash } from "node:crypto";
 import path from "node:path";
+import fs from "node:fs";
+import http from "node:http";
+import { verifyReleasePassport } from "../packages/core/release/release-passport.js";
 import { signedPublicationFixture } from "./helpers/pipeline-publication-signed.mjs";
 import {
   canonicalJson,
@@ -221,6 +224,99 @@ function changeDocument(state, name, mutate) {
     Buffer.from(`${canonicalJson(changed)}\n`),
   );
 }
+
+test("public Passport reader verifies current signed metadata and retains explicit verification limits", async (t) => {
+  const f = await fixture(t);
+  for (const { name, bytes } of f.state.assets)
+    fs.writeFileSync(path.join(f.f.root, name), bytes);
+  const input = {
+    passportLocation: path.join(f.f.root, "buildchain.release.json"),
+    checkedAt: "2026-09-20T00:00:00Z",
+    execute: f.execute,
+  };
+  const report = await verifyReleasePassport(input);
+  assert.equal(report.ok, true);
+  assert.equal(report.trust, "pass");
+  assert.equal(report.checkedAt, input.checkedAt);
+  assert.equal(report.verificationScope, "signed-release-metadata");
+  assert.equal(report.artifactBytesVerified, false);
+  assert.equal(report.providerStateVerified, false);
+  assert.equal(
+    report.completeness.artifactCount,
+    f.f.retained.qualified.artifacts.length,
+  );
+  assert.equal(f.state.signatures, 1);
+  const server = http.createServer((request, response) => {
+    if (request.url === "/buildchain.attestation.json") {
+      response.writeHead(302, { location: "/bundle.txt" }).end();
+      return;
+    }
+    const name =
+      request.url === "/bundle.txt"
+        ? "buildchain.attestation.json"
+        : request.url.slice(1);
+    const entry = f.state.assets.find((asset) => asset.name === name);
+    response.writeHead(entry ? 200 : 404).end(entry?.bytes);
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const remote = await verifyReleasePassport({
+    ...input,
+    passportLocation: `http://127.0.0.1:${server.address().port}/buildchain.release.json`,
+  });
+  assert.equal(remote.ok, true);
+  assert.equal(f.state.signatures, 2);
+  const rejected = await verifyReleasePassport({
+    ...input,
+    execute() {
+      throw new Error("signature failed");
+    },
+  });
+  assert.equal(rejected.ok, false);
+  assert.equal(rejected.issues[0].code, "pipeline.evidence");
+});
+
+for (const mutation of [
+  "passport",
+  "qualification",
+  "publisher",
+  "bundle",
+  "missing",
+])
+  test(`public Passport reader rejects ${mutation} evidence changes`, async (t) => {
+    const f = await fixture(t);
+    if (mutation === "passport")
+      changeDocument(f.state, "release", (v) => {
+        v.release.version = "999.0.0";
+      });
+    if (mutation === "qualification")
+      changeDocument(f.state, "qualification", (v) => {
+        v.source.commit = "9".repeat(40);
+      });
+    if (mutation === "publisher")
+      changeDocument(f.state, "plan", (v) => {
+        v.publisher.repository = "other/publisher";
+        return rooted(v);
+      });
+    for (const { name, bytes } of f.state.assets) {
+      if (mutation === "missing" && name === "buildchain.capsules.json")
+        continue;
+      fs.writeFileSync(
+        path.join(f.f.root, name),
+        mutation === "bundle" && name === "buildchain.attestation.json"
+          ? Buffer.concat([bytes, Buffer.from("\n")])
+          : bytes,
+      );
+    }
+    const report = await verifyReleasePassport({
+      passportLocation: path.join(f.f.root, "buildchain.release.json"),
+      execute: f.execute,
+    });
+    assert.equal(report.ok, false);
+    assert.equal(report.trust, "fail");
+    assert.equal(report.issues[0].code, "pipeline.evidence");
+    if (mutation === "publisher") assert.equal(f.state.signatures, 0);
+  });
 
 test("Stable product qualification verifies published bytes, signature and actual original jobs without renewing historical authority", async (t) => {
   const f = await fixture(t);

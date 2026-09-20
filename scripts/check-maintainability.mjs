@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
-import { projectRenamedMetrics } from "./source-metric-lineage.mjs";
+import {
+  projectRenamedMetrics,
+  projectWorkflowMetrics,
+} from "./source-metric-lineage.mjs";
+import {
+  workflowPath,
+  TAXONOMY_PATH,
+} from "../packages/core/workflow/workflow-taxonomy.mjs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
@@ -417,10 +424,25 @@ function checkMaintainability({ root = process.cwd() } = {}) {
     if (file.endsWith(".rs")) baselineFiles[file] = metrics;
   }
   const baselineTests = testMetricsAtRevision(root, extendedCoverageRevision);
-  const baselineWorkflows = workflowMetricsAtRevision(
-    root,
-    extendedCoverageRevision,
-  );
+  const taxonomyCoordinates = (policy) =>
+    policy.entries.map((entry) => ({
+      id: entry.id,
+      path: workflowPath(entry),
+    }));
+  const workflowLineage = projectWorkflowMetrics({
+    before: taxonomyCoordinates(
+      JSON.parse(
+        gitOutput(root, [
+          "show",
+          `${extendedCoverageRevision}:${TAXONOMY_PATH}`,
+        ]),
+      ),
+    ),
+    after: taxonomyCoordinates(readJson(root, TAXONOMY_PATH)),
+    metrics: workflowMetricsAtRevision(root, extendedCoverageRevision),
+    currentPaths: new Set(Object.keys(current.workflows)),
+  });
+  const baselineWorkflows = workflowLineage.metrics;
   const issues = evaluateExceptionGovernance({ policy });
   issues.push(...evaluateExceptionBudget({ policy }));
   const hotspots = collectHotspots(root, current, 20, debt.hotspots || []);
@@ -469,6 +491,7 @@ function checkMaintainability({ root = process.cwd() } = {}) {
     trackedFiles: current.repository.trackedFiles,
     sourceFiles: current.repository.handMaintainedSourceFiles,
     measurementRenames: lineage.renames,
+    workflowMeasurementRenames: workflowLineage.renames,
     publicSurface: current.publicSurface,
     hotspots: current.hotspots,
     governedDebtSurfaces: Object.values(debt.surfaces).reduce(

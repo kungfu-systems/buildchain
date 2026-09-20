@@ -12,7 +12,7 @@ const sha = "a".repeat(40),
     BUILDCHAIN_REPOSITORY: "kungfu-systems/buildchain",
     BUILDCHAIN_WORKFLOW_SHA: sha,
     BUILDCHAIN_WORKFLOW_REF:
-      "kungfu-systems/buildchain/.github/workflows/public-build-publication.yml@v4-alpha",
+      "kungfu-systems/buildchain/.github/workflows/.build-publication.yml@v4-alpha",
     BUILDCHAIN_REQUESTED_REF: "",
   };
 const context = {
@@ -121,7 +121,7 @@ test("qualified package binding rejects provider errors, duplicate packs and int
   }));
 test("publication workflow preserves central runtime preparation before business execution and always collects failure receipts", () => {
   const w = YAML.parse(
-    fs.readFileSync(".github/workflows/public-build-publication.yml", "utf8"),
+    fs.readFileSync(".github/workflows/.build-publication.yml", "utf8"),
   );
   const steps = w.jobs.publication.steps;
   assert.equal(steps.length, 5);

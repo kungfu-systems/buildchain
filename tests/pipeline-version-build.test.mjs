@@ -16,6 +16,11 @@ function fixture(t, extra = "") {
   fs.mkdirSync(path.join(cwd, ".buildchain"));
   fs.mkdirSync(path.join(cwd, "src"));
   fs.mkdirSync(path.join(cwd, "dist"));
+  fs.cpSync(
+    new URL("../templates/minimal-consumer/npm/.github", import.meta.url),
+    path.join(cwd, ".github"),
+    { recursive: true },
+  );
   const configPath = ".buildchain/buildchain.toml";
   const config = fs
     .readFileSync(

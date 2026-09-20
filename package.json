@@ -192,8 +192,7 @@
     "ajv": "8.17.1",
     "prettier": "^3.9.0",
     "tsup": "^8.5.0",
-    "typescript": "^5.9.0",
-    "yaml": "2.8.2"
+    "typescript": "^5.9.0"
   },
   "dependencies": {
     "@actions/artifact": "6.2.1",
@@ -202,6 +201,8 @@
     "@actions/glob": "0.7.0",
     "@electron/osx-sign": "1.3.3",
     "@kungfu-tech/kfd": "1.0.0-alpha.62",
-    "smol-toml": "1.7.0"
+    "acorn": "8.17.0",
+    "smol-toml": "1.7.0",
+    "yaml": "2.8.2"
   }
 }

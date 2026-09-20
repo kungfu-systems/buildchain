@@ -239,7 +239,7 @@ test("production admission rejects contract-only false success", () => {
 
 test("Bootstrap preserves caller permissions and retains evidence in its terminal node", () => {
   const workflow = fs.readFileSync(
-    new URL("../.github/workflows/public-ops-bootstrap.yml", import.meta.url),
+    new URL("../.github/workflows/.ops-bootstrap.yml", import.meta.url),
     "utf8",
   );
   assert.doesNotMatch(

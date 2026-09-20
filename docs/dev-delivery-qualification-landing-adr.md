@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-08-15
+last_reviewed: 2026-09-20
 ---
 
 # ADR: Qualification Leases and the exclusive Landing Warrant
@@ -231,12 +231,13 @@ skipped, nonterminal, or cross-PR predecessors.
 - Generated references: [`cli-reference.md`](cli-reference.md) and
   [`node-api-reference.md`](node-api-reference.md).
 
-The existing public `public-ops-dev-auto-merge.yml` reusable workflow remains the
-single-flight v1 controller and does not advertise v2 Landing guarantees.
-Bounded v2 is a separate opt-in controller contract built from the public CLI,
-Node API, and schema; merely calling the v1 reusable workflow never enables or
-claims it. Buildchain's tracked floating `@v4-alpha` self-delivery caller
-continues to exercise that public v1 path without overstating v2 execution.
+At the original ADR's rollout boundary, the standalone dev-auto-merge entry
+exercised the single-flight v1 controller and did not claim v2 Landing
+guarantees. That observation remains historical. Current consumers use the
+shared normal pipeline; `.ops-dev-auto-merge.yml` is an internal component.
+Consumers do not deploy a second controller or supply its proof/lease ports.
+The v1/v2 authority and migration invariants in this ADR remain implementation
+constraints, not extra consumer wiring.
 
 All mutations are plan-only unless `--execute` is supplied. Merge-group
 admission is always a read-only authority check; it never mutates GitHub Merge
@@ -245,7 +246,7 @@ Queue itself.
 ## Consequences
 
 Qualification throughput can increase without increasing the number of
-candidates permitted to land. Consumers retain the byte- and behavior-compatible
-single-flight default until they deliberately deploy the v2 mode. The tradeoff
+candidates permitted to land. The original rollout retained the single-flight default until explicit v2
+admission. Current selection belongs to the runtime. The tradeoff
 is a second state contract and controller family; Buildchain keeps that
 separation explicit so a rollout cannot silently weaken Warrant semantics.

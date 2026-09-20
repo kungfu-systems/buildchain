@@ -13,11 +13,11 @@
     "rationale": "Preserve the accepted 66,712 governance ledger at the exact protected Wave 4 cut while charging every subsequent source, Rust, test, and workflow line, function, job, step, and decision excess one-for-one. The fixed calibration offset cannot hide new debt because both the measured ledger and calibrated total are recomputed from the complete exact debt map."
   },
   "exceptionBudget": {
-    "maxTotal": 39,
+    "maxTotal": 38,
     "maxByCollection": {
       "approvedExistingDebtTransitions": 7,
       "approvedNewFileTransitions": 9,
-      "approvedExtractedDebt": 16,
+      "approvedExtractedDebt": 15,
       "approvedTestDebtTransitions": 6,
       "approvedWorkflowDebtTransitions": 1,
       "approvedPublicSurfaceTransitions": 0
@@ -201,12 +201,6 @@
     "packages/core/release/promote-ref/internal/durable-transaction-operations.js#createDurableTransactionOperations": {
       "maxLines": 378,
       "rationale": "Transplanted legacy durable transaction and Passport operations remain in one independently owned module. The exact two-line readable widening forwards rooted runtime-resume material and its post-publication finalizer without accepting a transient rebuilt candidate or inconsistent per-field overrides; this ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "packages/core/paper/paper-npm-bootstrap.js#executePaperNpmBootstrap": {
-      "maxLines": 490,
-      "maxComplexity": 58,
-      "rationale": "The existing externally guarded npm bootstrap transaction moved intact into an independently owned Paper module with an explicit runtime seam; this exact inherited debt ceiling cannot grow.",
       "governance": "legacy-debt-sunset-2026q4"
     },
     "scripts/maintainability-domain-metrics.mjs#rustTokens": {

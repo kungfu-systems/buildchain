@@ -8,15 +8,22 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-20
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-07-15
+  generated_at: 2026-09-20
   limits: Live provider configuration must be re-audited; no credential values are represented.
+  visible_context: Current two-entry consumer contract and retained internal implementation references.
 ---
 
 # Sealed Publication Authority
+
+This is an internal publication-authority reference. The shared pipeline owns
+these admission envelopes, nonces, provider observations and independent verifier
+calls. Consumers do not generate these records or add authority-audit workflows.
+Configured npm Trusted Publishing remains provider setup; it does not introduce
+a recurring npm login or token step into the consumer release flow.
 
 Buildchain publication authority is a closed-world, fail-closed protocol. It does
 not mint registry or cloud credentials. It independently verifies whether an
@@ -217,48 +224,11 @@ buildchain verify publication-admission admission.json \
   --json
 ```
 
-The read-only live collector defaults to npm trusted publishing. Other product
-providers select an explicit adapter:
-
-```bash
-buildchain audit publication-control-plane \
-  --repository kungfu-systems/buildchain \
-  --branch dev/v3/v3.0 \
-  --source-sha <exact-merged-branch-sha> \
-  --workflow .github/workflows/public-release-promote.yml \
-  --workflow-ref <exact-buildchain-sha> \
-  --publisher-workflow .github/workflows/self-release-promote.yml \
-  --job promote \
-  --environment none
-
-# Optional stronger external evidence; generate the JSON outside the workflow.
-buildchain audit publication-control-plane \
-  --repository kungfu-systems/buildchain \
-  --branch dev/v3/v3.0 \
-  --workflow .github/workflows/public-release-promote.yml \
-  --publisher-workflow .github/workflows/self-release-promote.yml \
-  --job promote \
-  --environment none \
-  --npm-trust-json sanitized-npm-trust.json
-
-buildchain audit publication-control-plane \
-  --repository kungfu-systems/buildchain \
-  --branch release/v3/v3.0 \
-  --workflow .github/workflows/.release-binary-assets.yml \
-  --job publish \
-  --environment buildchain-release-assets \
-  --publisher-mode github-token
-
-buildchain audit publication-control-plane \
-  --repository OWNER/CONSUMER \
-  --workflow-repository kungfu-systems/buildchain \
-  --branch main \
-  --workflow .github/workflows/public-release-web.yml \
-  --job production-apply \
-  --environment production \
-  --publisher-mode oidc-role \
-  --provider-audit-json sanitized-oidc-role-audit.json
-```
+The read-only control-plane collector is internal diagnostic tooling. Its workflow,
+publisher, job and provider coordinates must come from the exact admitted runtime
+and configured provider policy. For the current product publisher, inspect
+`.release-pipeline-products.yml`; the generated consumer caller is `buildchain.yml`.
+Do not substitute the retired standalone promotion or web workflow identities.
 
 The authority workflow identifies the reusable implementation that performs the
 publication job. The publisher workflow identifies the caller filename bound by

@@ -56,7 +56,7 @@ export function assembleWebPublicationAdmission({
       "managed web-surface publication requires an ephemeral GitHub-hosted Actions runner",
     );
   }
-  const workflowPath = ".github/workflows/public-release-web.yml";
+  const workflowPath = ".github/workflows/.release-web.yml";
   const publisherWorkflowPath = workflowPath;
   const controlPlaneAudit = createPublicationControlPlaneAudit({
     repository,

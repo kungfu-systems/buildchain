@@ -451,7 +451,7 @@ test("native authority binds and projects a notarized app release payload", () =
 test("Buildchain authority owns native credentials and performs provider verification", () => {
   const root = path.resolve(import.meta.dirname, "..");
   const workflowText = fs.readFileSync(
-    path.join(root, ".github/workflows/public-release-signing-authority.yml"),
+    path.join(root, ".github/workflows/.release-signing-authority.yml"),
     "utf8",
   );
   const workflow = workflowText.replace(/\n\s+/g, " ");
@@ -497,10 +497,8 @@ test("Buildchain authority owns native credentials and performs provider verific
     /uses: \.\/\.buildchain\/runtime\/actions\/build\/signing\/qualify-delivery/,
   );
   assert.match(workflow, /runtime-ref:/);
-  assert.match(
-    reusableDocs,
-    /public-release-signing-authority\.yml@v4/,
-  );
+  assert.match(reusableDocs, /internal `\.release-signing-authority\.yml`/);
+  assert.doesNotMatch(reusableDocs, /uses:.*\.release-signing-authority\.yml/);
   assert.match(workflow, /secrets\.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64/);
   assert.match(workflow, /secrets\.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64/);
   assert.match(workflow, /team-id: \$\{\{ vars\.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID \}\}/);

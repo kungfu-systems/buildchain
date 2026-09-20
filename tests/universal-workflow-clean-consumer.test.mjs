@@ -7,7 +7,7 @@ import { prepareReleaseConsumerDependencies } from "../packages/core/workflow/en
 import { inspectWorkflowJob } from "../scripts/workflow-action-graph.mjs";
 
 test("the public capability job prepares runtime before executing consumer logic", () => {
-  const graph = inspectWorkflowJob(".github/workflows/public-ops-bootstrap.yml", "execute");
+  const graph = inspectWorkflowJob(".github/workflows/.ops-bootstrap.yml", "execute");
   const prepare = graph.steps.findIndex(step => step.uses === "$/actions/runtime/environment/prepare");
   const engine = graph.steps.findIndex(step => step.uses?.endsWith("/workflow/engine/execute"));
   assert.ok(prepare >= 0 && engine > prepare);

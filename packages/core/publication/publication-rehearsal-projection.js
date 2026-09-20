@@ -9,8 +9,6 @@ export const PUBLICATION_REHEARSAL_AGENT_SECTION_START =
   "<!-- buildchain:publication-rehearsal:start -->";
 export const PUBLICATION_REHEARSAL_AGENT_SECTION_END =
   "<!-- buildchain:publication-rehearsal:end -->";
-export const PUBLICATION_REHEARSAL_WORKFLOW_PATH =
-  ".github/workflows/publication-rehearsal.yml";
 
 export function publicationRehearsalToml() {
   return `[publication_rehearsal]\ncontract = ${JSON.stringify(PUBLICATION_REHEARSAL_CAPSULE_CONTRACT)}\nadr = ${JSON.stringify(RELEASE_LOCAL_CONSTRUCTIBILITY_ADR)}\ninvariant = ${JSON.stringify(RELEASE_LOCAL_CONSTRUCTIBILITY_INVARIANT)}\ncommand = ${JSON.stringify(PUBLICATION_REHEARSAL_COMMAND)}\ncapsule = ".buildchain/publication-rehearsal/capsule.json"\ncandidate_root = ".buildchain/publication-rehearsal/candidate"\nstate = ".buildchain/publication-rehearsal/state.json"\nevidence = ".buildchain/publication-rehearsal/evidence.json"\n`;
@@ -94,11 +92,4 @@ export function mergePublicationRehearsalAgentInstructions(current = "") {
   return `${source.slice(0, start)}${section}${source.slice(
     end + PUBLICATION_REHEARSAL_AGENT_SECTION_END.length,
   )}`;
-}
-
-export function publicationRehearsalWorkflow(buildchainRef) {
-  const ref = String(buildchainRef || "").trim();
-  if (!/^v4(?:-alpha)?$/u.test(ref))
-    throw new Error("publication rehearsal workflow requires a floating public entry");
-  return `name: Publication Rehearsal\n\non:\n  workflow_dispatch:\n    inputs:\n      capsule-path:\n        description: "Source-bound v4 publication rehearsal capsule"\n        required: true\n        default: ".buildchain/publication-rehearsal/capsule.json"\n      candidate-root:\n        description: "Repository-relative candidate root"\n        required: true\n        default: ".buildchain/publication-rehearsal/candidate"\n\npermissions:\n  contents: read\n\njobs:\n  rehearsal:\n    uses: kungfu-systems/buildchain/.github/workflows/public-release-tail.yml@${ref}\n    with:\n      rehearsal-capsule-path: \${{ inputs.capsule-path }}\n      candidate-root: \${{ inputs.candidate-root }}\n      rehearsal-mode: simulate\n      state-path: ".buildchain/publication-rehearsal/state.json"\n      rehearsal-evidence-path: ".buildchain/publication-rehearsal/evidence.json"\n`;
 }

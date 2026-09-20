@@ -26,7 +26,7 @@ test("Evidence qualification preserves shell failure semantics and publishes onl
 test("observed evidence admits the default branch before publication and rejects pull requests", (t) => {
   const workflow = YAML.parse(
     fs.readFileSync(
-      path.join(root, ".github/workflows/public-ops-observed-evidence.yml"),
+      path.join(root, ".github/workflows/.ops-observed-evidence.yml"),
       "utf8",
     ),
   );

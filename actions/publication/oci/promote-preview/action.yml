@@ -27,7 +27,7 @@ runs:
       with:
         source-sha: ${{ steps.qualified.outputs.source-sha }}
         directory: .buildchain/consumer
-        workflow: .github/workflows/public-release-oci-compose-preview.yml
+        workflow: .github/workflows/.release-oci-compose-preview.yml
         workflow-sha: ${{ inputs.workflow-sha }}
     - uses: actions/download-artifact@v7.0.0
       with:

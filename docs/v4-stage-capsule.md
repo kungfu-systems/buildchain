@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-08-10
+  generated_at: 2026-09-20
   invisible_context: not asserted
 ---
 
@@ -133,24 +133,18 @@ shadow-only: it does not skip a v3 production stage or move v3 authority.
 
 ## Three-platform qualification and Wave reconciliation
 
-`architecture/stage-capsule-qualification.json` closes the Wave 2
-qualification boundary. Buildchain and external repositories use the same
-Buildchain-owned public reusable workflow,
-`.github/workflows/public-build-stage-capsule-canary.yml`. Buildchain's caller is the thin
-`.github/workflows/self-build-public-consumer-dogfood.yml`; it has no steps, copied
-orchestration, local action, direct qualification invocation, or private
-consumer profile. The persisted caller uses `@v4`. Candidate validation passes
-`train/v4/v4.1/<capability>` as the transient `runtime-ref` input, through the
-same central selection and preparation entry as external consumers.
+`architecture/stage-capsule-qualification.json` owns the Wave 2 qualification
+boundary. The former standalone public canary and self caller are historical;
+the retained `.build-stage-capsule-canary.yml` component is internal. Current
+Buildchain self verification runs the declared platform checks through the
+shared pipeline and schema-2 TOML, including `scripts/verify-product-platform.mjs`.
+Consumers do not copy campaign controllers or select provider/proof ports.
 
-The called workflow prepares the selected runtime and reads the consumer's
-tracked `.buildchain/buildchain.toml`, and executes only `install`, `build`,
-and `verify` on GitHub-hosted Linux x64, macOS arm64, and Windows x64 runners.
-Each stage binds its declared command, dependency edge, exact consumer source,
-platform, lifecycle manifest, summary, and real output roots into the campaign
-profile. `publish` is explicitly classified as a provider mutation and is not
-executed. The caller supplies only its stable consumer name and the real output
-paths; it does not copy the campaign orchestration.
+The internal qualification mechanism binds install/build/verify commands,
+dependency edges, exact source, platform, lifecycle summaries and output roots.
+Provider publication is separate authority and is not granted by Capsule reuse.
+The following campaign invariants describe the retained internal mechanism;
+they do not claim a new hosted qualification run.
 
 The external seed retains `install` and `build` before an intentional late
 `verify` failure. A clean process reads the retained store, restores only the

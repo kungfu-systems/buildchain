@@ -283,13 +283,7 @@
         "terminal PR state"
       ],
       "providerReadback": ["GitHub PR head and checks", "Git ref state root"],
-      "publicSurfaces": [
-        "export:./dev-delivery-warrant",
-        "cli:dev",
-        "workflow:public-ops-dev-auto-merge",
-        "workflow:public-ops-warrant-cancel",
-        "workflow:public-ops-warrant-close"
-      ],
+      "publicSurfaces": ["export:./dev-delivery-warrant", "cli:dev"],
       "sourcePaths": [
         "packages/core/dev-delivery/dev-delivery-proof.js",
         "packages/core/dev-delivery/dev-delivery-warrant-cancellation.js",
@@ -330,6 +324,11 @@
       "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
       "closedRequirements": [
         "v4 durable store and lease authority are not yet selected"
+      ],
+      "internalSurfaces": [
+        "workflow:.ops-dev-auto-merge",
+        "workflow:.ops-warrant-cancel",
+        "workflow:.ops-warrant-close"
       ]
     },
     {
@@ -416,8 +415,7 @@
       "publicSurfaces": [
         "export:./release-candidate",
         "export:./release-train",
-        "cli:candidate",
-        "workflow:public-release-promote"
+        "cli:candidate"
       ],
       "sourcePaths": [
         "packages/core/release/release-candidate.js",
@@ -442,7 +440,8 @@
       "closedRequirements": [
         "v4 canonical serialization boundary is not yet selected",
         "v4 Release Train authority remains deferred to the parity wave"
-      ]
+      ],
+      "internalSurfaces": ["workflow:.release-candidate-promote"]
     },
     {
       "id": "release-candidate-recovery",
@@ -539,10 +538,7 @@
         "remote ledger ref",
         "promotion refs"
       ],
-      "publicSurfaces": [
-        "export:./stable-candidate-ledger",
-        "workflow:public-ops-stable-candidate-patrol"
-      ],
+      "publicSurfaces": ["export:./stable-candidate-ledger"],
       "sourcePaths": [
         "packages/core/release/stable-candidate-ledger.js",
         "packages/core/release/commands/stable-candidate-patrol.mjs",
@@ -559,7 +555,8 @@
       "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
       "closedRequirements": [
         "v4 scheduler and ledger store ownership are not yet selected"
-      ]
+      ],
+      "internalSurfaces": ["workflow:.ops-stable-candidate-patrol"]
     },
     {
       "id": "publish-transaction",
@@ -626,12 +623,7 @@
         "GitHub release/tag/ref",
         "durable state ref"
       ],
-      "publicSurfaces": [
-        "action:release/promotion/ref",
-        "cli:release-transaction",
-        "workflow:public-release-promote",
-        "workflow:public-release-paper"
-      ],
+      "publicSurfaces": ["cli:release-transaction"],
       "sourcePaths": [
         "packages/core/release/publish-transaction.js",
         "packages/core/release/commands/release-transaction.mjs",
@@ -652,6 +644,11 @@
       "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
       "closedRequirements": [
         "v4 transaction journal store and npm effect executor are not yet selected"
+      ],
+      "internalSurfaces": [
+        "action:release/promotion/ref",
+        "workflow:.release-candidate-promote",
+        "workflow:.release-paper"
       ]
     },
     {
@@ -747,8 +744,7 @@
         "export:./buildchain-publication-authority",
         "cli:audit",
         "cli:create",
-        "cli:verify-publication-admission",
-        "workflow:public-build-publication"
+        "cli:verify-publication-admission"
       ],
       "sourcePaths": [
         "packages/core/publication/publication-authority.js",
@@ -768,7 +764,8 @@
       "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
       "closedRequirements": [
         "v4 capability registry and provider-effect interface are not yet selected"
-      ]
+      ],
+      "internalSurfaces": ["workflow:.build-publication"]
     },
     {
       "id": "github-governance-authority",
@@ -814,8 +811,7 @@
       ],
       "publicSurfaces": [
         "export:./github-governance-authority",
-        "cli:release-governance",
-        "workflow:public-ops-release-governance"
+        "cli:release-governance"
       ],
       "sourcePaths": [
         "packages/core/governance/github-governance-authority.js",
@@ -830,7 +826,8 @@
       "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
       "closedRequirements": [
         "v4 policy ownership boundary between core and GitHub adapter is not yet selected"
-      ]
+      ],
+      "internalSurfaces": ["workflow:.ops-release-governance"]
     },
     {
       "id": "engineering-housekeeper",
@@ -877,8 +874,7 @@
       ],
       "publicSurfaces": [
         "export:./engineering-housekeeper",
-        "export:./engineering-housekeeper-github",
-        "workflow:public-ops-housekeeping"
+        "export:./engineering-housekeeper-github"
       ],
       "sourcePaths": [
         "packages/core/governance/engineering-housekeeper.js",
@@ -899,7 +895,8 @@
       "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
       "closedRequirements": [
         "A future Rust migration would require a separately qualified writer cutover; v4 intentionally retains the TypeScript production authority."
-      ]
+      ],
+      "internalSurfaces": ["workflow:.ops-housekeeping"]
     },
     {
       "id": "release-passport-and-artifact-proof",
@@ -953,7 +950,6 @@
         "local package/sidecar"
       ],
       "publicSurfaces": [
-        "action:build/artifact/prepare-attestation",
         "export:./release-passport",
         "export:./artifact-passport",
         "cli:verify-release-passport",
@@ -982,7 +978,8 @@
       "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
       "closedRequirements": [
         "v4 proof graph storage and compatibility projection boundary are not yet selected"
-      ]
+      ],
+      "internalSurfaces": ["action:build/artifact/prepare-attestation"]
     },
     {
       "id": "release-propagation-work-control",
@@ -1033,8 +1030,7 @@
       ],
       "publicSurfaces": [
         "export:./release-propagation",
-        "cli:release-propagation",
-        "workflow:public-release-propagation"
+        "cli:release-propagation"
       ],
       "sourcePaths": [
         "packages/core/release/release-propagation-agent-entry.js",
@@ -1060,7 +1056,8 @@
       "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
       "closedRequirements": [
         "v4 Work persistence and external executor protocol are not yet selected"
-      ]
+      ],
+      "internalSurfaces": ["workflow:.release-propagation"]
     },
     {
       "id": "release-tail-provider-plane",
@@ -1126,9 +1123,7 @@
       "publicSurfaces": [
         "export:./release-tail-provider-plane",
         "export:./release-tail-provider-adapters",
-        "cli:release-tail",
-        "workflow:public-release-tail",
-        "action:release/tail/settle"
+        "cli:release-tail"
       ],
       "sourcePaths": [
         "packages/core/release/release-tail-provider-plane.js",
@@ -1141,12 +1136,16 @@
         "tests/release-tail-contract.test.mjs"
       ],
       "callers": [
-        ".github/workflows/public-release-tail.yml",
+        ".github/workflows/.release-tail.yml",
         "packages/core/release/cli/release-handlers.mjs"
       ],
       "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
       "closedRequirements": [
         "consumer cutovers and production provider credentials remain separate reviewed changes"
+      ],
+      "internalSurfaces": [
+        "workflow:.release-tail",
+        "action:release/tail/settle"
       ]
     }
   ],

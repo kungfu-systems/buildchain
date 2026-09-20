@@ -7,6 +7,7 @@ import {
   BUILDCHAIN_CONFIG_PATH,
 } from "../contracts/buildchain-layout.js";
 import { readProductConfiguration } from "./contract/reader.js";
+import { consumerConfigurationSummary } from "./contract/local-validation.js";
 import { runShellCommandSync } from "../runtime/spawn-command.js";
 import { normalizeBuildConfiguration } from "../build/build-configuration.js";
 
@@ -1636,6 +1637,14 @@ export function validateBuildchainConfig(
   if (requireVersionState && versionFiles.length === 0) {
     throw new Error("version state is required but no version.files are configured");
   }
+
+  if (loadedConfig.config.schema === 2)
+    return consumerConfigurationSummary(
+      loadedConfig,
+      versionFiles,
+      discoverConfiguredDerivedVersionMaterial(cwd, loadedConfig),
+      requireLifecycleStages,
+    );
 
   const lifecycleStages = configuredLifecycleStages(loadedConfig);
   const stageNames = new Set(lifecycleStages.map((stage) => stage.name));

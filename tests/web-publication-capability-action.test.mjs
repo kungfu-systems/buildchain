@@ -41,7 +41,7 @@ function fixture() {
     decision: "allow",
     expiresAt: "2099-01-01T00:00:00Z",
     artifactDigest: candidate.candidateDigest,
-    workflowPath: ".github/workflows/public-release-web.yml",
+    workflowPath: ".github/workflows/.release-web.yml",
     repository: request.repository,
     sourceSha: request.sourceSha,
     runtimeSha: request.runtimeSha,

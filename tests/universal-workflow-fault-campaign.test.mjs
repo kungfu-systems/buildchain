@@ -18,7 +18,7 @@ test("entry and runtime faults have the two declared recovery routes",()=>{
 });
 test("consumer recovery uses the same public entry without a copied distribution",()=>{
  const template=YAML.parse(read("templates/universal-buildchain-bootstrap.yml"));
- assert.equal(template.jobs.bootstrap.uses,"kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4");
+ assert.equal(template.jobs.bootstrap.uses,"kungfu-systems/buildchain/.github/workflows/.ops-bootstrap.yml@v4");
  assert.equal(template.jobs.bootstrap.with["runtime-ref"],"${{ inputs.runtime-ref }}");
  for(const file of ["templates/bootstrap-recovery","templates/universal-buildchain-bootstrap-recovery.yml",".github/workflows/public-ops-bootstrap-recovery.yml"])
   assert.equal(fs.existsSync(path.join(root,file)),false,file);

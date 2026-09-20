@@ -20,7 +20,7 @@ permissions:
   statuses: write
 jobs:
   delivery:
-    uses: ./.github/workflows/public-ops-dev-auto-merge.yml
+    uses: ./.github/workflows/.ops-dev-auto-merge.yml
     secrets:
       github-token: ${{ secrets.BUILDCHAIN_AUTOMATION_TOKEN || github.token }}
     with:

@@ -318,7 +318,7 @@ test("terminal failure settlement reconciles a concurrent identical winner as an
 });
 
 test("terminal workflow reaches a typed settlement transaction", () => {
- const graph = inspectWorkflowJob(".github/workflows/public-ops-warrant-close.yml", "close", REPOSITORY_ROOT);
+ const graph = inspectWorkflowJob(".github/workflows/.ops-warrant-close.yml", "close", REPOSITORY_ROOT);
  assert.equal(graph.job.steps.at(-1).with.phase, undefined);
  assert.ok(graph.modules.has("packages/core/dev-delivery/warrant/terminal.js"));
  const close = graph.steps.find(step => step.id === "close");
