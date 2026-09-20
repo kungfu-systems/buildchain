@@ -15,7 +15,7 @@ permissions:
   contents: read
 jobs:
   buildchain:
-    uses: kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4
     secrets: inherit
     permissions:
       actions: write

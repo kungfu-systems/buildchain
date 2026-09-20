@@ -34,7 +34,7 @@
       "calls": [
         {
           "id": "buildchain",
-          "uses": "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4-alpha",
+          "uses": "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4",
           "inputs": ["attempt", "runtime-ref"],
           "destination": "internal.workflow-composition"
         }
@@ -58,7 +58,7 @@
       "calls": [
         {
           "id": "buildchain",
-          "uses": "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha",
+          "uses": "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4",
           "inputs": [],
           "destination": "internal.workflow-composition"
         }
