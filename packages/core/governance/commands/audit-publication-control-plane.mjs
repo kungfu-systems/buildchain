@@ -5,7 +5,7 @@ const flag = (name, fallback = "") => process.argv.includes(`--${name}`) ? Strin
 try {
   const repository = flag("repository");
   const workflowRepository = flag("workflow-repository", repository);
-  const workflowPath = flag("workflow", ".github/workflows/public-release-promote.yml");
+  const workflowPath = flag("workflow", ".github/workflows/.release-candidate-promote.yml");
   const workflowRef = flag("workflow-ref");
   const publisherWorkflowPath = flag("publisher-workflow", workflowPath);
   const requiredStatusCheck = flag("required-status-check", "check");

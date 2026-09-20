@@ -4,15 +4,41 @@ import assert from "node:assert/strict";
 import { preparePipelinePublication } from "../packages/core/publication/pipeline/prepare.js";
 import { publicationContext } from "../packages/core/publication/pipeline/context.js";
 import { pipelinePublicationJournal } from "../packages/core/publication/pipeline/journal.js";
-import { readRecoveryPublicationMaterials } from "../packages/core/publication/pipeline/recovery-materials.js";
+import {
+  readRecoveryPublicationMaterials,
+  recoveryPublicationMaterial,
+} from "../packages/core/publication/pipeline/recovery-materials.js";
 import { importRecoveredPublication } from "../packages/core/publication/pipeline/recovery-import.js";
 import { publicationImportedValues } from "../packages/core/publication/pipeline/imported-materials.js";
+import { prepareRecoveredPublication } from "../packages/core/publication/pipeline/recovery-prepare.js";
 import {
   selectRecoveryAttempt,
   openRecoveryAttempt,
 } from "../packages/core/workflow/pipeline/recovery-session.js";
 import { planPipelineRecovery } from "../packages/core/workflow/pipeline/recovery-plan.js";
 import { recordDigest } from "../packages/core/release/discussion/envelope.js";
+
+test("unsigned conflicting plans remain ambiguous and cannot select their own recovery authority", async () => {
+  const { f, publisher, attempt } = await publicationFixture();
+  const { context } = await preparePipelinePublication(
+    attempt,
+    publisher,
+    f.host,
+  );
+  const { session, journal } = await publicationContext(context, f.host);
+  const { root, ...body } = context.plan;
+  body.publisher = { ...body.publisher, workflowSha: "8".repeat(40) };
+  await journal.record("publication/plan", {
+    ...body,
+    root: recordDigest(body),
+  });
+  session.observed = await session.journal.read();
+  const materials = await readRecoveryPublicationMaterials(session, f.host);
+  assert.throws(
+    () => recoveryPublicationMaterial(materials, "publication/plan/"),
+    /one exact retained material/,
+  );
+});
 
 test("publication freezes the real protected source and defining publisher, and fences duplicate/late workers across jobs", async () => {
   const { f, publisher, merge, complete, attempt } = await publicationFixture();
@@ -176,6 +202,31 @@ test("recovery adopts original materials and the derived publisher/source in one
     }),
     /immutable recorded result/,
   );
+  // Isolate preparation's retained-plan decision. Signature verification is
+  // exercised by the signed publication recovery/apply tests.
+  await resumedJournal.record(
+    "publication/qualified",
+    {
+      qualified: { planRoot: imported[0].root },
+    },
+    { phase: "next-development" },
+  );
+  const beforeEntryMove = structuredClone(f.snapshot().records);
+  const prepared = await prepareRecoveredPublication(
+    session,
+    "8".repeat(40),
+    f.host,
+    resumedJournal,
+    "next-development",
+  );
+  assert.equal(prepared.mode, "qualified");
+  assert.equal(prepared.preserveTransaction, true);
+  assert.equal(prepared.execution.publisher.workflowSha, "8".repeat(40));
+  assert.deepEqual(
+    await resumedJournal.materials("publication/plan/"),
+    imported,
+  );
+  assert.deepEqual(f.snapshot().records, beforeEntryMove);
   const tampered = structuredClone(container);
   tampered.values[0].value = { changed: true };
   assert.throws(

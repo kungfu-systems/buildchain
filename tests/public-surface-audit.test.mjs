@@ -18,7 +18,18 @@ test("public surface reverse audit passes for the generated Buildchain site bund
   assert.equal(report.status, "passed");
   assert.equal(report.summary.failureCount, 0);
   const cliCommands = enumerateCliCommandsFromBin({ root });
-  assert.equal(cliCommands.length, 117);
+  assert.equal(cliCommands.length, 113);
+  for (const id of [
+    "paper-alpha",
+    "paper-bootstrap-npm",
+    "paper-build",
+    "paper-resume",
+  ])
+    assert.equal(
+      cliCommands.some((entry) => entry.id === id),
+      false,
+      `${id} is retired`,
+    );
   assert.ok(cliCommands.some((entry) => entry.id === "adopter-delivery"));
   assert.ok(cliCommands.some((entry) => entry.id === "next-development"));
   assert.ok(cliCommands.some((entry) => entry.id === "release-tail"));
@@ -42,9 +53,7 @@ test("public surface reverse audit passes for the generated Buildchain site bund
   assert.ok(buildWorkflow?.reusable);
   assert.ok(buildWorkflow.inputCount > 0);
   assert.ok(buildWorkflow.outputCount > 0);
-  assert.ok(
-    buildWorkflow.secrets.includes("BUILDCHAIN_PROMOTION_TOKEN"),
-  );
+  assert.ok(buildWorkflow.secrets.includes("BUILDCHAIN_PROMOTION_TOKEN"));
   assert.ok(
     enumerateActionInputs({ root }).some(
       (entry) => entry.id === "release/promotion/ref" && entry.inputCount > 0,

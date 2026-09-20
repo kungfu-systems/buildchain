@@ -1,15 +1,7 @@
 import { BUILDCHAIN_USAGE } from "../../workflow/commands/buildchain-cli-help.mjs";
 import { formatCliHelp } from "../cli-reference.js";
 import { createBuildchainLayoutDiscovery } from "../buildchain-layout.js";
-import {
-  printJson,
-  readBooleanFlag,
-  readFlag,
-  readJsonInput,
-  readRepeatedFlag,
-  readRepeatedJsonInputs,
-  writeJsonFile,
-} from "./options.mjs";
+import { printJson, readBooleanFlag, readFlag } from "./options.mjs";
 import { packageVersion } from "./context.mjs";
 
 export async function handleHelpCommand(args) {

@@ -58,7 +58,7 @@ jobs:
     permissions:
       contents: ${contents}
       issues: write
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@${ref}
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@${ref}
     with:
       channel: ${channel}
       dry-run: ${dryRun}${extraInput}
@@ -76,7 +76,7 @@ function evaluate(overrides = {}) {
     callerSha: "b".repeat(40),
     callerTree: "c".repeat(40),
     calleeRepository: "kungfu-systems/buildchain",
-    calleeWorkflowPath: ".github/workflows/public-release-promote.yml",
+    calleeWorkflowPath: ".github/workflows/.release-candidate-promote.yml",
     calleeSha: SHA,
     jobId: "promote",
     trustedEventClasses: ["workflow_dispatch", "pull_request:closed"],
@@ -210,7 +210,7 @@ test("consumer command verifies clean exact checkouts and marks dirty runs diagn
   );
   const calleeRoot = path.join(workspace, "buildchain");
   const callerRoot = path.join(workspace, "kungfu");
-  const calleePath = ".github/workflows/public-release-promote.yml";
+  const calleePath = ".github/workflows/.release-candidate-promote.yml";
   const callerPath = ".github/workflows/self-release-new-version-compat.yml";
   initRepository(calleeRoot);
   fs.mkdirSync(path.join(calleeRoot, ".github/workflows"), { recursive: true });
@@ -259,7 +259,7 @@ test("consumer command verifies clean exact checkouts and marks dirty runs diagn
 test("folded workflow expressions retain complete parameter and secret bindings", () => {
   const parsed = parseWorkflowDocument(`jobs:
   build:
-    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4
+    uses: kungfu-systems/buildchain/.github/workflows/.build-candidate.yml@v4
     with:
       runtime-ref: \${{ inputs.runtime-ref ||
         '' }}

@@ -52,7 +52,7 @@ for (const field of ["source", "configuration", "toolchain", "platform", "produc
 
 test("entry recovery uses the original failed run source and refuses a fork or active run", async () => {
   const request = { repository: "consumer/project", runId: "111", currentRunId: "222" };
-  const run = { id: 111, run_attempt: 2, repository: { full_name: request.repository }, head_repository: { full_name: request.repository }, head_sha: "a".repeat(40), head_branch: "dev", path: ".github/workflows/build.yml", status: "completed", conclusion: "failure" };
+  const run = { id: 111, run_attempt: 2, repository: { full_name: request.repository }, head_repository: { full_name: request.repository }, head_sha: "a".repeat(40), head_branch: "dev", path: ".github/workflows/.build-candidate.yml", status: "completed", conclusion: "failure" };
   assert.equal((await resolveRecoverySource(request, async () => run)).sha, run.head_sha);
   await assert.rejects(resolveRecoverySource(request, async () => ({ ...run, head_repository: { full_name: "fork/project" } })), /fork/u);
   await assert.rejects(resolveRecoverySource(request, async () => ({ ...run, status: "in_progress" })), /unsuccessful/u);

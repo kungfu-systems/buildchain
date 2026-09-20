@@ -36,7 +36,7 @@ export function verifyWebPublicationCapability(request, now = Date.now()) {
   }
   const roleArn = required(request, "roleArn");
   const exact = {
-    workflowPath: ".github/workflows/public-release-web.yml",
+    workflowPath: ".github/workflows/.release-web.yml",
     repository: required(request, "repository"),
     sourceSha: required(request, "sourceSha").toLowerCase(),
     runtimeSha: required(request, "runtimeSha").toLowerCase(),

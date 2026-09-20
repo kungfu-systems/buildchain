@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:3912044182ad1a87be183a8b8e2bb277502593fb58d6d087fe321ad9b7296204",
+      "digest": "sha256:dc5a0ead4c0ee474b54fd29275ed6024099948730bbf645b1d5e26ed9a4d9402",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -23,7 +23,7 @@
       "title": "Golden Path",
       "path": "docs/getting-started.md",
       "plane": "use",
-      "digest": "sha256:8cadc5f2bb4ec8d8aea3bd7e05936da197ce3dfbae39c432a0fe9edf6d2b36fa",
+      "digest": "sha256:f7288047140441da510739759b4bc4e98953a93758241201517685ef2a59cfba",
       "capabilityGroup": "getting-started",
       "audience": [
         "consumer",
@@ -37,7 +37,7 @@
       "title": "Auditable demo artifact pipeline",
       "path": "docs/auditable-demo.md",
       "plane": "verify",
-      "digest": "sha256:17b0756d1cc1009144219748b31497a12ebd19e79218a7451b2632be19bc9ba8",
+      "digest": "sha256:c04ec63055c0bfd2270adf94163e69380a1ccf3ac7ca49d7795a382dd6893b6a",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -51,7 +51,7 @@
       "title": "Install and verify Buildchain",
       "path": "docs/install.md",
       "plane": "use",
-      "digest": "sha256:c04ba24a8bed696c02f68af4dd05bd2363fa06b85c54d49a4316efb36b7cf865",
+      "digest": "sha256:7dd8f00213c228dc1bf80b279de5698807ddfc2097278187c4851048cde59409",
       "capabilityGroup": "getting-started",
       "audience": [
         "consumer"
@@ -78,7 +78,7 @@
       "title": "GitHub-native Linux artifact attestation",
       "path": "docs/github-artifact-attestation.md",
       "plane": "verify",
-      "digest": "sha256:9274b03fa34152fc4cbe2f34437a570e550fec28274cdf995b4c5c3de40116bf",
+      "digest": "sha256:db666ec735cf21e8df1e73a7ec1e5cb63cd473934c22e1ec3d12f0235376bb0f",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -107,7 +107,7 @@
       "title": "Sealed publication authority",
       "path": "docs/publication-authority.md",
       "plane": "verify",
-      "digest": "sha256:ce7d7efaef90e2c50fc45dfa7c6682edc39e20455da68da0c65c529cf33107c9",
+      "digest": "sha256:7d3267cd276e32083232a1edb9f23cd68f249dd2179b6a0d6166957d74278965",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -136,7 +136,7 @@
       "title": "Release Candidate Passport",
       "path": "docs/release-candidate.md",
       "plane": "verify",
-      "digest": "sha256:1390cc5e17b0352dcb3ac56c3650ccf7c61429da5feb6b7043cf6160b4576e72",
+      "digest": "sha256:6ce3eb0650572b4075682029417818771a0df180613ed0af7ff8d057bded6f9d",
       "capabilityGroup": "reusable-build",
       "audience": [
         "release-operator",
@@ -165,7 +165,7 @@
       "title": "Next-development transition",
       "path": "docs/next-development-transition.md",
       "plane": "verify",
-      "digest": "sha256:06aecdf35d4176fca184ee935e53c8e5be1cd73ffa7c9f431ece69cec04a05c5",
+      "digest": "sha256:6bf7bc12b1dcceffe55baa10a56d0518d417fc53f9e695920c728e7bb1014d31",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "release-operator",
@@ -180,7 +180,7 @@
       "title": "Release propagation",
       "path": "docs/release-propagation.md",
       "plane": "use",
-      "digest": "sha256:d3eb1d67cf2025b9f380af3b5a4c5156a9f5ff820d3fac29d206b022346fd3d8",
+      "digest": "sha256:29a06e896923524af1cac1132a4f1e76216e212b064fbfc9b89fea68c127f67e",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "release-operator",
@@ -292,7 +292,7 @@
       "title": "Migration inventory",
       "path": "docs/migration-inventory.md",
       "plane": "verify",
-      "digest": "sha256:3796f5b306c3402c24257542474a9767bf81d953526b50484798749ad869d041",
+      "digest": "sha256:704cb3bae314a8e57488fa1c0e897b7aa39619947dfdb02ceb1a6e1b945b8575",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -333,7 +333,7 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:2b7f6d3c8df25cd37fe8028690fc2d9cdce80de873341ef815f800c4ace880db",
+      "digest": "sha256:02c3993f39db07f7c42898901c651d4a75afecec38164baed9cdef6e3eb3bb27",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -347,7 +347,7 @@
       "title": "Generated CLI reference",
       "path": "docs/cli-reference.md",
       "plane": "use",
-      "digest": "sha256:f9bdeffb0751225c13bf249305c4bfb20d8ab52ca502d0e3d35370b3d2b1e47a",
+      "digest": "sha256:e5aef9d294c4773292f4c8710ebb5a223ecc0bb878c4ac016c4f64cb38c586ed",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -362,7 +362,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:5c00176bff01621ea48e2d35fbea8c34810963eda6a7413a1819ca3fae529f6c",
+      "digest": "sha256:eb8723de940d6c368163403df0680f9419379b3dc439f48bb5c5b52c778617c3",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -419,7 +419,7 @@
       "title": "Lifecycle protocol",
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
-      "digest": "sha256:630bc3b568abe02c35e4e3115c856d609ea3178b92fc071112188e1e47efc035",
+      "digest": "sha256:dc14c86a1eb27c0f2ce1be1b26b6ca0757401c9caa072bfc388d3c7b839b859c",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -433,7 +433,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:756f5b9c979b7fb1e379b6427eea1abe177c4d0cf5159e944d4f7e3d9aef4ffb",
+      "digest": "sha256:4ec51d593a9882f15c92c1a1aed1b57fac5a0c481f0351b7063d5a4ebf8ff204",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -447,7 +447,7 @@
       "title": "V4 public adopter delivery",
       "path": "docs/v4-adopter-delivery.md",
       "plane": "verify",
-      "digest": "sha256:f3f34ce4f2b36ac935bc5cd7ef3a7306fc7c8eff85b40b8ebf369ac45bde1635",
+      "digest": "sha256:cc78873a9a1751acb8d4f63fd4a787f73ea167c701e7f642224104e5a5c43bae",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -462,7 +462,7 @@
       "title": "Publish transaction",
       "path": "docs/publish-transaction.md",
       "plane": "verify",
-      "digest": "sha256:d2acad45ad98f66202c59d9b46732ccc41694d56a273115b6fc66aff519ad3dd",
+      "digest": "sha256:2686c667760cd8ff27a67ecea06f2be9acf25b38488d081147a03f8718e3df62",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator"
@@ -490,7 +490,7 @@
       "title": "Declarative release-tail provider plane",
       "path": "docs/release-tail-provider-plane.md",
       "plane": "use",
-      "digest": "sha256:ee07fcad90540a4ba47531c8e6dd5be6e632676d81957ecb16f9a5891741b1eb",
+      "digest": "sha256:50069c262d8a56f5d55ee57cc07553507b47a7d59ef965a5ee1fd93d5e9a6c1f",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -505,7 +505,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:4f3ce05b94c78243aaffca178789ca1ef4929ae36d975878ff7ff4828f1d5f95",
+      "digest": "sha256:2b8c5fe275a88da55c31c04c2b904db65d417edb5cb6c861646b1d69cc7937ac",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -534,7 +534,7 @@
       "title": "Release flow",
       "path": "docs/release-flow.md",
       "plane": "verify",
-      "digest": "sha256:c981dadaa48e5adf5dcd8712eb1d37b60285bf66b0ba3a6c13a5252fcbdeedba",
+      "digest": "sha256:788857a77ad467447aaf2548618ae7ea068a281b21cbfdb2aba24fdfa393ade4",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "release-operator",
@@ -548,7 +548,7 @@
       "title": "Runtime train validation",
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
-      "digest": "sha256:3a96b88cafd3afd357e27e585aac0d048dbfb91659ac5f97c4b2535cde0ce3e1",
+      "digest": "sha256:69e12abdeb35b3b7f660375fc2d84deb2d9ddf46de6724b402d8dd101b42075f",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -575,7 +575,7 @@
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "digest": "sha256:6409f312df40a989dcbdb6ae41aab5bf419420d3b937b74c85a0ac878e71519c",
+      "digest": "sha256:0d61f096b69afc67acefa127b970b548b6c2b931177d7530933ddf9d593eebcc",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "site",

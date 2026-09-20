@@ -1,57 +1,59 @@
 ---
 status: draft
 period: ongoing
-theme: release-promotion-api
-doc_type: manual
+theme: internal-release-promotion-request
+doc_type: technical-reference
 source_level: local-files
 confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-09
-  visible_context: Current promotion workflows, JSON schemas, request binding implementation and focused tests.
-  invisible_context_boundary: No alpha publication or production promotion was performed.
+  generated_at: 2026-09-20
+  visible_context: Current workflow taxonomy, shared consumer entries, internal promotion components and request schemas.
+  invisible_context_boundary: This source documentation does not claim a new hosted publication or external consumer migration.
 ---
 
-# Release promotion request
+# Internal release promotion request
 
-`public-release-promote.yml` is the public API. Its single `request-json` input
-uses [`promotion-request-v1.schema.json`](../contracts/promotion-request-v1.schema.json).
-The schema owns field types and defaults. Unknown fields, stringified booleans,
-historical command hooks and caller-supplied internal authority fields are rejected.
+Consumers declare products and legal channel routes in
+`.buildchain/buildchain.toml`. The generated `buildchain.yml` caller invokes
+`public-ops-pipeline.yml`; a channel PR expresses release intent. Consumers do
+not construct a promotion request or add a promotion workflow. See the
+[Golden Path](getting-started.md) for the shared normal and recovery entries.
 
-```yaml
-jobs:
-  promote:
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@v4-alpha
-    with:
-      request-json: |
-        {
-          "schema": "buildchain.promotion-request/v1",
-          "target-ref": "alpha/v4/v4.1",
-          "target-sha": ${{ toJSON(github.sha) }},
-          "dry-run": true
-        }
-    secrets: inherit
-```
+## Internal schemas and components
 
-Serialize dynamic values with `toJSON` so quotes, newlines, numbers and booleans
-retain their original meaning. Permissions remain an explicit caller responsibility;
-an input cannot grant a job credentials or provider authority.
+The advanced promotion implementation retains
+[`.release-candidate-promote.yml`](../.github/workflows/.release-candidate-promote.yml)
+and [`.release-promote.yml`](../.github/workflows/.release-promote.yml) as
+internal components. Their `request-json` transport is an implementation
+boundary, not a consumer configuration extension.
 
-The public workflow selects one runtime through the central runtime entry, admits
-the consumer source and constructs the internal
+[`promotion-request-v1.schema.json`](../contracts/promotion-request-v1.schema.json)
+owns the internal request field types and defaults. Unknown fields,
+stringified booleans, historical command hooks and unadmitted authority fields
+are rejected. The request binder constructs a normalized
 [`promotion-invocation-v1.schema.json`](../contracts/promotion-invocation-v1.schema.json)
-document. QUALIFY, APPLY and SETTLE prepare that selected runtime and retain their
-separate job permissions. Later nodes validate source, artifact and publication
-evidence without comparing Buildchain SHAs.
+document. QUALIFY, APPLY and SETTLE retain separate jobs and permissions.
+These internals must not be copied into consumer YAML, TOML, or helper scripts.
 
-Buildchain dogfood and external consumers use the same `@v4` or `@v4-alpha`
-public entry. The entry commit owns the API shell; the selected runtime owns
-business actions, modules and resources. A transient `runtime-ref` can select a
-repaired train while preserving the original publication source and evidence.
-See [Runtime entry](runtime-entry.md) for selection precedence and recovery.
+## Runtime and recovery
+
+The public entry resolves one runtime. Its business jobs use that selected
+runtime while retaining exact source, artifact and publication evidence.
+Buildchain self consumption uses the same generated caller pair and runtime
+selection contract as other repositories.
+
+Recovery goes through `buildchain-recover.yml`, which calls
+`public-ops-recover.yml`. The caller supplies the exact attempt and, only when
+needed, a transient repaired runtime. The retained attempt owns source,
+artifacts, transaction and provider effects; recovery inputs cannot replace
+those identities. See [Runtime entry](runtime-entry.md).
+
+The retired `public-release-promote.yml` path is not an alias in the current
+contract. Historical receipts and published bytes keep their original paths;
+new consumers use the shared pipeline entry after its published qualification.

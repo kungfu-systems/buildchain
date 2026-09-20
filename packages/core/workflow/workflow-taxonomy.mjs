@@ -64,13 +64,12 @@ function validateEntries(policy, errors) {
     if (
       entry.path &&
       !(
-        [".build", "build", "buildchain", "buildchain-recover"].includes(
-          entry.id,
-        ) && entry.path === `.github/workflows/${entry.id}.yml`
+        [".build", "buildchain", "buildchain-recover"].includes(entry.id) &&
+        entry.path === `.github/workflows/${entry.id}.yml`
       )
     )
       errors.push(
-        `${entry.id}: explicit path is reserved for build APIs and the generated consumer pair`,
+        `${entry.id}: explicit path is reserved for the internal build engine and generated consumer pair`,
       );
     const file = workflowPath(entry);
     if (!WORKFLOW.test(file) || paths.has(file))
@@ -82,6 +81,33 @@ function validateEntries(policy, errors) {
       );
     validateEntryOwnership(entry, errors);
   }
+  const publicEntries = policy.entries.filter(
+    (entry) => entry.role === "public",
+  );
+  if (
+    policy.entries
+      .filter((entry) => entry.role === "self")
+      .map((entry) => entry.id)
+      .sort()
+      .join(",") !== "buildchain,buildchain-recover"
+  )
+    errors.push(
+      "repository event roots must be exactly the generated consumer pair",
+    );
+  if (
+    publicEntries.length !== 2 ||
+    ["pipeline", "recover"].some(
+      (purpose) =>
+        !publicEntries.some(
+          (entry) =>
+            entry.id === purpose &&
+            entry.category === "ops" &&
+            entry.purpose === purpose &&
+            entry.invocation === "reusable",
+        ),
+    )
+  )
+    errors.push("consumer public entries must be exactly pipeline and recover");
   return policy.entries;
 }
 
@@ -100,11 +126,9 @@ export function discoverWorkflowFiles(root) {
   return visit(directory).sort();
 }
 
-function validateWorkflow(root, entry, declared, errors) {
+function validateWorkflow(entry, text, declared, errors) {
+  if (typeof text !== "string") return;
   const file = workflowPath(entry),
-    absolute = path.join(root, file);
-  if (!fs.existsSync(absolute) || !fs.lstatSync(absolute).isFile()) return;
-  const text = fs.readFileSync(absolute, "utf8"),
     document = parseWorkflowDocument(text);
   if (
     (entry.invocation === "reusable") !==
@@ -258,23 +282,41 @@ function validateGateIntegration(root, errors) {
 
 export function checkWorkflowTaxonomy(
   root,
-  { integration = true, documentation = true } = {},
+  { integration = true, documentation = true, files } = {},
 ) {
   const errors = [],
-    policy = readWorkflowTaxonomy(root),
+    policy = files
+      ? JSON.parse(files[TAXONOMY_PATH] || "null")
+      : readWorkflowTaxonomy(root),
     entries = validateEntries(policy, errors);
   if (errors.length) return { ok: false, errors };
+  files ??= Object.fromEntries(
+    discoverWorkflowFiles(root).map((file) => {
+      const absolute = path.join(root, file);
+      return [
+        file,
+        fs.lstatSync(absolute).isFile()
+          ? fs.readFileSync(absolute, "utf8")
+          : null,
+      ];
+    }),
+  );
   const declared = new Set(entries.map(workflowPath)),
-    observed = new Set(discoverWorkflowFiles(root));
+    observed = new Set(
+      Object.keys(files).filter((file) =>
+        /^\.github\/workflows\/.*\.ya?ml$/iu.test(file),
+      ),
+    );
   for (const file of observed) {
     if (!declared.has(file)) errors.push(`unregistered workflow: ${file}`);
-    if (!fs.lstatSync(path.join(root, file)).isFile())
+    if (typeof files[file] !== "string")
       errors.push(`workflow must be a regular file: ${file}`);
   }
   for (const file of declared)
     if (!observed.has(file))
       errors.push(`registered workflow missing: ${file}`);
-  for (const entry of entries) validateWorkflow(root, entry, declared, errors);
+  for (const entry of entries)
+    validateWorkflow(entry, files[workflowPath(entry)], declared, errors);
   if (integration) validateGateIntegration(root, errors);
   if (documentation) {
     const file = path.join(root, TAXONOMY_DOC);
@@ -324,9 +366,9 @@ export function renderWorkflowCatalog(policy) {
     "",
     "Generated from `architecture/workflow-taxonomy.json`. Every workflow has one canonical implementation; alternate paths and historical forwarding aliases are rejected.",
     "",
-    "Public workflows own the consumer API. Component workflows own reusable multi-job topology. Self workflows own Buildchain repository automation. Actions own execution steps; JS adapters and Rust/WASM own implementation.",
+    "The two public workflows own normal pipeline execution and exact-attempt recovery. Component workflows are internal runtime implementation, including once-only setup and the dispatch signing service; consumers do not wire these components. Self workflows are the generated consumer pair. Actions own execution steps; JS adapters and Rust/WASM own implementation.",
     "",
-    "Names use `public-<category>-<purpose>.yml`, `.<category>-<purpose>.yml`, and the generated self callers `buildchain.yml` and `buildchain-recover.yml`, with categories `build`, `release`, and `ops`. The primary build API and backbone use `build.yml` and `.build.yml`.",
+    "Names use `public-ops-pipeline.yml`, `public-ops-recover.yml`, internal `.<category>-<purpose>.yml`, and the generated self callers `buildchain.yml` and `buildchain-recover.yml`. Categories are `build`, `release`, and `ops`; the internal build engine retains `.build.yml`.",
     "",
     "Register ownership before adding a workflow. `pnpm run check:workflows` validates source, calls, required CI integration and independent review ownership. `pnpm run generate:workflows` regenerates this catalog.",
     "",
@@ -366,6 +408,8 @@ function validateEntryOwnership(entry, errors) {
     errors.push(`${entry.id}: invalid invocation`);
   if ((entry.role === "self") !== (entry.invocation === "repository"))
     errors.push(`${entry.id}: role and invocation disagree`);
-  if (entry.role === "component" && entry.invocation !== "reusable")
-    errors.push(`${entry.id}: component must be reusable`);
+  if (entry.invocation === "dispatch-service" && entry.role !== "component")
+    errors.push(
+      `${entry.id}: dispatch services must remain internal components`,
+    );
 }

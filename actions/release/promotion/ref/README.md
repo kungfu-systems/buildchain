@@ -20,7 +20,7 @@ ai_provenance:
 # Release promotion adapter
 
 The consumer API is
-[public-release-promote.yml](../../../../.github/workflows/public-release-promote.yml).
+[.release-candidate-promote.yml](../../../../.github/workflows/.release-candidate-promote.yml).
 It admits one closed JSON request, qualifies exact source and runtime identities,
 applies the admitted publication plan, and settles provider evidence in separate
 permission boundaries. See the [request contract](../../../../docs/release-promotion-request.md).

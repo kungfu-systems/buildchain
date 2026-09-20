@@ -18,17 +18,17 @@
       "id": "typed-input-adapter",
       "injectionTarget": "packages/core/workflow/universal-workflow-bootstrap.js",
       "recoveryRoute": "same-entry-transient-runtime",
-      "recoveryTarget": ".github/workflows/public-ops-bootstrap.yml"
+      "recoveryTarget": ".github/workflows/.ops-bootstrap.yml"
     },
     {
       "id": "route-selector",
-      "injectionTarget": ".github/workflows/public-ops-bootstrap.yml",
+      "injectionTarget": ".github/workflows/.ops-bootstrap.yml",
       "recoveryRoute": "upgrade-entry-and-full-rerun",
       "recoveryTarget": "templates/universal-buildchain-bootstrap.yml"
     },
     {
       "id": "ordinary-candidate-loader",
-      "injectionTarget": ".github/workflows/public-ops-bootstrap.yml",
+      "injectionTarget": ".github/workflows/.ops-bootstrap.yml",
       "recoveryRoute": "upgrade-entry-and-full-rerun",
       "recoveryTarget": "templates/universal-buildchain-bootstrap.yml"
     },
@@ -36,23 +36,23 @@
       "id": "router",
       "injectionTarget": "packages/core/release/release-invocation.js",
       "recoveryRoute": "same-entry-transient-runtime",
-      "recoveryTarget": ".github/workflows/public-ops-bootstrap.yml"
+      "recoveryTarget": ".github/workflows/.ops-bootstrap.yml"
     },
     {
       "id": "action",
       "injectionTarget": "actions/release/promotion/candidate/action.yml",
       "recoveryRoute": "same-entry-transient-runtime",
-      "recoveryTarget": ".github/workflows/public-ops-bootstrap.yml"
+      "recoveryTarget": ".github/workflows/.ops-bootstrap.yml"
     },
     {
       "id": "cli-runtime",
       "injectionTarget": "packages/core/workflow/commands/universal-workflow-engine.mjs",
       "recoveryRoute": "same-entry-transient-runtime",
-      "recoveryTarget": ".github/workflows/public-ops-bootstrap.yml"
+      "recoveryTarget": ".github/workflows/.ops-bootstrap.yml"
     },
     {
       "id": "result-projection",
-      "injectionTarget": ".github/workflows/public-ops-bootstrap.yml",
+      "injectionTarget": ".github/workflows/.ops-bootstrap.yml",
       "recoveryRoute": "upgrade-entry-and-full-rerun",
       "recoveryTarget": "templates/universal-buildchain-bootstrap.yml"
     },

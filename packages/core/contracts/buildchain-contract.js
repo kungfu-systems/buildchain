@@ -16,6 +16,7 @@ import { evaluateBuildchainContractLock as evaluateFactBackedBuildchainContractL
 import { createControllerRegistry } from "../observability/controller-evidence.js";
 import { enumerateWorkflowInputs } from "./public-surface-audit.js";
 import { devDeliveryWorkflowContractSurface } from "../dev-delivery/dev-delivery-contract-surface.js";
+import { PIPELINE_ENTRY, RECOVERY_ENTRY } from "../consumer/contract/entries.js";
 
 export {
   BUILDCHAIN_CHANNELS,
@@ -101,6 +102,13 @@ function maybeFileDigest(root, relPath) {
 }
 
 function surface(root, value) {
+  if (["workflow", "action", "controller"].includes(value.kind))
+    value = {
+      ...value,
+      apiRole: value.kind === "workflow" && [PIPELINE_ENTRY, RECOVERY_ENTRY].includes(value.path)
+        ? "public"
+        : "implementation",
+    };
   if (value.kind === "workflow" && fs.existsSync(path.join(root, value.path))) {
     const contract = parseReusableWorkflowInterface(fs.readFileSync(path.join(root, value.path), "utf8"));
     value = { ...value, requiredInputs: contract.inputs.filter(x => x.required).map(x => x.name), optionalInputs: contract.inputs.filter(x => !x.required).map(x => x.name), requiredOutputs: contract.outputs.map(x => typeof x === "string" ? x : x.name) };
@@ -108,6 +116,7 @@ function surface(root, value) {
   const breakingModel = {
     id: value.id,
     kind: value.kind,
+    ...(value.apiRole ? { apiRole: value.apiRole } : {}),
     contractVersion: value.contractVersion || 1,
     requiredInputs: value.requiredInputs || [],
     requiredOutputs: value.requiredOutputs || [],
@@ -134,8 +143,8 @@ function declarativeAuditableDemoSurface(root, pkg, majorLine) {
   return surface(root, {
     id: "declarative-auditable-demo",
     kind: "workflow",
-    path: ".github/workflows/public-build-demo.yml",
-    publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/public-build-demo.yml@${majorLine}`,
+    path: ".github/workflows/.build-demo.yml",
+    publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/.build-demo.yml@${majorLine}`,
     breakingDefaults: {
       scenarioPathDefault: ".buildchain/auditable-demo.json",
       renderMediaDefault: false,
@@ -214,6 +223,28 @@ export function createBuildchainContractWorld({
       : readJson(path.join(root, "dist/site/controller-registry.json"), { controllers: [] }));
   const surfaces = [
     surface(root, {
+      id: "pipeline",
+      kind: "workflow",
+      path: PIPELINE_ENTRY,
+      publicRef: `kungfu-systems/buildchain/${PIPELINE_ENTRY}@${majorLine}`,
+      breakingDefaults: { configurationAuthority: ".buildchain/buildchain.toml", schema: 2 },
+      guarantees: [
+        "one product-independent generated caller admits normal repository events",
+        "the published runtime owns protected delivery, publication and provider readback",
+      ],
+    }),
+    surface(root, {
+      id: "attempt-recovery",
+      kind: "workflow",
+      path: RECOVERY_ENTRY,
+      publicRef: `kungfu-systems/buildchain/${RECOVERY_ENTRY}@${majorLine}`,
+      breakingDefaults: { selector: "exact-attempt", repairedRuntime: "optional-transient-input" },
+      guarantees: [
+        "recovery retains original source, materials and immutable publication evidence",
+        "consumers cannot replace provider effects, artifacts or source through recovery inputs",
+      ],
+    }),
+    surface(root, {
       id: "reusable-build",
       kind: "workflow",
       path: ".github/workflows/.build.yml",
@@ -234,8 +265,8 @@ export function createBuildchainContractWorld({
     surface(root, {
       id: "channel-build-router",
       kind: "workflow",
-      path: ".github/workflows/build.yml",
-      publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/build.yml@${majorLine}`,
+      path: ".github/workflows/.build-candidate.yml",
+      publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/.build-candidate.yml@${majorLine}`,
       breakingDefaults: {
         configurationAuthority: "buildchain.toml",
         runtimeIdentity: "entry-selected-complete-runtime",
@@ -253,8 +284,8 @@ export function createBuildchainContractWorld({
     surface(root, {
       id: "release-candidate-promote",
       kind: "workflow",
-      path: ".github/workflows/public-release-promote.yml",
-      publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/public-release-promote.yml@${majorLine}`,
+      path: ".github/workflows/.release-candidate-promote.yml",
+      publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/.release-candidate-promote.yml@${majorLine}`,
       breakingDefaults: {
         channelDefault: "auto",
         runtimeSelectionOwner: "actions/runtime/selection/resolve",
@@ -311,8 +342,8 @@ export function createBuildchainContractWorld({
     surface(root, {
       id: "web-surface",
       kind: "workflow",
-      path: ".github/workflows/public-release-web.yml",
-      publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/public-release-web.yml@${majorLine}`,
+      path: ".github/workflows/.release-web.yml",
+      publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/.release-web.yml@${majorLine}`,
       breakingDefaults: {
         runtimeSelectionOwner: "actions/runtime/selection/resolve",
         contractCompatibilityPolicy: "major-compatible",

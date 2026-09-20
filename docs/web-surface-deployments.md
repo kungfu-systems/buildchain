@@ -8,15 +8,22 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-09
+  generated_at: 2026-09-20
   invisible_context_boundary: No credentials, private logs, or unpublished deployment values are included.
+  visible_context: Current two-entry consumer contract and retained internal implementation references.
 ---
 
 # Web-Surface Deployment Contract
+
+This is a reference for the retained internal web deployment engine. It is not
+schema-2 consumer onboarding: web is not an additional product type or public
+reusable entry in the minimal contract. Current consumers use the shared
+normal/recovery pair. The deployment configurations, request envelopes and
+provider ports below belong to the internal engine or historical integrations.
 
 Buildchain supports `project.type = "web-surface"` for repositories that publish
 sites, docs, product pages, operator consoles, or browser apps. These projects
@@ -179,18 +186,8 @@ Buildchain validates these hard constraints:
 
 ### Floating Runtime Contract Lock
 
-Web-surface repositories can consume the stable Buildchain workflow shell with a
-floating ref, such as:
-
-```yaml
-jobs:
-  web:
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v4
-    with:
-      contract-lock: .buildchain/contract-lock.json
-      build-command: pnpm build
-      artifact-path: dist
-```
+The internal web component retains runtime-lock validation before build or
+provider planning. It is not invoked through a separate consumer web caller.
 
 The caller repository commits `.buildchain/contract-lock.json` after reviewing an
 accepted Buildchain runtime SHA and contract digest. The reusable workflow then
@@ -737,259 +734,24 @@ cleanup can derive `pr-N` from `--pull-number`, records the event, source SHA,
 actor, run id, preview bucket/prefix, manifest key, and adapter steps, and is an
 auditable no-op when no aliases are requested.
 
-## Reusable Workflow Shape
+## Internal workflow authority
 
-Buildchain ships `.github/workflows/public-release-web.yml` for repositories that want
-the standard PR review and promotion flow without copying bespoke glue:
+`.release-web.yml` retains the web engine's job and credential boundaries.
+It is an internal component, without a public product-specific alias. Its source,
+artifact, runtime, deployment-plan and environment ports must come from admitted
+runtime state; consumers do not write a third web workflow or pass these ports
+through their generated normal/recovery pair.
 
-```yaml
-jobs:
-  web-surface:
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v4
-    with:
-      build-command: npm run build
-      verify-command: npm run check
-      artifact-path: dist
-```
+Preview, staging and production keep separate provider permissions and evidence.
+Production requires exact source/artifact identity and independent admission;
+untrusted event inputs cannot grant provider mutation. A successful staging
+receipt does not prove production, and an API response does not replace provider
+readback. Provider failures preserve the previously valid public authority.
 
-The reusable workflow maps GitHub events to Buildchain web-surface semantics:
-
-| Event | Buildchain behavior |
-| --- | --- |
-| `pull_request` opened / synchronized / reopened | validate, build, verify, and plan `preview` for `pr-N` |
-| `pull_request` closed | plan apply-mode cleanup for the `pr-N` preview alias and manifest |
-| `pull_request` closed for a matching release PR | verify the release intent, then wait for the protected `main` push; do not plan or apply production from `refs/pull/*/merge` |
-| `push` to `main` | validate, build, verify, plan and apply `staging` from the merged `main` SHA, then optionally open a production release PR |
-| `push` to `main` from a matching release PR merge | validate the associated release PR, plan `production`, and enter the configured GitHub Environment gate from the protected mainline ref |
-| `workflow_dispatch` with `production-approved = true` | plan `production` and enter the configured GitHub Environment gate |
-
-The optional `runtime-ref` parameter selects a transient execution runtime.
-An empty value uses the selected consumer contract lock or entry default.
-All preparation goes through the shared [Runtime entry](runtime-entry.md).
-A maintainer can expose a manual input for train validation or repair:
-
-```yaml
-on:
-  workflow_dispatch:
-    inputs:
-      runtime-ref:
-        description: "Temporary Buildchain runtime ref for trusted manual validation"
-        required: false
-        default: ""
-
-jobs:
-  web-surface:
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v4
-    with:
-      runtime-ref: ${{ inputs.runtime-ref || '' }}
-      build-command: pnpm run build
-      verify-command: pnpm run check
-      artifact-path: dist
-```
-
-Only repository actors with write,
-maintain, or admin permission may use a non-empty runtime override. Train refs
-such as `train/v4/v4.1/site-source-of-truth` are temporary validation refs, not
-stable production dependencies or pending merge targets. They may remain for a
-retention window after release as a fast-use and rollback channel, with old
-trains handled by periodic Buildchain cleanup. The web-surface deployment
-manifest records the resolved runtime SHA as `runtimeId` and the stable
-rollback ref as `rollbackPointer`.
-
-The workflow deliberately plans and emits manifests by default. Live mutation is
-opt-in per channel:
-
-```yaml
-permissions:
-  contents: read
-  id-token: write
-  pull-requests: write
-
-jobs:
-  web-surface:
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v4
-    with:
-      build-command: pnpm run build
-      verify-command: pnpm run check
-      artifact-path: dist
-      preview-apply: true
-      preview-cleanup-apply: true
-      preview-aws-role-arn: arn:aws:iam::123456789012:role/site-preview-github-actions
-      staging-apply: true
-      staging-aws-role-arn: arn:aws:iam::123456789012:role/site-staging-github-actions
-      production-apply: false
-      production-release-on-main: false
-      production-aws-role-arn: arn:aws:iam::123456789012:role/site-production-github-actions
-      production-environment: production
-      release-feedback-actor-privacy: public
-```
-
-When enabled, Buildchain owns the full release apply state machine:
-
-- PR preview deploys run `deploy-apply --dry-run false` with the preview role
-  and update a single idempotent PR comment.
-- Closed PR cleanup runs `cleanup-apply --dry-run false` with the preview role
-  only.
-- Pushes to `main` run staging `deploy-apply --dry-run false` with the staging
-  role, then write a staging release feedback passport artifact and comment the
-  associated merged PR with the staging URL, source SHA, artifact identity, run
-  URL, and failure context when apply did not complete.
-- When `production-release-on-main=true`, successful staging applies open or
-  update a Buildchain-owned release PR from
-  `release/<channel>-<short-sha>` to `main`, unless the current push already
-  came from a matching release PR merge. The release PR contains one empty
-  release-intent commit, carries `production-release-label`, and includes the
-  staging URLs, source SHA, artifact hash, and staging release-passport artifact
-  link in the PR body.
-- Production release PR handoff is permission-aware. Staging apply and staging
-  health remain successful even when the repository or organization has
-  GitHub Actions workflow permissions set to read-only. In that case Buildchain
-  records `release-pr-status=permission-denied`, uploads the release PR handoff
-  summary/body plus staging release passport artifacts, and writes an exact
-  manual `gh pr create` command to the step summary. Set
-  `fail-on-release-pr-error=true` only when PR creation failure should fail the
-  whole workflow.
-- Release pull requests that match the configured production gate get a
-  Buildchain review comment with the staging URL and production target, so the
-  operator can verify staging from the PR page and use merge as the approval
-  action. Consumers do not need to hand-write `gh pr create` or production
-  release-intent glue.
-- `production-apply=true` enables the production capability; it does not request
-  production for every event. Ordinary `main` pushes remain staging-only and
-  can create or update a release PR. Production runs only when the capability
-  is enabled and either:
-  - a `workflow_dispatch` passes `production-approved=true` and the triggering
-    actor currently has `write`, `maintain`, or `admin` permission; or
-  - `production-release-on-main=true` and the `main` push commit is associated
-    with exactly one same-repository, merged release pull request matching
-    `production-release-label` and `production-release-head-prefix`.
-  The production job is then gated by the configured GitHub Environment.
-- Before production artifact download, Buildchain assembles a managed sealed
-  publication capability from the exact source/runtime SHAs, production plan
-  and artifact hash, a qualifying pre-publication controller receipt, the
-  trusted manual or reviewed-release-PR decision, production Environment and
-  AWS role target, an ephemeral-runner receipt, and a fresh nonce. Production
-  revalidates that capability against the downloaded plan before it downloads
-  product bytes. The later AWS OIDC exchange remains the provider's final
-  transaction-time authorization decision and fails closed before deploy apply.
-- The `publication-*-json` inputs are an advanced external-evidence
-  compatibility path, not a prerequisite for the standard release-PR or trusted
-  manual mechanisms. External evidence must now include
-  `publication-gate-aggregate-json`; supplying only a partial set still fails
-  closed.
-- Production apply writes a production release feedback passport artifact and
-  comments the release PR with the production URL, source SHA, artifact
-  identity, run URL, rollback pointer, and failure context when apply did not
-  complete.
-
-The feedback passport records the release responsibility chain:
-
-- human decision actor;
-- trigger actor;
-- runner/execution actor;
-- OIDC/deploy identity reference;
-- decision type and time;
-- source event, PR number, merge commit, and required gate label/head-prefix.
-
-`release-feedback-actor-privacy` controls actor values in the passport and
-comments. `public` records GitHub actor names, `redacted` records only the actor
-role, and `private-ref` records a stable private reference hash without exposing
-the actor name.
-
-For release-PR publishing, callers opt in explicitly:
-
-```yaml
-jobs:
-  web-surface:
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-web.yml@v4
-    with:
-      build-command: npm run build
-      verify-command: npm run check
-      artifact-path: dist
-      production-apply: true
-      production-release-on-main: true
-      production-release-label: buildchain-release
-      production-release-head-prefix: release/
-      production-release-branch-channel: production
-      production-release-pr-mode: auto
-      production-aws-role-arn: arn:aws:iam::123456789012:role/site-production-github-actions
-      production-environment: production
-```
-
-Keep `production-apply` enabled in the caller when the repository supports
-production. Buildchain derives whether the current event may use that
-capability: an ordinary `main` push plans and applies staging, a matching
-reviewed release PR merge authorizes production, and an approved trusted manual
-dispatch authorizes production. Inputs from an untrusted event cannot turn that
-decision on.
-
-`production-release-pr-mode` controls the post-staging handoff:
-
-| Mode | Behavior |
-| --- | --- |
-| `auto` | Generate release PR facts, create/update the empty release-intent branch and PR, and label it when token permissions allow. This is the default. |
-| `summary-only` | Generate and upload release PR facts, body, passport evidence, and manual command, but do not call the GitHub PR API. |
-| `disabled` | Record a disabled handoff and skip release PR API calls. |
-
-Automatic release PR creation normally uses the workflow `github.token`.
-Consumers that cannot enable "GitHub Actions can create and approve pull
-requests" globally should prefer the first-class GitHub App path. Pass the App
-client id as an input and the private key as a reusable workflow secret; Buildchain
-creates an installation token inside the release PR job and uses it only for the
-release-intent branch, PR, and label operations:
-
-```yaml
-with:
-  production-release-app-client-id: ${{ vars.KUNGFU_RELEASE_APP_CLIENT_ID }}
-secrets:
-  production-release-app-private-key: ${{ secrets.KUNGFU_RELEASE_APP_PRIVATE_KEY }}
-```
-
-When either side of the App configuration is missing, Buildchain does not hide
-that behind the fallback `github.token`. The handoff JSON and job summary report
-`status: "app-token-unavailable"` with an `appTokenStatus` such as
-`missing-client-id`, `missing-private-key`, or `create-failed`, and still include
-the manual PR creation command. If the repository intentionally uses another
-narrow token, pass it through `production-release-pr-token`.
-
-If a repository already generates its own narrow token or PAT, it can still pass
-that through `production-release-pr-token`:
-
-```yaml
-secrets:
-  production-release-pr-token: ${{ secrets.BUILDCHAIN_RELEASE_PR_TOKEN }}
-```
-
-Token priority is: generated GitHub App installation token,
-`production-release-pr-token`, then `github.token`.
-
-The merge button becomes the production approval only for a PR that carries the
-release label and comes from the configured source-branch prefix. Ordinary pull
-requests merged into `main` deploy staging and open a release-intent PR; merging
-that release PR triggers production. A release PR merge push does not open
-another release PR.
-
-Apply-only inputs are validated before the caller build or verification command
-runs. If the current event would run preview, staging, or production apply,
-missing role inputs, a production apply without `production-approved=true` on
-manual dispatch, or a manual actor without repository write authority fail
-immediately instead of spending the build and plan jobs first.
-
-Callers must grant `id-token: write` for OIDC role assumption. Preview comments
-need `pull-requests: write`. Automatic release PR creation also needs
-`contents: write`, `pull-requests: write`, and `issues: write` so Buildchain can
-create the release branch, write the empty release-intent commit, open or update
-the PR, and apply the release label. If these permissions are unavailable,
-Buildchain degrades the release handoff instead of marking a successful staging
-deployment as failed, unless `fail-on-release-pr-error=true`. The AWS roles remain caller-owned and
-should be scoped by channel: preview can mutate only preview resources, staging
-can mutate only staging resources, and production can mutate only production
-resources.
-
-Apply mode fails closed when the deploy config still contains placeholder AWS
-targets such as `pending-preview-distribution`. Planning can use placeholders
-for dry-run-only design work, but live apply requires concrete bucket and
-CloudFront distribution identifiers.
+The component's historical release-PR, cleanup and feedback mechanisms remain
+internal implementation contracts. Their workflow inputs are not schema-2 TOML
+fields or recommended consumer setup. Provider configuration still requires its
+own explicit authority and cannot be inferred from product metadata or evidence.
 
 ## Site Repository Shape
 

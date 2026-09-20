@@ -3,7 +3,7 @@
   "configurationAuthority": "buildchain.toml",
   "ordinaryInputs": ["config-path"],
   "backbone": ".github/workflows/.build.yml",
-  "facade": ".github/workflows/build.yml",
+  "facade": ".github/workflows/.build-candidate.yml",
   "jobs": [
     "plan",
     "build-native",

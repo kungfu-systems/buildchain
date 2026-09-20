@@ -1050,12 +1050,12 @@
     {
       "id": "init",
       "source": "bin/buildchain.mjs",
-      "usage": "buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|publication-artifact|anchored-package] [--force]",
+      "usage": "buildchain init [--cwd <dir>] [--type npm|binary|paper|package|native|publication-artifact|anchored-package] [--force]",
       "paths": [
         "init"
       ],
       "syntaxes": [
-        "buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|publication-artifact|anchored-package] [--force] [--package-manager pnpm|npm|yarn] [--runner-preset <preset>] [--artifact-name <name>]"
+        "buildchain init [--cwd <dir>] [--type npm|binary|paper|package|native|publication-artifact|anchored-package] [--force] [--package-manager pnpm|npm|yarn] [--runner-preset <preset>] [--artifact-name <name>]"
       ],
       "options": [
         "--artifact-name",
@@ -2751,108 +2751,6 @@
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
-      "id": "paper-alpha",
-      "source": "bin/buildchain.mjs",
-      "usage": "buildchain paper alpha [--cwd <dir>] [--source-ref <ref>] [--target-ref <ref>]",
-      "paths": [
-        "paper alpha"
-      ],
-      "syntaxes": [
-        "buildchain paper alpha [--cwd <dir>] [--source-ref <ref>] [--target-ref <ref>] [--execute] [--json]"
-      ],
-      "options": [
-        "--cwd",
-        "--execute",
-        "--json",
-        "--source-ref",
-        "--target-ref"
-      ],
-      "aliases": [],
-      "helpCommands": [
-        "buildchain paper alpha --help"
-      ],
-      "purpose": "Plan or open the protected dev-to-alpha paper publication PR without direct publication.",
-      "capabilityGroup": "release-passport-trust",
-      "audience": [
-        "agent",
-        "operator"
-      ],
-      "owner": "buildchain-cli",
-      "maturity": "stable",
-      "introducedVersion": "4.1.0-alpha.0",
-      "compatibilityPromise": "current-contract-only",
-      "deprecationReplacement": "",
-      "sunsetCondition": "explicit-contract-change-review",
-      "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
-    },
-    {
-      "id": "paper-bootstrap-npm",
-      "source": "bin/buildchain.mjs",
-      "usage": "buildchain paper bootstrap npm [--cwd <dir>] [--execute]",
-      "paths": [
-        "paper bootstrap npm"
-      ],
-      "syntaxes": [
-        "buildchain paper bootstrap npm [--cwd <dir>] [--execute] [--confirm-public-package <name>] [--json]"
-      ],
-      "options": [
-        "--confirm-public-package",
-        "--cwd",
-        "--execute",
-        "--json"
-      ],
-      "aliases": [],
-      "helpCommands": [
-        "buildchain paper bootstrap npm --help"
-      ],
-      "purpose": "Dry-run or explicitly bootstrap the public npm package and bind GitHub Trusted Publishing.",
-      "capabilityGroup": "release-passport-trust",
-      "audience": [
-        "agent",
-        "operator"
-      ],
-      "owner": "buildchain-cli",
-      "maturity": "stable",
-      "introducedVersion": "4.1.0-alpha.0",
-      "compatibilityPromise": "current-contract-only",
-      "deprecationReplacement": "",
-      "sunsetCondition": "explicit-contract-change-review",
-      "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
-    },
-    {
-      "id": "paper-build",
-      "source": "bin/buildchain.mjs",
-      "usage": "buildchain paper build [--cwd <dir>] [--execute] [--json]",
-      "paths": [
-        "paper build"
-      ],
-      "syntaxes": [
-        "buildchain paper build [--cwd <dir>] [--execute] [--json]"
-      ],
-      "options": [
-        "--cwd",
-        "--execute",
-        "--json"
-      ],
-      "aliases": [],
-      "helpCommands": [
-        "buildchain paper build --help"
-      ],
-      "purpose": "Plan or execute the existing two-clean-build reproducibility gate for a paper.",
-      "capabilityGroup": "reusable-build",
-      "audience": [
-        "agent",
-        "operator"
-      ],
-      "owner": "buildchain-cli",
-      "maturity": "stable",
-      "introducedVersion": "4.1.0-alpha.0",
-      "compatibilityPromise": "current-contract-only",
-      "deprecationReplacement": "",
-      "sunsetCondition": "explicit-contract-change-review",
-      "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
-    },
-    {
       "id": "paper-fleet-audit",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain paper fleet audit [--root <dir>] [--offline] [--json]",
@@ -2871,7 +2769,7 @@
       "helpCommands": [
         "buildchain paper fleet audit --help"
       ],
-      "purpose": "Discover Paper repositories and emit one deterministic v3 dependency, control-surface, and governance audit.",
+      "purpose": "Discover Paper repositories and audit current consumer configuration, dependencies, and governance.",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "agent",
@@ -2970,42 +2868,8 @@
       "helpCommands": [
         "buildchain paper preflight --help"
       ],
-      "purpose": "Report exact source, runtime, permission, npm trust, deterministic build, and release-state readiness.",
+      "purpose": "Validate the schema-2 consumer configuration and inspect retained legacy evidence without inferring hosted publication.",
       "capabilityGroup": "reusable-build",
-      "audience": [
-        "agent",
-        "operator"
-      ],
-      "owner": "buildchain-cli",
-      "maturity": "stable",
-      "introducedVersion": "4.1.0-alpha.0",
-      "compatibilityPromise": "current-contract-only",
-      "deprecationReplacement": "",
-      "sunsetCondition": "explicit-contract-change-review",
-      "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
-    },
-    {
-      "id": "paper-resume",
-      "source": "bin/buildchain.mjs",
-      "usage": "buildchain paper resume [--cwd <dir>] [--runtime-ref <ref>] [--execute] [--json]",
-      "paths": [
-        "paper resume"
-      ],
-      "syntaxes": [
-        "buildchain paper resume [--cwd <dir>] [--runtime-ref <ref>] [--execute] [--json]"
-      ],
-      "options": [
-        "--cwd",
-        "--execute",
-        "--json",
-        "--runtime-ref"
-      ],
-      "aliases": [],
-      "helpCommands": [
-        "buildchain paper resume --help"
-      ],
-      "purpose": "Plan or dispatch recovery of the exact existing sealed paper release transaction.",
-      "capabilityGroup": "release-passport-trust",
       "audience": [
         "agent",
         "operator"
@@ -3021,12 +2885,12 @@
     {
       "id": "paper-scaffold",
       "source": "bin/buildchain.mjs",
-      "usage": "buildchain paper scaffold --package <name> --repository <owner/repo> [--write] [--json]",
+      "usage": "buildchain paper scaffold --repository <owner/repo> [--package <name>] [--write] [--json]",
       "paths": [
         "paper scaffold"
       ],
       "syntaxes": [
-        "buildchain paper scaffold --package <name> --repository <owner/repo> [--write] [--json]"
+        "buildchain paper scaffold --repository <owner/repo> [--package <name>] [--write] [--json]"
       ],
       "options": [
         "--json",

@@ -1,12 +1,4 @@
-import {
-  printJson,
-  readBooleanFlag,
-  readFlag,
-  readJsonInput,
-  readRepeatedFlag,
-  readRepeatedJsonInputs,
-  writeJsonFile,
-} from "../../contracts/cli/options.mjs";
+import { printJson } from "../../contracts/cli/options.mjs";
 
 export function printKfdSchemaOrJson({ result, json }) {
   if (json) {

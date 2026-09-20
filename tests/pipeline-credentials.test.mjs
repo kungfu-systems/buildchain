@@ -17,11 +17,11 @@ test("normal and recovered delivery forward the canonical provider credential ac
   });
   const delivery = workflow(".ops-pipeline-delivery");
   assert.equal(delivery.on.workflow_call.secrets.BUILDCHAIN_AUTOMATION_TOKEN.required, false);
-  assert.equal(delivery.jobs.delivery.uses, "./.github/workflows/public-ops-dev-auto-merge.yml");
+  assert.equal(delivery.jobs.delivery.uses, "./.github/workflows/.ops-dev-auto-merge.yml");
   assert.deepEqual(delivery.jobs.delivery.secrets, {
     "github-token": "${{ secrets.BUILDCHAIN_AUTOMATION_TOKEN || github.token }}",
   });
-  const leaf = workflow("public-ops-dev-auto-merge");
+  const leaf = workflow(".ops-dev-auto-merge");
   for (const id of ["source", "reserve"]) {
     const step = leaf.jobs.admission.steps.find((item) => item.id === id);
     assert.equal(step.with["github-token"], "${{ secrets.github-token || github.token }}");
@@ -30,7 +30,7 @@ test("normal and recovered delivery forward the canonical provider credential ac
 
 test("automation credentials remain absent from product builds, native execution and native evidence sealing", () => {
   const execute = workflow(".ops-pipeline-execute");
-  const leaf = workflow("public-ops-dev-auto-merge");
+  const leaf = workflow(".ops-dev-auto-merge");
   for (const job of [execute.jobs.build, leaf.jobs["native-execution"], leaf.jobs["seal-native-execution"]]) {
     assert.equal(job.secrets, undefined);
     assert.doesNotMatch(JSON.stringify(job), /secrets\.|AUTOMATION_TOKEN/);

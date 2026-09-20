@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-08-16
+  generated_at: 2026-09-20
   visible_context: Exact v3 rehearsal runtime, v4 release-tail core, Stage Capsule contracts, public workflow and offline vectors.
   invisible_context_boundary: No credentials, private provider state, signed URLs or production publication receipts were read.
 ---
@@ -90,33 +90,18 @@ all three modes. The API delegates planning, transaction initialization, and
 execution to the same `release-tail-provider-plane` functions used by the
 production Action.
 
-## Config and public workflow
+## Internal configuration and component
 
-The consumer config is closed and effect-disabled:
+The internal `.release-tail.yml` component and rehearsal CLI consume the closed
+capsule, candidate, state and evidence paths. Simulation remains effect-disabled;
+provider mode requires independently verified authority and exact provider
+bindings. A rehearsal result never grants production publication authority.
 
-```toml
-[publication_rehearsal]
-contract = "buildchain-v4-publication-rehearsal-capsule/v1"
-capsule_path = "contracts/fixtures/v4-publication-rehearsal-v1/capsule.json"
-candidate_root = "contracts/fixtures/v4-publication-rehearsal-v1/candidate"
-state_path = ".buildchain/publication-rehearsal/state.json"
-evidence_path = ".buildchain/publication-rehearsal/evidence.json"
-effect_default = "disabled"
-```
-
-The public reusable
-[`public-release-tail.yml`](../.github/workflows/public-release-tail.yml) accepts the same
-capsule, candidate root, mode, state and evidence paths. Before publication,
-Buildchain dogfoods that public surface through the same floating `@v4` entry
-as external consumers. The shared entry selects the runtime from the transient
-parameter, consumer lock, or entry default, and prepares it in each job. The reusable is
-permission-neutral and the self-dogfood caller stays `contents: read`, passes
-`execute: false`, and therefore cannot inherit or synthesize production write
-authority. Effectful production callers must explicitly declare their own
-provider permission. Durable external consumers use `@v4` or `@v4-alpha`. Provider mode additionally requires the exact authority
-path. Provider bindings come from the capsule; an optional external bindings
-input is accepted only when its canonical exact root and payload equal the
-capsule binding. Ordinary calls default to `simulate`.
+The former `[publication_rehearsal]` consumer table and standalone public caller
+are not accepted schema-2 wiring. Current consumers use the normal pipeline and
+exact-attempt recovery. Internal fixtures retain the rehearsal inputs for
+mechanism qualification, without adding a third workflow or request JSON to a
+consumer repository.
 
 ## Offline portability vectors
 

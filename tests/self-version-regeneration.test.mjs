@@ -11,7 +11,7 @@ import {
 } from "../packages/core/publication/pipeline/version-regeneration.js";
 
 test("self version policy admits regenerated contract digests for development and stable versions", () => {
-  const configPath = ".buildchain/minimal-consumer.toml";
+  const configPath = ".buildchain/buildchain.toml";
   const { version: versionPolicy } = compileConsumerPlan(
     fs.readFileSync(configPath, "utf8"),
   );

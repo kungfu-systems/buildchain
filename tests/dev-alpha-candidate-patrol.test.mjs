@@ -1365,7 +1365,7 @@ test("managed candidate parsing requires the current state marker and rejects a 
 });
 
 test("reusable workflow retains the no-publication boundary", () => {
-  const file = ".github/workflows/public-ops-alpha-candidate-patrol.yml";
+  const file = ".github/workflows/.ops-alpha-candidate-patrol.yml";
   const observe = inspectWorkflowJob(file, "observe"), settle = inspectWorkflowJob(file, "settle");
   assert.equal(observe.job.permissions.contents, "read");
   assert.equal(settle.job.permissions.contents, "write");

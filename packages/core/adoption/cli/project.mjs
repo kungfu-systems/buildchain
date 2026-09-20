@@ -1,13 +1,10 @@
 import { initBuildchainRepo } from "../commands/init-repo.mjs";
 import { validateBuildchainConfig } from "../../consumer/buildchain-config.js";
+import { validateConsumerWiring } from "../../consumer/contract/local-validation.js";
 import {
   printJson,
   readBooleanFlag,
   readFlag,
-  readJsonInput,
-  readRepeatedFlag,
-  readRepeatedJsonInputs,
-  writeJsonFile,
 } from "../../contracts/cli/options.mjs";
 
 export async function handleInitCommand(args) {
@@ -28,11 +25,13 @@ export async function handleValidateCommand(args) {
     .split(",")
     .map((entry) => entry.trim())
     .filter(Boolean);
-  printJson(
-    validateBuildchainConfig(readFlag(args, "cwd", process.cwd()), {
-      requireVersionState: readBooleanFlag(args, "require-version-state"),
-      requireLifecycleStages: lifecycleStages,
-    }),
-  );
+  const cwd = readFlag(args, "cwd", process.cwd());
+  const result = validateBuildchainConfig(cwd, {
+    requireVersionState: readBooleanFlag(args, "require-version-state"),
+    requireLifecycleStages: lifecycleStages,
+  });
+  if (result.config?.schema === 2)
+    result.consumer = validateConsumerWiring(cwd, result.config.path);
+  printJson(result);
   return;
 }

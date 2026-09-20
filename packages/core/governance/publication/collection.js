@@ -223,7 +223,7 @@ export function collectPublicationControlPlane(
   {
     repository,
     workflowRepository = repository,
-    workflowPath = ".github/workflows/public-release-promote.yml",
+    workflowPath = ".github/workflows/.release-candidate-promote.yml",
     workflowRef = "",
     publisherWorkflowPath = workflowPath,
     requiredStatusCheck = "check",

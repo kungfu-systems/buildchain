@@ -7,16 +7,20 @@ source_level: local-files
 confidence: high
 sensitivity: public
 evidence_grade: A
-review_state: self-reviewed
-last_reviewed: 2026-09-11
+review_state: unreviewed
+last_reviewed: 2026-09-20
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-08-11
+  generated_at: 2026-09-20
   invisible_context: not asserted
 ---
 
 # Dev Delivery Warrant Queue
+
+Warrant, lease, proof and provider fields on this page are internal authority
+contracts. Consumers use the shared normal pipeline and recover by exact attempt;
+none of these fields or helper workflows belongs in consumer YAML or TOML.
 
 Buildchain's Dev Delivery Warrant Queue gives a qualified slow pull request a
 durable, non-preemptive delivery turn without replacing GitHub Merge Queue as
@@ -321,7 +325,7 @@ The reader rejects an empty run conclusion, nonterminal run or job state,
 unsupported job conclusion, or pull-request state outside `open|closed` before
 it can seal product-owned cleanup evidence.
 
-The public two-phase workflow keeps heartbeat authority in a fourth,
+The internal two-phase workflow keeps heartbeat authority in a fourth,
 GitHub-hosted job on a runner domain distinct from admission, native execution,
 evidence sealing, and finalization. Each successful heartbeat records the exact
 expected-old and next authority state roots plus its receipt root. The
@@ -340,13 +344,10 @@ write-normalize-observe-remutate cycle: `transferRoot`,
 `providerAttempt`, and, when expiry cleanup was required, the independent
 `providerTerminalReadbackRoot`.
 
-Buildchain's tracked self-delivery caller invokes
-`kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@v4-alpha`.
-The durable selector remains the floating alpha channel, the repository keeps
-matching `.buildchain/contract-lock.json` (`v4`) and
-`.buildchain/alpha-contract-lock.json` (`v4-alpha`), and a train runtime may be
-selected only through the trusted, non-persistent `workflow_dispatch` input.
-No candidate SHA or train ref is persisted in the caller.
+Buildchain's self entry is the same generated `buildchain.yml` used by other
+consumers. Internal `.ops-dev-auto-merge.yml` execution retains its authority
+boundaries. The optional repaired runtime belongs only to exact-attempt recovery;
+no candidate SHA or train ref is persisted in the consumer caller.
 
 Only complete `verified-native-qualification` evidence can mint a new Landing
 Warrant. Migrated `legacy-compatibility-only` evidence may preserve an exact
@@ -402,7 +403,7 @@ native proof or reuse authority. Phase-less native candidates remain invalid.
 
 ## Workflow rollout and rollback
 
-The reusable `public-ops-dev-auto-merge.yml` supports three explicit rollout modes:
+The internal `.ops-dev-auto-merge.yml` component retains three rollout modes for implementation qualification:
 
 - `off` preserves the previous exact-head admission controller;
 - `shadow` qualifies the source and emits a read-only queue submission plan;
@@ -423,12 +424,12 @@ The reusable `public-ops-dev-auto-merge.yml` supports three explicit rollout mod
   timestamped proof bytes, but it retains the immutable active Warrant and its
   originally selected proof instead of rewriting or rejecting that attempt.
   Each candidate also retains the exact successful source workflow run. If a
-  controller discovers that another candidate owns the active Warrant, a
-  configured consumer workflow is dispatched immediately for that exact PR,
+  controller discovers that another candidate owns the active Warrant, an
+  admitted internal continuation is dispatched immediately for that exact PR,
   head, source run, Assignment and Initiative, source identity and patch,
   plan, closure, dependency, toolchain, environment, affected paths, delivery
   class, and priority; the candidate is not left waiting for a patrol cron.
-  The shipped Buildchain caller and native template configure this handoff path
+  The internal workflow and native fixture configure this handoff path
   and accept the same complete input contract. A historical phase-less owner
   uses the distinct `legacy-phase-less-active-owner` command path. That path
   carries the exact queue state root observed before its duplicate submission,

@@ -108,9 +108,9 @@ function providerAttemptFor(sourceHead, mergeGroupHead, overrides = {}) {
     schema: "kungfu.buildchain.github-landing-provider-attempt/v1",
     repository: "kungfu-systems/kungfu",
     workflowId: 700,
-    workflowPath: ".github/workflows/public-ops-dev-auto-merge.yml",
+    workflowPath: ".github/workflows/.ops-dev-auto-merge.yml",
     workflowRef:
-      "kungfu-systems/kungfu/.github/workflows/public-ops-dev-auto-merge.yml@refs/heads/dev/v4/v4.0",
+      "kungfu-systems/kungfu/.github/workflows/.ops-dev-auto-merge.yml@refs/heads/dev/v4/v4.0",
     workflowSha: "c".repeat(40),
     event: "merge_group",
     runId: 1200,
@@ -1051,7 +1051,7 @@ test("Landing heartbeat requires the persisted admitted provider attempt and fre
       conclusion: null,
       referenced_workflows: [
         {
-          path: "kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@v4-alpha",
+          path: "kungfu-systems/buildchain/.github/workflows/.ops-dev-auto-merge.yml@v4-alpha",
           sha: providerAttempt.workflowSha,
           ref: "refs/tags/v4-alpha",
         },
@@ -1082,7 +1082,7 @@ test("Landing heartbeat requires the persisted admitted provider attempt and fre
     },
     "/repos/kungfu-systems/kungfu/actions/workflows/700": {
       id: 700,
-      path: ".github/workflows/public-ops-dev-auto-merge.yml",
+      path: ".github/workflows/.ops-dev-auto-merge.yml",
     },
   };
   const fetchImpl = async (url) => {
@@ -1228,7 +1228,7 @@ test("expired Landing never cancels a run-level successor and settles only termi
           run_attempt: 1,
           referenced_workflows: [
             {
-              path: "kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@refs/tags/v4-alpha",
+              path: "kungfu-systems/buildchain/.github/workflows/.ops-dev-auto-merge.yml@refs/tags/v4-alpha",
               ref: "refs/tags/v4-alpha",
               sha: "c".repeat(40),
             },
@@ -1276,7 +1276,7 @@ test("expired Landing never cancels a run-level successor and settles only termi
       response.end(
         JSON.stringify({
           id: 700,
-          path: ".github/workflows/public-ops-dev-auto-merge.yml",
+          path: ".github/workflows/.ops-dev-auto-merge.yml",
         }),
       );
       return;
@@ -1483,7 +1483,7 @@ test("Landing provider attempt is derived from exact live execution context", ()
         },
       ],
     },
-    workflow: { id: 700, path: ".github/workflows/public-build-check.yml" },
+    workflow: { id: 700, path: ".github/workflows/.build-check.yml" },
     pullRequest: {
       number: input.pullRequestNumber,
       head: { sha: input.sourceHead },
@@ -1499,7 +1499,7 @@ test("Landing provider attempt is derived from exact live execution context", ()
   assert.equal(attempt.workflowSha, mergeGroupHead);
   assert.equal(
     attempt.workflowRef,
-    "kungfu-systems/kungfu/.github/workflows/public-build-check.yml@refs/heads/gh-readonly-queue/dev/v4/v4.0/pr-182-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "kungfu-systems/kungfu/.github/workflows/.build-check.yml@refs/heads/gh-readonly-queue/dev/v4/v4.0/pr-182-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   );
   assert.equal(attempt.mergeGroupHead, mergeGroupHead);
   assert.throws(
@@ -1521,7 +1521,7 @@ test("Landing provider attempt is derived from exact live execution context", ()
           repository: { full_name: "kungfu-systems/kungfu" },
         },
         jobs: { jobs: [] },
-        workflow: { id: 700, path: ".github/workflows/public-build-check.yml" },
+        workflow: { id: 700, path: ".github/workflows/.build-check.yml" },
         pullRequest: {},
       }),
     /current execution context mismatch/u,

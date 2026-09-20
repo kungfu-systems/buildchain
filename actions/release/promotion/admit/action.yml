@@ -35,7 +35,7 @@ runs:
         directory: .buildchain/consumer
         source-sha: ${{ fromJSON(inputs.request-json).target-sha || github.sha }}
         workflow-sha: ${{ fromJSON(inputs.selection-json).router-sha }}
-        workflow: .github/workflows/public-release-promote.yml
+        workflow: .github/workflows/.release-candidate-promote.yml
         invocation-directory: .buildchain/invocation-source
         definition-repository: ${{ fromJSON(inputs.selection-json).repository }}
         definition-sha: ${{ github.workflow_sha }}

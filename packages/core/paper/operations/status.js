@@ -1,3 +1,4 @@
+import { paperConsumerStatus } from "../consumer-status.js";
 import path from "node:path";
 import { PAPER_PATHS, resolvePaperRepository } from "../paper-repository.js";
 import {
@@ -9,63 +10,36 @@ import {
 } from "./status-facts.js";
 import { existingFileFact } from "./files.js";
 import { PAPER_STATUS_CONTRACT } from "./identity.js";
-export function paperStatusBlockingNextActions({
-  stateMap,
-  deterministic,
-  transactionFacts,
-}) {
-  const actions = [];
-  if (!stateMap.scaffolded.satisfied) {
-    actions.push({
-      id: "scaffold-paper",
-      command: "buildchain paper scaffold --help",
-      description: "Plan a no-overwrite Buildchain paper scaffold.",
-    });
-  } else if (!stateMap.governed.satisfied) {
-    actions.push({
-      id: "restore-governance",
-      command: "buildchain paper preflight --json",
+export function paperStatusBlockingNextActions() {
+  return [
+    {
+      id: "migrate-consumer-contract",
+      command: "buildchain paper migrate --json",
       description:
-        "Repair the Git/contract-lock governance checks reported by preflight.",
-    });
-  } else if (!stateMap["content-ready"].satisfied) {
-    actions.push({
-      id: "complete-paper-content",
-      command: "make check",
-      description: "Add every declared paper source and metadata input.",
-    });
-  } else if (!deterministic) {
-    actions.push({
-      id: "build-reproducible-artifact",
-      command: "buildchain paper build --execute --json",
-      description:
-        "Run the existing two-clean-build reproducibility gate and promote exact bytes.",
-    });
-  } else if (
-    !stateMap.bootstrapped.satisfied ||
-    !stateMap["trust-bound"].satisfied
-  ) {
-    actions.push({
-      id: "bootstrap-npm",
-      command: "buildchain paper bootstrap npm --json",
-      description:
-        "Inspect the dry-run npm bootstrap and Trusted Publishing handoff.",
-    });
-  } else if (!stateMap["alpha-complete"].satisfied) {
-    actions.push({
-      id: transactionFacts.selected ? "resume-alpha" : "start-alpha",
-      command: transactionFacts.selected
-        ? "buildchain paper resume --json"
-        : "buildchain paper alpha --json",
-      description: transactionFacts.selected
-        ? "Resume the exact sealed release transaction."
-        : "Plan the protected dev-to-alpha publication PR.",
-    });
-  }
-  return actions;
+        "Review migration of this legacy Paper repository to schema 2 and the shared normal/recovery caller pair. Historical receipts remain unchanged.",
+    },
+  ];
 }
 export function collectPaperStatus({ cwd = process.cwd() } = {}) {
   const resolvedCwd = path.resolve(cwd);
+  const consumer = paperConsumerStatus(resolvedCwd);
+  if (consumer)
+    return {
+      ...consumer,
+      contract: PAPER_STATUS_CONTRACT,
+      highestEvidenceState: consumer.ok
+        ? "configured"
+        : "configuration-invalid",
+      states: consumer.checks.map((check) => ({
+        id: check.id,
+        status: check.status,
+        reason: check.message,
+      })),
+    };
+  return collectLegacyPaperStatus(resolvedCwd);
+}
+
+function collectLegacyPaperStatus(resolvedCwd) {
   const governance = collectPaperGovernanceFacts(resolvedCwd);
   const evidence = collectPaperEvidenceFacts(
     resolvedCwd,

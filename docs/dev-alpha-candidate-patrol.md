@@ -7,17 +7,22 @@ source_level: local-files
 confidence: high
 sensitivity: public
 evidence_grade: A
-review_state: self-reviewed
-last_reviewed: 2026-09-11
+review_state: unreviewed
+last_reviewed: 2026-09-20
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-08-11
+  generated_at: 2026-09-20
   visible_context: Buildchain v4 parity of the proven v3 Release Train and Release Cut contracts, existing source locks, exact-source Alpha preflight, Dev Patrol, cancelled duplicate runs, protected auto-merge policy, repository release governance, and the consumer-owned settlement renderer threat model.
   invisible_context_boundary: No credentials, private logs, or private configuration were used.
 ---
 
 # Dev to Alpha Candidate Patrol
+
+This is the internal `.ops-alpha-candidate-patrol.yml` mechanism. Current
+consumers use a legal channel PR and the shared normal pipeline; they do not add
+a patrol caller, renderer or controller-state inputs. The retained controller
+contract below describes implementation and historical qualification.
 
 Buildchain provides a reusable observation and single-flight PR controller for
 repositories that promote a development branch into a protected Alpha branch.
@@ -95,38 +100,13 @@ not an allowed supersession cause. Legacy markers remain readable by the core
 contract, but the active-train workflow refuses to manufacture missing Release
 Cut authority for an already-open legacy PR.
 
-## Reusable workflow
+## Internal workflow
 
-Call `.github/workflows/public-ops-alpha-candidate-patrol.yml` from a thin repository
-workflow. Start with `dry-run: true`. The reusable workflow always runs an
-`observe` job with only Actions/content/pull-request read permissions. Once the
-repository has proven that its two workflow names and branch topology produce
-exact same-SHA evidence, it may set `settlement-authorized: true` and
-`dry-run: false`. The older `create-pull-request` input remains a compatibility
-alias for settlement authorization.
-
-Repositories whose promotion policy requires a machine-readable PR declaration
-can pass static text through `pull-request-body-prefix`. When the declaration
-depends on the exact qualified delta, use `pull-request-body-prefix-renderer`
-instead. It names a repository-relative Node.js file in the consumer checkout.
-The read-only `observe` job checks out the selected SHA with credentials disabled,
-runs the renderer with a reduced environment, and requires it to write UTF-8 text
-to `BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX_OUTPUT`. The renderer also receives
-the selected SHA plus source and target branch names. It may derive a declaration
-from the exact checkout and `origin/<target-branch>` without receiving the
-promotion token.
-
-Static and rendered prefixes are mutually exclusive. A renderer failure, path
-escape, source-SHA mismatch, empty or oversized result, invalid UTF-8, or managed
-controller-marker injection fails before the write-permission job can run. The
-rendered bytes are retained with the read-only observation artifact and passed
-to `settle` as a job output, so the candidate PR is created with the correct
-declaration on its first write. Buildchain preserves that repository-owned text
-when later observations update only the managed state marker. Before any write,
-`settle` also requires its fresh observation to select the same SHA that produced
-the rendered bytes. Concurrent qualification progress therefore fails closed
-and is recomputed by the next patrol instead of attaching a declaration to the
-wrong candidate.
+The internal component separates read-only observation from write-permission
+settlement. Its source, target, rooted observations and optional internal renderer
+remain implementation ports. A renderer receives reduced authority, must bind
+the exact observed source, and cannot inject managed controller markers. Rendered
+bytes must be revalidated before any write; they are not new consumer wiring.
 
 The separately permissioned `settle` job prepares the entry-selected runtime,
 re-runs the exact observation, and compare-and-swap
@@ -155,7 +135,7 @@ The workflow exposes `train-root`, `cut-root`, `candidate-generation`,
 selected SHA. Alpha build orchestration should bind to those outputs and treat
 a non-empty hold root as a fail-closed result.
 
-The caller may additionally set `auto-merge: true` and choose `merge-method`
+An authorized internal invocation may set `auto-merge: true` and choose `merge-method`
 from `merge`, `squash`, or `rebase`. Buildchain only arms GitHub auto-merge for
 the single managed, open, exact-source candidate after the write-permission
 settlement has revalidated the observation. GitHub still owns every required
@@ -163,11 +143,8 @@ review, required check, branch-protection, and merge-queue gate; Buildchain does
 not approve or directly merge the PR. Invalid merge methods and GraphQL
 refusals fail the patrol run.
 
-Consumers should invoke this workflow after relevant qualification workflow
-completion and from an offset periodic fallback. GitHub may delay scheduled
-runs, so the event path supplies low latency while the fallback supplies
-recovery. Workflow concurrency plus the server-side open-PR reconciliation
-makes duplicate or delayed events idempotent.
+Runtime-owned routing and server-side reconciliation handle duplicate and delayed
+events. Consumers do not configure completion listeners or fallback cron jobs.
 
 The workflow never moves the Alpha ref directly, directly merges the pull
 request, approves it, publishes npm, creates a Git tag or GitHub Release, or

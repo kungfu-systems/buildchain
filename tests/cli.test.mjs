@@ -156,125 +156,46 @@ test("CLI creates canonical publication admission and runner provenance receipts
   assert.match(runner.receiptDigest, /^[0-9a-f]{64}$/);
 });
 
-test("init package creates .buildchain/buildchain.toml and reusable workflow", () => {
+test("init CLI writes schema-2 product configuration and the shared caller pair", () => {
   const cwd = tempDir("init-package");
-  fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({ name: "fixture", version: "0.1.0" }, null, 2));
-  const result = JSON.parse(runBuildchain([
-    "init",
-    "--cwd",
-    cwd,
-    "--type",
-    "package",
-    "--package-manager",
-    "npm",
-    "--artifact-name",
-    "fixture",
-  ]));
-
+  fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({ name: "fixture", version: "0.1.0" }));
+  const result = JSON.parse(runBuildchain(["init", "--cwd", cwd, "--type", "package", "--package-manager", "npm", "--artifact-name", "fixture"]));
   assert.equal(result.type, "package");
+  assert.equal(result.schemaVersion, 2);
   assert.equal(result.packageManager, "npm");
-  assert.deepEqual(result.written.sort(), [".buildchain/buildchain.toml", ".github/workflows/build.yml", "AGENTS.md"]);
-  assert.match(fs.readFileSync(path.join(cwd, "AGENTS.md"), "utf8"), /buildchain:next-development/);
-  assert.match(fs.readFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), "utf8"), /npm ci/);
-  const workflow = fs.readFileSync(path.join(cwd, ".github/workflows/build.yml"), "utf8");
-  assert.match(workflow, /workflow_dispatch:/);
-  assert.match(workflow, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v4/);
-  assert.doesNotMatch(workflow, /with:|buildchain-ref:|artifact-name-template:/);
-  const config = fs.readFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), "utf8");
-  assert.match(config, /\[build.artifacts\][\s\S]*name = "fixture"/);
+  assert.deepEqual(result.written.sort(), [".buildchain/buildchain.toml", ".github/workflows/buildchain-recover.yml", ".github/workflows/buildchain.yml", "AGENTS.md"]);
+  assert.match(fs.readFileSync(path.join(cwd, "AGENTS.md"), "utf8"), /buildchain:consumer/);
+  const config = fs.readFileSync(path.join(cwd, ".buildchain/buildchain.toml"), "utf8");
+  assert.match(config, /npm ci/);
+  assert.match(config, /filename = "fixture.tgz"/);
+  const validated = JSON.parse(runBuildchain(["validate", "--cwd", cwd, "--require-lifecycle-stages", "install,build,verify"]));
+  assert.equal(validated.config.schema, 2);
+  assert.equal(validated.consumer.workflows.length, 2);
+  assert.equal(validated.products[0].type, "npm");
   const failure = runBuildchainFailure(["init", "--cwd", cwd]);
   assert.notEqual(failure.status, 0);
   assert.match(failure.stderr, /already exists/);
 });
 
-test("init infra-contract creates a directly valid observed contract scaffold", () => {
-  const cwd = tempDir("init-infra-contract");
-  const result = JSON.parse(runBuildchain([
-    "init",
-    "--cwd",
-    cwd,
-    "--type",
-    "infra-contract",
-  ]));
-
-  assert.equal(result.type, "infra-contract");
-  assert.deepEqual(result.written.sort(), [
-    ".buildchain/buildchain.toml",
-    ".github/workflows/build.yml",
-    "AGENTS.md",
-    "infra/desired.json",
-    "infra/outputs.json",
-  ]);
-  const workflow = fs.readFileSync(path.join(cwd, ".github", "workflows", "build.yml"), "utf8");
-  assert.doesNotMatch(workflow, /with:/);
-  const config = fs.readFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), "utf8");
-  assert.match(config, /type = "infra-contract"[\s\S]*--mode ci[\s\S]*\.buildchain\/infra-contract-plan\.json/);
-  assert.match(config, /\.buildchain\/infra-contract-evidence-verification\.json/);
-
-  const outputPath = path.join(cwd, "infra-validation.json");
-  runBuildchain([
-    "infra-contract",
-    "--mode",
-    "validate",
-    "--cwd",
-    cwd,
-    "--output",
-    outputPath,
-  ]);
-  const validation = JSON.parse(fs.readFileSync(outputPath, "utf8"));
-  assert.equal(validation.project.type, "infra-contract");
-  assert.equal(validation.infra.adapter, "manual-observed");
-  assert.equal(validation.consumers.length, 1);
-
-  const ciPath = path.join(cwd, ".buildchain", "infra-contract-ci.json");
-  runBuildchain([
-    "infra-contract",
-    "--mode",
-    "ci",
-    "--cwd",
-    cwd,
-    "--source-sha",
-    "1".repeat(40),
-    "--output",
-    ciPath,
-  ]);
-  const ci = JSON.parse(fs.readFileSync(ciPath, "utf8"));
-  assert.equal(ci.contract, "kungfu-buildchain-infra-contract-ci");
-  assert.equal(ci.mutationAllowed, false);
-  assert.equal(ci.verificationOk, true);
-  assert.equal(fs.existsSync(path.join(cwd, ".buildchain", "infra-contract-plan.json")), true);
-  assert.equal(fs.existsSync(path.join(cwd, ".buildchain", "buildchain.infra-contract.json")), true);
-  assert.equal(fs.existsSync(path.join(cwd, ".buildchain", "infra-contract-propagation-apply.json")), true);
-  const verification = JSON.parse(fs.readFileSync(path.join(cwd, ".buildchain", "infra-contract-evidence-verification.json"), "utf8"));
-  assert.equal(verification.ok, true);
+test("init CLI rejects unsupported schema-1-only types before writing files", () => {
+  for (const type of ["infra-contract", "web-surface"]) {
+    const cwd = tempDir(`init-${type}`);
+    const failure = runBuildchainFailure(["init", "--cwd", cwd, "--type", type]);
+    assert.notEqual(failure.status, 0);
+    assert.match(failure.stderr, /not part of the schema-2 pipeline/);
+    assert.deepEqual(fs.readdirSync(cwd), []);
+  }
 });
 
-test("init publication-artifact creates a paper artifact scaffold", () => {
+test("init publication-artifact configures Paper through the same public pipeline", () => {
   const cwd = tempDir("init-publication-artifact");
-  const result = JSON.parse(runBuildchain([
-    "init",
-    "--cwd",
-    cwd,
-    "--type",
-    "publication-artifact",
-  ]));
-
-  assert.equal(result.type, "publication-artifact");
-  assert.deepEqual(result.written.sort(), [
-    ".buildchain/buildchain.toml",
-    ".github/workflows/build.yml",
-    "AGENTS.md",
-  ]);
-  const toml = fs.readFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), "utf8");
-  assert.match(toml, /type = "publication-artifact"/);
-  assert.match(toml, /primary_artifact = "_build\/main\.pdf"/);
-  assert.match(toml, /type = "latex-docker"/);
-  assert.match(toml, /image = "ghcr\.io\/kungfu-systems\/build-images\/latex-pdf-builder"/);
-  assert.match(toml, /digest = "sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8"/);
-  const workflow = fs.readFileSync(path.join(cwd, ".github", "workflows", "build.yml"), "utf8");
-  assert.match(workflow, /public-build-publication\.yml@v4/);
-  assert.match(workflow, /toolchain-type: config/);
-  assert.match(workflow, /verify-command: make check/);
+  const result = JSON.parse(runBuildchain(["init", "--cwd", cwd, "--type", "publication-artifact"]));
+  assert.equal(result.productType, "paper");
+  assert.deepEqual(result.written.sort(), [".buildchain/buildchain.toml", ".github/workflows/buildchain-recover.yml", ".github/workflows/buildchain.yml", "AGENTS.md", "release.json"]);
+  const validated = JSON.parse(runBuildchain(["validate", "--cwd", cwd]));
+  assert.equal(validated.products[0].artifacts[0].path, "_build/main.pdf");
+  assert.equal(validated.products[0].targets[0].provider, "github-release");
+  assert.equal(validated.consumer.channel, "v4");
 });
 
 test("infra-contract CLI apply consumes a saved fresh plan", () => {
@@ -661,7 +582,8 @@ test("validate reads initialized package config", () => {
     "install,build,verify",
   ]));
 
-  assert.equal(validation.project.type, "package");
+  assert.equal(validation.products[0].type, "npm");
+  assert.equal(validation.config.schema, 2);
   assert.equal(validation.versionFiles[0].path, "package.json");
   assert.deepEqual(validation.lifecycleStages.map((stage) => stage.name).sort(), ["build", "install", "verify"]);
 });
@@ -1913,11 +1835,13 @@ test("standalone binary runs public CLI without imported script entrypoint side 
     ),
   );
   assert.equal(scaffold.ok, true);
-  assert.equal(scaffold.written.length, 19);
-  assert.equal(
-    fs.readFileSync(path.join(paperCwd, "pnpm-workspace.yaml"), "utf8"),
-    `minimumReleaseAgeExclude:\n  - '@kungfu-tech/buildchain@${version}'\n`,
-  );
+  assert.equal(scaffold.written.length, 12);
+  assert.deepEqual(fs.readdirSync(path.join(paperCwd, ".github/workflows")).sort(),
+    ["buildchain-recover.yml", "buildchain.yml"]);
+  assert.equal(fs.existsSync(path.join(paperCwd, ".buildchain/paper/agent-entry.json")), false);
+  assert.equal(fs.existsSync(path.join(paperCwd, ".buildchain/paper/provisioning-authority.json")), false);
+  assert.equal(fs.existsSync(path.join(paperCwd, "pnpm-workspace.yaml")), false);
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(paperCwd, "package.json"))).devDependencies, { "@kungfu-tech/buildchain": version });
   execFileSync("git", ["init", "-q"], { cwd: paperCwd });
   const preflight = JSON.parse(
     execFileSync(
@@ -1933,9 +1857,9 @@ test("standalone binary runs public CLI without imported script entrypoint side 
       { encoding: "utf8" },
     ),
   );
-  assert.equal(preflight.localReady, true);
+  assert.deepEqual([preflight.schemaVersion, preflight.ok, preflight.localOnly], [2, true, true]);
   assert.equal(
-    preflight.checks.find((entry) => entry.id === "provisioning.authority").status,
+    preflight.checks.find((entry) => entry.id === "workflow.consumer-pair").status,
     "pass",
   );
 });
@@ -1983,7 +1907,7 @@ test("doctor reports repository readiness as structured JSON", () => {
     "config.valid",
     "package-manager.detected",
     "git.repository",
-    "workflow.build",
+    "workflow.consumer-pair",
   ]);
 });
 

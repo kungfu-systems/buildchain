@@ -8,15 +8,20 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-09
+  generated_at: 2026-09-20
   invisible_context: not asserted
 ---
 
 # Release Propagation
+
+This page documents internal propagation and native Work contracts. Propagation
+is not an extra public reusable workflow in the minimal consumer contract. A
+consumer does not pass graphs, release envelopes or downstream controller commands
+through its normal/recovery YAML pair.
 
 Release propagation lets a finalized upstream release open a downstream update
 PR using the upstream release passport as the audit source. It is for product
@@ -485,32 +490,13 @@ observed non-zero bytes, exact deployed Git revision, and matching release and
 artifact digests. The final receipt binds the accepted Work Control Decision
 root.
 
-## Reusable Workflow
+## Internal workflow
 
-Upstream repositories can call
-`.github/workflows/public-release-propagation.yml@v4-alpha` after release finalization:
-
-```yaml
-jobs:
-  propagate-site:
-    uses: kungfu-systems/buildchain/.github/workflows/public-release-propagation.yml@v4-alpha
-    with:
-      agent-work-mode: capture-only
-      graph-json: ${{ needs.release.outputs.propagation-graph-json }}
-      upstream-release-json: ${{ needs.release.outputs.upstream-release-json }}
-      downstream-target: site-libkungfu-dev
-      downstream-repository: kungfu-systems/site-libkungfu-dev
-      downstream-base-ref: dev/v2/v2.7
-      downstream-update-command: >-
-        node scripts/paper-propagation.cjs consume
-        --lock "$BUILDCHAIN_PROPAGATION_LOCK_PATH"
-        && corepack pnpm install --lockfile-only --ignore-scripts
-      downstream-prepare-command: pnpm install --frozen-lockfile --ignore-scripts
-      downstream-verify-command: pnpm run check
-      dry-run: true
-    secrets:
-      propagation-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
-```
+`.release-propagation.yml` is an internal component. Its graph, upstream release
+and downstream Work coordinates are derived and admitted inside the runtime.
+The former standalone public caller and arbitrary consumer update-command
+example are retired. The following source, push and evidence invariants still
+apply to the internal controller.
 
 Execution uses the native Work's exact downstream repository, base revision and
 branch. Push planning verifies that the base has not advanced and is an ancestor

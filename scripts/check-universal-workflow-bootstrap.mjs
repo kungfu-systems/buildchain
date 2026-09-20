@@ -41,7 +41,7 @@ assert.equal(executor.with["mutation-token"], "${{ inputs.secrets-buildchain-pro
 assert.equal(executor.with.token, "${{ github.token }}");
 assert.doesNotMatch(read(contract.bootstrap.publicWorkflow), /admission-policy-json:/u);
 const template = parse(contract.bootstrap.consumerTemplate);
-assert.equal(template.jobs.bootstrap.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4");
+assert.equal(template.jobs.bootstrap.uses, "kungfu-systems/buildchain/.github/workflows/.ops-bootstrap.yml@v4");
 assert.equal(template.jobs.bootstrap.with["runtime-ref"], "${{ inputs.runtime-ref }}");
 assert.equal(contract.bootstrap.selfDogfoodActive, false);
 assert.equal(fs.existsSync(path.join(root, contract.bootstrap.selfDogfoodWorkflow)), false,

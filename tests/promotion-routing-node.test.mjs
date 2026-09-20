@@ -9,7 +9,7 @@ import {bindPromotionSelection} from '../packages/core/release/promotion/selecti
 const sha='a'.repeat(40), other='b'.repeat(40);
 function fixture(change={}) {
  const request={schema:'buildchain.promotion-request/v1','target-ref':'alpha/v4/v4.1',...change};
- return {request, workflowSha:sha,workflowRef:'kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@refs/tags/v4',context:{ref:'refs/heads/alpha/v4/v4.1'},runtime:{repository:'kungfu-systems/buildchain',sha:other,ref:'train/v4/v4.1/repair',origin:'runtime-parameter',contract:{path:'.buildchain/contract-lock.json'}}};
+ return {request, workflowSha:sha,workflowRef:'kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@refs/tags/v4',context:{ref:'refs/heads/alpha/v4/v4.1'},runtime:{repository:'kungfu-systems/buildchain',sha:other,ref:'train/v4/v4.1/repair',origin:'runtime-parameter',contract:{path:'.buildchain/contract-lock.json'}}};
 }
 test('promotion uses the selected train for every publication channel without resolving it again',async()=>{
  for(const target of ['alpha/v4/v4.1','release/v4/v4.1','publish-gate/major']){
@@ -31,7 +31,7 @@ test('promotion lock binding rejects symlink escape and checkout drift before em
  assert.match(bindPromotionSelection(input,()=>sha)['contract-lock-digest'],/^sha256:[a-f0-9]{64}$/);
 });
 test('generated public router binds every node output and uses declared runtime preparation inputs',()=>{
- const wf=YAML.parse(fs.readFileSync('.github/workflows/public-release-promote.yml','utf8'));
+ const wf=YAML.parse(fs.readFileSync('.github/workflows/.release-candidate-promote.yml','utf8'));
  for(const [job,name] of [['resolve-promotion','resolve'],['consumer-admission','admit']]){
   const action=YAML.parse(fs.readFileSync(`actions/release/promotion/${name}/action.yml`,'utf8'));
   for(const value of Object.values(wf.jobs[job].outputs)){const key=value.match(/steps\.node\.outputs\.([\w-]+)/)[1];assert.ok(action.outputs[key],key);}

@@ -8,12 +8,13 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-06
+last_reviewed: 2026-09-20
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-06
-  invisible_context: not asserted
+  generated_at: 2026-09-20
+  visible_context: Current transaction documentation and the schema-2 normal and attempt recovery contracts.
+  invisible_context_boundary: No provider mutation or new publication is implied by this documentation update.
 ---
 
 # Publish Transaction
@@ -104,14 +105,15 @@ the next version; it never rebinds or overwrites the earlier source lock. The
 same source SHA reuses its own lock so authority planning and mutation stay on
 one exact version.
 
-`public-release-promote.yml` can establish or restore this state from an
-older successful candidate run through the documented fresh-event recovery
-inputs. The recovery receipt and sealed bundle are verified before the action
-reads or creates transaction state. If `resume-transaction-id` is supplied,
-the restored durable/local transaction must already exist with that exact id;
-a missing or different id fails before provider mutation. An absent transaction
-is created only when no expected existing identity was requested. See
-[Release Candidate: Resume from an existing candidate run](release-candidate.md#resume-from-an-existing-candidate-run).
+The public recovery boundary is `public-ops-recover.yml`, reached through the
+generated `buildchain-recover.yml` caller. It accepts an exact attempt and an
+optional transient repaired runtime. The retained attempt identifies the
+original candidate, sealed bundle and transaction; consumers do not supply run,
+root, discussion or transaction selector combinations. Internal recovery still
+verifies the immutable receipt and sealed material before reading or creating
+transaction state. An expected existing transaction must retain its exact
+identity; missing or different state fails before provider mutation. See the
+[Golden Path](getting-started.md) for the consumer recovery contract.
 
 ## V4 sealed npm package sets
 

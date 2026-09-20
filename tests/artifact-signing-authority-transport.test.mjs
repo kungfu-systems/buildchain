@@ -7,7 +7,7 @@ test("authority polling retries transient GET transport failures without replayi
   let getAttempts = 0;
   const delays = [];
   const result = await githubRequest(
-    "/repos/kungfu-systems/buildchain/actions/workflows/public-release-signing-authority.yml/runs",
+    "/repos/kungfu-systems/buildchain/actions/workflows/.release-signing-authority.yml/runs",
     {
       token: "test-token",
       fetchImpl: async () => {
@@ -32,7 +32,7 @@ test("authority polling retries transient GET transport failures without replayi
   await assert.rejects(
     () =>
       githubRequest(
-        "/repos/kungfu-systems/buildchain/actions/workflows/public-release-signing-authority.yml/dispatches",
+        "/repos/kungfu-systems/buildchain/actions/workflows/.release-signing-authority.yml/dispatches",
         {
           token: "test-token",
           method: "POST",

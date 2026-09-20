@@ -2,22 +2,11 @@ import { npmPublishDryRun } from "../npm/preview.js";
 import { runPublicationArtifactCli } from "../commands/publication-artifact.mjs";
 import { runPublicationPackageCli } from "../commands/publication-package.mjs";
 import { runPublicationReproducibilityCli } from "../commands/publication-reproducibility.mjs";
-import {
-  BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
-  formatDiagnosticsSummaryTable,
-  startProcessSampler,
-  summarizeDiagnosticsArtifacts,
-  summarizeProcessSamples,
-  validateAnchoredPackageRelease,
-} from "../../observability/diagnostics.js";
+import { validateAnchoredPackageRelease } from "../../observability/diagnostics.js";
 import {
   printJson,
   readBooleanFlag,
   readFlag,
-  readJsonInput,
-  readRepeatedFlag,
-  readRepeatedJsonInputs,
-  writeJsonFile,
 } from "../../contracts/cli/options.mjs";
 import { runScript } from "../../workflow/cli/process.mjs";
 

@@ -211,7 +211,12 @@ function validateCapabilities(capabilities, inventory, issues) {
           `${capability.id} owner drifted from the current inventory`,
         );
       for (const surface of capability.surfaces || [])
-        if (!source.publicSurfaces.includes(surface))
+        if (
+          ![
+            ...source.publicSurfaces,
+            ...(source.internalSurfaces || []),
+          ].includes(surface)
+        )
           issues.push(
             `${capability.id} has undeclared current surface: ${surface}`,
           );

@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-v4-cross-platform-adopter-qualification",
   "implementation": "packages/core/adoption/cross-platform-adopter-qualification.js",
   "runner": "packages/core/adoption/commands/cross-platform-adopter-qualification.mjs",
-  "publicWorkflow": ".github/workflows/public-build-adopter-qualification.yml",
+  "publicWorkflow": ".github/workflows/.build-adopter-qualification.yml",
   "sourceBinding": {
     "runtime": "job.workflow_sha",
     "consumer": "exact checked-out consumer commit",

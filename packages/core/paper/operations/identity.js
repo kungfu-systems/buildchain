@@ -7,9 +7,6 @@ export const PAPER_NPM_BOOTSTRAP_CONTRACT =
   "kungfu-buildchain-paper-npm-bootstrap";
 export const PAPER_PROVISIONING_CONTRACT =
   "kungfu-buildchain-paper-provisioning-authority";
-export const PAPER_BUILD_PLAN_CONTRACT = "kungfu-buildchain-paper-build-plan";
-export const PAPER_ALPHA_PLAN_CONTRACT = "kungfu-buildchain-paper-alpha-plan";
-export const PAPER_RESUME_PLAN_CONTRACT = "kungfu-buildchain-paper-resume-plan";
 export const PAPER_VISIBILITY_CONTRACT = "kungfu-buildchain-paper-visibility";
 export const PAPER_STATE_ORDER = Object.freeze([
   "scaffolded",

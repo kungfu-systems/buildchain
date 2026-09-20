@@ -12,13 +12,7 @@ import {
   stableJson,
   workCheck,
 } from "./paper-repository.js";
-import {
-  mergeNextDevelopmentAgentInstructions,
-  NEXT_DEVELOPMENT_AGENT_SECTION_START,
-  NEXT_DEVELOPMENT_AGENT_SECTION_END,
-  NEXT_DEVELOPMENT_LOCAL_COMMAND,
-} from "../release/next-development-projection.js";
-import { NEXT_DEVELOPMENT_ADR } from "../release/next-development-transition.js";
+import { paperConsumerStatus } from "./consumer-status.js";
 
 export const PAPER_AGENT_ENTRY_CONTRACT = "kungfu-buildchain-paper-agent-entry";
 export const PAPER_AGENT_ENTRY_SCHEMA_VERSION = 1;
@@ -35,10 +29,6 @@ const EXACT_PAPER_SCRIPTS = Object.freeze({
 
 const GIT_SHA_PATTERN = /^[0-9a-f]{40}$/i;
 const SHA256_PATTERN = /^sha256:[0-9a-f]{64}$/i;
-
-function jsonText(value) {
-  return `${JSON.stringify(value, null, 2)}\n`;
-}
 
 export function paperAgentEntryInstructions({ developmentRef }) {
   return `${PAPER_AGENT_ENTRY_SECTION_START}
@@ -63,142 +53,6 @@ Buildchain package and runtime authority, and feature-to-development lineage.
 Passing local commands alone is not acceptance, and manually bypassing them
 does not bypass remote policy.
 ${PAPER_AGENT_ENTRY_SECTION_END}`;
-}
-
-export function mergePaperAgentEntryInstructions(
-  current = "",
-  { developmentRef },
-) {
-  const source = String(current || "");
-  const section = paperAgentEntryInstructions({ developmentRef });
-  const start = source.indexOf(PAPER_AGENT_ENTRY_SECTION_START);
-  const end = source.indexOf(PAPER_AGENT_ENTRY_SECTION_END);
-  if ((start === -1) !== (end === -1)) {
-    throw new Error(
-      "AGENTS.md has an incomplete Buildchain Paper agent-entry managed section",
-    );
-  }
-  if (start === -1) {
-    return source.trim()
-      ? `${source.trimEnd()}\n\n${section}\n`
-      : `# AGENTS.md\n\n${section}\n`;
-  }
-  if (
-    source.indexOf(PAPER_AGENT_ENTRY_SECTION_START, start + 1) !== -1 ||
-    source.indexOf(PAPER_AGENT_ENTRY_SECTION_END, end + 1) !== -1 ||
-    end < start
-  ) {
-    throw new Error(
-      "AGENTS.md has ambiguous Buildchain Paper agent-entry managed sections",
-    );
-  }
-  return `${source.slice(0, start)}${section}${source.slice(
-    end + PAPER_AGENT_ENTRY_SECTION_END.length,
-  )}`;
-}
-
-export function createPaperAgentEntry({
-  buildchainVersion,
-  buildchainSha,
-  developmentRef,
-}) {
-  const version = String(buildchainVersion || "").trim();
-  const sourceSha = String(buildchainSha || "").trim();
-  if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version)) {
-    throw new Error(
-      "paper agent entry requires an exact Buildchain semantic version",
-    );
-  }
-  if (!GIT_SHA_PATTERN.test(sourceSha)) {
-    throw new Error(
-      "paper agent entry requires an exact Buildchain source SHA",
-    );
-  }
-  if (!/^dev\/v\d+\/v\d+\.\d+$/.test(developmentRef)) {
-    throw new Error("paper agent entry requires an exact development ref");
-  }
-  const payload = {
-    schemaVersion: PAPER_AGENT_ENTRY_SCHEMA_VERSION,
-    contract: PAPER_AGENT_ENTRY_CONTRACT,
-    runtime: {
-      package: "@kungfu-tech/buildchain",
-      version,
-      sourceSha,
-    },
-    repository: {
-      developmentRef,
-      pullRequestTarget: developmentRef,
-    },
-    commands: {
-      verify: "pnpm paper:agent:verify",
-      start: "pnpm paper:work:start -- <topic> --execute --json",
-      submit: "pnpm paper:work:submit -- --execute --json",
-    },
-    policy: {
-      localMutation: "dry-run-first",
-      protectedBranchPatterns: [
-        "main",
-        "dev/**",
-        "alpha/**",
-        "release/**",
-        "publish-gate/**",
-      ],
-      workBranchPattern: PAPER_WORK_BRANCH_PATTERN.source,
-      forcePush: false,
-      remoteAcceptance: "required-buildchain-check",
-    },
-  };
-  return {
-    ...payload,
-    entryDigest: sha256Text(stableJson(payload)),
-  };
-}
-
-function mergePaperNextDevelopmentInstructions(current) {
-  const merged = mergeNextDevelopmentAgentInstructions(current);
-  const start = merged.indexOf(NEXT_DEVELOPMENT_AGENT_SECTION_START);
-  const end = merged.indexOf(NEXT_DEVELOPMENT_AGENT_SECTION_END);
-  const section = merged.slice(start, end)
-    .replace(
-      `\`${NEXT_DEVELOPMENT_ADR}\``,
-      `[Buildchain next-development ADR](https://github.com/kungfu-systems/buildchain/blob/v4/${NEXT_DEVELOPMENT_ADR})`,
-    )
-    .replace(
-      NEXT_DEVELOPMENT_LOCAL_COMMAND,
-      NEXT_DEVELOPMENT_LOCAL_COMMAND.replace(
-        "node packages/core/", "node node_modules/@kungfu-tech/buildchain/packages/core/",
-      ),
-    );
-  return `${merged.slice(0, start)}${section}${merged.slice(end)}`;
-}
-
-export function paperAgentEntryFiles({
-  cwd,
-  buildchainVersion,
-  buildchainSha,
-  developmentRef = "",
-}) {
-  const resolvedDevelopmentRef = developmentRef || paperDevelopmentRef(cwd);
-  const agentsPath = path.resolve(cwd, PAPER_PATHS.agentInstructions);
-  const currentAgents = fs.existsSync(agentsPath)
-    ? fs.readFileSync(agentsPath, "utf8")
-    : "";
-  const entry = createPaperAgentEntry({
-    buildchainVersion,
-    buildchainSha,
-    developmentRef: resolvedDevelopmentRef,
-  });
-  return new Map([
-    [PAPER_PATHS.agentEntry, jsonText(entry)],
-    [
-      PAPER_PATHS.agentInstructions,
-      mergePaperNextDevelopmentInstructions(
-        mergePaperAgentEntryInstructions(currentAgents, {
-          developmentRef: resolvedDevelopmentRef,
-        }),
-      ),
-    ],
-  ]);
 }
 
 export function resolvePaperBuildchainSha(buildchainRoot, buildchainSha = "") {
@@ -283,6 +137,41 @@ export function collectPaperAgentEntry({
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const developmentRef = paperDevelopmentRef(resolvedCwd);
+  const consumer = paperConsumerStatus(resolvedCwd);
+  if (consumer) {
+    const context =
+      mode === "ci"
+        ? ciContext({ env, developmentRef })
+        : mode === "local"
+          ? localContext({ cwd: resolvedCwd, developmentRef })
+          : { mode: "contract", ok: true };
+    const checks = [...consumer.checks];
+    if (mode !== "contract")
+      checks.push(
+        workCheck(
+          "agent-entry.work-context",
+          context.ok,
+          context.message,
+          `Use a work branch containing origin/${developmentRef} and target that development channel`,
+        ),
+      );
+    return {
+      ...consumer,
+      contract: PAPER_AGENT_ENTRY_CONTRACT,
+      mode,
+      context,
+      checks,
+      ok: checks.every((check) => check.status === "pass"),
+      nextActions: checks
+        .filter((check) => check.status === "fail")
+        .map((check) => ({
+          id: `repair-${check.id}`,
+          command:
+            check.correctiveCommand || "buildchain paper preflight --json",
+          description: check.message,
+        })),
+    };
+  }
   const source = readJson(path.resolve(resolvedCwd, PAPER_PATHS.agentEntry));
   const entry = source.value || {};
   const packageJson =

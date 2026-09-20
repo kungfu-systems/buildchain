@@ -40,7 +40,7 @@ test('advisory render failure preserves Gate qualification and suppresses public
  const result=qualifyCapturedDemos({renderMedia:true,renderFailureAdvisory:true},{qualify:()=>calls.push('gate'),render:()=>{calls.push('render');throw new Error('renderer failed');},onAdvisoryFailure:()=>calls.push('advisory')});
  assert.deepEqual(calls,['gate','render','advisory']);assert.equal(result.renderOutcome,'failure');
  assert.throws(()=>qualifyCapturedDemos({renderMedia:true,renderFailureAdvisory:true},{qualify:()=>{throw new Error('Gate failed');},render:()=>assert.fail('render must not start')}),/Gate failed/u);
- const workflow=YAML.parse(fs.readFileSync('.github/workflows/public-build-demo.yml','utf8'));assert.match(workflow.jobs.publish.if,/needs.qualify.outputs.render-result == 'success'/u);
+ const workflow=YAML.parse(fs.readFileSync('.github/workflows/.build-demo.yml','utf8'));assert.match(workflow.jobs.publish.if,/needs.qualify.outputs.render-result == 'success'/u);
  const action=YAML.parse(fs.readFileSync('actions/build/demo/qualify/action.yml','utf8'));assert.equal(action.outputs['render-result'].value,'${{ steps.identity.outputs.render-result }}');
  const publisher=YAML.parse(fs.readFileSync('actions/build/demo/publish/action.yml','utf8'));const source=publisher.runs.steps.find(s=>s.name==='Check out exact source with bounded update capability');assert.equal(source.with.path,'source');assert.equal(source.with['persist-credentials'],true);assert.ok(publisher.runs.steps[0].uses.endsWith('/workflow/admission/reject'));
  for(const composite of [action,publisher])for(const step of composite.runs.steps)assert.ok(step.uses&&!step.run&&!step.with?.script);
