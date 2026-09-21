@@ -858,7 +858,7 @@
       "status": "repository-internal",
       "owner": "buildchain-workflows",
       "maturity": "repository-internal",
-      "introducedVersion": "4.1.5-alpha.1",
+      "introducedVersion": "4.1.6-alpha.0",
       "compatibilityPromise": "current-contract-only",
       "deprecationReplacement": "",
       "sunsetCondition": "explicit-contract-change-review",
