@@ -52,6 +52,11 @@ before its first pipeline PR. The TOML declares `feature/*`, `fix/*`, `chore/*`,
 `docs/*`, `ci/*`, and `refactor/*` development routes. The tool-maintained stable
 contract lock binds the qualified published runtime.
 
+An Alpha qualification branch uses the same generated caller pair at `@v4-alpha`
+and its tool-maintained Alpha lock. Both callers must select the same channel;
+the complete product and protected delivery checks still apply. The default
+generated consumer pair and protected self configuration remain `@v4`.
+
 Products declare their own install, build, and verification commands in TOML.
 Publication, source qualification, reviews, merge queues, provider readback and
 recovery belong to the published runtime. Internal workflow libraries and actions are implementation only. The complete

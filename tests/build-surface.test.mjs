@@ -582,7 +582,7 @@ test("queued Warrant cancellation workflow binds exact terminal event authority"
 test("self delivery exposes only the ordinary attempt wake boundary", () => {
   const workflow = readWorkflow(".github/workflows/buildchain.yml"), job = workflow.jobs.buildchain;
   assert.deepEqual(workflow.on.repository_dispatch.types, ["buildchain-attempt-wake"]);
-  assert.equal(job.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4");
+  assert.match(job.uses, /^kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-pipeline\.yml@v4(?:-alpha)?$/u);
   assert.equal(job.with, undefined);
   for (const [file, ref] of [["contract-lock.json", "v4"], ["alpha-contract-lock.json", "v4-alpha"]])
     assert.equal(JSON.parse(readRepoText(`.buildchain/${file}`)).buildchain.ref, ref);
