@@ -80,8 +80,10 @@ test("consumer validation admits registered implementation libraries without a r
   const root = fixture(t);
   assert.equal(fs.existsSync(path.join(root, ".git")), false);
   const result = validateConsumerWiring(root, ".buildchain/buildchain.toml");
-  assert.equal(result.channel, "v4");
-  const inspection = inspectConsumerContract(consumerFiles(root));
+  assert.ok(["v4", "v4-alpha"].includes(result.channel));
+  const inspection = inspectConsumerContract(consumerFiles(root), {
+    channel: result.channel,
+  });
   assert.equal(inspection.ok, true, inspection.issues.join("\n"));
   assert.deepEqual(
     result.workflows.sort(),
@@ -446,7 +448,8 @@ test("workflow hotspot routes retain the same logical identities as debt metrics
 });
 
 test("installed normal and recovery entries preserve the generated public contract", () => {
-  for (const [file, expected] of Object.entries(consumerWorkflows())) {
+  const { channel } = validateConsumerWiring(repository);
+  for (const [file, expected] of Object.entries(consumerWorkflows(channel))) {
     assert.equal(
       fs.readFileSync(path.join(repository, file), "utf8"),
       expected,
