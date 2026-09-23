@@ -37,6 +37,11 @@ async function groupBuild(event, inputs, host) {
   return { operation: "build", context };
 }
 
+async function wakePipeline(host, attempt, reason) {
+  await host.wake(attempt);
+  return { operation: "wait", reason, attempt };
+}
+
 export async function controlPipeline(name, payload, inputs, host) {
   const event = pipelineEvent(name, payload, host.repository);
   host.terminalOnly = event.terminalOnly;
@@ -66,14 +71,12 @@ export async function controlPipeline(name, payload, inputs, host) {
   if (
     current.identity.requestKey.startsWith("recover:") &&
     recordDigest(current.events[0].runtime) !== recordDigest(host.runtime)
-  ) {
-    await host.wake(current.identity.id);
-    return {
-      operation: "wait",
-      reason: "admitted-recovery-runtime-continuation-required",
-      attempt: current.identity.id,
-    };
-  }
+  )
+    return wakePipeline(
+      host,
+      current.identity.id,
+      "admitted-recovery-runtime-continuation-required",
+    );
   if (
     ["failure", "cancelled", "superseded", "complete"].includes(
       session.observed.status,
@@ -90,14 +93,12 @@ export async function controlPipeline(name, payload, inputs, host) {
   if (
     admission.live.source &&
     host.selection.source.sha !== admission.live.source.commit
-  ) {
-    await host.wake(session.observed.attempt);
-    return {
-      operation: "wait",
-      reason: "source-generation-runtime-selection-required",
-      attempt: session.observed.attempt,
-    };
-  }
+  )
+    return wakePipeline(
+      host,
+      session.observed.attempt,
+      "source-generation-runtime-selection-required",
+    );
   if (session.intent.expectedNodes.includes("warrant"))
     host.queueExit ||= githubPipelineQueueExit(
       host.github.graphql,
@@ -118,16 +119,15 @@ export async function controlPipeline(name, payload, inputs, host) {
     return { operation: "build", context };
   }
   await host.project(session);
-  if (operation.operation === "successor") {
-    // Closed or retargeted PRs do not authorize a new attempt on the old route.
-    // A later normal event re-admits a lawful source after the old candidate ends.
-    await host.wake(session.observed.attempt);
-    return {
-      operation: "wait",
-      reason: operation.reason,
-      attempt: session.observed.attempt,
-    };
-  }
+  // PR run.head_sha and signing certificates can name different commits.
+  const dispatchPublication =
+    operation.operation === "publish" && event.kind !== "attempt";
+  if (operation.operation === "successor" || dispatchPublication)
+    return wakePipeline(
+      host,
+      session.observed.attempt,
+      operation.reason || "publication-requires-a-normal-dispatch",
+    );
   if (operation.operation === "settle") {
     const settled = await host.settle(
       session,
