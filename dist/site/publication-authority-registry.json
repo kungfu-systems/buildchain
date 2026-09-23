@@ -397,6 +397,23 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/.release-historical.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "channel-ref",
+        "github-release",
+        "npm-publish"
+      ],
+      "credentialMode": "trusted-publishing",
+      "publisherWorkflowMode": "caller-bound",
+      "publisherWorkflowPath": ".github/workflows/.release-historical.yml",
+      "environment": "none",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/.release-oci-compose-preview.yml",
       "authorityClass": "product-publication",
       "publicationCapable": true,
@@ -578,6 +595,19 @@
       "environment": "none",
       "environmentMode": "fixed",
       "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/dev-pr-auto-merge.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/dev-pr-auto-merge.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
       "notes": ""
     },
     {
@@ -934,6 +964,23 @@
       "environmentMode": "caller-bound",
       "runnerPolicy": "qualified-measured",
       "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/release-candidate-promote.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "channel-ref",
+        "github-release",
+        "npm-publish"
+      ],
+      "credentialMode": "trusted-publishing",
+      "publisherWorkflowMode": "caller-bound",
+      "publisherWorkflowPath": ".github/workflows/release-candidate-promote.yml",
+      "environment": "none",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
     }
   ],
   "workflowFacts": [
@@ -1148,6 +1195,11 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/.release-historical.yml",
+      "signals": [],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/.release-oci-compose-preview.yml",
       "signals": [
         "write-permission"
@@ -1235,6 +1287,13 @@
       "path": ".github/workflows/check.yml",
       "signals": [],
       "classified": false
+    },
+    {
+      "path": ".github/workflows/dev-pr-auto-merge.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
     },
     {
       "path": ".github/workflows/public-build-adopter-qualification.yml",
@@ -1437,10 +1496,15 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/release-candidate-promote.yml",
+      "signals": [],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/v4-stage-capsule-canary.yml",
       "signals": [],
       "classified": false
     }
   ],
-  "registryDigest": "2bc253594c7ffed8c9a1c4ebb711b8130b96e1822adfa953241772253df64861"
+  "registryDigest": "34af2916bf9785f527f1f4a1f1000f483f2c6617640daf61e81f5749c779962e"
 }

@@ -1,8 +1,8 @@
 import { resolvePromotionChannel } from "./channel.js";
-import { normalizePromotionRequest } from "../promotion-request.js";
+import { normalizeHistoricalPromotion } from "./compatibility.js";
 
 export async function routePromotion({ context, request: requestValue, workflowRepository, workflowSha, workflowRef, runtime }) {
-  const request = normalizePromotionRequest(requestValue);
+  const { request, historical } = normalizeHistoricalPromotion(requestValue, workflowRef);
   const route = resolvePromotionChannel({
     publicationChannel: request.channel,
     targetRef: request["target-ref"] || context.ref.replace(/^refs\/heads\//u, ""),
@@ -10,6 +10,7 @@ export async function routePromotion({ context, request: requestValue, workflowR
   const entryRef = workflowRef.split("@").at(-1).replace(/^refs\/(?:heads|tags)\//u, "");
   return {
     "request-json": JSON.stringify(request),
+    ...(historical ? { "historical-inputs-json": historical } : {}),
     repository: runtime.repository,
     channel: route.channel,
     "publication-channel": route.publicationChannel,

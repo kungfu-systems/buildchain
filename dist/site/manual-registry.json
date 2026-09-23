@@ -23,7 +23,7 @@
       "title": "Golden Path",
       "path": "docs/getting-started.md",
       "plane": "use",
-      "digest": "sha256:551432f4963a4636562a41d54bb0d03498bc7d161cbb407f8ac2c635ab90ed37",
+      "digest": "sha256:74b768144656395a3601173e38b931f6a228087f337551c4b3de5f1e36498d09",
       "capabilityGroup": "getting-started",
       "audience": [
         "consumer",
@@ -362,7 +362,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:223ce8ef55c3f7afec53aea63c745dcbbde4327325b1b2e1da9a510f3530878e",
+      "digest": "sha256:e05aeb1a6689be4bbb4958140caab07794d7a466f352f1b39eda1c7eb63bf0a9",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",

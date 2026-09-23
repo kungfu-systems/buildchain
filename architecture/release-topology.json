@@ -69,6 +69,7 @@
       "packages/core/release/promote-candidate/product-provider-adapters.js",
       "packages/core/release/promote-candidate/product-provider-github-adapters.js",
       "packages/core/release/promote-candidate/product-provider.js",
+      "packages/core/release/promotion/historical-evidence.js",
       "packages/core/release/release-tail-provider-adapters.js",
       "packages/core/release/release-tail-provider-plane.js",
       "packages/core/release/settle/action.js"
@@ -120,6 +121,7 @@
         "packages/core/build/stage-capsule.js",
         "packages/core/consumer/buildchain-channel-identity.js",
         "packages/core/consumer/buildchain-config.js",
+        "packages/core/consumer/compatibility-promotion-workflows.js",
         "packages/core/consumer/compatibility-workflows.js",
         "packages/core/consumer/contract/entries.js",
         "packages/core/consumer/contract/identity.js",
@@ -298,6 +300,7 @@
         "packages/core/release/discussion/store.js",
         "packages/core/release/discussion/threads.js",
         "packages/core/release/github-provider-plane.js",
+        "packages/core/release/github-release-metadata.js",
         "packages/core/release/github-release.js",
         "packages/core/release/next-development-transition.js",
         "packages/core/release/next-development/actions.js",
@@ -317,6 +320,7 @@
         "packages/core/release/passport/impact-validation.js",
         "packages/core/release/passport/impact.js",
         "packages/core/release/passport/inputs.js",
+        "packages/core/release/passport/invariants.js",
         "packages/core/release/passport/issues.js",
         "packages/core/release/passport/json.js",
         "packages/core/release/passport/locations.js",
@@ -346,8 +350,13 @@
         "packages/core/release/promote-candidate/provider-request.js",
         "packages/core/release/promote-candidate/provider-settlement.js",
         "packages/core/release/promote-candidate/publication-completion.js",
+        "packages/core/release/promote-candidate/publication.js",
         "packages/core/release/promote-candidate/release-documents.js",
         "packages/core/release/promote-candidate/transaction.js",
+        "packages/core/release/promotion/compatibility-context.js",
+        "packages/core/release/promotion/compatibility-qualification.js",
+        "packages/core/release/promotion/historical-evidence-files.js",
+        "packages/core/release/promotion/historical-evidence.js",
         "packages/core/release/protected-publication-source.js",
         "packages/core/release/publish-transaction.js",
         "packages/core/release/recovery/lineage.js",
@@ -409,7 +418,7 @@
         "packages/core/workflow/pipeline/web-status.js",
         "packages/core/workflow/workflow-taxonomy.mjs"
       ],
-      "root": "sha256:421b2876395d171277a264c3528b3fe995864b5b612ca6bbe106bda09913b477"
+      "root": "sha256:d61260ef543b545ea09d7652cd5c71dc001943630d73fbaf3b8309a69ed93ca5"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/runtime/domain-wasm.js",

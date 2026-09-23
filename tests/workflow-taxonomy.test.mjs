@@ -462,6 +462,7 @@ test("early workflow source checks can load taxonomy before dependencies are ins
   for (const relative of [
     "packages/core/workflow/workflow-taxonomy.mjs",
     "packages/core/consumer/compatibility-workflows.js",
+    "packages/core/consumer/compatibility-promotion-workflows.js",
     "packages/core/contracts/workflow-yaml-contract.js",
   ]) {
     const target = path.join(root, relative);

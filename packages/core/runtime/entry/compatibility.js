@@ -25,7 +25,13 @@ export function historicalEntrySelection(value, workflowRef) {
   if (!["auto", "alpha", "stable"].includes(requested))
     throw new Error("Invalid historical Buildchain channel");
   const channel = requested === "auto" ? calledChannel : requested;
-  const ref = read("buildchain-ref").replace(/^v[23](-alpha)?$/u, "v4$1");
+  let ref = read("buildchain-ref").replace(/^v[23](-alpha)?$/u, "v4$1");
+  if (workflowRef?.split("@")[0] === "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml") {
+    const recovery = read("resume-buildchain-runtime-sha");
+    if (recovery && !/^[a-f0-9]{40}$/u.test(recovery))
+      throw new Error("Historical recovery selector requires an exact runtime SHA");
+    if (recovery) ref = recovery;
+  }
   const stableLock = read(
     "buildchain-stable-contract-lock-path",
     ".buildchain/contract-lock.json",

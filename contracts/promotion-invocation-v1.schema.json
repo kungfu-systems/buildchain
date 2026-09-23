@@ -501,6 +501,11 @@
       "type": "string",
       "default": "",
       "description": "Existing consumer release Discussion ID; restore its retained candidate through the selected runtime."
+    },
+    "historical-inputs-json": {
+      "type": "string",
+      "default": "",
+      "description": "Validated historical promotion context emitted by the retained entry."
     }
   }
 }

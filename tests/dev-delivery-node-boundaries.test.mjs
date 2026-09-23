@@ -77,7 +77,7 @@ test("locked branch check combines classic and applied protection and fails clos
  await assert.rejects(run(missing, new Error("denied")), /Unable/u);
 });
 test("candidate submission retains literal native commands and executes only in required mode", () => {
- const input = { "delivery-warrant-mode": "shadow", "native-command": 'echo "$(secret)"; exit 7', "environment-root": `sha256:${"d".repeat(64)}`, "source-workflow-run-id": 123 };
+ const input = { "source-root": `sha256:${"a".repeat(64)}`, "delivery-warrant-mode": "shadow", "native-command": 'echo "$(secret)"; exit 7', "environment-root": `sha256:${"d".repeat(64)}`, "source-workflow-run-id": 123 };
  const context = { affectedPaths: [] };
  const request = deliverySubmissionRequest(input, context);
  assert.equal(request.nativeCommand, input["native-command"]); assert.equal(request.execute, false);

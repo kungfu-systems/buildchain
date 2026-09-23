@@ -1,3 +1,4 @@
+import { verifyHistoricalEvidence } from "../promotion/historical-evidence.js";
 import {
   resolveCandidateBuildSummaryPath,
   resolveCandidateProviderInputs,
@@ -28,6 +29,11 @@ export async function prepareCandidatePublication(
     declaredPath: request["candidate-build-summary-path"],
   });
   const candidate = read(candidatePassportPath);
+  verifyHistoricalEvidence({
+    context: request["historical-inputs-json"],
+    candidateDirectory: path.resolve(".buildchain/release-candidate"),
+    sourceSha: candidate.source?.headSha,
+  });
   const stageCapsules = read(request["stage-capsules-path"]);
   const qualification = read(request["publication-qualification-path"]);
   const token = request["token"];

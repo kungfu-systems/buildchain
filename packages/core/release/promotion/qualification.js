@@ -1,3 +1,6 @@
+import { historicalEvidencePaths } from "./historical-evidence.js";
+import { assertHistoricalPromotionEffects } from "./compatibility-qualification.js";
+import { historicalReleaseMetadata } from "../github-release-metadata.js";
 import path from "node:path";
 import { assertDeclarativePromotionInputs } from "../../publication/publication-qualification.js";
 import { materializePublicationIntent } from "../candidate/publication-intent.js";
@@ -33,6 +36,7 @@ export async function qualifyPromotion(
   );
   if (intent.action !== "promote") return intent;
   assertDeclarativePromotionInputs(request);
+  assertHistoricalPromotionEffects(request);
   const outputDir = path.join(workspace, ".buildchain/release-candidate"),
     qualified = await candidate({
       request,
@@ -93,6 +97,13 @@ export async function qualifyPromotion(
     "sealed-bundle-manifest": qualified.paths.sealedBundleManifest,
     "recovery-receipt-path": qualified.paths.recoveryReceipt || "",
     "required-artifacts-path": qualified.paths.publishRequiredArtifacts,
-    "release-artifact-paths": (qualified.paths.releaseAssets || []).join("\n"),
+    "release-artifact-paths": [
+      ...(qualified.paths.releaseAssets || []),
+      ...historicalReleaseMetadata(
+        request["historical-inputs-json"],
+        outputDir,
+      ),
+      ...historicalEvidencePaths(request["historical-inputs-json"], outputDir),
+    ].join("\n"),
   };
 }

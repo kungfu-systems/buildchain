@@ -1,3 +1,4 @@
+import { adaptHistoricalPromotionWorkflow } from "./compatibility-promotion-workflows.js";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -150,7 +151,7 @@ export function renderCompatibilityWorkflow(entry, source) {
       );
     }
   }
-  return rendered;
+  return adaptHistoricalPromotionWorkflow(entry, rendered);
 }
 
 export function compatibilityWorkflowEntries(root, files, canonicalEntries) {
@@ -166,11 +167,17 @@ export function compatibilityWorkflowEntries(root, files, canonicalEntries) {
       !known.has(entry.target) ||
       entry.path === entry.target ||
       (entry.adapter &&
-        !["build-v4.0", "entry-v4.0", "build-backbone"].includes(
+        ![
+          "build-v4.0",
+          "entry-v4.0",
+          "build-backbone",
+          "promotion-v4.0",
+          "promotion-backbone",
+        ].includes(entry.adapter)) ||
+      (entry.inheritCallerPermissions &&
+        !["build-v4.0", "build-backbone", "promotion-v4.0"].includes(
           entry.adapter,
         )) ||
-      (entry.inheritCallerPermissions &&
-        !["build-v4.0", "build-backbone"].includes(entry.adapter)) ||
       !entry.interface ||
       Object.keys(entry.interface).some(
         (key) => !["workflow_call", "workflow_dispatch"].includes(key),

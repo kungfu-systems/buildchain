@@ -137,3 +137,65 @@ for (const entry of contract.entries) {
     );
   });
 }
+
+test("retained interfaces accept all observed libnode, kfd and taolu workflow arguments", () => {
+  const { calls } = JSON.parse(
+    fs.readFileSync(
+      "contracts/fixtures/consumer-upgrade/consumer-calls.json",
+      "utf8",
+    ),
+  );
+  assert.equal(calls.length, 11);
+  for (const call of calls) {
+    const entry = YAML.parse(fs.readFileSync(call.entry, "utf8")).on
+      .workflow_call;
+    for (const key of call.inputs)
+      assert.ok(
+        entry.inputs[key],
+        `${call.repository}:${call.workflow}#${call.job}: missing ${key}`,
+      );
+    for (const key of call.secrets)
+      assert.ok(
+        entry.secrets[key],
+        `${call.repository}:${call.workflow}#${call.job}: missing secret declaration ${key}`,
+      );
+  }
+});
+
+test("actual old caller permissions admit every retained reusable job", () => {
+  const { calls } = JSON.parse(
+    fs.readFileSync(
+      "contracts/fixtures/consumer-upgrade/consumer-calls.json",
+      "utf8",
+    ),
+  );
+  const rank = { none: 0, read: 1, write: 2 };
+  function narrow(declaration, available, location) {
+    if (!declaration) return available;
+    for (const [key, value] of Object.entries(declaration))
+      assert.ok(
+        rank[value] <= (rank[available[key]] || 0),
+        `${location}: ${key}:${value} exceeds caller grant ${available[key] || "none"}`,
+      );
+    return declaration;
+  }
+  function visit(file, available, chain) {
+    assert.ok(!chain.includes(file), `recursive workflow ${file}`);
+    const doc = YAML.parse(fs.readFileSync(file, "utf8"));
+    const envelope = narrow(doc.permissions, available, file);
+    for (const [name, job] of Object.entries(doc.jobs)) {
+      const permissions = job.permissions
+        ? narrow(job.permissions, available, `${file}#${name}`)
+        : envelope;
+      if (job.uses?.startsWith("./.github/workflows/"))
+        visit(job.uses.slice(2), permissions, [...chain, file]);
+    }
+  }
+  for (const call of calls) {
+    assert.ok(
+      call.permissions && typeof call.permissions === "object",
+      `fixture requires exact permissions: ${call.repository}:${call.workflow}#${call.job}`,
+    );
+    visit(call.entry, call.permissions, []);
+  }
+});

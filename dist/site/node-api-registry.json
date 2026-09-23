@@ -10767,7 +10767,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery/dev-delivery-warrant.js",
-        "line": 519
+        "line": 522
       },
       "example": "import { cancelQueuedDevDeliveryCandidate } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -10804,7 +10804,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery/dev-delivery-warrant.js",
-        "line": 395
+        "line": 396
       },
       "example": "import { closeDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -11177,7 +11177,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery/dev-delivery-warrant.js",
-        "line": 266
+        "line": 267
       },
       "example": "import { heartbeatDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -11234,7 +11234,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery/dev-delivery-warrant.js",
-        "line": 533
+        "line": 536
       },
       "example": "import { observeDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -11258,7 +11258,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery/dev-delivery-warrant.js",
-        "line": 391
+        "line": 392
       },
       "example": "import { qualifyDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -11306,7 +11306,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery/dev-delivery-warrant.js",
-        "line": 528
+        "line": 531
       },
       "example": "import { reconcileDevDeliveryTerminalEvidence } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -11339,7 +11339,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery/dev-delivery-warrant.js",
-        "line": 312
+        "line": 313
       },
       "example": "import { recoverExpiredDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -11372,7 +11372,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery/dev-delivery-warrant.js",
-        "line": 106
+        "line": 107
       },
       "example": "import { selectDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -11396,7 +11396,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery/dev-delivery-warrant.js",
-        "line": 522
+        "line": 525
       },
       "example": "import { settleDevDeliveryTerminalEvent } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -23463,7 +23463,7 @@
       ],
       "source": {
         "path": "packages/core/release/release-tail-provider-adapters.js",
-        "line": 181
+        "line": 182
       },
       "example": "import { createActivationReceiptProjectorAdapter } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23492,7 +23492,7 @@
       ],
       "source": {
         "path": "packages/core/release/release-tail-provider-adapters.js",
-        "line": 310
+        "line": 311
       },
       "example": "import { createGitHubReleaseAssetsAdapter } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23521,7 +23521,7 @@
       ],
       "source": {
         "path": "packages/core/release/release-tail-provider-adapters.js",
-        "line": 191
+        "line": 192
       },
       "example": "import { createHttpJsonReadback } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23550,7 +23550,7 @@
       ],
       "source": {
         "path": "packages/core/release/release-tail-provider-adapters.js",
-        "line": 161
+        "line": 162
       },
       "example": "import { createSignedStaticChannelAdapter } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23579,7 +23579,7 @@
       ],
       "source": {
         "path": "packages/core/release/release-tail-provider-adapters.js",
-        "line": 171
+        "line": 172
       },
       "example": "import { createSiteReleaseActivationAdapter } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23608,7 +23608,7 @@
       ],
       "source": {
         "path": "packages/core/release/release-tail-provider-adapters.js",
-        "line": 297
+        "line": 298
       },
       "example": "import { githubReleaseAssetsTargetRoot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23632,7 +23632,7 @@
       ],
       "source": {
         "path": "packages/core/release/release-tail-provider-adapters.js",
-        "line": 9
+        "line": 10
       },
       "example": "import { ReleaseTailProviderError } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -27860,7 +27860,7 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-warrant",
       "export": "./dev-delivery-warrant",
       "target": "./packages/core/dev-delivery/dev-delivery-warrant.js",
-      "digest": "sha256:86cdcfcd6ea321245719bd37a0a277249f2778ebc301eaea64c411e446e82a96",
+      "digest": "sha256:aa841331bdcff362f0e430b11f9937ad4bc6f320482338c8a658658bf9baddfb",
       "summary": "Durable fair Dev Delivery Warrant queue, fenced lease, and split source and integration proof APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -29469,7 +29469,7 @@
       "specifier": "@kungfu-tech/buildchain/release-tail-provider-adapters",
       "export": "./release-tail-provider-adapters",
       "target": "./packages/core/release/release-tail-provider-adapters.js",
-      "digest": "sha256:56ee24cb3b8d89808ba17bc5dbbf5038d466d71ab7ecf1329c64a946f4cd13a3",
+      "digest": "sha256:f1f6931f8bc8107a753a10ca77a62b1fbf731fcb450cf8c9750c693641c994d1",
       "summary": "Buildchain-owned GitHub Release, signed-channel, activation, and released-evidence provider adapters.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -29845,7 +29845,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:223ce8ef55c3f7afec53aea63c745dcbbde4327325b1b2e1da9a510f3530878e"
+      "digest": "sha256:e05aeb1a6689be4bbb4958140caab07794d7a466f352f1b39eda1c7eb63bf0a9"
     },
     {
       "id": "build-facts",

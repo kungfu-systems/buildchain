@@ -1,3 +1,9 @@
+import {
+  historicalEvidenceFileKeys,
+  historicalPromotionContext,
+  historicalPublisherPath,
+  HISTORICAL_PUBLISHER,
+} from "./promotion/compatibility-context.js";
 import fs from "node:fs";
 import path from "node:path";
 import { installationRoot } from "../runtime/installation-root.js";
@@ -92,8 +98,11 @@ export function bindPromotionInvocation(requestValue, selection) {
     throw new Error("Promotion override decision is missing");
   projected["promotion-override-used"] = selection["override-used"] === "true";
   projected["buildchain-expected-major"] = "4";
+  const historical = selection["historical-inputs-json"] || "";
+  if (historical) historicalPromotionContext(historical);
+  projected["historical-inputs-json"] = historical;
   projected["publication-authority-workflow-path"] =
-    ".github/workflows/.release-promote.yml";
+    historicalPublisherPath(historical);
   projected.schema = "buildchain.promotion-invocation/v1";
   return normalizePromotionRequest(projected, "invocation");
 }
@@ -101,7 +110,11 @@ export function bindPromotionInvocation(requestValue, selection) {
 export function verifyPromotionInvocation(value) {
   if (typeof value === "string") value = JSON.parse(value);
   const normalized = normalizePromotionRequest(value, "invocation");
-  if (Object.keys(value).length !== Object.keys(normalized).length)
+  const omittedCompatibility = !Object.hasOwn(value, "historical-inputs-json");
+  if (
+    Object.keys(value).length + Number(omittedCompatibility) !==
+    Object.keys(normalized).length
+  )
     throw new Error("Promotion invocation must include all normalized fields");
   if (
     !/^sha256:[0-9a-f]{64}$/.test(normalized["promotion-contract-lock-digest"])
@@ -109,5 +122,21 @@ export function verifyPromotionInvocation(value) {
     throw new Error(
       "Promotion invocation requires its admitted contract lock root",
     );
+  const historical = historicalPromotionContext(
+    normalized["historical-inputs-json"],
+  );
+  if (
+    Boolean(historical) !==
+    (normalized["publication-authority-workflow-path"] === HISTORICAL_PUBLISHER)
+  )
+    throw new Error(
+      "Promotion publisher does not match its admitted interface",
+    );
+  if (historical)
+    for (const key of historicalEvidenceFileKeys)
+      if ((historical.inputs[key] || "") !== normalized[key])
+        throw new Error(
+          `Historical evidence selection does not match invocation: ${key}`,
+        );
   return normalized;
 }

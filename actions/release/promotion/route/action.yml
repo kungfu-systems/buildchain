@@ -47,6 +47,8 @@ outputs:
     description: reason
   request-json:
     description: request json
+  historical-inputs-json:
+    description: Validated historical publication parameters; empty for the typed API.
 runs:
   using: node24
   main: dist/index.js

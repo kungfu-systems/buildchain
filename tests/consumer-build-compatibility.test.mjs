@@ -273,3 +273,11 @@ test("reported lock drift compares the accepted SHA and contract with the select
   assert.equal(runtimeContractLockDrift(minimal, sha, digest), false);
   assert.equal(runtimeContractLockDrift(minimal, "c".repeat(40), digest), true);
 });
+
+test("the retained promotion entry routes its old exact recovery runtime selector", () => {
+  const ref = "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4";
+  const sha = "a".repeat(40);
+  assert.equal(historicalEntrySelection({ "resume-buildchain-runtime-sha": sha }, ref).runtimeRef, sha);
+  assert.throws(() => historicalEntrySelection({ "resume-buildchain-runtime-sha": "moving" }, ref), /exact runtime SHA/);
+  assert.equal(historicalEntrySelection({ "resume-buildchain-runtime-sha": sha }, "kungfu-systems/buildchain/.github/workflows/build.yml@v4").runtimeRef, "");
+});

@@ -46,3 +46,23 @@ test("component invocation retains closed typed normalization and source lock in
   assert.throws(() => verifyPromotionInvocation({ ...invocation, "promotion-contract-lock-digest": "unrooted" }), /lock root/);
   assert.throws(() => verifyPromotionInvocation({ ...invocation, "dry-run": "false" }), /boolean/);
 });
+
+test("pre-upgrade complete invocations remain valid without the new optional transport", () => {
+  const invocation = bindPromotionInvocation(request, selection);
+  delete invocation["historical-inputs-json"];
+  assert.equal(verifyPromotionInvocation(invocation)["historical-inputs-json"], "");
+  delete invocation["target-ref"];
+  assert.throws(() => verifyPromotionInvocation(invocation), /all normalized fields/);
+});
+
+test("historical publication binds its validated context to the retained publisher", () => {
+  const historical = JSON.stringify({ schema: "buildchain.historical-promotion/v1", inputs: { "github-release-title": "Release" } });
+  const invocation = bindPromotionInvocation(request, { ...selection, "historical-inputs-json": historical });
+  assert.equal(invocation["publication-authority-workflow-path"], ".github/workflows/.release-historical.yml");
+  assert.equal(verifyPromotionInvocation(invocation)["historical-inputs-json"], historical);
+  for (const change of [
+    { "historical-inputs-json": "" },
+    { "publication-authority-workflow-path": ".github/workflows/.release-promote.yml" },
+    { "historical-inputs-json": JSON.stringify({ schema: "buildchain.historical-promotion/v1", inputs: { token: "invalid" } }) },
+  ]) assert.throws(() => verifyPromotionInvocation({ ...invocation, ...change }));
+});

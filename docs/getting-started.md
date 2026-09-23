@@ -98,6 +98,23 @@ another reusable job, so existing required job contexts remain intact. A runtime
 lock continues to select its exact runtime; upgrading a package does not silently
 override the lock. Existing Trusted Publishing configuration remains in use.
 
+The frozen compatibility boundary is the published v4.1.3 entry set, plus the
+v4.0 build/check/release interfaces and the v4.0.9 delivery interface used by
+older consumers. Regression fixtures record 11 calls from libnode, kfd and
+taolu, including their v2/v3/v4 selectors. Those fixtures prove parameter and
+secret admission; they do not by themselves prove a full hosted consumer release.
+Local execution tests cover build artifacts, candidate identity, native delivery,
+publication metadata, KFD witness comparisons, recovery pins and failure propagation.
+
+The old final-version publication mode uses the current provider transaction.
+Retained release callers preserve their existing permission envelope and npm
+Trusted Publishing caller identity. KFD witness files and the two retained
+read-only evidence commands are checked against the selected source and sealed
+candidate, then included as rooted publication evidence. Arbitrary legacy
+publishing or preparation commands are not qualified adapters and fail explicitly;
+old phase-less delivery owner migration is not a verified upgrade path. A consumer
+using these extensions needs separate qualification before upgrading.
+
 Moving such a consumer to the schema-2 caller pair is an optional interface
 migration, separate from updating Buildchain. Do not run the initializer over
 an existing configuration as a prerequisite for a compatible version update.

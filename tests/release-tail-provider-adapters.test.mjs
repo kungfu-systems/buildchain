@@ -139,3 +139,46 @@ test("GitHub Release adapter uploads sealed assets and rejects immutable collisi
     /immutable GitHub Release asset collision/u,
   );
 });
+
+test("retained title and notes are sealed assets, applied and verified on provider readback", async (t) => {
+  const { historicalReleaseMetadata } = await import("../packages/core/release/github-release-metadata.js");
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "release-metadata-"));
+  t.after(() => fs.rmSync(temporary, { recursive: true, force: true }));
+  const [metadataPath] = historicalReleaseMetadata(JSON.stringify({
+    schema: "buildchain.historical-promotion/v1",
+    inputs: { "github-release-title": "Taolu release", "github-release-notes": "Release notes" },
+  }), temporary);
+  const name = path.basename(metadataPath);
+  const root = `sha256:${crypto.createHash("sha256").update(fs.readFileSync(metadataPath)).digest("hex")}`;
+  const base = effect("artifact.publish");
+  const sealed = { ...base, artifactRoles: [{ role: "metadata", root }],
+    targetRoot: githubReleaseAssetsTargetRoot({ destination: base.destination, artifacts: [{ role: "metadata", name, root }] }),
+  };
+  let release;
+  const assets = [];
+  let writes = 0;
+  const adapter = createGitHubReleaseAssetsAdapter({
+    resolveArtifact: () => ({ path: metadataPath, name, root }),
+    octokit: { rest: { repos: {
+      async getReleaseByTag() { if (!release) throw Object.assign(new Error("missing"), { status: 404 }); return { data: release }; },
+      async listReleaseAssets() { return { data: assets }; },
+      async createRelease(input) { writes++; release = { id: 7, ...input }; return { data: release }; },
+      async updateRelease(input) { writes++; Object.assign(release, input); return { data: release }; },
+      async uploadReleaseAsset({ name, data }) { writes++; assets.push({ name, digest: `sha256:${crypto.createHash("sha256").update(data).digest("hex")}` }); return { data: {} }; },
+    } } },
+  });
+  await adapter.apply(sealed);
+  assert.equal(release.name, "Taolu release");
+  assert.equal(release.body, "Release notes");
+  assert.equal((await adapter.readback(sealed)).targetRoot, sealed.targetRoot);
+  const before = writes;
+  await adapter.apply(sealed);
+  assert.equal(writes, before, "an exact retry has no effects");
+  release.name = "wrong";
+  assert.equal((await adapter.readback(sealed)).providerCode, "github-release-metadata-incomplete");
+  await adapter.apply(sealed);
+  assert.equal(release.name, "Taolu release");
+  fs.writeFileSync(metadataPath, "tampered");
+  await assert.rejects(adapter.apply(sealed), /changed after sealing/);
+  await assert.rejects(adapter.readback(sealed), /changed after sealing/);
+});

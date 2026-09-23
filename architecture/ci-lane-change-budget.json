@@ -3736,6 +3736,125 @@
         "expectedContributionSeconds": 0,
         "rationale": "Run ordered project stages on the governed Linux container."
       }
+    },
+    {
+      "laneId": ".github/workflows/.release-historical.yml#apply",
+      "authorityClass": "release",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "serialized",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 30,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "protected release APPLY latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "APPLY is the sole contents-write and provider-mutation OIDC authority boundary."
+      }
+    },
+    {
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "runtime entry preparation",
+        "expectedContributionSeconds": 300,
+        "rationale": "Five-minute upper bound for central entry selection; no business execution or provider mutation."
+      },
+      "laneId": ".github/workflows/.release-historical.yml#execution-runtime"
+    },
+    {
+      "laneId": ".github/workflows/.release-historical.yml#qualify",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "serialized",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 30,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "protected release qualification latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "QUALIFY is the read-only exact-runtime and sealed-candidate admission boundary."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-historical.yml#settle",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "serialized",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 10,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "terminal receipt projection latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "SETTLE verifies and projects the already durable terminal ReleaseReceipt without mutation authority."
+      }
+    },
+    {
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "runtime entry preparation",
+        "expectedContributionSeconds": 300,
+        "rationale": "Five-minute upper bound for central entry selection; no business execution or provider mutation."
+      },
+      "laneId": ".github/workflows/dev-pr-auto-merge.yml#execution-runtime"
+    },
+    {
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "runtime entry preparation",
+        "expectedContributionSeconds": 300,
+        "rationale": "Five-minute upper bound for central entry selection; no business execution or provider mutation."
+      },
+      "laneId": ".github/workflows/release-candidate-promote.yml#execution-runtime"
+    },
+    {
+      "laneId": ".github/workflows/release-candidate-promote.yml#invoke",
+      "authorityClass": "release",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 35,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "public promotion adapter latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The public compatibility surface resolves discovery facts and invokes one fixed v4 publisher."
+      }
     }
   ],
   "declarationFamilies": [

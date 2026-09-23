@@ -797,8 +797,7 @@
         "updatedAt",
         "status",
         "qualification",
-        "terminal",
-        "sourceRoot"
+        "terminal"
       ],
       "properties": {
         "repository": {
@@ -947,8 +946,35 @@
               "$ref": "#/$defs/terminal"
             }
           ]
+        },
+        "assignmentRoot": {
+          "$ref": "#/$defs/root"
+        },
+        "initiativeRoot": {
+          "$ref": "#/$defs/root"
         }
-      }
+      },
+      "oneOf": [
+        {
+          "required": ["sourceRoot"],
+          "not": {
+            "anyOf": [
+              {
+                "required": ["assignmentRoot"]
+              },
+              {
+                "required": ["initiativeRoot"]
+              }
+            ]
+          }
+        },
+        {
+          "required": ["assignmentRoot", "initiativeRoot"],
+          "not": {
+            "required": ["sourceRoot"]
+          }
+        }
+      ]
     }
   }
 }

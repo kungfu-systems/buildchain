@@ -146,6 +146,7 @@
     ".github/workflows/.release-authority.yml",
     ".github/workflows/.release-binary-assets.yml",
     ".github/workflows/.release-candidate-promote.yml",
+    ".github/workflows/.release-historical.yml",
     ".github/workflows/.release-oci-compose-preview.yml",
     ".github/workflows/.release-paper.yml",
     ".github/workflows/.release-pipeline-products.yml",
@@ -156,6 +157,7 @@
     ".github/workflows/.release-web.yml",
     ".github/workflows/build.yml",
     ".github/workflows/check.yml",
+    ".github/workflows/dev-pr-auto-merge.yml",
     ".github/workflows/public-build-adopter-qualification.yml",
     ".github/workflows/public-build-check.yml",
     ".github/workflows/public-build-demo.yml",
@@ -185,6 +187,7 @@
     ".github/workflows/public-release-propagation.yml",
     ".github/workflows/public-release-tail.yml",
     ".github/workflows/public-release-web.yml",
+    ".github/workflows/release-candidate-promote.yml",
     ".github/workflows/v4-stage-capsule-canary.yml"
   ],
   "bootstrapGovernedWorkflows": [
@@ -227,6 +230,7 @@
     ".github/workflows/.release-authority.yml",
     ".github/workflows/.release-binary-assets.yml",
     ".github/workflows/.release-candidate-promote.yml",
+    ".github/workflows/.release-historical.yml",
     ".github/workflows/.release-oci-compose-preview.yml",
     ".github/workflows/.release-paper.yml",
     ".github/workflows/.release-pipeline-products.yml",
@@ -237,6 +241,7 @@
     ".github/workflows/.release-web.yml",
     ".github/workflows/build.yml",
     ".github/workflows/check.yml",
+    ".github/workflows/dev-pr-auto-merge.yml",
     ".github/workflows/public-build-adopter-qualification.yml",
     ".github/workflows/public-build-check.yml",
     ".github/workflows/public-build-demo.yml",
@@ -265,6 +270,7 @@
     ".github/workflows/public-release-propagation.yml",
     ".github/workflows/public-release-tail.yml",
     ".github/workflows/public-release-web.yml",
+    ".github/workflows/release-candidate-promote.yml",
     ".github/workflows/v4-stage-capsule-canary.yml"
   ]
 }
