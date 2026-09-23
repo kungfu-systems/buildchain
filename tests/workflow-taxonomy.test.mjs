@@ -1,4 +1,8 @@
 import assert from "node:assert/strict";
+import {
+  CONSUMER_UPGRADE_PATH,
+  renderCompatibilityWorkflow,
+} from "../packages/core/consumer/compatibility-workflows.js";
 import { consumerWorkflows } from "../packages/core/consumer/contract/entries.js";
 import { validateConsumerWiring } from "../packages/core/consumer/contract/local-validation.js";
 import { inspectConsumerContract } from "../packages/core/consumer/contract/inspection.js";
@@ -68,6 +72,87 @@ function consumerFiles(root) {
       ]),
     ),
   };
+}
+
+function upgradeFixture(t) {
+  const root = fixture(t);
+  const policy = editPolicy(root, (value) => {
+    value.consumerUpgradeContract = CONSUMER_UPGRADE_PATH;
+  });
+  const target = workflowPath(
+    policy.entries.find((entry) => entry.id === "check"),
+  );
+  const source = fs.readFileSync(path.join(root, target), "utf8");
+  const entry = {
+    path: ".github/workflows/check.yml",
+    target,
+    interface: { workflow_call: {} },
+    interfaceSource: source.match(/^on:\n[\s\S]*?(?=^[a-z][a-z-]*:)/mu)[0],
+  };
+  const contract = {
+    schema: "buildchain.consumer-upgrade/v1",
+    source: { sha: "a".repeat(40) },
+    entries: [entry],
+  };
+  fs.writeFileSync(
+    path.join(root, CONSUMER_UPGRADE_PATH),
+    JSON.stringify(contract),
+  );
+  fs.writeFileSync(
+    path.join(root, entry.path),
+    renderCompatibilityWorkflow(entry, source),
+  );
+  return { root, entry, contract };
+}
+
+test("registry-aware validators accept generated historical entries in local and provider source inspection", (t) => {
+  const { root } = upgradeFixture(t);
+  const result = validateConsumerWiring(root, ".buildchain/buildchain.toml");
+  const files = {
+    ...consumerFiles(root),
+    [CONSUMER_UPGRADE_PATH]: fs.readFileSync(
+      path.join(root, CONSUMER_UPGRADE_PATH),
+      "utf8",
+    ),
+  };
+  const inspection = inspectConsumerContract(files, {
+    channel: result.channel,
+  });
+  assert.equal(inspection.ok, true, inspection.issues.join("\n"));
+});
+
+for (const mutation of [
+  "missing-registry",
+  "unknown-target",
+  "changed-permission",
+  "extra-event",
+]) {
+  test(`registry-aware validation fails closed for ${mutation}`, (t) => {
+    const { root, entry, contract } = upgradeFixture(t);
+    const registry = path.join(root, CONSUMER_UPGRADE_PATH);
+    const workflow = path.join(root, entry.path);
+    if (mutation === "missing-registry") fs.unlinkSync(registry);
+    if (mutation === "unknown-target") {
+      contract.entries[0].target = ".github/workflows/unknown.yml";
+      fs.writeFileSync(registry, JSON.stringify(contract));
+    }
+    if (mutation === "changed-permission")
+      fs.writeFileSync(
+        workflow,
+        fs
+          .readFileSync(workflow, "utf8")
+          .replace("contents: read", "contents: write"),
+      );
+    if (mutation === "extra-event")
+      fs.writeFileSync(
+        workflow,
+        fs.readFileSync(workflow, "utf8").replace("on:\n", "on:\n  push: {}\n"),
+      );
+    assert.throws(
+      () => validateConsumerWiring(root, ".buildchain/buildchain.toml"),
+      /upgrade contract is missing|Invalid consumer upgrade entry|compatibility workflow drift|repository event triggers/u,
+    );
+  });
 }
 
 test("the repository has exactly one canonical file per declared workflow", () => {
@@ -410,6 +495,8 @@ test("early workflow source checks can load taxonomy before dependencies are ins
   const root = fixture(t);
   for (const relative of [
     "packages/core/workflow/workflow-taxonomy.mjs",
+    "packages/core/consumer/compatibility-workflows.js",
+    "packages/core/consumer/compatibility-promotion-workflows.js",
     "packages/core/contracts/workflow-yaml-contract.js",
   ]) {
     const target = path.join(root, relative);
