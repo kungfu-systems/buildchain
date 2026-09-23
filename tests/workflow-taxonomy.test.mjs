@@ -352,7 +352,7 @@ test("a second YAML copy cannot silently become another executable surface", (t)
 test("dangling local calls fail; shell strings do not become workflow calls", (t) => {
   const root = fixture(t);
   const entry = readWorkflowTaxonomy(root).entries.find(
-    (item) => item.id === "check",
+    (item) => item.id === ".auditable-demo",
   );
   const file = workflowPath(entry);
   const text =
@@ -507,4 +507,12 @@ test("installed normal and recovery entries preserve the generated public contra
       expected,
     );
   }
+});
+
+
+test("a broken adapted component reports diagnostics instead of throwing", (t) => {
+  const root = fixture(t);
+  const entry = readWorkflowTaxonomy(root).entries.find(item => item.id === "check");
+  writeWorkflowSource(root, workflowPath(entry), "on:\n  workflow_call:\njobs:\n  check:\n    runs-on: ubuntu-latest\n    steps:\n      - run: true\n");
+  rejected(root, /Historical runtime entry is missing/);
 });

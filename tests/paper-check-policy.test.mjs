@@ -1,3 +1,4 @@
+import { compatibilityWorkflowTarget } from "../packages/core/consumer/compatibility-workflows.js";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -112,8 +113,8 @@ test("the public check reaches the required owned Paper policy node", () => {
   );
   assert.match(controller, /actions\/build\/source\/check-lifecycle/);
   assert.match(action, /actions\/build\/source\/run-check/);
-  assert.equal(
-    fs.existsSync(path.join(repositoryRoot, ".github/workflows/check.yml")),
-    false,
-  );
+  const retained = fs.readFileSync(path.join(repositoryRoot, ".github/workflows/check.yml"), "utf8");
+  assert.equal(compatibilityWorkflowTarget(repositoryRoot, ".github/workflows/check.yml", retained), ".github/workflows/.build-check.yml");
+  assert.match(retained, /actions\/build\/source\/qualify/);
+
 });

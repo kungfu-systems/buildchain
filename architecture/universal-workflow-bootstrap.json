@@ -120,6 +120,7 @@
     ".github/workflows/.build-demo-adapter.yml",
     ".github/workflows/.build-demo.yml",
     ".github/workflows/.build-gate-profile.yml",
+    ".github/workflows/.build-historical.yml",
     ".github/workflows/.build-publication.yml",
     ".github/workflows/.build-stage-capsule-canary.yml",
     ".github/workflows/.build.yml",
@@ -154,6 +155,7 @@
     ".github/workflows/.release-tail.yml",
     ".github/workflows/.release-web.yml",
     ".github/workflows/build.yml",
+    ".github/workflows/check.yml",
     ".github/workflows/public-build-adopter-qualification.yml",
     ".github/workflows/public-build-check.yml",
     ".github/workflows/public-build-demo.yml",
@@ -182,7 +184,8 @@
     ".github/workflows/public-release-promote.yml",
     ".github/workflows/public-release-propagation.yml",
     ".github/workflows/public-release-tail.yml",
-    ".github/workflows/public-release-web.yml"
+    ".github/workflows/public-release-web.yml",
+    ".github/workflows/v4-stage-capsule-canary.yml"
   ],
   "bootstrapGovernedWorkflows": [
     ".github/workflows/.ops-bootstrap.yml",
@@ -199,6 +202,7 @@
     ".github/workflows/.build-demo-adapter.yml",
     ".github/workflows/.build-demo.yml",
     ".github/workflows/.build-gate-profile.yml",
+    ".github/workflows/.build-historical.yml",
     ".github/workflows/.build-publication.yml",
     ".github/workflows/.build-stage-capsule-canary.yml",
     ".github/workflows/.build.yml",
@@ -232,6 +236,7 @@
     ".github/workflows/.release-tail.yml",
     ".github/workflows/.release-web.yml",
     ".github/workflows/build.yml",
+    ".github/workflows/check.yml",
     ".github/workflows/public-build-adopter-qualification.yml",
     ".github/workflows/public-build-check.yml",
     ".github/workflows/public-build-demo.yml",
@@ -259,6 +264,7 @@
     ".github/workflows/public-release-promote.yml",
     ".github/workflows/public-release-propagation.yml",
     ".github/workflows/public-release-tail.yml",
-    ".github/workflows/public-release-web.yml"
+    ".github/workflows/public-release-web.yml",
+    ".github/workflows/v4-stage-capsule-canary.yml"
   ]
 }

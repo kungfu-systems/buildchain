@@ -90,6 +90,7 @@
             "aggregate",
             "execute",
             "plan",
+            "qualify-contract",
             "qualify-profile",
             "resolve",
             "run-profile"

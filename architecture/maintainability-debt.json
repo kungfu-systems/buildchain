@@ -2228,7 +2228,8 @@
     "tests/declarative-promotion-mode.test.mjs",
     "tests/github-governance-authority.test.mjs",
     "tests/macos-credential-island.test.mjs",
-    "tests/public-dogfood-contract.test.mjs"
+    "tests/public-dogfood-contract.test.mjs",
+    "packages/core/workflow/workflow-taxonomy.mjs"
   ],
   "burnDownSlices": [
     {

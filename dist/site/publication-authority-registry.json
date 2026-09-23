@@ -43,6 +43,19 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/.build-historical.yml",
+      "authorityClass": "non-publication-oidc",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/.build-historical.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/.build-publication.yml",
       "authorityClass": "evidence-publication",
       "publicationCapable": false,
@@ -960,6 +973,15 @@
       "classified": false
     },
     {
+      "path": ".github/workflows/.build-historical.yml",
+      "signals": [
+        "write-permission",
+        "oidc",
+        "environment"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/.build-publication.yml",
       "signals": [
         "write-permission"
@@ -1190,10 +1212,7 @@
     },
     {
       "path": ".github/workflows/build.yml",
-      "signals": [
-        "write-permission",
-        "oidc"
-      ],
+      "signals": [],
       "classified": true
     },
     {
@@ -1211,6 +1230,11 @@
         "oidc"
       ],
       "classified": true
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "signals": [],
+      "classified": false
     },
     {
       "path": ".github/workflows/public-build-adopter-qualification.yml",
@@ -1411,7 +1435,12 @@
         "environment"
       ],
       "classified": true
+    },
+    {
+      "path": ".github/workflows/v4-stage-capsule-canary.yml",
+      "signals": [],
+      "classified": false
     }
   ],
-  "registryDigest": "dd1418b0f9f5930caa3d33c9088a05eb620e53bc455ccc4ec681639dcdd3ceaa"
+  "registryDigest": "2bc253594c7ffed8c9a1c4ebb711b8130b96e1822adfa953241772253df64861"
 }

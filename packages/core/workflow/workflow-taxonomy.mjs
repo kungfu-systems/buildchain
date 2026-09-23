@@ -346,14 +346,18 @@ export function checkWorkflowTaxonomy(
     validateWorkflow(entry, files[workflowPath(entry)], declared, errors);
   for (const entry of compatibility) {
     validateWorkflow(entry, files[entry.path], declared, errors);
-    if (
-      files[entry.target] &&
-      files[entry.path] !==
-        renderCompatibilityWorkflow(entry, files[entry.target])
-    )
-      errors.push(
-        `${entry.path}: generated consumer compatibility workflow drift`,
-      );
+    try {
+      if (
+        files[entry.target] &&
+        files[entry.path] !==
+          renderCompatibilityWorkflow(entry, files[entry.target])
+      )
+        errors.push(
+          `${entry.path}: generated consumer compatibility workflow drift`,
+        );
+    } catch (error) {
+      errors.push(`${entry.path}: ${error.message}`);
+    }
   }
   if (integration) validateGateIntegration(root, errors);
   if (documentation) {

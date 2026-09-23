@@ -4,8 +4,8 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 113,
-    "workflowCount": 73,
-    "actionCount": 283,
+    "workflowCount": 76,
+    "actionCount": 284,
     "sitePageCount": 94,
     "docCommandRefCount": 998,
     "failureCount": 0
@@ -604,13 +604,14 @@
         "path": ".github/workflows/.build-candidate.yml",
         "reusable": true,
         "inputs": [
+          "compatibility-inputs",
           "config-path",
           "contract-lock",
           "resume-run-id",
           "runtime-ref",
           "runtime-selection"
         ],
-        "inputCount": 5,
+        "inputCount": 6,
         "secrets": [
           "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64",
           "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
@@ -799,6 +800,34 @@
         "outputCount": 14
       },
       {
+        "id": ".build-historical",
+        "path": ".github/workflows/.build-historical.yml",
+        "reusable": true,
+        "inputs": [
+          "compatibility-inputs",
+          "config-path",
+          "contract-lock",
+          "resume-run-id",
+          "runtime-ref",
+          "runtime-selection"
+        ],
+        "inputCount": 6,
+        "secrets": [
+          "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64",
+          "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
+          "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
+          "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
+          "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
+          "BUILDCHAIN_PROMOTION_TOKEN"
+        ],
+        "secretCount": 6,
+        "outputs": [
+          "result",
+          "runtime-selection"
+        ],
+        "outputCount": 2
+      },
+      {
         "id": ".build-publication",
         "path": ".github/workflows/.build-publication.yml",
         "reusable": true,
@@ -874,13 +903,14 @@
         "path": ".github/workflows/.build.yml",
         "reusable": true,
         "inputs": [
+          "compatibility-inputs",
           "config-path",
           "contract-lock",
           "resume-run-id",
           "runtime-ref",
           "runtime-selection"
         ],
-        "inputCount": 5,
+        "inputCount": 6,
         "secrets": [
           "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64",
           "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
@@ -2013,14 +2043,110 @@
         "path": ".github/workflows/build.yml",
         "reusable": true,
         "inputs": [
+          "artifact-compression-level",
+          "artifact-finalization-command",
+          "artifact-finalization-on-platform",
+          "artifact-name",
+          "artifact-name-template",
+          "artifact-paths",
+          "artifact-relay-s3-bucket",
+          "artifact-relay-s3-download-role-arn",
+          "artifact-relay-s3-oidc-audience",
+          "artifact-relay-s3-prefix",
+          "artifact-relay-s3-region",
+          "artifact-relay-s3-role-arn",
+          "artifact-relay-s3-upload-role-arn",
+          "artifact-retention-days",
+          "artifact-signing-request-upload-no-proxy",
+          "artifact-transfer-mode",
+          "aws-codebuild-project",
+          "aws-ec2-macos-runner-label",
+          "aws-ec2-windows-runner-label",
+          "build-command",
+          "buildchain-alpha-contract-lock-path",
+          "buildchain-channel",
+          "buildchain-contract-compatibility-policy",
+          "buildchain-contract-drift-issue-mode",
+          "buildchain-contract-lock-path",
+          "buildchain-expected-channel",
+          "buildchain-expected-major",
+          "buildchain-ref",
+          "buildchain-repository",
+          "buildchain-stable-contract-lock-path",
+          "cache-dependency-lock-root",
+          "cache-policy-root",
+          "cache-toolchain-root",
+          "cargo-registry-index",
+          "checkout-cache-fallback",
+          "checkout-cache-fetch-attempts",
+          "checkout-cache-github-timeout-seconds",
+          "checkout-cache-mirror-url-template",
+          "checkout-cache-mode",
+          "checkout-cache-reference-repository-template",
+          "checkout-cache-timeout-seconds",
+          "checkout-history-mode",
+          "compiler-cache-platforms-json",
+          "compiler-cache-provider",
+          "compiler-cache-required",
           "config-path",
           "contract-lock",
+          "control-runner-json",
+          "credential-island-caller-owned",
+          "credential-island-environment",
+          "credential-island-macos-app-path",
+          "credential-island-macos-platform-id",
+          "expected-artifacts-json",
+          "fail-fast",
+          "gate-profile-aggregate-json",
+          "github-artifact-attestation-platform-id",
+          "github-artifact-attestation-signer-sha",
+          "github-artifact-attestation-subject-path",
+          "install-command",
+          "kfd-agent-hub",
+          "lifecycle-timeout-minutes",
+          "linux-container-image",
+          "linux-container-preset",
+          "node-version",
+          "platforms-json",
+          "pre-upload-transport-smoke-artifact-root",
+          "pre-upload-transport-smoke-scenario-path",
+          "process-sample-interval-ms",
+          "process-summary-path",
+          "publish-anchor-request-json",
+          "publish-channel",
+          "publish-refs-json",
+          "publish-registry",
+          "publish-source-ref",
+          "release-candidate",
+          "release-candidate-family-evidence-json",
+          "requested-parallelism",
+          "require-build",
+          "require-install",
+          "require-trusted-event",
+          "require-verify",
           "resume-run-id",
+          "runner-preset",
           "runtime-ref",
-          "runtime-selection"
+          "runtime-selection",
+          "rust-toolchain",
+          "rustup-dist-server",
+          "rustup-update-root",
+          "sample-process-tree",
+          "self-hosted-offline-fallback",
+          "setup-node",
+          "setup-rust",
+          "shifu-cache-profile-digest",
+          "shifu-cache-profile-ref",
+          "untrusted-policy",
+          "verify-command",
+          "verify-substage-evidence-path",
+          "working-directory"
         ],
-        "inputCount": 5,
+        "inputCount": 98,
         "secrets": [
+          "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
+          "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
+          "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN",
           "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64",
           "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
           "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
@@ -2028,13 +2154,57 @@
           "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
           "BUILDCHAIN_PROMOTION_TOKEN"
         ],
-        "secretCount": 6,
+        "secretCount": 9,
         "outputs": [
+          "artifact-coordinates-json",
+          "build-diagnostics-summary-artifact",
+          "build-diagnostics-summary-json",
+          "build-summary-artifact",
+          "build-summary-json",
+          "buildchain-channel",
+          "buildchain-channel-reason",
+          "buildchain-channel-selection-source",
+          "buildchain-contract-digest",
+          "buildchain-contract-lock-drift",
+          "buildchain-contract-lock-status",
+          "buildchain-runtime-class",
+          "buildchain-runtime-override",
+          "buildchain-runtime-ref",
+          "buildchain-runtime-sha",
+          "buildchain-runtime-trust-decision",
+          "controller-plan-artifact",
+          "controller-plan-digest",
+          "controller-plan-json",
           "controller-receipt-artifact",
+          "controller-receipt-digest",
+          "controller-receipt-json",
+          "controller-receipt-status",
+          "credential-island-macos-artifact",
+          "credential-island-macos-manifest-artifact",
+          "linux-container-enabled",
+          "linux-container-image",
+          "platform-count",
+          "platforms-json",
+          "publish-allowed",
+          "publish-channel",
+          "publish-reason",
+          "publish-source-channel",
+          "publish-source-consumer-version",
+          "publish-source-line",
+          "publish-source-locked",
+          "publish-source-ref",
+          "publish-source-sha",
+          "publish-source-tree-sha",
           "release-candidate-artifact",
-          "result"
+          "release-candidate-passport-artifact",
+          "release-candidate-passport-json",
+          "release-manifest-json",
+          "result",
+          "runner-preset",
+          "runner-routing-json",
+          "trusted-event"
         ],
-        "outputCount": 3
+        "outputCount": 47
       },
       {
         "id": "buildchain-recover",
@@ -2057,6 +2227,46 @@
         "secretCount": 0,
         "outputs": [],
         "outputCount": 0
+      },
+      {
+        "id": "check",
+        "path": ".github/workflows/check.yml",
+        "reusable": true,
+        "inputs": [
+          "buildchain-ref",
+          "buildchain-repository",
+          "contract-lock",
+          "mode",
+          "node-version",
+          "require-version-state",
+          "runtime-ref",
+          "runtime-selection",
+          "source-proof-closure-paths-json",
+          "source-proof-dependency-paths-json",
+          "source-proof-policy-paths-json",
+          "source-proof-required-contexts-json",
+          "source-proof-reuse",
+          "upload-artifacts",
+          "working-directory"
+        ],
+        "inputCount": 15,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [
+          "controller-plan-artifact",
+          "controller-plan-digest",
+          "controller-plan-json",
+          "controller-receipt-artifact",
+          "controller-receipt-digest",
+          "controller-receipt-json",
+          "controller-receipt-status",
+          "source-proof-decision-root",
+          "source-proof-producer-run-id",
+          "source-proof-reuse-reason",
+          "source-proof-reused",
+          "source-proof-root"
+        ],
+        "outputCount": 12
       },
       {
         "id": "public-build-adopter-qualification",
@@ -3113,6 +3323,27 @@
           "web-surface-urls-json"
         ],
         "outputCount": 23
+      },
+      {
+        "id": "v4-stage-capsule-canary",
+        "path": ".github/workflows/v4-stage-capsule-canary.yml",
+        "reusable": true,
+        "inputs": [
+          "build-artifact-path",
+          "consumer",
+          "contract-lock",
+          "go-version",
+          "install-artifact-path",
+          "node-version",
+          "runtime-ref",
+          "runtime-selection",
+          "verify-artifact-path"
+        ],
+        "inputCount": 9,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
       }
     ],
     "actionInputs": [
@@ -3612,6 +3843,15 @@
         "inputCount": 2
       },
       {
+        "id": "build/gate/qualify-contract",
+        "path": "actions/build/gate/qualify-contract/action.yml",
+        "inputs": [
+          "conclusion",
+          "result"
+        ],
+        "inputCount": 2
+      },
+      {
         "id": "build/gate/qualify-profile",
         "path": "actions/build/gate/qualify-profile/action.yml",
         "inputs": [
@@ -3642,12 +3882,13 @@
         "id": "build/lifecycle/plan",
         "path": "actions/build/lifecycle/plan/action.yml",
         "inputs": [
+          "compatibility-inputs",
           "config-path",
           "control-token",
           "workflow-ref",
           "workflow-sha"
         ],
-        "inputCount": 4
+        "inputCount": 5
       },
       {
         "id": "build/lifecycle/prepare",
@@ -3714,13 +3955,14 @@
         "id": "build/plan/resolve",
         "path": "actions/build/plan/resolve/action.yml",
         "inputs": [
+          "compatibility-inputs",
           "config-path",
           "control-token",
           "token",
           "workflow-ref",
           "workflow-sha"
         ],
-        "inputCount": 5
+        "inputCount": 6
       },
       {
         "id": "build/signing/admit-requests",
@@ -5833,6 +6075,7 @@
         "id": "runtime/selection/resolve",
         "path": "actions/runtime/selection/resolve/action.yml",
         "inputs": [
+          "compatibility-inputs",
           "contract-lock",
           "pipeline-attempt",
           "recovery-attempt",
@@ -5845,7 +6088,7 @@
           "workflow-ref",
           "workflow-sha"
         ],
-        "inputCount": 11
+        "inputCount": 12
       },
       {
         "id": "runtime/toolchain/user-paths",
@@ -11661,7 +11904,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "b0cf6f05cea3a3730c2afc07fa767d913242387c9aca6674c7b1a7932d2de31d",
-    "workflowRegistryDigest": "f003f899bdf9ef28eea93c899466211c2b4402e7c6fe48effd3655736e65822b",
+    "workflowRegistryDigest": "db57af37bb9e7cb0531af4415f5199fc79e222dfb6f575b80a007a3be67d2577",
     "pageRegistryDigest": "36e7f641d8d2e6d167f52cd2b04c563ab8b9befe6c2003b2d27fefe4f17f5cc0"
   },
   "comparison": {

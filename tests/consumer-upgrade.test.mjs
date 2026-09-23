@@ -8,6 +8,7 @@ import { resolveBuildConfiguration } from "../packages/core/build/plan/configura
 import { runtimeSelector } from "../packages/core/runtime/entry/selection.js";
 import YAML from "yaml";
 import { fileURLToPath } from "node:url";
+import { renderCompatibilityWorkflow } from "../packages/core/consumer/compatibility-workflows.js";
 
 test("unchanged schema-1 consumer executes install, build and verify with the current CLI", (t) => {
   const consumer = fs.mkdtempSync(path.join(os.tmpdir(), "consumer-upgrade-"));
@@ -120,11 +121,14 @@ for (const entry of contract.entries) {
     );
     assert.deepEqual(
       actual.permissions ?? null,
-      entry.permissions,
+      entry.inheritCallerPermissions ? null : entry.permissions,
       "historical permission boundary",
     );
     const implementation = YAML.parse(
-      fs.readFileSync(path.join(root, entry.target), "utf8"),
+      renderCompatibilityWorkflow(
+        entry,
+        fs.readFileSync(path.join(root, entry.target), "utf8"),
+      ),
     );
     assert.deepEqual(
       actual.jobs,

@@ -3583,6 +3583,159 @@
         "expectedContributionSeconds": 0,
         "rationale": "Runs only after completed exact-source public installation qualification; no merge-critical runner lane is added."
       }
+    },
+    {
+      "laneId": ".github/workflows/.build-historical.yml#attest",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 15,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "build orchestration latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "Attest only the verified final artifact identity."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.build-historical.yml#build-container",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 180,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "build orchestration latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "Run ordered project stages on the governed Linux container."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.build-historical.yml#deliver",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 15,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "build orchestration latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "Verify every required producer and publish rooted final references."
+      }
+    },
+    {
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "runtime entry preparation",
+        "expectedContributionSeconds": 300,
+        "rationale": "Five-minute upper bound for central entry selection; no business execution or provider mutation."
+      },
+      "laneId": ".github/workflows/.build-historical.yml#execution-runtime"
+    },
+    {
+      "laneId": ".github/workflows/.build-historical.yml#plan",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 10,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "build orchestration latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "Admit the source and runtime and resolve the read-only project plan."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.build-historical.yml#sign",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 180,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "build orchestration latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "Keep detached signing and certificate instances separate from source execution."
+      }
+    },
+    {
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "runtime entry preparation",
+        "expectedContributionSeconds": 300,
+        "rationale": "Five-minute upper bound for central entry selection; no business execution or provider mutation."
+      },
+      "laneId": ".github/workflows/check.yml#execution-runtime"
+    },
+    {
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "runtime entry preparation",
+        "expectedContributionSeconds": 300,
+        "rationale": "Five-minute upper bound for central entry selection; no business execution or provider mutation."
+      },
+      "laneId": ".github/workflows/v4-stage-capsule-canary.yml#execution-runtime"
+    },
+    {
+      "laneId": ".github/workflows/.build-historical.yml#build-native",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 180,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "build orchestration latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "Run ordered project stages on the governed Linux container."
+      }
     }
   ],
   "declarationFamilies": [

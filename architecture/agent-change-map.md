@@ -130,6 +130,7 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - `tests/github-governance-authority.test.mjs`
 - `tests/macos-credential-island.test.mjs`
 - `tests/public-dogfood-contract.test.mjs`
+- `packages/core/workflow/workflow-taxonomy.mjs`
 
 ## action-process-runtime
 
@@ -2244,6 +2245,7 @@ Owner: Buildchain runtime maintainers
 - `packages/core/runtime/entry/actions.js`
 - `packages/core/runtime/entry/activation.js`
 - `packages/core/runtime/entry/attempt.js`
+- `packages/core/runtime/entry/compatibility.js`
 - `packages/core/runtime/entry/github.js`
 - `packages/core/runtime/entry/recovery.js`
 - `packages/core/runtime/entry/selection.js`
@@ -2257,11 +2259,13 @@ Owner: Buildchain runtime maintainers
 
 ### Tests
 
+- `tests/consumer-build-compatibility.test.mjs`
 - `tests/pipeline-recovery-runtime-continuation.test.mjs`
 - `tests/runtime-entry-activation.test.mjs`
 - `tests/runtime-entry-architecture.test.mjs`
 - `tests/runtime-entry-provider.test.mjs`
 - `tests/runtime-entry-selection.test.mjs`
+- `tests/runtime-entry-transport.test.mjs`
 
 ### Generated outputs
 
@@ -2270,7 +2274,7 @@ Owner: Buildchain runtime maintainers
 
 ### Minimal validation
 
-- `node --test tests/runtime-entry-selection.test.mjs tests/runtime-entry-activation.test.mjs tests/runtime-entry-provider.test.mjs tests/runtime-entry-architecture.test.mjs`
+- `node --test tests/runtime-entry-selection.test.mjs tests/runtime-entry-activation.test.mjs tests/runtime-entry-provider.test.mjs tests/runtime-entry-architecture.test.mjs tests/runtime-entry-transport.test.mjs tests/consumer-build-compatibility.test.mjs`
 
 ## runtime-provider-foundations
 
