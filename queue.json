@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 371,
+  "generation": 372,
   "fencingCounter": 82,
   "policy": {
     "agingSeconds": 900,
@@ -14,7 +14,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.1",
     "candidateId": "sha256:faa1685526283aeacf36bbab3e7b8b8ba96d75a5db688de659db347b4b949e4e",
@@ -96,8 +96,13 @@
     "issuedAt": "2026-09-23T12:05:09.175Z",
     "expiresAt": "2026-09-23T13:17:06.866Z",
     "fencingToken": "sha256:08f0bee6c7bc9bf6c7a11852cfbaeb4883b8eef7ec439a5f24d115eb5428a3d8",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-09-23T12:17:06.866Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-09-23T12:17:06.866Z",
+    "nativeProofRoot": "sha256:810052ecceefc038a3fe5d4f4018a051fe4a9a209f2f681201d6c25a5fcfe046",
+    "nativeExecutionReceiptRoot": "sha256:2b8d0d3ba580d84036d13640f1b180dea03f895e911a9e58959afb90c4a602e6",
+    "nativeProofReuseRoot": "sha256:d78afca5caefaa57aa329d7ced2dc4446e9e7328d644df2f8ad599e04ea0544c",
+    "qualificationReceiptRoot": "sha256:540fba253b619382fc4a24095cd9b860d16dc658427d3f84445ca9bb605a10c6",
+    "qualifiedAt": "2026-09-23T12:20:05.549Z"
   },
   "candidates": [
     {
@@ -11417,10 +11422,10 @@
       "sourceWorkflowRunId": 35855793232,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-23T12:05:05.442Z",
-      "updatedAt": "2026-09-23T12:17:06.866Z",
+      "updatedAt": "2026-09-23T12:20:05.549Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         "actions/build/artifact/finalize/dist/index.js",
@@ -11477,6 +11482,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-23T12:17:06.866Z",
-  "stateRoot": "sha256:c6feeede0f8974fe23ba44dc47e5060899694d0b58597ae4e2c81ad0810f1a7c"
+  "updatedAt": "2026-09-23T12:20:05.549Z",
+  "stateRoot": "sha256:a556f0f23d981621a64b22d1594679ebed0523e9f982455cc034d2fc5a4c04be"
 }
