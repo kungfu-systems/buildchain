@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 377,
+  "generation": 378,
   "fencingCounter": 83,
   "policy": {
     "agingSeconds": 900,
@@ -14,7 +14,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.1",
     "candidateId": "sha256:7fc58b5699e4dee0851393b65314d33d87731342e76ab2f15c76b563056d9fc9",
@@ -56,8 +56,13 @@
     "issuedAt": "2026-09-23T16:16:40.382Z",
     "expiresAt": "2026-09-23T17:23:09.450Z",
     "fencingToken": "sha256:2a7a17ef6015c71ce78369d5aa7edfef1f48dee02471979cbb7a2767abea93db",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-09-23T16:23:09.450Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-09-23T16:23:09.450Z",
+    "nativeProofRoot": "sha256:0468a2d7e2ad0b3769ea264261839a7d37ec16d5697b40c8f0cdbfb1c68b0c5d",
+    "nativeExecutionReceiptRoot": "sha256:844c4224cd9d92c58f227037d6e3c912e889ca0f2131df74c851fc91721ffd50",
+    "nativeProofReuseRoot": "sha256:874a77b86ed368d87dd583102f36d80771760ec3b065428196edf707c655e051",
+    "qualificationReceiptRoot": "sha256:72fc629ae582af00004a748be0b4b19ffd14a740b6b27b2ca4f943a14e8196d8",
+    "qualifiedAt": "2026-09-23T16:28:26.763Z"
   },
   "candidates": [
     {
@@ -11469,10 +11474,10 @@
       "sourceWorkflowRunId": 35883975751,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-23T16:16:36.034Z",
-      "updatedAt": "2026-09-23T16:23:09.450Z",
+      "updatedAt": "2026-09-23T16:28:26.763Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         ".buildchain/release-impact.json",
@@ -11489,6 +11494,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-23T16:23:09.450Z",
-  "stateRoot": "sha256:fa12346ab87f3c16241ce168f16624eee58beee88723914154c25197ea2d2f75"
+  "updatedAt": "2026-09-23T16:28:26.763Z",
+  "stateRoot": "sha256:737fd81ea69ec78e08b48f1cfdd4e3211ad50bad4aa27b999264a258acb87b12"
 }
