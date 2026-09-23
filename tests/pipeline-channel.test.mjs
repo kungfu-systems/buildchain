@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { pipelineHostFixture } from "./helpers/pipeline-host.mjs";
 import { openPipelineSession } from "../packages/core/workflow/pipeline/session.js";
 import { controlPipelineChannel } from "../packages/core/workflow/pipeline/channel-control.js";
+import { controlPipeline } from "../packages/core/workflow/pipeline/controller.js";
 import {
   beginPipelineBuild,
   recordPipelineBuild,
@@ -81,6 +82,45 @@ test("lawful channel PR uses protected queue and hands exact merge to the distin
     "next-development",
   ]);
   assert.notEqual(observed.status, "complete");
+
+  // A merged PR's run.head_sha names its source, while its signing certificate
+  // names the merge commit. Publication must use the normal attempt dispatch,
+  // whose provider run and signing source identify the same execution commit.
+  f.admission.live.state = "closed";
+  f.host.channel = (selected, admission, input) =>
+    controlPipelineChannel(selected, admission, input, f.host);
+  const request = f.host.request;
+  f.host.request = (url, options) =>
+    url.endsWith("/pulls/23")
+      ? { base: { ref: f.admission.route.to }, state: "closed" }
+      : request(url, options);
+  const retained = JSON.stringify(f.snapshot());
+  for (const [name, action] of [
+    ["pull_request", "closed"],
+    ["pull_request_target", "closed"],
+    ["pull_request_review", "submitted"],
+  ]) {
+    const before = f.effects.filter((effect) => effect.wake).length;
+    const result = await controlPipeline(
+      name,
+      {
+        repository: { full_name: f.host.repository },
+        action,
+        pull_request: { number: 23 },
+      },
+      inputs,
+      f.host,
+    );
+    assert.equal(result.operation, "wait", name);
+    assert.equal(result.reason, "publication-requires-a-normal-dispatch");
+    assert.equal(result.attempt, observed.attempt);
+    assert.equal(f.effects.filter((effect) => effect.wake).length, before + 1);
+    assert.equal(JSON.stringify(f.snapshot()), retained);
+  }
+  const dispatched = await f.wake();
+  assert.equal(dispatched.operation, "publish");
+  assert.equal(dispatched.attempt, observed.attempt);
+  assert.equal(JSON.stringify(f.snapshot()), retained);
 });
 
 test("repeated channel source retirement reuses verified immutable material across workers", async () => {

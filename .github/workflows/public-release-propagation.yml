@@ -1,0 +1,231 @@
+# Generated from the consumer upgrade contract; edit the canonical implementation.
+name: Release Propagation
+on:
+  workflow_call:
+    inputs:
+      graph-json:
+        description: Release propagation graph JSON
+        required: true
+        type: string
+      upstream-release-json:
+        description: Finalized upstream release envelope JSON
+        required: true
+        type: string
+      source-node:
+        description: Optional source node id; inferred from repository/package when omitted
+        default: ""
+        required: false
+        type: string
+      downstream-target:
+        description: Target downstream node id or owner/repo
+        required: true
+        type: string
+      downstream-repository:
+        description: Downstream owner/repo to checkout and update
+        required: true
+        type: string
+      downstream-base-ref:
+        description: Downstream PR base branch
+        required: true
+        type: string
+      downstream-branch:
+        description: Optional downstream update branch override. Empty uses the exact release identity.
+        default: ""
+        required: false
+        type: string
+      lock-path:
+        description: Optional downstream lock path override
+        default: ""
+        required: false
+        type: string
+      downstream-update-command:
+        description: Optional consumer-owned command that applies the exact lock to downstream
+          package/config pins
+        default: ""
+        required: false
+        type: string
+      pr-title:
+        description: Downstream PR title
+        default: "chore: consume upstream release"
+        required: false
+        type: string
+      pr-body:
+        description: Additional downstream PR body
+        default: ""
+        required: false
+        type: string
+      downstream-prepare-command:
+        description: Optional consumer-owned command that pins the propagated release and updates
+          deterministic generated files
+        default: ""
+        required: false
+        type: string
+      refresh-managed-readme-badges:
+        description: Refresh a Buildchain-managed README badge block after consumer preparation
+        default: true
+        required: false
+        type: boolean
+      downstream-verify-command:
+        description: Optional consumer-owned check command run against the final propagation tree before commit
+        default: ""
+        required: false
+        type: string
+      agent-work-context-json:
+        description: Optional exact typed Family State, WorkRef, and authority context; when present emits a
+          resumable propagation work unit
+        default: ""
+        required: false
+        type: string
+      agent-work-mode:
+        description: capture-only emits a paused typed Work; execute requires an exact authorized Work context
+        default: capture-only
+        required: false
+        type: string
+      dry-run:
+        description: Plan and write lock without pushing a PR
+        default: true
+        required: false
+        type: boolean
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
+    secrets:
+      propagation-token:
+        description: Token with contents:write and pull-requests:write on the downstream repository
+        required: false
+    outputs:
+      controller-plan-artifact:
+        description: Controller plan artifact name
+        value: ${{ jobs.propagate.outputs.controller-plan-artifact }}
+      controller-plan-json:
+        description: Compact controller plan JSON
+        value: ${{ jobs.propagate.outputs.controller-plan-json }}
+      controller-plan-digest:
+        description: Controller plan digest
+        value: ${{ jobs.propagate.outputs.controller-plan-digest }}
+      controller-receipt-artifact:
+        description: Controller receipt artifact name
+        value: ${{ jobs.propagate.outputs.controller-receipt-artifact }}
+      controller-receipt-json:
+        description: Compact controller receipt JSON
+        value: ${{ jobs.propagate.outputs.controller-receipt-json }}
+      controller-receipt-digest:
+        description: Controller receipt digest
+        value: ${{ jobs.propagate.outputs.controller-receipt-digest }}
+      controller-receipt-status:
+        description: Controller receipt status
+        value: ${{ jobs.propagate.outputs.controller-receipt-status }}
+      propagation-receipt-json:
+        description: Exact release propagation receipt JSON
+        value: ${{ jobs.propagate.outputs.propagation-receipt-json }}
+      propagation-receipt-digest:
+        description: Exact release propagation receipt SHA-256
+        value: ${{ jobs.propagate.outputs.propagation-receipt-digest }}
+      propagation-work-artifact:
+        description: Agent-native propagation work artifact name
+        value: ${{ jobs.propagate.outputs.propagation-work-artifact }}
+      propagation-work-json:
+        description: Latest agent-native propagation work envelope
+        value: ${{ jobs.propagate.outputs.propagation-work-json }}
+      propagation-work-root:
+        description: Latest agent-native propagation work content root
+        value: ${{ jobs.propagate.outputs.propagation-work-root }}
+      propagation-work-next-action:
+        description: Next executable agent action
+        value: ${{ jobs.propagate.outputs.propagation-work-next-action }}
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
+  propagate:
+    name: Create downstream release propagation PR
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: |-
+        buildchain-release-propagation-${{
+          fromJSON(inputs.upstream-release-json).repository
+        }}-${{
+          fromJSON(inputs.upstream-release-json).package.version
+          || fromJSON(inputs.upstream-release-json).publicationArtifact.version
+        }}-${{
+          fromJSON(inputs.upstream-release-json).channel
+        }}-${{
+          inputs.downstream-repository
+        }}
+      cancel-in-progress: false
+    outputs:
+      controller-plan-artifact: ${{ steps.propagation-deliver.outputs.controller-plan-artifact }}
+      controller-plan-json: ${{ steps.propagation-plan.outputs.controller-plan-json }}
+      controller-plan-digest: ${{ steps.propagation-plan.outputs.controller-plan-digest }}
+      controller-receipt-artifact: ${{ steps.propagation-deliver.outputs.controller-receipt-artifact }}
+      controller-receipt-json: ${{ steps.propagation-deliver.outputs.controller-receipt-json }}
+      controller-receipt-digest: ${{ steps.propagation-deliver.outputs.controller-receipt-digest }}
+      controller-receipt-status: ${{ steps.propagation-deliver.outputs.controller-receipt-status }}
+      propagation-receipt-json: ${{ steps.propagation-deliver.outputs.propagation-receipt-json }}
+      propagation-receipt-digest: ${{ steps.propagation-deliver.outputs.propagation-receipt-digest }}
+      propagation-work-artifact: ${{ steps.propagation-plan.outputs.propagation-work-artifact }}
+      propagation-work-json: ${{ steps.propagation-deliver.outputs.propagation-work-json }}
+      propagation-work-root: ${{ steps.propagation-deliver.outputs.propagation-work-root }}
+      propagation-work-next-action: ${{ steps.propagation-deliver.outputs.propagation-work-next-action }}
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Plan downstream propagation
+        id: propagation-plan
+        uses: ./.buildchain/runtime/actions/release/propagation/plan
+        with:
+          runtime-ref: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
+          runtime-repository: kungfu-systems/buildchain
+          request-json: ${{ toJSON(inputs) }}
+          secrets-propagation-token: ${{ secrets.propagation-token }}
+      - name: Materialize verified downstream update
+        id: propagation-materialize
+        uses: ./.buildchain/runtime/actions/release/propagation/materialize
+        with:
+          request-json: ${{ toJSON(inputs) }}
+          node-path: ${{ steps.propagation-plan.outputs.node-path }}
+      - name: Deliver propagation and report evidence
+        id: propagation-deliver
+        if: ${{ always() }}
+        uses: ./.buildchain/runtime/actions/release/propagation/deliver
+        with:
+          request-json: ${{ toJSON(inputs) }}
+          token: ${{ secrets.propagation-token }}
+          controller-plan-digest: ${{ steps.propagation-plan.outputs.controller-plan-digest }}
+          propagation-key: ${{ steps.propagation-plan.outputs.propagation-key }}
+          predecessors-ok: ${{ steps.propagation-plan.outcome == 'success' &&
+            steps.propagation-materialize.outcome == 'success' }}
+    needs:
+      - execution-runtime

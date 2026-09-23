@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { compatibilityWorkflowTarget } from "../../consumer/compatibility-workflows.js";
 import { exactObject, exactRuntime, fail, contentRoot } from "./identity.js";
 function rawFileRoot(runtimeRoot, relative) {
   const hash = crypto.createHash("sha256");
@@ -41,14 +42,17 @@ export function executeBootstrapConformance(
       ),
     ),
   );
+  const governed = [...new Set(architecture.bootstrapGovernedWorkflows.map(relative =>
+    compatibilityWorkflowTarget(runtimeRoot, relative, fs.readFileSync(path.join(runtimeRoot, relative), "utf8"))
+  ))];
   if (
-    architecture.bootstrapGovernedWorkflows.length !==
+    governed.length !==
       request.payload.expectedGovernedWorkflowCount ||
     architecture.status !== "active" ||
     policy.allowedCapabilities.includes("workflow-contract")
   )
     fail("candidate Bootstrap conformance does not close execution semantics");
-  for (const relative of architecture.bootstrapGovernedWorkflows) {
+  for (const relative of governed) {
     const source = fs.readFileSync(path.join(runtimeRoot, relative), "utf8");
     if (
       relative !== architecture.bootstrap.publicWorkflow &&
@@ -60,7 +64,7 @@ export function executeBootstrapConformance(
     schema: "kungfu-buildchain-v4-universal-bootstrap-conformance-result/v1",
     status: "candidate-engine-executed",
     runtime: exactRuntime(admission),
-    governedWorkflowCount: architecture.bootstrapGovernedWorkflows.length,
+    governedWorkflowCount: governed.length,
     architectureRoot: rawFileRoot(
       runtimeRoot,
       "architecture/universal-workflow-bootstrap.json",

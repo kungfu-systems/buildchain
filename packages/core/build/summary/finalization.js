@@ -1,3 +1,4 @@
+import { historicalBuildOutputs } from "./historical-outputs.js";
 import { aggregate } from "./aggregation.js";
 import { controllerReceipt } from "./controller-receipt.js";
 import path from "node:path";
@@ -97,6 +98,22 @@ async function finalizeBuild(context, jobs) {
     ["diagnostics-summary.json"],
     file(".buildchain/artifacts"),
   );
+  let historicalOutputs;
+  if (plan.identity.visible_workflow === ".github/workflows/build.yml") {
+    artifacts.controller_plan = await upload(
+      plan,
+      `${plan.artifacts.name}-controller-plan-${plan.source.sha}`,
+      ["plan.json"],
+      file(".buildchain/controller"),
+    );
+    historicalOutputs = historicalBuildOutputs(
+      plan,
+      artifacts,
+      controller,
+      aggregated.summary,
+      file,
+    );
+  }
   const result = {
     schema: "buildchain.build-result/v1",
     status: "success",
@@ -104,6 +121,7 @@ async function finalizeBuild(context, jobs) {
     source: plan.source,
     runtime: plan.identity,
     artifacts,
+    ...(historicalOutputs ? { historical_outputs: historicalOutputs } : {}),
   };
   const rooted = { ...result, root: rootOf(result) };
   await publishRecord(

@@ -15,6 +15,7 @@ const protectedDogfoodRef = PUBLIC_DOGFOOD_ENTRY_REF;
 const fixturePaths = [
   "actions/build/verification/repository",
   "architecture/workflow-taxonomy.json",
+  "architecture/consumer-upgrade.json",
   "actions/build/stage-capsule",
   "packages/core/build/stage-capsule/actions.js",
   "packages/core/build/stage-capsule/canary.js",
@@ -144,7 +145,7 @@ test("the consumer pair cannot hide another event controller in a product librar
   );
   assert.throws(
     () => checkPublicDogfoodContract(target),
-    /product library owns a repository event/u,
+    /product library owns a repository event|public\/component entry has repository event triggers/u,
   );
 });
 

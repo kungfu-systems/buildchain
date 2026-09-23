@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-20
+last_reviewed: 2026-09-24
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-20
+  generated_at: 2026-09-24
   visible_context: Buildchain 4.1 source, architecture registries and local validation.
   invisible_context_boundary: No unpublished release or external consumer qualification is claimed.
 ---
@@ -20,9 +20,11 @@ ai_provenance:
 # Code organization
 
 Buildchain 4.1 uses responsibility layers, then capability directories. The
-normal pipeline and exact-attempt recovery workflows are the consumer API.
-Product choices belong in schema-2 TOML; other workflows and every action are
-internal implementation. Source changes require separate published qualification.
+normal pipeline and exact-attempt recovery workflows are the API for new consumers.
+Their product choices belong in schema-2 TOML. Existing consumers retain the
+historical interfaces registered in `architecture/consumer-upgrade.json`; see
+[Compatible upgrades](getting-started.md#migrating-old-callers). Other workflows
+and actions are internal implementation. Source changes require separate published qualification.
 
 ```text
 .github/workflows/                 Consumer APIs and hosted job topology
@@ -118,9 +120,10 @@ the candidate build receipt is an input to that publication proof.
 
 Dependencies point down the layers. Core modules cannot import actions,
 workflows, CLI entries or repository tooling. A moved business implementation
-has one current owner; imports bind directly to that owner. Retired aliases,
-compatibility wrappers, command-hook fallbacks and old execution switches are
-removed. Immutable release and qualification evidence remains historical data.
+has one current owner; imports bind directly to that owner. Registered historical
+workflow paths are generated from their maintained canonical implementations.
+They preserve published contracts without independently maintained copies.
+Immutable release and qualification evidence remains historical data.
 
 `pnpm run check:layout` checks the closed directory vocabulary, action registry,
 entry sizes, node budgets, import direction and reachable JSON input fields.

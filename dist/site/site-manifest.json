@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:dc5a0ead4c0ee474b54fd29275ed6024099948730bbf645b1d5e26ed9a4d9402"
+      "digest": "sha256:e73a9d94a37deb8354f741ee3a780c7bae1ec5fc28dd7eb917717b0fa289d56f"
     },
     {
       "id": "getting-started",
@@ -61,7 +61,7 @@
       "path": "docs/getting-started.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:f7288047140441da510739759b4bc4e98953a93758241201517685ef2a59cfba"
+      "digest": "sha256:74b768144656395a3601173e38b931f6a228087f337551c4b3de5f1e36498d09"
     },
     {
       "id": "auditable-demo",
@@ -213,7 +213,7 @@
       "path": "docs/migration-inventory.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:704cb3bae314a8e57488fa1c0e897b7aa39619947dfdb02ceb1a6e1b945b8575"
+      "digest": "sha256:9c906930fd60bab1d22f56f8d1d26e1b83fe849bfcf67941b7e53003da15ba56"
     },
     {
       "id": "ownership",
@@ -253,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:eb8723de940d6c368163403df0680f9419379b3dc439f48bb5c5b52c778617c3"
+      "digest": "sha256:e05aeb1a6689be4bbb4958140caab07794d7a466f352f1b39eda1c7eb63bf0a9"
     },
     {
       "id": "build-facts",

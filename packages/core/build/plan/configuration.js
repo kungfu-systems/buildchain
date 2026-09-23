@@ -1,8 +1,11 @@
+import { resolveBuildIdentity } from "./identity.js";
 import { installationRoot } from "../../runtime/installation-root.js";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { loadBuildchainConfig } from "../../consumer/buildchain-config.js";
+import { historicalBuildInputs } from "./compatibility.js";
+import { historicalBuildLocator, finishHistoricalBuildPlan, historicalPublishGate } from "./compatibility-plan.js";
 import {
   containedBuildPath,
   discoverBuildConfiguration,
@@ -25,6 +28,8 @@ export function resolveBuildConfiguration({
   callerWorkflowRef = "",
   eventName = "",
   baseRef = "",
+  compatibilityInputs = {},
+  compatibilityEnvironment = {},
   environmentRegistry = JSON.parse(
     fs.readFileSync(
       path.join(runtimeRoot, "architecture/build-environments.json"),
@@ -36,43 +41,9 @@ export function resolveBuildConfiguration({
     if (!/^[a-f0-9]{40}$/u.test(value || ""))
       throw new Error(`${label} must be an exact SHA`);
   }
-  const match = String(workflowRef).match(
-    /^([^/]+\/[^/]+)\/(\.github\/workflows\/[^@]+)@(?:refs\/(?:heads|tags)\/)?(v([1-9]\d*)(-alpha)?)$/u,
-  );
-  if (!match || match[1] !== repository)
-    throw new Error(
-      "Ordinary builds require the exact called workflow identity on a floating channel",
-    );
-  const identity = {
-    repository,
-    ref: match[3],
-    full_ref: `refs/tags/${match[3]}`,
-    sha: workflowSha,
-    channel: match[5] ? "alpha" : "stable",
-    major: match[4],
-    visible_workflow: match[2],
-  };
-  const callerPath = callerWorkflowRef
-    .split("@")[0]
-    .split("/.github/workflows/")[1];
-  if (callerPath) {
-    const caller = fs.readFileSync(
-      containedBuildPath(root, `.github/workflows/${callerPath}`),
-      "utf8",
-    );
-    const calls = [
-      ...caller.matchAll(
-        /uses:\s+kungfu-systems\/buildchain\/(\.github\/workflows\/(?:build|\.build)\.yml)@(v\d+(?:-alpha)?)\s*$/gmu,
-      ),
-    ].filter((call) => call[2] === identity.ref);
-    const paths = [...new Set(calls.map((call) => call[1]))];
-    if (paths.length !== 1)
-      throw new Error(
-        "Unable to derive one visible build workflow from the exact caller",
-      );
-    identity.visible_workflow = paths[0];
-  }
-  const project = discoverBuildConfiguration(root, locator);
+  const identity = resolveBuildIdentity({ root, workflowRef, workflowSha, repository, callerWorkflowRef });
+  const historical = historicalBuildInputs(compatibilityInputs, compatibilityEnvironment);
+  const project = discoverBuildConfiguration(root, historicalBuildLocator(root, locator, historical));
   const loaded = loadBuildchainConfig(path.resolve(root, project.cwd));
   const build = normalizeBuildConfiguration(loaded.config.build);
   if (
@@ -188,6 +159,8 @@ export function resolveBuildConfiguration({
           : ".buildchain/contract-lock.json",
     },
   };
+  historicalPublishGate(plan, historical, eventName);
+  finishHistoricalBuildPlan(plan, historical, root);
   for (const [stage, status] of Object.entries(plan.lifecycle)) {
     if (status.required && !status.configured)
       throw new Error(`buildchain.toml must declare lifecycle.${stage}`);

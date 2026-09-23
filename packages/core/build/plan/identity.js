@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import { containedBuildPath } from "../build-configuration.js";
 import { rootOf } from "./values.js";
 export function assertPlan(plan) {
   const { root, ...body } = plan;
@@ -42,4 +44,44 @@ export function bindBuildPlan({
     throw new Error("Platform is not in the build plan");
   if (!workspace) throw new Error("Build workspace is required");
   return { plan, platform, workspace };
+}
+
+export function resolveBuildIdentity({ root, workflowRef, workflowSha, repository, callerWorkflowRef }) {
+  const match = String(workflowRef).match(
+    /^([^/]+\/[^/]+)\/(\.github\/workflows\/[^@]+)@(?:refs\/(?:heads|tags)\/)?(v([1-9]\d*)(-alpha)?)$/u,
+  );
+  if (!match || match[1] !== repository)
+    throw new Error(
+      "Ordinary builds require the exact called workflow identity on a floating channel",
+    );
+  const identity = {
+    repository,
+    ref: match[3],
+    full_ref: `refs/tags/${match[3]}`,
+    sha: workflowSha,
+    channel: match[5] ? "alpha" : "stable",
+    major: match[4],
+    visible_workflow: match[2],
+  };
+  const callerPath = callerWorkflowRef
+    .split("@")[0]
+    .split("/.github/workflows/")[1];
+  if (callerPath) {
+    const caller = fs.readFileSync(
+      containedBuildPath(root, `.github/workflows/${callerPath}`),
+      "utf8",
+    );
+    const calls = [
+      ...caller.matchAll(
+        /uses:\s+kungfu-systems\/buildchain\/(\.github\/workflows\/(?:build|\.build)\.yml)@(v\d+(?:-alpha)?)\s*$/gmu,
+      ),
+    ].filter((call) => call[2] === identity.ref);
+    const paths = [...new Set(calls.map((call) => call[1]))];
+    if (paths.length !== 1)
+      throw new Error(
+        "Unable to derive one visible build workflow from the exact caller",
+      );
+    identity.visible_workflow = paths[0];
+  }
+  return identity;
 }

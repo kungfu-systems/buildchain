@@ -1,3 +1,4 @@
+import { devDeliverySourceBinding } from "../dev-delivery-candidate-identity.js";
 import path from "node:path";
 import { requireValue } from "../../runtime/action-process.mjs";
 import { writeJson } from "../native/files.js";
@@ -19,7 +20,7 @@ export function handoffInputs(
     "expected-pr-number": warrant.pullRequestNumber,
     "expected-head-sha": warrant.sourceHead,
     "source-workflow-run-id": warrant.sourceWorkflowRunId,
-    "native-roots-json": JSON.stringify({ sourceRoot: warrant.sourceRoot }),
+    "native-roots-json": JSON.stringify(devDeliverySourceBinding(warrant)),
     "source-identity-root": warrant.sourceIdentityRoot,
     "source-patch-root": warrant.sourcePatchRoot,
     "plan-root": warrant.planRoot,

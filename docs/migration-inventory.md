@@ -8,20 +8,22 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-20
+last_reviewed: 2026-09-24
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-20
-  invisible_context: not asserted
+  generated_at: 2026-09-24
+  visible_context: Dated migration inventory and the registered consumer upgrade contract.
+  invisible_context_boundary: No unpublished release or external consumer qualification is claimed.
 ---
 
 # Buildchain v2 Migration Inventory
 
 This inventory records the dated Buildchain v2 consolidation boundary and its
-v3 successor. The original dispositions below remain historical. Current
-consumers follow the [minimal schema-2 contract](getting-started.md), using only
-the shared normal/recovery pair; historical wrappers are not compatibility APIs.
+v3 successor. The original dispositions below remain historical. New consumers
+follow the [minimal schema-2 contract](getting-started.md) through the shared
+normal/recovery pair. Existing consumers retain the registered historical paths;
+see [Compatible upgrades](getting-started.md#migrating-old-callers).
 Standalone `workflows` and `action-*` repositories are historical rollback
 anchors, not active Buildchain migration targets.
 

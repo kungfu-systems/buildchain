@@ -8,22 +8,23 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-20
+last_reviewed: 2026-09-24
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-20
-  visible_context: Exact GitHub channel refs and workflow files on 23 organization default branches
+  generated_at: 2026-09-24
+  visible_context: Retained dated migration observations and the registered consumer upgrade contract.
   invisible_context_boundary: Other branches, private or unlisted consumers and future floating ref updates were not established by this audit
 ---
 
 # Version-prefixed workflow path migration
 
 This page retains the dated 2026-09-05/06 migration observations. Its paths and
-channel readbacks are historical, not current consumer instructions. The current
-contract uses `public-ops-pipeline.yml` and `public-ops-recover.yml`; see
-[Getting started](getting-started.md). Former product-specific public workflows
-are now internal components, with no consumer compatibility aliases.
+channel readbacks are historical, not current consumer instructions. New consumers
+use `public-ops-pipeline.yml` and `public-ops-recover.yml`. Existing consumers
+retain the registered historical paths described in
+[Compatible upgrades](getting-started.md#migrating-old-callers). The retirement
+descriptions below remain dated observations of that earlier migration.
 
 This source change retires three filenames. Their reusable capabilities, inputs,
 outputs, jobs and permission envelopes remain at the canonical paths below.
