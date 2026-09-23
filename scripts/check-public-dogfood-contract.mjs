@@ -5,6 +5,7 @@ import YAML from "yaml";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkSelfConsumerContract } from "./check-self-consumer-contract.mjs";
+import { compatibilityWorkflowTarget } from "../packages/core/consumer/compatibility-workflows.js";
 
 const DEFAULT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -188,6 +189,7 @@ function assertWorkflowInventory(root) {
     if (!entry.isFile() || !/\.ya?ml$/u.test(entry.name)) continue;
     let relative = `.github/workflows/${entry.name}`;
     const text = read(root, relative);
+    relative = compatibilityWorkflowTarget(root, relative, text);
     if (
       relative !== REUSABLE_PATH &&
       (text.includes(

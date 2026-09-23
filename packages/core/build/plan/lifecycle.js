@@ -9,6 +9,7 @@ export function lifecycleOptions(plan, platform, stage, root) {
     cwd: path.join(root, plan.project.cwd),
     workspace: root,
     stageName: stage,
+    command: plan.lifecycle[stage]?.command || "",
     required: plan.lifecycle[stage]?.required || false,
     timeoutMinutes: plan.build.timeout_minutes,
     artifactName: names.payload,

@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { readConsumerUpgrade, renderCompatibilityWorkflow } from "../consumer/compatibility-workflows.js";
 
 import { createPublicationAuthorityRegistry } from "../publication/publication-authority.js";
 
@@ -70,16 +71,11 @@ export function buildchainPublicationAuthorityDescriptors({ root = process.cwd()
     environmentMode,
     runnerPolicy: publicationCapable ? "qualified-measured" : "unqualified",
   }));
-  const taxonomyPath = path.join(root, "architecture/workflow-taxonomy.json");
-  if (!fs.existsSync(taxonomyPath)) return descriptors;
-  const taxonomy = JSON.parse(fs.readFileSync(taxonomyPath, "utf8"));
-  for (const entry of taxonomy.entries) {
-    if (!entry.compatibility) continue;
-    const previous = descriptors.find((item) => item.workflowPath === entry.compatibility.path);
+  for (const entry of readConsumerUpgrade(root)?.entries || []) {
+    const previous = descriptors.find((item) => item.workflowPath === entry.target);
     if (!previous) continue;
-    const prefix = entry.role === "component" ? "." : `${entry.role}-`;
-    const workflowPath = `.github/workflows/${prefix}${entry.category}-${entry.purpose}.yml`;
-    if (fs.readFileSync(path.join(root, workflowPath), "utf8") !== fs.readFileSync(path.join(root, entry.compatibility.path), "utf8")) {
+    const workflowPath = entry.path;
+    if (fs.readFileSync(path.join(root, workflowPath), "utf8") !== renderCompatibilityWorkflow(entry, fs.readFileSync(path.join(root, entry.target), "utf8"))) {
       throw new Error(`publication authority alias differs from canonical workflow: ${workflowPath}`);
     }
     descriptors.push({ ...previous, workflowPath, publisherWorkflowPath: previous.publisherWorkflowPath === previous.workflowPath ? workflowPath : previous.publisherWorkflowPath });

@@ -79,8 +79,9 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
       "source-root",
       environment.BUILDCHAIN_WORK_SOURCE_ROOT ||
         environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_ROOT ||
-        sourceRootFromGitHubEvent(environment),
+        rootFromGitHubEvent(environment),
     ),
+    ...historicalDeliveryRootOptions(rest, environment),
     // prettier-ignore
     ...{ expectedSourceHead: flag(rest, "expected-source-head", environment.BUILDCHAIN_DEV_DELIVERY_EXPECTED_SOURCE_HEAD), observedSourceHead: flag(rest, "observed-source-head", environment.BUILDCHAIN_DEV_DELIVERY_OBSERVED_SOURCE_HEAD) },
 
@@ -278,6 +279,24 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
 }
 
 // prettier-ignore
-function sourceRootFromGitHubEvent(environment) {
-  try { const event = JSON.parse(fs.readFileSync(environment.GITHUB_EVENT_PATH, "utf8")); return event.client_payload?.candidate?.sourceRoot || JSON.parse(event.inputs?.["native-roots-json"] || "{}").sourceRoot || ""; } catch { return ""; }
+function rootFromGitHubEvent(environment, key = "sourceRoot") {
+  try { const event = JSON.parse(fs.readFileSync(environment.GITHUB_EVENT_PATH, "utf8")); return event.client_payload?.candidate?.[key] || JSON.parse(event.inputs?.["native-roots-json"] || "{}")[key] || ""; } catch { return ""; }
+}
+
+export function historicalDeliveryRootOptions(args, environment) {
+  const result = {};
+  for (const [key, name] of [
+    ["assignmentRoot", "assignment-root"],
+    ["initiativeRoot", "initiative-root"],
+  ]) {
+    const value = flag(
+      args,
+      name,
+      environment[
+        `BUILDCHAIN_DEV_DELIVERY_${name.replaceAll("-", "_").toUpperCase()}`
+      ] || rootFromGitHubEvent(environment, key),
+    );
+    if (value) result[key] = value;
+  }
+  return result;
 }

@@ -2,6 +2,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
+  compatibilityWorkflowEntries,
+  renderCompatibilityWorkflow,
+} from "../packages/core/consumer/compatibility-workflows.js";
+import {
   readWorkflowTaxonomy,
   renderWorkflowCatalog,
   TAXONOMY_DOC,
@@ -17,6 +21,19 @@ for (const entry of policy.entries) {
     root,
     workflowPath(entry),
     fs.readFileSync(path.join(root, workflowPath(entry)), "utf8"),
+  );
+}
+for (const entry of compatibilityWorkflowEntries(
+  root,
+  undefined,
+  policy.entries.map((entry) => ({ ...entry, path: workflowPath(entry) })),
+)) {
+  fs.writeFileSync(
+    path.join(root, entry.path),
+    renderCompatibilityWorkflow(
+      entry,
+      fs.readFileSync(path.join(root, entry.target), "utf8"),
+    ),
   );
 }
 fs.writeFileSync(path.join(root, TAXONOMY_DOC), renderWorkflowCatalog(policy));

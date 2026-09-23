@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-20
+last_reviewed: 2026-09-23
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-20
+  generated_at: 2026-09-23
   visible_context: Repository contribution rules and implementation naming and release transition changes.
   invisible_context_boundary: No private credentials or unpublished external release state.
 ---
@@ -55,8 +55,11 @@ host live in `crates`. `bin` contains the CLI entry, and `scripts` contains only
 repository tooling. Schemas, ownership declarations and tests live in
 `contracts`, `architecture` and `tests`.
 
-Do not add historical aliases or compatibility forwarders. Update every owned
-caller and generated artifact when moving a contract or implementation.
+Preserve published consumer contracts when moving an implementation. Historical
+entry paths are explicitly retained in `architecture/consumer-upgrade.json` and
+generated from the current canonical workflow. Their input defaults, outputs,
+permissions and job contexts remain part of the upgrade contract. Do not add
+unregistered aliases or independently maintained copies.
 
 ## Build and verification
 
@@ -96,9 +99,12 @@ category vocabulary is enforced by `architecture/workflow-taxonomy.json`:
 Categories are only `build`, `release`, and `ops`. Register the identity, role,
 category, purpose, owner, lifecycle status, invocation, and rationale before
 adding its derived filename. The [Workflow Catalog](docs/workflow-catalog.md)
-lists every canonical API and component path. Consumers select only the two public
+lists every canonical API and component path. New consumers select the two public
 entries; actions and product-specific components are internal. Self automation
-has only the generated normal and recovery entries. Retired paths have no generated aliases. A matching prefix alone does not admit an unregistered workflow.
+has only the generated normal and recovery entries. Existing consumers retain
+the published paths registered in the consumer upgrade contract. The checker
+verifies their generated bodies against the canonical implementation; they add
+no repository event roots. A matching prefix alone does not admit an unregistered workflow.
 
 `validate`, `doctor`, and consumer source inspection check the generated caller
 bytes and the registered implementation inventory separately. A repository that

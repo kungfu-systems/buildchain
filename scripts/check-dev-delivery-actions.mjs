@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import YAML from "yaml";
 import { lowerSelfReferencesForLint } from "./workflow-self-reference.mjs";
+import { compatibilityWorkflowTarget } from "../packages/core/consumer/compatibility-workflows.js";
 const root = process.cwd();
 const contract = JSON.parse(fs.readFileSync(path.join(root, "architecture/dev-delivery-orchestration.json"), "utf8"));
 const temp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-delivery-actionlint-")));
@@ -16,6 +17,17 @@ try {
   fs.mkdirSync(path.join(temp, ".buildchain"));
   fs.symlinkSync(path.join(root, "actions"), path.join(temp, "actions"), "junction");
   const files = fs.readdirSync(workflows).filter(file => /\.ya?ml$/u.test(file)).map(file => path.join(workflows, file));
+  const configPath = path.join(temp, ".github/actionlint.yaml");
+  const config = YAML.parse(fs.readFileSync(configPath, "utf8"));
+  for (const file of files) {
+    const relative = `.github/workflows/${path.basename(file)}`;
+    const canonical = compatibilityWorkflowTarget(root, relative, fs.readFileSync(file, "utf8"));
+    // Verified generated copies inherit only their canonical source's scoped
+    // rules for GitHub contexts newer than the pinned actionlint release.
+    if (canonical !== relative && config.paths?.[canonical])
+      config.paths[relative] = config.paths[canonical];
+  }
+  fs.writeFileSync(configPath, YAML.stringify(config));
   for (const node of contract.nodes) for (const implementation of node.implementations) {
     const action = YAML.parse(fs.readFileSync(path.join(root, implementation.action), "utf8"));
     assert.deepEqual(Object.keys(action.inputs || {}), implementation.inputs, `${implementation.action}: input contract drift`);

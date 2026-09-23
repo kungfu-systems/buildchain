@@ -175,6 +175,8 @@ runs:
         product-publication-intent-path: ${{
           fromJSON(inputs.needs-qualify-outputs-product-publication-intent-path)
           }}
+        historical-inputs-json: ${{ fromJSON(inputs.request-json).historical-inputs-json }}
+        publisher-workflow-path: ${{ fromJSON(inputs.request-json).publication-authority-workflow-path }}
         publisher-workflow-sha: ${{ fromJSON(inputs.needs-qualify-outputs-publisher-sha) }}
         runtime-commit: ${{ fromJSON(inputs.needs-qualify-outputs-runtime-sha) }}
         runtime-tree: ${{ fromJSON(inputs.needs-qualify-outputs-runtime-tree) }}
@@ -225,6 +227,8 @@ runs:
         product-publication-intent-path: ${{
           fromJSON(inputs.needs-qualify-outputs-product-publication-intent-path)
           }}
+        historical-inputs-json: ${{ fromJSON(inputs.request-json).historical-inputs-json }}
+        publisher-workflow-path: ${{ fromJSON(inputs.request-json).publication-authority-workflow-path }}
         publisher-workflow-sha: ${{ fromJSON(inputs.needs-qualify-outputs-publisher-sha) }}
         runtime-commit: ${{ fromJSON(inputs.needs-qualify-outputs-runtime-sha) }}
         runtime-tree: ${{ fromJSON(inputs.needs-qualify-outputs-runtime-tree) }}

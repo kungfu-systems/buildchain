@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-20
+last_reviewed: 2026-09-23
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-20
+  generated_at: 2026-09-23
   visible_context: Buildchain 4.1 source, architecture registries and local validation.
   invisible_context_boundary: No unpublished release or external consumer qualification is claimed.
 ---
@@ -60,14 +60,16 @@ generated consumer pair and protected self configuration remain `@v4`.
 Products declare their own install, build, and verification commands in TOML.
 Publication, source qualification, reviews, merge queues, provider readback and
 recovery belong to the published runtime. Internal workflow libraries and actions are implementation only. The complete
-public reusable API is `public-ops-pipeline.yml` and `public-ops-recover.yml`;
+API for new consumers is `public-ops-pipeline.yml` and `public-ops-recover.yml`;
 self callers use the same public reusable-workflow contract as every other consumer.
 
 ## Building this repo
 
 Read [Code organization](docs/code-organization.md) before changing implementation
 layout. Keep workflows, action adapters, JavaScript modules and Rust domains in
-their declared responsibility layers. No historical compatibility entry is retained.
+their declared responsibility layers. Published historical entry contracts are retained
+by `architecture/consumer-upgrade.json`. Generate them from their maintained components;
+do not add independent implementations or remove a published path during a compatible upgrade.
 
 Buildchain is a pnpm workspace running on Node 24:
 
@@ -81,7 +83,7 @@ Workflow paths are governed by [`architecture/workflow-taxonomy.json`](architect
 and the generated [`Workflow Catalog`](docs/workflow-catalog.md). Before adding,
 renaming, or editing workflow YAML, register its role (`public`, component `.`,
 or `self`) and category (`build`, `release`, or `ops`). Use the derived filename;
-do not invent prefixes, categories, or compatibility aliases. Edit canonical
+do not invent prefixes, categories, or unregistered compatibility aliases. Edit canonical
 implementations, run `pnpm run generate:workflows`, and pass
 `pnpm run check:workflows` plus the full check. Taxonomy and gate changes require
 independent `@kungfu-origin` review through CODEOWNERS.

@@ -57,7 +57,7 @@ export async function transferBuild(context, platform) {
         sourceSha: plan.source.sha,
         platformId: platform.id,
         platformName: platform.name,
-        groups: [{ role: "payload", artifactName: names.payload, paths }],
+        groups: [{ role: "payload", artifactName: names.transfer, paths }],
       });
       artifacts.push({
         role: "relay",
@@ -71,7 +71,7 @@ export async function transferBuild(context, platform) {
     } else
       artifacts.push({
         role: "payload",
-        ref: await upload(plan, names.payload, paths, sourceRoot),
+        ref: await upload(plan, names.transfer, paths, sourceRoot),
       });
     const requestRoot = path.join(
       sourceRoot,

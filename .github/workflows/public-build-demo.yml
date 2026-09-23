@@ -1,0 +1,186 @@
+# Generated from the consumer upgrade contract; edit the canonical implementation.
+name: Buildchain Declarative Binary Auditable Demo
+on:
+  workflow_call:
+    inputs:
+      source-ref:
+        default: ""
+        type: string
+        required: false
+      binary-artifact-name:
+        type: string
+        required: true
+      binary-artifact-digest:
+        type: string
+        required: true
+      scenario-path:
+        default: .buildchain/auditable-demo.json
+        type: string
+        required: false
+      renderer-image:
+        type: string
+        required: true
+      render-media:
+        default: false
+        type: boolean
+        required: false
+      render-failure-advisory:
+        description: Preserve a required Gate while reporting full-media render failure without failing the
+          caller
+        default: false
+        type: boolean
+        required: false
+      media-profile:
+        default: responsive-web-delivery-v1
+        type: string
+        required: false
+      materialize:
+        default: false
+        type: boolean
+        required: false
+      materialize-base-ref:
+        default: ""
+        type: string
+        required: false
+      artifact-retention-days:
+        default: 14
+        type: number
+        required: false
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
+    secrets:
+      DEMO_UPDATE_TOKEN:
+        required: false
+    outputs:
+      source-sha:
+        value: ${{ jobs.capture.outputs.source-sha }}
+      capture-artifact-name:
+        value: ${{ jobs.capture.outputs.capture-artifact-name }}
+      capture-artifact-digest:
+        value: ${{ jobs.capture.outputs.capture-artifact-digest }}
+      evidence-artifact-name:
+        value: ${{ jobs.qualify.outputs.evidence-artifact-name }}
+      evidence-artifact-digest:
+        value: ${{ jobs.qualify.outputs.evidence-artifact-digest }}
+      render-result:
+        value: ${{ jobs.qualify.outputs.render-result }}
+      publication-pr-url:
+        value: ${{ jobs.publish.outputs.pr-url }}
+permissions:
+  actions: read
+  contents: read
+concurrency:
+  group: declarative-auditable-demo-${{ github.repository }}-${{ github.ref }}-${{
+    inputs.binary-artifact-digest }}
+  cancel-in-progress: false
+jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
+  capture:
+    name: Capture every declared demo
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    outputs:
+      source-sha: ${{ steps.node.outputs.source-sha }}
+      capture-artifact-name: ${{ steps.node.outputs.capture-artifact-name }}
+      capture-artifact-digest: ${{ steps.node.outputs.capture-artifact-digest }}
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Capture every declared demo
+        id: node
+        uses: ./.buildchain/runtime/actions/build/demo/capture
+        with:
+          request-json: ${{ toJSON(inputs) }}
+          workflow-sha: ${{ job.workflow_sha }}
+    needs:
+      - execution-runtime
+  qualify:
+    name: Gate and render every declared demo
+    needs:
+      - capture
+      - execution-runtime
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    outputs:
+      evidence-artifact-name: ${{ steps.node.outputs.evidence-artifact-name }}
+      evidence-artifact-digest: ${{ steps.node.outputs.evidence-artifact-digest }}
+      render-result: ${{ steps.node.outputs.render-result }}
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Gate and render every declared demo
+        id: node
+        uses: ./.buildchain/runtime/actions/build/demo/qualify
+        with:
+          request-json: ${{ toJSON(inputs) }}
+          workflow-sha: ${{ job.workflow_sha }}
+          source-sha: ${{ needs.capture.outputs.source-sha }}
+          capture-artifact-name: ${{ needs.capture.outputs.capture-artifact-name }}
+          capture-artifact-digest: ${{ needs.capture.outputs.capture-artifact-digest }}
+  publish:
+    name: Open protected materialization pull request
+    if: ${{ (inputs.materialize && inputs.render-media && needs.qualify.outputs.render-result ==
+      'success') }}
+    needs:
+      - capture
+      - qualify
+      - execution-runtime
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: write
+    outputs:
+      pr-url: ${{ steps.node.outputs.pr-url }}
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Open protected materialization pull request
+        id: node
+        uses: ./.buildchain/runtime/actions/build/demo/publish
+        with:
+          request-json: ${{ toJSON(inputs) }}
+          workflow-sha: ${{ job.workflow_sha }}
+          source-sha: ${{ needs.capture.outputs.source-sha }}
+          capture-artifact-name: ${{ needs.capture.outputs.capture-artifact-name }}
+          evidence-artifact-name: ${{ needs.qualify.outputs.evidence-artifact-name }}
+          update-token: ${{ secrets.DEMO_UPDATE_TOKEN }}

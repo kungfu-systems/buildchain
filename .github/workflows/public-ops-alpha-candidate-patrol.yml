@@ -1,0 +1,233 @@
+# Generated from the consumer upgrade contract; edit the canonical implementation.
+name: Buildchain Dev to Alpha Candidate Patrol
+on:
+  workflow_call:
+    inputs:
+      source-branch:
+        description: Development source branch
+        required: true
+        type: string
+      target-branch:
+        description: Alpha target branch
+        required: true
+        type: string
+      dev-workflow-path:
+        description: Repository path of the Dev Patrol workflow
+        default: .github/workflows/dev-verify-patrol.yml
+        required: false
+        type: string
+      alpha-workflow-path:
+        description: Repository path of the Alpha preflight workflow
+        default: .github/workflows/alpha-promotion-preflight.yml
+        required: false
+        type: string
+      max-age-seconds:
+        description: Maximum age of each same-SHA workflow result
+        default: 604800
+        required: false
+        type: number
+      pull-request-body-prefix:
+        description: Repository-owned declaration prepended when a candidate PR is created
+        default: ""
+        required: false
+        type: string
+      pull-request-body-prefix-renderer:
+        description: Repository-relative Node.js renderer for an exact-source PR declaration
+        default: ""
+        required: false
+        type: string
+      settlement-authorized:
+        description: Run the separately permissioned candidate settlement job
+        default: false
+        required: false
+        type: boolean
+      auto-merge:
+        description: Enable GitHub auto-merge on the managed exact-source Alpha PR
+        default: false
+        required: false
+        type: boolean
+      merge-method:
+        description: "GitHub auto-merge method: merge, squash, or rebase"
+        default: merge
+        required: false
+        type: string
+      dry-run:
+        description: Evaluate without creating a branch or pull request
+        default: true
+        required: false
+        type: boolean
+      reactivation-authorized:
+        description: Explicitly authorize a new evidence-bound transition for a tombstoned SHA
+        default: false
+        required: false
+        type: boolean
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
+    secrets:
+      promotion-token:
+        description: Repository-owned token for source-lock branch and PR writes
+        required: false
+    outputs:
+      result-path:
+        value: ${{ jobs.observe.outputs.result-path }}
+      eligible:
+        value: ${{ jobs.observe.outputs.eligible }}
+      selected-sha:
+        value: ${{ jobs.observe.outputs.selected-sha }}
+      source-lock-ref:
+        value: ${{ jobs.observe.outputs.source-lock-ref }}
+      promotion-pr:
+        value: ${{ jobs.settle.outputs.promotion-pr || jobs.observe.outputs.active-candidate-pr }}
+      controller-state:
+        value: ${{ jobs.settle.outputs.controller-state || jobs.observe.outputs.controller-state }}
+      active-candidate-pr:
+        value: ${{ jobs.settle.outputs.active-candidate-pr || jobs.observe.outputs.active-candidate-pr }}
+      next-candidate-sha:
+        value: ${{ jobs.settle.outputs.next-candidate-sha || jobs.observe.outputs.next-candidate-sha }}
+      settlement-action:
+        value: ${{ jobs.settle.outputs.settlement-action || 'none' }}
+      prior-state-root:
+        value: ${{ jobs.settle.outputs.prior-state-root || jobs.observe.outputs.prior-state-root }}
+      train-root:
+        value: ${{ jobs.settle.outputs.train-root || jobs.observe.outputs.train-root }}
+      cut-root:
+        value: ${{ jobs.settle.outputs.cut-root || jobs.observe.outputs.cut-root }}
+      candidate-generation:
+        value: ${{ jobs.settle.outputs.candidate-generation || jobs.observe.outputs.candidate-generation }}
+      candidate-tree-sha:
+        value: ${{ jobs.settle.outputs.candidate-tree-sha || jobs.observe.outputs.candidate-tree-sha }}
+      runtime-sha:
+        value: ${{ jobs.observe.outputs.runtime-sha }}
+      drift-root:
+        value: ${{ jobs.settle.outputs.drift-root || jobs.observe.outputs.drift-root }}
+      hold-root:
+        value: ${{ jobs.settle.outputs.hold-root || jobs.observe.outputs.hold-root }}
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+concurrency:
+  group: buildchain-dev-alpha-candidate-${{ github.repository }}-${{ inputs.target-branch }}
+  cancel-in-progress: false
+jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
+  observe:
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    outputs:
+      result-path: ${{ steps.node.outputs.result-path }}
+      eligible: ${{ steps.node.outputs.eligible }}
+      selected-sha: ${{ steps.node.outputs.selected-sha }}
+      source-lock-ref: ${{ steps.node.outputs.source-lock-ref }}
+      controller-state: ${{ steps.node.outputs.controller-state }}
+      active-candidate-pr: ${{ steps.node.outputs.active-candidate-pr }}
+      next-candidate-sha: ${{ steps.node.outputs.next-candidate-sha }}
+      pull-request-body-prefix: ${{ steps.node.outputs.pull-request-body-prefix }}
+      prior-state-root: ${{ steps.node.outputs.prior-state-root }}
+      train-root: ${{ steps.node.outputs.train-root }}
+      cut-root: ${{ steps.node.outputs.cut-root }}
+      candidate-generation: ${{ steps.node.outputs.candidate-generation }}
+      candidate-tree-sha: ${{ steps.node.outputs.candidate-tree-sha }}
+      runtime-sha: ${{ steps.node.outputs.runtime-sha }}
+      cut-created-at: ${{ steps.node.outputs.cut-created-at }}
+      observed-at: ${{ steps.node.outputs.observed-at }}
+      drift-root: ${{ steps.node.outputs.drift-root }}
+      hold-root: ${{ steps.node.outputs.hold-root }}
+      observation-json: ${{ steps.node.outputs.observation-json }}
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Execute alpha-candidate-patrol-observe
+        id: node
+        uses: ./.buildchain/runtime/actions/governance/alpha-candidate/observe
+        with:
+          runtime-ref: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
+          runtime-repository: kungfu-systems/buildchain
+          request-json: ${{ toJSON(inputs) }}
+    needs:
+      - execution-runtime
+  settle:
+    needs:
+      - observe
+      - execution-runtime
+    if: |-
+      ${{
+        (
+          inputs.settlement-authorized &&
+          !inputs.dry-run &&
+          (needs.observe.outputs.controller-state == 'eligible-for-settlement' ||
+          needs.observe.outputs.controller-state == 'active' ||
+          needs.observe.outputs.controller-state == 'held' ||
+          needs.observe.outputs.controller-state == 'superseded' ||
+          needs.observe.outputs.controller-state == 'retained-next')
+        )
+      }}
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: write
+    outputs:
+      promotion-pr: ${{ steps.node.outputs.promotion-pr }}
+      controller-state: ${{ steps.node.outputs.controller-state }}
+      active-candidate-pr: ${{ steps.node.outputs.active-candidate-pr }}
+      next-candidate-sha: ${{ steps.node.outputs.next-candidate-sha }}
+      settlement-action: ${{ steps.node.outputs.settlement-action }}
+      prior-state-root: ${{ steps.node.outputs.prior-state-root }}
+      train-root: ${{ steps.node.outputs.train-root }}
+      cut-root: ${{ steps.node.outputs.cut-root }}
+      candidate-generation: ${{ steps.node.outputs.candidate-generation }}
+      candidate-tree-sha: ${{ steps.node.outputs.candidate-tree-sha }}
+      runtime-sha: ${{ steps.node.outputs.runtime-sha }}
+      cut-created-at: ${{ steps.node.outputs.cut-created-at }}
+      drift-root: ${{ steps.node.outputs.drift-root }}
+      hold-root: ${{ steps.node.outputs.hold-root }}
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Execute alpha-candidate-patrol-settle
+        id: node
+        uses: ./.buildchain/runtime/actions/governance/alpha-candidate/settle
+        with:
+          request-json: ${{ toJSON(inputs) }}
+          observation-json: ${{ needs.observe.outputs.observation-json }}
+          pull-request-body-prefix: ${{ needs.observe.outputs.pull-request-body-prefix }}
+          token: ${{ secrets.promotion-token || github.token }}

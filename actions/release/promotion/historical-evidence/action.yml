@@ -1,0 +1,15 @@
+name: Qualify retained consumer release evidence
+description: Execute retained evidence commands in the read-only qualification job.
+inputs:
+  request-json:
+    description: Complete admitted promotion invocation.
+    required: true
+  source-sha:
+    description: Exact qualified candidate source commit.
+    required: true
+outputs:
+  receipt-root:
+    description: Root of the validated historical evidence receipt.
+runs:
+  using: node24
+  main: dist/index.js

@@ -34,6 +34,8 @@ export async function resolveBuildPlan(request, providers) {
     callerWorkflowRef: workflow.callerRef,
     eventName: event.name,
     baseRef: source.baseRef,
+    compatibilityInputs: request.compatibilityInputs,
+    compatibilityEnvironment: request.compatibilityEnvironment,
   });
   const git = (...args) =>
     execFileSync("git", ["-C", sourceRoot, ...args], {

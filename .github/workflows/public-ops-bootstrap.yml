@@ -1,0 +1,147 @@
+# Generated from the consumer upgrade contract; edit the canonical implementation.
+name: Buildchain Universal Bootstrap
+on:
+  workflow_call:
+    inputs:
+      request-json:
+        description: Versioned exact-candidate request envelope
+        required: true
+        type: string
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
+    outputs:
+      runtime-sha:
+        description: Exact admitted Buildchain runtime SHA
+        value: ${{ jobs.admit.outputs.runtime-sha }}
+      request-root:
+        description: Canonical request root
+        value: ${{ jobs.admit.outputs.request-root }}
+      admission-root:
+        description: Candidate-tree admission policy root
+        value: ${{ jobs.admit.outputs.admission-root }}
+      result-root:
+        description: Candidate result root
+        value: ${{ jobs.execute.outputs.result-root }}
+      result-json:
+        description: Rooted candidate result for schema-derived facade output projection
+        value: ${{ jobs.execute.outputs.result-json }}
+      terminal-receipt-json:
+        description: Terminal receipt with exact runtime and review lineage
+        value: ${{ jobs.settle.outputs.terminal-receipt-json }}
+      terminal-receipt-root:
+        description: Terminal receipt root
+        value: ${{ jobs.settle.outputs.terminal-receipt-root }}
+jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
+  admit:
+    name: Admit exact reviewed candidate
+    runs-on: ubuntu-24.04
+    outputs:
+      runtime-sha: ${{ steps.node.outputs.runtime-sha }}
+      capability-id: ${{ steps.node.outputs.capability-id }}
+      request-root: ${{ steps.node.outputs.request-root }}
+      admission-root: ${{ steps.node.outputs.admission-root }}
+      admission-json: ${{ steps.node.outputs.admission-json }}
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Admit exact reviewed candidate
+        id: node
+        uses: ./.buildchain/runtime/actions/workflow/bootstrap/admit
+        with:
+          job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
+          request-json: ${{ toJSON(inputs) }}
+    needs:
+      - execution-runtime
+  execute:
+    concurrency:
+      group: buildchain-release-promotion-${{ github.repository }}
+      cancel-in-progress: false
+    name: Execute exact admitted candidate
+    needs:
+      - admit
+      - execution-runtime
+    runs-on: ubuntu-24.04
+    outputs:
+      result-json: ${{ steps.node.outputs.result-json }}
+      result-root: ${{ steps.node.outputs.result-root }}
+    steps:
+      - name: Checkout unchanged consumer source
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+        id: source-checkout
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+        if: ${{ always() }}
+      - name: Execute exact admitted candidate
+        id: node
+        uses: ./.buildchain/runtime/actions/workflow/bootstrap/execute
+        with:
+          needs-admit-outputs-runtime-sha: ${{ toJSON(needs.admit.outputs.runtime-sha) }}
+          needs-admit-outputs-capability-id: ${{ toJSON(needs.admit.outputs.capability-id) }}
+          request-json: ${{ toJSON(inputs) }}
+          needs-admit-outputs-admission-json: ${{ toJSON(needs.admit.outputs.admission-json) }}
+          secrets-buildchain-promotion-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+        if: ${{ always() }}
+  settle:
+    name: Seal terminal receipt outside candidate authority
+    needs:
+      - admit
+      - execute
+      - execution-runtime
+    runs-on: ubuntu-24.04
+    outputs:
+      terminal-receipt-json: ${{ steps.node.outputs.terminal-receipt-json }}
+      terminal-receipt-root: ${{ steps.node.outputs.terminal-receipt-root }}
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Seal terminal receipt outside candidate authority
+        id: node
+        uses: ./.buildchain/runtime/actions/workflow/bootstrap/settle
+        with:
+          job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
+          needs-admit-outputs-admission-json: ${{ toJSON(needs.admit.outputs.admission-json) }}
+          needs-execute-outputs-result-json: ${{ toJSON(needs.execute.outputs.result-json) }}
+          request-json: ${{ toJSON(inputs) }}

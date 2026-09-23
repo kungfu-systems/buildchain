@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
+import { renderCompatibilityWorkflow } from "../packages/core/consumer/compatibility-workflows.js";
 
 test("workflow lint binds source action inputs despite a foreign executing runtime and preserves failures", (t) => {
   const root = fs.mkdtempSync(
@@ -66,6 +67,25 @@ test("workflow lint binds source action inputs despite a foreign executing runti
       fs.readFileSync(env.BUILDCHAIN_TEST_OLD_ACTIONLINT_RECORD, "utf8"),
       "-version\n",
     );
+  const retained = {
+    path: ".github/workflows/retained.yml",
+    target: ".github/workflows/fixture.yml",
+    interfaceSource: "on:\n  workflow_call:\n",
+  };
+  const canonical = workflow("fresh-input").replace("on: push", "on:\n  workflow_call:");
+  write(retained.target, canonical);
+  write("architecture/consumer-upgrade.json", JSON.stringify({
+    schema: "buildchain.consumer-upgrade/v1", source: { sha: "a".repeat(40) }, entries: [retained],
+  }));
+  write(retained.path, renderCompatibilityWorkflow(retained, canonical));
+  const compatible = lint();
+  assert.equal(compatible.status, 0, compatible.stdout + compatible.stderr);
+  write(retained.path, renderCompatibilityWorkflow(retained, canonical).replace("fresh-input", "undeclared-input"));
+  const drift = lint();
+  assert.notEqual(drift.status, 0);
+  assert.match(drift.stderr, /generated consumer compatibility workflow drift/);
+  fs.unlinkSync(path.join(root, retained.path));
+  fs.unlinkSync(path.join(root, "architecture/consumer-upgrade.json"));
   assert.equal(
     fs.readFileSync(path.join(root, foreign), "utf8"),
     metadata("old-input"),

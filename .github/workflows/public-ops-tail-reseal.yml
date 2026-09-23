@@ -1,0 +1,174 @@
+# Generated from the consumer upgrade contract; edit the canonical implementation.
+name: V4 Retained Candidate Tail Reseal
+on:
+  workflow_call:
+    inputs:
+      request-json:
+        description: Exact rooted v4 tail-reseal request JSON
+        required: true
+        type: string
+      consumer-policy-receipt-json:
+        description: Original candidate floating-consumer policy receipt JSON
+        required: true
+        type: string
+      macos-finalization-command:
+        description: Reviewed macOS signing-finalization command that emits provider readbacks
+        required: true
+        type: string
+      artifact-retention-days:
+        description: Retention window for resealed candidate evidence
+        required: false
+        default: 7
+        type: number
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
+    secrets:
+      BUILDCHAIN_EVIDENCE_READ_TOKEN:
+        description: Read-only token for cross-repository run and artifact evidence
+        required: true
+      BUILDCHAIN_SIGNING_TOKEN:
+        description: Credential-island token available only to macOS finalization
+        required: true
+    outputs:
+      release-candidate-passport-json:
+        description: Standard v4 candidate Release Passport summary
+        value: ${{ jobs.seal.outputs.release-candidate-passport-json }}
+      tail-reseal-receipt-root:
+        description: Root of the independently read-back tail-reseal receipt
+        value: ${{ jobs.seal.outputs.tail-reseal-receipt-root }}
+permissions:
+  actions: read
+  contents: read
+jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
+  plan:
+    name: Admit exact retained candidate
+    runs-on: ubuntu-24.04
+    outputs:
+      request-artifact: ${{ steps.node.outputs.request-artifact }}
+      platforms-json: ${{ steps.node.outputs.platforms-json }}
+      source-run-id: ${{ steps.node.outputs.source-run-id }}
+      source-run-attempt: ${{ steps.node.outputs.source-run-attempt }}
+      source-sha: ${{ steps.node.outputs.source-sha }}
+      source-tree-sha: ${{ steps.node.outputs.source-tree-sha }}
+      runtime-sha: ${{ steps.node.outputs.runtime-sha }}
+      consumer-policy-receipt-root: ${{ steps.node.outputs.consumer-policy-receipt-root }}
+      warrant-readback-root: ${{ steps.node.outputs.warrant-readback-root }}
+      signing-provider-readback-root: ${{ steps.node.outputs.signing-provider-readback-root }}
+      release-tail-provider-readback-root: ${{ steps.node.outputs.release-tail-provider-readback-root }}
+      signing-authority-repository: ${{ steps.node.outputs.signing-authority-repository }}
+      signing-authority-run-id: ${{ steps.node.outputs.signing-authority-run-id }}
+      signing-result-artifact: ${{ steps.node.outputs.signing-result-artifact }}
+      target-version: ${{ steps.node.outputs.target-version }}
+      plan-root: ${{ steps.node.outputs.plan-root }}
+      admission-root: ${{ steps.node.outputs.admission-root }}
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Admit exact retained candidate
+        id: node
+        uses: ./.buildchain/runtime/actions/release/reseal/plan
+        with:
+          request-json: ${{ toJSON(inputs) }}
+          workflow-sha: ${{ job.workflow_sha }}
+          evidence-read-token: ${{ secrets.BUILDCHAIN_EVIDENCE_READ_TOKEN }}
+    needs:
+      - execution-runtime
+  platforms:
+    name: Retain or reseal ${{ matrix.platform.name }}
+    needs:
+      - plan
+      - execution-runtime
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ${{ fromJSON(needs.plan.outputs.platforms-json) }}
+    runs-on: ${{ fromJSON(matrix.platform.runner) }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout exact candidate source
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ needs.plan.outputs.source-sha }}
+          persist-credentials: false
+        id: source-checkout
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+        if: ${{ always() }}
+      - name: Retain or reseal ${{ matrix.platform.name }}
+        id: node
+        uses: ./.buildchain/runtime/actions/release/reseal/platforms
+        with:
+          matrix-json: ${{ toJSON(matrix) }}
+          request-json: ${{ toJSON(inputs) }}
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+          runtime-sha: ${{ needs.plan.outputs.runtime-sha }}
+          request-artifact: ${{ needs.plan.outputs.request-artifact }}
+          source-run-id: ${{ needs.plan.outputs.source-run-id }}
+          evidence-read-token: ${{ secrets.BUILDCHAIN_EVIDENCE_READ_TOKEN }}
+          signing-authority-repository: ${{ needs.plan.outputs.signing-authority-repository }}
+          signing-authority-run-id: ${{ needs.plan.outputs.signing-authority-run-id }}
+          signing-result-artifact: ${{ needs.plan.outputs.signing-result-artifact }}
+          signing-token: ${{ secrets.BUILDCHAIN_SIGNING_TOKEN }}
+        if: ${{ always() }}
+  seal:
+    name: Seal standard candidate Passport
+    needs:
+      - plan
+      - platforms
+      - execution-runtime
+    runs-on: ubuntu-24.04
+    outputs:
+      release-candidate-passport-json: ${{ steps.node.outputs.release-candidate-passport-json }}
+      tail-reseal-receipt-root: ${{ steps.node.outputs.tail-reseal-receipt-root }}
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Seal standard candidate Passport
+        id: node
+        uses: ./.buildchain/runtime/actions/release/reseal/seal
+        with:
+          request-json: ${{ toJSON(inputs) }}
+          runtime-sha: ${{ needs.plan.outputs.runtime-sha }}
+          request-artifact: ${{ needs.plan.outputs.request-artifact }}
+          source-sha: ${{ needs.plan.outputs.source-sha }}

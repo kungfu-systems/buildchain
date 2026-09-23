@@ -1,0 +1,168 @@
+# Generated from the consumer upgrade contract; edit the canonical implementation.
+name: V4 Adopter Delivery
+on:
+  workflow_dispatch:
+    inputs:
+      consumer:
+        description: Stable lowercase public adopter identity
+        required: false
+        default: buildchain
+        type: string
+      input-path:
+        description: Repository-relative public adopter delivery gate input
+        required: false
+        default: contracts/fixtures/v4-adopter-delivery-v1/gate-positive.json
+        type: string
+      consumer-repository:
+        description: Exact external public adopter repository for candidate qualification
+        required: false
+        default: ""
+        type: string
+      consumer-ref:
+        description: Exact external public adopter commit for candidate qualification
+        required: false
+        default: ""
+        type: string
+      invocation-source-path:
+        description: Public floating caller path retained by the external adopter
+        required: false
+        default: ""
+        type: string
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+  workflow_call:
+    inputs:
+      consumer:
+        description: Stable lowercase public adopter identity
+        required: true
+        type: string
+      input-path:
+        description: Repository-relative public adopter delivery gate input
+        required: true
+        type: string
+      consumer-repository:
+        description: Exact external public adopter repository for candidate qualification
+        required: false
+        default: ""
+        type: string
+      consumer-ref:
+        description: Exact external public adopter commit for candidate qualification
+        required: false
+        default: ""
+        type: string
+      invocation-source-path:
+        description: Public floating caller path retained by the external adopter
+        required: false
+        default: ""
+        type: string
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
+permissions:
+  contents: read
+jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
+  consumer-admission:
+    name: Admit floating-only v4 adopter
+    runs-on: ubuntu-24.04
+    outputs:
+      receipt-root: ${{ steps.node.outputs.receipt-root }}
+      consumer-source-sha: ${{ steps.node.outputs.consumer-source-sha }}
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Validate exact adopter selection and floating consumer policy.
+        id: node
+        uses: ./.buildchain/runtime/actions/adoption/adopter/admit
+        with:
+          request-json: ${{ toJSON(inputs) }}
+          workflow-sha: ${{ job.workflow_sha }}
+    needs:
+      - execution-runtime
+  conformance:
+    name: Public adopter delivery (${{ matrix.platform }})
+    needs:
+      - consumer-admission
+      - execution-runtime
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-x64
+            runner: ubuntu-24.04
+          - platform: macos-arm64
+            runner: macos-15
+          - platform: windows-x64
+            runner: windows-2025
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Execute current failure, retry, exact readback and independent driver verification.
+        id: node
+        uses: ./.buildchain/runtime/actions/adoption/adopter/qualify
+        with:
+          request-json: ${{ toJSON(inputs) }}
+          workflow-sha: ${{ job.workflow_sha }}
+          consumer-sha: ${{ needs.consumer-admission.outputs.consumer-source-sha }}
+          platform: ${{ matrix.platform }}
+  qualification:
+    name: Reconcile exact three-platform qualification
+    needs:
+      - conformance
+      - execution-runtime
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Require exactly one consistent report for every declared platform.
+        id: node
+        uses: ./.buildchain/runtime/actions/adoption/adopter/reconcile
+        with:
+          request-json: ${{ toJSON(inputs) }}
+          workflow-sha: ${{ job.workflow_sha }}

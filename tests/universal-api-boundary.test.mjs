@@ -1,3 +1,4 @@
+import { compatibilityWorkflowTarget } from "../packages/core/consumer/compatibility-workflows.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -33,8 +34,10 @@ test("bootstrap and direct capability APIs partition all reusable workflows", ()
 test("direct workflows do not carry alternate historical execution branches", () => {
   assert.equal(Object.hasOwn(contract, "migration"), false);
   for (const file of contract.directCapabilityWorkflows) {
+    const source = fs.readFileSync(path.join(root, file), "utf8");
+    const target = compatibilityWorkflowTarget(root, file, source);
     assert.doesNotMatch(
-      fs.readFileSync(path.join(root, file), "utf8"),
+      fs.readFileSync(path.join(root, target), "utf8"),
       /universal-request-json|universal-bootstrap:/u,
       file,
     );

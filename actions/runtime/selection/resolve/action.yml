@@ -1,6 +1,9 @@
 name: Select the execution runtime
 description: Resolve one entry-owned runtime selection for all jobs in an execution.
 inputs:
+  compatibility-inputs:
+    description: Typed inputs from a retained historical workflow boundary.
+    default: ""
   recovery-attempt:
     description: Internal exact business selector for the trusted recovery entry.
     default: ""

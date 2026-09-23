@@ -7,6 +7,7 @@ import {
   selectExecutionRuntime,
 } from "./selection.js";
 import { selectAttemptRecoveryRuntime } from "./attempt.js";
+import { historicalEntrySelection } from "./compatibility.js";
 
 export async function selectExecutionRuntimeAction(
   core,
@@ -41,8 +42,10 @@ export async function selectExecutionRuntimeAction(
   });
   const workflowSha = core.getInput("workflow-sha", { required: true });
   const workflowRef = core.getInput("workflow-ref", { required: true });
+  const historical = historicalEntrySelection(core.getInput("compatibility-inputs"), workflowRef);
   const lockPath =
     core.getInput("contract-lock") ||
+    historical.lockPath ||
     transport?.contract?.path ||
     (/@(?:refs\/tags\/)?v4-alpha$/u.test(workflowRef)
       ? ".buildchain/alpha-contract-lock.json"
@@ -55,7 +58,7 @@ export async function selectExecutionRuntimeAction(
     throw new Error(
       "Contract lock path must be relative to the consumer repository",
     );
-  const runtimeRef = core.getInput("runtime-ref");
+  const runtimeRef = core.getInput("runtime-ref") || historical.runtimeRef || "";
   let selection;
   if (retained) {
     if (runtimeRef || resumeRunId)

@@ -2,6 +2,14 @@ name: "Promote a v4 declarative release candidate"
 author: "Keren Dong"
 description: "Validate sealed candidate evidence and execute one rooted product publication and Release Tail Provider Plane"
 inputs:
+  historical-inputs-json:
+    description: Validated retained promotion context from admission.
+    required: false
+    default: ""
+  publisher-workflow-path:
+    description: Admitted publisher implementation path.
+    required: false
+    default: .github/workflows/.release-promote.yml
   standalone-binary-distribution:
     description: Include binary distribution in this release intent.
     default: "false"

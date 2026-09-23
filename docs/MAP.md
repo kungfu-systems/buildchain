@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-20
+last_reviewed: 2026-09-24
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-20
+  generated_at: 2026-09-24
   visible_context: Current consumer contract and release and recovery manuals.
   invisible_context_boundary: No unobserved hosted qualification or external consumer migration.
 ---
@@ -31,9 +31,10 @@ running artifact), *use* (consume / extend) - and a **status**:
 - `to write` - planned; the material exists but is not yet a single doc.
 - `retired` - intentionally not part of the active consumer surface.
 
-The current consumer contract is the shared normal/recovery caller pair plus
-schema-2 TOML. Start with [Getting started](getting-started.md),
+New consumers use the shared normal/recovery caller pair plus schema-2 TOML. Start with [Getting started](getting-started.md),
 [Release governance](release-governance.md), and [Attempt recovery](bootstrap-recovery.md).
+Existing consumers can retain the registered historical contracts; see
+[Compatible upgrades](getting-started.md#migrating-old-callers).
 The mechanism documents below also describe internal components and historical
 qualification; their implementation ports are not additional consumer APIs.
 

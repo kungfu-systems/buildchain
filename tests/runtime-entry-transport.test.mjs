@@ -44,3 +44,17 @@ test("unsafe lock paths fail at entry before any provider read", async () => {
   assert.equal(h.calls.length, 0);
  }
 });
+
+test("historical lock locators use the same exact runtime and provider validation", async () => {
+  const h = harness();
+  const selected = await h.run({"compatibility-inputs": JSON.stringify({
+    "buildchain-contract-lock-path": "buildchain.contract-lock.json",
+  })});
+  assert.equal(selected.sha, sha("b"));
+  assert.deepEqual(h.calls.filter(([kind]) => kind === "lock"), [["lock", sha("d"), "buildchain.contract-lock.json"]]);
+  const denied = harness({allowed:false});
+  await assert.rejects(denied.run({"compatibility-inputs": JSON.stringify({"buildchain-ref":"train/v4/v4.1/repair"})}), /not authorized/);
+  const unsafe = harness();
+  await assert.rejects(unsafe.run({"compatibility-inputs": JSON.stringify({"buildchain-contract-lock-path":"../outside.json"})}), /relative/);
+  assert.equal(unsafe.calls.length, 0);
+});

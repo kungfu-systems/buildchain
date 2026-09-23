@@ -53,7 +53,7 @@
         "cliCommandCount": 24,
         "nodeApiCount": 24,
         "workflowCount": 0,
-        "actionCount": 107
+        "actionCount": 108
       },
       "manuals": [
         "docs/release-passport.md",
@@ -89,8 +89,8 @@
         "pageCount": 19,
         "cliCommandCount": 9,
         "nodeApiCount": 17,
-        "workflowCount": 0,
-        "actionCount": 91
+        "workflowCount": 2,
+        "actionCount": 92
       },
       "manuals": [
         "docs/auditable-demo.md",
@@ -257,7 +257,7 @@
         "pageCount": 17,
         "cliCommandCount": 13,
         "nodeApiCount": 16,
-        "workflowCount": 7,
+        "workflowCount": 15,
         "actionCount": 1
       },
       "manuals": [
@@ -298,7 +298,7 @@
         "pageCount": 13,
         "cliCommandCount": 0,
         "nodeApiCount": 2,
-        "workflowCount": 37,
+        "workflowCount": 62,
         "actionCount": 31
       },
       "manuals": [

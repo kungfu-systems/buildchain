@@ -41,7 +41,7 @@ async function downloadBuild(
     return validateReference(
       matches[0].ref,
       plan,
-      role === "credential" ? names.credentialInput : names[role],
+      role === "credential" ? names.credentialInput : role === "payload" ? names.transfer : names[role],
     );
   };
   if (!payload) return { execution, get };

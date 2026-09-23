@@ -1,0 +1,834 @@
+# Generated from the consumer upgrade contract; edit the canonical implementation.
+name: Buildchain Project Build
+on:
+  workflow_call:
+    inputs:
+      buildchain-channel:
+        description: "Buildchain runtime channel: auto, alpha, or stable"
+        default: auto
+        type: string
+        required: false
+      buildchain-alpha-contract-lock-path:
+        description: Consumer-owned contract lock selected for the alpha channel
+        default: .buildchain/alpha-contract-lock.json
+        type: string
+        required: false
+      buildchain-stable-contract-lock-path:
+        description: Consumer-owned contract lock selected for the stable channel
+        default: .buildchain/contract-lock.json
+        type: string
+        required: false
+      buildchain-repository:
+        default: kungfu-systems/buildchain
+        type: string
+        required: false
+      buildchain-ref:
+        description: Official floating Buildchain channel, protected authority, or a
+          temporary train/SHA for trusted manual validation.
+        default: ""
+        type: string
+        required: false
+      buildchain-expected-channel:
+        description: Explicit stable or alpha lane expected by a trusted channel router
+          when the workflow shell ref is opaque
+        default: ""
+        type: string
+        required: false
+      buildchain-expected-major:
+        description: Explicit Buildchain major expected by a trusted channel router when
+          the workflow shell ref is opaque
+        default: ""
+        type: string
+        required: false
+      buildchain-contract-lock-path:
+        description: Consumer-owned Buildchain contract lock path
+        default: ""
+        type: string
+        required: false
+      buildchain-contract-compatibility-policy:
+        description: "Contract compatibility policy: major-compatible, allow-additive,
+          or exact"
+        default: major-compatible
+        type: string
+        required: false
+      buildchain-contract-drift-issue-mode:
+        description: "Consumer issue behavior for Buildchain floating-ref contract
+          drift: off, breaking-only, or compatible-and-breaking"
+        default: compatible-and-breaking
+        type: string
+        required: false
+      working-directory:
+        default: .
+        type: string
+        required: false
+      runner-preset:
+        description: "Runner preset: github-hosted, kungfu-v4-self-hosted,
+          aws-us-codebuild-linux, aws-us-ec2-windows-jit, aws-us-ec2-macos-jit,
+          or custom with platforms-json"
+        default: github-hosted
+        type: string
+        required: false
+      aws-codebuild-project:
+        description: Required CodeBuild project name for the explicit
+          aws-us-codebuild-linux burst preset
+        default: ""
+        type: string
+        required: false
+      aws-ec2-windows-runner-label:
+        description: Required unique card-scoped JIT label for the explicit
+          aws-us-ec2-windows-jit burst preset
+        default: ""
+        type: string
+        required: false
+      aws-ec2-macos-runner-label:
+        description: Required unique campaign-scoped JIT label for the explicit
+          aws-us-ec2-macos-jit burst preset
+        default: ""
+        type: string
+        required: false
+      platforms-json:
+        description: "Optional custom JSON array of platform objects: id, name, runner
+          JSON string, and optional githubHosted boolean"
+        default: ""
+        type: string
+        required: false
+      self-hosted-offline-fallback:
+        description: Route each supported exact-label self-hosted lane to its
+          GitHub-hosted runner when no matching runner is online
+        default: false
+        type: boolean
+        required: false
+      control-runner-json:
+        description: JSON runner-label array for trusted control-plane jobs
+        default: '["ubuntu-24.04"]'
+        type: string
+        required: false
+      artifact-finalization-command:
+        description: Optional consumer verification command over final artifact bytes
+          before manifest resealing
+        default: ""
+        type: string
+        required: false
+      artifact-finalization-on-platform:
+        description: Run trusted artifact finalization on each GitHub-hosted platform
+          runner instead of the control runner
+        default: false
+        type: boolean
+        required: false
+      fail-fast:
+        description: Cancel sibling platform lanes after a required matrix failure;
+          false retains all-platform diagnostics
+        default: false
+        type: boolean
+        required: false
+      linux-container-preset:
+        description: "Optional Linux job container preset: kungfu-verify, none, or
+          custom with linux-container-image"
+        default: ""
+        type: string
+        required: false
+      linux-container-image:
+        description: Optional explicit Linux job container image, preferably pinned by
+          digest
+        default: ""
+        type: string
+        required: false
+      require-trusted-event:
+        default: true
+        type: boolean
+        required: false
+      untrusted-policy:
+        description: fail or skip when an untrusted fork event asks for build execution
+        default: fail
+        type: string
+        required: false
+      publish-channel:
+        description: "Publish channel requested by the caller: none, alpha, release,
+          major, or a custom channel from publish-refs-json"
+        default: none
+        type: string
+        required: false
+      publish-refs-json:
+        description: Optional JSON object mapping publish channels to allowed Git ref
+          regular expressions
+        default: ""
+        type: string
+        required: false
+      publish-source-ref:
+        description: Optional source branch such as publish-gate/alpha/<line>/<version>
+          to resolve and lock before build
+        default: ""
+        type: string
+        required: false
+      publish-anchor-request-json:
+        description: Required JSON request when publish-source-ref resolves to
+          publish-gate/anchor
+        default: ""
+        type: string
+        required: false
+      publish-registry:
+        description: Registry recorded in the resolved publish source manifest
+        default: https://registry.npmjs.org/
+        type: string
+        required: false
+      setup-node:
+        default: true
+        type: boolean
+        required: false
+      node-version:
+        default: "24"
+        type: string
+        required: false
+      setup-rust:
+        description: Install a Rust toolchain for native lifecycle jobs
+        default: false
+        type: boolean
+        required: false
+      rust-toolchain:
+        description: Rust toolchain installed when setup-rust is enabled
+        default: stable
+        type: string
+        required: false
+      rustup-dist-server:
+        description: Optional rustup distribution mirror; empty uses the official Rust
+          server
+        default: ""
+        type: string
+        required: false
+      rustup-update-root:
+        description: Optional rustup self-update mirror; empty uses the official Rust server
+        default: ""
+        type: string
+        required: false
+      cargo-registry-index:
+        description: Optional crates.io-compatible Cargo registry index; empty uses the
+          Cargo default
+        default: ""
+        type: string
+        required: false
+      install-command:
+        default: ""
+        type: string
+        required: false
+      build-command:
+        default: ""
+        type: string
+        required: false
+      verify-command:
+        default: ""
+        type: string
+        required: false
+      verify-substage-evidence-path:
+        description: Optional lifecycle verify substage evidence path produced by the
+          consumer command
+        default: ""
+        type: string
+        required: false
+      kfd-agent-hub:
+        description: "Agent Hub conformance mode: off or auto. Auto reads
+          .buildchain/kfd/agent-hub.json and runs the fixed KFD suite."
+        default: off
+        type: string
+        required: false
+      lifecycle-timeout-minutes:
+        description: Maximum minutes for the build matrix job and fallback timeout for
+          each lifecycle stage
+        default: 120
+        type: number
+        required: false
+      require-install:
+        default: false
+        type: boolean
+        required: false
+      require-build:
+        default: true
+        type: boolean
+        required: false
+      require-verify:
+        default: false
+        type: boolean
+        required: false
+      artifact-name:
+        default: buildchain-artifact
+        type: string
+        required: false
+      artifact-name-template:
+        description: "Artifact name template with placeholders: {artifact}, {platform},
+          {sha}, {shortSha}, {runId}, {runAttempt}"
+        default: "{artifact}-{platform}-{sha}"
+        type: string
+        required: false
+      artifact-paths:
+        default: |
+          dist
+          build/stage
+        type: string
+        required: false
+      pre-upload-transport-smoke-scenario-path:
+        description: Optional declarative demo scenario, relative to working-directory,
+          whose transport smoke must pass before Linux artifact upload
+        default: ""
+        type: string
+        required: false
+      pre-upload-transport-smoke-artifact-root:
+        description: Artifact root, relative to working-directory, used by the
+          pre-upload transport simulation
+        default: .
+        type: string
+        required: false
+      credential-island-macos-app-path:
+        description: Optional exact .app path to seal for a protected macOS
+          credential-island job
+        default: ""
+        type: string
+        required: false
+      credential-island-environment:
+        description: Protected environment used by the built-in signer; leave empty for
+          caller-owned signing
+        default: ""
+        type: string
+        required: false
+      credential-island-caller-owned:
+        description: Seal and export the macOS input/runtime for a caller-owned
+          protected signing job instead of running the built-in signer
+        default: false
+        type: boolean
+        required: false
+      credential-island-macos-platform-id:
+        description: macOS build platform whose sealed app is admitted to the credential
+          island
+        default: macos-arm64
+        type: string
+        required: false
+      github-artifact-attestation-subject-path:
+        description: Optional exact artifact path to bind to a GitHub keyless
+          attestation policy after the final platform manifest is sealed
+        default: ""
+        type: string
+        required: false
+      github-artifact-attestation-signer-sha:
+        description: Exact 40-hex Buildchain commit containing the trusted reusable
+          signer workflow
+        default: ""
+        type: string
+        required: false
+      github-artifact-attestation-platform-id:
+        description: Linux platform id that owns github-artifact-attestation-subject-path
+        default: linux-x64
+        type: string
+        required: false
+      release-candidate:
+        description: Generate and upload a PR-stage release-candidate passport after the
+          full platform matrix succeeds
+        default: false
+        type: boolean
+        required: false
+      expected-artifacts-json:
+        description: Optional JSON expectation contract for final artifact files
+        default: ""
+        type: string
+        required: false
+      process-summary-path:
+        description: Optional process sampler summary JSON path, relative to workspace,
+          to embed in final diagnostics
+        default: ""
+        type: string
+        required: false
+      sample-process-tree:
+        description: Wrap the build lifecycle with the process tree sampler
+        default: true
+        type: boolean
+        required: false
+      process-sample-interval-ms:
+        description: Process sampler interval in milliseconds
+        default: 15000
+        type: number
+        required: false
+      requested-parallelism:
+        description: Optional expected build parallelism recorded in process diagnostics
+        default: 0
+        type: number
+        required: false
+      artifact-retention-days:
+        default: 14
+        type: number
+        required: false
+      artifact-compression-level:
+        description: GitHub Artifact payload compression level (0-9); zero avoids
+          recompressing release archives and reduces signed-URL exposure
+        default: 0
+        type: number
+        required: false
+      artifact-signing-request-upload-no-proxy:
+        description: Optional NO_PROXY value scoped only to Buildchain-owned signing
+          request uploads; signed-result downloads retain the runner route
+        default: ""
+        type: string
+        required: false
+      artifact-transfer-mode:
+        description: "Artifact transfer policy: GitHub-hosted platforms always upload
+          natively; other platforms use github-artifacts or
+          s3-to-github-artifacts"
+        default: github-artifacts
+        type: string
+        required: false
+      artifact-relay-s3-bucket:
+        description: Optional S3 bucket for artifact relay. Empty may use
+          BUILDCHAIN_ARTIFACT_RELAY_S3_BUCKET repo/org variable.
+        default: ""
+        type: string
+        required: false
+      artifact-relay-s3-region:
+        description: Optional S3 region for artifact relay. Empty may use
+          BUILDCHAIN_ARTIFACT_RELAY_S3_REGION repo/org variable.
+        default: ""
+        type: string
+        required: false
+      artifact-relay-s3-prefix:
+        description: Optional S3 key prefix for artifact relay. Empty may use
+          BUILDCHAIN_ARTIFACT_RELAY_S3_PREFIX repo/org variable.
+        default: ""
+        type: string
+        required: false
+      artifact-relay-s3-role-arn:
+        description: Optional shared OIDC role ARN for S3 relay upload/download. Prefer
+          repo/org variables or secrets.
+        default: ""
+        type: string
+        required: false
+      artifact-relay-s3-upload-role-arn:
+        description: Optional upload OIDC role ARN for self-hosted build runners.
+        default: ""
+        type: string
+        required: false
+      artifact-relay-s3-download-role-arn:
+        description: Optional download OIDC role ARN for the GitHub-hosted relay runner.
+        default: ""
+        type: string
+        required: false
+      artifact-relay-s3-oidc-audience:
+        description: Optional OIDC audience for S3 relay roles. Defaults to
+          sts.amazonaws.com.cn for cn-* regions, otherwise sts.amazonaws.com.
+        default: ""
+        type: string
+        required: false
+      checkout-cache-mode:
+        description: "Locked source checkout cache mode: off, auto, or require"
+        default: off
+        type: string
+        required: false
+      checkout-cache-mirror-url-template:
+        description: Trusted local/LAN Git mirror URL template. Supports {owner},
+          {repo}, {repository}, {repositorySlug}, and {sha}.
+        default: ""
+        type: string
+        required: false
+      checkout-cache-reference-repository-template:
+        description: Trusted runner-local bare reference repository template. Supports
+          {owner}, {repo}, {repository}, {repositorySlug}, and {sha}.
+        default: ""
+        type: string
+        required: false
+      checkout-cache-fallback:
+        description: "Fallback when checkout cache misses: github or fail"
+        default: github
+        type: string
+        required: false
+      checkout-cache-timeout-seconds:
+        description: Timeout for each trusted cache transport attempt
+        default: 60
+        type: number
+        required: false
+      checkout-cache-github-timeout-seconds:
+        description: Timeout for each GitHub fallback fetch attempt
+        default: 600
+        type: number
+        required: false
+      checkout-cache-fetch-attempts:
+        description: Maximum bounded attempts for retryable GitHub fallback fetch failures
+        default: 3
+        type: number
+        required: false
+      checkout-history-mode:
+        description: "Locked consumer source history: shallow or full. Full retains
+          ancestry required by source-history gates."
+        default: shallow
+        type: string
+        required: false
+      shifu-cache-profile-ref:
+        description: Opaque trusted Shifu cache profile reference passed to lifecycle
+          commands without interpretation
+        default: ""
+        type: string
+        required: false
+      shifu-cache-profile-digest:
+        description: Opaque expected Shifu cache profile digest passed to lifecycle
+          commands without interpretation
+        default: ""
+        type: string
+        required: false
+      cache-dependency-lock-root:
+        description: Optional consumer-owned exact dependency-lock root bound into
+          structured cache evidence
+        default: ""
+        type: string
+        required: false
+      cache-toolchain-root:
+        description: Optional consumer-owned exact toolchain root bound into structured
+          cache evidence
+        default: ""
+        type: string
+        required: false
+      cache-policy-root:
+        description: Optional consumer-owned exact qualification policy root bound into
+          structured cache evidence
+        default: ""
+        type: string
+        required: false
+      compiler-cache-provider:
+        description: "Audited compiler cache provider prepared before build: none or
+          sccache"
+        default: none
+        type: string
+        required: false
+      compiler-cache-platforms-json:
+        description: JSON array of platform ids on which compiler-cache preparation is
+          enabled
+        default: "[]"
+        type: string
+        required: false
+      compiler-cache-required:
+        description: Fail the selected platform before build when the compiler cache
+          cannot be prepared
+        default: false
+        type: boolean
+        required: false
+      gate-profile-aggregate-json:
+        description: Optional qualifying buildchain.shifu-gate-aggregate/v1 JSON from
+          the reusable Gate workflow
+        default: ""
+        type: string
+        required: false
+      release-candidate-family-evidence-json:
+        description: Optional exact Initiative-family release evidence JSON embedded in
+          the release-candidate passport
+        default: ""
+        type: string
+        required: false
+      config-path:
+        description: Locate buildchain.toml when the project cannot be discovered.
+        type: string
+        required: false
+        default: ""
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime contract lock path.
+        type: string
+        required: false
+        default: ""
+      resume-run-id:
+        description: Failed execution to resume using its original source and retained
+          build outputs.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflows.
+        type: string
+        required: false
+        default: ""
+    secrets:
+      BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN:
+        required: false
+      BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN:
+        required: false
+      BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN:
+        required: false
+      BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64:
+        required: false
+      BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD:
+        required: false
+      BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64:
+        required: false
+      BUILDCHAIN_MACOS_NOTARY_API_KEY_ID:
+        required: false
+      BUILDCHAIN_MACOS_NOTARY_API_ISSUER:
+        required: false
+      BUILDCHAIN_PROMOTION_TOKEN:
+        required: false
+    outputs:
+      result:
+        description: Rooted build result and exact artifact references.
+        value: ${{ jobs.build.outputs.result }}
+      release-candidate-artifact:
+        description: Uploaded release-candidate passport artifact name when
+          release-candidate is enabled
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['release-candidate-artifact']
+          }}
+      controller-receipt-artifact:
+        description: Uploaded build-channel-router controller receipt artifact name
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['controller-receipt-artifact']
+          }}
+      buildchain-channel:
+        description: "Resolved Buildchain channel: alpha or stable"
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['buildchain-channel']
+          }}
+      buildchain-channel-selection-source:
+        description: Evidence source used to select the Buildchain channel
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['buildchain-channel-selection-source']
+          }}
+      buildchain-channel-reason:
+        description: Human-readable Buildchain channel selection reason
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['buildchain-channel-reason']
+          }}
+      runner-preset:
+        description: Resolved runner preset name
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['runner-preset']
+          }}
+      platforms-json:
+        description: Resolved platform matrix JSON
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['platforms-json']
+          }}
+      runner-routing-json:
+        description: De-identified self-hosted availability and offline fallback decision
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['runner-routing-json']
+          }}
+      platform-count:
+        description: Resolved platform count
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['platform-count']
+          }}
+      linux-container-enabled:
+        description: Whether Linux build platforms are routed through a job container
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['linux-container-enabled']
+          }}
+      linux-container-image:
+        description: Resolved Linux job container image
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['linux-container-image']
+          }}
+      build-summary-artifact:
+        description: Uploaded aggregate build summary artifact name
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['build-summary-artifact']
+          }}
+      credential-island-macos-artifact:
+        description: Uploaded signed macOS payload artifact name when the credential
+          island is enabled
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['credential-island-macos-artifact']
+          }}
+      credential-island-macos-manifest-artifact:
+        description: Uploaded signed macOS manifest artifact name when the credential
+          island is enabled
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['credential-island-macos-manifest-artifact']
+          }}
+      build-diagnostics-summary-artifact:
+        description: Uploaded aggregate diagnostics summary artifact name
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['build-diagnostics-summary-artifact']
+          }}
+      release-candidate-passport-artifact:
+        description: Uploaded release-candidate passport artifact name when
+          release-candidate is enabled
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['release-candidate-passport-artifact']
+          }}
+      release-candidate-passport-json:
+        description: Compact release-candidate passport JSON when release-candidate is
+          enabled
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['release-candidate-passport-json']
+          }}
+      build-summary-json:
+        description: Compact aggregate build summary JSON
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['build-summary-json']
+          }}
+      artifact-coordinates-json:
+        description: Producer-owned exact GitHub Artifact coordinates for every resolved
+          build platform
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['artifact-coordinates-json']
+          }}
+      build-diagnostics-summary-json:
+        description: Compact aggregate diagnostics summary JSON with lifecycle,
+          diagnostics contract warning, and sidecar manifest warning totals
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['build-diagnostics-summary-json']
+          }}
+      trusted-event:
+        description: Whether the event is trusted enough to run build jobs
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['trusted-event']
+          }}
+      buildchain-runtime-ref:
+        description: Resolved Buildchain runtime ref
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['buildchain-runtime-ref']
+          }}
+      buildchain-runtime-sha:
+        description: Resolved immutable Buildchain runtime SHA
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['buildchain-runtime-sha']
+          }}
+      buildchain-runtime-class:
+        description: "Runtime stability class: stable, alpha, authority, train,
+          exact-sha, or development"
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['buildchain-runtime-class']
+          }}
+      buildchain-runtime-override:
+        description: Whether an authority, train, or exact-SHA buildchain-ref override
+          was used
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['buildchain-runtime-override']
+          }}
+      buildchain-runtime-trust-decision:
+        description: Runtime override trust decision
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['buildchain-runtime-trust-decision']
+          }}
+      buildchain-contract-lock-status:
+        description: Floating Buildchain runtime contract lock status
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['buildchain-contract-lock-status']
+          }}
+      buildchain-contract-lock-drift:
+        description: Whether the floating Buildchain runtime SHA or contract digest
+          drifted from the consumer lock
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['buildchain-contract-lock-drift']
+          }}
+      buildchain-contract-digest:
+        description: Current Buildchain runtime contract digest
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['buildchain-contract-digest']
+          }}
+      publish-channel:
+        description: Resolved publish channel
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['publish-channel']
+          }}
+      publish-allowed:
+        description: Whether this event/ref may publish after successful verification
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['publish-allowed']
+          }}
+      publish-reason:
+        description: Human-readable publish gate reason
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['publish-reason']
+          }}
+      publish-source-ref:
+        description: Resolved publish source ref
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['publish-source-ref']
+          }}
+      publish-source-sha:
+        description: Locked source SHA used for checkout/build/summary
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['publish-source-sha']
+          }}
+      publish-source-tree-sha:
+        description: Git tree SHA for the locked source commit used by release-candidate
+          promotion equivalence checks
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['publish-source-tree-sha']
+          }}
+      publish-source-locked:
+        description: Whether a publish-gate source ref was explicitly locked
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['publish-source-locked']
+          }}
+      publish-source-channel:
+        description: Channel parsed from the publish-gate source ref
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['publish-source-channel']
+          }}
+      publish-source-line:
+        description: Line parsed from the publish-gate source ref
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['publish-source-line']
+          }}
+      publish-source-consumer-version:
+        description: Consumer version parsed from the publish-gate source ref
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['publish-source-consumer-version']
+          }}
+      release-manifest-json:
+        description: Resolved release manifest JSON
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['release-manifest-json']
+          }}
+      controller-plan-artifact:
+        description: Uploaded build-channel-router controller plan artifact name
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['controller-plan-artifact']
+          }}
+      controller-plan-json:
+        description: Compact source/runtime-bound build-channel-router controller plan
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['controller-plan-json']
+          }}
+      controller-plan-digest:
+        description: Digest of the build-channel-router controller plan
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['controller-plan-digest']
+          }}
+      controller-receipt-json:
+        description: Compact build-channel-router controller receipt
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['controller-receipt-json']
+          }}
+      controller-receipt-digest:
+        description: Digest of the build-channel-router controller receipt
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['controller-receipt-digest']
+          }}
+      controller-receipt-status:
+        description: Final build-channel-router controller status
+        value: ${{
+          fromJSON(jobs.build.outputs.result).historical_outputs['controller-receipt-status']
+          }}
+jobs:
+  build:
+    uses: ./.github/workflows/.build-historical.yml
+    with:
+      config-path: ${{ inputs.config-path }}
+      compatibility-inputs: ${{ toJSON(inputs) }}
+      runtime-ref: ${{ inputs.runtime-ref }}
+      contract-lock: ${{ inputs.contract-lock }}
+      resume-run-id: ${{ inputs.resume-run-id }}
+      runtime-selection: ${{ inputs.runtime-selection }}
+    secrets: inherit
+  summarize:
+    name: Summarize build contract
+    needs: build
+    if: ${{ always() }}
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
+    permissions:
+      contents: read
+    steps:
+      - uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.build.outputs.runtime-selection }}
+          token: ${{ github.token }}
+      - uses: ./.buildchain/runtime/actions/build/gate/qualify-contract
+        with:
+          conclusion: ${{ needs.build.result }}
+          result: ${{ needs.build.outputs.result }}

@@ -9,7 +9,7 @@ import artifact from "@actions/artifact";
 
 const repo = path.resolve(import.meta.dirname, "..");
 
-test("real lifecycle artifacts survive transfer and isolated finalization; provider failures cannot qualify", async (t) => {
+for (const historical of [false, true]) test(`real ${historical ? "historical" : "modern"} lifecycle artifacts survive transfer and isolated finalization; provider failures cannot qualify`, async (t) => {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-pipeline-"));
   t.after(() => fs.rmSync(workspace, { recursive: true, force: true }));
   const gitConfig = path.join(workspace, "empty.gitconfig");
@@ -37,10 +37,11 @@ test("real lifecycle artifacts survive transfer and isolated finalization; provi
   const { createControllerPlan } = await import("../packages/core/observability/controller-evidence.js");
   const { artifactNames } = await import("../packages/core/build/artifact/contracts.js");
   const { plan } = resolveBuildConfiguration({ root: source, repository: "kungfu-systems/buildchain",
-    workflowRef: "kungfu-systems/buildchain/.github/workflows/.build-candidate.yml@v4-alpha", workflowSha: "a".repeat(40),
+    workflowRef: `kungfu-systems/buildchain/.github/workflows/${historical ? "build" : ".build-candidate"}.yml@v4-alpha`, workflowSha: "a".repeat(40),
     sourceSha: git("rev-parse", "HEAD"), sourceRef: "refs/heads/dev/v4/v4.0" });
   plan.source.tree_sha = git("rev-parse", "HEAD^{tree}");
   plan.run = { repository: "test/project", id: "123", attempt: "1" };
+  plan.admission = { lock_status: "contract-lock", lock_drift: false, contract_digest: `sha256:${"b".repeat(64)}` };
   plan.transfer = { mode: "github-artifacts" };
   Object.assign(plan, buildMatrices(plan, resolveRunnerMatrix({ runnerPreset: "github-hosted" })));
   const platform = plan.platforms[0];
@@ -50,6 +51,7 @@ test("real lifecycle artifacts survive transfer and isolated finalization; provi
   plan.anchored_material = { target_channel: "none", target_ref: "" };
   plan.source.release = { ref: plan.source.ref, channel: "none", line: "", version: "1.0.0", locked: true, manifest: {} };
   plan.build.artifacts.release_candidate = false;
+  if (historical) plan.artifacts.name_template = "{artifact}-{platform}-{shortSha}";
   const registry = JSON.parse(fs.readFileSync(path.join(repo, "dist/site/controller-registry.json")));
   plan.controller = createControllerPlan({ descriptor: registry.controllers.find((c) => c.id === "build-lifecycle"),
     source: { repository: plan.run.repository, sha: plan.source.sha },
@@ -118,6 +120,33 @@ test("real lifecycle artifacts survive transfer and isolated finalization; provi
     assert.equal(result.artifacts.payloads[0].id, final.result.payload.id);
     const receipt = JSON.parse(fs.readFileSync(path.join(workspace, ".buildchain/controller/receipt.json")));
     assert.equal(receipt.qualifying, true);
+    if (historical) {
+      const expected = JSON.parse(fs.readFileSync(path.join(repo, "contracts/fixtures/consumer-upgrade/build-v4.0.0.json")));
+      const outputs = result.historical_outputs;
+      assert.deepEqual(Object.keys(outputs).sort(), Object.keys(expected.outputs).sort());
+      assert.equal(outputs["build-summary-artifact"], result.artifacts.summary.name);
+      assert.equal(outputs["publish-source-sha"], plan.source.sha);
+      assert.equal(outputs["controller-receipt-status"], "passed");
+      assert.equal(outputs["controller-receipt-digest"], receipt.digest);
+      assert.equal(outputs["publish-allowed"], "false");
+      assert.equal(outputs["release-candidate-artifact"], "");
+      const coordinates = JSON.parse(outputs["artifact-coordinates-json"]);
+      assert.equal(String(coordinates.artifacts[0].id), String(final.result.payload.id));
+      assert.equal(JSON.parse(outputs["build-summary-json"]).platformCount, 1);
+      assert.equal(JSON.parse(outputs["controller-plan-json"]).digest, plan.controller.digest);
+      assert.ok([...objects.values()].some(item => item.name === outputs["controller-plan-artifact"]));
+      const { root, ...body } = result;
+      assert.equal(root, rootOf(body));
+      const { qualifyHistoricalBuild } = await import("../packages/core/build/summary/compatibility.js");
+      qualifyHistoricalBuild("success", result);
+      const changed = structuredClone(result);
+      changed.historical_outputs["publish-source-sha"] = "c".repeat(40);
+      assert.throws(() => qualifyHistoricalBuild("success", changed), /content root/);
+    } else assert.equal(result.historical_outputs, undefined);
+
+    const artifactNamesSeen = [...objects.values()].map(item => item.name);
+    assert.equal(new Set(artifactNamesSeen).size, artifactNamesSeen.length, "intermediate upload cannot occupy the final consumer artifact name");
+    if (historical) assert.equal(final.result.payload.name, `${plan.artifacts.name}-${platform.id}-${plan.source.sha.slice(0, 12)}`);
     const failedJobs = JSON.parse(process.env.BUILDCHAIN_JOBS);
     failedJobs.sign.result = "failure";
     process.env.BUILDCHAIN_JOBS = JSON.stringify(failedJobs);
