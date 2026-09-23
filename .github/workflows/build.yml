@@ -1,0 +1,69 @@
+# Generated from the consumer upgrade contract; edit the canonical implementation.
+name: Buildchain Project Build
+on:
+  workflow_call:
+    inputs:
+      config-path:
+        description: Locate buildchain.toml when the project cannot be discovered.
+        type: string
+        required: false
+        default: ""
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime contract lock path.
+        type: string
+        required: false
+        default: ""
+      resume-run-id:
+        description: Failed execution to resume using its original source and retained build outputs.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflows.
+        type: string
+        required: false
+        default: ""
+    secrets:
+      BUILDCHAIN_PROMOTION_TOKEN:
+        required: false
+      BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64:
+        required: false
+      BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD:
+        required: false
+      BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64:
+        required: false
+      BUILDCHAIN_MACOS_NOTARY_API_KEY_ID:
+        required: false
+      BUILDCHAIN_MACOS_NOTARY_API_ISSUER:
+        required: false
+    outputs:
+      result:
+        description: Rooted build result and exact artifact references.
+        value: ${{ jobs.build.outputs.result }}
+      release-candidate-artifact:
+        description: Artifact name from the verified build result.
+        value: ${{ fromJSON(jobs.build.outputs.result).artifacts.release_candidate.name }}
+      controller-receipt-artifact:
+        description: Artifact name from the verified build result.
+        value: ${{ fromJSON(jobs.build.outputs.result).artifacts.controller_receipt.name }}
+permissions:
+  issues: write
+  contents: read
+  actions: read
+  id-token: write
+  attestations: write
+jobs:
+  build:
+    uses: ./.github/workflows/.build.yml
+    with:
+      config-path: ${{ inputs.config-path }}
+      runtime-ref: ${{ inputs.runtime-ref }}
+      contract-lock: ${{ inputs.contract-lock }}
+      resume-run-id: ${{ inputs.resume-run-id }}
+      runtime-selection: ${{ inputs.runtime-selection }}
+    secrets: inherit

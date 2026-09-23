@@ -1,0 +1,171 @@
+# Generated from the consumer upgrade contract; edit the canonical implementation.
+name: Buildchain Dev Qualification Patrol
+on:
+  workflow_call:
+    inputs:
+      source-branch:
+        description: Development branch whose latest head is qualified
+        required: true
+        type: string
+      dev-workflow-path:
+        description: Heavy Dev qualification workflow path
+        default: .github/workflows/dev-verify-patrol.yml
+        required: false
+        type: string
+      preflight-workflow-path:
+        description: Lightweight exact-source preflight workflow path
+        default: .github/workflows/alpha-promotion-preflight.yml
+        required: false
+        type: string
+      priority-workflows-json:
+        description: JSON array of Alpha and release workflows that retain runner priority
+        default: "[]"
+        required: false
+        type: string
+      dispatch-inputs-json:
+        description: Scalar workflow_dispatch inputs; source-sha is controller-owned
+        default: "{}"
+        required: false
+        type: string
+      max-attempts:
+        description: Maximum total attempts for an exact Dev qualification run
+        default: 2
+        required: false
+        type: number
+      mutation-authorized:
+        description: Permit the separately permissioned mutation job
+        default: false
+        required: false
+        type: boolean
+      dry-run:
+        description: Observe without dispatching or rerunning a workflow
+        default: true
+        required: false
+        type: boolean
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
+    secrets:
+      qualification-token:
+        description: Repository-owned token with Actions write permission
+        required: false
+    outputs:
+      state:
+        value: ${{ jobs.mutate.outputs.state || jobs.observe.outputs.state }}
+      action:
+        value: ${{ jobs.mutate.outputs.action || jobs.observe.outputs.action }}
+      reason:
+        value: ${{ jobs.mutate.outputs.reason || jobs.observe.outputs.reason }}
+      source-sha:
+        value: ${{ jobs.mutate.outputs.source-sha || jobs.observe.outputs.source-sha }}
+      pending-sha:
+        value: ${{ jobs.mutate.outputs.pending-sha || jobs.observe.outputs.pending-sha }}
+      active-run-id:
+        value: ${{ jobs.mutate.outputs.active-run-id || jobs.observe.outputs.active-run-id }}
+      decision-root:
+        value: ${{ jobs.mutate.outputs.decision-root || jobs.observe.outputs.decision-root }}
+permissions:
+  actions: read
+  contents: read
+concurrency:
+  group: buildchain-dev-qualification-${{ github.repository }}-${{ inputs.source-branch }}
+  cancel-in-progress: false
+jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
+  observe:
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      result-path: ${{ steps.node.outputs.result-path }}
+      state: ${{ steps.node.outputs.state }}
+      action: ${{ steps.node.outputs.action }}
+      reason: ${{ steps.node.outputs.reason }}
+      source-sha: ${{ steps.node.outputs.source-sha }}
+      pending-sha: ${{ steps.node.outputs.pending-sha }}
+      active-run-id: ${{ steps.node.outputs.active-run-id }}
+      decision-root: ${{ steps.node.outputs.decision-root }}
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Execute dev-qualification-patrol-observe
+        id: node
+        uses: ./.buildchain/runtime/actions/governance/dev-qualification/observe
+        with:
+          runtime-ref: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
+          runtime-repository: kungfu-systems/buildchain
+          request-json: ${{ toJSON(inputs) }}
+    needs:
+      - execution-runtime
+  mutate:
+    needs:
+      - observe
+      - execution-runtime
+    if: |-
+      ${{
+        (
+          inputs.mutation-authorized &&
+          !inputs.dry-run &&
+          (needs.observe.outputs.action == 'dispatch' ||
+          needs.observe.outputs.action == 'rerun-failed-jobs')
+        )
+      }}
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+      contents: read
+    outputs:
+      state: ${{ steps.node.outputs.state }}
+      action: ${{ steps.node.outputs.action }}
+      reason: ${{ steps.node.outputs.reason }}
+      source-sha: ${{ steps.node.outputs.source-sha }}
+      pending-sha: ${{ steps.node.outputs.pending-sha }}
+      active-run-id: ${{ steps.node.outputs.active-run-id }}
+      decision-root: ${{ steps.node.outputs.decision-root }}
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Execute dev-qualification-patrol-mutate
+        id: node
+        uses: ./.buildchain/runtime/actions/governance/dev-qualification/apply
+        with:
+          runtime-ref: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
+          runtime-repository: kungfu-systems/buildchain
+          request-json: ${{ toJSON(inputs) }}
+          secrets-qualification-token: ${{ secrets.qualification-token }}
+          observation-json: ${{ toJSON(needs.observe.outputs) }}

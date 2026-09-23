@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 37783,
-    "current": 29722
+    "measuredExcess": 37782,
+    "current": 29721
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -1202,7 +1202,7 @@
         "baseline": {
           "lines": 1411,
           "functions": {
-            "buildSiteBundle@729": {
+            "buildSiteBundle@730": {
               "lines": 637
             }
           }
@@ -1210,15 +1210,15 @@
         "current": {
           "lines": 1411,
           "functions": {
-            "buildSiteBundle@729": {
-              "lines": 628
+            "buildSiteBundle@730": {
+              "lines": 627
             }
           }
         },
         "target": {
           "lines": 600,
           "functions": {
-            "buildSiteBundle@729": {
+            "buildSiteBundle@730": {
               "lines": 180
             }
           }
@@ -2227,7 +2227,8 @@
     "tests/controller-evidence.test.mjs",
     "tests/declarative-promotion-mode.test.mjs",
     "tests/github-governance-authority.test.mjs",
-    "tests/macos-credential-island.test.mjs"
+    "tests/macos-credential-island.test.mjs",
+    "tests/public-dogfood-contract.test.mjs"
   ],
   "burnDownSlices": [
     {

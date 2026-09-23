@@ -1,0 +1,114 @@
+# Generated from the consumer upgrade contract; edit the canonical implementation.
+name: Patrol Observed Evidence
+on:
+  workflow_call:
+    inputs:
+      build-command:
+        type: string
+        required: true
+      verify-command:
+        type: string
+        required: true
+      artifact-path:
+        type: string
+        required: true
+      manifest-path:
+        type: string
+        required: true
+      evidence-source-repository:
+        type: string
+        default: ""
+        required: false
+      evidence-source-ref:
+        type: string
+        default: ""
+        required: false
+      evidence-source-path:
+        type: string
+        default: .observed-evidence/source
+        required: false
+      production-aws-role-arn:
+        type: string
+        required: true
+      production-bucket:
+        type: string
+        required: true
+      cloudfront-distribution:
+        type: string
+        required: false
+        default: ""
+      production-environment:
+        type: string
+        required: false
+        default: production
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
+    outputs:
+      receipt-path:
+        value: ${{ jobs.publish.outputs.receipt-path }}
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
+  publish:
+    runs-on: ubuntu-24.04
+    environment: ${{ inputs.production-environment }}
+    concurrency:
+      group: observed-evidence-${{ github.repository }}-${{ inputs.production-bucket }}
+      cancel-in-progress: false
+    outputs:
+      receipt-path: ${{ steps.node.outputs.receipt-path }}
+    steps:
+      - name: Checkout caller default branch
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+        id: source-checkout
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Admit evidence publisher
+        uses: ./.buildchain/runtime/actions/observability/evidence/admit-publisher
+      - name: Execute observed-evidence-publish
+        id: node
+        uses: ./.buildchain/runtime/actions/observability/evidence/publish
+        with:
+          runtime-ref: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
+          request-json: ${{ toJSON(inputs) }}
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+        if: ${{ always() }}
+    needs:
+      - execution-runtime

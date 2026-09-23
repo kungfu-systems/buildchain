@@ -119,6 +119,7 @@
         "packages/core/build/stage-capsule.js",
         "packages/core/consumer/buildchain-channel-identity.js",
         "packages/core/consumer/buildchain-config.js",
+        "packages/core/consumer/compatibility-workflows.js",
         "packages/core/consumer/contract/entries.js",
         "packages/core/consumer/contract/identity.js",
         "packages/core/consumer/contract/inspection.js",
@@ -407,7 +408,7 @@
         "packages/core/workflow/pipeline/web-status.js",
         "packages/core/workflow/workflow-taxonomy.mjs"
       ],
-      "root": "sha256:3681d639714d1717f7a747ff5ddf08889f9b2320b387d64ecc99743d38d1529c"
+      "root": "sha256:421b2876395d171277a264c3528b3fe995864b5b612ca6bbe106bda09913b477"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/runtime/domain-wasm.js",

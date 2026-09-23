@@ -4,7 +4,8 @@ import { fileURLToPath } from "node:url";
 import { parse as yaml } from "yaml";
 import * as consumerPlan from "../packages/core/consumer/contract/plan.js";
 import { consumerWorkflows } from "../packages/core/consumer/contract/entries.js";
-import { workflowPath } from "../packages/core/workflow/workflow-taxonomy.mjs";
+import { checkWorkflowTaxonomy, workflowPath } from "../packages/core/workflow/workflow-taxonomy.mjs";
+import { readConsumerUpgrade } from "../packages/core/consumer/compatibility-workflows.js";
 
 export const SELF_ENTRY_CHANNEL = "v4";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -33,6 +34,9 @@ export function checkSelfConsumerContract(root = ROOT) {
     if (read(file) !== bytes) fail(`${file}: generated caller drift`);
   const taxonomy = JSON.parse(read("architecture/workflow-taxonomy.json"));
   const registered = new Set(taxonomy.entries.map(workflowPath));
+  const inventory = checkWorkflowTaxonomy(root, { integration: false, documentation: false });
+  if (!inventory.ok) fail(inventory.errors.join("; "));
+  for (const entry of readConsumerUpgrade(root)?.entries || []) registered.add(entry.path);
   const observed = fs
     .readdirSync(path.join(root, ".github/workflows"))
     .filter((file) => /\.ya?ml$/u.test(file))

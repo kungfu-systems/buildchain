@@ -491,5 +491,6 @@
       "rationale": "Generated minimal consumer caller; all orchestration belongs to the published runtime.",
       "path": ".github/workflows/buildchain-recover.yml"
     }
-  ]
+  ],
+  "consumerUpgradeContract": "architecture/consumer-upgrade.json"
 }

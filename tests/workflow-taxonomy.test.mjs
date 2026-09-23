@@ -1,4 +1,9 @@
 import assert from "node:assert/strict";
+import {
+  CONSUMER_UPGRADE_PATH,
+  readConsumerUpgrade,
+  renderCompatibilityWorkflow,
+} from "../packages/core/consumer/compatibility-workflows.js";
 import { consumerWorkflows } from "../packages/core/consumer/contract/entries.js";
 import { validateConsumerWiring } from "../packages/core/consumer/contract/local-validation.js";
 import { inspectConsumerContract } from "../packages/core/consumer/contract/inspection.js";
@@ -32,6 +37,7 @@ function fixture(t) {
   const files = [
     TAXONOMY_PATH,
     TAXONOMY_DOC,
+    CONSUMER_UPGRADE_PATH,
     "package.json",
     ".buildchain/buildchain.toml",
     ".github/CODEOWNERS",
@@ -40,6 +46,7 @@ function fixture(t) {
     "packages/core/build/verification/source.js",
     "packages/core/build/source/lifecycle.js",
     ...policy.entries.map(workflowPath),
+    ...readConsumerUpgrade(repository).entries.map((entry) => entry.path),
   ];
   for (const file of files) {
     fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
@@ -62,10 +69,11 @@ function consumerFiles(root) {
   return {
     ...standardConsumerExample("npm"),
     ...Object.fromEntries(
-      [TAXONOMY_PATH, ...discoverWorkflowFiles(root)].map((file) => [
-        file,
-        fs.readFileSync(path.join(root, file), "utf8"),
-      ]),
+      [
+        TAXONOMY_PATH,
+        CONSUMER_UPGRADE_PATH,
+        ...discoverWorkflowFiles(root),
+      ].map((file) => [file, fs.readFileSync(path.join(root, file), "utf8")]),
     ),
   };
 }
@@ -73,7 +81,40 @@ function consumerFiles(root) {
 test("the repository has exactly one canonical file per declared workflow", () => {
   const result = checkWorkflowTaxonomy(repository);
   assert.equal(result.ok, true, result.errors.join("\n"));
-  assert.equal(result.fileCount, result.canonicalCount);
+  assert.equal(
+    result.fileCount,
+    result.canonicalCount + result.compatibilityCount,
+  );
+});
+
+test("consumer upgrade contracts cannot disappear while their policy is registered", (t) => {
+  const root = fixture(t);
+  fs.unlinkSync(path.join(root, CONSUMER_UPGRADE_PATH));
+  rejected(root, /upgrade contract is missing/u);
+});
+
+test("compatibility paths must use a registered canonical implementation", (t) => {
+  const root = fixture(t);
+  const contract = readConsumerUpgrade(root);
+  contract.entries[0].target = ".github/workflows/unregistered.yml";
+  fs.writeFileSync(
+    path.join(root, CONSUMER_UPGRADE_PATH),
+    JSON.stringify(contract),
+  );
+  rejected(root, /Invalid consumer upgrade entry/u);
+});
+
+test("compatibility workflow cannot independently change execution or permissions", (t) => {
+  const root = fixture(t);
+  const entry = readConsumerUpgrade(root).entries.find((entry) =>
+    entry.path.endsWith("build.yml"),
+  );
+  const file = path.join(root, entry.path);
+  fs.writeFileSync(
+    file,
+    fs.readFileSync(file, "utf8").replace("contents: read", "contents: write"),
+  );
+  rejected(root, /compatibility workflow drift/u);
 });
 
 test("consumer validation admits registered implementation libraries without a repository identity exception", (t) => {
@@ -323,6 +364,16 @@ test("dangling local calls fail; shell strings do not become workflow calls", (t
     file,
     "on:\n  workflow_call:\njobs:\n  run:\n    runs-on: ubuntu-latest\n    steps:\n      - run: |\n          uses: ./.github/workflows/not-a-call.yml\n",
   );
+  for (const alias of readConsumerUpgrade(root).entries.filter(
+    (item) => item.target === file,
+  ))
+    fs.writeFileSync(
+      path.join(root, alias.path),
+      renderCompatibilityWorkflow(
+        alias,
+        fs.readFileSync(path.join(root, file), "utf8"),
+      ),
+    );
   const result = checkWorkflowTaxonomy(root);
   assert.equal(result.ok, true, result.errors.join("\n"));
 });
@@ -410,6 +461,7 @@ test("early workflow source checks can load taxonomy before dependencies are ins
   const root = fixture(t);
   for (const relative of [
     "packages/core/workflow/workflow-taxonomy.mjs",
+    "packages/core/consumer/compatibility-workflows.js",
     "packages/core/contracts/workflow-yaml-contract.js",
   ]) {
     const target = path.join(root, relative);

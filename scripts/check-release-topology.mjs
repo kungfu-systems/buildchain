@@ -5,6 +5,7 @@ import { assertPipelinePublicationTopology } from "./check-pipeline-publication-
 import { inspectWorkflowJob, readWorkflow } from "./workflow-action-graph.mjs";
 import crypto from "node:crypto";
 import fs from "node:fs";
+import { readConsumerUpgrade, compatibilityWorkflowTarget } from "../packages/core/consumer/compatibility-workflows.js";
 import ts from "typescript";
 
 import path from "node:path";
@@ -406,7 +407,10 @@ export function findUnknownReleaseTopology(
 }
 
 function assertClosedWorld(workflowPaths) {
-  const unknown = findUnknownReleaseTopology(workflowPaths);
+  const retained = (readConsumerUpgrade(root)?.entries || []).filter(entry =>
+    workflowPaths.includes(compatibilityWorkflowTarget(root, entry.path, read(entry.path)))
+  ).map(entry => entry.path);
+  const unknown = findUnknownReleaseTopology([...workflowPaths, ...retained]);
   assert.deepEqual(
     unknown,
     [],

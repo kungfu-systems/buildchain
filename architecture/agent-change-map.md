@@ -129,6 +129,7 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 - `tests/declarative-promotion-mode.test.mjs`
 - `tests/github-governance-authority.test.mjs`
 - `tests/macos-credential-island.test.mjs`
+- `tests/public-dogfood-contract.test.mjs`
 
 ## action-process-runtime
 
