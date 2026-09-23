@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 390,
+  "generation": 391,
   "fencingCounter": 85,
   "policy": {
     "agingSeconds": 900,
@@ -14,7 +14,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.1",
     "candidateId": "sha256:e1157b9a6d6c69a11506dc712e16436b1b71cc1defed7175cb614bd4b7c3d6c8",
@@ -274,8 +274,13 @@
     "issuedAt": "2026-09-23T20:32:41.720Z",
     "expiresAt": "2026-09-23T21:39:14.480Z",
     "fencingToken": "sha256:db2cee449478d7340200add9e8bdc0c343ecd39362455b23ecea6f30b36ae706",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-09-23T20:39:14.480Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-09-23T20:39:14.480Z",
+    "nativeProofRoot": "sha256:b36b9288af1a1d2edd7291edc1c82cb5bd6d872ea142e9fda15cbe14e6fddab1",
+    "nativeExecutionReceiptRoot": "sha256:d7b27145899e0b3dce4c7f921816290098ab2035307a1778e05e7d49ad5ff758",
+    "nativeProofReuseRoot": "sha256:bda66ac164930db84e60f74885bfb1c54e12ac6cf8442124f0f6d68b25eb36b3",
+    "qualificationReceiptRoot": "sha256:d190b72a2cb61604b1dbc1d4d3c6dad760648b1a54fbf84ff08bed778c79c710",
+    "qualifiedAt": "2026-09-23T20:42:54.907Z"
   },
   "candidates": [
     {
@@ -11791,10 +11796,10 @@
       "sourceWorkflowRunId": 35912888530,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-23T20:32:38.172Z",
-      "updatedAt": "2026-09-23T20:39:14.480Z",
+      "updatedAt": "2026-09-23T20:42:54.907Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         ".buildchain/alpha-contract-lock.json",
@@ -12029,6 +12034,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-23T20:39:14.480Z",
-  "stateRoot": "sha256:cd20e7e37259fa09cff33627b15e9dee84bca1b7ad9bbb78682536c622870c50"
+  "updatedAt": "2026-09-23T20:42:54.907Z",
+  "stateRoot": "sha256:8be21a964de923096cca90ed0c525279ff4f438ede0e79fe8f4b35ddabc6d197"
 }
