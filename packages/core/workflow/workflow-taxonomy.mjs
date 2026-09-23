@@ -2,6 +2,12 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import {
+  CONSUMER_UPGRADE_PATH,
+  compatibilityWorkflowEntries,
+  readConsumerUpgrade,
+  renderCompatibilityWorkflow,
+} from "../consumer/compatibility-workflows.js";
+import {
   parseWorkflowDocument,
   parseYamlUses,
 } from "../contracts/workflow-yaml-contract.js";
@@ -290,6 +296,24 @@ export function checkWorkflowTaxonomy(
       : readWorkflowTaxonomy(root),
     entries = validateEntries(policy, errors);
   if (errors.length) return { ok: false, errors };
+  let compatibility = [];
+  try {
+    if (
+      policy.consumerUpgradeContract &&
+      (policy.consumerUpgradeContract !== CONSUMER_UPGRADE_PATH ||
+        !readConsumerUpgrade(root, files))
+    )
+      throw new Error(
+        "Required consumer upgrade contract is missing or changed",
+      );
+    compatibility = compatibilityWorkflowEntries(
+      root,
+      files,
+      entries.map((entry) => ({ ...entry, path: workflowPath(entry) })),
+    );
+  } catch (error) {
+    return { ok: false, errors: [error.message] };
+  }
   files ??= Object.fromEntries(
     discoverWorkflowFiles(root).map((file) => {
       const absolute = path.join(root, file);
@@ -301,7 +325,10 @@ export function checkWorkflowTaxonomy(
       ];
     }),
   );
-  const declared = new Set(entries.map(workflowPath)),
+  const declared = new Set([
+      ...entries.map(workflowPath),
+      ...compatibility.map((entry) => entry.path),
+    ]),
     observed = new Set(
       Object.keys(files).filter((file) =>
         /^\.github\/workflows\/.*\.ya?ml$/iu.test(file),
@@ -317,6 +344,21 @@ export function checkWorkflowTaxonomy(
       errors.push(`registered workflow missing: ${file}`);
   for (const entry of entries)
     validateWorkflow(entry, files[workflowPath(entry)], declared, errors);
+  for (const entry of compatibility) {
+    validateWorkflow(entry, files[entry.path], declared, errors);
+    try {
+      if (
+        files[entry.target] &&
+        files[entry.path] !==
+          renderCompatibilityWorkflow(entry, files[entry.target])
+      )
+        errors.push(
+          `${entry.path}: generated consumer compatibility workflow drift`,
+        );
+    } catch (error) {
+      errors.push(`${entry.path}: ${error.message}`);
+    }
+  }
   if (integration) validateGateIntegration(root, errors);
   if (documentation) {
     const file = path.join(root, TAXONOMY_DOC);
@@ -329,6 +371,7 @@ export function checkWorkflowTaxonomy(
   return {
     ok: !errors.length,
     canonicalCount: entries.length,
+    compatibilityCount: compatibility.length,
     fileCount: observed.size,
     errors,
   };
@@ -364,7 +407,7 @@ export function renderWorkflowCatalog(policy) {
     "",
     "# Workflow catalog",
     "",
-    "Generated from `architecture/workflow-taxonomy.json`. Every workflow has one canonical implementation; alternate paths and historical forwarding aliases are rejected.",
+    "Generated from `architecture/workflow-taxonomy.json`. Every workflow has one canonical implementation. Historical entry contracts declared in an optional `architecture/consumer-upgrade.json` registry must match their generated canonical implementations byte-for-byte, including job contexts, inputs, outputs, permissions and publisher identities.",
     "",
     "The two public workflows own normal pipeline execution and exact-attempt recovery. Component workflows are internal runtime implementation, including once-only setup and the dispatch signing service; consumers do not wire these components. Self workflows are the generated consumer pair. Actions own execution steps; JS adapters and Rust/WASM own implementation.",
     "",
