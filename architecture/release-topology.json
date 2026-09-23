@@ -680,20 +680,20 @@
             "repository_dispatch"
           ],
           "jobs": [
-            "buildchain|reusable-call|kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4|write|write|-|contents-write,oidc-write"
+            "buildchain|reusable-call|kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha|write|write|-|contents-write,oidc-write"
           ],
           "reusableEdges": [
-            "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4"
+            "kungfu-systems/buildchain/.github/workflows/public-ops-pipeline.yml@v4-alpha"
           ]
         },
         {
           "path": ".github/workflows/buildchain-recover.yml",
           "triggers": ["workflow_dispatch"],
           "jobs": [
-            "buildchain|reusable-call|kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4|write|write|-|contents-write,oidc-write"
+            "buildchain|reusable-call|kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4-alpha|write|write|-|contents-write,oidc-write"
           ],
           "reusableEdges": [
-            "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4"
+            "kungfu-systems/buildchain/.github/workflows/public-ops-recover.yml@v4-alpha"
           ]
         }
       ],
