@@ -117,6 +117,17 @@ test("compatibility workflow cannot independently change execution or permission
   rejected(root, /compatibility workflow drift/u);
 });
 
+test("a historical entry cannot add repository event triggers", (t) => {
+  const root = fixture(t);
+  const entry = readConsumerUpgrade(root).entries[0];
+  const file = path.join(root, entry.path);
+  fs.writeFileSync(
+    file,
+    fs.readFileSync(file, "utf8").replace("on:\n", "on:\n  push: {}\n"),
+  );
+  rejected(root, /repository event triggers|compatibility workflow drift/u);
+});
+
 test("consumer validation admits registered implementation libraries without a repository identity exception", (t) => {
   const root = fixture(t);
   assert.equal(fs.existsSync(path.join(root, ".git")), false);
@@ -510,10 +521,15 @@ test("installed normal and recovery entries preserve the generated public contra
   }
 });
 
-
 test("a broken adapted component reports diagnostics instead of throwing", (t) => {
   const root = fixture(t);
-  const entry = readWorkflowTaxonomy(root).entries.find(item => item.id === "check");
-  writeWorkflowSource(root, workflowPath(entry), "on:\n  workflow_call:\njobs:\n  check:\n    runs-on: ubuntu-latest\n    steps:\n      - run: true\n");
+  const entry = readWorkflowTaxonomy(root).entries.find(
+    (item) => item.id === "check",
+  );
+  writeWorkflowSource(
+    root,
+    workflowPath(entry),
+    "on:\n  workflow_call:\njobs:\n  check:\n    runs-on: ubuntu-latest\n    steps:\n      - run: true\n",
+  );
   rejected(root, /Historical runtime entry is missing/);
 });

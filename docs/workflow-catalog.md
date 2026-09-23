@@ -19,7 +19,7 @@ ai_provenance:
 
 # Workflow catalog
 
-Generated from `architecture/workflow-taxonomy.json`. Every workflow has one canonical implementation. Published historical entry contracts are retained in `architecture/consumer-upgrade.json` and generated from those implementations, preserving their job contexts, inputs, outputs, permissions and publisher identities.
+Generated from `architecture/workflow-taxonomy.json`. Every workflow has one canonical implementation. Historical entry contracts declared in an optional `architecture/consumer-upgrade.json` registry must match their generated canonical implementations byte-for-byte, including job contexts, inputs, outputs, permissions and publisher identities.
 
 The two public workflows own normal pipeline execution and exact-attempt recovery. Component workflows are internal runtime implementation, including once-only setup and the dispatch signing service; consumers do not wire these components. Self workflows are the generated consumer pair. Actions own execution steps; JS adapters and Rust/WASM own implementation.
 
