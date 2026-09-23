@@ -1,3 +1,4 @@
+import { devDeliverySourceBinding } from "./dev-delivery-candidate-identity.js";
 import {
   devDeliveryClone as clone,
   devDeliveryContentRoot,
@@ -489,6 +490,8 @@ function createDevDeliverySuccessorWake(queue, now) {
         "pullRequestNumber",
         "sourceHead",
         "sourceRoot",
+        "assignmentRoot",
+        "initiativeRoot",
         "sourceIdentityRoot",
         "sourcePatchRoot",
         "sourceProofRoot",
@@ -584,5 +587,5 @@ export function observeDevDeliveryQueue(
 }
 
 function candidateSourceBinding(candidate) {
-  return { sourceRoot: candidate.sourceRoot };
+  return devDeliverySourceBinding(candidate);
 }

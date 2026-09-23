@@ -1,0 +1,12 @@
+name: Qualify historical build aggregate
+description: Preserve the historical required check using the completed rooted build result.
+inputs:
+  conclusion:
+    description: Conclusion of the maintained build workflow.
+    required: true
+  result:
+    description: Rooted result emitted by the maintained build workflow.
+    required: true
+runs:
+  using: node24
+  main: dist/index.js

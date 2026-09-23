@@ -90,6 +90,7 @@
             "aggregate",
             "execute",
             "plan",
+            "qualify-contract",
             "qualify-profile",
             "resolve",
             "run-profile"
@@ -400,6 +401,7 @@
             "bind-selection",
             "candidate",
             "classify",
+            "historical-evidence",
             "inspect-invocation",
             "qualify",
             "qualify-candidate",

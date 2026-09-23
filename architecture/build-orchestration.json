@@ -45,6 +45,9 @@
     "packages/core/build/plan/action-context.js",
     "packages/core/build/plan/action.js",
     "packages/core/build/plan/admission.js",
+    "packages/core/build/plan/compatibility-artifacts.js",
+    "packages/core/build/plan/compatibility-plan.js",
+    "packages/core/build/plan/compatibility.js",
     "packages/core/build/plan/configuration.js",
     "packages/core/build/plan/environment.js",
     "packages/core/build/plan/identity.js",
@@ -60,8 +63,10 @@
     "packages/core/build/signing/credential-transaction.js",
     "packages/core/build/signing/transaction.js",
     "packages/core/build/summary/aggregation.js",
+    "packages/core/build/summary/compatibility.js",
     "packages/core/build/summary/controller-receipt.js",
     "packages/core/build/summary/finalization.js",
+    "packages/core/build/summary/historical-outputs.js",
     "packages/core/build/summary/payloads.js"
   ],
   "entryJob": "execution-runtime",
@@ -69,6 +74,7 @@
     "runtime-ref",
     "contract-lock",
     "resume-run-id",
-    "runtime-selection"
+    "runtime-selection",
+    "compatibility-inputs"
   ]
 }

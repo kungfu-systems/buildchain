@@ -8,10 +8,18 @@
       "id": "source-check",
       "version": 1,
       "workflow": {
-        "id": ".build-check",
-        "path": ".github/workflows/.build-check.yml"
+        "id": "check",
+        "path": ".github/workflows/check.yml"
       },
       "inputs": {
+        "buildchain-ref": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "buildchain-repository": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "contract-lock": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -98,7 +106,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:eeb5323004b7ef68187e300352f0bb8d646ed8ba8720181abbbc3ff59c91f0e8"
+      "digest": "sha256:b82be1358eaf5751a36b06648de7447a7cca488935df4c3c3e351b58cd0263ef"
     },
     {
       "schemaVersion": 1,
@@ -133,6 +141,10 @@
         "BUILDCHAIN_PROMOTION_TOKEN": {
           "classification": "redacted",
           "source": "workflow-call-secret"
+        },
+        "compatibility-inputs": {
+          "classification": "included",
+          "source": "workflow-call-input"
         },
         "config-path": {
           "classification": "digest-only",
@@ -204,7 +216,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:849a51ff18efbc2bf4668cd6ba6e08004caf5fc01de4676eade0f917d24c5fd1"
+      "digest": "sha256:7f3559f3b6bf1fb0624846addbd7018ef78647e9a1339a08c114a6e2fd464aca"
     },
     {
       "schemaVersion": 1,
@@ -1138,5 +1150,5 @@
       "digest": "sha256:8f495bf2d183158c3e38da53f0f8cf1f7cb44aae8ba05f4ca2447b1a08b2ffea"
     }
   ],
-  "digest": "sha256:0c3b9ae5e97d89cc801f5553954141844fe668c7643df3920597e20a830b423e"
+  "digest": "sha256:5801f9cc732698c8a137a711f8596502d32e88509bf174ee036da0ea332007fa"
 }

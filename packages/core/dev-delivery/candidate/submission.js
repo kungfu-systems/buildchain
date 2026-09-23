@@ -1,3 +1,4 @@
+import { devDeliverySourceBinding } from "../dev-delivery-candidate-identity.js";
 export function deliverySubmissionRequest(
   input,
   { repository, branch, sourceProofRoot, affectedPaths },
@@ -9,7 +10,7 @@ export function deliverySubmissionRequest(
     branch,
     pullRequestNumber: Number(input["expected-pr-number"]),
     sourceHead: input["expected-head-sha"],
-    sourceRoot: input["source-root"],
+    ...devDeliverySourceBinding({ sourceRoot: input["source-root"], assignmentRoot: input["assignment-root"], initiativeRoot: input["initiative-root"] }),
     sourceIdentityRoot: input["source-identity-root"],
     sourcePatchRoot: input["source-patch-root"],
     sourceProofRoot,

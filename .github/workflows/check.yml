@@ -1,0 +1,182 @@
+# Generated from the consumer upgrade contract; edit the canonical implementation.
+name: Buildchain Check
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: Repository directory containing buildchain.toml
+        default: .
+        type: string
+        required: false
+      node-version:
+        description: Node.js version used for the Buildchain runtime
+        default: "24"
+        type: string
+        required: false
+      require-version-state:
+        description: Require configured version.files entries
+        default: false
+        type: boolean
+        required: false
+      mode:
+        description: "Check mode: verify runs install + verify; source runs install + check"
+        default: verify
+        type: string
+        required: false
+      upload-artifacts:
+        description: Upload check lifecycle manifests and summaries
+        default: true
+        type: boolean
+        required: false
+      source-proof-reuse:
+        description: Allow exact accepted pull-request source proof reuse for merge groups
+        default: false
+        type: boolean
+        required: false
+      source-proof-policy-paths-json:
+        description: JSON array of source policy paths bound into the reusable proof
+        default: "[]"
+        type: string
+        required: false
+      source-proof-closure-paths-json:
+        description: JSON array of source closure paths bound into the reusable proof
+        default: "[]"
+        type: string
+        required: false
+      source-proof-dependency-paths-json:
+        description: JSON array of dependency paths bound into the reusable proof
+        default: "[]"
+        type: string
+        required: false
+      source-proof-required-contexts-json:
+        description: JSON array of required contexts bound into the reusable proof
+        default: "[]"
+        type: string
+        required: false
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
+      buildchain-repository:
+        description: Buildchain runtime repository
+        default: kungfu-systems/buildchain
+        type: string
+        required: false
+      buildchain-ref:
+        description: Buildchain runtime ref. Empty uses v3.
+        default: v3
+        type: string
+        required: false
+    outputs:
+      controller-plan-artifact:
+        description: Uploaded source-check controller plan artifact name
+        value: ${{ jobs.check.outputs.controller-plan-artifact }}
+      controller-plan-json:
+        description: Compact source/runtime-bound source-check controller plan
+        value: ${{ jobs.check.outputs.controller-plan-json }}
+      controller-plan-digest:
+        description: Digest of the source-check controller plan
+        value: ${{ jobs.check.outputs.controller-plan-digest }}
+      controller-receipt-artifact:
+        description: Uploaded source-check controller receipt artifact name
+        value: ${{ jobs.check.outputs.controller-receipt-artifact }}
+      controller-receipt-json:
+        description: Compact source-check controller receipt
+        value: ${{ jobs.check.outputs.controller-receipt-json }}
+      controller-receipt-digest:
+        description: Digest of the source-check controller receipt
+        value: ${{ jobs.check.outputs.controller-receipt-digest }}
+      controller-receipt-status:
+        description: Final source-check controller status
+        value: ${{ jobs.check.outputs.controller-receipt-status }}
+      source-proof-root:
+        description: Exact source qualification proof root sealed or reused by this run
+        value: ${{ jobs.check.outputs.source-proof-root }}
+      source-proof-reused:
+        description: Whether this run reused an exact accepted source proof
+        value: ${{ jobs.check.outputs.source-proof-reused }}
+      source-proof-reuse-reason:
+        description: Reuse decision or fail-closed fallback reason
+        value: ${{ jobs.check.outputs.source-proof-reuse-reason }}
+      source-proof-producer-run-id:
+        description: Pull-request workflow run that produced the reused proof
+        value: ${{ jobs.check.outputs.source-proof-producer-run-id }}
+      source-proof-decision-root:
+        description: Exact merge-group source-proof reuse decision root
+        value: ${{ jobs.check.outputs.source-proof-decision-root }}
+permissions:
+  contents: read
+jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          compatibility-inputs: ${{ toJSON(inputs) }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
+  check:
+    name: check
+    runs-on: ubuntu-24.04
+    outputs:
+      controller-plan-artifact: ${{ steps.node.outputs.controller-plan-artifact }}
+      controller-plan-json: ${{ steps.node.outputs.controller-plan-json }}
+      controller-plan-digest: ${{ steps.node.outputs.controller-plan-digest }}
+      controller-receipt-artifact: ${{ steps.node.outputs.controller-receipt-artifact }}
+      controller-receipt-json: ${{ steps.node.outputs.controller-receipt-json }}
+      controller-receipt-digest: ${{ steps.node.outputs.controller-receipt-digest }}
+      controller-receipt-status: ${{ steps.node.outputs.controller-receipt-status }}
+      source-proof-root: ${{ steps.node.outputs.source-proof-root }}
+      source-proof-reused: ${{ steps.node.outputs.source-proof-reused }}
+      source-proof-reuse-reason: ${{ steps.node.outputs.source-proof-reuse-reason }}
+      source-proof-producer-run-id: ${{ steps.node.outputs.source-proof-producer-run-id }}
+      source-proof-decision-root: ${{ steps.node.outputs.source-proof-decision-root }}
+    steps:
+      - name: Checkout repository
+        id: source
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ inputs.mode == 'source' && inputs.source-proof-reuse && github.event_name == 'pull_request'
+            && github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: ${{ inputs.mode == 'source' && (!inputs.source-proof-reuse || github.event_name ==
+            'pull_request') && '0' || '1' }}
+          persist-credentials: false
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+        if: ${{ always() }}
+      - name: check
+        id: node
+        uses: ./.buildchain/runtime/actions/build/source/qualify
+        with:
+          runtime-ref: ${{ env.BUILDCHAIN_RUNTIME_SHA }}
+          runtime-repository: kungfu-systems/buildchain
+          request-json: ${{ toJSON(inputs) }}
+          steps-source-outcome: ${{ toJSON(steps.source.outcome) }}
+          source-checkout-outcome: ${{ steps.source.outcome }}
+        if: ${{ always() }}
+    needs:
+      - execution-runtime

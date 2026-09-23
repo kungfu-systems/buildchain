@@ -1,14 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
+import { readConsumerUpgrade } from "../packages/core/consumer/compatibility-workflows.js";
 
 function readJson(root, file) {
   return JSON.parse(fs.readFileSync(path.join(root, file), "utf8"));
 }
 
-// Public API ownership follows the current architecture. Retired release
-// contracts do not require aliases or forwarding implementations in 4.1.
+// Current APIs and explicitly retained published contracts have distinct owners.
 export function evaluatePublicSurface({ root, policy }) {
   const issues = [];
+  const retained = new Set((readConsumerUpgrade(root)?.entries || []).map(entry => entry.path));
   const groups = new Set(readJson(root, "dist/site/capability-registry.json").groups.map(entry => entry.id));
   for (const [file, collection, kind, key] of [
     ["dist/site/cli-registry.json", "commands", "cli", "id"],
@@ -26,7 +27,8 @@ export function evaluatePublicSurface({ root, policy }) {
       }
       if (!groups.has(entry.capabilityGroup)) issues.push(`${label}: capability group ${entry.capabilityGroup || "<empty>"} is not registered`);
       if (!entry.nonDuplicationRationale?.trim()) issues.push(`${label}: public surface requires a non-duplication rationale`);
-      if (entry.compatibilityPromise !== "current-contract-only") issues.push(`${label}: historical compatibility promise is not part of the current architecture`);
+      const promise = kind === "workflow" && retained.has(entry.path) ? "retained-consumer-contract" : "current-contract-only";
+      if (entry.compatibilityPromise !== promise) issues.push(`${label}: compatibility promise does not match the registered contract`);
       if (kind === "action" && !["public", "implementation"].includes(entry.apiRole)) issues.push(`${label}: action API role is missing`);
       const target = kind === "node" ? entry.target : ["workflow", "action"].includes(kind) ? entry.path : null;
       if (target) {

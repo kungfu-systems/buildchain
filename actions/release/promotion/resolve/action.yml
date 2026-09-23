@@ -66,6 +66,9 @@ outputs:
   request-json:
     description: Validated request with declared defaults.
     value: ${{ steps.route.outputs.request-json }}
+  historical-inputs-json:
+    description: Validated historical publication parameters; empty for the typed API.
+    value: ${{ steps.route.outputs.historical-inputs-json }}
 runs:
   using: composite
   steps:

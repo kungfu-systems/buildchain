@@ -1,3 +1,4 @@
+import { releaseMetadata, releaseMetadataMatches } from "./github-release-metadata.js";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -358,6 +359,9 @@ export function createGitHubReleaseAssetsAdapter({
       if (!observed.release) {
         return { outcome: "absent", providerCode: "github-release-absent" };
       }
+      if (!releaseMetadataMatches(releaseMetadata(expected), observed.release)) {
+        return { outcome: "absent", providerCode: "github-release-metadata-incomplete" };
+      }
       const byName = new Map(
         observed.assets.map((asset) => [asset.name, asset]),
       );
@@ -409,6 +413,7 @@ export function createGitHubReleaseAssetsAdapter({
         );
       }
       const observed = await releaseAndAssets(effect);
+      const metadata = releaseMetadata(expected);
       let release = observed.release;
       if (!release) {
         try {
@@ -419,6 +424,7 @@ export function createGitHubReleaseAssetsAdapter({
               tag_name: observed.coordinate.tag,
               target_commitish: effect.subject.sourceSha,
               name: observed.coordinate.tag,
+              ...metadata,
               draft: false,
               prerelease: effect.subject.channel === "alpha",
               make_latest: effect.subject.channel === "alpha" ? "false" : "true",
@@ -439,6 +445,18 @@ export function createGitHubReleaseAssetsAdapter({
             code: "github-asset-collision",
             classification: "conflict",
           });
+        }
+      }
+      if (!releaseMetadataMatches(metadata, release)) {
+        try {
+          await octokit.rest.repos.updateRelease({
+            owner: observed.coordinate.owner,
+            repo: observed.coordinate.repo,
+            release_id: release.id,
+            ...metadata,
+          });
+        } catch (error) {
+          throw classifyProviderError(error, "github-release-metadata-transient");
         }
       }
       for (const artifact of expected) {

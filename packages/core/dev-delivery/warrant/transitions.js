@@ -13,7 +13,7 @@ import {
   settleDevDeliveryTerminalEvent,
   submitDevDeliveryCandidate,
 } from "../dev-delivery-warrant.js";
-import { reuseExactActiveDevDeliverySourceProof } from "../dev-delivery-candidate-identity.js";
+import { devDeliverySourceBinding, reuseExactActiveDevDeliverySourceProof } from "../dev-delivery-candidate-identity.js";
 import { runDeliveryWarrantReadCandidate } from "../delivery-warrant-read-candidate.js";
 
 import {
@@ -83,7 +83,7 @@ export function transitionFor(command, queue, options) {
         "pullRequestNumber",
       ),
       sourceHead: exactSha(options.sourceHead, "sourceHead"),
-      sourceRoot: exactRoot(options.sourceRoot, "sourceRoot"),
+      ...devDeliverySourceBinding(options),
       sourceIdentityRoot: exactRoot(
         options.sourceIdentityRoot,
         "sourceIdentityRoot",

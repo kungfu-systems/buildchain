@@ -58,7 +58,7 @@ export async function aggregate(context, plan, jobs, executions) {
       runId: plan.run.id,
       runAttempt: plan.run.attempt,
     },
-    publishGate: {
+    publishGate: plan.historical_publish_gate || {
       trustedEvent: true,
       channel: "none",
       allowed: false,
@@ -94,7 +94,9 @@ export async function aggregate(context, plan, jobs, executions) {
     artifacts: await readProviderArtifacts(plan.run),
     platforms: plan.platforms,
     artifactName: plan.artifacts.name,
-    artifactNameTemplate: "{artifact}-final-{platform}-{sha}",
+    artifactNameTemplate: plan.identity.visible_workflow === ".github/workflows/build.yml"
+      ? plan.artifacts.name_template || "{artifact}-{platform}-{sha}"
+      : "{artifact}-final-{platform}-{sha}",
     sourceSha: plan.source.sha,
     sourceRef: plan.source.ref,
     repository: plan.run.repository,

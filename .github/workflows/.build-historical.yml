@@ -1,0 +1,326 @@
+# Generated from the consumer upgrade contract; edit the canonical implementation.
+name: Buildchain Build
+on:
+  workflow_call:
+    inputs:
+      compatibility-inputs:
+        description: Internal transport for retained historical build arguments.
+        type: string
+        required: false
+        default: ""
+      config-path:
+        description: Locate buildchain.toml when the project cannot be discovered.
+        type: string
+        required: false
+        default: ""
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime contract lock path.
+        type: string
+        required: false
+        default: ""
+      resume-run-id:
+        description: Failed execution to resume using its original source and retained
+          build outputs.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflows.
+        type: string
+        required: false
+        default: ""
+    secrets:
+      BUILDCHAIN_PROMOTION_TOKEN:
+        required: false
+      BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64:
+        required: false
+      BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD:
+        required: false
+      BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64:
+        required: false
+      BUILDCHAIN_MACOS_NOTARY_API_KEY_ID:
+        required: false
+      BUILDCHAIN_MACOS_NOTARY_API_ISSUER:
+        required: false
+    outputs:
+      result:
+        description: Rooted build result and exact artifact references.
+        value: ${{ jobs.deliver.outputs.result }}
+      runtime-selection:
+        description: Entry-resolved runtime for the historical aggregate check.
+        value: ${{ jobs.execution-runtime.outputs.selection }}
+jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+      source-sha: ${{ steps.select.outputs.source-sha }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          compatibility-inputs: ${{ inputs.compatibility-inputs }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          resume-run-id: ${{ inputs.resume-run-id }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
+  plan:
+    runs-on: ubuntu-24.04
+    permissions:
+      issues: write
+      contents: read
+      actions: read
+    outputs:
+      plan: ${{ steps.plan.outputs.plan }}
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: Checkout exact consumer source
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ needs.execution-runtime.outputs.source-sha }}
+          path: source
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/plan
+        env:
+          BUILDCHAIN_HISTORICAL_ARTIFACT_RELAY_S3_BUCKET: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_BUCKET }}
+          BUILDCHAIN_HISTORICAL_ARTIFACT_RELAY_S3_REGION: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_REGION }}
+          BUILDCHAIN_HISTORICAL_ARTIFACT_RELAY_S3_PREFIX: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_PREFIX }}
+          BUILDCHAIN_HISTORICAL_ARTIFACT_RELAY_S3_ROLE_ARN: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN }}
+          BUILDCHAIN_HISTORICAL_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN }}
+          BUILDCHAIN_HISTORICAL_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN }}
+          BUILDCHAIN_HISTORICAL_ARTIFACT_RELAY_S3_OIDC_AUDIENCE: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_OIDC_AUDIENCE }}
+          BUILDCHAIN_HISTORICAL_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE: ${{ vars.BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE }}
+          BUILDCHAIN_HISTORICAL_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE: ${{ vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
+          BUILDCHAIN_HISTORICAL_ARTIFACT_SIGNING_REQUEST_UPLOAD_NO_PROXY: ${{ vars.BUILDCHAIN_ARTIFACT_SIGNING_REQUEST_UPLOAD_NO_PROXY }}
+        with:
+          config-path: ${{ inputs.config-path }}
+          compatibility-inputs: ${{ inputs.compatibility-inputs }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          control-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+        id: plan
+    needs:
+      - execution-runtime
+  build-native:
+    needs:
+      - plan
+      - execution-runtime
+    if: ${{ fromJSON(needs.plan.outputs.plan).matrix.native[0] != null }}
+    strategy:
+      fail-fast: ${{ fromJSON(needs.plan.outputs.plan).build.fail_fast }}
+      matrix:
+        platform: ${{ fromJSON(needs.plan.outputs.plan).matrix.native }}
+    runs-on: ${{ matrix.platform.runner }}
+    timeout-minutes: ${{ fromJSON(needs.plan.outputs.plan).build.timeout_minutes }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/prepare
+        with:
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          checkout-source: "true"
+          tools: "true"
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/stage
+        with:
+          token: ${{ github.token }}
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          stage: install
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/stage
+        with:
+          token: ${{ github.token }}
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          stage: build
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/stage
+        with:
+          token: ${{ github.token }}
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          stage: verify
+      - uses: ./.buildchain/runtime/actions/build/artifact/transfer
+        with:
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+        if: ${{ always() }}
+  build-container:
+    needs:
+      - plan
+      - execution-runtime
+    if: ${{ fromJSON(needs.plan.outputs.plan).matrix.container[0] != null }}
+    strategy:
+      fail-fast: ${{ fromJSON(needs.plan.outputs.plan).build.fail_fast }}
+      matrix:
+        platform: ${{ fromJSON(needs.plan.outputs.plan).matrix.container }}
+    runs-on: ${{ matrix.platform.runner }}
+    timeout-minutes: ${{ fromJSON(needs.plan.outputs.plan).build.timeout_minutes }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/prepare
+        with:
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          checkout-source: "true"
+          tools: "true"
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/stage
+        with:
+          token: ${{ github.token }}
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          stage: install
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/stage
+        with:
+          token: ${{ github.token }}
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          stage: build
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/stage
+        with:
+          token: ${{ github.token }}
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          stage: verify
+      - uses: ./.buildchain/runtime/actions/build/artifact/transfer
+        with:
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+        if: ${{ always() }}
+    container:
+      image: ${{ fromJSON(needs.plan.outputs.plan).container.image }}
+      options: --user root
+  sign:
+    needs:
+      - plan
+      - build-native
+      - build-container
+      - execution-runtime
+    if: ${{ always() && needs.plan.result == 'success' && !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ${{ fromJSON(needs.plan.outputs.plan).matrix.sign }}
+    runs-on: ${{ matrix.platform.runner }}
+    environment:
+      name: ${{ matrix.platform.environment }}
+    timeout-minutes: 180
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/prepare
+        with:
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          checkout-source: ${{ matrix.platform.kind == 'artifact' }}
+          tools: "false"
+      - uses: ./.buildchain/runtime/actions/build/artifact/sign
+        with:
+          plan: ${{ needs.plan.outputs.plan }}
+          platform: ${{ toJSON(matrix.platform) }}
+          kind: ${{ matrix.platform.kind }}
+          control-token: ${{ matrix.platform.kind == 'artifact' && secrets.BUILDCHAIN_PROMOTION_TOKEN || '' }}
+          expected-team-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID }}
+          certificate-sha1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
+          certificate-p12-base64: ${{ matrix.platform.kind == 'credential' &&
+            secrets.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64 || '' }}
+          certificate-password: ${{ matrix.platform.kind == 'credential' &&
+            secrets.BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD || '' }}
+          notary-api-key-p8-base64: ${{ matrix.platform.kind == 'credential' &&
+            secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64 || '' }}
+          notary-api-key-id: ${{ matrix.platform.kind == 'credential' &&
+            secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_ID || '' }}
+          notary-api-issuer: ${{ matrix.platform.kind == 'credential' &&
+            secrets.BUILDCHAIN_MACOS_NOTARY_API_ISSUER || '' }}
+  attest:
+    needs:
+      - plan
+      - sign
+      - execution-runtime
+    if: ${{ always() && needs.sign.result == 'success' &&
+      fromJSON(needs.plan.outputs.plan).build.attestation.subject_path != '' }}
+    runs-on: ubuntu-24.04
+    outputs:
+      artifact: ${{ steps.attest.outputs.artifact }}
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/prepare
+        with:
+          plan: ${{ needs.plan.outputs.plan }}
+      - uses: ./.buildchain/runtime/actions/build/artifact/attest
+        with:
+          plan: ${{ needs.plan.outputs.plan }}
+        id: attest
+  deliver:
+    needs:
+      - plan
+      - build-native
+      - build-container
+      - sign
+      - attest
+      - execution-runtime
+    if: ${{ always() && needs.plan.result == 'success' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      result: ${{ steps.final.outputs.result }}
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - uses: ./.buildchain/runtime/actions/build/lifecycle/prepare
+        with:
+          plan: ${{ needs.plan.outputs.plan }}
+      - uses: ./.buildchain/runtime/actions/build/artifact/finalize
+        with:
+          token: ${{ github.token }}
+          plan: ${{ needs.plan.outputs.plan }}
+          jobs: ${{ toJSON(needs) }}
+        id: final

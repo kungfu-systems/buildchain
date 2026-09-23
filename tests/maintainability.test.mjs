@@ -163,6 +163,8 @@ test("exact-head maintainability baseline is reproducible", () => {
     actionDefinitions,
     actionDefinitionLines,
     automationImplementationLines,
+    generatedCompatibilityWorkflowFiles,
+    generatedCompatibilityWorkflowLines,
     ...originalMetrics
   } = report.repository;
   assert.deepEqual(originalMetrics, baseline.repository);
@@ -511,7 +513,7 @@ test("public API governance rejects missing ownership and historical compatibili
     );
     assert.ok(
       issues.includes(
-        `cli:${entry.id}: historical compatibility promise is not part of the current architecture`,
+        `cli:${entry.id}: compatibility promise does not match the registered contract`,
       ),
     );
     assert.ok(

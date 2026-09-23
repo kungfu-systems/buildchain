@@ -113,3 +113,11 @@ export function assertRuntimeContractAccepted(result) {
       `Buildchain contract lock rejected: ${(result.evaluation.reasons || []).join("; ")}`,
     );
 }
+
+// Compare lock metadata with the selected runtime, independently of checkout paths.
+export function runtimeContractLockDrift(lock, runtimeSha, contractDigest) {
+  if (lock.schema === "buildchain.consumer-contract-lock/v2")
+    return lock.runtime.sha !== runtimeSha;
+  return lock.buildchain.resolvedSha !== runtimeSha ||
+    lock.buildchain.contractDigest !== contractDigest;
+}

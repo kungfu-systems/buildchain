@@ -1,6 +1,9 @@
 name: Resolve admitted build plan
 description: Admit exact source and runtime, resolve runners and root the build execution contract.
 inputs:
+  compatibility-inputs:
+    description: Retained historical build arguments, normalized into the rooted plan.
+    default: ""
   config-path:
     description: Optional project TOML locator
     required: false

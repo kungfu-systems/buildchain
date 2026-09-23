@@ -50,7 +50,7 @@ export async function createReleaseDocuments({
     schema: RELEASE_INVOCATION_CONTRACT,
     publisher: {
       repository: "kungfu-systems/buildchain",
-      workflow: ".github/workflows/.release-promote.yml",
+      workflow: request["publisher-workflow-path"] || ".github/workflows/.release-promote.yml",
       workflowSha: request["publisher-workflow-sha"],
       job: "apply",
     },
