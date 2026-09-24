@@ -1,0 +1,299 @@
+# Generated from the consumer upgrade contract; edit the canonical implementation.
+name: Buildchain Paper Release
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        default: .
+        type: string
+        required: false
+      toolchain-type:
+        default: config
+        type: string
+        required: false
+      verify-command:
+        default: make check
+        type: string
+        required: false
+      package-name:
+        default: ""
+        type: string
+        required: false
+      publish-dist-tag:
+        default: ""
+        type: string
+        required: false
+      target-ref:
+        default: ""
+        type: string
+        required: false
+      target-sha:
+        default: ""
+        type: string
+        required: false
+      publisher-workflow-path:
+        description: Repository-local workflow path configured as the npm trusted publisher
+        default: .github/workflows/public-release-paper.yml
+        type: string
+        required: false
+      artifact-name:
+        default: paper-publication
+        type: string
+        required: false
+      artifact-paths:
+        description: Declared release assets in addition to Buildchain publication evidence and npm package
+          bytes
+        default: _build/*.pdf
+        type: string
+        required: false
+      artifact-retention-days:
+        default: 30
+        type: number
+        required: false
+      required-status-check:
+        default: check / check
+        type: string
+        required: false
+      branch-protection-bypass-apps:
+        default: github-actions
+        type: string
+        required: false
+      github-release:
+        default: true
+        type: boolean
+        required: false
+      release-passport-output-dir:
+        default: .buildchain/release-passport
+        type: string
+        required: false
+      release-passport-product-name:
+        default: ""
+        type: string
+        required: false
+      release-passport-impact-json:
+        default: ""
+        type: string
+        required: false
+      github-governance-receipt-json:
+        description: Fresh qualifying governance receipt for the exact publication repository and target ref
+        default: ""
+        type: string
+        required: false
+      dry-run:
+        default: false
+        type: boolean
+        required: false
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
+    secrets:
+      KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:
+        description: Private key for the dedicated read-only GitHub governance auditor App
+        required: false
+      BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID:
+        description: Preferred GitHub App client ID for generated repository writes
+        required: false
+      BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY:
+        description: Preferred GitHub App private key for generated repository writes
+        required: false
+      BUILDCHAIN_GENERATED_WRITE_TOKEN:
+        description: Equivalent narrow token fallback for generated repository writes
+        required: false
+    outputs:
+      package-name:
+        value: ${{ jobs.publication-candidate.outputs.package-name }}
+      package-version:
+        value: ${{ jobs.publication-candidate.outputs.package-version }}
+      public-release-tag:
+        value: ${{ jobs.publish.outputs.public-release-tag }}
+      release-passport-path:
+        value: ${{ jobs.publish.outputs.release-passport-path }}
+      github-release-url:
+        value: ${{ jobs.publish.outputs.github-release-url }}
+      upstream-release-json:
+        description: Exact post-publication release envelope for downstream propagation
+        value: ${{ jobs.publish.outputs.upstream-release-json }}
+      propagation-work-artifact:
+        description: Artifact containing one paused typed propagation work unit per configured downstream target
+        value: ${{ jobs.publish.outputs.propagation-work-artifact }}
+      controller-plan-json:
+        description: Paper publication controller plan json
+        value: ${{ jobs.publish.outputs.controller-plan-json }}
+      controller-plan-digest:
+        description: Paper publication controller plan digest
+        value: ${{ jobs.publish.outputs.controller-plan-digest }}
+      controller-plan-artifact:
+        description: Paper publication controller plan artifact
+        value: ${{ jobs.publish.outputs.controller-plan-artifact }}
+      controller-receipt-json:
+        description: Paper publication controller receipt json
+        value: ${{ jobs.publish.outputs.controller-receipt-json }}
+      controller-receipt-digest:
+        description: Paper publication controller receipt digest
+        value: ${{ jobs.publish.outputs.controller-receipt-digest }}
+      controller-receipt-artifact:
+        description: Paper publication controller receipt artifact
+        value: ${{ jobs.publish.outputs.controller-receipt-artifact }}
+      controller-receipt-status:
+        description: Paper publication controller receipt status
+        value: ${{ jobs.publish.outputs.controller-receipt-status }}
+permissions:
+  contents: read
+jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
+  publication-candidate:
+    name: Build read-only paper publication candidate
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/.build-publication.yml
+    with:
+      working-directory: ${{ inputs.working-directory }}
+      toolchain-type: ${{ inputs.toolchain-type }}
+      verify-command: ${{ inputs.verify-command }}
+      prepare-paper-package: true
+      package-name: ${{ inputs.package-name }}
+      publish-dist-tag: ${{ inputs.publish-dist-tag }}
+      target-ref: ${{ inputs.target-ref || github.ref_name }}
+      artifact-name: ${{ inputs.artifact-name }}
+      artifact-paths: ${{ inputs.artifact-paths }}
+      artifact-retention-days: ${{ inputs.artifact-retention-days }}
+      runtime-selection: ${{ needs.execution-runtime.outputs.selection }}
+    needs:
+      - execution-runtime
+  publication-authority:
+    name: Seal exact paper publication capability
+    needs:
+      - publication-candidate
+      - execution-runtime
+    permissions:
+      actions: read
+      checks: read
+      contents: read
+      pull-requests: read
+    uses: ./.github/workflows/.release-authority.yml
+    with:
+      github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
+      auto-admission: true
+      auto-admission-kind: publication-artifact
+      authority-workflow-path: .github/workflows/.release-paper.yml
+      source-sha: ${{ inputs.target-sha || github.sha }}
+      target-ref: ${{ inputs.target-ref || github.ref_name }}
+      publisher-workflow-path: ${{ inputs.publisher-workflow-path }}
+      required-status-check: ${{ inputs.required-status-check }}
+      product: ${{ inputs.release-passport-product-name ||
+        needs.publication-candidate.outputs.package-name }}
+      publication-target: npm:${{ needs.publication-candidate.outputs.package-name }}
+      publication-version: ${{ needs.publication-candidate.outputs.package-version }}
+      package-name: ${{ needs.publication-candidate.outputs.package-name }}
+      evidence-repository: ${{ github.repository }}
+      evidence-run-id: ${{ github.run_id }}
+      evidence-publication-artifact: ${{ needs.publication-candidate.outputs.publication-artifact-name }}
+      evidence-controller-artifact: ${{ needs.publication-candidate.outputs.controller-receipt-artifact }}
+      dry-run: ${{ inputs.dry-run }}
+      runtime-selection: ${{ needs.execution-runtime.outputs.selection }}
+    secrets: inherit
+  publish:
+    name: Publish admitted paper candidate
+    needs:
+      - publication-candidate
+      - publication-authority
+      - execution-runtime
+    if: ${{ !inputs.dry-run && needs.publication-authority.result == 'success' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      checks: write
+      contents: read
+      id-token: write
+      issues: write
+      pull-requests: write
+    outputs:
+      package-name: ${{ steps.admit-candidate.outputs.package-name }}
+      package-version: ${{ steps.admit-candidate.outputs.package-version }}
+      public-release-tag: ${{ steps.publish-candidate.outputs.public-release-tag }}
+      release-passport-path: ${{ steps.publish-candidate.outputs.release-passport-path }}
+      github-release-url: ${{ steps.publish-candidate.outputs.github-release-url }}
+      upstream-release-json: ${{ steps.settle-publication.outputs.upstream-release-json }}
+      propagation-work-artifact: ${{ steps.settle-publication.outputs.propagation-work-artifact }}
+      controller-plan-json: ${{ steps.admit-candidate.outputs.controller-plan-json }}
+      controller-plan-digest: ${{ steps.admit-candidate.outputs.controller-plan-digest }}
+      controller-plan-artifact: ${{ steps.admit-candidate.outputs.controller-plan-artifact }}
+      controller-receipt-json: ${{ steps.settle-publication.outputs.controller-receipt-json }}
+      controller-receipt-digest: ${{ steps.settle-publication.outputs.controller-receipt-digest }}
+      controller-receipt-artifact: ${{ steps.settle-publication.outputs.controller-receipt-artifact }}
+      controller-receipt-status: ${{ steps.settle-publication.outputs.controller-receipt-status }}
+    steps:
+      - name: Checkout exact admitted source
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ inputs.target-sha || github.sha }}
+          clean: true
+          persist-credentials: false
+        id: source-checkout
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+        if: ${{ always() }}
+      - name: Paper admit candidate.
+        id: admit-candidate
+        uses: ./.buildchain/runtime/actions/paper/candidate/admit
+        with:
+          request-json: ${{ toJSON(inputs) }}
+          candidate-plan-json: ${{ toJSON(needs.publication-candidate.outputs) }}
+          capability-json: ${{ needs.publication-authority.outputs.capability-json }}
+          app-client-id: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID }}
+          app-private-key: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY }}
+          write-token: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN }}
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+        if: ${{ always() }}
+      - name: Paper publish candidate.
+        id: publish-candidate
+        uses: ./.buildchain/runtime/actions/paper/candidate/publish
+        with:
+          request-json: ${{ toJSON(inputs) }}
+          candidate-json: ${{ steps.admit-candidate.outputs.candidate-json }}
+          token: ${{ steps.admit-candidate.outputs.token }}
+      - name: Paper settle publication.
+        id: settle-publication
+        uses: ./.buildchain/runtime/actions/paper/publication/settle
+        with:
+          request-json: ${{ toJSON(inputs) }}
+          candidate-json: ${{ steps.admit-candidate.outputs.candidate-json }}
+          publication-json: ${{ steps.publish-candidate.outputs.publication-json }}
+          target-json: ${{ steps.publish-candidate.outputs.target-json }}
+          token: ${{ secrets.BUILDCHAIN_GENERATED_WRITE_TOKEN || github.token }}
+          plan-outcome: ${{ steps.admit-candidate.outputs.plan-outcome }}
+          publish-outcome: ${{ steps.publish-candidate.outcome }}
+          promote-outcome: ${{ steps.publish-candidate.outputs.promote-outcome }}
+        if: ${{ always() }}

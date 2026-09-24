@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
   CONSUMER_UPGRADE_PATH,
+  readConsumerUpgrade,
   renderCompatibilityWorkflow,
 } from "../packages/core/consumer/compatibility-workflows.js";
 import { consumerWorkflows } from "../packages/core/consumer/contract/entries.js";
@@ -36,6 +37,7 @@ function fixture(t) {
   const files = [
     TAXONOMY_PATH,
     TAXONOMY_DOC,
+    CONSUMER_UPGRADE_PATH,
     "package.json",
     ".buildchain/buildchain.toml",
     ".github/CODEOWNERS",
@@ -44,6 +46,7 @@ function fixture(t) {
     "packages/core/build/verification/source.js",
     "packages/core/build/source/lifecycle.js",
     ...policy.entries.map(workflowPath),
+    ...readConsumerUpgrade(repository).entries.map((entry) => entry.path),
   ];
   for (const file of files) {
     fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
@@ -66,99 +69,63 @@ function consumerFiles(root) {
   return {
     ...standardConsumerExample("npm"),
     ...Object.fromEntries(
-      [TAXONOMY_PATH, ...discoverWorkflowFiles(root)].map((file) => [
-        file,
-        fs.readFileSync(path.join(root, file), "utf8"),
-      ]),
+      [
+        TAXONOMY_PATH,
+        CONSUMER_UPGRADE_PATH,
+        ...discoverWorkflowFiles(root),
+      ].map((file) => [file, fs.readFileSync(path.join(root, file), "utf8")]),
     ),
   };
-}
-
-function upgradeFixture(t) {
-  const root = fixture(t);
-  const policy = editPolicy(root, (value) => {
-    value.consumerUpgradeContract = CONSUMER_UPGRADE_PATH;
-  });
-  const target = workflowPath(
-    policy.entries.find((entry) => entry.id === "check"),
-  );
-  const source = fs.readFileSync(path.join(root, target), "utf8");
-  const entry = {
-    path: ".github/workflows/check.yml",
-    target,
-    interface: { workflow_call: {} },
-    interfaceSource: source.match(/^on:\n[\s\S]*?(?=^[a-z][a-z-]*:)/mu)[0],
-  };
-  const contract = {
-    schema: "buildchain.consumer-upgrade/v1",
-    source: { sha: "a".repeat(40) },
-    entries: [entry],
-  };
-  fs.writeFileSync(
-    path.join(root, CONSUMER_UPGRADE_PATH),
-    JSON.stringify(contract),
-  );
-  fs.writeFileSync(
-    path.join(root, entry.path),
-    renderCompatibilityWorkflow(entry, source),
-  );
-  return { root, entry, contract };
-}
-
-test("registry-aware validators accept generated historical entries in local and provider source inspection", (t) => {
-  const { root } = upgradeFixture(t);
-  const result = validateConsumerWiring(root, ".buildchain/buildchain.toml");
-  const files = {
-    ...consumerFiles(root),
-    [CONSUMER_UPGRADE_PATH]: fs.readFileSync(
-      path.join(root, CONSUMER_UPGRADE_PATH),
-      "utf8",
-    ),
-  };
-  const inspection = inspectConsumerContract(files, {
-    channel: result.channel,
-  });
-  assert.equal(inspection.ok, true, inspection.issues.join("\n"));
-});
-
-for (const mutation of [
-  "missing-registry",
-  "unknown-target",
-  "changed-permission",
-  "extra-event",
-]) {
-  test(`registry-aware validation fails closed for ${mutation}`, (t) => {
-    const { root, entry, contract } = upgradeFixture(t);
-    const registry = path.join(root, CONSUMER_UPGRADE_PATH);
-    const workflow = path.join(root, entry.path);
-    if (mutation === "missing-registry") fs.unlinkSync(registry);
-    if (mutation === "unknown-target") {
-      contract.entries[0].target = ".github/workflows/unknown.yml";
-      fs.writeFileSync(registry, JSON.stringify(contract));
-    }
-    if (mutation === "changed-permission")
-      fs.writeFileSync(
-        workflow,
-        fs
-          .readFileSync(workflow, "utf8")
-          .replace("contents: read", "contents: write"),
-      );
-    if (mutation === "extra-event")
-      fs.writeFileSync(
-        workflow,
-        fs.readFileSync(workflow, "utf8").replace("on:\n", "on:\n  push: {}\n"),
-      );
-    assert.throws(
-      () => validateConsumerWiring(root, ".buildchain/buildchain.toml"),
-      /upgrade contract is missing|Invalid consumer upgrade entry|compatibility workflow drift|repository event triggers/u,
-    );
-  });
 }
 
 test("the repository has exactly one canonical file per declared workflow", () => {
   const result = checkWorkflowTaxonomy(repository);
   assert.equal(result.ok, true, result.errors.join("\n"));
-  assert.equal(result.fileCount, result.canonicalCount);
+  assert.equal(
+    result.fileCount,
+    result.canonicalCount + result.compatibilityCount,
+  );
+});
+
+test("consumer upgrade contracts cannot disappear while their policy is registered", (t) => {
+  const root = fixture(t);
+  fs.unlinkSync(path.join(root, CONSUMER_UPGRADE_PATH));
+  rejected(root, /upgrade contract is missing/u);
+});
+
+test("compatibility paths must use a registered canonical implementation", (t) => {
+  const root = fixture(t);
+  const contract = readConsumerUpgrade(root);
+  contract.entries[0].target = ".github/workflows/unregistered.yml";
+  fs.writeFileSync(
+    path.join(root, CONSUMER_UPGRADE_PATH),
+    JSON.stringify(contract),
+  );
+  rejected(root, /Invalid consumer upgrade entry/u);
+});
+
+test("compatibility workflow cannot independently change execution or permissions", (t) => {
+  const root = fixture(t);
+  const entry = readConsumerUpgrade(root).entries.find((entry) =>
+    entry.path.endsWith("build.yml"),
+  );
+  const file = path.join(root, entry.path);
+  fs.writeFileSync(
+    file,
+    fs.readFileSync(file, "utf8").replace("contents: read", "contents: write"),
+  );
+  rejected(root, /compatibility workflow drift/u);
+});
+
+test("a historical entry cannot add repository event triggers", (t) => {
+  const root = fixture(t);
+  const entry = readConsumerUpgrade(root).entries[0];
+  const file = path.join(root, entry.path);
+  fs.writeFileSync(
+    file,
+    fs.readFileSync(file, "utf8").replace("on:\n", "on:\n  push: {}\n"),
+  );
+  rejected(root, /repository event triggers|compatibility workflow drift/u);
 });
 
 test("consumer validation admits registered implementation libraries without a repository identity exception", (t) => {
@@ -396,7 +363,7 @@ test("a second YAML copy cannot silently become another executable surface", (t)
 test("dangling local calls fail; shell strings do not become workflow calls", (t) => {
   const root = fixture(t);
   const entry = readWorkflowTaxonomy(root).entries.find(
-    (item) => item.id === "check",
+    (item) => item.id === ".auditable-demo",
   );
   const file = workflowPath(entry);
   const text =
@@ -408,6 +375,16 @@ test("dangling local calls fail; shell strings do not become workflow calls", (t
     file,
     "on:\n  workflow_call:\njobs:\n  run:\n    runs-on: ubuntu-latest\n    steps:\n      - run: |\n          uses: ./.github/workflows/not-a-call.yml\n",
   );
+  for (const alias of readConsumerUpgrade(root).entries.filter(
+    (item) => item.target === file,
+  ))
+    fs.writeFileSync(
+      path.join(root, alias.path),
+      renderCompatibilityWorkflow(
+        alias,
+        fs.readFileSync(path.join(root, file), "utf8"),
+      ),
+    );
   const result = checkWorkflowTaxonomy(root);
   assert.equal(result.ok, true, result.errors.join("\n"));
 });
@@ -542,4 +519,17 @@ test("installed normal and recovery entries preserve the generated public contra
       expected,
     );
   }
+});
+
+test("a broken adapted component reports diagnostics instead of throwing", (t) => {
+  const root = fixture(t);
+  const entry = readWorkflowTaxonomy(root).entries.find(
+    (item) => item.id === "check",
+  );
+  writeWorkflowSource(
+    root,
+    workflowPath(entry),
+    "on:\n  workflow_call:\njobs:\n  check:\n    runs-on: ubuntu-latest\n    steps:\n      - run: true\n",
+  );
+  rejected(root, /Historical runtime entry is missing/);
 });

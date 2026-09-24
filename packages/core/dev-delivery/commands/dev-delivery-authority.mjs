@@ -7,7 +7,11 @@ import {
 } from "../dev-delivery-authority-landing.js";
 import { defaultDevDeliveryStateRef } from "../warrant/values.js";
 import { GitHubDevDeliveryStore } from "../../providers/dev-delivery/store.js";
-import { flag, hasFlag } from "./dev-delivery-warrant-options.mjs";
+import {
+  flag,
+  hasFlag,
+  historicalDeliveryRootOptions,
+} from "./dev-delivery-warrant-options.mjs";
 import { runDevDeliveryAuthorityCommandAdapter } from "./dev-delivery-authority-command-adapters.mjs";
 function text(value = "") {
   return String(value ?? "").trim();
@@ -247,10 +251,7 @@ export function devDeliveryAuthorityCliOptions(
       environment.BUILDCHAIN_WORK_SOURCE_ROOT ||
         environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_ROOT,
     ),
-    // Retired roots remain readable in persisted historical candidates.
-    // New authority submissions accept only the Work sourceRoot above.
-    // Retired CLI flags are intentionally ignored by this parser.
-    // This prevents producers from reconstructing obsolete identities.
+    ...historicalDeliveryRootOptions(rest, environment),
     sourceIdentityRoot: flag(
       rest,
       "source-identity-root",

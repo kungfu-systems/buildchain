@@ -1,0 +1,256 @@
+{
+  "inputs": {
+    "buildchain-repository": {
+      "description": "Buildchain runtime repository",
+      "default": "kungfu-systems/buildchain",
+      "type": "string",
+      "required": false
+    },
+    "buildchain-ref": {
+      "description": "Optional Buildchain runtime ref. Empty uses v3.",
+      "default": "v3",
+      "type": "string",
+      "required": false
+    },
+    "target-branch": {
+      "description": "Protected dev branch to merge ready PRs into",
+      "default": "",
+      "type": "string",
+      "required": false
+    },
+    "expected-pr-number": {
+      "description": "Optional exact PR number for targeted Agent admission; requires expected-head-sha",
+      "default": 0,
+      "type": "number",
+      "required": false
+    },
+    "expected-head-sha": {
+      "description": "Exact 40-character PR head required for targeted Agent admission",
+      "default": "",
+      "type": "string",
+      "required": false
+    },
+    "diagnostic-context": {
+      "description": "Commit-status context used for PR-visible targeted admission state",
+      "default": "Buildchain delivery intent",
+      "type": "string",
+      "required": false
+    },
+    "delivery-warrant-mode": {
+      "description": "Delivery Warrant rollout: off, shadow (read-only queue plan), or required",
+      "default": "off",
+      "type": "string",
+      "required": false
+    },
+    "assignment-root": {
+      "description": "Exact native Assignment content root",
+      "default": "",
+      "type": "string",
+      "required": false
+    },
+    "initiative-root": {
+      "description": "Exact parent Initiative content root",
+      "default": "",
+      "type": "string",
+      "required": false
+    },
+    "source-identity-root": {
+      "description": "Immutable semantic source identity root",
+      "default": "",
+      "type": "string",
+      "required": false
+    },
+    "source-patch-root": {
+      "description": "Immutable source patch or tree-intent root",
+      "default": "",
+      "type": "string",
+      "required": false
+    },
+    "project-cut-proof-json": {
+      "description": "Optional exact rooted Project Cut replay proof required when GitHub reports the PR behind the current protected base",
+      "default": "",
+      "type": "string",
+      "required": false
+    },
+    "plan-root": {
+      "description": "Exact qualification plan root",
+      "default": "",
+      "type": "string",
+      "required": false
+    },
+    "closure-root": {
+      "description": "Exact affected-closure root",
+      "default": "",
+      "type": "string",
+      "required": false
+    },
+    "dependency-root": {
+      "description": "Exact dependency-graph root",
+      "default": "",
+      "type": "string",
+      "required": false
+    },
+    "toolchain-root": {
+      "description": "Exact qualification toolchain root",
+      "default": "",
+      "type": "string",
+      "required": false
+    },
+    "affected-paths-json": {
+      "description": "JSON array of paths covered by source qualification",
+      "default": "[]",
+      "type": "string",
+      "required": false
+    },
+    "shard-evidence-roots-json": {
+      "description": "JSON array of additional source-shard evidence roots",
+      "default": "[]",
+      "type": "string",
+      "required": false
+    },
+    "delivery-class": {
+      "description": "Bounded delivery class",
+      "default": "native-proof-required",
+      "type": "string",
+      "required": false
+    },
+    "delivery-priority": {
+      "description": "Reviewed priority: ordinary, expedited, or emergency",
+      "default": "ordinary",
+      "type": "string",
+      "required": false
+    },
+    "warrant-lease-seconds": {
+      "description": "Delivery Warrant lease TTL",
+      "default": 3600,
+      "type": "number",
+      "required": false
+    },
+    "required-status-checks": {
+      "description": "Comma or newline separated required status/check-run name fragments",
+      "default": "check / check",
+      "type": "string",
+      "required": false
+    },
+    "queue-admission-context": {
+      "description": "Temporary exact-head commit status required before native queue admission",
+      "default": "",
+      "type": "string",
+      "required": false
+    },
+    "ready-label": {
+      "description": "Required label for PRs eligible to merge. Empty disables the label gate.",
+      "default": "ready",
+      "type": "string",
+      "required": false
+    },
+    "block-labels": {
+      "description": "Comma or newline separated labels that block merging",
+      "default": "blocked,do-not-merge,work-in-progress",
+      "type": "string",
+      "required": false
+    },
+    "allowed-head-prefixes": {
+      "description": "Comma or newline separated allowed source branch prefixes",
+      "default": "feature/,fix/,chore/,docs/,ci/,refactor/",
+      "type": "string",
+      "required": false
+    },
+    "require-approval": {
+      "description": "Require at least one current approval and no latest changes-requested review",
+      "default": true,
+      "type": "boolean",
+      "required": false
+    },
+    "same-repository-only": {
+      "description": "Reject fork/cross-repository PR heads by default",
+      "default": true,
+      "type": "boolean",
+      "required": false
+    },
+    "max-merges": {
+      "description": "Maximum PRs to merge in one run",
+      "default": 1,
+      "type": "number",
+      "required": false
+    },
+    "merge-method": {
+      "description": "GitHub merge method: merge, squash, or rebase",
+      "default": "merge",
+      "type": "string",
+      "required": false
+    },
+    "landing-mode": {
+      "description": "Landing mode: auto selects native queue when enabled; queue fails closed without one",
+      "default": "auto",
+      "type": "string",
+      "required": false
+    },
+    "dry-run": {
+      "description": "Plan only; do not merge PRs",
+      "default": true,
+      "type": "boolean",
+      "required": false
+    }
+  },
+  "secrets": {
+    "github-token": {
+      "description": "Optional token for reading and merging PRs. Defaults to github.token.",
+      "required": false
+    }
+  },
+  "outputs": {
+    "evaluated-count": {
+      "description": "Number of PRs evaluated",
+      "value": "${{ jobs.merge-dev-prs.outputs.evaluated-count }}"
+    },
+    "merged-count": {
+      "description": "Number of PRs directly merged, or directly eligible in dry-run mode",
+      "value": "${{ jobs.merge-dev-prs.outputs.merged-count }}"
+    },
+    "enqueued-count": {
+      "description": "Number of PRs admitted into the native merge queue",
+      "value": "${{ jobs.merge-dev-prs.outputs.enqueued-count }}"
+    },
+    "action-count": {
+      "description": "Number of direct merges, queue admissions, or planned actions",
+      "value": "${{ jobs.merge-dev-prs.outputs.action-count }}"
+    },
+    "skipped-count": {
+      "description": "Number of PRs skipped",
+      "value": "${{ jobs.merge-dev-prs.outputs.skipped-count }}"
+    },
+    "final-base-sha": {
+      "description": "Final target branch SHA after the run",
+      "value": "${{ jobs.merge-dev-prs.outputs.final-base-sha }}"
+    },
+    "admission-state": {
+      "description": "Typed targeted admission state; empty for cadence patrol",
+      "value": "${{ jobs.merge-dev-prs.outputs.admission-state }}"
+    },
+    "admission-receipt-root": {
+      "description": "Content root of the targeted exact-head admission receipt",
+      "value": "${{ jobs.merge-dev-prs.outputs.admission-receipt-root }}"
+    },
+    "source-proof-root": {
+      "description": "Content root of the reusable Source Qualification Proof",
+      "value": "${{ jobs.merge-dev-prs.outputs.source-proof-root }}"
+    },
+    "warrant-receipt-root": {
+      "description": "Content root of the selected Delivery Warrant receipt",
+      "value": "${{ jobs.merge-dev-prs.outputs.warrant-receipt-root }}"
+    },
+    "warrant-state-root": {
+      "description": "Exact readback root of the durable Warrant queue",
+      "value": "${{ jobs.merge-dev-prs.outputs.warrant-state-root }}"
+    },
+    "warrant-state-commit": {
+      "description": "Immutable queue commit containing the active Warrant readback",
+      "value": "${{ jobs.merge-dev-prs.outputs.warrant-state-commit }}"
+    },
+    "project-cut-proof-root": {
+      "description": "Verified exact Project Cut replay proof root, when supplied",
+      "value": "${{ jobs.merge-dev-prs.outputs.project-cut-proof-root }}"
+    }
+  }
+}

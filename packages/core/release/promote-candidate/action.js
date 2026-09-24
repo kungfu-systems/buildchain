@@ -1,5 +1,5 @@
 import * as github from "@actions/github";
-import { publishWithDiscussion } from "../discussion/publication.js";
+import { publishCandidate } from "./publication.js";
 import { selectedRecordRuntime } from "../discussion/session.js";
 export async function candidatePublicationAction(core, env) {
   const required = new Set([
@@ -39,6 +39,8 @@ export async function candidatePublicationAction(core, env) {
       "publish-package-main",
       "publish-package-set-order",
       "publisher-workflow-sha",
+      "publisher-workflow-path",
+      "historical-inputs-json",
       "repository",
       "required-artifacts-path",
       "required-status-check",
@@ -70,7 +72,7 @@ export async function candidatePublicationAction(core, env) {
   request["artifact-paths"] = core
     .getMultilineInput("artifact-paths")
     .filter(Boolean);
-  return publishWithDiscussion(request, {
+  return publishCandidate(request, {
     octokit: github.getOctokit(request.token),
     mutationOctokit: github.getOctokit(
       request["mutation-token"] || request.token,

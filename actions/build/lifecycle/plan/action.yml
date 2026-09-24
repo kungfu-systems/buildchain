@@ -2,6 +2,9 @@ name: resolve-build-plan
 description: Admit source and runtime, resolve TOML and produce the complete
   rooted build plan.
 inputs:
+  compatibility-inputs:
+    description: Retained historical build arguments.
+    default: ""
   config-path:
     description: Optional project TOML locator
     required: false
@@ -24,6 +27,7 @@ runs:
       uses: ./.buildchain/runtime/actions/build/plan/resolve
       with:
         config-path: ${{ inputs.config-path }}
+        compatibility-inputs: ${{ inputs.compatibility-inputs }}
         workflow-ref: ${{ inputs.workflow-ref }}
         workflow-sha: ${{ inputs.workflow-sha }}
         control-token: ${{ inputs.control-token }}

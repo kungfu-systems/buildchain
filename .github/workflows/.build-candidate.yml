@@ -2,6 +2,11 @@ name: Buildchain Project Build
 on:
   workflow_call:
     inputs:
+      compatibility-inputs:
+        description: Internal transport for retained historical build arguments.
+        type: string
+        required: false
+        default: ""
       config-path:
         description: Locate buildchain.toml when the project cannot be discovered.
         type: string
@@ -61,6 +66,7 @@ jobs:
     uses: ./.github/workflows/.build.yml
     with:
       config-path: ${{ inputs.config-path }}
+      compatibility-inputs: ${{ inputs.compatibility-inputs }}
       runtime-ref: ${{ inputs.runtime-ref }}
       contract-lock: ${{ inputs.contract-lock }}
       resume-run-id: ${{ inputs.resume-run-id }}

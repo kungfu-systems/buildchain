@@ -1,3 +1,4 @@
+import { historicalRecoveryPins, verifyHistoricalCandidateRuntime } from "./compatibility-qualification.js";
 import { recoverDiscussionCandidate } from "../discussion/recovery.js";
 import { resolveReleaseCandidateArtifacts } from "../candidate/resolve.js";
 import { resumeFromCandidateRun } from "../recovery/candidate.js";
@@ -20,6 +21,7 @@ export async function qualifyPromotionCandidate(
     recoverDiscussion = recoverDiscussionCandidate,
   } = {},
 ) {
+  const expectedRuntime = historicalRecoveryPins(request, runtimeSha);
   const shared = {
     token,
     apiUrl,
@@ -41,7 +43,7 @@ export async function qualifyPromotionCandidate(
       targetRef: intent["target-ref"],
     });
   if (request["resume-candidate-run-id"])
-    return recover({
+    return verifyHistoricalCandidateRuntime(await recover({
       ...shared,
       repository: request["resume-candidate-repository"],
       targetRepository: repository,
@@ -63,7 +65,7 @@ export async function qualifyPromotionCandidate(
       runtimeRoot,
       recoveryRunId,
       recoveryRunAttempt,
-    });
+    }), expectedRuntime);
   return fresh({
     ...shared,
     repository,

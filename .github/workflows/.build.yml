@@ -2,6 +2,11 @@ name: Buildchain Build
 on:
   workflow_call:
     inputs:
+      compatibility-inputs:
+        description: Internal transport for retained historical build arguments.
+        type: string
+        required: false
+        default: ""
       config-path:
         description: Locate buildchain.toml when the project cannot be discovered.
         type: string
@@ -60,6 +65,7 @@ jobs:
         uses: $/actions/runtime/selection/resolve
         with:
           runtime-ref: ${{ inputs.runtime-ref }}
+          compatibility-inputs: ${{ inputs.compatibility-inputs }}
           contract-lock: ${{ inputs.contract-lock }}
           workflow-ref: ${{ job.workflow_ref }}
           workflow-sha: ${{ job.workflow_sha }}
@@ -91,6 +97,7 @@ jobs:
       - uses: ./.buildchain/runtime/actions/build/lifecycle/plan
         with:
           config-path: ${{ inputs.config-path }}
+          compatibility-inputs: ${{ inputs.compatibility-inputs }}
           workflow-ref: ${{ job.workflow_ref }}
           workflow-sha: ${{ job.workflow_sha }}
           control-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}

@@ -1,3 +1,4 @@
+import { devDeliverySourceBinding } from "../dev-delivery-candidate-identity.js";
 import fs from "node:fs";
 import path from "node:path";
 import {
@@ -55,7 +56,7 @@ function submitCandidate(state, options) {
     {
       pullRequestNumber: options.pullRequestNumber,
       sourceHead: options.sourceHead,
-      sourceRoot: options.sourceRoot,
+      ...devDeliverySourceBinding(options),
       sourceIdentityRoot: options.sourceIdentityRoot,
       sourcePatchRoot: options.sourcePatchRoot,
       sourceProofRoot: options.sourceProofRoot,

@@ -2,6 +2,7 @@
 import { actionSurfaceAudit } from "./site-action-audit.mjs";
 import { actionInventory } from "../packages/core/contracts/action-inventory.js";
 import { readWorkflowTaxonomy, workflowPath } from "../packages/core/workflow/workflow-taxonomy.mjs";
+import { readConsumerUpgrade } from "../packages/core/consumer/compatibility-workflows.js";
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -830,12 +831,14 @@ function buildSiteBundle() {
   };
   const nodeApiRegistry = createSiteNodeApiRegistry({ root, packageJson, nodeApiMeta, sha256File, publicSurfaceLifecycle });
   const taxonomy = readWorkflowTaxonomy(root);
+  const retainedEntries = readConsumerUpgrade(root)?.entries || [];
   const workflowRegistry = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-workflow-registry",
     workflowSource: ".github/workflows reverse input enumeration",
     workflows: enumerateWorkflowInputs({ root }).map((entry) => {
-      const classification = taxonomy?.entries.find((item) => workflowPath(item) === entry.path || item.compatibility?.path === entry.path);
+      const retained = retainedEntries.find(item => item.path === entry.path);
+      const classification = taxonomy?.entries.find((item) => workflowPath(item) === (retained?.target || entry.path));
       const semanticId = classification?.id || entry.id;
       const surfaceById = new Map([
         ["build", "channel-build-router"],
@@ -877,14 +880,10 @@ function buildSiteBundle() {
         [".auditable-demo", "preview"],
         [".declarative-auditable-demo", "preview"],
         ["release-propagation", "preview"],
-        ["candidate-lab", "repository-internal"],
-        ["build-surface-fixture", "repository-internal"],
-        ["buildchain-stable-candidate-qualification", "repository-internal"],
         ["engineering-housekeeper", "preview"],
         ["engineering-housekeeper-daily", "preview"],
         ["engineering-housekeeper-weekly", "preview"],
         ["engineering-housekeeper-monthly", "preview"],
-        ["self-hosted-runner-smoke", "compatibility-fixture"],
       ]);
       const engineeringHousekeeper = semanticId.startsWith("engineering-housekeeper");
       if (classification?.role === "component") statusById.set(semanticId, "repository-internal");
@@ -905,6 +904,7 @@ function buildSiteBundle() {
             ? "One reusable policy and evidence boundary owns Engineering Housekeeper execution; scheduled callers contain cadence values only."
             : "Canonical workflow owns one declared API or orchestration responsibility.",
         }),
+        ...(retained ? { compatibilityPromise: "retained-consumer-contract", status: "compatibility", apiRole: "compatibility", nonDuplicationRationale: "Generated from the registered canonical implementation; retained published inputs, outputs, defaults, permissions and job contexts are verified before release." } : {}),
       };
     }),
     actionSource: "actions/*/*/*/action.yml reverse input enumeration",

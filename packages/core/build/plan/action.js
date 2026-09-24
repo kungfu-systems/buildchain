@@ -23,6 +23,8 @@ export async function resolveBuildPlanAction(core, env) {
       runtimeRoot,
       runtime: JSON.parse(env.BUILDCHAIN_RUNTIME_SELECTION),
       configPath: core.getInput("config-path"),
+      compatibilityInputs: core.getInput("compatibility-inputs"),
+      compatibilityEnvironment: Object.fromEntries(Object.entries(env).filter(([key]) => key.startsWith("BUILDCHAIN_HISTORICAL_"))),
       workflow: {
         ref: core.getInput("workflow-ref", { required: true }),
         sha: workflowSha,

@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-20
+last_reviewed: 2026-09-24
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-20
+  generated_at: 2026-09-24
   visible_context: Buildchain 4.1 source, architecture registries and local validation.
   invisible_context_boundary: No unpublished release or external consumer qualification is claimed.
 ---
@@ -277,7 +277,7 @@ owns release orchestration and its evidence.
 
 ## Consumer workflow contract
 
-Every product uses the same two generated files:
+New consumers use the same two generated files:
 
 - `.github/workflows/buildchain.yml` calls `public-ops-pipeline.yml@v4`.
 - `.github/workflows/buildchain-recover.yml` calls `public-ops-recover.yml@v4`.
@@ -289,12 +289,16 @@ release. The runtime manages publication, provider readback and completion.
 Recovery takes an exact attempt and, when needed, one temporary repaired runtime.
 
 The [workflow catalog](docs/workflow-catalog.md) distinguishes the two public
-entries from internal components. Consumers do not call internal workflows or
-actions, supply publication payloads, or implement their own release controller.
+entries from internal components. New integrations declare products in TOML and
+use these entries for release orchestration.
 The three [standard examples](templates/minimal-consumer/) share identical caller
 bytes; their TOML and product source differ. Tool-maintained locks bind the
 published runtime. Existing npm Trusted Publishing continues to authenticate
 publication in the hosted workflow.
+
+Existing consumers can retain the registered historical workflow paths and their
+schema-1 product configuration. See [Compatible upgrades](docs/getting-started.md#migrating-old-callers)
+for the supported interfaces and validation boundary.
 
 ## Release Model
 

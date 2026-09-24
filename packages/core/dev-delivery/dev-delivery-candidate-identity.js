@@ -18,9 +18,18 @@ export const EXACT_DEV_DELIVERY_PROOF_FIELDS = Object.freeze([
   "sourceWorkflowRunId",
 ]);
 export function devDeliverySourceBinding(input = {}) {
-  if (Object.hasOwn(input, "assignmentRoot") || Object.hasOwn(input, "initiativeRoot"))
-    throw new Error("provide sourceRoot alone; obsolete producer roots are unsupported");
-  return { sourceRoot: exactRoot(input.sourceRoot, "sourceRoot") };
+  const legacy = ["assignmentRoot", "initiativeRoot"].some(
+    (key) => Object.hasOwn(input, key) && input[key] !== undefined && input[key] !== "",
+  );
+  if (!legacy) return { sourceRoot: exactRoot(input.sourceRoot, "sourceRoot") };
+  if (input.sourceRoot)
+    throw new Error("provide sourceRoot alone; do not mix historical producer roots");
+  // Keep the original identity preimage so persisted queues and Warrants survive
+  // a runtime upgrade without changing candidate IDs or their receipt roots.
+  return {
+    assignmentRoot: exactRoot(input.assignmentRoot, "assignmentRoot"),
+    initiativeRoot: exactRoot(input.initiativeRoot, "initiativeRoot"),
+  };
 }
 export function matchesExactDevDeliveryCandidate(existing, attempted) {
   return (
@@ -44,7 +53,7 @@ export function reuseExactActiveDevDeliverySourceProof(active, input) {
   );
   const exact =
     admittedPhase &&
-    ["sourceRoot"].every(
+    ["sourceRoot", "assignmentRoot", "initiativeRoot"].every(
       (field) => active[field] === input[field],
     ) &&
     [

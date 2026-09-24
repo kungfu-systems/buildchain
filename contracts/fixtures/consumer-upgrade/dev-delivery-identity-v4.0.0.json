@@ -1,0 +1,27 @@
+{
+  "source": {
+    "ref": "v4.0.0",
+    "sha": "45a49dcaa0fcef59bc66481a85c39514d08972cc"
+  },
+  "input": {
+    "pullRequestNumber": 7,
+    "assignmentRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "initiativeRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "sourceIdentityRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "deliveryClass": "non-native-fast"
+  },
+  "expected": {
+    "repository": "example/consumer",
+    "protectedBase": "dev/v1/v1.0"
+  },
+  "identity": {
+    "repository": "example/consumer",
+    "protectedBase": "dev/v1/v1.0",
+    "pullRequestNumber": 7,
+    "assignmentRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "initiativeRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "sourceIdentityRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "deliveryClass": "non-native-fast",
+    "candidateId": "sha256:813934370a742836babec43977e77b5d028901efb6dec3ccc087993ecb69a5d4"
+  }
+}

@@ -39,3 +39,17 @@ test('generated public router binds every node output and uses declared runtime 
  }
  assert.equal(wf.jobs.invoke.uses,'./.github/workflows/.release-promote.yml');
 });
+
+test('retained promotion routes flat inputs and preserves admitted runtime provenance', async () => {
+ const base=fixture();
+ const result=await routePromotion({...base,workflowRef:'kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@refs/tags/v4',request:{schema:'buildchain.promotion-compatibility/v1',inputs:{channel:'alpha','target-ref':'alpha/v4/v4.1','github-release-title':'Product Alpha'}}});
+ assert.equal(JSON.parse(result['request-json']).channel,'alpha');
+ assert.equal(JSON.parse(result['historical-inputs-json']).inputs['github-release-title'],'Product Alpha');
+ assert.equal(result['runtime-sha'],other);
+ assert.equal(result['contract-lock-path'],base.runtime.contract.path);
+ const wf=YAML.parse(fs.readFileSync('.github/workflows/release-candidate-promote.yml','utf8'));
+ assert.equal(wf.jobs.invoke.uses,'./.github/workflows/.release-historical.yml');
+ assert.equal(wf.jobs['resolve-promotion'].outputs['historical-inputs-json'],'${{ steps.node.outputs.historical-inputs-json }}');
+ const worker=YAML.parse(fs.readFileSync('.github/workflows/.release-historical.yml','utf8'));
+ assert.deepEqual(worker.jobs.qualify.permissions,{actions:'read',contents:'read'});
+});

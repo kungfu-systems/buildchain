@@ -1,0 +1,331 @@
+# Generated from the consumer upgrade contract; edit the canonical implementation.
+name: Release Candidate Promote Advanced
+on:
+  workflow_call:
+    inputs:
+      request-json:
+        description: Complete normalized buildchain.promotion-invocation/v1 produced by
+          the public promotion API.
+        type: string
+        required: true
+      runtime-ref:
+        description: Transient execution runtime; empty selects the consumer lock.
+        type: string
+        required: false
+        default: ""
+      contract-lock:
+        description: Optional consumer runtime lock path.
+        type: string
+        required: false
+        default: ""
+      runtime-selection:
+        description: Entry-resolved runtime transport for nested workflow jobs.
+        type: string
+        required: false
+        default: ""
+    secrets:
+      BUILDCHAIN_PROMOTION_TOKEN:
+        description: Optional bypass-capable token used only for generated protected ref
+          updates
+        required: false
+      BUILDCHAIN_PUBLICATION_COMMIT_TOKEN:
+        description: Optional consumer-owned credential exposed only to the final
+          publication commit command
+        required: false
+      BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY:
+        description: Optional consumer-owned private signing material exposed only to
+          the final publication commit command
+        required: false
+      KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:
+        description: Private key for the dedicated read-only GitHub governance auditor App
+        required: false
+      buildchain-issue-token:
+        description: Optional token with issues:write on the Buildchain repository for
+          workflow-friction reports
+        required: false
+      BUILDCHAIN_ISSUE_TOKEN:
+        description: Optional token with issues:write on the Buildchain repository for
+          workflow-friction reports
+        required: false
+      buildchain-issue-app-id:
+        description: Optional GitHub App ID used to mint a Buildchain issue-report token
+        required: false
+      BUILDCHAIN_ISSUE_APP_ID:
+        description: Optional GitHub App ID used to mint a Buildchain issue-report token
+        required: false
+      buildchain-issue-app-private-key:
+        description: Optional GitHub App private key used to mint a Buildchain
+          issue-report token
+        required: false
+      BUILDCHAIN_ISSUE_APP_PRIVATE_KEY:
+        description: Optional GitHub App private key used to mint a Buildchain
+          issue-report token
+        required: false
+    outputs:
+      discussion-id:
+        description: Release transaction discussion-id.
+        value: ${{ jobs.apply.outputs.discussion-id }}
+      discussion-url:
+        description: Release transaction discussion-url.
+        value: ${{ jobs.apply.outputs.discussion-url }}
+      promoted-sha:
+        description: Promoted channel SHA
+        value: ${{ jobs.apply.outputs.promoted-sha || jobs.qualify.outputs.current-sha
+          }}
+      built-source-sha:
+        description: PR-stage built source SHA
+        value: ${{ jobs.apply.outputs.built-source-sha }}
+      release-candidate-artifact:
+        description: Resolved release-candidate artifact name
+        value: ${{ jobs.apply.outputs.release-candidate-artifact }}
+      release-candidate-action:
+        description: "Candidate admission action: discovered or reused"
+        value: ${{ jobs.apply.outputs.release-candidate-action }}
+      release-candidate-recovery-root:
+        description: Exact sha256 recovery receipt root
+        value: ${{ jobs.apply.outputs.release-invocation-root }}
+      release-candidate-recovery-receipt-artifact:
+        description: Immutable recovery receipt Actions artifact name
+        value: ${{ '' }}
+      release-propagation-work-artifact:
+        description: Captured package release propagation Work artifact
+        value: ${{ '' }}
+      publication-commit-evidence-path:
+        description: Validated consumer publication commit evidence path
+        value: ${{ '' }}
+      publication-commit-evidence-digest:
+        description: sha256 digest of validated consumer publication commit evidence
+        value: ${{ '' }}
+      publication-commit-url:
+        description: Canonical public authority URL validated after the final commit
+        value: ${{ '' }}
+      publication-commit-payload-root:
+        description: Exact public authority payload root validated after the final commit
+        value: ${{ '' }}
+      controller-plan-artifact:
+        description: Controller plan artifact name
+        value: ${{ '' }}
+      controller-plan-json:
+        description: Compact controller plan JSON
+        value: ${{ '' }}
+      controller-plan-digest:
+        description: Controller plan digest
+        value: ${{ jobs.apply.outputs.release-invocation-root }}
+      publication-capability-digest:
+        description: Sealed publication capability receipt digest
+        value: ${{ jobs.apply.outputs.release-invocation-root }}
+      github-artifact-attestation-id:
+        description: GitHub keyless attestation id for the declared Linux release artifact
+        value: ${{ '' }}
+      github-artifact-attestation-url:
+        description: GitHub keyless attestation URL
+        value: ${{ '' }}
+      github-artifact-attestation-evidence-root:
+        description: Verified Buildchain attestation evidence root published with the
+          GitHub Release
+        value: ${{ '' }}
+      github-artifact-attestation-publication-receipt-digest:
+        description: Read-back verified GitHub Release evidence publication receipt digest
+        value: ${{ '' }}
+      release-tail-declaration-root:
+        description: Root of the declarative release-tail contract
+        value: ${{ jobs.apply.outputs.release-tail-declaration-root }}
+      release-tail-transaction-state:
+        description: Final declarative release-tail transaction state
+        value: ${{ jobs.apply.outputs.release-tail-transaction-state }}
+      release-tail-transaction-root:
+        description: Stable declarative release-tail transaction root
+        value: ${{ jobs.apply.outputs.release-tail-transaction-root }}
+      release-tail-state-root:
+        description: Root of the final declarative release-tail transaction state
+        value: ${{ jobs.apply.outputs.release-tail-state-root }}
+      release-tail-receipt-roots-json:
+        description: JSON array of standardized declarative release-tail receipt roots
+        value: ${{ jobs.apply.outputs.release-tail-receipt-roots-json }}
+      release-invocation-root:
+        description: Canonical post-admission ReleaseInvocation root
+        value: ${{ jobs.apply.outputs.release-invocation-root }}
+      release-transaction-root:
+        description: Canonical three-phase ReleaseTransaction root
+        value: ${{ jobs.apply.outputs.release-transaction-root }}
+      release-receipt-root:
+        description: Single terminal ReleaseReceipt root
+        value: ${{ jobs.apply.outputs.release-receipt-root }}
+      controller-receipt-artifact:
+        description: Controller receipt artifact name
+        value: ${{ jobs.settle.outputs.controller-receipt-artifact }}
+      controller-receipt-json:
+        description: Compact controller receipt JSON
+        value: ${{ jobs.settle.outputs.controller-receipt-json }}
+      controller-receipt-digest:
+        description: Controller receipt digest
+        value: ${{ jobs.settle.outputs.controller-receipt-digest }}
+      controller-receipt-status:
+        description: Controller receipt status
+        value: ${{ jobs.settle.outputs.controller-receipt-status }}
+concurrency:
+  group: buildchain-release-promotion-${{ github.repository }}
+  cancel-in-progress: false
+jobs:
+  execution-runtime:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      selection: ${{ steps.select.outputs.selection }}
+    steps:
+      - id: select
+        uses: $/actions/runtime/selection/resolve
+        with:
+          runtime-ref: ${{ inputs.runtime-ref }}
+          contract-lock: ${{ inputs.contract-lock }}
+          workflow-ref: ${{ job.workflow_ref }}
+          workflow-sha: ${{ job.workflow_sha }}
+          token: ${{ github.token }}
+          selection: ${{ inputs.runtime-selection }}
+    timeout-minutes: 5
+  qualify:
+    name: QUALIFY canonical v4 release invocation inputs
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      action: ${{ steps.node.outputs.action }}
+      reason: ${{ steps.node.outputs.reason }}
+      channel: ${{ steps.node.outputs.channel }}
+      target-ref: ${{ steps.node.outputs.target-ref }}
+      requested-sha: ${{ steps.node.outputs.requested-sha }}
+      current-sha: ${{ steps.node.outputs.current-sha }}
+      runtime-sha: ${{ steps.node.outputs.runtime-sha }}
+      runtime-tree: ${{ steps.node.outputs.runtime-tree }}
+      publisher-sha: ${{ steps.node.outputs.publisher-sha }}
+      version: ${{ steps.node.outputs.version }}
+      exact-tag: ${{ steps.node.outputs.exact-tag }}
+      candidate-version: ${{ steps.node.outputs.candidate-version }}
+      product-publication-intent-path: ${{ steps.node.outputs.product-publication-intent-path }}
+      product-publication-intent-root: ${{ steps.node.outputs.product-publication-intent-root }}
+      candidate-source-sha: ${{ steps.node.outputs.candidate-source-sha }}
+      candidate-artifact: ${{ steps.node.outputs.candidate-artifact }}
+      recovery-receipt-path: ${{ steps.node.outputs.recovery-receipt-path }}
+      candidate-passport-path: ${{ steps.node.outputs.candidate-passport-path }}
+      candidate-build-summary-path: ${{ steps.node.outputs.candidate-build-summary-path }}
+      stage-capsules-path: ${{ steps.node.outputs.stage-capsules-path }}
+      publication-qualification-path: ${{ steps.node.outputs.publication-qualification-path }}
+      sealed-bundle-root: ${{ steps.node.outputs.sealed-bundle-root }}
+      sealed-bundle-manifest: ${{ steps.node.outputs.sealed-bundle-manifest }}
+      required-artifacts-path: ${{ steps.node.outputs.required-artifacts-path }}
+      release-artifact-paths: ${{ steps.node.outputs.release-artifact-paths }}
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: QUALIFY canonical v4 release invocation inputs
+        id: node
+        uses: ./.buildchain/runtime/actions/release/promotion/qualify
+        with:
+          runtime-ref: ${{ fromJSON(inputs.request-json).promotion-runtime-sha }}
+          runtime-repository: kungfu-systems/buildchain
+          request-json: ${{ inputs.request-json }}
+          job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
+    needs:
+      - execution-runtime
+  apply:
+    name: APPLY one rooted provider transaction
+    needs:
+      - qualify
+      - execution-runtime
+    if: ${{ (needs.qualify.outputs.action == 'promote' && !fromJSON(inputs.request-json).dry-run) }}
+    runs-on: ubuntu-24.04
+    outputs:
+      promoted-sha: ${{ steps.node.outputs.promoted-sha }}
+      built-source-sha: ${{ steps.node.outputs.built-source-sha }}
+      release-candidate-artifact: ${{ steps.node.outputs.release-candidate-artifact }}
+      release-candidate-action: ${{ steps.node.outputs.release-candidate-action }}
+      release-candidate-outcome: ${{ steps.node.outputs.release-candidate-outcome }}
+      promotion-outcome: ${{ steps.node.outputs.promotion-outcome }}
+      finalization-needed: ${{ steps.node.outputs.finalization-needed }}
+      release-tail-transaction-state: ${{ steps.node.outputs.release-tail-transaction-state }}
+      release-tail-declaration-root: ${{ steps.node.outputs.release-tail-declaration-root }}
+      release-tail-transaction-root: ${{ steps.node.outputs.release-tail-transaction-root }}
+      release-tail-state-root: ${{ steps.node.outputs.release-tail-state-root }}
+      release-tail-receipt-roots-json: ${{ steps.node.outputs.release-tail-receipt-roots-json }}
+      release-invocation-root: ${{ steps.node.outputs.release-invocation-root }}
+      release-transaction-root: ${{ steps.node.outputs.release-transaction-root }}
+      release-receipt-root: ${{ steps.node.outputs.release-receipt-root }}
+      discussion-id: ${{ steps.node.outputs.discussion-id }}
+      discussion-url: ${{ steps.node.outputs.discussion-url }}
+    steps:
+      - name: Checkout the admitted protected channel state
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ needs.qualify.outputs.requested-sha }}
+          clean: true
+          persist-credentials: false
+        id: source-checkout
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+        if: ${{ always() }}
+      - name: APPLY one rooted provider transaction
+        id: node
+        uses: ./.buildchain/runtime/actions/release/promotion/apply
+        with:
+          needs-qualify-outputs-runtime-sha: ${{ toJSON(needs.qualify.outputs.runtime-sha) }}
+          needs-qualify-outputs-runtime-tree: ${{ toJSON(needs.qualify.outputs.runtime-tree) }}
+          needs-qualify-outputs-requested-sha: ${{ toJSON(needs.qualify.outputs.requested-sha) }}
+          request-json: ${{ inputs.request-json }}
+          secrets-buildchain-promotion-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          needs-qualify-outputs-version: ${{ toJSON(needs.qualify.outputs.version) }}
+          needs-qualify-outputs-exact-tag: ${{ toJSON(needs.qualify.outputs.exact-tag) }}
+          needs-qualify-outputs-channel: ${{ toJSON(needs.qualify.outputs.channel) }}
+          needs-qualify-outputs-target-ref: ${{ toJSON(needs.qualify.outputs.target-ref) }}
+          needs-qualify-outputs-recovery-receipt-path: ${{ toJSON(needs.qualify.outputs.recovery-receipt-path) }}
+          needs-qualify-outputs-candidate-passport-path: ${{ toJSON(needs.qualify.outputs.candidate-passport-path) }}
+          needs-qualify-outputs-candidate-build-summary-path: ${{ toJSON(needs.qualify.outputs.candidate-build-summary-path) }}
+          needs-qualify-outputs-stage-capsules-path: ${{ toJSON(needs.qualify.outputs.stage-capsules-path) }}
+          needs-qualify-outputs-publication-qualification-path: ${{ toJSON(needs.qualify.outputs.publication-qualification-path) }}
+          needs-qualify-outputs-sealed-bundle-root: ${{ toJSON(needs.qualify.outputs.sealed-bundle-root) }}
+          needs-qualify-outputs-sealed-bundle-manifest: ${{ toJSON(needs.qualify.outputs.sealed-bundle-manifest) }}
+          needs-qualify-outputs-required-artifacts-path: ${{ toJSON(needs.qualify.outputs.required-artifacts-path) }}
+          needs-qualify-outputs-product-publication-intent-path: ${{ toJSON(needs.qualify.outputs.product-publication-intent-path) }}
+          needs-qualify-outputs-publisher-sha: ${{ toJSON(needs.qualify.outputs.publisher-sha) }}
+          needs-qualify-outputs-release-artifact-paths: ${{ toJSON(needs.qualify.outputs.release-artifact-paths) }}
+          needs-qualify-outputs-candidate-source-sha: ${{ toJSON(needs.qualify.outputs.candidate-source-sha) }}
+          needs-qualify-outputs-candidate-artifact: ${{ toJSON(needs.qualify.outputs.candidate-artifact) }}
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}
+        if: ${{ always() }}
+  settle:
+    name: SETTLE terminal ReleaseReceipt projection
+    needs:
+      - qualify
+      - apply
+      - execution-runtime
+    if: ${{ (always() && needs.qualify.result == 'success') }}
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      controller-receipt-artifact: ${{ steps.node.outputs.controller-receipt-artifact }}
+      controller-receipt-json: ${{ steps.node.outputs.controller-receipt-json }}
+      controller-receipt-digest: ${{ steps.node.outputs.controller-receipt-digest }}
+      controller-receipt-status: ${{ steps.node.outputs.controller-receipt-status }}
+    steps:
+      - name: Prepare selected execution runtime
+        uses: $/actions/runtime/environment/prepare
+        with:
+          selection: ${{ needs.execution-runtime.outputs.selection }}
+          token: ${{ github.token }}
+      - name: SETTLE terminal ReleaseReceipt projection
+        id: node
+        uses: ./.buildchain/runtime/actions/release/promotion/settle
+        with:
+          needs-qualify-outputs-action: ${{ toJSON(needs.qualify.outputs.action) }}
+          request-json: ${{ inputs.request-json }}
+          needs-qualify-outputs-runtime-sha: ${{ toJSON(needs.qualify.outputs.runtime-sha) }}
+          needs-qualify-outputs-requested-sha: ${{ toJSON(needs.qualify.outputs.requested-sha) }}

@@ -2,15 +2,23 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { rootOf, readJson } from "../plan/values.js";
+import { resolveArtifactContract } from "./naming.js";
 
 export function artifactNames(plan, platform) {
   const base = plan.artifacts.name;
   const sha = plan.source.sha;
   const lane = `${platform.id}-${sha}`;
   const attempt = `${plan.run.id}-${plan.run.attempt}`;
+  const payload = plan.artifacts.name_template ? resolveArtifactContract({
+    artifactName: base, artifactNameTemplate: plan.artifacts.name_template,
+    platformId: platform.id, platformName: platform.name,
+    sha, ref: plan.source.ref, runId: plan.run.id, runAttempt: plan.run.attempt,
+  }).artifactName : `${base}-${lane}`;
+  const historical = plan.identity.visible_workflow === ".github/workflows/build.yml";
   return {
-    payload: `${base}-${lane}`,
-    final: `${base}-final-${lane}`,
+    payload,
+    transfer: historical ? `${base}-unfinalized-${lane}-${attempt}` : payload,
+    final: historical ? payload : `${base}-final-${lane}`,
     manifest: `${base}-manifest-${lane}`,
     diagnostics: `${base}-diagnostics-${lane}`,
     execution: `${base}-execution-${lane}`,

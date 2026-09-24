@@ -107,6 +107,19 @@ runs:
         request-json: ${{ inputs.request-json }}
         workflow-sha: ${{ fromJSON(inputs.job-workflow-sha) }}
         token: ${{ github.token }}
+    - name: Checkout the qualified source for retained consumer evidence
+      if: ${{ steps.qualification.outputs.action == 'promote' && fromJSON(inputs.request-json).historical-inputs-json != '' }}
+      uses: actions/checkout@v7.0.0
+      with:
+        ref: ${{ steps.qualification.outputs.candidate-source-sha }}
+        path: .buildchain/historical-source
+        persist-credentials: false
+    - name: Qualify retained consumer evidence
+      if: ${{ steps.qualification.outputs.action == 'promote' && fromJSON(inputs.request-json).historical-inputs-json != '' }}
+      uses: ./.buildchain/runtime/actions/release/promotion/historical-evidence
+      with:
+        request-json: ${{ inputs.request-json }}
+        source-sha: ${{ steps.qualification.outputs.candidate-source-sha }}
     - name: Retain the exact QUALIFY cut
       if: ${{ steps.qualification.outputs.action == 'promote' }}
       uses: actions/upload-artifact@v7.0.1

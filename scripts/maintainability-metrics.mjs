@@ -6,6 +6,10 @@ import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import ts from "typescript";
 import {
+  CONSUMER_UPGRADE_PATH,
+  renderCompatibilityWorkflow,
+} from "../packages/core/consumer/compatibility-workflows.js";
+import {
   dependencyCycles,
   relativeImports,
 } from "./check-internal-architecture.mjs";
@@ -292,7 +296,29 @@ function collectMaintainabilityMetrics({
     path: file,
     text: readTrackedFile(root, file, revision),
   }));
-  const logicalWorkflows = physicalWorkflows;
+  const retained = files.includes(CONSUMER_UPGRADE_PATH)
+    ? JSON.parse(readTrackedFile(root, CONSUMER_UPGRADE_PATH, revision)).entries
+    : [];
+  const generatedWorkflows = new Set(
+    retained
+      .filter((entry) => {
+        const actual = physicalWorkflows.find(
+          (file) => file.path === entry.path,
+        );
+        const canonical = physicalWorkflows.find(
+          (file) => file.path === entry.target,
+        );
+        return (
+          actual &&
+          canonical &&
+          actual.text === renderCompatibilityWorkflow(entry, canonical.text)
+        );
+      })
+      .map((entry) => entry.path),
+  );
+  const logicalWorkflows = physicalWorkflows.filter(
+    (entry) => !generatedWorkflows.has(entry.path),
+  );
   const workflowMetrics = Object.fromEntries(
     logicalWorkflows.map((entry) => [
       entry.path,
@@ -319,7 +345,7 @@ function collectMaintainabilityMetrics({
     (total, entry) => total + entry.lines,
     0,
   );
-  const workflowLines = sumLines(workflowFiles);
+  const workflowLines = sumLines(logicalWorkflows.map((entry) => entry.path));
   const actionDefinitionLines = sumLines(actionDefinitions);
   const head = revision || gitText(root, ["rev-parse", "HEAD"]).trim();
   return {
@@ -334,6 +360,8 @@ function collectMaintainabilityMetrics({
       testLines: sumLines(testFiles),
       workflowFiles: logicalWorkflows.length,
       workflowLines,
+      generatedCompatibilityWorkflowFiles: generatedWorkflows.size,
+      generatedCompatibilityWorkflowLines: sumLines([...generatedWorkflows]),
       actionDefinitions: actionDefinitions.length,
       actionDefinitionLines,
       automationImplementationLines:
