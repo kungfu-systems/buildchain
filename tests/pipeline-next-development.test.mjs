@@ -215,48 +215,51 @@ test("stable publication opens a normal protected Dev PR for the next patch alph
   assert.deepEqual(f.records[0].value, f.publication);
 });
 
-test("a late publication cannot regress already advanced protected development or accept an unproved version", async () => {
-  const f = fixture();
-  const newer = await f.f.provider.materializeDevelopment({
-    source: f.context.plan.source,
-    versionPolicy: f.context.plan.versionPolicy,
-    version: "1.0.1-alpha.0",
-    sourceTimestamp: f.context.plan.sourceTimestamp,
-    root: recordDigest("newer protected version"),
+for (const retained of [false, true]) {
+  test(`a late publication preserves protected development with retained PR: ${retained}`, async () => {
+    const f = fixture();
+    if (retained) await nextPipelineDevelopment(f.context, f.host, f.journal);
+    const newer = await f.f.provider.materializeDevelopment({
+      source: f.context.plan.source,
+      versionPolicy: f.context.plan.versionPolicy,
+      version: "1.0.1-alpha.0",
+      sourceTimestamp: f.context.plan.sourceTimestamp,
+      root: recordDigest("newer protected version"),
+    });
+    const writes = f.f.writes.length;
+    f.host.source.branchHead = async () => newer.source.commit;
+    const pr = {
+      number: 8,
+      head: { sha: newer.source.commit },
+      base: { ref: f.context.plan.developmentBranch },
+      merge_commit_sha: newer.source.commit,
+    };
+    const request = f.host.request;
+    f.host.request = async (url, options) =>
+      url.includes(`/commits/${newer.source.commit}/pulls?`)
+        ? [pr]
+        : url.endsWith("/pulls/8")
+          ? pr
+          : request(url, options);
+    f.host.integration.observe = async () => {
+      throw new Error("missing protected checks");
+    };
+    await assert.rejects(
+      nextPipelineDevelopment(f.context, f.host, f.journal),
+      /missing protected checks/,
+    );
+    f.host.integration.observe = async () => ({
+      mergeCommit: newer.source.commit,
+      root: recordDigest(pr),
+    });
+    const result = await nextPipelineDevelopment(f.context, f.host, f.journal);
+    assert.equal(result.reason, "protected-development-already-advanced");
+    assert.equal(result.observedVersion, "1.0.1-alpha.0");
+    assert.equal(f.f.writes.length, writes);
+    assert.equal(f.requests(), retained ? 1 : 0);
+    assert.deepEqual(f.records[0].value, f.publication);
   });
-  const writes = f.f.writes.length;
-  f.host.source.branchHead = async () => newer.source.commit;
-  const pr = {
-    number: 8,
-    head: { sha: newer.source.commit },
-    base: { ref: f.context.plan.developmentBranch },
-    merge_commit_sha: newer.source.commit,
-  };
-  const request = f.host.request;
-  f.host.request = async (url, options) =>
-    url.includes(`/commits/${newer.source.commit}/pulls?`)
-      ? [pr]
-      : url.endsWith("/pulls/8")
-        ? pr
-        : request(url, options);
-  f.host.integration.observe = async () => {
-    throw new Error("missing protected checks");
-  };
-  await assert.rejects(
-    nextPipelineDevelopment(f.context, f.host, f.journal),
-    /missing protected checks/,
-  );
-  f.host.integration.observe = async () => ({
-    mergeCommit: newer.source.commit,
-    root: recordDigest(pr),
-  });
-  const result = await nextPipelineDevelopment(f.context, f.host, f.journal);
-  assert.equal(result.reason, "protected-development-already-advanced");
-  assert.equal(result.observedVersion, "1.0.1-alpha.0");
-  assert.equal(f.f.writes.length, writes);
-  assert.equal(f.requests(), 0);
-  assert.deepEqual(f.records[0].value, f.publication);
-});
+}
 
 test("anchored stable follow-up requires a new reviewed manual anchor after publication", async () => {
   const f = fixture({ channel: "stable" });

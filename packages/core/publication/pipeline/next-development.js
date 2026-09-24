@@ -31,14 +31,14 @@ export async function nextPipelineDevelopment(context, host, journal) {
     throw new Error("Next-development has conflicting retained PRs");
   let selected = retained[0];
   const adapter = githubPipelineVersion(host.request, host.repository);
+  const advanced = await observeAdvancedPipelineDevelopment(
+    context,
+    host,
+    transition,
+    adapter,
+  );
+  if (advanced) return advanced;
   if (!selected) {
-    const advanced = await observeAdvancedPipelineDevelopment(
-      context,
-      host,
-      transition,
-      adapter,
-    );
-    if (advanced) return advanced;
     selected = await prepareNextDevelopmentPullRequest(
       context,
       host,

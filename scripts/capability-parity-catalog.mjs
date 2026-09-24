@@ -74,26 +74,21 @@ export function ensureCapabilityCutAncestor({
   descendant = "HEAD",
   label = "capability cut",
 } = {}) {
-  try {
-    assertCapabilityCutAncestor({ root, revision, descendant, label });
-    return;
-  } catch (error) {
-    if (git(root, ["rev-parse", "--is-shallow-repository"]) !== "true")
-      throw error;
+  const commit = git(root, ["rev-parse", `${descendant}^{commit}`]);
+  for (const depth of [0, 256, 512, 1024, 2048, 4096]) {
+    if (depth)
+      git(root, ["fetch", "--no-tags", `--depth=${depth}`, "origin", commit]);
+    try {
+      assertCapabilityCutAncestor({ root, revision, descendant, label });
+      return;
+    } catch (error) {
+      if (
+        depth === 4096 ||
+        git(root, ["rev-parse", "--is-shallow-repository"]) !== "true"
+      )
+        throw error;
+    }
   }
-  const descendantCommit = git(root, ["rev-parse", `${descendant}^{commit}`]);
-  try {
-    execFileSync(
-      "git",
-      ["fetch", "--no-tags", "--depth=256", "origin", descendantCommit],
-      { cwd: root, stdio: "ignore" },
-    );
-  } catch {
-    throw new Error(
-      `${label} ${revision} ancestry could not be hydrated from ${descendantCommit} through a bounded origin fetch`,
-    );
-  }
-  assertCapabilityCutAncestor({ root, revision, descendant, label });
 }
 
 function protectedTreeWitness(root, descendant) {
@@ -439,7 +434,11 @@ function addPlatformCatalog(catalog, root, revision, paths) {
   }
 }
 
-export function collectRevisionCatalog({ root, revision, liveV3Revision: liveBaselineRevision }) {
+export function collectRevisionCatalog({
+  root,
+  revision,
+  liveV3Revision: liveBaselineRevision,
+}) {
   const catalog = new Map();
   const paths = gitPaths(root, revision);
   const pathSet = new Set(paths);
