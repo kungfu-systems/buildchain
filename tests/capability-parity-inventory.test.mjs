@@ -39,7 +39,7 @@ test("live v4 cut has an admitted lineage from the checked candidate", () => {
   );
 });
 
-test("live v4 ancestry is hydrated in a bounded shallow checkout", () => {
+test("live v4 ancestry is hydrated beyond the initial bounded shallow fetch", () => {
   const sandbox = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-capability-cut-shallow-"),
   );
@@ -56,7 +56,7 @@ test("live v4 ancestry is hydrated in a bounded shallow checkout", () => {
     runGit(source, ["commit", "-m", value]);
   }
   const cut = runGit(source, ["rev-parse", "HEAD^"]);
-  for (let index = 0; index < 130; index++) {
+  for (let index = 0; index < 300; index++) {
     runGit(source, ["commit", "--allow-empty", "-m", `history-${index}`]);
   }
   runGit(sandbox, ["init", "--bare", remote]);
