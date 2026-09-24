@@ -3,8 +3,8 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.1",
-  "generation": 400,
-  "fencingCounter": 86,
+  "generation": 401,
+  "fencingCounter": 87,
   "policy": {
     "agingSeconds": 900,
     "maxPriority": 2,
@@ -12,7 +12,59 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": null,
+  "activeWarrant": {
+    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
+    "phase": "provisional",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v4/v4.1",
+    "candidateId": "sha256:91417373c3493f6e97245f97e2dae6659d79bd97ec5250662b10ffa43a00056b",
+    "pullRequestNumber": 3930,
+    "sourceHead": "844fa369f37bda976bfeef488b65467e41881b6a",
+    "sourceRoot": "sha256:9cc5d969e968b68b54e356caa86869352deadd03b8e3c027161259f848388f33",
+    "sourceIdentityRoot": "sha256:0115b6cd5b904abb276d9e155a0dd20f4fd8c8e57eb989877367133a09333fc0",
+    "sourcePatchRoot": "sha256:d4b3198ef47411097776306226f70fe4077a1a8de0885eb9479e62428360d633",
+    "sourceProofRoot": "sha256:e76ffed80d62d9c4fbcfd6449657e5f79cc56db2d1a47551444aab7e6c8b0117",
+    "planRoot": "sha256:f3e48d4164016b630276f62b1feacb87ef177320a3ae6ea1a3439844f8baa6d5",
+    "closureRoot": "sha256:289224716a2f85c12004135d55b9cea1f8117efc25fecb6f7b68e95c548738a6",
+    "dependencyRoot": "sha256:112ccf60af579b065fdc58ffe7845fd04b82cf770f93a9ec5a65481de4825ad2",
+    "toolchainRoot": "sha256:a49753f0b4a4ad3e4d9313ac99129d428ee35e936a0e4321d57e66792a8d19db",
+    "environmentRoot": "sha256:eb464e2cf9ac313af84a4616492d568d2e66e56c263b1dae2d6ddabdb7391b21",
+    "nativeCommandContract": {
+      "schema": "kungfu.buildchain.native-command-contract/v1",
+      "runner": "bash-lc",
+      "command": "node ../runtime/packages/core/workflow/commands/pipeline-build.mjs --platform linux-x64 --config-path '.buildchain/buildchain.toml'",
+      "commandRoot": "sha256:8cdd46222931cfaa92492885fe740c56b2eb9f1949f54deef49a4c1952f3ba5b"
+    },
+    "affectedPaths": [
+      ".buildchain/contract-lock.json",
+      ".buildchain/release-impact.json",
+      "actions/publication/pipeline/settle/dist/index.js",
+      "actions/publication/version/materialize-development/dist/index.js",
+      "dist/site/buildchain-contract.json",
+      "dist/site/buildchain-site.json",
+      "dist/site/kfd-claims.json",
+      "dist/site/kfd-upstream-aggregate.json",
+      "dist/site/public-surface-audit.json",
+      "dist/site/publication-registry.json",
+      "dist/site/site-manifest.json",
+      "dist/site/workflow-registry.json",
+      "package.json",
+      "packages/core/publication/pipeline/next-development.js",
+      "scripts/capability-parity-catalog.mjs",
+      "tests/capability-parity-inventory.test.mjs",
+      "tests/pipeline-next-development.test.mjs"
+    ],
+    "shardEvidenceRoots": [],
+    "sourceWorkflowRunId": 35949996533,
+    "deliveryClass": "native-proof-required",
+    "priority": "ordinary",
+    "generation": 87,
+    "expectedOldStateRoot": "sha256:dc809fa4d27fccd570f7328a2cc850c181a6d1751e0fd81bf1a64b6d9d4a755f",
+    "issuedAt": "2026-09-24T03:40:48.451Z",
+    "expiresAt": "2026-09-24T04:40:48.451Z",
+    "fencingToken": "sha256:34c01d7f9c6180785cb279fdb0580ecbd9a131cc93c26f3d2357088ac5a8ebe3",
+    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission."
+  },
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -11849,10 +11901,10 @@
       "sourceWorkflowRunId": 35949996533,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-24T03:40:44.619Z",
-      "updatedAt": "2026-09-24T03:40:44.619Z",
+      "updatedAt": "2026-09-24T03:40:48.451Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
+      "status": "selected",
       "terminal": null,
       "affectedPaths": [
         ".buildchain/contract-lock.json",
@@ -11876,6 +11928,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-24T03:40:44.619Z",
-  "stateRoot": "sha256:dc809fa4d27fccd570f7328a2cc850c181a6d1751e0fd81bf1a64b6d9d4a755f"
+  "updatedAt": "2026-09-24T03:40:48.451Z",
+  "stateRoot": "sha256:736b851dc475ce3ab7afdcb384ed7315206805294918d5292da93103e94da1d4"
 }
