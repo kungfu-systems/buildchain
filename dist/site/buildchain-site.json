@@ -37,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "4.1.7-alpha.0",
+    "version": "4.1.7-alpha.1",
     "versionSource": "package.json#version"
   },
   "source": {
